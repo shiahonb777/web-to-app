@@ -8,8 +8,11 @@ import androidx.lifecycle.viewModelScope
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.data.model.*
 import com.webtoapp.data.repository.WebAppRepository
+import com.webtoapp.util.IconStorage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 主界面ViewModel
@@ -66,6 +69,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             name = webApp.name,
             url = webApp.url,
             iconUri = webApp.iconPath?.let { Uri.parse(it) },
+            savedIconPath = webApp.iconPath,  // 保留已有的本地路径
             activationEnabled = webApp.activationEnabled,
             activationCodes = webApp.activationCodes,
             adsEnabled = webApp.adsEnabled,
@@ -86,6 +90,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * 处理选择的图标 URI - 复制到私有目录实现持久化
+     */
+    fun handleIconSelected(uri: Uri) {
+        viewModelScope.launch {
+            val savedPath = withContext(Dispatchers.IO) {
+                IconStorage.saveIconFromUri(getApplication(), uri)
+            }
+            if (savedPath != null) {
+                // 删除旧图标（如果存在且不同）
+                val oldPath = _editState.value.savedIconPath
+                if (oldPath != null && oldPath != savedPath) {
+                    withContext(Dispatchers.IO) {
+                        IconStorage.deleteIcon(oldPath)
+                    }
+                }
+                // 更新状态，保存本地路径
+                _editState.value = _editState.value.copy(
+                    iconUri = Uri.parse(savedPath),
+                    savedIconPath = savedPath
+                )
+            } else {
+                _uiState.value = UiState.Error("图标保存失败，请重试")
+            }
+        }
+    }
+
+    /**
      * 保存应用
      */
     fun saveApp() {
@@ -98,10 +129,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = UiState.Loading
 
             try {
+                // 使用持久化的本地路径
+                val iconPath = state.savedIconPath ?: state.iconUri?.toString()
+                
                 val webApp = _currentApp.value?.copy(
                     name = state.name,
                     url = normalizeUrl(state.url),
-                    iconPath = state.iconUri?.toString(),
+                    iconPath = iconPath,
                     activationEnabled = state.activationEnabled,
                     activationCodes = state.activationCodes,
                     adsEnabled = state.adsEnabled,
@@ -114,7 +148,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ) ?: WebApp(
                     name = state.name,
                     url = normalizeUrl(state.url),
-                    iconPath = state.iconUri?.toString(),
+                    iconPath = iconPath,
                     activationEnabled = state.activationEnabled,
                     activationCodes = state.activationCodes,
                     adsEnabled = state.adsEnabled,
@@ -229,7 +263,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 data class EditState(
     val name: String = "",
     val url: String = "",
-    val iconUri: Uri? = null,
+    val iconUri: Uri? = null,           // 用于 UI 显示
+    val savedIconPath: String? = null,  // 持久化的本地文件路径
     val iconBitmap: Bitmap? = null,
 
     // 激活码

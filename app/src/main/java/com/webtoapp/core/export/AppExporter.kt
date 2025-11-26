@@ -1,12 +1,16 @@
 package com.webtoapp.core.export
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.Settings
+import android.widget.Toast
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -26,44 +30,223 @@ class AppExporter(private val context: Context) {
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
-     * 创建桌面快捷方式
+     * 创建桌面快捷方式 - 增强兼容性版本
+     * 支持 Android 7.0+ 及各厂商定制系统
      */
     fun createShortcut(webApp: WebApp): ShortcutResult {
         return try {
-            if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
-                return ShortcutResult.Error("设备不支持创建快捷方式")
+            // 准备图标
+            val iconBitmap = prepareIconBitmap(webApp)
+            val icon = if (iconBitmap != null) {
+                IconCompat.createWithBitmap(iconBitmap)
+            } else {
+                IconCompat.createWithResource(context, android.R.drawable.sym_def_app_icon)
             }
 
-            // 准备图标
-            val icon = prepareIcon(webApp)
-
             // 创建启动Intent
-            val intent = Intent(context, WebViewActivity::class.java).apply {
+            val launchIntent = Intent(context, WebViewActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 putExtra("app_id", webApp.id)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
-            // 创建快捷方式信息
-            val shortcutInfo = ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")
-                .setShortLabel(webApp.name)
-                .setLongLabel(webApp.name)
-                .setIcon(icon)
-                .setIntent(intent)
-                .build()
-
-            // 请求创建快捷方式
-            val result = ShortcutManagerCompat.requestPinShortcut(context, shortcutInfo, null)
-
-            if (result) {
-                ShortcutResult.Success
-            } else {
-                ShortcutResult.Error("创建快捷方式失败")
+            // 根据系统版本选择创建方式
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                    // Android 8.0+ 使用 ShortcutManager API
+                    createShortcutApi26(webApp, icon, launchIntent)
+                }
+                else -> {
+                    // Android 7.x 使用传统广播方式
+                    createShortcutLegacy(webApp, iconBitmap, launchIntent)
+                }
             }
         } catch (e: Exception) {
-            ShortcutResult.Error(e.message ?: "未知错误")
+            ShortcutResult.Error("创建失败: ${e.message}")
         }
+    }
+
+    /**
+     * Android 8.0+ 创建快捷方式
+     */
+    private fun createShortcutApi26(
+        webApp: WebApp,
+        icon: IconCompat,
+        launchIntent: Intent
+    ): ShortcutResult {
+        // 检查是否支持固定快捷方式
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
+            // 尝试引导用户到设置页面
+            return tryOpenShortcutSettings() ?: ShortcutResult.Error(
+                "当前启动器不支持创建快捷方式，请尝试更换默认桌面或手动授权"
+            )
+        }
+
+        // 创建快捷方式信息
+        val shortcutInfo = ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")
+            .setShortLabel(webApp.name.take(10)) // 限制长度避免截断
+            .setLongLabel(webApp.name.take(25))
+            .setIcon(icon)
+            .setIntent(launchIntent)
+            .setAlwaysBadged() // 显示应用角标
+            .build()
+
+        // 创建回调 PendingIntent
+        val callbackIntent = Intent(ACTION_SHORTCUT_CREATED).apply {
+            `package` = context.packageName
+        }
+        val successCallback = PendingIntent.getBroadcast(
+            context,
+            webApp.id.toInt(),
+            callbackIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 请求创建快捷方式
+        val result = ShortcutManagerCompat.requestPinShortcut(
+            context,
+            shortcutInfo,
+            successCallback.intentSender
+        )
+
+        return if (result) {
+            ShortcutResult.Success
+        } else {
+            // 检查是否是权限问题
+            checkAndRequestPermission()
+        }
+    }
+
+    /**
+     * Android 7.x 传统广播方式创建快捷方式
+     */
+    @Suppress("DEPRECATION")
+    private fun createShortcutLegacy(
+        webApp: WebApp,
+        iconBitmap: Bitmap?,
+        launchIntent: Intent
+    ): ShortcutResult {
+        val shortcutIntent = Intent("com.android.launcher.action.INSTALL_SHORTCUT").apply {
+            putExtra(Intent.EXTRA_SHORTCUT_NAME, webApp.name)
+            putExtra(Intent.EXTRA_SHORTCUT_INTENT, launchIntent)
+            putExtra("duplicate", false) // 不允许重复创建
+            
+            if (iconBitmap != null) {
+                putExtra(Intent.EXTRA_SHORTCUT_ICON, iconBitmap)
+            } else {
+                putExtra(
+                    Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
+                    Intent.ShortcutIconResource.fromContext(
+                        context,
+                        android.R.drawable.sym_def_app_icon
+                    )
+                )
+            }
+        }
+
+        context.sendBroadcast(shortcutIntent)
+        
+        // 传统方式无法确认是否成功，返回待确认状态
+        return ShortcutResult.Pending("快捷方式请求已发送，请检查桌面")
+    }
+
+    /**
+     * 准备图标 Bitmap
+     * 支持本地文件路径和 content:// URI
+     */
+    private fun prepareIconBitmap(webApp: WebApp): Bitmap? {
+        webApp.iconPath?.let { path ->
+            try {
+                val original = when {
+                    // 本地文件路径（绝对路径）
+                    path.startsWith("/") -> {
+                        val file = File(path)
+                        if (file.exists()) {
+                            BitmapFactory.decodeFile(path)
+                        } else null
+                    }
+                    // file:// URI
+                    path.startsWith("file://") -> {
+                        val file = File(Uri.parse(path).path ?: return null)
+                        if (file.exists()) {
+                            BitmapFactory.decodeFile(file.absolutePath)
+                        } else null
+                    }
+                    // content:// URI（向后兼容）
+                    else -> {
+                        val uri = Uri.parse(path)
+                        context.contentResolver.openInputStream(uri)?.use { stream ->
+                            BitmapFactory.decodeStream(stream)
+                        }
+                    }
+                }
+                
+                if (original != null) {
+                    // 调整为适合快捷方式的尺寸 (192x192)
+                    val size = 192
+                    return Bitmap.createScaledBitmap(original, size, size, true).also {
+                        if (it !== original) original.recycle()
+                    }
+                }
+            } catch (e: Exception) {
+                // 图标加载失败，返回 null 使用默认图标
+            }
+        }
+        return null
+    }
+
+    /**
+     * 检查并请求快捷方式权限（针对国产 ROM）
+     */
+    private fun checkAndRequestPermission(): ShortcutResult {
+        val manufacturer = Build.MANUFACTURER.lowercase()
+        
+        val message = when {
+            manufacturer.contains("xiaomi") || manufacturer.contains("redmi") -> {
+                "请在 设置 > 应用设置 > 应用管理 > WebToApp > 权限管理 中开启「桌面快捷方式」权限"
+            }
+            manufacturer.contains("huawei") || manufacturer.contains("honor") -> {
+                "请在 设置 > 应用 > 应用管理 > WebToApp > 权限 中开启「创建桌面快捷方式」权限"
+            }
+            manufacturer.contains("oppo") -> {
+                "请在 设置 > 应用管理 > WebToApp > 权限 中开启「桌面快捷方式」权限"
+            }
+            manufacturer.contains("vivo") -> {
+                "请在 i管家 > 应用管理 > 权限管理 中开启「桌面快捷方式」权限"
+            }
+            manufacturer.contains("meizu") -> {
+                "请在 手机管家 > 权限管理 中开启「桌面快捷方式」权限"
+            }
+            manufacturer.contains("samsung") -> {
+                "请确认桌面已解锁编辑状态，或尝试长按应用图标添加到主屏幕"
+            }
+            else -> {
+                "创建快捷方式失败，请检查桌面设置或应用权限"
+            }
+        }
+        
+        return ShortcutResult.PermissionRequired(message)
+    }
+
+    /**
+     * 尝试打开快捷方式设置页面
+     */
+    private fun tryOpenShortcutSettings(): ShortcutResult? {
+        return try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:${context.packageName}")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            ShortcutResult.PermissionRequired("请在应用设置中开启快捷方式权限后重试")
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    companion object {
+        private const val ACTION_SHORTCUT_CREATED = "com.webtoapp.SHORTCUT_CREATED"
     }
 
     /**
@@ -119,32 +302,6 @@ class AppExporter(private val context: Context) {
         } catch (e: Exception) {
             ExportResult.Error(e.message ?: "导出模板失败")
         }
-    }
-
-    /**
-     * 准备快捷方式图标
-     */
-    private fun prepareIcon(webApp: WebApp): IconCompat {
-        webApp.iconPath?.let { path ->
-            try {
-                val uri = Uri.parse(path)
-                val inputStream = context.contentResolver.openInputStream(uri)
-                inputStream?.use { stream ->
-                    val bitmap = BitmapFactory.decodeStream(stream)
-                    if (bitmap != null) {
-                        // 调整大小
-                        val size = 192
-                        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, size, size, true)
-                        return IconCompat.createWithBitmap(scaledBitmap)
-                    }
-                }
-            } catch (e: Exception) {
-                // 使用默认图标
-            }
-        }
-
-        // 返回默认图标
-        return IconCompat.createWithResource(context, android.R.drawable.sym_def_app_icon)
     }
 
     /**
@@ -391,7 +548,16 @@ data class AppExportData(
  * 快捷方式创建结果
  */
 sealed class ShortcutResult {
+    /** 创建成功 */
     data object Success : ShortcutResult()
+    
+    /** 请求已发送，等待用户确认（Android 7.x 传统方式） */
+    data class Pending(val message: String) : ShortcutResult()
+    
+    /** 需要用户手动授予权限（国产 ROM 限制） */
+    data class PermissionRequired(val message: String) : ShortcutResult()
+    
+    /** 创建失败 */
     data class Error(val message: String) : ShortcutResult()
 }
 

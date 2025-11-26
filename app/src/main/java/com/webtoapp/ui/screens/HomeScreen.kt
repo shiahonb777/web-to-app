@@ -148,6 +148,15 @@ fun HomeScreen(
                                         is com.webtoapp.core.export.ShortcutResult.Success -> {
                                             snackbarHostState.showSnackbar("快捷方式创建成功")
                                         }
+                                        is com.webtoapp.core.export.ShortcutResult.Pending -> {
+                                            snackbarHostState.showSnackbar(result.message)
+                                        }
+                                        is com.webtoapp.core.export.ShortcutResult.PermissionRequired -> {
+                                            snackbarHostState.showSnackbar(
+                                                message = result.message,
+                                                duration = SnackbarDuration.Long
+                                            )
+                                        }
                                         is com.webtoapp.core.export.ShortcutResult.Error -> {
                                             snackbarHostState.showSnackbar(result.message)
                                         }

@@ -52,12 +52,12 @@ fun CreateAppScreen(
         }
     }
 
-    // 图片选择器
+    // 图片选择器 - 选择后复制到私有目录实现持久化
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            viewModel.updateEditState { copy(iconUri = it) }
+            viewModel.handleIconSelected(it)
         }
     }
 
