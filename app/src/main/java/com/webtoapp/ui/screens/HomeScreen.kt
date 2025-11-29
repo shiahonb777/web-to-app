@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.webtoapp.core.apkbuilder.ApkBuilder
+import com.webtoapp.core.apkbuilder.BuildResult
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.viewmodel.MainViewModel
 import com.webtoapp.ui.viewmodel.UiState
@@ -38,7 +40,9 @@ fun HomeScreen(
     viewModel: MainViewModel,
     onCreateApp: () -> Unit,
     onEditApp: (WebApp) -> Unit,
-    onPreviewApp: (WebApp) -> Unit
+    onPreviewApp: (WebApp) -> Unit,
+    onOpenAppModifier: () -> Unit = {},
+    onOpenAbout: () -> Unit = {}
 ) {
     val apps by viewModel.filteredApps.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -47,8 +51,11 @@ fun HomeScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<WebApp?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showBuildDialog by remember { mutableStateOf(false) }
+    var buildingApp by remember { mutableStateOf<WebApp?>(null) }
 
-    // Snackbar
+    // Scope 和 Snackbar
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -85,6 +92,20 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // 关于作者
+                    IconButton(onClick = onOpenAbout) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = "关于作者"
+                        )
+                    }
+                    // 应用修改器入口
+                    IconButton(onClick = onOpenAppModifier) {
+                        Icon(
+                            imageVector = Icons.Outlined.AppShortcut,
+                            contentDescription = "应用修改器"
+                        )
+                    }
                     IconButton(onClick = {
                         isSearchActive = !isSearchActive
                         if (!isSearchActive) viewModel.search("")
@@ -175,6 +196,10 @@ fun HomeScreen(
                                     }
                                 }
                             },
+                            onBuildApk = {
+                                buildingApp = app
+                                showBuildDialog = true
+                            },
                             modifier = Modifier.animateItemPlacement()
                         )
                     }
@@ -186,6 +211,24 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    // 构建 APK 对话框
+    if (showBuildDialog && buildingApp != null) {
+        BuildApkDialog(
+            webApp = buildingApp!!,
+            onDismiss = {
+                showBuildDialog = false
+                buildingApp = null
+            },
+            onResult = { message ->
+                showBuildDialog = false
+                buildingApp = null
+                scope.launch {
+                    snackbarHostState.showSnackbar(message)
+                }
+            }
+        )
     }
 
     // 删除确认对话框
@@ -236,6 +279,7 @@ fun AppCard(
     onDelete: () -> Unit,
     onCreateShortcut: () -> Unit = {},
     onExport: () -> Unit = {},
+    onBuildApk: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -351,6 +395,14 @@ fun AppCard(
                         leadingIcon = { Icon(Icons.Outlined.AppShortcut, null) }
                     )
                     DropdownMenuItem(
+                        text = { Text("构建 APK") },
+                        onClick = {
+                            expanded = false
+                            onBuildApk()
+                        },
+                        leadingIcon = { Icon(Icons.Outlined.InstallMobile, null) }
+                    )
+                    DropdownMenuItem(
                         text = { Text("导出项目") },
                         onClick = {
                             expanded = false
@@ -448,4 +500,119 @@ fun EmptyState(
             Text("创建应用")
         }
     }
+}
+
+/**
+ * 构建 APK 对话框
+ */
+@Composable
+fun BuildApkDialog(
+    webApp: WebApp,
+    onDismiss: () -> Unit,
+    onResult: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val apkBuilder = remember { ApkBuilder(context) }
+    
+    var isBuilding by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0) }
+    var progressText by remember { mutableStateOf("准备中...") }
+
+    AlertDialog(
+        onDismissRequest = { if (!isBuilding) onDismiss() },
+        title = { Text("构建 APK") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 应用信息
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Android,
+                        null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(webApp.name, style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            webApp.url,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                
+                Divider()
+                
+                Text(
+                    "将为「${webApp.name}」构建独立的 APK 安装包。",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                Text(
+                    "构建完成后可直接安装到设备上，无需创建快捷方式。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // 进度
+                if (isBuilding) {
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = progress / 100f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "$progressText ($progress%)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (!isBuilding) {
+                Button(
+                    onClick = {
+                        isBuilding = true
+                        scope.launch {
+                            val result = apkBuilder.buildApk(webApp) { p, t ->
+                                progress = p
+                                progressText = t
+                            }
+                            when (result) {
+                                is BuildResult.Success -> {
+                                    // 直接安装
+                                    apkBuilder.installApk(result.apkFile)
+                                    onResult("APK 构建成功，正在启动安装...")
+                                }
+                                is BuildResult.Error -> {
+                                    onResult("构建失败: ${result.message}")
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Outlined.Build, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("开始构建")
+                }
+            } else {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            }
+        },
+        dismissButton = {
+            if (!isBuilding) {
+                TextButton(onClick = onDismiss) {
+                    Text("取消")
+                }
+            }
+        }
+    )
 }

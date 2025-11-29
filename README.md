@@ -17,7 +17,14 @@
 
 ### 导出功能
 - **桌面快捷方式**：创建桌面图标，像原生App一样启动
+- **构建APK安装包**：直接生成独立APK并安装，无需Android Studio
 - **项目模板导出**：导出完整Android Studio项目，可自行编译APK
+
+### 应用图标修改器（新功能）
+- **应用列表扫描**：自动获取设备上已安装的应用列表
+- **图标/名称修改**：自由修改任意应用的图标和显示名称
+- **克隆安装**：将修改后的应用作为新应用安装（独立包名）
+- **快捷方式启动**：创建使用新图标的快捷方式，启动原应用
 
 ## 技术栈
 
@@ -39,6 +46,14 @@ app/src/main/java/com/webtoapp/
 │   ├── adblock/              # 广告拦截
 │   ├── ads/                  # 广告集成
 │   ├── announcement/         # 公告管理
+│   ├── apkbuilder/          # APK构建器（新）
+│   │   ├── ApkBuilder.kt    # 构建核心
+│   │   ├── ApkSigner.kt     # APK签名
+│   │   └── ApkTemplate.kt   # 模板管理
+│   ├── appmodifier/         # 应用修改器（新）
+│   │   ├── AppCloner.kt     # 应用克隆
+│   │   ├── AppListProvider.kt # 应用列表
+│   │   └── InstalledAppInfo.kt # 应用信息
 │   ├── export/              # 导出功能
 │   └── webview/             # WebView管理
 ├── data/                      # 数据层
@@ -51,6 +66,9 @@ app/src/main/java/com/webtoapp/
 │   ├── MainActivity.kt      # 主Activity
 │   ├── navigation/          # 导航
 │   ├── screens/             # 页面
+│   │   ├── HomeScreen.kt    # 主页
+│   │   ├── CreateAppScreen.kt # 创建应用
+│   │   └── AppModifierScreen.kt # 应用修改器（新）
 │   ├── theme/               # 主题
 │   ├── viewmodel/           # ViewModel
 │   └── webview/             # WebView Activity
@@ -75,11 +93,26 @@ app/src/main/java/com/webtoapp/
 2. 选择 "创建快捷方式"
 3. 确认添加到桌面
 
-### 导出为独立APK
+### 构建APK安装包（新功能）
+1. 点击应用卡片右侧菜单
+2. 选择 "构建 APK"
+3. 点击 "开始构建"
+4. 构建完成后自动弹出安装界面
+
+### 导出为项目模板
 1. 点击应用卡片右侧菜单
 2. 选择 "导出项目"
 3. 在导出目录找到项目文件夹
 4. 使用Android Studio打开并编译
+
+### 使用应用修改器（新功能）
+1. 点击主页右上角的应用图标按钮
+2. 在应用列表中搜索或筛选目标应用
+3. 点击应用进入修改界面
+4. 选择新图标、输入新名称
+5. 选择操作方式：
+   - **快捷方式**：创建使用新图标的桌面快捷方式
+   - **克隆安装**：生成新APK并安装为独立应用
 
 ## 编译说明
 

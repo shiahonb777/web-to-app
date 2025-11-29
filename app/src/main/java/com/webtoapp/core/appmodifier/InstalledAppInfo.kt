@@ -1,0 +1,71 @@
+package com.webtoapp.core.appmodifier
+
+import android.graphics.drawable.Drawable
+
+/**
+ * 已安装应用信息
+ */
+data class InstalledAppInfo(
+    val packageName: String,
+    val appName: String,
+    val versionName: String,
+    val versionCode: Long,
+    val icon: Drawable?,
+    val apkPath: String,
+    val isSystemApp: Boolean,
+    val installedTime: Long,
+    val updatedTime: Long,
+    val apkSize: Long
+) {
+    /**
+     * 格式化的 APK 大小
+     */
+    val formattedSize: String
+        get() {
+            val kb = apkSize / 1024.0
+            val mb = kb / 1024.0
+            return when {
+                mb >= 1 -> String.format("%.1f MB", mb)
+                kb >= 1 -> String.format("%.1f KB", kb)
+                else -> "$apkSize B"
+            }
+        }
+}
+
+/**
+ * 应用修改配置
+ */
+data class AppModifyConfig(
+    val originalApp: InstalledAppInfo,
+    val newAppName: String,
+    val newIconPath: String? = null
+)
+
+/**
+ * 应用修改结果
+ */
+sealed class AppModifyResult {
+    /**
+     * 快捷方式创建成功
+     */
+    data object ShortcutSuccess : AppModifyResult()
+    
+    /**
+     * 克隆安装成功
+     */
+    data class CloneSuccess(val apkPath: String) : AppModifyResult()
+    
+    /**
+     * 操作失败
+     */
+    data class Error(val message: String) : AppModifyResult()
+}
+
+/**
+ * 应用筛选类型
+ */
+enum class AppFilterType {
+    ALL,        // 所有应用
+    USER,       // 用户应用
+    SYSTEM      // 系统应用
+}

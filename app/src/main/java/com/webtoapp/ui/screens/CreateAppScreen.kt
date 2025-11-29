@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -123,6 +124,16 @@ fun CreateAppScreen(
                 editState = editState,
                 onEnabledChange = { viewModel.updateEditState { copy(adBlockEnabled = it) } },
                 onRulesChange = { viewModel.updateEditState { copy(adBlockRules = it) } }
+            )
+
+            // 访问电脑版
+            DesktopModeCard(
+                enabled = editState.webViewConfig.desktopMode,
+                onEnabledChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(desktopMode = it))
+                    }
+                }
             )
 
             // WebView高级设置
@@ -678,5 +689,57 @@ fun SettingsSwitch(
             )
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+/**
+ * 访问电脑版卡片
+ */
+@Composable
+fun DesktopModeCard(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Computer,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "访问电脑版",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "强制使用桌面版网站（PC User-Agent + 宽视图）",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = onEnabledChange
+                )
+            }
+
+            Text(
+                text = "启用后将用桌面模式加载网页，适合对 PC 布局要求较高的网站。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

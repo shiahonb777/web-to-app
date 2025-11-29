@@ -1,15 +1,20 @@
 package com.webtoapp.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.webtoapp.ui.screens.AppModifierScreen
 import com.webtoapp.ui.screens.CreateAppScreen
 import com.webtoapp.ui.screens.HomeScreen
+import com.webtoapp.ui.screens.AboutScreen
 import com.webtoapp.ui.viewmodel.MainViewModel
+import com.webtoapp.ui.webview.WebViewActivity
 
 /**
  * 导航路由定义
@@ -19,6 +24,8 @@ object Routes {
     const val CREATE_APP = "create_app"
     const val EDIT_APP = "edit_app/{appId}"
     const val PREVIEW = "preview/{appId}"
+    const val APP_MODIFIER = "app_modifier"
+    const val ABOUT = "about"
 
     fun editApp(appId: Long) = "edit_app/$appId"
     fun preview(appId: Long) = "preview/$appId"
@@ -50,6 +57,12 @@ fun AppNavigation() {
                 },
                 onPreviewApp = { webApp ->
                     navController.navigate(Routes.preview(webApp.id))
+                },
+                onOpenAppModifier = {
+                    navController.navigate(Routes.APP_MODIFIER)
+                },
+                onOpenAbout = {
+                    navController.navigate(Routes.ABOUT)
                 }
             )
         }
@@ -88,11 +101,34 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
+
+        // 应用修改器
+        composable(Routes.APP_MODIFIER) {
+            AppModifierScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // 关于页面
+        composable(Routes.ABOUT) {
+            AboutScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
 @Composable
 fun PreviewScreen(appId: Long, onBack: () -> Unit) {
+    val context = LocalContext.current
+
+    LaunchedEffect(appId) {
+        if (appId > 0) {
+            WebViewActivity.start(context, appId)
+        }
+        onBack()
+    }
+
     // 预览界面将在WebViewActivity中实现
     // 这里只是占位
 }

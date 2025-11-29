@@ -231,22 +231,27 @@ class WebViewManager(
     }
 
     /**
-     * 处理特殊URL（电话、邮件、短信等）
+     * 处理特殊URL（电话、邮件、短信、第三方App等）
      */
     private fun handleSpecialUrl(url: String): Boolean {
         val uri = Uri.parse(url)
-        return when (uri.scheme) {
-            "tel", "sms", "mailto", "geo", "market", "intent" -> {
-                try {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
-                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(intent)
-                    true
-                } catch (e: Exception) {
-                    false
-                }
-            }
-            else -> false
+        val scheme = uri.scheme?.lowercase() ?: return false
+        
+        // http/https 由 WebView 处理
+        if (scheme == "http" || scheme == "https") {
+            return false
+        }
+        
+        // 所有非 http/https 协议都尝试用外部应用打开
+        return try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            // 没有应用能处理此协议，静默失败
+            android.util.Log.w("WebViewManager", "No app to handle scheme: $scheme")
+            true // 返回true阻止WebView加载，避免ERR_UNKNOWN_URL_SCHEME
         }
     }
 

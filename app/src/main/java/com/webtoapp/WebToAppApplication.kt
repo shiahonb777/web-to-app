@@ -4,6 +4,7 @@ import android.app.Application
 import com.webtoapp.core.activation.ActivationManager
 import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.announcement.AnnouncementManager
+import com.webtoapp.core.shell.ShellModeManager
 import com.webtoapp.data.database.AppDatabase
 import com.webtoapp.data.repository.WebAppRepository
 
@@ -35,6 +36,11 @@ class WebToAppApplication : Application() {
         AdBlocker()
     }
 
+    // Shell 模式管理器
+    val shellModeManager: ShellModeManager by lazy {
+        ShellModeManager(this)
+    }
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -56,5 +62,8 @@ class WebToAppApplication : Application() {
 
         val adBlock: AdBlocker
             get() = instance.adBlocker
+
+        val shellMode: ShellModeManager
+            get() = instance.shellModeManager
     }
 }

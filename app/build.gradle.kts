@@ -12,8 +12,8 @@ android {
         applicationId = "com.webtoapp"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -99,4 +99,5 @@ dependencies {
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.android.tools.build:apksig:2.3.0")
 }
