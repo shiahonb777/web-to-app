@@ -16,12 +16,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Android
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -185,14 +189,47 @@ fun AboutScreen(
 
                         // QQ群
                         Text(
-                            "作者每天都会在群里互动，交流学习，发布更新消息、体验版和最新安装包。",
+                            "作者每天都会在群里和大家互动，交流学习，发布更新消息、体验版和最新安装包。有建议可以给群主反馈！",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF444444)
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // QQ号复制
+                        // QQ群号复制
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .border(1.dp, borderColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("QQ 群", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text(
+                                    "1041130206",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    val clip = ClipData.newPlainText("QQ群", "1041130206")
+                                    clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "QQ群号已复制", Toast.LENGTH_SHORT).show()
+                                }
+                            ) {
+                                Icon(Icons.Default.ContentCopy, "复制", tint = primaryColor)
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // 作者QQ号复制
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -243,14 +280,48 @@ fun AboutScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // 树状结构绘制
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复安装包签名冲突问题")
-                        ChangeLogTreeItem(Icons.Outlined.Palette, "优化图标替换逻辑")
-                        ChangeLogTreeItem(Icons.Outlined.Star, "新增应用启动自动权限请求")
-                        ChangeLogTreeItem(Icons.Outlined.Info, "修复主页点击空白问题")
-                        ChangeLogTreeItem(Icons.Outlined.Code, "增加访问电脑版功能")
-                        ChangeLogTreeItem(Icons.Outlined.Group, "增加关于作者页面")
-                        ChangeLogTreeItem(Icons.Outlined.Palette, "UI 细节优化")
+                        // 新增功能
+                        Text(
+                            "✨ 新增功能",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4CAF50)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.Build, "一键构建独立 APK 安装包")
+                        ChangeLogTreeItem(Icons.Outlined.Android, "应用修改器：修改已安装应用图标/名称")
+                        ChangeLogTreeItem(Icons.Outlined.Code, "克隆安装：生成独立包名的克隆应用")
+                        ChangeLogTreeItem(Icons.Outlined.Computer, "访问电脑版：强制桌面模式加载网页")
+                        ChangeLogTreeItem(Icons.Outlined.Security, "启动自动请求运行时权限")
+                        ChangeLogTreeItem(Icons.Outlined.Info, "关于作者页面")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // 优化改进
+                        Text(
+                            "🔧 优化改进",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2196F3)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.Palette, "全新 Material Design 3 界面")
+                        ChangeLogTreeItem(Icons.Outlined.Star, "优化图标替换逻辑（支持自适应图标）")
+                        ChangeLogTreeItem(Icons.Outlined.Security, "使用官方 apksig 签名库")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Bug修复
+                        Text(
+                            "🐛 Bug 修复",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF5722)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 APK 签名冲突问题")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复主页点击卡片空白问题")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 resources.arsc 压缩导致安装失败")
                     }
                 }
                 
