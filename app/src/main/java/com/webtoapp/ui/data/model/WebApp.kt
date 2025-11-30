@@ -86,5 +86,6 @@ data class WebViewConfig(
     val swipeRefreshEnabled: Boolean = true,
     val fullscreenEnabled: Boolean = true,
     val downloadEnabled: Boolean = true,
-    val openExternalLinks: Boolean = false // 外部链接是否在浏览器打开
+    val openExternalLinks: Boolean = false, // 外部链接是否在浏览器打开
+    val hideToolbar: Boolean = false // 隐藏工具栏（全屏模式，无浏览器特征）
 )

@@ -279,50 +279,55 @@ fun WebViewScreen(
 
     val webViewManager = remember { WebViewManager(context, adBlocker) }
     val targetUrl = directUrl ?: webApp?.url ?: ""
+    
+    // 是否隐藏工具栏（全屏模式）
+    val hideToolbar = webApp?.webViewConfig?.hideToolbar == true
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = pageTitle.ifEmpty { webApp?.name ?: "WebApp" },
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1
-                        )
-                        if (currentUrl.isNotEmpty()) {
+            if (!hideToolbar) {
+                TopAppBar(
+                    title = {
+                        Column {
                             Text(
-                                text = currentUrl,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = pageTitle.ifEmpty { webApp?.name ?: "WebApp" },
+                                style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1
                             )
+                            if (currentUrl.isNotEmpty()) {
+                                Text(
+                                    text = currentUrl,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { (context as? AppCompatActivity)?.finish() }) {
+                            Icon(Icons.Default.Close, "关闭")
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { webViewRef?.goBack() },
+                            enabled = canGoBack
+                        ) {
+                            Icon(Icons.Default.ArrowBack, "后退")
+                        }
+                        IconButton(
+                            onClick = { webViewRef?.goForward() },
+                            enabled = canGoForward
+                        ) {
+                            Icon(Icons.Default.ArrowForward, "前进")
+                        }
+                        IconButton(onClick = { webViewRef?.reload() }) {
+                            Icon(Icons.Default.Refresh, "刷新")
                         }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { (context as? AppCompatActivity)?.finish() }) {
-                        Icon(Icons.Default.Close, "关闭")
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { webViewRef?.goBack() },
-                        enabled = canGoBack
-                    ) {
-                        Icon(Icons.Default.ArrowBack, "后退")
-                    }
-                    IconButton(
-                        onClick = { webViewRef?.goForward() },
-                        enabled = canGoForward
-                    ) {
-                        Icon(Icons.Default.ArrowForward, "前进")
-                    }
-                    IconButton(onClick = { webViewRef?.reload() }) {
-                        Icon(Icons.Default.Refresh, "刷新")
-                    }
-                }
-            )
+                )
+            }
         }
     ) { padding ->
         Box(

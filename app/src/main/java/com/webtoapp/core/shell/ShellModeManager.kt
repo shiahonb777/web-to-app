@@ -123,5 +123,8 @@ data class WebViewShellConfig(
     val desktopMode: Boolean = false,
 
     @SerializedName("userAgent")
-    val userAgent: String? = null
+    val userAgent: String? = null,
+
+    @SerializedName("hideToolbar")
+    val hideToolbar: Boolean = false
 )

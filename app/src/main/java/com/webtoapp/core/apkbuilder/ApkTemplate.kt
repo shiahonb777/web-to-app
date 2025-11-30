@@ -107,7 +107,8 @@ class ApkTemplate(private val context: Context) {
                 "domStorageEnabled": ${config.domStorageEnabled},
                 "zoomEnabled": ${config.zoomEnabled},
                 "desktopMode": ${config.desktopMode},
-                "userAgent": ${config.userAgent?.let { "\"${escapeJson(it)}\"" } ?: "null"}
+                "userAgent": ${config.userAgent?.let { "\"${escapeJson(it)}\"" } ?: "null"},
+                "hideToolbar": ${config.hideToolbar}
             }
         }
         """.trimIndent()
@@ -224,5 +225,6 @@ data class ApkConfig(
     val domStorageEnabled: Boolean = true,
     val zoomEnabled: Boolean = true,
     val desktopMode: Boolean = false,
-    val userAgent: String? = null
+    val userAgent: String? = null,
+    val hideToolbar: Boolean = false
 )

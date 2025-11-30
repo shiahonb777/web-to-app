@@ -573,7 +573,8 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         domStorageEnabled = webViewConfig.domStorageEnabled,
         zoomEnabled = webViewConfig.zoomEnabled,
         desktopMode = webViewConfig.desktopMode,
-        userAgent = webViewConfig.userAgent
+        userAgent = webViewConfig.userAgent,
+        hideToolbar = webViewConfig.hideToolbar
     )
 }
 

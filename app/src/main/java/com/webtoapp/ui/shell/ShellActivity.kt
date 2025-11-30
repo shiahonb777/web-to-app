@@ -275,44 +275,49 @@ fun ShellScreen(
         com.webtoapp.core.webview.WebViewManager(context, adBlocker)
     }
 
+    // 是否隐藏工具栏（全屏模式）
+    val hideToolbar = config.webViewConfig.hideToolbar
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = pageTitle.ifEmpty { config.appName },
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1
-                        )
-                        if (currentUrl.isNotEmpty()) {
+            if (!hideToolbar) {
+                TopAppBar(
+                    title = {
+                        Column {
                             Text(
-                                text = currentUrl,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = pageTitle.ifEmpty { config.appName },
+                                style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1
                             )
+                            if (currentUrl.isNotEmpty()) {
+                                Text(
+                                    text = currentUrl,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { webViewRef?.goBack() },
+                            enabled = canGoBack
+                        ) {
+                            Icon(Icons.Default.ArrowBack, "后退")
+                        }
+                        IconButton(
+                            onClick = { webViewRef?.goForward() },
+                            enabled = canGoForward
+                        ) {
+                            Icon(Icons.Default.ArrowForward, "前进")
+                        }
+                        IconButton(onClick = { webViewRef?.reload() }) {
+                            Icon(Icons.Default.Refresh, "刷新")
                         }
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { webViewRef?.goBack() },
-                        enabled = canGoBack
-                    ) {
-                        Icon(Icons.Default.ArrowBack, "后退")
-                    }
-                    IconButton(
-                        onClick = { webViewRef?.goForward() },
-                        enabled = canGoForward
-                    ) {
-                        Icon(Icons.Default.ArrowForward, "前进")
-                    }
-                    IconButton(onClick = { webViewRef?.reload() }) {
-                        Icon(Icons.Default.Refresh, "刷新")
-                    }
-                }
-            )
+                )
+            }
         }
     ) { padding ->
         Box(

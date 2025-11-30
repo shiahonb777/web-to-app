@@ -136,6 +136,16 @@ fun CreateAppScreen(
                 }
             )
 
+            // 全屏模式
+            FullscreenModeCard(
+                enabled = editState.webViewConfig.hideToolbar,
+                onEnabledChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(hideToolbar = it))
+                    }
+                }
+            )
+
             // WebView高级设置
             WebViewConfigCard(
                 config = editState.webViewConfig,
@@ -701,39 +711,79 @@ fun DesktopModeCard(
     onEnabledChange: (Boolean) -> Unit
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.Computer,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "访问电脑版",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "强制使用桌面版网站（PC User-Agent + 宽视图）",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Switch(
-                    checked = enabled,
-                    onCheckedChange = onEnabledChange
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Computer,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "访问电脑版",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "强制使用桌面版网站",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChange
+            )
+        }
+    }
+}
+
+/**
+ * 全屏模式卡片
+ */
+@Composable
+fun FullscreenModeCard(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Fullscreen,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "全屏模式",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "隐藏工具栏，无浏览器特征",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChange
+            )
         }
     }
 }
