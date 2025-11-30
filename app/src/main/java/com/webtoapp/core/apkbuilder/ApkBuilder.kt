@@ -245,10 +245,9 @@ class ApkBuilder(private val context: Context) {
                     addIconsToApk(zipOut, iconBitmap)
                 }
 
-                // 为使用 adaptive icon 的模板添加前景 PNG 图标（drawable/ic_launcher_foreground.png）
-                if (iconBitmap != null &&
-                    entryNames.contains("res/drawable/ic_launcher_foreground.xml")
-                ) {
+                // 为使用 adaptive icon 的模板添加前景 PNG 图标
+                // 无条件写入，因为 release 版 APK 的前景图可能被编译到不同路径
+                if (iconBitmap != null) {
                     addAdaptiveIconPngs(zipOut, iconBitmap, entryNames)
                 }
             }
@@ -321,10 +320,19 @@ class ApkBuilder(private val context: Context) {
         bitmap: Bitmap,
         existingEntryNames: Set<String>
     ) {
-        val foregroundPng = "res/drawable/ic_launcher_foreground.png"
-        if (!existingEntryNames.contains(foregroundPng)) {
-            val iconBytes = template.scaleBitmapToPng(bitmap, 108)
-            writeEntryDeflated(zipOut, foregroundPng, iconBytes)
+        val bases = listOf(
+            "res/drawable/ic_launcher_foreground",
+            "res/drawable-v24/ic_launcher_foreground",
+            "res/drawable-anydpi-v24/ic_launcher_foreground"
+        )
+
+        val iconBytes = template.scaleBitmapToPng(bitmap, 108)
+
+        bases.forEach { base ->
+            val pngPath = "${base}.png"
+            if (!existingEntryNames.contains(pngPath)) {
+                writeEntryDeflated(zipOut, pngPath, iconBytes)
+            }
         }
     }
     

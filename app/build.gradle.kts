@@ -5,6 +5,7 @@ plugins {
 }
 
 android {
+
     signingConfigs {
         create("shihao") {
             storeFile = file("D:\\github\\web-app\\my-release-key.jks")
@@ -30,7 +31,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("shihao")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

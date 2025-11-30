@@ -140,7 +140,7 @@ fun AboutScreen(
                         )
                         
                         Text(
-                            text = "v1.2.0",
+                            text = "v1.2.2",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier
                                 .background(accentColor, RoundedCornerShape(4.dp))
@@ -272,7 +272,7 @@ fun AboutScreen(
                             Icon(Icons.Outlined.NewReleases, null, tint = Color(0xFFD50000))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "更新日志 v1.2",
+                                "更新日志",
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
                             )
@@ -280,9 +280,35 @@ fun AboutScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // 新增功能
+                        // v1.2.2 Bug修复
                         Text(
-                            "✨ 新增功能",
+                            "v1.2.2 🐛 Bug 修复",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF5722)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 Release 版构建 APK 自定义图标不生效")
+                        ChangeLogTreeItem(Icons.Outlined.Code, "优化 ArscEditor 图标路径替换逻辑")
+                        ChangeLogTreeItem(Icons.Outlined.Build, "清理冗余调试代码，优化代码结构")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // v1.2.1 新增功能
+                        Text(
+                            "v1.2.1 ✨ 新增功能",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4CAF50)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.Star, "全屏模式：隐藏工具栏，更像原生应用")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // v1.2.0 新增功能
+                        Text(
+                            "v1.2.0 ✨ 新增功能",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF4CAF50)
@@ -291,15 +317,15 @@ fun AboutScreen(
                         ChangeLogTreeItem(Icons.Outlined.Build, "一键构建独立 APK 安装包")
                         ChangeLogTreeItem(Icons.Outlined.Android, "应用修改器：修改已安装应用图标/名称")
                         ChangeLogTreeItem(Icons.Outlined.Code, "克隆安装：生成独立包名的克隆应用")
-                        ChangeLogTreeItem(Icons.Outlined.Computer, "访问电脑版：强制桌面模式加载网页")
+                        ChangeLogTreeItem(Icons.Outlined.Computer, "访问电脑版：强制桌面模式")
                         ChangeLogTreeItem(Icons.Outlined.Security, "启动自动请求运行时权限")
                         ChangeLogTreeItem(Icons.Outlined.Info, "关于作者页面")
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // 优化改进
+                        // v1.2.0 优化改进
                         Text(
-                            "🔧 优化改进",
+                            "v1.2.0 🔧 优化改进",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF2196F3)
@@ -311,9 +337,9 @@ fun AboutScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // Bug修复
+                        // v1.2.0 Bug修复
                         Text(
-                            "🐛 Bug 修复",
+                            "v1.2.0 🐛 Bug 修复",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFF5722)

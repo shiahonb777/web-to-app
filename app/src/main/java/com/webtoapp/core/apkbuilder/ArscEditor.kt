@@ -1,9 +1,6 @@
 package com.webtoapp.core.apkbuilder
 
 import android.util.Log
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 /**
  * Android 资源表 (ARSC) 编辑器
@@ -16,10 +13,6 @@ class ArscEditor {
 
     companion object {
         private const val TAG = "ArscEditor"
-        private const val ARSC_MAGIC = 0x0002
-        private const val STRING_POOL_TYPE = 0x0001
-        
-        // 填充字符：使用空格而不是空字节，避免字符串被截断
         private const val PAD_CHAR = ' '
     }
 
@@ -149,14 +142,22 @@ class ArscEditor {
      * 这样 ic_launcher.xml 仍然是 adaptive icon，但前景图会从 PNG 资源加载
      */
     fun modifyIconPathsToPng(arscData: ByteArray): ByteArray {
-        val replacements = mapOf(
-            "res/drawable/ic_launcher_foreground.xml" to "res/drawable/ic_launcher_foreground.png"
+        // 适配多种可能的前景图路径：
+        // - res/drawable/ic_launcher_foreground.xml
+        // - res/drawable-anydpi-v24/ic_launcher_foreground.xml（Gradle 常见打包结果）
+        val candidates = listOf(
+            "res/drawable/ic_launcher_foreground",
+            "res/drawable-v24/ic_launcher_foreground",
+            "res/drawable-anydpi-v24/ic_launcher_foreground"
         )
 
         var result = arscData
         var changed = false
 
-        for ((oldPath, newPath) in replacements) {
+        for (base in candidates) {
+            val oldPath = "${base}.xml"
+            val newPath = "${base}.png"
+
             if (oldPath.length != newPath.length) continue
 
             val before = result
@@ -174,40 +175,6 @@ class ArscEditor {
         return result
     }
 
-    /**
-     * 将资源表中出现的旧包名替换为新的包名，避免 Provider authority 等字符串冲突
-     */
-    fun replacePackageStrings(arscData: ByteArray, oldPackage: String, newPackage: String): ByteArray {
-        var result = replaceStringInData(arscData, oldPackage, newPackage)
-        result = replaceUtf16StringInData(result, oldPackage, newPackage)
-        return result
-    }
-
-    /**
-     * 安全地在数据中查找并替换字符串（保留用于兼容旧调用）
-     */
-    private fun replaceStringInDataSafe(
-        data: ByteArray, 
-        oldStr: String, 
-        newStr: String,
-        charset: java.nio.charset.Charset
-    ): ByteArray {
-        return replaceStringByBytes(data, oldStr, newStr, charset)
-    }
-
-    /**
-     * 在数据中查找并替换 UTF-8 字符串（兼容旧方法）
-     */
-    private fun replaceStringInData(data: ByteArray, oldStr: String, newStr: String): ByteArray {
-        return replaceStringByBytes(data, oldStr, newStr, Charsets.UTF_8)
-    }
-
-    /**
-     * 在数据中查找并替换 UTF-16LE 字符串（兼容旧方法）
-     */
-    private fun replaceUtf16StringInData(data: ByteArray, oldStr: String, newStr: String): ByteArray {
-        return replaceStringByBytes(data, oldStr, newStr, Charsets.UTF_16LE)
-    }
 
     /**
      * 字节数组替换
@@ -233,161 +200,4 @@ class ArscEditor {
         return result
     }
 
-    /**
-     * 扫描并替换所有主字符串池中的指定字符串
-     * 这是一个更精确的实现，解析 ARSC 结构
-     */
-    fun modifyStringInPool(arscData: ByteArray, targetStrings: Map<String, String>): ByteArray {
-        if (targetStrings.isEmpty()) return arscData
-        
-        return try {
-            val buffer = ByteBuffer.wrap(arscData).order(ByteOrder.LITTLE_ENDIAN)
-            
-            // 读取资源表头
-            val type = buffer.short.toInt() and 0xFFFF
-            val headerSize = buffer.short.toInt() and 0xFFFF
-            buffer.int // tableSize (跳过)
-            buffer.int // packageCount (跳过)
-            
-            if (type != ARSC_MAGIC) {
-                return arscData
-            }
-            
-            // 定位全局字符串池
-            val stringPoolOffset = headerSize
-            buffer.position(stringPoolOffset)
-            
-            val poolType = buffer.short.toInt() and 0xFFFF
-            if (poolType != STRING_POOL_TYPE) {
-                return arscData
-            }
-            
-            val poolHeaderSize = buffer.short.toInt() and 0xFFFF
-            buffer.int // poolSize (跳过)
-            val stringCount = buffer.int
-            val styleCount = buffer.int
-            val flags = buffer.int
-            val stringsStart = buffer.int
-            buffer.int // stylesStart (跳过)
-            
-            val isUtf8 = (flags and 0x100) != 0
-            
-            // 读取字符串偏移
-            val offsets = IntArray(stringCount) { buffer.int }
-            
-            // 跳过样式偏移
-            repeat(styleCount) { buffer.int }
-            
-            // 读取字符串
-            val stringsDataStart = stringPoolOffset + poolHeaderSize + stringsStart
-            val strings = mutableListOf<String>()
-            
-            for (i in 0 until stringCount) {
-                buffer.position(stringsDataStart + offsets[i])
-                val str = if (isUtf8) {
-                    readUtf8String(buffer)
-                } else {
-                    readUtf16String(buffer)
-                }
-                // 替换字符串
-                val replaced = targetStrings[str] ?: str
-                strings.add(replaced)
-            }
-            
-            // 重建 ARSC（简化：只在原位置替换字符串内容）
-            val result = arscData.copyOf()
-            for (entry in targetStrings) {
-                replaceInPlace(result, entry.key, entry.value)
-            }
-            
-            result
-            
-        } catch (e: Exception) {
-            arscData
-        }
-    }
-
-    /**
-     * 原地替换字符串（按字节长度保持不变，用空格填充）
-     */
-    private fun replaceInPlace(data: ByteArray, oldStr: String, newStr: String) {
-        // UTF-8 替换
-        replaceInPlaceWithCharset(data, oldStr, newStr, Charsets.UTF_8)
-        // UTF-16LE 替换
-        replaceInPlaceWithCharset(data, oldStr, newStr, Charsets.UTF_16LE)
-    }
-    
-    /**
-     * 使用指定编码原地替换字符串
-     */
-    private fun replaceInPlaceWithCharset(data: ByteArray, oldStr: String, newStr: String, charset: java.nio.charset.Charset) {
-        val oldBytes = oldStr.toByteArray(charset)
-        val targetLen = oldBytes.size
-        
-        // 按字节长度安全调整新字符串
-        val safeNewStr = adjustStringToByteLength(newStr, targetLen, charset)
-        val newBytes = safeNewStr.toByteArray(charset)
-        
-        // 构建填充后的替换字节数组
-        val padded = ByteArray(targetLen)
-        System.arraycopy(newBytes, 0, padded, 0, newBytes.size)
-        
-        // 用空格填充剩余部分
-        val padChar = PAD_CHAR.toString().toByteArray(charset)
-        var pos = newBytes.size
-        while (pos + padChar.size <= targetLen) {
-            System.arraycopy(padChar, 0, padded, pos, padChar.size)
-            pos += padChar.size
-        }
-        // 处理剩余不足一个填充字符的字节
-        while (pos < targetLen) {
-            padded[pos] = 0x20 // ASCII 空格
-            pos++
-        }
-        
-        replaceFirst(data, oldBytes, padded)
-    }
-
-    /**
-     * 替换第一个匹配
-     */
-    private fun replaceFirst(data: ByteArray, pattern: ByteArray, replacement: ByteArray) {
-        var i = 0
-        while (i <= data.size - pattern.size) {
-            var match = true
-            for (j in pattern.indices) {
-                if (data[i + j] != pattern[j]) {
-                    match = false
-                    break
-                }
-            }
-            if (match) {
-                System.arraycopy(replacement, 0, data, i, replacement.size)
-                return
-            }
-            i++
-        }
-    }
-
-    private fun readUtf8String(buffer: ByteBuffer): String {
-        val charLen = buffer.get().toInt() and 0xFF
-        val byteLen = if (charLen > 0x7F) {
-            val b2 = buffer.get().toInt() and 0xFF
-            ((charLen and 0x7F) shl 8) or b2
-        } else {
-            buffer.get().toInt() and 0xFF
-        }
-        val bytes = ByteArray(byteLen)
-        buffer.get(bytes)
-        return String(bytes, Charsets.UTF_8)
-    }
-
-    private fun readUtf16String(buffer: ByteBuffer): String {
-        val charLen = buffer.short.toInt() and 0xFFFF
-        val chars = CharArray(charLen)
-        for (i in 0 until charLen) {
-            chars[i] = buffer.short.toInt().toChar()
-        }
-        return String(chars)
-    }
 }

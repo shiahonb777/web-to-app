@@ -85,14 +85,10 @@ class AxmlEditor {
             val oldStartupAuthority = "$ORIGINAL_PACKAGE.androidx-startup"
             val newStartupAuthority = "$newPackageName.androidx-startup"
 
-            val permPatched = replaceFullStringInData(data, oldPermission, newPermission)
-            val authPatched = replaceFullStringInData(data, oldAuthority, newAuthority)
-            val startupPatched = replaceFullStringInData(data, oldStartupAuthority, newStartupAuthority)
+            replaceFullStringInData(data, oldPermission, newPermission)
+            replaceFullStringInData(data, oldAuthority, newAuthority)
+            replaceFullStringInData(data, oldStartupAuthority, newStartupAuthority)
 
-            Log.d(
-                "AxmlEditor",
-                "fixDynamicPermissionAndAuthorities: permPatched=$permPatched, authPatched=$authPatched, startupPatched=$startupPatched"
-            )
         } catch (e: Exception) {
             Log.w("AxmlEditor", "fixDynamicPermissionAndAuthorities failed", e)
         }
@@ -143,13 +139,8 @@ class AxmlEditor {
     private fun stripTestOnlyFlag(data: ByteArray) {
         try {
             val testOnlyIndex = findStringIndex(data, "testOnly")
-            if (testOnlyIndex < 0) {
-                Log.d("AxmlEditor", "stripTestOnlyFlag: 'testOnly' not found in string pool")
-                return
-            }
-
-            val patched = clearTestOnlyAttributes(data, testOnlyIndex)
-            Log.d("AxmlEditor", "stripTestOnlyFlag: testOnlyIndex=$testOnlyIndex, patched=$patched")
+            if (testOnlyIndex < 0) return
+            clearTestOnlyAttributes(data, testOnlyIndex)
         } catch (e: Exception) {
             Log.w("AxmlEditor", "stripTestOnlyFlag failed", e)
         }
