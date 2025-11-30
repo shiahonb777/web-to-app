@@ -5,6 +5,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("shihao") {
+            storeFile = file("D:\\github\\web-app\\my-release-key.jks")
+            storePassword = "zshnb666"
+            keyAlias = "shihao"
+            keyPassword = "zshnb666"
+        }
+    }
     namespace = "com.webtoapp"
     compileSdk = 34
 
@@ -45,7 +53,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.5"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     packaging {
@@ -99,5 +107,7 @@ dependencies {
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("com.android.tools.build:apksig:2.3.0")
+    
+    // APK 签名库（支持 v1/v2/v3 签名）
+    implementation("com.android.tools.build:apksig:8.7.2")
 }

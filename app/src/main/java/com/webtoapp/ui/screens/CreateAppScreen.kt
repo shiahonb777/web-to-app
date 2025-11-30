@@ -734,12 +734,6 @@ fun DesktopModeCard(
                     onCheckedChange = onEnabledChange
                 )
             }
-
-            Text(
-                text = "启用后将用桌面模式加载网页，适合对 PC 布局要求较高的网站。",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

@@ -398,6 +398,31 @@ fun AppModifyDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
+                // 克隆提示
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                            MaterialTheme.shapes.small
+                        )
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Warning,
+                        null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "克隆安装仅适用于无签名校验的应用，兼容性较差",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                
                 // 进度
                 if (isProcessing) {
                     Column {
@@ -424,16 +449,24 @@ fun AppModifyDialog(
                             onClick = {
                                 isProcessing = true
                                 scope.launch {
-                                    val config = AppModifyConfig(
-                                        originalApp = app,
-                                        newAppName = newAppName,
-                                        newIconPath = newIconPath
-                                    )
-                                    val result = appCloner.cloneAndInstall(config) { p, t ->
-                                        progress = p
-                                        progressText = t
+                                    try {
+                                        val config = AppModifyConfig(
+                                            originalApp = app,
+                                            newAppName = newAppName,
+                                            newIconPath = newIconPath
+                                        )
+                                        val result = appCloner.cloneAndInstall(config) { p, t ->
+                                            // 确保在主线程更新 UI
+                                            scope.launch {
+                                                progress = p
+                                                progressText = t
+                                            }
+                                        }
+                                        onResult(result)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        onResult(AppModifyResult.Error(e.message ?: "克隆失败"))
                                     }
-                                    onResult(result)
                                 }
                             },
                             enabled = newAppName.isNotBlank()
@@ -449,16 +482,24 @@ fun AppModifyDialog(
                         onClick = {
                             isProcessing = true
                             scope.launch {
-                                val config = AppModifyConfig(
-                                    originalApp = app,
-                                    newAppName = newAppName,
-                                    newIconPath = newIconPath
-                                )
-                                val result = appCloner.createModifiedShortcut(config) { p, t ->
-                                    progress = p
-                                    progressText = t
+                                try {
+                                    val config = AppModifyConfig(
+                                        originalApp = app,
+                                        newAppName = newAppName,
+                                        newIconPath = newIconPath
+                                    )
+                                    val result = appCloner.createModifiedShortcut(config) { p, t ->
+                                        // 确保在主线程更新 UI
+                                        scope.launch {
+                                            progress = p
+                                            progressText = t
+                                        }
+                                    }
+                                    onResult(result)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    onResult(AppModifyResult.Error(e.message ?: "创建快捷方式失败"))
                                 }
-                                onResult(result)
                             }
                         },
                         enabled = newAppName.isNotBlank()

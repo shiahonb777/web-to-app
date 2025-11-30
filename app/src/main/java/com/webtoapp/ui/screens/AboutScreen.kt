@@ -140,7 +140,7 @@ fun AboutScreen(
                         )
                         
                         Text(
-                            text = "v1.1.0",
+                            text = "v1.2.0",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier
                                 .background(accentColor, RoundedCornerShape(4.dp))
@@ -272,7 +272,7 @@ fun AboutScreen(
                             Icon(Icons.Outlined.NewReleases, null, tint = Color(0xFFD50000))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "更新日志 v1.1",
+                                "更新日志 v1.2",
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
                             )
@@ -322,6 +322,9 @@ fun AboutScreen(
                         ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 APK 签名冲突问题")
                         ChangeLogTreeItem(Icons.Outlined.BugReport, "修复主页点击卡片空白问题")
                         ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 resources.arsc 压缩导致安装失败")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复导出APK包名非法导致安装失败")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复导出APK权限/Provider冲突问题")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复克隆应用多次克隆包名重复问题")
                     }
                 }
                 

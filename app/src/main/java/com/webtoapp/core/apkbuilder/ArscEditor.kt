@@ -9,35 +9,43 @@ import java.nio.ByteOrder
  * Android 资源表 (ARSC) 编辑器
  * 用于修改 resources.arsc 中的应用名称
  * 
- * 注意：这是一个简化实现，直接在字符串池中查找并替换 app_name 的值
+ * 重要：ARSC 字符串池中的字符串带有长度前缀，简单替换必须保持字符串长度不变
+ * 否则会导致 APK 解析失败
  */
 class ArscEditor {
 
     companion object {
+        private const val TAG = "ArscEditor"
         private const val ARSC_MAGIC = 0x0002
         private const val STRING_POOL_TYPE = 0x0001
+        
+        // 填充字符：使用空格而不是空字节，避免字符串被截断
+        private const val PAD_CHAR = ' '
     }
 
     /**
      * 修改应用名称
+     * 
+     * 重要：按字节长度处理，确保替换后的字节数与原字符串完全相同
+     * 这是因为 ARSC 字符串池的结构限制，无法改变字符串的实际字节长度
+     * 
      * @param arscData 原始 ARSC 数据
      * @param oldAppName 原应用名（用于定位）
      * @param newAppName 新应用名
      * @return 修改后的 ARSC 数据
      */
     fun modifyAppName(arscData: ByteArray, oldAppName: String, newAppName: String): ByteArray {
-        // 简化实现：直接在二进制数据中查找并替换字符串
-        // 注意：这种方法要求新旧字符串长度相同或者新字符串更短
+        Log.d(TAG, "modifyAppName: old='$oldAppName', new='$newAppName'")
         
-        // 首先尝试 UTF-8 编码查找
-        val utf8Result = replaceStringInData(arscData, oldAppName, newAppName)
+        // 首先尝试 UTF-8 编码查找和替换
+        val utf8Result = replaceStringByBytes(arscData, oldAppName, newAppName, Charsets.UTF_8)
         val utf8Changed = !utf8Result.contentEquals(arscData)
 
         val finalResult = if (utf8Changed) {
             utf8Result
         } else {
             // 如果没找到，尝试 UTF-16LE 编码查找
-            replaceUtf16StringInData(arscData, oldAppName, newAppName)
+            replaceStringByBytes(arscData, oldAppName, newAppName, Charsets.UTF_16LE)
         }
 
         val usedEncoding = when {
@@ -46,12 +54,94 @@ class ArscEditor {
             else -> "none"
         }
 
-        Log.d(
-            "ArscEditor",
-            "modifyAppName: old='$oldAppName', new='$newAppName', encoding=$usedEncoding"
-        )
+        Log.d(TAG, "modifyAppName completed: encoding=$usedEncoding")
         
         return finalResult
+    }
+    
+    /**
+     * 按字节长度安全替换字符串
+     * 核心逻辑：确保替换后的字节数与原字符串完全相同
+     * 
+     * 策略：
+     * 1. 如果新字符串字节数 == 旧字符串字节数：直接替换
+     * 2. 如果新字符串字节数 < 旧字符串字节数：用空格填充
+     * 3. 如果新字符串字节数 > 旧字符串字节数：逐字符截断直到字节数合适
+     */
+    private fun replaceStringByBytes(
+        data: ByteArray,
+        oldStr: String,
+        newStr: String,
+        charset: java.nio.charset.Charset
+    ): ByteArray {
+        val oldBytes = oldStr.toByteArray(charset)
+        val targetByteLen = oldBytes.size
+        
+        // 按字节长度安全调整新字符串
+        val safeNewStr = adjustStringToByteLength(newStr, targetByteLen, charset)
+        val newBytes = safeNewStr.toByteArray(charset)
+        
+        // 构建最终替换字节数组（确保长度完全匹配）
+        val replacement = when {
+            newBytes.size == targetByteLen -> newBytes
+            newBytes.size < targetByteLen -> {
+                // 用空格填充到目标长度
+                val padBytes = PAD_CHAR.toString().toByteArray(charset)
+                val result = ByteArray(targetByteLen)
+                System.arraycopy(newBytes, 0, result, 0, newBytes.size)
+                var pos = newBytes.size
+                while (pos + padBytes.size <= targetByteLen) {
+                    System.arraycopy(padBytes, 0, result, pos, padBytes.size)
+                    pos += padBytes.size
+                }
+                // 处理剩余不足一个填充字符的字节
+                while (pos < targetByteLen) {
+                    result[pos] = 0x20 // ASCII 空格
+                    pos++
+                }
+                result
+            }
+            else -> {
+                // 理论上不应该到这里，因为 adjustStringToByteLength 已处理
+                Log.w(TAG, "字节长度调整异常: expected=$targetByteLen, got=${newBytes.size}")
+                newBytes.copyOf(targetByteLen)
+            }
+        }
+        
+        Log.d(TAG, "replaceStringByBytes: oldBytes=${oldBytes.size}, newBytes=${newBytes.size}, " +
+                "replacement=${replacement.size}, charset=$charset")
+        
+        return replaceBytes(data, oldBytes, replacement)
+    }
+    
+    /**
+     * 将字符串调整到指定的字节长度（按完整字符截断，不破坏编码）
+     */
+    private fun adjustStringToByteLength(str: String, targetByteLen: Int, charset: java.nio.charset.Charset): String {
+        val fullBytes = str.toByteArray(charset)
+        
+        // 如果已经符合或更短，直接返回
+        if (fullBytes.size <= targetByteLen) {
+            return str
+        }
+        
+        // 逐字符截断，确保不破坏多字节字符
+        val builder = StringBuilder()
+        var currentByteLen = 0
+        
+        for (char in str) {
+            val charBytes = char.toString().toByteArray(charset)
+            if (currentByteLen + charBytes.size <= targetByteLen) {
+                builder.append(char)
+                currentByteLen += charBytes.size
+            } else {
+                // 无法再添加完整字符，停止
+                break
+            }
+        }
+        
+        Log.d(TAG, "adjustStringToByteLength: '$str'(${fullBytes.size}B) -> '${builder}'(${currentByteLen}B), target=$targetByteLen")
+        return builder.toString()
     }
 
     /**
@@ -85,36 +175,38 @@ class ArscEditor {
     }
 
     /**
-     * 在数据中查找并替换 UTF-8 字符串
+     * 将资源表中出现的旧包名替换为新的包名，避免 Provider authority 等字符串冲突
      */
-    private fun replaceStringInData(data: ByteArray, oldStr: String, newStr: String): ByteArray {
-        val oldBytes = oldStr.toByteArray(Charsets.UTF_8)
-        val newBytes = newStr.toByteArray(Charsets.UTF_8)
-        
-        // 如果新字符串更长，需要截断
-        val replacement = if (newBytes.size <= oldBytes.size) {
-            newBytes + ByteArray(oldBytes.size - newBytes.size) { 0 }
-        } else {
-            newBytes.copyOf(oldBytes.size)
-        }
-        
-        return replaceBytes(data, oldBytes, replacement)
+    fun replacePackageStrings(arscData: ByteArray, oldPackage: String, newPackage: String): ByteArray {
+        var result = replaceStringInData(arscData, oldPackage, newPackage)
+        result = replaceUtf16StringInData(result, oldPackage, newPackage)
+        return result
     }
 
     /**
-     * 在数据中查找并替换 UTF-16LE 字符串
+     * 安全地在数据中查找并替换字符串（保留用于兼容旧调用）
+     */
+    private fun replaceStringInDataSafe(
+        data: ByteArray, 
+        oldStr: String, 
+        newStr: String,
+        charset: java.nio.charset.Charset
+    ): ByteArray {
+        return replaceStringByBytes(data, oldStr, newStr, charset)
+    }
+
+    /**
+     * 在数据中查找并替换 UTF-8 字符串（兼容旧方法）
+     */
+    private fun replaceStringInData(data: ByteArray, oldStr: String, newStr: String): ByteArray {
+        return replaceStringByBytes(data, oldStr, newStr, Charsets.UTF_8)
+    }
+
+    /**
+     * 在数据中查找并替换 UTF-16LE 字符串（兼容旧方法）
      */
     private fun replaceUtf16StringInData(data: ByteArray, oldStr: String, newStr: String): ByteArray {
-        val oldBytes = oldStr.toByteArray(Charsets.UTF_16LE)
-        val newBytes = newStr.toByteArray(Charsets.UTF_16LE)
-        
-        val replacement = if (newBytes.size <= oldBytes.size) {
-            newBytes + ByteArray(oldBytes.size - newBytes.size) { 0 }
-        } else {
-            newBytes.copyOf(oldBytes.size)
-        }
-        
-        return replaceBytes(data, oldBytes, replacement)
+        return replaceStringByBytes(data, oldStr, newStr, Charsets.UTF_16LE)
     }
 
     /**
@@ -216,24 +308,44 @@ class ArscEditor {
     }
 
     /**
-     * 原地替换字符串（保持长度不变或填充空字节）
+     * 原地替换字符串（按字节长度保持不变，用空格填充）
      */
     private fun replaceInPlace(data: ByteArray, oldStr: String, newStr: String) {
-        // UTF-8
-        val oldUtf8 = oldStr.toByteArray(Charsets.UTF_8)
-        val newUtf8 = newStr.toByteArray(Charsets.UTF_8)
-        if (newUtf8.size <= oldUtf8.size) {
-            val padded = newUtf8 + ByteArray(oldUtf8.size - newUtf8.size) { 0 }
-            replaceFirst(data, oldUtf8, padded)
+        // UTF-8 替换
+        replaceInPlaceWithCharset(data, oldStr, newStr, Charsets.UTF_8)
+        // UTF-16LE 替换
+        replaceInPlaceWithCharset(data, oldStr, newStr, Charsets.UTF_16LE)
+    }
+    
+    /**
+     * 使用指定编码原地替换字符串
+     */
+    private fun replaceInPlaceWithCharset(data: ByteArray, oldStr: String, newStr: String, charset: java.nio.charset.Charset) {
+        val oldBytes = oldStr.toByteArray(charset)
+        val targetLen = oldBytes.size
+        
+        // 按字节长度安全调整新字符串
+        val safeNewStr = adjustStringToByteLength(newStr, targetLen, charset)
+        val newBytes = safeNewStr.toByteArray(charset)
+        
+        // 构建填充后的替换字节数组
+        val padded = ByteArray(targetLen)
+        System.arraycopy(newBytes, 0, padded, 0, newBytes.size)
+        
+        // 用空格填充剩余部分
+        val padChar = PAD_CHAR.toString().toByteArray(charset)
+        var pos = newBytes.size
+        while (pos + padChar.size <= targetLen) {
+            System.arraycopy(padChar, 0, padded, pos, padChar.size)
+            pos += padChar.size
+        }
+        // 处理剩余不足一个填充字符的字节
+        while (pos < targetLen) {
+            padded[pos] = 0x20 // ASCII 空格
+            pos++
         }
         
-        // UTF-16LE
-        val oldUtf16 = oldStr.toByteArray(Charsets.UTF_16LE)
-        val newUtf16 = newStr.toByteArray(Charsets.UTF_16LE)
-        if (newUtf16.size <= oldUtf16.size) {
-            val padded = newUtf16 + ByteArray(oldUtf16.size - newUtf16.size) { 0 }
-            replaceFirst(data, oldUtf16, padded)
-        }
+        replaceFirst(data, oldBytes, padded)
     }
 
     /**

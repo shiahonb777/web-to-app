@@ -22,6 +22,7 @@ build/
 
 # Local configuration file
 local.properties
+gradle/config.properties
 
 # Android Studio
 *.iml

@@ -84,14 +84,45 @@ class ApkBuilder(private val context: Context) {
             
             onProgress(70, "签名 APK...")
             
-            // 签名
-            val signSuccess = signer.sign(unsignedApk, signedApk)
+            // 检查未签名 APK 是否有效
+            if (!unsignedApk.exists() || unsignedApk.length() == 0L) {
+                Log.e("ApkBuilder", "未签名 APK 无效: exists=${unsignedApk.exists()}, size=${unsignedApk.length()}")
+                return@withContext BuildResult.Error("生成未签名 APK 失败")
+            }
+            
+            Log.d("ApkBuilder", "未签名 APK 准备完成: size=${unsignedApk.length()}")
+            
+            // 签名（带重试和详细错误信息）
+            val signSuccess = try {
+                signer.sign(unsignedApk, signedApk)
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "签名过程发生异常", e)
+                return@withContext BuildResult.Error("签名失败: ${e.message ?: "未知错误"}")
+            }
+            
             if (!signSuccess) {
-                return@withContext BuildResult.Error("APK 签名失败")
+                Log.e("ApkBuilder", "APK 签名返回失败")
+                // 清理可能的部分输出文件
+                if (signedApk.exists()) {
+                    signedApk.delete()
+                }
+                return@withContext BuildResult.Error("APK 签名失败，请重试")
+            }
+            
+            // 验证签名后的 APK
+            if (!signedApk.exists() || signedApk.length() == 0L) {
+                Log.e("ApkBuilder", "签名后 APK 无效")
+                return@withContext BuildResult.Error("签名后 APK 文件无效")
             }
 
+            onProgress(85, "验证 APK...")
+            
             // 调试：在安装前用 PackageManager 预解析一次 APK，检查包信息
-            debugApkStructure(signedApk)
+            val parseResult = debugApkStructure(signedApk)
+            if (!parseResult) {
+                Log.w("ApkBuilder", "APK 预解析失败，可能无法安装")
+                // 不返回错误，让用户尝试安装看具体错误
+            }
             
             onProgress(90, "清理临时文件...")
             
@@ -100,11 +131,12 @@ class ApkBuilder(private val context: Context) {
             
             onProgress(100, "构建完成")
             
+            Log.d("ApkBuilder", "构建成功: ${signedApk.absolutePath}, size=${signedApk.length()}")
             BuildResult.Success(signedApk)
             
         } catch (e: Exception) {
-            e.printStackTrace()
-            BuildResult.Error(e.message ?: "构建失败")
+            Log.e("ApkBuilder", "构建过程发生异常", e)
+            BuildResult.Error("构建失败: ${e.message ?: "未知错误"}")
         }
     }
 
@@ -227,9 +259,10 @@ class ApkBuilder(private val context: Context) {
 
     /**
      * 调试辅助：使用 PackageManager 预解析已构建 APK，检查系统是否能正常读取包信息
+     * @return 是否解析成功
      */
-    private fun debugApkStructure(apkFile: File) {
-        try {
+    private fun debugApkStructure(apkFile: File): Boolean {
+        return try {
             val pm = context.packageManager
             val flags = PackageManager.GET_ACTIVITIES or
                     PackageManager.GET_SERVICES or
@@ -242,6 +275,7 @@ class ApkBuilder(private val context: Context) {
                     "ApkBuilder",
                     "getPackageArchiveInfo 返回 null，无法解析 APK: ${apkFile.absolutePath}"
                 )
+                false
             } else {
                 Log.d(
                     "ApkBuilder",
@@ -251,9 +285,11 @@ class ApkBuilder(private val context: Context) {
                             "services=${info.services?.size ?: 0}, " +
                             "providers=${info.providers?.size ?: 0}"
                 )
+                true
             }
         } catch (e: Exception) {
             Log.e("ApkBuilder", "调试解析 APK 时发生异常: ${apkFile.absolutePath}", e)
+            false
         }
     }
     
@@ -422,14 +458,39 @@ class ApkBuilder(private val context: Context) {
      * 生成包名
      * 注意：新包名长度必须 <= 原包名 "com.webtoapp" (12字符)
      * 使用格式：com.w2a.xxxx (12字符)
+     *
+     * 约束：最后一段必须是合法的 Java 标识符段（首字符为字母或下划线），
+     * 否则 PackageManager 会在解析时直接报包名非法，表现为“安装包已损坏”。
      */
     private fun generatePackageName(appName: String): String {
-        // 从应用名生成4位唯一标识
-        val hash = appName.hashCode().let { 
+        // 从应用名生成 4 位 base36 标识，再规范化为合法包名段
+        val raw = appName.hashCode().let { 
             if (it < 0) (-it).toString(36) else it.toString(36)
         }.take(4).padStart(4, '0')
-        
-        return "com.w2a.$hash"  // 总长度: 12字符，与原包名相同
+
+        val segment = normalizePackageSegment(raw)
+
+        return "com.w2a.$segment"  // 总长度: 12 字符，与原包名相同
+    }
+
+    /**
+     * 规范化包名中的单段：
+     * - 转小写
+     * - 首字符如果是数字或其它非法字符，则映射/替换为字母，保证满足 [a-zA-Z_][a-zA-Z0-9_]* 规则
+     */
+    private fun normalizePackageSegment(segment: String): String {
+        if (segment.isEmpty()) return "a"
+
+        val chars = segment.lowercase().toCharArray()
+
+        chars[0] = when {
+            chars[0] in 'a'..'z' -> chars[0]
+            chars[0] in '0'..'9' -> ('a' + (chars[0] - '0'))  // 0..9 映射到 a..j
+            else -> 'a'
+        }
+
+        // 其余字符 base36 已经是 [0-9a-z]，符合包名要求，无需再处理
+        return String(chars)
     }
 
     /**

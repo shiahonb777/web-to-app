@@ -174,6 +174,12 @@ MIT License
 
 ## 更新日志
 
+### v1.2.0
+**Bug 修复**
+- 修复导出APK包名非法（段首数字）导致安装失败
+- 修复导出APK权限/Provider冲突问题（自定义权限、FileProvider、StartupProvider）
+- 修复克隆应用多次克隆同一应用时包名重复问题
+
 ### v1.1.0
 **新增功能**
 - 一键构建独立 APK 安装包（无需 Android Studio）
