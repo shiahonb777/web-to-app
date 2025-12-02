@@ -1,8 +1,38 @@
-# WebToApp - 网站转App生成器
+<div align="center">
 
-一款Android原生应用，可将任意网站URL转换为独立的Android App。
+# WebToApp 🚀
 
-## 功能特性
+**[English](README_EN.md) | 简体中文**
+
+**无需编程，一键将任意网站或媒体转换为独立 Android 应用！**
+
+[![GitHub stars](https://img.shields.io/github/stars/shiahonb777/web-to-app?style=social)](https://github.com/shiahonb777/web-to-app)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+</div>
+
+---
+
+WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编程知识，即可将网站、图片、视频转换为独立的 App。支持直接构建 APK 安装包，真正做到「零门槛出包」。
+
+## ✨ 核心亮点
+
+- 🌐 **网站转App** - 输入任意网址，生成独立 WebView 应用
+- 🎬 **媒体转App** - 图片/视频一键转换为全屏展示应用
+- 📦 **一键出包** - 无需 Android Studio，直接生成可安装 APK
+- 🎨 **深度定制** - 自定义图标、名称、启动画面、用户脚本
+- 🛡️ **内置功能** - 广告拦截、激活码验证、公告弹窗
+- ⚡ **应用修改器** - 修改已安装应用的图标和名称
+
+## 🎯 适用场景
+
+- 📱 将常用网站封装为独立 App，桌面一键直达
+- 🎞️ 制作电子相册、视频壁纸、产品展示应用
+- 🏢 企业内部系统快速 App 化
+- 🎮 游戏/工具类 H5 应用独立封装
+- 🔧 给已安装应用换个喜欢的图标
+
+## 📋 功能特性
 
 ### 核心功能
 - **URL转App**：输入任意网址，一键生成独立应用
