@@ -35,12 +35,16 @@ class MainActivity : ComponentActivity() {
         
         // 检查是否为 Shell 模式
         val shellManager = WebToAppApplication.shellMode
-        if (shellManager.isShellMode()) {
+        val isShell = shellManager.isShellMode()
+        android.util.Log.d("MainActivity", "检查 Shell 模式: isShellMode=$isShell")
+        if (isShell) {
             // Shell 模式：直接跳转到 ShellActivity
+            android.util.Log.d("MainActivity", "进入 Shell 模式，跳转到 ShellActivity")
             startActivity(Intent(this, ShellActivity::class.java))
             finish()
             return
         }
+        android.util.Log.d("MainActivity", "普通模式，显示主界面")
 
         enableEdgeToEdge()
 

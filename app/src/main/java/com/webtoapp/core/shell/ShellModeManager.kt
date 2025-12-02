@@ -40,14 +40,25 @@ class ShellModeManager(private val context: Context) {
 
         configLoaded = true
         cachedConfig = try {
+            android.util.Log.d("ShellModeManager", "尝试加载配置文件: $CONFIG_FILE")
             context.assets.open(CONFIG_FILE).use { inputStream ->
                 InputStreamReader(inputStream).use { reader ->
-                    val config = Gson().fromJson(reader, ShellConfig::class.java)
+                    val jsonStr = reader.readText()
+                    android.util.Log.d("ShellModeManager", "配置文件内容: $jsonStr")
+                    val config = Gson().fromJson(jsonStr, ShellConfig::class.java)
+                    android.util.Log.d("ShellModeManager", "解析结果: targetUrl=${config?.targetUrl}, splashEnabled=${config?.splashEnabled}")
                     // 验证配置有效性
-                    if (config?.targetUrl.isNullOrBlank()) null else config
+                    if (config?.targetUrl.isNullOrBlank()) {
+                        android.util.Log.w("ShellModeManager", "配置无效: targetUrl 为空")
+                        null
+                    } else {
+                        android.util.Log.d("ShellModeManager", "配置有效，进入 Shell 模式")
+                        config
+                    }
                 }
             }
         } catch (e: Exception) {
+            android.util.Log.e("ShellModeManager", "加载配置文件失败", e)
             null
         }
 
@@ -126,7 +137,40 @@ data class ShellConfig(
     val splashVideoEndMs: Long = 5000,
     
     @SerializedName("splashLandscape")
-    val splashLandscape: Boolean = false
+    val splashLandscape: Boolean = false,
+    
+    @SerializedName("splashFillScreen")
+    val splashFillScreen: Boolean = true,
+    
+    @SerializedName("splashEnableAudio")
+    val splashEnableAudio: Boolean = false,
+    
+    // 媒体应用配置
+    @SerializedName("appType")
+    val appType: String = "WEB",
+    
+    @SerializedName("mediaConfig")
+    val mediaConfig: MediaShellConfig = MediaShellConfig()
+)
+
+/**
+ * 媒体应用 Shell 配置
+ */
+data class MediaShellConfig(
+    @SerializedName("enableAudio")
+    val enableAudio: Boolean = true,
+    
+    @SerializedName("loop")
+    val loop: Boolean = true,
+    
+    @SerializedName("autoPlay")
+    val autoPlay: Boolean = true,
+    
+    @SerializedName("fillScreen")
+    val fillScreen: Boolean = true,
+    
+    @SerializedName("landscape")
+    val landscape: Boolean = false
 )
 
 /**
@@ -149,5 +193,25 @@ data class WebViewShellConfig(
     val userAgent: String? = null,
 
     @SerializedName("hideToolbar")
-    val hideToolbar: Boolean = false
+    val hideToolbar: Boolean = false,
+    
+    @SerializedName("injectScripts")
+    val injectScripts: List<ShellUserScript> = emptyList()
+)
+
+/**
+ * Shell 模式用户脚本配置
+ */
+data class ShellUserScript(
+    @SerializedName("name")
+    val name: String = "",
+    
+    @SerializedName("code")
+    val code: String = "",
+    
+    @SerializedName("enabled")
+    val enabled: Boolean = true,
+    
+    @SerializedName("runAt")
+    val runAt: String = "DOCUMENT_END"
 )

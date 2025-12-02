@@ -187,6 +187,11 @@ fun CreateAppScreen(
                         copy(splashConfig = splashConfig.copy(orientation = it))
                     }
                 },
+                onFillScreenChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(fillScreen = it))
+                    }
+                },
                 onVideoTrimChange = { startMs, endMs, totalDurationMs ->
                     viewModel.updateEditState {
                         copy(splashConfig = splashConfig.copy(
@@ -724,9 +729,273 @@ fun WebViewConfigCard(
                     checked = config.openExternalLinks,
                     onCheckedChange = { onConfigChange(config.copy(openExternalLinks = it)) }
                 )
+                
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                // 用户脚本管理
+                UserScriptsSection(
+                    scripts = config.injectScripts,
+                    onScriptsChange = { onConfigChange(config.copy(injectScripts = it)) }
+                )
             }
         }
     }
+}
+
+/**
+ * 用户脚本管理区域
+ */
+@Composable
+fun UserScriptsSection(
+    scripts: List<UserScript>,
+    onScriptsChange: (List<UserScript>) -> Unit
+) {
+    var showAddDialog by remember { mutableStateOf(false) }
+    var editingScript by remember { mutableStateOf<UserScript?>(null) }
+    var editingIndex by remember { mutableIntStateOf(-1) }
+    
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "用户脚本",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = "注入自定义 JavaScript 代码",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            FilledTonalIconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, "添加脚本")
+            }
+        }
+        
+        if (scripts.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            scripts.forEachIndexed { index, script ->
+                UserScriptItem(
+                    script = script,
+                    onToggle = {
+                        val updated = scripts.toMutableList()
+                        updated[index] = script.copy(enabled = !script.enabled)
+                        onScriptsChange(updated)
+                    },
+                    onEdit = {
+                        editingScript = script
+                        editingIndex = index
+                    },
+                    onDelete = {
+                        onScriptsChange(scripts.filterIndexed { i, _ -> i != index })
+                    }
+                )
+            }
+        }
+    }
+    
+    // 添加/编辑脚本对话框
+    if (showAddDialog || editingScript != null) {
+        UserScriptDialog(
+            script = editingScript,
+            onDismiss = {
+                showAddDialog = false
+                editingScript = null
+                editingIndex = -1
+            },
+            onSave = { newScript ->
+                if (editingIndex >= 0) {
+                    // 编辑现有脚本
+                    val updated = scripts.toMutableList()
+                    updated[editingIndex] = newScript
+                    onScriptsChange(updated)
+                } else {
+                    // 添加新脚本
+                    onScriptsChange(scripts + newScript)
+                }
+                showAddDialog = false
+                editingScript = null
+                editingIndex = -1
+            }
+        )
+    }
+}
+
+/**
+ * 用户脚本列表项
+ */
+@Composable
+fun UserScriptItem(
+    script: UserScript,
+    onToggle: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = script.enabled,
+                onCheckedChange = { onToggle() }
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = script.name.ifBlank { "未命名脚本" },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "${script.runAt.name} · ${script.code.length} 字符",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Outlined.Edit, "编辑", Modifier.size(20.dp))
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Outlined.Delete, "删除",
+                    Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 用户脚本编辑对话框
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserScriptDialog(
+    script: UserScript?,
+    onDismiss: () -> Unit,
+    onSave: (UserScript) -> Unit
+) {
+    var name by remember { mutableStateOf(script?.name ?: "") }
+    var code by remember { mutableStateOf(script?.code ?: "") }
+    var runAt by remember { mutableStateOf(script?.runAt ?: ScriptRunTime.DOCUMENT_END) }
+    var showRunAtMenu by remember { mutableStateOf(false) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (script == null) "添加脚本" else "编辑脚本") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("脚本名称") },
+                    placeholder = { Text("如：隐藏广告") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // 运行时机选择
+                ExposedDropdownMenuBox(
+                    expanded = showRunAtMenu,
+                    onExpandedChange = { showRunAtMenu = it }
+                ) {
+                    OutlinedTextField(
+                        value = when (runAt) {
+                            ScriptRunTime.DOCUMENT_START -> "页面开始加载时"
+                            ScriptRunTime.DOCUMENT_END -> "DOM就绪后（推荐）"
+                            ScriptRunTime.DOCUMENT_IDLE -> "页面完全加载后"
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("运行时机") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showRunAtMenu) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showRunAtMenu,
+                        onDismissRequest = { showRunAtMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("页面开始加载时") },
+                            onClick = {
+                                runAt = ScriptRunTime.DOCUMENT_START
+                                showRunAtMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("DOM就绪后（推荐）") },
+                            onClick = {
+                                runAt = ScriptRunTime.DOCUMENT_END
+                                showRunAtMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("页面完全加载后") },
+                            onClick = {
+                                runAt = ScriptRunTime.DOCUMENT_IDLE
+                                showRunAtMenu = false
+                            }
+                        )
+                    }
+                }
+                
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it },
+                    label = { Text("JavaScript 代码") },
+                    placeholder = { Text("document.querySelector('.ad').remove();") },
+                    minLines = 5,
+                    maxLines = 10,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Text(
+                    text = "提示：脚本将在每次页面加载时自动执行",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(UserScript(
+                        name = name.ifBlank { "未命名脚本" },
+                        code = code,
+                        enabled = script?.enabled ?: true,
+                        runAt = runAt
+                    ))
+                },
+                enabled = code.isNotBlank()
+            ) {
+                Text("保存")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }
 
 @Composable
@@ -873,6 +1142,7 @@ fun SplashScreenCard(
     onDurationChange: (Int) -> Unit,
     onClickToSkipChange: (Boolean) -> Unit,
     onOrientationChange: (SplashOrientation) -> Unit,
+    onFillScreenChange: (Boolean) -> Unit,
     onVideoTrimChange: (startMs: Long, endMs: Long, totalDurationMs: Long) -> Unit,
     onClearMedia: () -> Unit
 ) {
@@ -1114,6 +1384,26 @@ fun SplashScreenCard(
                                     else SplashOrientation.PORTRAIT
                                 )
                             }
+                        )
+                    }
+                    
+                    // 铺满屏幕设置
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("铺满屏幕", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "自动放大图片/视频以填充整个屏幕",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = editState.splashConfig.fillScreen,
+                            onCheckedChange = onFillScreenChange
                         )
                     }
                 }

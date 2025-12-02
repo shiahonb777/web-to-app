@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.webtoapp.ui.screens.AppModifierScreen
 import com.webtoapp.ui.screens.CreateAppScreen
+import com.webtoapp.ui.screens.CreateMediaAppScreen
 import com.webtoapp.ui.screens.HomeScreen
 import com.webtoapp.ui.screens.AboutScreen
 import com.webtoapp.ui.viewmodel.MainViewModel
@@ -22,6 +23,7 @@ import com.webtoapp.ui.webview.WebViewActivity
 object Routes {
     const val HOME = "home"
     const val CREATE_APP = "create_app"
+    const val CREATE_MEDIA_APP = "create_media_app"
     const val EDIT_APP = "edit_app/{appId}"
     const val PREVIEW = "preview/{appId}"
     const val APP_MODIFIER = "app_modifier"
@@ -51,6 +53,9 @@ fun AppNavigation() {
                     viewModel.createNewApp()
                     navController.navigate(Routes.CREATE_APP)
                 },
+                onCreateMediaApp = {
+                    navController.navigate(Routes.CREATE_MEDIA_APP)
+                },
                 onEditApp = { webApp ->
                     viewModel.editApp(webApp)
                     navController.navigate(Routes.editApp(webApp.id))
@@ -74,6 +79,17 @@ fun AppNavigation() {
                 isEdit = false,
                 onBack = { navController.popBackStack() },
                 onSaved = { navController.popBackStack() }
+            )
+        }
+        
+        // 创建媒体应用
+        composable(Routes.CREATE_MEDIA_APP) {
+            CreateMediaAppScreen(
+                onBack = { navController.popBackStack() },
+                onCreated = { name, appType, mediaUri, mediaConfig, iconUri ->
+                    viewModel.saveMediaApp(name, appType, mediaUri, mediaConfig, iconUri)
+                    navController.popBackStack()
+                }
             )
         }
 

@@ -43,6 +43,8 @@ import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.data.model.ScriptRunTime
+import com.webtoapp.data.model.UserScript
 import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.ui.webview.ActivationDialog
@@ -176,10 +178,33 @@ fun ShellScreen(
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
 
-    // 启动画面状态
-    var showSplash by remember { mutableStateOf(false) }
-    var splashCountdown by remember { mutableIntStateOf(0) }
+    // 同步检查启动画面配置（必须在 WebView 初始化之前）
+    val splashMediaExists = remember {
+        if (config.splashEnabled) {
+            val extension = if (config.splashType == "VIDEO") "mp4" else "png"
+            try {
+                context.assets.open("splash_media.$extension").close()
+                android.util.Log.d("ShellActivity", "同步检查: 启动画面媒体存在")
+                true
+            } catch (e: Exception) {
+                android.util.Log.e("ShellActivity", "同步检查: 启动画面媒体不存在", e)
+                false
+            }
+        } else false
+    }
+    
+    // 启动画面状态 - 根据配置同步初始化
+    var showSplash by remember { mutableStateOf(config.splashEnabled && splashMediaExists) }
+    var splashCountdown by remember { mutableIntStateOf(if (config.splashEnabled && splashMediaExists) config.splashDuration else 0) }
     var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
+    
+    // 处理启动画面横屏
+    LaunchedEffect(showSplash) {
+        if (showSplash && config.splashLandscape) {
+            originalOrientation = activity.requestedOrientation
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
+    }
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -211,30 +236,15 @@ fun ShellScreen(
             showAnnouncementDialog = announcement.shouldShowAnnouncement(-1L, ann)
         }
 
-        // 检查启动画面（从 assets 加载）
-        if (config.splashEnabled && isActivated) {
-            val splashExists = try {
-                val extension = if (config.splashType == "VIDEO") "mp4" else "png"
-                context.assets.open("splash_media.$extension").close()
-                true
-            } catch (e: Exception) {
-                false
-            }
-            if (splashExists) {
-                showSplash = true
-                splashCountdown = config.splashDuration
-                
-                // 处理横屏显示
-                if (config.splashLandscape) {
-                    originalOrientation = activity.requestedOrientation
-                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                }
-            }
-        }
+        // 启动画面已在同步初始化阶段处理
+        android.util.Log.d("ShellActivity", "LaunchedEffect: showSplash=$showSplash, splashCountdown=$splashCountdown")
     }
 
-    // 启动画面倒计时
+    // 启动画面倒计时（仅用于图片类型，视频类型由播放器控制）
     LaunchedEffect(showSplash, splashCountdown) {
+        // 视频类型不使用倒计时，由视频播放器控制结束
+        if (config.splashType == "VIDEO") return@LaunchedEffect
+        
         if (showSplash && splashCountdown > 0) {
             delay(1000L)
             splashCountdown--
@@ -317,13 +327,25 @@ fun ShellScreen(
         }
     }
 
-    // 转换配置
+    // 转换配置（包含用户脚本）
     val webViewConfig = WebViewConfig(
         javaScriptEnabled = config.webViewConfig.javaScriptEnabled,
         domStorageEnabled = config.webViewConfig.domStorageEnabled,
         zoomEnabled = config.webViewConfig.zoomEnabled,
         desktopMode = config.webViewConfig.desktopMode,
-        userAgent = config.webViewConfig.userAgent
+        userAgent = config.webViewConfig.userAgent,
+        injectScripts = config.webViewConfig.injectScripts.map { shellScript ->
+            UserScript(
+                name = shellScript.name,
+                code = shellScript.code,
+                enabled = shellScript.enabled,
+                runAt = try {
+                    ScriptRunTime.valueOf(shellScript.runAt)
+                } catch (e: Exception) {
+                    ScriptRunTime.DOCUMENT_END
+                }
+            )
+        }
     )
 
     val webViewManager = remember { 
@@ -332,7 +354,20 @@ fun ShellScreen(
 
     // 是否隐藏工具栏（全屏模式）
     val hideToolbar = config.webViewConfig.hideToolbar
+    
+    // 关闭启动画面的回调（提前定义）
+    val closeSplash = {
+        showSplash = false
+        // 恢复原始方向
+        if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+            activity.requestedOrientation = originalOrientation
+            originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
 
+    // 整体容器，确保启动画面覆盖在 Scaffold 之上
+    Box(modifier = Modifier.fillMaxSize()) {
+    
     Scaffold(
         topBar = {
             if (!hideToolbar) {
@@ -413,6 +448,12 @@ fun ShellScreen(
                         }
                     }
                 }
+            } else if (config.appType == "IMAGE" || config.appType == "VIDEO") {
+                // 媒体应用模式
+                MediaContentDisplay(
+                    isVideo = config.appType == "VIDEO",
+                    mediaConfig = config.mediaConfig
+                )
             } else {
                 // WebView
                 AndroidView(
@@ -520,7 +561,7 @@ fun ShellScreen(
         )
     }
 
-    // 启动画面覆盖层
+    // 启动画面覆盖层（在 Box 内，覆盖在 Scaffold 之上）
     AnimatedVisibility(
         visible = showSplash,
         enter = fadeIn(animationSpec = tween(300)),
@@ -531,18 +572,16 @@ fun ShellScreen(
             countdown = splashCountdown,
             videoStartMs = config.splashVideoStartMs,
             videoEndMs = config.splashVideoEndMs,
-            onSkip = if (config.splashClickToSkip) {
-                { 
-                    showSplash = false
-                    // 恢复原始方向
-                    if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
-                        activity.requestedOrientation = originalOrientation
-                        originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                    }
-                }
-            } else null
+            fillScreen = config.splashFillScreen,
+            enableAudio = config.splashEnableAudio,
+            // 点击跳过（仅当启用时）
+            onSkip = if (config.splashClickToSkip) { closeSplash } else null,
+            // 播放完成回调（始终需要）
+            onComplete = closeSplash
         )
     }
+    
+    } // 关闭外层 Box
 }
 
 /**
@@ -554,12 +593,19 @@ fun ShellSplashOverlay(
     countdown: Int,
     videoStartMs: Long = 0,
     videoEndMs: Long = 5000,
-    onSkip: (() -> Unit)?
+    fillScreen: Boolean = true,
+    enableAudio: Boolean = false,    // 是否启用视频音频
+    onSkip: (() -> Unit)?,           // 点击跳过回调
+    onComplete: (() -> Unit)? = null // 播放完成回调
 ) {
     val context = LocalContext.current
     val extension = if (splashType == "VIDEO") "mp4" else "png"
     val assetPath = "splash_media.$extension"
     val videoDurationMs = videoEndMs - videoStartMs
+    val contentScaleMode = if (fillScreen) ContentScale.Crop else ContentScale.Fit
+    
+    // 视频剩余时间（用于动态倒计时显示）
+    var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
     Box(
         modifier = Modifier
@@ -574,46 +620,52 @@ fun ShellSplashOverlay(
                 } else {
                     Modifier
                 }
-            )
+            ),
+        contentAlignment = Alignment.Center
     ) {
         when (splashType) {
             "IMAGE" -> {
                 // 图片启动画面（从 assets 加载）
-                val inputStream = remember {
-                    try {
-                        context.assets.open(assetPath)
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-                if (inputStream != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context)
-                                .data(inputStream)
-                                .crossfade(true)
-                                .build()
-                        ),
-                        contentDescription = "启动画面",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                // 使用 file:///android_asset/ 前缀加载 assets 中的图片
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(context)
+                            .data("file:///android_asset/$assetPath")
+                            .crossfade(true)
+                            .build()
+                    ),
+                    contentDescription = "启动画面",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = contentScaleMode
+                )
             }
             "VIDEO" -> {
                 // 视频启动画面（支持裁剪播放）
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+                var isPlayerReady by remember { mutableStateOf(false) }
                 
                 // 监控播放进度
-                LaunchedEffect(mediaPlayer) {
+                // 仅在播放器准备就绪后开始监控
+                LaunchedEffect(isPlayerReady) {
+                    if (!isPlayerReady) return@LaunchedEffect
                     mediaPlayer?.let { mp ->
+                        // 等待播放器真正开始播放
+                        while (!mp.isPlaying) {
+                            delay(50)
+                            if (mediaPlayer == null) return@LaunchedEffect
+                        }
+                        // 监控播放进度并更新剩余时间
                         while (mp.isPlaying) {
-                            if (mp.currentPosition >= videoEndMs) {
+                            val currentPos = mp.currentPosition
+                            // 更新剩余时间用于倒计时显示
+                            videoRemainingMs = (videoEndMs - currentPos).coerceAtLeast(0L)
+                            if (currentPos >= videoEndMs) {
                                 mp.pause()
-                                onSkip?.invoke()
+                                // 使用 onComplete 回调，因为这是播放完成
+                                onComplete?.invoke()
                                 break
                             }
-                            delay(100)
+                            delay(100) // 100ms 更新一次倒计时显示
                         }
                     }
                 }
@@ -628,19 +680,22 @@ fun ShellSplashOverlay(
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                                             setSurface(holder.surface)
-                                            setVolume(0f, 0f)
+                                            // 根据配置决定是否启用音频
+                                            val volume = if (enableAudio) 1f else 0f
+                                            setVolume(volume, volume)
                                             isLooping = false
                                             setOnPreparedListener {
                                                 seekTo(videoStartMs.toInt())
                                                 start()
+                                                isPlayerReady = true
                                             }
-                                            setOnCompletionListener { onSkip?.invoke() }
+                                            setOnCompletionListener { onComplete?.invoke() }
                                             prepareAsync()
                                         }
                                         afd.close()
                                     } catch (e: Exception) {
                                         e.printStackTrace()
-                                        onSkip?.invoke()
+                                        onComplete?.invoke()
                                     }
                                 }
                                 override fun surfaceChanged(h: android.view.SurfaceHolder, f: Int, w: Int, ht: Int) {}
@@ -664,7 +719,8 @@ fun ShellSplashOverlay(
         }
 
         // 倒计时/跳过提示
-        val displayTime = if (splashType == "VIDEO") (videoDurationMs / 1000).toInt() else countdown
+        // 视频使用动态剩余时间，图片使用传入的 countdown
+        val displayTime = if (splashType == "VIDEO") ((videoRemainingMs + 999) / 1000).toInt() else countdown
         
         Surface(
             modifier = Modifier
@@ -700,6 +756,92 @@ fun ShellSplashOverlay(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * 媒体内容显示组件（Shell 模式下的图片/视频展示）
+ */
+@Composable
+fun MediaContentDisplay(
+    isVideo: Boolean,
+    mediaConfig: com.webtoapp.core.shell.MediaShellConfig
+) {
+    val context = LocalContext.current
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isVideo) {
+            // 视频播放
+            var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+            
+            AndroidView(
+                factory = { ctx ->
+                    android.view.SurfaceView(ctx).apply {
+                        holder.addCallback(object : android.view.SurfaceHolder.Callback {
+                            override fun surfaceCreated(holder: android.view.SurfaceHolder) {
+                                try {
+                                    val afd = ctx.assets.openFd("media_content.mp4")
+                                    mediaPlayer = android.media.MediaPlayer().apply {
+                                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                                        setSurface(holder.surface)
+                                        
+                                        val volume = if (mediaConfig.enableAudio) 1f else 0f
+                                        setVolume(volume, volume)
+                                        isLooping = mediaConfig.loop
+                                        
+                                        setOnPreparedListener {
+                                            if (mediaConfig.autoPlay) start()
+                                        }
+                                        prepareAsync()
+                                    }
+                                    afd.close()
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            
+                            override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {}
+                            
+                            override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
+                                mediaPlayer?.release()
+                                mediaPlayer = null
+                            }
+                        })
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+            
+            DisposableEffect(Unit) {
+                onDispose {
+                    mediaPlayer?.release()
+                    mediaPlayer = null
+                }
+            }
+        } else {
+            // 图片显示
+            val painter = rememberAsyncImagePainter(
+                ImageRequest.Builder(context)
+                    .data("file:///android_asset/media_content.png")
+                    .crossfade(true)
+                    .build()
+            )
+            
+            Image(
+                painter = painter,
+                contentDescription = "媒体内容",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = if (mediaConfig.fillScreen) 
+                    androidx.compose.ui.layout.ContentScale.Crop 
+                else 
+                    androidx.compose.ui.layout.ContentScale.Fit
+            )
         }
     }
 }

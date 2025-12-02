@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Build
 import android.webkit.*
 import com.webtoapp.core.adblock.AdBlocker
+import com.webtoapp.data.model.ScriptRunTime
+import com.webtoapp.data.model.UserScript
 import com.webtoapp.data.model.WebViewConfig
 
 /**
@@ -140,11 +142,19 @@ class WebViewManager(
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 callbacks.onPageStarted(url)
+                // 注入 DOCUMENT_START 脚本
+                view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_START) }
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                // 注入 DOCUMENT_END 脚本
+                view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_END) }
                 callbacks.onPageFinished(url)
+                // 注入 DOCUMENT_IDLE 脚本（延迟执行）
+                view?.postDelayed({
+                    injectScripts(view, config.injectScripts, ScriptRunTime.DOCUMENT_IDLE)
+                }, 500)
             }
 
             override fun onReceivedError(
@@ -263,6 +273,31 @@ class WebViewManager(
         val targetHost = Uri.parse(targetUrl).host ?: return false
         val currentHost = Uri.parse(currentUrl).host ?: return false
         return !targetHost.endsWith(currentHost) && !currentHost.endsWith(targetHost)
+    }
+    
+    /**
+     * 注入用户脚本
+     */
+    private fun injectScripts(webView: WebView, scripts: List<UserScript>, runAt: ScriptRunTime) {
+        scripts.filter { it.enabled && it.runAt == runAt && it.code.isNotBlank() }
+            .forEach { script ->
+                try {
+                    // 包装脚本，添加错误处理
+                    val wrappedCode = """
+                        (function() {
+                            try {
+                                ${script.code}
+                            } catch(e) {
+                                console.error('[UserScript: ${script.name}] Error:', e);
+                            }
+                        })();
+                    """.trimIndent()
+                    webView.evaluateJavascript(wrappedCode, null)
+                    android.util.Log.d("WebViewManager", "注入脚本: ${script.name} (${runAt.name})")
+                } catch (e: Exception) {
+                    android.util.Log.e("WebViewManager", "脚本注入失败: ${script.name}", e)
+                }
+            }
     }
 }
 

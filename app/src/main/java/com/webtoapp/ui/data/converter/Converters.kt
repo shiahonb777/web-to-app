@@ -5,6 +5,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.webtoapp.data.model.AdConfig
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.data.model.AppType
+import com.webtoapp.data.model.MediaConfig
 import com.webtoapp.data.model.SplashConfig
 import com.webtoapp.data.model.WebViewConfig
 
@@ -88,5 +90,27 @@ class Converters {
         } catch (e: Exception) {
             null
         }
+    }
+    
+    // AppType 转换
+    @TypeConverter
+    fun fromAppType(value: AppType): String = value.name
+
+    @TypeConverter
+    fun toAppType(value: String): AppType = try {
+        AppType.valueOf(value)
+    } catch (e: Exception) {
+        AppType.WEB
+    }
+    
+    // MediaConfig 转换
+    @TypeConverter
+    fun fromMediaConfig(value: MediaConfig?): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toMediaConfig(value: String): MediaConfig? = try {
+        gson.fromJson(value, MediaConfig::class.java)
+    } catch (e: Exception) {
+        null
     }
 }

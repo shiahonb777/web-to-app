@@ -10,7 +10,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -27,7 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import coil.compose.AsyncImage
 import com.webtoapp.core.appmodifier.*
+import com.webtoapp.ui.components.VideoTrimmer
+import com.webtoapp.util.SplashStorage
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * 应用修改器页面
@@ -285,6 +290,7 @@ fun AppModifyDialog(
     onDismiss: () -> Unit,
     onResult: (AppModifyResult) -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
     var newAppName by remember { mutableStateOf(app.appName) }
@@ -293,11 +299,71 @@ fun AppModifyDialog(
     var progress by remember { mutableStateOf(0) }
     var progressText by remember { mutableStateOf("") }
     
+    // 启动画面配置状态
+    var splashEnabled by remember { mutableStateOf(false) }
+    var splashType by remember { mutableStateOf("IMAGE") }
+    var splashPath by remember { mutableStateOf<String?>(null) }
+    var splashDuration by remember { mutableIntStateOf(3) }
+    var splashClickToSkip by remember { mutableStateOf(true) }
+    var splashLandscape by remember { mutableStateOf(false) }
+    var splashFillScreen by remember { mutableStateOf(true) }
+    var splashVideoStartMs by remember { mutableLongStateOf(0L) }
+    var splashVideoEndMs by remember { mutableLongStateOf(5000L) }
+    var splashVideoDurationMs by remember { mutableLongStateOf(0L) }
+    var splashEnableAudio by remember { mutableStateOf(false) }
+    
+    // 激活码配置状态
+    var activationEnabled by remember { mutableStateOf(false) }
+    var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
+    var newActivationCode by remember { mutableStateOf("") }
+    
+    // 公告配置状态
+    var announcementEnabled by remember { mutableStateOf(false) }
+    var announcementTitle by remember { mutableStateOf("") }
+    var announcementContent by remember { mutableStateOf("") }
+    var announcementLink by remember { mutableStateOf("") }
+    
     // 图片选择器
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { newIconPath = it.toString() }
+    }
+    
+    // 启动画面图片选择器
+    val splashImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                val savedPath = SplashStorage.saveMediaFromUri(context, it, isVideo = false)
+                if (savedPath != null) {
+                    splashPath = savedPath
+                    splashType = "IMAGE"
+                    splashEnabled = true
+                }
+            }
+        }
+    }
+    
+    // 启动画面视频选择器
+    val splashVideoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                val savedPath = SplashStorage.saveMediaFromUri(context, it, isVideo = true)
+                if (savedPath != null) {
+                    splashPath = savedPath
+                    splashType = "VIDEO"
+                    splashEnabled = true
+                    // 重置视频裁剪范围
+                    splashVideoStartMs = 0L
+                    splashVideoEndMs = 5000L
+                    splashVideoDurationMs = 0L
+                }
+            }
+        }
     }
 
     AlertDialog(
@@ -305,7 +371,11 @@ fun AppModifyDialog(
         title = { Text("修改应用") },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 200.dp, max = 450.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // 原应用信息
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -398,6 +468,302 @@ fun AppModifyDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
+                Divider()
+                
+                // 启动画面配置
+                Text("启动画面", style = MaterialTheme.typography.titleSmall)
+                
+                // 启动画面开关
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("启用启动画面", style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = splashEnabled,
+                        onCheckedChange = { splashEnabled = it }
+                    )
+                }
+                
+                // 仅在启用启动画面时显示配置
+                if (splashEnabled) {
+                    // 媒体选择
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { splashImagePickerLauncher.launch("image/*") },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("选择图片")
+                        }
+                        OutlinedButton(
+                            onClick = { splashVideoPickerLauncher.launch("video/*") },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Outlined.VideoFile, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("选择视频")
+                        }
+                    }
+                    
+                    // 显示已选择的媒体
+                    if (splashPath != null) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    if (splashType == "IMAGE") Icons.Outlined.Image 
+                                    else Icons.Outlined.VideoFile,
+                                    null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        if (splashType == "IMAGE") "已选择图片" else "已选择视频",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        File(splashPath!!).name,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                IconButton(onClick = { 
+                                    splashPath = null
+                                    splashEnabled = false 
+                                }) {
+                                    Icon(Icons.Default.Clear, "清除")
+                                }
+                            }
+                        }
+                        
+                        // 视频裁剪（仅视频）
+                        if (splashType == "VIDEO") {
+                            VideoTrimmer(
+                                videoPath = splashPath!!,
+                                startMs = splashVideoStartMs,
+                                endMs = splashVideoEndMs,
+                                videoDurationMs = splashVideoDurationMs,
+                                onTrimChange = { start, end, total ->
+                                    splashVideoStartMs = start
+                                    splashVideoEndMs = end
+                                    splashVideoDurationMs = total
+                                }
+                            )
+                        }
+                        
+                        // 图片时长（仅图片）
+                        if (splashType == "IMAGE") {
+                            Column {
+                                Text(
+                                    "显示时长：${splashDuration} 秒",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Slider(
+                                    value = splashDuration.toFloat(),
+                                    onValueChange = { splashDuration = it.toInt() },
+                                    valueRange = 1f..5f,
+                                    steps = 3,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        
+                        // 点击跳过
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("允许点击跳过", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = splashClickToSkip,
+                                onCheckedChange = { splashClickToSkip = it }
+                            )
+                        }
+                        
+                        // 横屏显示
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("横屏显示", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = splashLandscape,
+                                onCheckedChange = { splashLandscape = it }
+                            )
+                        }
+                        
+                        // 铺满屏幕
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("铺满屏幕", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = splashFillScreen,
+                                onCheckedChange = { splashFillScreen = it }
+                            )
+                        }
+                        
+                        // 启用音频（仅视频）
+                        if (splashType == "VIDEO") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("启用音频", style = MaterialTheme.typography.bodyMedium)
+                                Switch(
+                                    checked = splashEnableAudio,
+                                    onCheckedChange = { splashEnableAudio = it }
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // 激活码设置
+                Text("激活码验证", style = MaterialTheme.typography.titleSmall)
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("启用激活码", style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = activationEnabled,
+                        onCheckedChange = { activationEnabled = it }
+                    )
+                }
+                
+                if (activationEnabled) {
+                    Text(
+                        text = "启用后，用户需要输入正确的激活码才能使用应用",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    // 添加激活码
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = newActivationCode,
+                            onValueChange = { newActivationCode = it },
+                            placeholder = { Text("输入激活码") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        FilledIconButton(
+                            onClick = {
+                                if (newActivationCode.isNotBlank()) {
+                                    activationCodes = activationCodes + newActivationCode
+                                    newActivationCode = ""
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Add, "添加")
+                        }
+                    }
+                    
+                    // 激活码列表
+                    activationCodes.forEachIndexed { index, code ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = code,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = {
+                                    activationCodes = activationCodes.filterIndexed { i, _ -> i != index }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    "删除",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // 弹窗公告设置
+                Text("弹窗公告", style = MaterialTheme.typography.titleSmall)
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("启用弹窗公告", style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = announcementEnabled,
+                        onCheckedChange = { announcementEnabled = it }
+                    )
+                }
+                
+                if (announcementEnabled) {
+                    OutlinedTextField(
+                        value = announcementTitle,
+                        onValueChange = { announcementTitle = it },
+                        label = { Text("公告标题") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    OutlinedTextField(
+                        value = announcementContent,
+                        onValueChange = { announcementContent = it },
+                        label = { Text("公告内容") },
+                        minLines = 2,
+                        maxLines = 4,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    OutlinedTextField(
+                        value = announcementLink,
+                        onValueChange = { announcementLink = it },
+                        label = { Text("链接地址（可选）") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                
+                Divider()
+                
                 // 克隆提示
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -453,7 +819,23 @@ fun AppModifyDialog(
                                         val config = AppModifyConfig(
                                             originalApp = app,
                                             newAppName = newAppName,
-                                            newIconPath = newIconPath
+                                            newIconPath = newIconPath,
+                                            splashEnabled = splashEnabled && splashPath != null,
+                                            splashType = splashType,
+                                            splashPath = splashPath,
+                                            splashDuration = splashDuration,
+                                            splashClickToSkip = splashClickToSkip,
+                                            splashVideoStartMs = splashVideoStartMs,
+                                            splashVideoEndMs = splashVideoEndMs,
+                                            splashLandscape = splashLandscape,
+                                            splashFillScreen = splashFillScreen,
+                                            splashEnableAudio = splashEnableAudio,
+                                            activationEnabled = activationEnabled,
+                                            activationCodes = activationCodes,
+                                            announcementEnabled = announcementEnabled,
+                                            announcementTitle = announcementTitle,
+                                            announcementContent = announcementContent,
+                                            announcementLink = announcementLink.ifBlank { null }
                                         )
                                         val result = appCloner.cloneAndInstall(config) { p, t ->
                                             // 确保在主线程更新 UI
@@ -486,7 +868,23 @@ fun AppModifyDialog(
                                     val config = AppModifyConfig(
                                         originalApp = app,
                                         newAppName = newAppName,
-                                        newIconPath = newIconPath
+                                        newIconPath = newIconPath,
+                                        splashEnabled = splashEnabled && splashPath != null,
+                                        splashType = splashType,
+                                        splashPath = splashPath,
+                                        splashDuration = splashDuration,
+                                        splashClickToSkip = splashClickToSkip,
+                                        splashVideoStartMs = splashVideoStartMs,
+                                        splashVideoEndMs = splashVideoEndMs,
+                                        splashLandscape = splashLandscape,
+                                        splashFillScreen = splashFillScreen,
+                                        splashEnableAudio = splashEnableAudio,
+                                        activationEnabled = activationEnabled,
+                                        activationCodes = activationCodes,
+                                        announcementEnabled = announcementEnabled,
+                                        announcementTitle = announcementTitle,
+                                        announcementContent = announcementContent,
+                                        announcementLink = announcementLink.ifBlank { null }
                                     )
                                     val result = appCloner.createModifiedShortcut(config) { p, t ->
                                         // 确保在主线程更新 UI

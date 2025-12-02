@@ -243,8 +243,11 @@ fun WebViewScreen(
         }
     }
 
-    // 启动画面倒计时
+    // 启动画面倒计时（仅用于图片类型，视频类型由播放器控制）
     LaunchedEffect(showSplash, splashCountdown) {
+        // 视频类型不使用倒计时，由视频播放器控制结束
+        if (webApp?.splashConfig?.type == SplashType.VIDEO) return@LaunchedEffect
+        
         if (showSplash && splashCountdown > 0) {
             delay(1000L)
             splashCountdown--
@@ -525,6 +528,16 @@ fun WebViewScreen(
         )
     }
 
+    // 关闭启动画面的回调
+    val closeSplash = {
+        showSplash = false
+        // 恢复原始方向
+        if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+            activity.requestedOrientation = originalOrientation
+            originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+    
     // 启动画面覆盖层
     AnimatedVisibility(
         visible = showSplash,
@@ -535,16 +548,10 @@ fun WebViewScreen(
             SplashOverlay(
                 splashConfig = splashConfig,
                 countdown = splashCountdown,
-                onSkip = if (splashConfig.clickToSkip) {
-                    { 
-                        showSplash = false
-                        // 恢复原始方向
-                        if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
-                            activity.requestedOrientation = originalOrientation
-                            originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        }
-                    }
-                } else null
+                // 点击跳过（仅当启用时）
+                onSkip = if (splashConfig.clickToSkip) { closeSplash } else null,
+                // 播放完成回调（始终需要）
+                onComplete = closeSplash
             )
         }
     }
@@ -638,7 +645,8 @@ fun AnnouncementDialog(
 fun SplashOverlay(
     splashConfig: SplashConfig,
     countdown: Int,
-    onSkip: (() -> Unit)?
+    onSkip: (() -> Unit)?,           // 点击跳过回调
+    onComplete: (() -> Unit)? = null // 播放完成回调
 ) {
     val context = LocalContext.current
     val mediaPath = splashConfig.mediaPath ?: return
@@ -647,6 +655,10 @@ fun SplashOverlay(
     val videoStartMs = splashConfig.videoStartMs
     val videoEndMs = splashConfig.videoEndMs
     val videoDurationMs = videoEndMs - videoStartMs
+    val contentScaleMode = if (splashConfig.fillScreen) ContentScale.Crop else ContentScale.Fit
+    
+    // 视频剩余时间（用于动态倒计时显示）
+    var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
     Box(
         modifier = Modifier
@@ -661,7 +673,8 @@ fun SplashOverlay(
                 } else {
                     Modifier
                 }
-            )
+            ),
+        contentAlignment = Alignment.Center
     ) {
         when (splashConfig.type) {
             SplashType.IMAGE -> {
@@ -675,23 +688,37 @@ fun SplashOverlay(
                     ),
                     contentDescription = "启动画面",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = contentScaleMode
                 )
             }
             SplashType.VIDEO -> {
                 // 视频启动画面 - 支持裁剪播放
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+                var isPlayerReady by remember { mutableStateOf(false) }
                 
                 // 监控播放进度，到达结束时间时停止
-                LaunchedEffect(mediaPlayer) {
+                // 仅在播放器准备就绪后开始监控
+                LaunchedEffect(isPlayerReady) {
+                    if (!isPlayerReady) return@LaunchedEffect
                     mediaPlayer?.let { mp ->
+                        // 等待播放器真正开始播放
+                        while (!mp.isPlaying) {
+                            delay(50)
+                            // 如果播放器被释放则退出
+                            if (mediaPlayer == null) return@LaunchedEffect
+                        }
+                        // 监控播放进度并更新剩余时间
                         while (mp.isPlaying) {
-                            if (mp.currentPosition >= videoEndMs) {
+                            val currentPos = mp.currentPosition
+                            // 更新剩余时间用于倒计时显示
+                            videoRemainingMs = (videoEndMs - currentPos).coerceAtLeast(0L)
+                            if (currentPos >= videoEndMs) {
                                 mp.pause()
-                                onSkip?.invoke()
+                                // 使用 onComplete 回调
+                                onComplete?.invoke()
                                 break
                             }
-                            delay(100)
+                            delay(100) // 100ms 更新一次倒计时显示
                         }
                     }
                 }
@@ -710,14 +737,15 @@ fun SplashOverlay(
                                             setOnPreparedListener { 
                                                 // 跳到裁剪起始位置
                                                 seekTo(videoStartMs.toInt())
-                                                start() 
+                                                start()
+                                                isPlayerReady = true
                                             }
-                                            setOnCompletionListener { onSkip?.invoke() }
+                                            setOnCompletionListener { onComplete?.invoke() }
                                             prepareAsync()
                                         }
                                     } catch (e: Exception) {
                                         e.printStackTrace()
-                                        onSkip?.invoke()
+                                        onComplete?.invoke()
                                     }
                                 }
                                 override fun surfaceChanged(h: android.view.SurfaceHolder, f: Int, w: Int, ht: Int) {}
@@ -742,10 +770,9 @@ fun SplashOverlay(
         }
 
         // 倒计时/跳过提示
-        val displayCountdown = if (splashConfig.type == SplashType.VIDEO) {
-            // 视频使用裁剪时长
-            ((videoDurationMs - (countdown * 1000L).coerceAtMost(videoDurationMs)) / 1000).toInt()
-                .let { (videoDurationMs / 1000).toInt() - it }
+        // 视频使用动态剩余时间，图片使用传入的 countdown
+        val displayTime = if (splashConfig.type == SplashType.VIDEO) {
+            ((videoRemainingMs + 999) / 1000).toInt()
         } else {
             countdown
         }
@@ -761,16 +788,15 @@ fun SplashOverlay(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (displayCountdown > 0 || countdown > 0) {
+                if (displayTime > 0) {
                     Text(
-                        text = "${if (splashConfig.type == SplashType.VIDEO) 
-                            (videoDurationMs / 1000).toInt() else countdown}s",
+                        text = "${displayTime}s",
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
                 if (onSkip != null) {
-                    if (displayCountdown > 0 || countdown > 0) {
+                    if (displayTime > 0) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "|",

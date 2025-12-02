@@ -48,7 +48,19 @@ data class AppModifyConfig(
     val splashClickToSkip: Boolean = true, // 是否允许点击跳过
     val splashVideoStartMs: Long = 0,      // 视频裁剪起始（毫秒）
     val splashVideoEndMs: Long = 5000,     // 视频裁剪结束（毫秒）
-    val splashLandscape: Boolean = false   // 是否横屏显示
+    val splashLandscape: Boolean = false,  // 是否横屏显示
+    val splashFillScreen: Boolean = true,  // 是否铺满屏幕
+    val splashEnableAudio: Boolean = false, // 是否启用视频音频
+    
+    // 激活码配置
+    val activationEnabled: Boolean = false,
+    val activationCodes: List<String> = emptyList(),
+    
+    // 弹窗公告配置
+    val announcementEnabled: Boolean = false,
+    val announcementTitle: String = "",
+    val announcementContent: String = "",
+    val announcementLink: String? = null
 )
 
 /**

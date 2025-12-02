@@ -39,8 +39,8 @@ class ApkBuilder(private val context: Context) {
     private val tempDir = File(context.cacheDir, "apk_build_temp").apply { mkdirs() }
     
     // 原始应用名（用于替换）
-    // 使用较长的占位符名称，支持用户输入更长的自定义名称（最多32字节，约10个中文字符）
-    private val originalAppName = "WebToApp - 网站转应用生成器"
+    // 使用零宽空格扩展长度，显示为"WebToApp"但有足够字节空间（UTF-8约98字节，支持约30个中文字符）
+    private val originalAppName = "WebToApp\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B\u200B"
     private val originalPackageName = "com.webtoapp"
 
     /**
@@ -55,6 +55,12 @@ class ApkBuilder(private val context: Context) {
     ): BuildResult = withContext(Dispatchers.IO) {
         try {
             onProgress(0, "准备构建...")
+            
+            // 调试日志：检查 WebApp 的启动画面配置
+            Log.d("ApkBuilder", "构建开始 - WebApp配置:")
+            Log.d("ApkBuilder", "  splashEnabled=${webApp.splashEnabled}")
+            Log.d("ApkBuilder", "  splashConfig=${webApp.splashConfig}")
+            Log.d("ApkBuilder", "  splashMediaPath=${webApp.getSplashMediaPath()}")
             
             // 生成包名（基于应用名）
             val packageName = generatePackageName(webApp.name)
@@ -78,8 +84,15 @@ class ApkBuilder(private val context: Context) {
             
             onProgress(30, "注入配置...")
             
+            // 获取媒体文件路径（媒体应用使用 url 字段存储媒体路径）
+            val mediaContentPath = if (webApp.appType != com.webtoapp.data.model.AppType.WEB) {
+                webApp.url // 媒体应用的 url 字段存储的是媒体文件路径
+            } else {
+                null
+            }
+            
             // 修改 APK 内容
-            modifyApk(templateApk, unsignedApk, config, webApp.iconPath, webApp.getSplashMediaPath()) { progress ->
+            modifyApk(templateApk, unsignedApk, config, webApp.iconPath, webApp.getSplashMediaPath(), mediaContentPath) { progress ->
                 onProgress(30 + (progress * 0.4).toInt(), "处理资源...")
             }
             
@@ -164,6 +177,7 @@ class ApkBuilder(private val context: Context) {
      * 3. 修改应用名
      * 4. 替换/添加图标
      * 5. 嵌入启动画面媒体
+     * 6. 嵌入媒体应用内容
      */
     private fun modifyApk(
         sourceApk: File,
@@ -171,6 +185,7 @@ class ApkBuilder(private val context: Context) {
         config: ApkConfig,
         iconPath: String?,
         splashMediaPath: String?,
+        mediaContentPath: String? = null,
         onProgress: (Int) -> Unit
     ) {
         val iconBitmap = iconPath?.let { template.loadBitmap(it) }
@@ -196,6 +211,11 @@ class ApkBuilder(private val context: Context) {
                         (entry.name.endsWith(".SF") || entry.name.endsWith(".RSA") || 
                          entry.name.endsWith(".DSA") || entry.name == "META-INF/MANIFEST.MF") -> {
                             // 跳过
+                        }
+                        
+                        // 跳过旧的启动画面媒体文件（将在后面重新添加）
+                        entry.name.startsWith("assets/splash_media.") -> {
+                            Log.d("ApkBuilder", "跳过旧启动画面媒体: ${entry.name}")
                         }
                         
                         // 修改 AndroidManifest.xml（修改包名）
@@ -255,8 +275,17 @@ class ApkBuilder(private val context: Context) {
                 }
 
                 // 嵌入启动画面媒体文件
+                Log.d("ApkBuilder", "启动画面配置: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath, splashType=${config.splashType}")
                 if (config.splashEnabled && splashMediaPath != null) {
                     addSplashMediaToAssets(zipOut, splashMediaPath, config.splashType)
+                } else {
+                    Log.w("ApkBuilder", "跳过嵌入启动画面: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath")
+                }
+                
+                // 嵌入媒体应用内容（图片/视频转APP）
+                if (config.appType != "WEB" && mediaContentPath != null) {
+                    val isVideo = config.appType == "VIDEO"
+                    addMediaContentToAssets(zipOut, mediaContentPath, isVideo)
                 }
             }
         }
@@ -266,14 +295,28 @@ class ApkBuilder(private val context: Context) {
 
     /**
      * 将启动画面媒体文件添加到 assets 目录
+     * 
+     * 重要：必须使用 STORED（未压缩）方式存储！
+     * 因为 AssetManager.openFd() 只支持未压缩的 assets 文件。
+     * 如果使用 DEFLATED 压缩，openFd() 会抛出 FileNotFoundException。
      */
     private fun addSplashMediaToAssets(
         zipOut: ZipOutputStream,
         mediaPath: String,
         splashType: String
     ) {
+        Log.d("ApkBuilder", "准备嵌入启动画面媒体: path=$mediaPath, type=$splashType")
+        
         val mediaFile = File(mediaPath)
-        if (!mediaFile.exists()) return
+        if (!mediaFile.exists()) {
+            Log.e("ApkBuilder", "启动画面媒体文件不存在: $mediaPath")
+            return
+        }
+        
+        if (!mediaFile.canRead()) {
+            Log.e("ApkBuilder", "启动画面媒体文件无法读取: $mediaPath")
+            return
+        }
 
         // 根据类型确定文件名
         val extension = if (splashType == "VIDEO") "mp4" else "png"
@@ -281,10 +324,77 @@ class ApkBuilder(private val context: Context) {
 
         try {
             val mediaBytes = mediaFile.readBytes()
-            writeEntryDeflated(zipOut, assetPath, mediaBytes)
-            Log.d("ApkBuilder", "启动画面媒体已嵌入: $assetPath (${mediaBytes.size} bytes)")
+            if (mediaBytes.isEmpty()) {
+                Log.e("ApkBuilder", "启动画面媒体文件内容为空: $mediaPath")
+                return
+            }
+            
+            // 使用 STORED（未压缩）方式存储，确保 AssetManager.openFd() 可以读取
+            // 这是关键修复：openFd() 只支持未压缩的 assets 文件！
+            writeEntryStoredSimple(zipOut, assetPath, mediaBytes)
+            Log.d("ApkBuilder", "启动画面媒体已嵌入(STORED): $assetPath (${mediaBytes.size} bytes)")
         } catch (e: Exception) {
-            Log.e("ApkBuilder", "嵌入启动画面媒体失败", e)
+            Log.e("ApkBuilder", "嵌入启动画面媒体失败: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * 写入条目（使用 STORED 未压缩格式，简化版本）
+     * 用于启动画面媒体等需要被 AssetManager.openFd() 读取的文件
+     */
+    private fun writeEntryStoredSimple(zipOut: ZipOutputStream, name: String, data: ByteArray) {
+        val entry = ZipEntry(name)
+        entry.method = ZipEntry.STORED
+        entry.size = data.size.toLong()
+        entry.compressedSize = data.size.toLong()
+        
+        val crc = CRC32()
+        crc.update(data)
+        entry.crc = crc.value
+
+        zipOut.putNextEntry(entry)
+        zipOut.write(data)
+        zipOut.closeEntry()
+    }
+    
+    /**
+     * 将媒体应用内容添加到 assets 目录
+     * 使用 STORED（未压缩）方式，以支持 AssetManager.openFd()
+     */
+    private fun addMediaContentToAssets(
+        zipOut: ZipOutputStream,
+        mediaPath: String,
+        isVideo: Boolean
+    ) {
+        Log.d("ApkBuilder", "准备嵌入媒体应用内容: path=$mediaPath, isVideo=$isVideo")
+        
+        val mediaFile = File(mediaPath)
+        if (!mediaFile.exists()) {
+            Log.e("ApkBuilder", "媒体文件不存在: $mediaPath")
+            return
+        }
+        
+        if (!mediaFile.canRead()) {
+            Log.e("ApkBuilder", "媒体文件无法读取: $mediaPath")
+            return
+        }
+
+        // 根据类型确定文件名
+        val extension = if (isVideo) "mp4" else "png"
+        val assetPath = "assets/media_content.$extension"
+
+        try {
+            val mediaBytes = mediaFile.readBytes()
+            
+            if (mediaBytes.isEmpty()) {
+                Log.e("ApkBuilder", "媒体文件内容为空: $mediaPath")
+                return
+            }
+            
+            writeEntryStoredSimple(zipOut, assetPath, mediaBytes)
+            Log.d("ApkBuilder", "媒体应用内容已嵌入: $assetPath (${mediaBytes.size} bytes)")
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "嵌入媒体应用内容失败", e)
         }
     }
 
@@ -430,6 +540,8 @@ class ApkBuilder(private val context: Context) {
      */
     private fun writeConfigEntry(zipOut: ZipOutputStream, config: ApkConfig) {
         val configJson = template.createConfigJson(config)
+        Log.d("ApkBuilder", "写入配置文件: splashEnabled=${config.splashEnabled}, splashType=${config.splashType}")
+        Log.d("ApkBuilder", "配置JSON内容: $configJson")
         val data = configJson.toByteArray(Charsets.UTF_8)
         writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
     }
@@ -629,13 +741,23 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         desktopMode = webViewConfig.desktopMode,
         userAgent = webViewConfig.userAgent,
         hideToolbar = webViewConfig.hideToolbar,
+        injectScripts = webViewConfig.injectScripts,
         splashEnabled = splashEnabled,
         splashType = splashConfig?.type?.name ?: "IMAGE",
         splashDuration = splashConfig?.duration ?: 3,
         splashClickToSkip = splashConfig?.clickToSkip ?: true,
         splashVideoStartMs = splashConfig?.videoStartMs ?: 0L,
         splashVideoEndMs = splashConfig?.videoEndMs ?: 5000L,
-        splashLandscape = splashConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE
+        splashLandscape = splashConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE,
+        splashFillScreen = splashConfig?.fillScreen ?: true,
+        splashEnableAudio = splashConfig?.enableAudio ?: false,
+        // 媒体应用配置
+        appType = appType.name,
+        mediaEnableAudio = mediaConfig?.enableAudio ?: true,
+        mediaLoop = mediaConfig?.loop ?: true,
+        mediaAutoPlay = mediaConfig?.autoPlay ?: true,
+        mediaFillScreen = mediaConfig?.fillScreen ?: true,
+        mediaLandscape = mediaConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE
     )
 }
 

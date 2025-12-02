@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WebToApp - 网站转应用生成器</string>
+    <!-- 使用零宽空格(\u200B)扩展长度，显示为"WebToApp"但有足够字节空间支持长自定义名称 -->
+    <string name="app_name">WebToApp&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;</string>
     <string name="app_description">将任意网站转换为独立App</string>
 
     <!-- 主界面 -->

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -116,20 +118,30 @@ fun VideoTrimmer(
         isLoading = false
     }
     
-    // 当起始位置变化时更新预览帧
+    // 当起始位置变化时更新预览帧（带防抖处理，避免频繁调用导致卡顿）
+    var previewJob by remember { mutableStateOf<Job?>(null) }
+    val scope = rememberCoroutineScope()
+    
     LaunchedEffect(currentPreviewMs) {
+        // 取消之前的任务
+        previewJob?.cancel()
+        
         if (retrieverReady && currentPreviewMs >= 0) {
-            withContext(Dispatchers.IO) {
-                try {
-                    val frame = retriever.getFrameAtTime(
-                        currentPreviewMs * 1000, 
-                        MediaMetadataRetriever.OPTION_CLOSEST_SYNC
-                    )
-                    if (frame != null) {
-                        thumbnail = frame
+            // 防抖延迟 150ms
+            previewJob = scope.launch {
+                kotlinx.coroutines.delay(150)
+                withContext(Dispatchers.IO) {
+                    try {
+                        val frame = retriever.getFrameAtTime(
+                            currentPreviewMs * 1000, 
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                        )
+                        if (frame != null) {
+                            thumbnail = frame
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
             }
         }

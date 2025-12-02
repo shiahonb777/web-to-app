@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.data.model.*
+import com.webtoapp.util.MediaStorage
 import com.webtoapp.util.SplashStorage
 import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.util.IconStorage
@@ -316,6 +317,62 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             "https://$trimmed"
         } else {
             trimmed
+        }
+    }
+    
+    /**
+     * 保存媒体应用（图片/视频转APP）
+     */
+    fun saveMediaApp(
+        name: String,
+        appType: AppType,
+        mediaUri: Uri,
+        mediaConfig: MediaConfig,
+        iconUri: Uri?
+    ) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            
+            try {
+                val context = getApplication<Application>()
+                val isVideo = appType == AppType.VIDEO
+                
+                // 保存媒体文件
+                val savedMediaPath = withContext(Dispatchers.IO) {
+                    MediaStorage.saveMedia(context, mediaUri, isVideo)
+                }
+                
+                if (savedMediaPath == null) {
+                    _uiState.value = UiState.Error("媒体文件保存失败")
+                    return@launch
+                }
+                
+                // 保存图标（如果有）
+                val savedIconPath = iconUri?.let { uri ->
+                    withContext(Dispatchers.IO) {
+                        IconStorage.saveIconFromUri(context, uri)
+                    }
+                }
+                
+                // 创建 WebApp 对象
+                val webApp = WebApp(
+                    name = name.ifBlank { if (isVideo) "视频应用" else "图片应用" },
+                    url = savedMediaPath,  // 对于媒体应用，url 存储媒体路径
+                    iconPath = savedIconPath,
+                    appType = appType,
+                    mediaConfig = mediaConfig.copy(mediaPath = savedMediaPath)
+                )
+                
+                // 保存到数据库
+                withContext(Dispatchers.IO) {
+                    repository.createWebApp(webApp)
+                }
+                
+                _uiState.value = UiState.Success("媒体应用创建成功")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = UiState.Error("创建失败: ${e.message}")
+            }
         }
     }
 }

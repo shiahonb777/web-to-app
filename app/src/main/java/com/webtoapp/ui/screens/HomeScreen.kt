@@ -39,6 +39,7 @@ import java.util.*
 fun HomeScreen(
     viewModel: MainViewModel,
     onCreateApp: () -> Unit,
+    onCreateMediaApp: () -> Unit = {},
     onEditApp: (WebApp) -> Unit,
     onPreviewApp: (WebApp) -> Unit,
     onOpenAppModifier: () -> Unit = {},
@@ -53,6 +54,7 @@ fun HomeScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showBuildDialog by remember { mutableStateOf(false) }
     var buildingApp by remember { mutableStateOf<WebApp?>(null) }
+    var showFabMenu by remember { mutableStateOf(false) }
 
     // Scope 和 Snackbar
     val scope = rememberCoroutineScope()
@@ -122,13 +124,56 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onCreateApp,
-                icon = { Icon(Icons.Default.Add, "创建") },
-                text = { Text("创建应用") },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 展开的菜单项
+                AnimatedVisibility(
+                    visible = showFabMenu,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // 创建媒体应用
+                        SmallFloatingActionButton(
+                            onClick = {
+                                showFabMenu = false
+                                onCreateMediaApp()
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Icon(Icons.Outlined.Image, "媒体应用")
+                        }
+                        // 创建网页应用
+                        SmallFloatingActionButton(
+                            onClick = {
+                                showFabMenu = false
+                                onCreateApp()
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Icon(Icons.Outlined.Language, "网页应用")
+                        }
+                    }
+                }
+                // 主 FAB
+                ExtendedFloatingActionButton(
+                    onClick = { showFabMenu = !showFabMenu },
+                    icon = { 
+                        Icon(
+                            if (showFabMenu) Icons.Default.Close else Icons.Default.Add, 
+                            "创建"
+                        ) 
+                    },
+                    text = { Text(if (showFabMenu) "关闭" else "创建应用") },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->

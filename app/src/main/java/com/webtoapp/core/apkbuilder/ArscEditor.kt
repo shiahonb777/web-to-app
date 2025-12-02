@@ -13,7 +13,8 @@ class ArscEditor {
 
     companion object {
         private const val TAG = "ArscEditor"
-        private const val PAD_CHAR = ' '
+        // 使用 null 字符填充，这样显示时会被忽略，不会显示空格
+        private const val PAD_CHAR = '\u0000'
     }
 
     /**
@@ -78,20 +79,10 @@ class ArscEditor {
         val replacement = when {
             newBytes.size == targetByteLen -> newBytes
             newBytes.size < targetByteLen -> {
-                // 用空格填充到目标长度
-                val padBytes = PAD_CHAR.toString().toByteArray(charset)
+                // 用 null 字符填充到目标长度，显示时会被忽略
                 val result = ByteArray(targetByteLen)
                 System.arraycopy(newBytes, 0, result, 0, newBytes.size)
-                var pos = newBytes.size
-                while (pos + padBytes.size <= targetByteLen) {
-                    System.arraycopy(padBytes, 0, result, pos, padBytes.size)
-                    pos += padBytes.size
-                }
-                // 处理剩余不足一个填充字符的字节
-                while (pos < targetByteLen) {
-                    result[pos] = 0x20 // ASCII 空格
-                    pos++
-                }
+                // 剩余字节保持为 0 (null)，不需要额外填充
                 result
             }
             else -> {

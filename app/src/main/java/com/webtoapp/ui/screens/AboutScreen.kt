@@ -288,10 +288,11 @@ fun AboutScreen(
                             color = Color(0xFF4CAF50)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.Android, "媒体应用：图片/视频转独立App")
+                        ChangeLogTreeItem(Icons.Outlined.Code, "用户脚本：支持JS脚本注入")
                         ChangeLogTreeItem(Icons.Outlined.Star, "启动画面：支持图片/视频启动动画")
-                        ChangeLogTreeItem(Icons.Outlined.Build, "视频裁剪器：可视化选择视频片段（时长不限）")
-                        ChangeLogTreeItem(Icons.Outlined.Android, "集成到网页转App、快捷方式等三大功能")
-                        ChangeLogTreeItem(Icons.Outlined.Code, "支持点击跳过、自定义显示时长")
+                        ChangeLogTreeItem(Icons.Outlined.Build, "视频裁剪器：可视化选择视频片段")
+                        ChangeLogTreeItem(Icons.Outlined.Palette, "视频音频开关：启动画面/媒体应用")
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
@@ -303,8 +304,8 @@ fun AboutScreen(
                             color = Color(0xFFFF5722)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复快捷方式图标错误使用启动图片的问题")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复数据库 schema 不匹配导致的闪退")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复快捷方式图标错误使用启动图片")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复数据库schema不匹配导致闪退")
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         

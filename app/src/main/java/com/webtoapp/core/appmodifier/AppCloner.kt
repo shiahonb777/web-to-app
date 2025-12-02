@@ -91,11 +91,28 @@ class AppCloner(private val context: Context) {
             
             safeProgress(50, "创建快捷方式...")
             
+            // 判断是否需要使用 SplashLauncherActivity（有启动画面/激活码/公告任一功能真正生效时）
+            // 启动画面：必须启用且有有效的媒体路径
+            val hasSplash = config.splashEnabled && 
+                           !config.splashPath.isNullOrBlank() && 
+                           java.io.File(config.splashPath).exists()
+            // 激活码：必须启用且有至少一个激活码
+            val hasActivation = config.activationEnabled && config.activationCodes.isNotEmpty()
+            // 公告：必须启用且有标题
+            val hasAnnouncement = config.announcementEnabled && config.announcementTitle.isNotBlank()
+            
+            val needsSplashLauncher = hasSplash || hasActivation || hasAnnouncement
+            
+            Log.d("AppCloner", "快捷方式配置: hasSplash=$hasSplash, hasActivation=$hasActivation, hasAnnouncement=$hasAnnouncement, needsSplashLauncher=$needsSplashLauncher")
+            
             // 创建启动 Intent
-            val launchIntent = if (config.splashEnabled && config.splashPath != null) {
-                // 使用 SplashLauncherActivity 显示启动画面后再启动目标应用
+            val launchIntent = if (needsSplashLauncher) {
+                // 使用 SplashLauncherActivity 处理启动画面/激活码/公告
                 Intent(context, SplashLauncherActivity::class.java).apply {
+                    // 必须设置 action，否则 ShortcutManager 会报错
+                    action = Intent.ACTION_VIEW
                     putExtra(SplashLauncherActivity.EXTRA_TARGET_PACKAGE, config.originalApp.packageName)
+                    // 启动画面配置
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_TYPE, config.splashType)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_PATH, config.splashPath)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_DURATION, config.splashDuration)
@@ -103,6 +120,16 @@ class AppCloner(private val context: Context) {
                     putExtra(SplashLauncherActivity.EXTRA_VIDEO_START_MS, config.splashVideoStartMs)
                     putExtra(SplashLauncherActivity.EXTRA_VIDEO_END_MS, config.splashVideoEndMs)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_LANDSCAPE, config.splashLandscape)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_FILL_SCREEN, config.splashFillScreen)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_ENABLE_AUDIO, config.splashEnableAudio)
+                    // 激活码配置（使用逗号分隔的字符串，因为 PersistableBundle 不支持 ArrayList）
+                    putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_ENABLED, config.activationEnabled)
+                    putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_CODES, config.activationCodes.joinToString(","))
+                    // 公告配置
+                    putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_ENABLED, config.announcementEnabled)
+                    putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_TITLE, config.announcementTitle)
+                    putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_CONTENT, config.announcementContent)
+                    putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_LINK, config.announcementLink)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }

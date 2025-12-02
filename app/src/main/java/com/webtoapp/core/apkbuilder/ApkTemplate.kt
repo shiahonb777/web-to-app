@@ -3,6 +3,7 @@ package com.webtoapp.core.apkbuilder
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.webtoapp.data.model.UserScript
 import java.io.*
 import java.util.zip.*
 
@@ -102,13 +103,33 @@ class ApkTemplate(private val context: Context) {
             "announcementTitle": "${escapeJson(config.announcementTitle)}",
             "announcementContent": "${escapeJson(config.announcementContent)}",
             "announcementLink": "${escapeJson(config.announcementLink)}",
+            "splashEnabled": ${config.splashEnabled},
+            "splashType": "${config.splashType}",
+            "splashDuration": ${config.splashDuration},
+            "splashClickToSkip": ${config.splashClickToSkip},
+            "splashVideoStartMs": ${config.splashVideoStartMs},
+            "splashVideoEndMs": ${config.splashVideoEndMs},
+            "splashLandscape": ${config.splashLandscape},
+            "splashFillScreen": ${config.splashFillScreen},
+            "splashEnableAudio": ${config.splashEnableAudio},
             "webViewConfig": {
                 "javaScriptEnabled": ${config.javaScriptEnabled},
                 "domStorageEnabled": ${config.domStorageEnabled},
                 "zoomEnabled": ${config.zoomEnabled},
                 "desktopMode": ${config.desktopMode},
                 "userAgent": ${config.userAgent?.let { "\"${escapeJson(it)}\"" } ?: "null"},
-                "hideToolbar": ${config.hideToolbar}
+                "hideToolbar": ${config.hideToolbar},
+                "injectScripts": [${config.injectScripts.joinToString(",") { script ->
+                    """{"name":"${escapeJson(script.name)}","code":"${escapeJson(script.code)}","enabled":${script.enabled},"runAt":"${script.runAt.name}"}"""
+                }}]
+            },
+            "appType": "${config.appType}",
+            "mediaConfig": {
+                "enableAudio": ${config.mediaEnableAudio},
+                "loop": ${config.mediaLoop},
+                "autoPlay": ${config.mediaAutoPlay},
+                "fillScreen": ${config.mediaFillScreen},
+                "landscape": ${config.mediaLandscape}
             }
         }
         """.trimIndent()
@@ -263,6 +284,7 @@ data class ApkConfig(
     val desktopMode: Boolean = false,
     val userAgent: String? = null,
     val hideToolbar: Boolean = false,
+    val injectScripts: List<UserScript> = emptyList(), // 用户注入脚本
     
     // 启动画面配置
     val splashEnabled: Boolean = false,
@@ -271,5 +293,15 @@ data class ApkConfig(
     val splashClickToSkip: Boolean = true, // 是否允许点击跳过
     val splashVideoStartMs: Long = 0,      // 视频裁剪起始（毫秒）
     val splashVideoEndMs: Long = 5000,     // 视频裁剪结束（毫秒）
-    val splashLandscape: Boolean = false   // 是否横屏显示
+    val splashLandscape: Boolean = false,  // 是否横屏显示
+    val splashFillScreen: Boolean = true,  // 是否自动放大铺满屏幕
+    val splashEnableAudio: Boolean = false, // 是否启用视频音频
+    
+    // 媒体应用配置（图片/视频转APP）
+    val appType: String = "WEB",           // "WEB", "IMAGE", "VIDEO"
+    val mediaEnableAudio: Boolean = true,  // 视频是否启用音频
+    val mediaLoop: Boolean = true,         // 是否循环播放
+    val mediaAutoPlay: Boolean = true,     // 是否自动播放
+    val mediaFillScreen: Boolean = true,   // 是否铺满屏幕
+    val mediaLandscape: Boolean = false    // 是否横屏显示
 )

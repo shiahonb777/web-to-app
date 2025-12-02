@@ -70,14 +70,26 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:theme="@style/Theme.WebToApp.NoActionBar" />
+        
+        <!-- 媒体应用Activity（图片/视频展示App） -->
+        <activity
+            android:name=".ui.media.MediaAppActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.WebToApp.NoActionBar" />
 
         <!-- 启动画面中转Activity（用于本地应用快捷方式） -->
+        <!-- 使用透明主题，避免显示应用切换动画 -->
         <activity
             android:name=".ui.splash.SplashLauncherActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:hardwareAccelerated="true"
-            android:theme="@style/Theme.WebToApp.NoActionBar">
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.WebToApp.Transparent">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

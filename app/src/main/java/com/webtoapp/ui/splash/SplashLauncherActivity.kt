@@ -44,6 +44,16 @@ class SplashLauncherActivity : AppCompatActivity() {
         const val EXTRA_VIDEO_START_MS = "video_start_ms"
         const val EXTRA_VIDEO_END_MS = "video_end_ms"
         const val EXTRA_SPLASH_LANDSCAPE = "splash_landscape"
+        const val EXTRA_SPLASH_FILL_SCREEN = "splash_fill_screen"
+        const val EXTRA_SPLASH_ENABLE_AUDIO = "splash_enable_audio"
+        // 激活码配置
+        const val EXTRA_ACTIVATION_ENABLED = "activation_enabled"
+        const val EXTRA_ACTIVATION_CODES = "activation_codes"
+        // 公告配置
+        const val EXTRA_ANNOUNCEMENT_ENABLED = "announcement_enabled"
+        const val EXTRA_ANNOUNCEMENT_TITLE = "announcement_title"
+        const val EXTRA_ANNOUNCEMENT_CONTENT = "announcement_content"
+        const val EXTRA_ANNOUNCEMENT_LINK = "announcement_link"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +67,21 @@ class SplashLauncherActivity : AppCompatActivity() {
         val videoStartMs = intent.getLongExtra(EXTRA_VIDEO_START_MS, 0L)
         val videoEndMs = intent.getLongExtra(EXTRA_VIDEO_END_MS, 5000L)
         val isLandscape = intent.getBooleanExtra(EXTRA_SPLASH_LANDSCAPE, false)
+        val fillScreen = intent.getBooleanExtra(EXTRA_SPLASH_FILL_SCREEN, true)
+        val enableAudio = intent.getBooleanExtra(EXTRA_SPLASH_ENABLE_AUDIO, false)
+        // 激活码配置（从逗号分隔的字符串解析）
+        val activationEnabled = intent.getBooleanExtra(EXTRA_ACTIVATION_ENABLED, false)
+        val activationCodesStr = intent.getStringExtra(EXTRA_ACTIVATION_CODES) ?: ""
+        val activationCodes = if (activationCodesStr.isNotBlank()) {
+            activationCodesStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        } else {
+            emptyList()
+        }
+        // 公告配置
+        val announcementEnabled = intent.getBooleanExtra(EXTRA_ANNOUNCEMENT_ENABLED, false)
+        val announcementTitle = intent.getStringExtra(EXTRA_ANNOUNCEMENT_TITLE) ?: ""
+        val announcementContent = intent.getStringExtra(EXTRA_ANNOUNCEMENT_CONTENT) ?: ""
+        val announcementLink = intent.getStringExtra(EXTRA_ANNOUNCEMENT_LINK)
 
         // 验证参数
         if (targetPackage.isNullOrBlank()) {
@@ -83,6 +108,14 @@ class SplashLauncherActivity : AppCompatActivity() {
                     clickToSkip = clickToSkip,
                     videoStartMs = videoStartMs,
                     videoEndMs = videoEndMs,
+                    fillScreen = fillScreen,
+                    enableAudio = enableAudio,
+                    activationEnabled = activationEnabled,
+                    activationCodes = activationCodes,
+                    announcementEnabled = announcementEnabled,
+                    announcementTitle = announcementTitle,
+                    announcementContent = announcementContent,
+                    announcementLink = announcementLink,
                     onLaunchTarget = { launchTargetApp(targetPackage) }
                 )
             }
@@ -93,13 +126,14 @@ class SplashLauncherActivity : AppCompatActivity() {
         try {
             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
             if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(launchIntent)
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        finish()
+        // 使用 finishAndRemoveTask 彻底移除当前任务
+        // 这样在最近应用中不会留下 SplashLauncherActivity 的任务
+        finishAndRemoveTask()
     }
 }
 
@@ -116,36 +150,67 @@ fun SplashLauncherScreen(
     clickToSkip: Boolean,
     videoStartMs: Long,
     videoEndMs: Long,
+    fillScreen: Boolean,
+    enableAudio: Boolean = false,
+    activationEnabled: Boolean = false,
+    activationCodes: List<String> = emptyList(),
+    announcementEnabled: Boolean = false,
+    announcementTitle: String = "",
+    announcementContent: String = "",
+    announcementLink: String? = null,
     onLaunchTarget: () -> Unit
 ) {
-    // 如果没有有效的启动画面，直接启动目标应用
-    LaunchedEffect(hasValidSplash) {
-        if (!hasValidSplash) {
+    val context = LocalContext.current
+    
+    // 激活状态
+    var isActivated by remember { mutableStateOf(!activationEnabled) }
+    var showActivationDialog by remember { mutableStateOf(activationEnabled) }
+    
+    // 公告状态
+    var showAnnouncementDialog by remember { mutableStateOf(false) }
+    
+    // 启动画面状态
+    var showSplash by remember { mutableStateOf(false) }
+    var countdown by remember { mutableIntStateOf(
+        if (splashType == "VIDEO") ((videoEndMs - videoStartMs) / 1000).toInt() else splashDuration
+    ) }
+    
+    // 激活成功后检查公告和启动画面
+    LaunchedEffect(isActivated) {
+        if (isActivated) {
+            // 检查公告
+            if (announcementEnabled && announcementTitle.isNotEmpty()) {
+                showAnnouncementDialog = true
+            } else {
+                // 检查启动画面
+                if (hasValidSplash && splashPath != null) {
+                    showSplash = true
+                } else {
+                    onLaunchTarget()
+                }
+            }
+        }
+    }
+    
+    // 公告关闭后显示启动画面
+    fun onAnnouncementDismiss() {
+        showAnnouncementDialog = false
+        if (hasValidSplash && splashPath != null) {
+            showSplash = true
+        } else {
+            onLaunchTarget()
+        }
+    }
+    
+    // 如果不需要激活也不需要公告也不需要启动画面，直接启动目标应用
+    LaunchedEffect(Unit) {
+        if (!activationEnabled && !announcementEnabled && !hasValidSplash) {
             onLaunchTarget()
         }
     }
 
-    if (!hasValidSplash || splashPath == null) {
-        // 显示加载中
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = Color.White)
-        }
-        return
-    }
-
-    // 倒计时状态
-    var countdown by remember { mutableIntStateOf(
-        if (splashType == "VIDEO") ((videoEndMs - videoStartMs) / 1000).toInt() else splashDuration
-    ) }
-    var showSplash by remember { mutableStateOf(true) }
-
     // 倒计时逻辑（仅对图片）
-    if (splashType == "IMAGE") {
+    if (showSplash && splashType == "IMAGE") {
         LaunchedEffect(countdown) {
             if (countdown > 0) {
                 delay(1000L)
@@ -156,26 +221,171 @@ fun SplashLauncherScreen(
             }
         }
     }
-
-    // 启动画面 UI
-    AnimatedVisibility(
-        visible = showSplash,
-        enter = fadeIn(animationSpec = tween(200)),
-        exit = fadeOut(animationSpec = tween(200))
+    
+    // 主UI
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
     ) {
-        SplashContent(
-            splashType = splashType,
-            splashPath = splashPath,
-            countdown = countdown,
-            clickToSkip = clickToSkip,
-            videoStartMs = videoStartMs,
-            videoEndMs = videoEndMs,
-            onSkip = {
-                showSplash = false
-                onLaunchTarget()
+        // 未激活状态显示激活界面
+        if (!isActivated) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "应用需要激活",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = { showActivationDialog = true }) {
+                    Text("输入激活码")
+                }
+            }
+        }
+
+        // 启动画面
+        AnimatedVisibility(
+            visible = showSplash && splashPath != null,
+            enter = fadeIn(animationSpec = tween(200)),
+            exit = fadeOut(animationSpec = tween(200))
+        ) {
+            SplashContent(
+                splashType = splashType,
+                splashPath = splashPath!!,
+                countdown = countdown,
+                clickToSkip = clickToSkip,
+                videoStartMs = videoStartMs,
+                videoEndMs = videoEndMs,
+                fillScreen = fillScreen,
+                enableAudio = enableAudio,
+                onSkip = {
+                    showSplash = false
+                    onLaunchTarget()
+                }
+            )
+        }
+        
+        // 加载指示器（非激活非启动画面状态）
+        if (!showActivationDialog && !showAnnouncementDialog && !showSplash && isActivated) {
+            CircularProgressIndicator(color = Color.White)
+        }
+    }
+    
+    // 激活码对话框
+    if (showActivationDialog) {
+        ActivationDialog(
+            onDismiss = { showActivationDialog = false },
+            onActivate = { code ->
+                if (activationCodes.contains(code)) {
+                    isActivated = true
+                    showActivationDialog = false
+                }
             }
         )
     }
+    
+    // 公告对话框
+    if (showAnnouncementDialog) {
+        AnnouncementDialog(
+            title = announcementTitle,
+            content = announcementContent,
+            linkUrl = announcementLink,
+            onDismiss = { onAnnouncementDismiss() },
+            onLinkClick = { url ->
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                context.startActivity(intent)
+            }
+        )
+    }
+}
+
+/**
+ * 激活码对话框
+ */
+@Composable
+fun ActivationDialog(
+    onDismiss: () -> Unit,
+    onActivate: (String) -> Unit
+) {
+    var code by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("激活应用") },
+        text = {
+            Column {
+                Text("请输入激活码以继续使用")
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = {
+                        code = it
+                        error = null
+                    },
+                    label = { Text("激活码") },
+                    singleLine = true,
+                    isError = error != null,
+                    supportingText = error?.let { { Text(it) } }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (code.isBlank()) {
+                        error = "请输入激活码"
+                    } else {
+                        onActivate(code)
+                    }
+                }
+            ) {
+                Text("激活")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
+}
+
+/**
+ * 公告对话框
+ */
+@Composable
+fun AnnouncementDialog(
+    title: String,
+    content: String,
+    linkUrl: String?,
+    onDismiss: () -> Unit,
+    onLinkClick: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                Text(content)
+                if (!linkUrl.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextButton(onClick = { onLinkClick(linkUrl) }) {
+                        Text("查看详情")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("我知道了")
+            }
+        }
+    )
 }
 
 /**
@@ -189,10 +399,16 @@ fun SplashContent(
     clickToSkip: Boolean,
     videoStartMs: Long,
     videoEndMs: Long,
+    fillScreen: Boolean,
+    enableAudio: Boolean = false,
     onSkip: () -> Unit
 ) {
     val context = LocalContext.current
     val videoDurationMs = videoEndMs - videoStartMs
+    val contentScaleMode = if (fillScreen) ContentScale.Crop else ContentScale.Fit
+    
+    // 视频剩余时间（用于动态倒计时显示）
+    var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
     Box(
         modifier = Modifier
@@ -207,7 +423,8 @@ fun SplashContent(
                 } else {
                     Modifier
                 }
-            )
+            ),
+        contentAlignment = Alignment.Center
     ) {
         when (splashType) {
             "IMAGE" -> {
@@ -220,22 +437,34 @@ fun SplashContent(
                     ),
                     contentDescription = "启动画面",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = contentScaleMode
                 )
             }
             "VIDEO" -> {
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+                var isPlayerReady by remember { mutableStateOf(false) }
                 
                 // 监控播放进度
-                LaunchedEffect(mediaPlayer) {
+                // 仅在播放器准备就绪后开始监控
+                LaunchedEffect(isPlayerReady) {
+                    if (!isPlayerReady) return@LaunchedEffect
                     mediaPlayer?.let { mp ->
+                        // 等待播放器真正开始播放
+                        while (!mp.isPlaying) {
+                            delay(50)
+                            if (mediaPlayer == null) return@LaunchedEffect
+                        }
+                        // 监控播放进度并更新剩余时间
                         while (mp.isPlaying) {
-                            if (mp.currentPosition >= videoEndMs) {
+                            val currentPos = mp.currentPosition
+                            // 更新剩余时间用于倒计时显示
+                            videoRemainingMs = (videoEndMs - currentPos).coerceAtLeast(0L)
+                            if (currentPos >= videoEndMs) {
                                 mp.pause()
                                 onSkip()
                                 break
                             }
-                            delay(100)
+                            delay(100) // 100ms 更新一次倒计时显示
                         }
                     }
                 }
@@ -249,11 +478,14 @@ fun SplashContent(
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(splashPath)
                                             setSurface(holder.surface)
-                                            setVolume(0f, 0f)
+                                            // 根据配置决定是否启用音频
+                                            val volume = if (enableAudio) 1f else 0f
+                                            setVolume(volume, volume)
                                             isLooping = false
                                             setOnPreparedListener {
                                                 seekTo(videoStartMs.toInt())
                                                 start()
+                                                isPlayerReady = true
                                             }
                                             setOnCompletionListener { onSkip() }
                                             prepareAsync()
@@ -295,7 +527,8 @@ fun SplashContent(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val displayTime = if (splashType == "VIDEO") (videoDurationMs / 1000).toInt() else countdown
+                // 视频使用动态剩余时间，图片使用传入的 countdown
+                val displayTime = if (splashType == "VIDEO") ((videoRemainingMs + 999) / 1000).toInt() else countdown
                 if (displayTime > 0) {
                     Text(
                         text = "${displayTime}s",
