@@ -36,6 +36,40 @@ fun VideoTrimmer(
     val context = LocalContext.current
     val maxTrimDuration = 5000L // 最大裁剪时长 5 秒
     
+    // 检查视频文件是否存在
+    val videoExists = remember(videoPath) {
+        when {
+            videoPath.startsWith("/") -> File(videoPath).exists()
+            videoPath.startsWith("content://") -> {
+                try {
+                    context.contentResolver.openInputStream(Uri.parse(videoPath))?.close()
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            else -> false
+        }
+    }
+    
+    // 如果文件不存在，显示提示
+    if (!videoExists) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "视频文件不存在",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+    
     // 获取视频总时长
     var totalDuration by remember { mutableLongStateOf(videoDurationMs) }
     var isPlaying by remember { mutableStateOf(false) }

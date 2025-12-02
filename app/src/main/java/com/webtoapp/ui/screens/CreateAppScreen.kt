@@ -837,6 +837,26 @@ fun FullscreenModeCard(
 }
 
 /**
+ * 检查媒体文件是否存在
+ */
+fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, savedPath: String?): Boolean {
+    // 优先检查保存的路径
+    if (!savedPath.isNullOrEmpty()) {
+        return java.io.File(savedPath).exists()
+    }
+    // 检查 URI
+    if (uri != null) {
+        return try {
+            context.contentResolver.openInputStream(uri)?.close()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    return false
+}
+
+/**
  * 启动画面设置卡片
  */
 @Composable
@@ -851,6 +871,18 @@ fun SplashScreenCard(
     onClearMedia: () -> Unit
 ) {
     val context = LocalContext.current
+    
+    // 检查媒体文件是否存在
+    val mediaExists = remember(editState.splashMediaUri, editState.savedSplashPath) {
+        checkMediaExists(context, editState.splashMediaUri, editState.savedSplashPath)
+    }
+    
+    // 如果媒体不存在但 URI 非空，自动清除
+    LaunchedEffect(mediaExists, editState.splashMediaUri) {
+        if (!mediaExists && editState.splashMediaUri != null) {
+            onClearMedia()
+        }
+    }
     
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -889,7 +921,7 @@ fun SplashScreenCard(
                 )
 
                 // 媒体预览区域
-                if (editState.splashMediaUri != null) {
+                if (editState.splashMediaUri != null && mediaExists) {
                     if (editState.splashConfig.type == SplashType.VIDEO) {
                         // 视频裁剪器
                         Column {
