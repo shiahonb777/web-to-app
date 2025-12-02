@@ -47,7 +47,8 @@ data class AppModifyConfig(
     val splashDuration: Int = 3,           // 图片显示时长（秒）
     val splashClickToSkip: Boolean = true, // 是否允许点击跳过
     val splashVideoStartMs: Long = 0,      // 视频裁剪起始（毫秒）
-    val splashVideoEndMs: Long = 5000      // 视频裁剪结束（毫秒）
+    val splashVideoEndMs: Long = 5000,     // 视频裁剪结束（毫秒）
+    val splashLandscape: Boolean = false   // 是否横屏显示
 )
 
 /**

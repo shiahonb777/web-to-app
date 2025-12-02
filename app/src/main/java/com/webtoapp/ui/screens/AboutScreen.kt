@@ -289,7 +289,7 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         ChangeLogTreeItem(Icons.Outlined.Star, "启动画面：支持图片/视频启动动画")
-                        ChangeLogTreeItem(Icons.Outlined.Build, "视频裁剪器：可视化选择视频片段（最长5秒）")
+                        ChangeLogTreeItem(Icons.Outlined.Build, "视频裁剪器：可视化选择视频片段（时长不限）")
                         ChangeLogTreeItem(Icons.Outlined.Android, "集成到网页转App、快捷方式等三大功能")
                         ChangeLogTreeItem(Icons.Outlined.Code, "支持点击跳过、自定义显示时长")
                         

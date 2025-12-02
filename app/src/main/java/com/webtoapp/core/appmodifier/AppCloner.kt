@@ -102,6 +102,7 @@ class AppCloner(private val context: Context) {
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_CLICK_SKIP, config.splashClickToSkip)
                     putExtra(SplashLauncherActivity.EXTRA_VIDEO_START_MS, config.splashVideoStartMs)
                     putExtra(SplashLauncherActivity.EXTRA_VIDEO_END_MS, config.splashVideoEndMs)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_LANDSCAPE, config.splashLandscape)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }

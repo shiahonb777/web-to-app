@@ -1,6 +1,7 @@
 package com.webtoapp.ui.splash
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -42,6 +43,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         const val EXTRA_SPLASH_CLICK_SKIP = "splash_click_skip"
         const val EXTRA_VIDEO_START_MS = "video_start_ms"
         const val EXTRA_VIDEO_END_MS = "video_end_ms"
+        const val EXTRA_SPLASH_LANDSCAPE = "splash_landscape"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +56,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         val clickToSkip = intent.getBooleanExtra(EXTRA_SPLASH_CLICK_SKIP, true)
         val videoStartMs = intent.getLongExtra(EXTRA_VIDEO_START_MS, 0L)
         val videoEndMs = intent.getLongExtra(EXTRA_VIDEO_END_MS, 5000L)
+        val isLandscape = intent.getBooleanExtra(EXTRA_SPLASH_LANDSCAPE, false)
 
         // 验证参数
         if (targetPackage.isNullOrBlank()) {
@@ -63,6 +66,11 @@ class SplashLauncherActivity : AppCompatActivity() {
 
         // 验证启动画面媒体是否存在
         val hasValidSplash = splashPath != null && File(splashPath).exists()
+        
+        // 处理横屏显示
+        if (hasValidSplash && isLandscape) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
 
         setContent {
             WebToAppTheme {

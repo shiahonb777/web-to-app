@@ -3,7 +3,6 @@ package com.webtoapp.util
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
@@ -15,7 +14,6 @@ import java.util.UUID
 object SplashStorage {
 
     private const val SPLASH_DIR = "splash_media"
-    private const val MAX_VIDEO_DURATION_MS = 5000L // 最大视频时长 5 秒
     private const val MAX_IMAGE_SIZE = 1920 // 最大图片尺寸
 
     /**
@@ -46,31 +44,20 @@ object SplashStorage {
      * 保存视频文件
      */
     private fun saveVideoFromUri(context: Context, uri: Uri, splashDir: File): String? {
-        // 检查视频时长
-        val retriever = MediaMetadataRetriever()
+        // 复制视频文件
+        val fileName = "splash_${UUID.randomUUID()}.mp4"
+        val videoFile = File(splashDir, fileName)
+
         return try {
-            retriever.setDataSource(context, uri)
-            val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            val duration = durationStr?.toLongOrNull() ?: 0L
-
-            if (duration > MAX_VIDEO_DURATION_MS) {
-                // 视频超过 5 秒，返回 null
-                return null
-            }
-
-            // 复制视频文件
-            val fileName = "splash_${UUID.randomUUID()}.mp4"
-            val videoFile = File(splashDir, fileName)
-
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(videoFile).use { output ->
                     input.copyTo(output)
                 }
             }
-
             videoFile.absolutePath
-        } finally {
-            retriever.release()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 

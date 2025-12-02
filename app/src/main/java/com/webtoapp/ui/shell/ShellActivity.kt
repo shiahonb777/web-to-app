@@ -2,6 +2,7 @@ package com.webtoapp.ui.shell
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -158,6 +159,7 @@ fun ShellScreen(
     onHideCustomView: () -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as android.app.Activity
     val activation = WebToAppApplication.activation
     val announcement = WebToAppApplication.announcement
     val adBlocker = WebToAppApplication.adBlock
@@ -177,6 +179,7 @@ fun ShellScreen(
     // 启动画面状态
     var showSplash by remember { mutableStateOf(false) }
     var splashCountdown by remember { mutableIntStateOf(0) }
+    var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -220,6 +223,12 @@ fun ShellScreen(
             if (splashExists) {
                 showSplash = true
                 splashCountdown = config.splashDuration
+                
+                // 处理横屏显示
+                if (config.splashLandscape) {
+                    originalOrientation = activity.requestedOrientation
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
             }
         }
     }
@@ -231,6 +240,11 @@ fun ShellScreen(
             splashCountdown--
         } else if (showSplash && splashCountdown <= 0) {
             showSplash = false
+            // 恢复原始方向
+            if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                activity.requestedOrientation = originalOrientation
+                originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
         }
     }
 
@@ -518,7 +532,14 @@ fun ShellScreen(
             videoStartMs = config.splashVideoStartMs,
             videoEndMs = config.splashVideoEndMs,
             onSkip = if (config.splashClickToSkip) {
-                { showSplash = false }
+                { 
+                    showSplash = false
+                    // 恢复原始方向
+                    if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                        activity.requestedOrientation = originalOrientation
+                        originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    }
+                }
             } else null
         )
     }

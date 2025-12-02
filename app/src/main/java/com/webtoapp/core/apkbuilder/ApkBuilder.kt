@@ -634,7 +634,8 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         splashDuration = splashConfig?.duration ?: 3,
         splashClickToSkip = splashConfig?.clickToSkip ?: true,
         splashVideoStartMs = splashConfig?.videoStartMs ?: 0L,
-        splashVideoEndMs = splashConfig?.videoEndMs ?: 5000L
+        splashVideoEndMs = splashConfig?.videoEndMs ?: 5000L,
+        splashLandscape = splashConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE
     )
 }
 

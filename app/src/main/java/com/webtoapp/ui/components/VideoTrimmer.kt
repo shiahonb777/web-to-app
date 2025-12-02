@@ -1,27 +1,30 @@
 package com.webtoapp.ui.components
 
+import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
  * 视频裁剪组件
- * 允许用户选择视频的一个片段（最长5秒）
+ * 使用缩略图预览，避免 VideoView 黑框问题
+ * 时长不限制
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +37,6 @@ fun VideoTrimmer(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val maxTrimDuration = 5000L // 最大裁剪时长 5 秒
     
     // 检查视频文件是否存在
     val videoExists = remember(videoPath) {
@@ -57,7 +59,7 @@ fun VideoTrimmer(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(160.dp)
+                .height(120.dp)
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
@@ -70,28 +72,74 @@ fun VideoTrimmer(
         return
     }
     
-    // 获取视频总时长
+    // 获取视频信息和缩略图
     var totalDuration by remember { mutableLongStateOf(videoDurationMs) }
-    var isPlaying by remember { mutableStateOf(false) }
-    var currentPosition by remember { mutableLongStateOf(startMs) }
+    var thumbnail by remember { mutableStateOf<Bitmap?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var currentPreviewMs by remember { mutableLongStateOf(startMs) }
     
-    // 初始化获取视频时长
+    // MediaMetadataRetriever 实例（用于实时预览）
+    val retriever = remember { MediaMetadataRetriever() }
+    var retrieverReady by remember { mutableStateOf(false) }
+    
+    // 初始化 retriever 和加载视频信息
     LaunchedEffect(videoPath) {
-        if (totalDuration == 0L) {
+        isLoading = true
+        withContext(Dispatchers.IO) {
             try {
-                val retriever = MediaMetadataRetriever()
                 when {
                     videoPath.startsWith("/") -> retriever.setDataSource(videoPath)
                     videoPath.startsWith("content://") -> retriever.setDataSource(context, Uri.parse(videoPath))
                     else -> retriever.setDataSource(videoPath)
                 }
-                val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                totalDuration = durationStr?.toLongOrNull() ?: 0L
-                retriever.release()
+                retrieverReady = true
                 
-                // 初始化裁剪范围
-                val initialEnd = minOf(maxTrimDuration, totalDuration)
-                onTrimChange(0L, initialEnd, totalDuration)
+                // 获取时长
+                val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                val duration = durationStr?.toLongOrNull() ?: 0L
+                
+                // 获取初始缩略图
+                val frame = retriever.getFrameAtTime(startMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                
+                totalDuration = duration
+                thumbnail = frame
+                currentPreviewMs = startMs
+                
+                // 初始化裁剪范围（使用整个视频）
+                if (videoDurationMs == 0L && duration > 0) {
+                    onTrimChange(0L, duration, duration)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        isLoading = false
+    }
+    
+    // 当起始位置变化时更新预览帧
+    LaunchedEffect(currentPreviewMs) {
+        if (retrieverReady && currentPreviewMs >= 0) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val frame = retriever.getFrameAtTime(
+                        currentPreviewMs * 1000, 
+                        MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                    )
+                    if (frame != null) {
+                        thumbnail = frame
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+    
+    // 清理 retriever
+    DisposableEffect(Unit) {
+        onDispose {
+            try {
+                retriever.release()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -106,50 +154,45 @@ fun VideoTrimmer(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // 视频预览区域
+        // 视频缩略图预览区域
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp)
+                .height(120.dp)
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color.Black),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            // 简化的视频预览（使用 VideoView）
-            AndroidView(
-                factory = { ctx ->
-                    android.widget.VideoView(ctx).apply {
-                        when {
-                            videoPath.startsWith("/") -> setVideoPath(videoPath)
-                            else -> setVideoURI(Uri.parse(videoPath))
-                        }
-                        setOnPreparedListener { mp ->
-                            mp.isLooping = true
-                            mp.setVolume(0f, 0f)
-                            seekTo(startMs.toInt())
-                        }
-                    }
-                },
-                update = { videoView ->
-                    if (isPlaying) {
-                        videoView.start()
-                    } else {
-                        videoView.pause()
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-            
-            // 播放/暂停按钮
-            FloatingActionButton(
-                onClick = { isPlaying = !isPlaying },
-                modifier = Modifier.size(48.dp),
-                containerColor = Color.White.copy(alpha = 0.8f)
-            ) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp))
+            } else if (thumbnail != null) {
+                Image(
+                    bitmap = thumbnail!!.asImageBitmap(),
+                    contentDescription = "视频预览",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                // 视频图标指示
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(40.dp),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                ) {
+                    Icon(
+                        Icons.Default.Videocam,
+                        contentDescription = null,
+                        modifier = Modifier.padding(8.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else {
                 Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "暂停" else "播放",
-                    tint = Color.Black
+                    Icons.Default.Videocam,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -162,10 +205,7 @@ fun VideoTrimmer(
             Text(
                 text = "已选择: %.1f 秒".format(selectedSeconds),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (selectedDuration > maxTrimDuration) 
-                    MaterialTheme.colorScheme.error 
-                else 
-                    MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = "总时长: %.1f 秒".format(totalDuration / 1000f),
@@ -178,7 +218,7 @@ fun VideoTrimmer(
         if (totalDuration > 0) {
             Column {
                 Text(
-                    text = "裁剪范围（拖动选择 1-5 秒片段）",
+                    text = "裁剪范围（拖动选择播放片段）",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -189,25 +229,16 @@ fun VideoTrimmer(
                 RangeSlider(
                     value = startMs.toFloat()..endMs.toFloat(),
                     onValueChange = { range ->
-                        var newStart = range.start.toLong()
+                        val newStart = range.start.toLong()
                         var newEnd = range.endInclusive.toLong()
-                        
-                        // 限制最大时长为 5 秒
-                        if (newEnd - newStart > maxTrimDuration) {
-                            // 根据哪个端点在移动来调整
-                            if (newStart != startMs) {
-                                // 起始点在移动，调整结束点
-                                newEnd = minOf(newStart + maxTrimDuration, totalDuration)
-                            } else {
-                                // 结束点在移动，调整起始点
-                                newStart = maxOf(0, newEnd - maxTrimDuration)
-                            }
-                        }
                         
                         // 确保至少有 1 秒
                         if (newEnd - newStart < 1000) {
                             newEnd = minOf(newStart + 1000, totalDuration)
                         }
+                        
+                        // 更新预览帧位置（优先显示起始位置）
+                        currentPreviewMs = newStart
                         
                         onTrimChange(newStart, newEnd, totalDuration)
                     },
@@ -232,15 +263,6 @@ fun VideoTrimmer(
                     )
                 }
             }
-        }
-        
-        // 提示信息
-        if (selectedDuration > maxTrimDuration) {
-            Text(
-                text = "⚠️ 裁剪片段不能超过 5 秒",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
-            )
         }
     }
 }

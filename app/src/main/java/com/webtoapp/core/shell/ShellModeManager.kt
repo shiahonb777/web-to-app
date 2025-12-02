@@ -123,7 +123,10 @@ data class ShellConfig(
     val splashVideoStartMs: Long = 0,
 
     @SerializedName("splashVideoEndMs")
-    val splashVideoEndMs: Long = 5000
+    val splashVideoEndMs: Long = 5000,
+    
+    @SerializedName("splashLandscape")
+    val splashLandscape: Boolean = false
 )
 
 /**

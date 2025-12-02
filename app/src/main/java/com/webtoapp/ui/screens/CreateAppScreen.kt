@@ -182,6 +182,11 @@ fun CreateAppScreen(
                         copy(splashConfig = splashConfig.copy(clickToSkip = it))
                     }
                 },
+                onOrientationChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(orientation = it))
+                    }
+                },
                 onVideoTrimChange = { startMs, endMs, totalDurationMs ->
                     viewModel.updateEditState {
                         copy(splashConfig = splashConfig.copy(
@@ -867,6 +872,7 @@ fun SplashScreenCard(
     onSelectVideo: () -> Unit,
     onDurationChange: (Int) -> Unit,
     onClickToSkipChange: (Boolean) -> Unit,
+    onOrientationChange: (SplashOrientation) -> Unit,
     onVideoTrimChange: (startMs: Long, endMs: Long, totalDurationMs: Long) -> Unit,
     onClearMedia: () -> Unit
 ) {
@@ -915,7 +921,7 @@ fun SplashScreenCard(
 
             if (editState.splashEnabled) {
                 Text(
-                    text = "设置应用启动时显示的图片或视频（视频限5秒内）",
+                    text = "设置应用启动时显示的图片或视频",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1047,41 +1053,69 @@ fun SplashScreenCard(
                     }
                 }
 
-                // 显示时长设置（仅图片显示，视频使用裁剪范围）
-                if (editState.splashConfig.type == SplashType.IMAGE || editState.splashMediaUri == null) {
-                    Column {
-                        Text(
-                            text = "显示时长：${editState.splashConfig.duration} 秒",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Slider(
-                            value = editState.splashConfig.duration.toFloat(),
-                            onValueChange = { onDurationChange(it.toInt()) },
-                            valueRange = 1f..5f,
-                            steps = 3,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                // 以下设置仅在上传媒体后显示
+                if (editState.splashMediaUri != null && mediaExists) {
+                    // 显示时长设置（仅图片显示，视频使用裁剪范围）
+                    if (editState.splashConfig.type == SplashType.IMAGE) {
+                        Column {
+                            Text(
+                                text = "显示时长：${editState.splashConfig.duration} 秒",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Slider(
+                                value = editState.splashConfig.duration.toFloat(),
+                                onValueChange = { onDurationChange(it.toInt()) },
+                                valueRange = 1f..5f,
+                                steps = 3,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
-                }
 
-                // 点击跳过设置
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("允许点击跳过", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "用户可点击屏幕跳过启动画面",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // 点击跳过设置
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("允许点击跳过", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "用户可点击屏幕跳过启动画面",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = editState.splashConfig.clickToSkip,
+                            onCheckedChange = onClickToSkipChange
                         )
                     }
-                    Switch(
-                        checked = editState.splashConfig.clickToSkip,
-                        onCheckedChange = onClickToSkipChange
-                    )
+                    
+                    // 显示方向设置
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("横屏显示", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "启动画面以横屏方式展示",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = editState.splashConfig.orientation == SplashOrientation.LANDSCAPE,
+                            onCheckedChange = { isLandscape ->
+                                onOrientationChange(
+                                    if (isLandscape) SplashOrientation.LANDSCAPE 
+                                    else SplashOrientation.PORTRAIT
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }

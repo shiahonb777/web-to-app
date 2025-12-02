@@ -102,10 +102,11 @@ data class SplashConfig(
     val mediaPath: String? = null,             // 媒体文件路径
     val duration: Int = 3,                     // 图片显示时长（秒，1-5秒）
     val clickToSkip: Boolean = true,           // 是否允许点击跳过
+    val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // 显示方向
     
     // 视频裁剪配置
     val videoStartMs: Long = 0,                // 视频裁剪起始时间（毫秒）
-    val videoEndMs: Long = 5000,               // 视频裁剪结束时间（毫秒，最大5秒）
+    val videoEndMs: Long = 5000,               // 视频裁剪结束时间（毫秒）
     val videoDurationMs: Long = 0              // 原视频总时长（毫秒）
 )
 
@@ -114,5 +115,13 @@ data class SplashConfig(
  */
 enum class SplashType {
     IMAGE,  // 图片
-    VIDEO   // 视频（裁剪后5秒以内）
+    VIDEO   // 视频
+}
+
+/**
+ * 启动画面显示方向
+ */
+enum class SplashOrientation {
+    PORTRAIT,   // 竖屏
+    LANDSCAPE   // 横屏
 }

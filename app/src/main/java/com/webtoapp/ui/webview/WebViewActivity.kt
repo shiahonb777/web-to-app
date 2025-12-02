@@ -42,8 +42,10 @@ import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.core.webview.WebViewManager
 import com.webtoapp.data.model.SplashConfig
+import com.webtoapp.data.model.SplashOrientation
 import com.webtoapp.data.model.SplashType
 import com.webtoapp.data.model.WebApp
+import android.content.pm.ActivityInfo
 import com.webtoapp.ui.theme.WebToAppTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -169,6 +171,7 @@ fun WebViewScreen(
     onHideCustomView: () -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as android.app.Activity
     val repository = WebToAppApplication.repository
     val activation = WebToAppApplication.activation
     val announcement = WebToAppApplication.announcement
@@ -191,6 +194,7 @@ fun WebViewScreen(
     // 启动画面状态
     var showSplash by remember { mutableStateOf(false) }
     var splashCountdown by remember { mutableIntStateOf(0) }
+    var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -227,6 +231,12 @@ fun WebViewScreen(
                     if (mediaPath != null && File(mediaPath).exists()) {
                         showSplash = true
                         splashCountdown = app.splashConfig.duration
+                        
+                        // 处理横屏显示
+                        if (app.splashConfig.orientation == SplashOrientation.LANDSCAPE) {
+                            originalOrientation = activity.requestedOrientation
+                            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        }
                     }
                 }
             }
@@ -240,6 +250,11 @@ fun WebViewScreen(
             splashCountdown--
         } else if (showSplash && splashCountdown <= 0) {
             showSplash = false
+            // 恢复原始方向
+            if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                activity.requestedOrientation = originalOrientation
+                originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
         }
     }
 
@@ -521,7 +536,14 @@ fun WebViewScreen(
                 splashConfig = splashConfig,
                 countdown = splashCountdown,
                 onSkip = if (splashConfig.clickToSkip) {
-                    { showSplash = false }
+                    { 
+                        showSplash = false
+                        // 恢复原始方向
+                        if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                            activity.requestedOrientation = originalOrientation
+                            originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        }
+                    }
                 } else null
             )
         }
