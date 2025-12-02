@@ -140,7 +140,7 @@ fun AboutScreen(
                         )
                         
                         Text(
-                            text = "v1.2.2",
+                            text = "v1.2.3",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier
                                 .background(accentColor, RoundedCornerShape(4.dp))
@@ -279,6 +279,20 @@ fun AboutScreen(
                         }
                         
                         Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // v1.2.3 Bug修复
+                        Text(
+                            "v1.2.3 🐛 Bug 修复",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF5722)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复构建 APK 图标被放大裁剪的问题")
+                        ChangeLogTreeItem(Icons.Outlined.Palette, "遵循 Android Adaptive Icon 规范处理图标")
+                        ChangeLogTreeItem(Icons.Outlined.Star, "提升图标清晰度（使用 xxxhdpi 分辨率）")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
                         
                         // v1.2.2 Bug修复
                         Text(

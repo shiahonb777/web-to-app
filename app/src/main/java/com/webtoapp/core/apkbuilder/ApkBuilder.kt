@@ -314,6 +314,9 @@ class ApkBuilder(private val context: Context) {
      * 为 adaptive icon 的前景创建 PNG 版本
      * 在 res/drawable 目录下写入 ic_launcher_foreground.png，
      * 并配合 ArscEditor.modifyIconPathsToPng 将路径从 .xml 切换到 .png
+     * 
+     * 注意：遵循 Android Adaptive Icon 规范，图标会被放置在安全区域（中间 72dp），
+     * 周围保留 18dp 边距，避免被形状遮罩裁剪导致图标看起来被放大
      */
     private fun addAdaptiveIconPngs(
         zipOut: ZipOutputStream,
@@ -326,7 +329,9 @@ class ApkBuilder(private val context: Context) {
             "res/drawable-anydpi-v24/ic_launcher_foreground"
         )
 
-        val iconBytes = template.scaleBitmapToPng(bitmap, 108)
+        // 使用 xxxhdpi 尺寸（432px）确保高清晰度，系统会自动缩放到其他 dpi
+        // 108dp * 4 (xxxhdpi) = 432px
+        val iconBytes = template.createAdaptiveForegroundIcon(bitmap, 432)
 
         bases.forEach { base ->
             val pngPath = "${base}.png"
@@ -444,10 +449,19 @@ class ApkBuilder(private val context: Context) {
             }
         }
         
-        val iconBytes = if (entryName.contains("round")) {
-            template.createRoundIcon(bitmap, size)
-        } else {
-            template.scaleBitmapToPng(bitmap, size)
+        val iconBytes = when {
+            // 圆形图标
+            entryName.contains("round") -> {
+                template.createRoundIcon(bitmap, size)
+            }
+            // adaptive icon 前景图需要预留 safe zone 边距
+            entryName.contains("foreground") -> {
+                template.createAdaptiveForegroundIcon(bitmap, size)
+            }
+            // 普通图标
+            else -> {
+                template.scaleBitmapToPng(bitmap, size)
+            }
         }
         
         writeEntryDeflated(zipOut, entryName, iconBytes)

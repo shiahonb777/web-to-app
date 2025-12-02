@@ -158,6 +158,42 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
+     * 创建 Adaptive Icon 前景图
+     * 遵循 Android Adaptive Icon 规范：
+     * - 前景层总尺寸 108dp
+     * - 安全区域（完整显示）为中间 72dp（66.67%）
+     * - 外围 18dp 作为 safe zone 边距
+     *
+     * @param bitmap 用户上传的图标
+     * @param size 输出尺寸（像素）
+     * @return PNG 格式字节数组
+     */
+    fun createAdaptiveForegroundIcon(bitmap: Bitmap, size: Int): ByteArray {
+        // 创建透明画布
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(output)
+        
+        // 计算安全区域尺寸（72/108 ≈ 66.67%）
+        val safeZoneSize = (size * 72f / 108f).toInt()
+        val padding = (size - safeZoneSize) / 2
+        
+        // 将用户图标缩放到安全区域尺寸
+        val scaled = Bitmap.createScaledBitmap(bitmap, safeZoneSize, safeZoneSize, true)
+        
+        // 居中绘制到画布
+        canvas.drawBitmap(scaled, padding.toFloat(), padding.toFloat(), null)
+        
+        // 转换为 PNG
+        val baos = ByteArrayOutputStream()
+        output.compress(Bitmap.CompressFormat.PNG, 100, baos)
+        
+        if (scaled != bitmap) scaled.recycle()
+        output.recycle()
+        
+        return baos.toByteArray()
+    }
+
+    /**
      * 创建圆形图标
      */
     fun createRoundIcon(bitmap: Bitmap, size: Int): ByteArray {

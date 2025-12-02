@@ -550,13 +550,60 @@ class AppCloner(private val context: Context) {
             }
         }
         
-        val iconBytes = if (entryName.contains("round")) {
-            createRoundIcon(bitmap, size)
-        } else {
-            scaleBitmapToPng(bitmap, size)
+        val iconBytes = when {
+            // 圆形图标
+            entryName.contains("round") -> {
+                createRoundIcon(bitmap, size)
+            }
+            // adaptive icon 前景图需要预留 safe zone 边距
+            entryName.contains("foreground") -> {
+                createAdaptiveForegroundIcon(bitmap, size)
+            }
+            // 普通图标
+            else -> {
+                scaleBitmapToPng(bitmap, size)
+            }
         }
         
         writeEntryStored(zipOut, entryName, iconBytes)
+    }
+
+    /**
+     * 创建 Adaptive Icon 前景图
+     * 遵循 Android Adaptive Icon 规范：
+     * - 前景层总尺寸 108dp
+     * - 安全区域（完整显示）为中间 72dp（66.67%）
+     * - 外围 18dp 作为 safe zone 边距
+     */
+    private fun createAdaptiveForegroundIcon(bitmap: Bitmap, size: Int): ByteArray {
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        
+        // 计算安全区域尺寸（72/108 ≈ 66.67%）
+        val safeZoneSize = (size * 72f / 108f).toInt()
+        val padding = (size - safeZoneSize) / 2f
+        
+        // 计算缩放比例，保持纵横比
+        val scale = Math.min(safeZoneSize.toFloat() / bitmap.width, safeZoneSize.toFloat() / bitmap.height)
+        val scaledWidth = (bitmap.width * scale).toInt()
+        val scaledHeight = (bitmap.height * scale).toInt()
+        
+        // 计算居中位置（在安全区域内居中）
+        val left = padding + (safeZoneSize - scaledWidth) / 2f
+        val top = padding + (safeZoneSize - scaledHeight) / 2f
+        
+        val destRect = android.graphics.RectF(left, top, left + scaledWidth, top + scaledHeight)
+        val paint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+        }
+        
+        canvas.drawBitmap(bitmap, null, destRect, paint)
+        
+        val baos = ByteArrayOutputStream()
+        output.compress(Bitmap.CompressFormat.PNG, 100, baos)
+        output.recycle()
+        return baos.toByteArray()
     }
 
     /**

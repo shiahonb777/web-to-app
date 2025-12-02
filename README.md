@@ -174,6 +174,14 @@ MIT License
 
 ## 更新日志
 
+### v1.2.3
+**Bug 修复**
+- 修复构建 APK 图标被放大裁剪的问题
+  - 根因：未遵循 Android Adaptive Icon 规范，图标直接填满前景层导致被形状遮罩裁剪
+  - 方案：为图标预留 safe zone 边距（72dp 安全区域 + 18dp 边距）
+- 遵循 Android Adaptive Icon 规范处理图标
+- 提升图标清晰度（使用 xxxhdpi 432px 分辨率）
+
 ### v1.2.2
 **Bug 修复**
 - 修复 Release 版本构建 APK 时自定义图标不生效的问题
