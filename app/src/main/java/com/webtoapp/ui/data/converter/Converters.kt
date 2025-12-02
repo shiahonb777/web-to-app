@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.webtoapp.data.model.AdConfig
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.data.model.SplashConfig
 import com.webtoapp.data.model.WebViewConfig
 
 /**
@@ -71,6 +72,21 @@ class Converters {
             gson.fromJson(value, WebViewConfig::class.java) ?: WebViewConfig()
         } catch (e: Exception) {
             WebViewConfig()
+        }
+    }
+
+    // SplashConfig 转换
+    @TypeConverter
+    fun fromSplashConfig(value: SplashConfig?): String {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toSplashConfig(value: String): SplashConfig? {
+        return try {
+            gson.fromJson(value, SplashConfig::class.java)
+        } catch (e: Exception) {
+            null
         }
     }
 }

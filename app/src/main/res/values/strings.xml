@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WebToApp</string>
+    <string name="app_name">WebToApp - 网站转应用生成器</string>
     <string name="app_description">将任意网站转换为独立App</string>
 
     <!-- 主界面 -->

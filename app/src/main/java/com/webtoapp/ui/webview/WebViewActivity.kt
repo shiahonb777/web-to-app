@@ -15,8 +15,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,17 +29,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.core.webview.WebViewManager
+import com.webtoapp.data.model.SplashConfig
+import com.webtoapp.data.model.SplashType
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.theme.WebToAppTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * WebView容器Activity - 用于预览和运行WebApp
@@ -174,6 +187,10 @@ fun WebViewScreen(
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    
+    // 启动画面状态
+    var showSplash by remember { mutableStateOf(false) }
+    var splashCountdown by remember { mutableIntStateOf(0) }
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -203,7 +220,26 @@ fun WebViewScreen(
                     val shouldShow = announcement.shouldShowAnnouncement(appId, app.announcement)
                     showAnnouncementDialog = shouldShow
                 }
+
+                // 检查启动画面
+                if (app.splashEnabled && app.splashConfig != null && isActivated) {
+                    val mediaPath = app.splashConfig.mediaPath
+                    if (mediaPath != null && File(mediaPath).exists()) {
+                        showSplash = true
+                        splashCountdown = app.splashConfig.duration
+                    }
+                }
             }
+        }
+    }
+
+    // 启动画面倒计时
+    LaunchedEffect(showSplash, splashCountdown) {
+        if (showSplash && splashCountdown > 0) {
+            delay(1000L)
+            splashCountdown--
+        } else if (showSplash && splashCountdown <= 0) {
+            showSplash = false
         }
     }
 
@@ -473,6 +509,23 @@ fun WebViewScreen(
             }
         )
     }
+
+    // 启动画面覆盖层
+    AnimatedVisibility(
+        visible = showSplash,
+        enter = fadeIn(animationSpec = tween(300)),
+        exit = fadeOut(animationSpec = tween(300))
+    ) {
+        webApp?.splashConfig?.let { splashConfig ->
+            SplashOverlay(
+                splashConfig = splashConfig,
+                countdown = splashCountdown,
+                onSkip = if (splashConfig.clickToSkip) {
+                    { showSplash = false }
+                } else null
+            )
+        }
+    }
 }
 
 @Composable
@@ -553,4 +606,163 @@ fun AnnouncementDialog(
             }
         }
     )
+}
+
+/**
+ * 启动画面覆盖层
+ * 支持图片和视频（含裁剪播放）
+ */
+@Composable
+fun SplashOverlay(
+    splashConfig: SplashConfig,
+    countdown: Int,
+    onSkip: (() -> Unit)?
+) {
+    val context = LocalContext.current
+    val mediaPath = splashConfig.mediaPath ?: return
+
+    // 视频裁剪相关
+    val videoStartMs = splashConfig.videoStartMs
+    val videoEndMs = splashConfig.videoEndMs
+    val videoDurationMs = videoEndMs - videoStartMs
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .then(
+                if (onSkip != null) {
+                    Modifier.clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { onSkip() }
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        when (splashConfig.type) {
+            SplashType.IMAGE -> {
+                // 图片启动画面
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(context)
+                            .data(File(mediaPath))
+                            .crossfade(true)
+                            .build()
+                    ),
+                    contentDescription = "启动画面",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            SplashType.VIDEO -> {
+                // 视频启动画面 - 支持裁剪播放
+                var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+                
+                // 监控播放进度，到达结束时间时停止
+                LaunchedEffect(mediaPlayer) {
+                    mediaPlayer?.let { mp ->
+                        while (mp.isPlaying) {
+                            if (mp.currentPosition >= videoEndMs) {
+                                mp.pause()
+                                onSkip?.invoke()
+                                break
+                            }
+                            delay(100)
+                        }
+                    }
+                }
+                
+                AndroidView(
+                    factory = { ctx ->
+                        android.view.SurfaceView(ctx).apply {
+                            holder.addCallback(object : android.view.SurfaceHolder.Callback {
+                                override fun surfaceCreated(holder: android.view.SurfaceHolder) {
+                                    try {
+                                        mediaPlayer = android.media.MediaPlayer().apply {
+                                            setDataSource(mediaPath)
+                                            setSurface(holder.surface)
+                                            setVolume(0f, 0f) // 静音
+                                            isLooping = false
+                                            setOnPreparedListener { 
+                                                // 跳到裁剪起始位置
+                                                seekTo(videoStartMs.toInt())
+                                                start() 
+                                            }
+                                            setOnCompletionListener { onSkip?.invoke() }
+                                            prepareAsync()
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        onSkip?.invoke()
+                                    }
+                                }
+                                override fun surfaceChanged(h: android.view.SurfaceHolder, f: Int, w: Int, ht: Int) {}
+                                override fun surfaceDestroyed(h: android.view.SurfaceHolder) {
+                                    mediaPlayer?.release()
+                                    mediaPlayer = null
+                                }
+                            })
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                
+                // 组件销毁时释放 MediaPlayer
+                DisposableEffect(Unit) {
+                    onDispose {
+                        mediaPlayer?.release()
+                        mediaPlayer = null
+                    }
+                }
+            }
+        }
+
+        // 倒计时/跳过提示
+        val displayCountdown = if (splashConfig.type == SplashType.VIDEO) {
+            // 视频使用裁剪时长
+            ((videoDurationMs - (countdown * 1000L).coerceAtMost(videoDurationMs)) / 1000).toInt()
+                .let { (videoDurationMs / 1000).toInt() - it }
+        } else {
+            countdown
+        }
+        
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp),
+            shape = MaterialTheme.shapes.small,
+            color = Color.Black.copy(alpha = 0.6f)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (displayCountdown > 0 || countdown > 0) {
+                    Text(
+                        text = "${if (splashConfig.type == SplashType.VIDEO) 
+                            (videoDurationMs / 1000).toInt() else countdown}s",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                if (onSkip != null) {
+                    if (displayCountdown > 0 || countdown > 0) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "|",
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = "跳过",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+    }
 }

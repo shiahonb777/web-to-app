@@ -26,9 +26,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.data.model.*
+import com.webtoapp.ui.components.VideoTrimmer
 import com.webtoapp.ui.viewmodel.EditState
 import com.webtoapp.ui.viewmodel.MainViewModel
 import com.webtoapp.ui.viewmodel.UiState
+import com.webtoapp.util.SplashStorage
 
 /**
  * 创建/编辑应用页面
@@ -59,6 +61,24 @@ fun CreateAppScreen(
     ) { uri: Uri? ->
         uri?.let {
             viewModel.handleIconSelected(it)
+        }
+    }
+
+    // 启动画面图片选择器
+    val splashImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.handleSplashMediaSelected(it, isVideo = false)
+        }
+    }
+
+    // 启动画面视频选择器
+    val splashVideoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.handleSplashMediaSelected(it, isVideo = true)
         }
     }
 
@@ -144,6 +164,34 @@ fun CreateAppScreen(
                         copy(webViewConfig = webViewConfig.copy(hideToolbar = it))
                     }
                 }
+            )
+
+            // 启动画面
+            SplashScreenCard(
+                editState = editState,
+                onEnabledChange = { viewModel.updateEditState { copy(splashEnabled = it) } },
+                onSelectImage = { splashImagePickerLauncher.launch("image/*") },
+                onSelectVideo = { splashVideoPickerLauncher.launch("video/*") },
+                onDurationChange = { 
+                    viewModel.updateEditState { 
+                        copy(splashConfig = splashConfig.copy(duration = it)) 
+                    } 
+                },
+                onClickToSkipChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(clickToSkip = it))
+                    }
+                },
+                onVideoTrimChange = { startMs, endMs, totalDurationMs ->
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(
+                            videoStartMs = startMs,
+                            videoEndMs = endMs,
+                            videoDurationMs = totalDurationMs
+                        ))
+                    }
+                },
+                onClearMedia = { viewModel.clearSplashMedia() }
             )
 
             // WebView高级设置
@@ -784,6 +832,226 @@ fun FullscreenModeCard(
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
+        }
+    }
+}
+
+/**
+ * 启动画面设置卡片
+ */
+@Composable
+fun SplashScreenCard(
+    editState: EditState,
+    onEnabledChange: (Boolean) -> Unit,
+    onSelectImage: () -> Unit,
+    onSelectVideo: () -> Unit,
+    onDurationChange: (Int) -> Unit,
+    onClickToSkipChange: (Boolean) -> Unit,
+    onVideoTrimChange: (startMs: Long, endMs: Long, totalDurationMs: Long) -> Unit,
+    onClearMedia: () -> Unit
+) {
+    val context = LocalContext.current
+    
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 标题和开关
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.PlayCircle,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "启动画面",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Switch(
+                    checked = editState.splashEnabled,
+                    onCheckedChange = onEnabledChange
+                )
+            }
+
+            if (editState.splashEnabled) {
+                Text(
+                    text = "设置应用启动时显示的图片或视频（视频限5秒内）",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // 媒体预览区域
+                if (editState.splashMediaUri != null) {
+                    if (editState.splashConfig.type == SplashType.VIDEO) {
+                        // 视频裁剪器
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "视频裁剪",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                                TextButton(onClick = onClearMedia) {
+                                    Icon(Icons.Default.Close, null, Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("移除", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            
+                            VideoTrimmer(
+                                videoPath = editState.savedSplashPath ?: editState.splashMediaUri.toString(),
+                                startMs = editState.splashConfig.videoStartMs,
+                                endMs = editState.splashConfig.videoEndMs,
+                                videoDurationMs = editState.splashConfig.videoDurationMs,
+                                onTrimChange = onVideoTrimChange
+                            )
+                        }
+                    } else {
+                        // 图片预览
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    shape = MaterialTheme.shapes.medium
+                                ),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(editState.splashMediaUri)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "启动画面预览",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                // 删除按钮
+                                IconButton(
+                                    onClick = onClearMedia,
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        "移除",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // 空状态 - 选择媒体
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.AddPhotoAlternate,
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "点击下方按钮选择图片或视频",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // 选择按钮
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onSelectImage,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Outlined.Image, null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("选择图片")
+                    }
+                    OutlinedButton(
+                        onClick = onSelectVideo,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Outlined.VideoFile, null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("选择视频")
+                    }
+                }
+
+                // 显示时长设置（仅图片显示，视频使用裁剪范围）
+                if (editState.splashConfig.type == SplashType.IMAGE || editState.splashMediaUri == null) {
+                    Column {
+                        Text(
+                            text = "显示时长：${editState.splashConfig.duration} 秒",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Slider(
+                            value = editState.splashConfig.duration.toFloat(),
+                            onValueChange = { onDurationChange(it.toInt()) },
+                            valueRange = 1f..5f,
+                            steps = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                // 点击跳过设置
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("允许点击跳过", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "用户可点击屏幕跳过启动画面",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = editState.splashConfig.clickToSkip,
+                        onCheckedChange = onClickToSkipChange
+                    )
+                }
+            }
         }
     }
 }

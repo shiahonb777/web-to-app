@@ -40,6 +40,10 @@ data class WebApp(
     // WebView配置
     val webViewConfig: WebViewConfig = WebViewConfig(),
 
+    // 启动画面配置
+    val splashEnabled: Boolean = false,
+    val splashConfig: SplashConfig? = null,
+
     // 元数据
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
@@ -89,3 +93,26 @@ data class WebViewConfig(
     val openExternalLinks: Boolean = false, // 外部链接是否在浏览器打开
     val hideToolbar: Boolean = false // 隐藏工具栏（全屏模式，无浏览器特征）
 )
+
+/**
+ * 启动画面配置
+ */
+data class SplashConfig(
+    val type: SplashType = SplashType.IMAGE,  // 类型：图片或视频
+    val mediaPath: String? = null,             // 媒体文件路径
+    val duration: Int = 3,                     // 图片显示时长（秒，1-5秒）
+    val clickToSkip: Boolean = true,           // 是否允许点击跳过
+    
+    // 视频裁剪配置
+    val videoStartMs: Long = 0,                // 视频裁剪起始时间（毫秒）
+    val videoEndMs: Long = 5000,               // 视频裁剪结束时间（毫秒，最大5秒）
+    val videoDurationMs: Long = 0              // 原视频总时长（毫秒）
+)
+
+/**
+ * 启动画面类型
+ */
+enum class SplashType {
+    IMAGE,  // 图片
+    VIDEO   // 视频（裁剪后5秒以内）
+}

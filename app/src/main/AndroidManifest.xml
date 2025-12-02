@@ -71,6 +71,19 @@
             android:hardwareAccelerated="true"
             android:theme="@style/Theme.WebToApp.NoActionBar" />
 
+        <!-- 启动画面中转Activity（用于本地应用快捷方式） -->
+        <activity
+            android:name=".ui.splash.SplashLauncherActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.WebToApp.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <!-- FileProvider for sharing files -->
         <provider
             android:name="androidx.core.content.FileProvider"

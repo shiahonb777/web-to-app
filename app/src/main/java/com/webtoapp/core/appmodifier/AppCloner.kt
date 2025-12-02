@@ -22,6 +22,7 @@ import com.webtoapp.core.apkbuilder.JarSigner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Log
+import com.webtoapp.ui.splash.SplashLauncherActivity
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -90,11 +91,27 @@ class AppCloner(private val context: Context) {
             
             safeProgress(50, "创建快捷方式...")
             
-            // 直接启动原应用
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(config.originalApp.packageName)?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            } ?: return@withContext AppModifyResult.Error("无法获取应用启动 Intent")
+            // 创建启动 Intent
+            val launchIntent = if (config.splashEnabled && config.splashPath != null) {
+                // 使用 SplashLauncherActivity 显示启动画面后再启动目标应用
+                Intent(context, SplashLauncherActivity::class.java).apply {
+                    putExtra(SplashLauncherActivity.EXTRA_TARGET_PACKAGE, config.originalApp.packageName)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_TYPE, config.splashType)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_PATH, config.splashPath)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_DURATION, config.splashDuration)
+                    putExtra(SplashLauncherActivity.EXTRA_SPLASH_CLICK_SKIP, config.splashClickToSkip)
+                    putExtra(SplashLauncherActivity.EXTRA_VIDEO_START_MS, config.splashVideoStartMs)
+                    putExtra(SplashLauncherActivity.EXTRA_VIDEO_END_MS, config.splashVideoEndMs)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
+            } else {
+                // 直接启动原应用
+                context.packageManager.getLaunchIntentForPackage(config.originalApp.packageName)?.apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                } ?: return@withContext AppModifyResult.Error("无法获取应用启动 Intent")
+            }
 
             // 检查是否支持固定快捷方式
             if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {

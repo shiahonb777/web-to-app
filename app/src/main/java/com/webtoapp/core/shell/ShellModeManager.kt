@@ -103,7 +103,27 @@ data class ShellConfig(
 
     // WebView 配置
     @SerializedName("webViewConfig")
-    val webViewConfig: WebViewShellConfig = WebViewShellConfig()
+    val webViewConfig: WebViewShellConfig = WebViewShellConfig(),
+
+    // 启动画面配置
+    @SerializedName("splashEnabled")
+    val splashEnabled: Boolean = false,
+
+    @SerializedName("splashType")
+    val splashType: String = "IMAGE",
+
+    @SerializedName("splashDuration")
+    val splashDuration: Int = 3,
+
+    @SerializedName("splashClickToSkip")
+    val splashClickToSkip: Boolean = true,
+
+    // 视频裁剪配置
+    @SerializedName("splashVideoStartMs")
+    val splashVideoStartMs: Long = 0,
+
+    @SerializedName("splashVideoEndMs")
+    val splashVideoEndMs: Long = 5000
 )
 
 /**

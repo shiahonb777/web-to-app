@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.data.model.*
+import com.webtoapp.util.SplashStorage
 import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.util.IconStorage
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +79,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             announcement = webApp.announcement ?: Announcement(),
             adBlockEnabled = webApp.adBlockEnabled,
             adBlockRules = webApp.adBlockRules,
-            webViewConfig = webApp.webViewConfig
+            webViewConfig = webApp.webViewConfig,
+            splashEnabled = webApp.splashEnabled,
+            splashConfig = webApp.splashConfig ?: SplashConfig(),
+            splashMediaUri = webApp.splashConfig?.mediaPath?.let { Uri.parse(it) },
+            savedSplashPath = webApp.splashConfig?.mediaPath
         )
     }
 
@@ -117,6 +122,53 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * 处理选择的启动画面媒体 - 复制到私有目录实现持久化
+     */
+    fun handleSplashMediaSelected(uri: Uri, isVideo: Boolean) {
+        viewModelScope.launch {
+            val savedPath = withContext(Dispatchers.IO) {
+                SplashStorage.saveMediaFromUri(getApplication(), uri, isVideo)
+            }
+            if (savedPath != null) {
+                // 删除旧媒体文件（如果存在且不同）
+                val oldPath = _editState.value.savedSplashPath
+                if (oldPath != null && oldPath != savedPath) {
+                    withContext(Dispatchers.IO) {
+                        SplashStorage.deleteMedia(oldPath)
+                    }
+                }
+                // 更新状态
+                val newType = if (isVideo) SplashType.VIDEO else SplashType.IMAGE
+                _editState.value = _editState.value.copy(
+                    splashMediaUri = Uri.parse(savedPath),
+                    savedSplashPath = savedPath,
+                    splashConfig = _editState.value.splashConfig.copy(type = newType)
+                )
+            } else {
+                _uiState.value = UiState.Error("启动画面保存失败，请重试")
+            }
+        }
+    }
+
+    /**
+     * 清除启动画面媒体
+     */
+    fun clearSplashMedia() {
+        viewModelScope.launch {
+            val oldPath = _editState.value.savedSplashPath
+            if (oldPath != null) {
+                withContext(Dispatchers.IO) {
+                    SplashStorage.deleteMedia(oldPath)
+                }
+            }
+            _editState.value = _editState.value.copy(
+                splashMediaUri = null,
+                savedSplashPath = null
+            )
+        }
+    }
+
+    /**
      * 保存应用
      */
     fun saveApp() {
@@ -132,6 +184,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // 使用持久化的本地路径
                 val iconPath = state.savedIconPath ?: state.iconUri?.toString()
                 
+                // 构建启动画面配置
+                val splashConfig = if (state.splashEnabled && state.savedSplashPath != null) {
+                    state.splashConfig.copy(mediaPath = state.savedSplashPath)
+                } else {
+                    null
+                }
+                
                 val webApp = _currentApp.value?.copy(
                     name = state.name,
                     url = normalizeUrl(state.url),
@@ -144,7 +203,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     announcement = state.announcement,
                     adBlockEnabled = state.adBlockEnabled,
                     adBlockRules = state.adBlockRules,
-                    webViewConfig = state.webViewConfig
+                    webViewConfig = state.webViewConfig,
+                    splashEnabled = state.splashEnabled,
+                    splashConfig = splashConfig
                 ) ?: WebApp(
                     name = state.name,
                     url = normalizeUrl(state.url),
@@ -157,7 +218,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     announcement = state.announcement,
                     adBlockEnabled = state.adBlockEnabled,
                     adBlockRules = state.adBlockRules,
-                    webViewConfig = state.webViewConfig
+                    webViewConfig = state.webViewConfig,
+                    splashEnabled = state.splashEnabled,
+                    splashConfig = splashConfig
                 )
 
                 if (_currentApp.value != null) {
@@ -284,7 +347,13 @@ data class EditState(
     val adBlockRules: List<String> = emptyList(),
 
     // WebView配置
-    val webViewConfig: WebViewConfig = WebViewConfig()
+    val webViewConfig: WebViewConfig = WebViewConfig(),
+
+    // 启动画面
+    val splashEnabled: Boolean = false,
+    val splashConfig: SplashConfig = SplashConfig(),
+    val splashMediaUri: Uri? = null,        // 用于 UI 显示
+    val savedSplashPath: String? = null     // 持久化的本地文件路径
 )
 
 /**

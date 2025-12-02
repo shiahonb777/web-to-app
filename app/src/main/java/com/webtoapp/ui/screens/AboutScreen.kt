@@ -140,7 +140,7 @@ fun AboutScreen(
                         )
                         
                         Text(
-                            text = "v1.2.3",
+                            text = "v1.3.0",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier
                                 .background(accentColor, RoundedCornerShape(4.dp))
@@ -279,6 +279,34 @@ fun AboutScreen(
                         }
                         
                         Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // v1.3 新增功能
+                        Text(
+                            "v1.3.0 ✨ 新增功能",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4CAF50)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.Star, "启动画面：支持图片/视频启动动画")
+                        ChangeLogTreeItem(Icons.Outlined.Build, "视频裁剪器：可视化选择视频片段（最长5秒）")
+                        ChangeLogTreeItem(Icons.Outlined.Android, "集成到网页转App、快捷方式等三大功能")
+                        ChangeLogTreeItem(Icons.Outlined.Code, "支持点击跳过、自定义显示时长")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // v1.3 Bug修复
+                        Text(
+                            "v1.3.0 🐛 Bug 修复",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF5722)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复快捷方式图标错误使用启动图片的问题")
+                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复数据库 schema 不匹配导致的闪退")
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
                         
                         // v1.2.3 Bug修复
                         Text(

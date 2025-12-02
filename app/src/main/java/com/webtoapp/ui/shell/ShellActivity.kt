@@ -14,8 +14,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -23,10 +28,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.adblock.AdBlocker
@@ -37,7 +46,10 @@ import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.ui.webview.ActivationDialog
 import com.webtoapp.ui.webview.AnnouncementDialog
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.InputStream
 
 /**
  * Shell Activity - 用于独立 WebApp 运行
@@ -162,6 +174,10 @@ fun ShellScreen(
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
 
+    // 启动画面状态
+    var showSplash by remember { mutableStateOf(false) }
+    var splashCountdown by remember { mutableIntStateOf(0) }
+
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
@@ -190,6 +206,31 @@ fun ShellScreen(
                 linkUrl = config.announcementLink.ifEmpty { null }
             )
             showAnnouncementDialog = announcement.shouldShowAnnouncement(-1L, ann)
+        }
+
+        // 检查启动画面（从 assets 加载）
+        if (config.splashEnabled && isActivated) {
+            val splashExists = try {
+                val extension = if (config.splashType == "VIDEO") "mp4" else "png"
+                context.assets.open("splash_media.$extension").close()
+                true
+            } catch (e: Exception) {
+                false
+            }
+            if (splashExists) {
+                showSplash = true
+                splashCountdown = config.splashDuration
+            }
+        }
+    }
+
+    // 启动画面倒计时
+    LaunchedEffect(showSplash, splashCountdown) {
+        if (showSplash && splashCountdown > 0) {
+            delay(1000L)
+            splashCountdown--
+        } else if (showSplash && splashCountdown <= 0) {
+            showSplash = false
         }
     }
 
@@ -463,5 +504,181 @@ fun ShellScreen(
                 context.startActivity(intent)
             }
         )
+    }
+
+    // 启动画面覆盖层
+    AnimatedVisibility(
+        visible = showSplash,
+        enter = fadeIn(animationSpec = tween(300)),
+        exit = fadeOut(animationSpec = tween(300))
+    ) {
+        ShellSplashOverlay(
+            splashType = config.splashType,
+            countdown = splashCountdown,
+            videoStartMs = config.splashVideoStartMs,
+            videoEndMs = config.splashVideoEndMs,
+            onSkip = if (config.splashClickToSkip) {
+                { showSplash = false }
+            } else null
+        )
+    }
+}
+
+/**
+ * Shell 模式启动画面覆盖层（从 assets 加载媒体，支持视频裁剪）
+ */
+@Composable
+fun ShellSplashOverlay(
+    splashType: String,
+    countdown: Int,
+    videoStartMs: Long = 0,
+    videoEndMs: Long = 5000,
+    onSkip: (() -> Unit)?
+) {
+    val context = LocalContext.current
+    val extension = if (splashType == "VIDEO") "mp4" else "png"
+    val assetPath = "splash_media.$extension"
+    val videoDurationMs = videoEndMs - videoStartMs
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .then(
+                if (onSkip != null) {
+                    Modifier.clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { onSkip() }
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        when (splashType) {
+            "IMAGE" -> {
+                // 图片启动画面（从 assets 加载）
+                val inputStream = remember {
+                    try {
+                        context.assets.open(assetPath)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                if (inputStream != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(context)
+                                .data(inputStream)
+                                .crossfade(true)
+                                .build()
+                        ),
+                        contentDescription = "启动画面",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            "VIDEO" -> {
+                // 视频启动画面（支持裁剪播放）
+                var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+                
+                // 监控播放进度
+                LaunchedEffect(mediaPlayer) {
+                    mediaPlayer?.let { mp ->
+                        while (mp.isPlaying) {
+                            if (mp.currentPosition >= videoEndMs) {
+                                mp.pause()
+                                onSkip?.invoke()
+                                break
+                            }
+                            delay(100)
+                        }
+                    }
+                }
+                
+                AndroidView(
+                    factory = { ctx ->
+                        android.view.SurfaceView(ctx).apply {
+                            holder.addCallback(object : android.view.SurfaceHolder.Callback {
+                                override fun surfaceCreated(holder: android.view.SurfaceHolder) {
+                                    try {
+                                        val afd = ctx.assets.openFd(assetPath)
+                                        mediaPlayer = android.media.MediaPlayer().apply {
+                                            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                                            setSurface(holder.surface)
+                                            setVolume(0f, 0f)
+                                            isLooping = false
+                                            setOnPreparedListener {
+                                                seekTo(videoStartMs.toInt())
+                                                start()
+                                            }
+                                            setOnCompletionListener { onSkip?.invoke() }
+                                            prepareAsync()
+                                        }
+                                        afd.close()
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        onSkip?.invoke()
+                                    }
+                                }
+                                override fun surfaceChanged(h: android.view.SurfaceHolder, f: Int, w: Int, ht: Int) {}
+                                override fun surfaceDestroyed(h: android.view.SurfaceHolder) {
+                                    mediaPlayer?.release()
+                                    mediaPlayer = null
+                                }
+                            })
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                
+                DisposableEffect(Unit) {
+                    onDispose {
+                        mediaPlayer?.release()
+                        mediaPlayer = null
+                    }
+                }
+            }
+        }
+
+        // 倒计时/跳过提示
+        val displayTime = if (splashType == "VIDEO") (videoDurationMs / 1000).toInt() else countdown
+        
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp),
+            shape = MaterialTheme.shapes.small,
+            color = Color.Black.copy(alpha = 0.6f)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (displayTime > 0) {
+                    Text(
+                        text = "${displayTime}s",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                if (onSkip != null) {
+                    if (displayTime > 0) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "|",
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = "跳过",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
     }
 }

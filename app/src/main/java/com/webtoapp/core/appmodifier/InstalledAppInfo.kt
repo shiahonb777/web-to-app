@@ -38,7 +38,16 @@ data class InstalledAppInfo(
 data class AppModifyConfig(
     val originalApp: InstalledAppInfo,
     val newAppName: String,
-    val newIconPath: String? = null
+    val newIconPath: String? = null,
+    
+    // 启动画面配置
+    val splashEnabled: Boolean = false,
+    val splashType: String = "IMAGE",      // "IMAGE" or "VIDEO"
+    val splashPath: String? = null,        // 媒体文件路径
+    val splashDuration: Int = 3,           // 图片显示时长（秒）
+    val splashClickToSkip: Boolean = true, // 是否允许点击跳过
+    val splashVideoStartMs: Long = 0,      // 视频裁剪起始（毫秒）
+    val splashVideoEndMs: Long = 5000      // 视频裁剪结束（毫秒）
 )
 
 /**
