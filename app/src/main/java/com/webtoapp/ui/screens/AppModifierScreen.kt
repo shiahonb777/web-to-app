@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens
 
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -28,14 +29,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.webtoapp.core.appmodifier.*
+import com.webtoapp.data.model.BgmConfig
+import com.webtoapp.ui.components.BgmCard
+import com.webtoapp.ui.components.IconPickerWithLibrary
 import com.webtoapp.ui.components.VideoTrimmer
 import com.webtoapp.util.SplashStorage
 import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * 应用修改器页面
+ * 应用修改器主页面 - 应用列表
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,13 +60,38 @@ fun AppModifierScreen(
     var searchQuery by remember { mutableStateOf("") }
     var filterType by remember { mutableStateOf(AppFilterType.USER) }
     var selectedApp by remember { mutableStateOf<InstalledAppInfo?>(null) }
-    var showModifyDialog by remember { mutableStateOf(false) }
     
     // 加载应用列表
     LaunchedEffect(filterType, searchQuery) {
         isLoading = true
         apps = appListProvider.getInstalledApps(filterType, searchQuery)
         isLoading = false
+    }
+    
+    // 如果选中了应用，显示修改页面
+    if (selectedApp != null) {
+        AppModifyFullScreen(
+            app = selectedApp!!,
+            appCloner = appCloner,
+            onBack = { selectedApp = null },
+            onResult = { result ->
+                selectedApp = null
+                scope.launch {
+                    when (result) {
+                        is AppModifyResult.ShortcutSuccess -> {
+                            snackbarHostState.showSnackbar("快捷方式创建成功")
+                        }
+                        is AppModifyResult.CloneSuccess -> {
+                            snackbarHostState.showSnackbar("克隆成功，请确认安装")
+                        }
+                        is AppModifyResult.Error -> {
+                            snackbarHostState.showSnackbar("失败: ${result.message}")
+                        }
+                    }
+                }
+            }
+        )
+        return
     }
 
     Scaffold(
@@ -162,44 +192,12 @@ fun AppModifierScreen(
                     items(apps, key = { it.packageName }) { app ->
                         AppListItem(
                             app = app,
-                            onClick = {
-                                selectedApp = app
-                                showModifyDialog = true
-                            }
+                            onClick = { selectedApp = app }
                         )
                     }
                 }
             }
         }
-    }
-    
-    // 修改对话框
-    if (showModifyDialog && selectedApp != null) {
-        AppModifyDialog(
-            app = selectedApp!!,
-            appCloner = appCloner,
-            onDismiss = { 
-                showModifyDialog = false
-                selectedApp = null
-            },
-            onResult = { result ->
-                showModifyDialog = false
-                selectedApp = null
-                scope.launch {
-                    when (result) {
-                        is AppModifyResult.ShortcutSuccess -> {
-                            snackbarHostState.showSnackbar("快捷方式创建成功")
-                        }
-                        is AppModifyResult.CloneSuccess -> {
-                            snackbarHostState.showSnackbar("克隆成功，请确认安装")
-                        }
-                        is AppModifyResult.Error -> {
-                            snackbarHostState.showSnackbar("失败: ${result.message}")
-                        }
-                    }
-                }
-            }
-        )
     }
 }
 
@@ -280,20 +278,23 @@ fun AppListItem(
 }
 
 /**
- * 应用修改对话框
+ * 应用修改全屏页面（和 CreateAppScreen 类似的布局）
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppModifyDialog(
+fun AppModifyFullScreen(
     app: InstalledAppInfo,
     appCloner: AppCloner,
-    onDismiss: () -> Unit,
+    onBack: () -> Unit,
     onResult: (AppModifyResult) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
     
+    // 基本信息状态
     var newAppName by remember { mutableStateOf(app.appName) }
+    var newIconUri by remember { mutableStateOf<Uri?>(null) }
     var newIconPath by remember { mutableStateOf<String?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
@@ -323,11 +324,18 @@ fun AppModifyDialog(
     var announcementContent by remember { mutableStateOf("") }
     var announcementLink by remember { mutableStateOf("") }
     
-    // 图片选择器
+    // 背景音乐配置状态
+    var bgmEnabled by remember { mutableStateOf(false) }
+    var bgmConfig by remember { mutableStateOf(BgmConfig()) }
+    
+    // 图片选择器（相册选择）
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { newIconPath = it.toString() }
+        uri?.let { 
+            newIconUri = it
+            newIconPath = null // 清除图标库路径
+        }
     }
     
     // 启动画面图片选择器
@@ -357,7 +365,6 @@ fun AppModifyDialog(
                     splashPath = savedPath
                     splashType = "VIDEO"
                     splashEnabled = true
-                    // 重置视频裁剪范围
                     splashVideoStartMs = 0L
                     splashVideoEndMs = 5000L
                     splashVideoDurationMs = 0L
@@ -365,438 +372,118 @@ fun AppModifyDialog(
             }
         }
     }
+    
+    // 构建配置并执行操作
+    fun buildConfig(): AppModifyConfig {
+        return AppModifyConfig(
+            originalApp = app,
+            newAppName = newAppName,
+            newIconPath = newIconPath ?: newIconUri?.toString(),
+            splashEnabled = splashEnabled && splashPath != null,
+            splashType = splashType,
+            splashPath = splashPath,
+            splashDuration = splashDuration,
+            splashClickToSkip = splashClickToSkip,
+            splashVideoStartMs = splashVideoStartMs,
+            splashVideoEndMs = splashVideoEndMs,
+            splashLandscape = splashLandscape,
+            splashFillScreen = splashFillScreen,
+            splashEnableAudio = splashEnableAudio,
+            activationEnabled = activationEnabled,
+            activationCodes = activationCodes,
+            announcementEnabled = announcementEnabled,
+            announcementTitle = announcementTitle,
+            announcementContent = announcementContent,
+            announcementLink = announcementLink.ifBlank { null },
+            bgmEnabled = bgmEnabled,
+            bgmConfig = if (bgmEnabled) bgmConfig else null
+        )
+    }
 
-    AlertDialog(
-        onDismissRequest = { if (!isProcessing) onDismiss() },
-        title = { Text("修改应用") },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 200.dp, max = 450.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // 原应用信息
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    app.icon?.let { drawable ->
-                        Image(
-                            bitmap = drawable.toBitmap(48, 48).asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(MaterialTheme.shapes.small)
-                        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("修改应用") },
+                navigationIcon = {
+                    IconButton(onClick = { if (!isProcessing) onBack() }) {
+                        Icon(Icons.Default.ArrowBack, "返回")
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(app.appName, style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            app.packageName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                
-                Divider()
-                
-                // 新图标选择
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(MaterialTheme.shapes.medium)
-                            .border(
-                                2.dp,
-                                MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.medium
-                            )
-                            .clickable { imagePickerLauncher.launch("image/*") },
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        if (newIconPath != null) {
-                            AsyncImage(
-                                model = newIconPath,
-                                contentDescription = "新图标",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Icon(
-                                    Icons.Outlined.AddPhotoAlternate,
-                                    "选择图标",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Column {
-                        Text("新图标", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "点击选择新图标（可选）",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        if (newIconPath != null) {
+                },
+                actions = {
+                    if (!isProcessing) {
+                        // 克隆安装按钮（仅当没有自定义图标时可用）
+                        if (newIconUri == null && newIconPath == null) {
                             TextButton(
-                                onClick = { newIconPath = null },
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("使用原图标", style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    }
-                }
-                
-                // 新名称
-                OutlinedTextField(
-                    value = newAppName,
-                    onValueChange = { newAppName = it },
-                    label = { Text("新应用名称") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Divider()
-                
-                // 启动画面配置
-                Text("启动画面", style = MaterialTheme.typography.titleSmall)
-                
-                // 启动画面开关
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("启用启动画面", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = splashEnabled,
-                        onCheckedChange = { splashEnabled = it }
-                    )
-                }
-                
-                // 仅在启用启动画面时显示配置
-                if (splashEnabled) {
-                    // 媒体选择
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { splashImagePickerLauncher.launch("image/*") },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("选择图片")
-                        }
-                        OutlinedButton(
-                            onClick = { splashVideoPickerLauncher.launch("video/*") },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Outlined.VideoFile, null, Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("选择视频")
-                        }
-                    }
-                    
-                    // 显示已选择的媒体
-                    if (splashPath != null) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    if (splashType == "IMAGE") Icons.Outlined.Image 
-                                    else Icons.Outlined.VideoFile,
-                                    null,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        if (splashType == "IMAGE") "已选择图片" else "已选择视频",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        File(splashPath!!).name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                IconButton(onClick = { 
-                                    splashPath = null
-                                    splashEnabled = false 
-                                }) {
-                                    Icon(Icons.Default.Clear, "清除")
-                                }
-                            }
-                        }
-                        
-                        // 视频裁剪（仅视频）
-                        if (splashType == "VIDEO") {
-                            VideoTrimmer(
-                                videoPath = splashPath!!,
-                                startMs = splashVideoStartMs,
-                                endMs = splashVideoEndMs,
-                                videoDurationMs = splashVideoDurationMs,
-                                onTrimChange = { start, end, total ->
-                                    splashVideoStartMs = start
-                                    splashVideoEndMs = end
-                                    splashVideoDurationMs = total
-                                }
-                            )
-                        }
-                        
-                        // 图片时长（仅图片）
-                        if (splashType == "IMAGE") {
-                            Column {
-                                Text(
-                                    "显示时长：${splashDuration} 秒",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Slider(
-                                    value = splashDuration.toFloat(),
-                                    onValueChange = { splashDuration = it.toInt() },
-                                    valueRange = 1f..5f,
-                                    steps = 3,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                        
-                        // 点击跳过
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("允许点击跳过", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = splashClickToSkip,
-                                onCheckedChange = { splashClickToSkip = it }
-                            )
-                        }
-                        
-                        // 横屏显示
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("横屏显示", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = splashLandscape,
-                                onCheckedChange = { splashLandscape = it }
-                            )
-                        }
-                        
-                        // 铺满屏幕
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("铺满屏幕", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = splashFillScreen,
-                                onCheckedChange = { splashFillScreen = it }
-                            )
-                        }
-                        
-                        // 启用音频（仅视频）
-                        if (splashType == "VIDEO") {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("启用音频", style = MaterialTheme.typography.bodyMedium)
-                                Switch(
-                                    checked = splashEnableAudio,
-                                    onCheckedChange = { splashEnableAudio = it }
-                                )
-                            }
-                        }
-                    }
-                }
-                
-                Divider()
-                
-                // 激活码设置
-                Text("激活码验证", style = MaterialTheme.typography.titleSmall)
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("启用激活码", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = activationEnabled,
-                        onCheckedChange = { activationEnabled = it }
-                    )
-                }
-                
-                if (activationEnabled) {
-                    Text(
-                        text = "启用后，用户需要输入正确的激活码才能使用应用",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    // 添加激活码
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = newActivationCode,
-                            onValueChange = { newActivationCode = it },
-                            placeholder = { Text("输入激活码") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        FilledIconButton(
-                            onClick = {
-                                if (newActivationCode.isNotBlank()) {
-                                    activationCodes = activationCodes + newActivationCode
-                                    newActivationCode = ""
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.Add, "添加")
-                        }
-                    }
-                    
-                    // 激活码列表
-                    activationCodes.forEachIndexed { index, code ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = code,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(
                                 onClick = {
-                                    activationCodes = activationCodes.filterIndexed { i, _ -> i != index }
-                                }
+                                    isProcessing = true
+                                    scope.launch {
+                                        try {
+                                            val result = appCloner.cloneAndInstall(buildConfig()) { p, t ->
+                                                scope.launch {
+                                                    progress = p
+                                                    progressText = t
+                                                }
+                                            }
+                                            onResult(result)
+                                        } catch (e: Exception) {
+                                            onResult(AppModifyResult.Error(e.message ?: "克隆失败"))
+                                        }
+                                    }
+                                },
+                                enabled = newAppName.isNotBlank()
                             ) {
-                                Icon(
-                                    Icons.Outlined.Delete,
-                                    "删除",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                                Text("克隆安装")
                             }
                         }
+                        // 快捷方式按钮
+                        TextButton(
+                            onClick = {
+                                isProcessing = true
+                                scope.launch {
+                                    try {
+                                        val result = appCloner.createModifiedShortcut(buildConfig()) { p, t ->
+                                            scope.launch {
+                                                progress = p
+                                                progressText = t
+                                            }
+                                        }
+                                        onResult(result)
+                                    } catch (e: Exception) {
+                                        onResult(AppModifyResult.Error(e.message ?: "创建快捷方式失败"))
+                                    }
+                                }
+                            },
+                            enabled = newAppName.isNotBlank()
+                        ) {
+                            Text("快捷方式")
+                        }
+                    } else {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                            strokeWidth = 2.dp
+                        )
                     }
                 }
-                
-                Divider()
-                
-                // 弹窗公告设置
-                Text("弹窗公告", style = MaterialTheme.typography.titleSmall)
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("启用弹窗公告", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = announcementEnabled,
-                        onCheckedChange = { announcementEnabled = it }
-                    )
-                }
-                
-                if (announcementEnabled) {
-                    OutlinedTextField(
-                        value = announcementTitle,
-                        onValueChange = { announcementTitle = it },
-                        label = { Text("公告标题") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    OutlinedTextField(
-                        value = announcementContent,
-                        onValueChange = { announcementContent = it },
-                        label = { Text("公告内容") },
-                        minLines = 2,
-                        maxLines = 4,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    OutlinedTextField(
-                        value = announcementLink,
-                        onValueChange = { announcementLink = it },
-                        label = { Text("链接地址（可选）") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                
-                Divider()
-                
-                // 克隆提示
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
-                            MaterialTheme.shapes.small
-                        )
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.Warning,
-                        null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "克隆安装仅适用于无签名校验的应用，兼容性较差",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-                
-                // 进度
-                if (isProcessing) {
-                    Column {
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(scrollState)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // 进度条
+            if (isProcessing) {
+                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         LinearProgressIndicator(
                             progress = progress / 100f,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             progressText,
                             style = MaterialTheme.typography.bodySmall,
@@ -805,118 +492,454 @@ fun AppModifyDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            if (!isProcessing) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (newIconPath == null) {
-                        // 克隆安装按钮
-                        OutlinedButton(
-                            onClick = {
-                                isProcessing = true
-                                scope.launch {
-                                    try {
-                                        val config = AppModifyConfig(
-                                            originalApp = app,
-                                            newAppName = newAppName,
-                                            newIconPath = newIconPath,
-                                            splashEnabled = splashEnabled && splashPath != null,
-                                            splashType = splashType,
-                                            splashPath = splashPath,
-                                            splashDuration = splashDuration,
-                                            splashClickToSkip = splashClickToSkip,
-                                            splashVideoStartMs = splashVideoStartMs,
-                                            splashVideoEndMs = splashVideoEndMs,
-                                            splashLandscape = splashLandscape,
-                                            splashFillScreen = splashFillScreen,
-                                            splashEnableAudio = splashEnableAudio,
-                                            activationEnabled = activationEnabled,
-                                            activationCodes = activationCodes,
-                                            announcementEnabled = announcementEnabled,
-                                            announcementTitle = announcementTitle,
-                                            announcementContent = announcementContent,
-                                            announcementLink = announcementLink.ifBlank { null }
-                                        )
-                                        val result = appCloner.cloneAndInstall(config) { p, t ->
-                                            // 确保在主线程更新 UI
-                                            scope.launch {
-                                                progress = p
-                                                progressText = t
-                                            }
-                                        }
-                                        onResult(result)
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        onResult(AppModifyResult.Error(e.message ?: "克隆失败"))
-                                    }
-                                }
-                            },
-                            enabled = newAppName.isNotBlank()
-                        ) {
-                            Icon(Icons.Outlined.InstallMobile, null, Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("克隆安装")
-                        }
-                    }
-
-                    // 创建快捷方式按钮
-                    Button(
-                        onClick = {
-                            isProcessing = true
-                            scope.launch {
-                                try {
-                                    val config = AppModifyConfig(
-                                        originalApp = app,
-                                        newAppName = newAppName,
-                                        newIconPath = newIconPath,
-                                        splashEnabled = splashEnabled && splashPath != null,
-                                        splashType = splashType,
-                                        splashPath = splashPath,
-                                        splashDuration = splashDuration,
-                                        splashClickToSkip = splashClickToSkip,
-                                        splashVideoStartMs = splashVideoStartMs,
-                                        splashVideoEndMs = splashVideoEndMs,
-                                        splashLandscape = splashLandscape,
-                                        splashFillScreen = splashFillScreen,
-                                        splashEnableAudio = splashEnableAudio,
-                                        activationEnabled = activationEnabled,
-                                        activationCodes = activationCodes,
-                                        announcementEnabled = announcementEnabled,
-                                        announcementTitle = announcementTitle,
-                                        announcementContent = announcementContent,
-                                        announcementLink = announcementLink.ifBlank { null }
-                                    )
-                                    val result = appCloner.createModifiedShortcut(config) { p, t ->
-                                        // 确保在主线程更新 UI
-                                        scope.launch {
-                                            progress = p
-                                            progressText = t
-                                        }
-                                    }
-                                    onResult(result)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                    onResult(AppModifyResult.Error(e.message ?: "创建快捷方式失败"))
-                                }
-                            }
-                        },
-                        enabled = newAppName.isNotBlank()
+            
+            // 原应用信息卡片
+            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    app.icon?.let { drawable ->
+                        Image(
+                            bitmap = drawable.toBitmap(56, 56).asImageBitmap(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(MaterialTheme.shapes.small)
+                        )
+                    } ?: Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.small),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.AppShortcut, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("快捷方式")
+                        Icon(Icons.Outlined.Android, null)
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text("原应用", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text(app.appName, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "${app.packageName} · v${app.versionName}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-            } else {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp))
             }
-        },
-        dismissButton = {
-            if (!isProcessing) {
-                TextButton(onClick = onDismiss) {
-                    Text("取消")
+            
+            // 基本信息卡片
+            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text("基本信息", style = MaterialTheme.typography.titleMedium)
+                    
+                    // 图标选择（带图标库功能）
+                    IconPickerWithLibrary(
+                        iconUri = newIconUri,
+                        iconPath = newIconPath,
+                        onSelectFromGallery = { imagePickerLauncher.launch("image/*") },
+                        onSelectFromLibrary = { path ->
+                            newIconPath = path
+                            newIconUri = null
+                        }
+                    )
+                    
+                    // 清除自定义图标按钮
+                    if (newIconUri != null || newIconPath != null) {
+                        TextButton(
+                            onClick = { 
+                                newIconUri = null
+                                newIconPath = null 
+                            },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("使用原图标", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                    
+                    // 新名称
+                    OutlinedTextField(
+                        value = newAppName,
+                        onValueChange = { newAppName = it },
+                        label = { Text("应用名称") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            
+            // 激活码设置卡片
+            ActivationCard(
+                enabled = activationEnabled,
+                codes = activationCodes,
+                onEnabledChange = { activationEnabled = it },
+                onCodesChange = { activationCodes = it }
+            )
+            
+            // 公告设置卡片
+            AnnouncementCardForModifier(
+                enabled = announcementEnabled,
+                title = announcementTitle,
+                content = announcementContent,
+                link = announcementLink,
+                onEnabledChange = { announcementEnabled = it },
+                onTitleChange = { announcementTitle = it },
+                onContentChange = { announcementContent = it },
+                onLinkChange = { announcementLink = it }
+            )
+            
+            // 启动画面设置卡片
+            SplashCardForModifier(
+                enabled = splashEnabled,
+                splashType = splashType,
+                splashPath = splashPath,
+                duration = splashDuration,
+                clickToSkip = splashClickToSkip,
+                landscape = splashLandscape,
+                fillScreen = splashFillScreen,
+                enableAudio = splashEnableAudio,
+                videoStartMs = splashVideoStartMs,
+                videoEndMs = splashVideoEndMs,
+                videoDurationMs = splashVideoDurationMs,
+                onEnabledChange = { splashEnabled = it },
+                onSelectImage = { splashImagePickerLauncher.launch("image/*") },
+                onSelectVideo = { splashVideoPickerLauncher.launch("video/*") },
+                onClearMedia = { 
+                    splashPath = null
+                    splashEnabled = false 
+                },
+                onDurationChange = { splashDuration = it },
+                onClickToSkipChange = { splashClickToSkip = it },
+                onLandscapeChange = { splashLandscape = it },
+                onFillScreenChange = { splashFillScreen = it },
+                onEnableAudioChange = { splashEnableAudio = it },
+                onVideoTrimChange = { start, end, total ->
+                    splashVideoStartMs = start
+                    splashVideoEndMs = end
+                    splashVideoDurationMs = total
+                }
+            )
+            
+            // 背景音乐卡片
+            BgmCard(
+                enabled = bgmEnabled,
+                config = bgmConfig,
+                onEnabledChange = { bgmEnabled = it },
+                onConfigChange = { bgmConfig = it }
+            )
+            
+            // 提示信息
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Outlined.Warning,
+                        null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "克隆安装仅适用于无签名校验的应用，兼容性较差。建议优先使用「快捷方式」功能。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+/**
+ * 激活码卡片（用于修改器）
+ */
+@Composable
+private fun ActivationCard(
+    enabled: Boolean,
+    codes: List<String>,
+    onEnabledChange: (Boolean) -> Unit,
+    onCodesChange: (List<String>) -> Unit
+) {
+    var newCode by remember { mutableStateOf("") }
+    
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Key, null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("激活码验证", style = MaterialTheme.typography.titleMedium)
+                }
+                Switch(checked = enabled, onCheckedChange = onEnabledChange)
+            }
+            
+            if (enabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "启用后，用户需要输入正确的激活码才能使用应用",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newCode,
+                        onValueChange = { newCode = it },
+                        placeholder = { Text("输入激活码") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledIconButton(
+                        onClick = {
+                            if (newCode.isNotBlank()) {
+                                onCodesChange(codes + newCode)
+                                newCode = ""
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Add, "添加")
+                    }
+                }
+                
+                codes.forEachIndexed { index, code ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(code, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                        IconButton(onClick = { onCodesChange(codes.filterIndexed { i, _ -> i != index }) }) {
+                            Icon(Icons.Outlined.Delete, "删除", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 }
             }
         }
-    )
+    }
+}
+
+/**
+ * 公告卡片（用于修改器）
+ */
+@Composable
+private fun AnnouncementCardForModifier(
+    enabled: Boolean,
+    title: String,
+    content: String,
+    link: String,
+    onEnabledChange: (Boolean) -> Unit,
+    onTitleChange: (String) -> Unit,
+    onContentChange: (String) -> Unit,
+    onLinkChange: (String) -> Unit
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Announcement, null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("弹窗公告", style = MaterialTheme.typography.titleMedium)
+                }
+                Switch(checked = enabled, onCheckedChange = onEnabledChange)
+            }
+            
+            if (enabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = onTitleChange,
+                    label = { Text("公告标题") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = onContentChange,
+                    label = { Text("公告内容") },
+                    minLines = 2,
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = link,
+                    onValueChange = onLinkChange,
+                    label = { Text("链接地址（可选）") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 启动画面卡片（用于修改器）
+ */
+@Composable
+private fun SplashCardForModifier(
+    enabled: Boolean,
+    splashType: String,
+    splashPath: String?,
+    duration: Int,
+    clickToSkip: Boolean,
+    landscape: Boolean,
+    fillScreen: Boolean,
+    enableAudio: Boolean,
+    videoStartMs: Long,
+    videoEndMs: Long,
+    videoDurationMs: Long,
+    onEnabledChange: (Boolean) -> Unit,
+    onSelectImage: () -> Unit,
+    onSelectVideo: () -> Unit,
+    onClearMedia: () -> Unit,
+    onDurationChange: (Int) -> Unit,
+    onClickToSkipChange: (Boolean) -> Unit,
+    onLandscapeChange: (Boolean) -> Unit,
+    onFillScreenChange: (Boolean) -> Unit,
+    onEnableAudioChange: (Boolean) -> Unit,
+    onVideoTrimChange: (Long, Long, Long) -> Unit
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.PlayCircle, null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("启动画面", style = MaterialTheme.typography.titleMedium)
+                }
+                Switch(checked = enabled, onCheckedChange = onEnabledChange)
+            }
+            
+            if (enabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(onClick = onSelectImage, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("选择图片")
+                    }
+                    OutlinedButton(onClick = onSelectVideo, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Outlined.VideoFile, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("选择视频")
+                    }
+                }
+                
+                if (splashPath != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                if (splashType == "IMAGE") Icons.Outlined.Image else Icons.Outlined.VideoFile,
+                                null, Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(if (splashType == "IMAGE") "已选择图片" else "已选择视频", style = MaterialTheme.typography.bodyMedium)
+                                Text(File(splashPath).name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                            }
+                            IconButton(onClick = onClearMedia) {
+                                Icon(Icons.Default.Clear, "清除")
+                            }
+                        }
+                    }
+                    
+                    if (splashType == "VIDEO") {
+                        VideoTrimmer(
+                            videoPath = splashPath,
+                            startMs = videoStartMs,
+                            endMs = videoEndMs,
+                            videoDurationMs = videoDurationMs,
+                            onTrimChange = onVideoTrimChange
+                        )
+                    }
+                    
+                    if (splashType == "IMAGE") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("显示时长：$duration 秒", style = MaterialTheme.typography.bodyMedium)
+                        Slider(
+                            value = duration.toFloat(),
+                            onValueChange = { onDurationChange(it.toInt()) },
+                            valueRange = 1f..5f,
+                            steps = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    SettingsSwitchRow("允许点击跳过", clickToSkip, onClickToSkipChange)
+                    SettingsSwitchRow("横屏显示", landscape, onLandscapeChange)
+                    SettingsSwitchRow("铺满屏幕", fillScreen, onFillScreenChange)
+                    if (splashType == "VIDEO") {
+                        SettingsSwitchRow("启用音频", enableAudio, onEnableAudioChange)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsSwitchRow(title: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.bodyMedium)
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
 }

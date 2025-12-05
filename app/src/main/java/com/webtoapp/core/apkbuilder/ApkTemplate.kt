@@ -3,6 +3,8 @@ package com.webtoapp.core.apkbuilder
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.webtoapp.core.shell.BgmShellItem
+import com.webtoapp.core.shell.LrcShellTheme
 import com.webtoapp.data.model.UserScript
 import java.io.*
 import java.util.zip.*
@@ -130,7 +132,18 @@ class ApkTemplate(private val context: Context) {
                 "autoPlay": ${config.mediaAutoPlay},
                 "fillScreen": ${config.mediaFillScreen},
                 "landscape": ${config.mediaLandscape}
-            }
+            },
+            "bgmEnabled": ${config.bgmEnabled},
+            "bgmPlaylist": [${config.bgmPlaylist.joinToString(",") { item ->
+                """{"id":"${escapeJson(item.id)}","name":"${escapeJson(item.name)}","assetPath":"${escapeJson(item.assetPath)}","lrcAssetPath":${item.lrcAssetPath?.let { "\"${escapeJson(it)}\"" } ?: "null"},"sortOrder":${item.sortOrder}}"""
+            }}],
+            "bgmPlayMode": "${config.bgmPlayMode}",
+            "bgmVolume": ${config.bgmVolume},
+            "bgmAutoPlay": ${config.bgmAutoPlay},
+            "bgmShowLyrics": ${config.bgmShowLyrics},
+            "bgmLrcTheme": ${config.bgmLrcTheme?.let { theme ->
+                """{"id":"${escapeJson(theme.id)}","name":"${escapeJson(theme.name)}","fontSize":${theme.fontSize},"textColor":"${escapeJson(theme.textColor)}","highlightColor":"${escapeJson(theme.highlightColor)}","backgroundColor":"${escapeJson(theme.backgroundColor)}","animationType":"${theme.animationType}","position":"${theme.position}"}"""
+            } ?: "null"}
         }
         """.trimIndent()
     }
@@ -298,10 +311,24 @@ data class ApkConfig(
     val splashEnableAudio: Boolean = false, // 是否启用视频音频
     
     // 媒体应用配置（图片/视频转APP）
-    val appType: String = "WEB",           // "WEB", "IMAGE", "VIDEO"
+    val appType: String = "WEB",           // "WEB", "IMAGE", "VIDEO", "HTML"
     val mediaEnableAudio: Boolean = true,  // 视频是否启用音频
     val mediaLoop: Boolean = true,         // 是否循环播放
     val mediaAutoPlay: Boolean = true,     // 是否自动播放
     val mediaFillScreen: Boolean = true,   // 是否铺满屏幕
-    val mediaLandscape: Boolean = false    // 是否横屏显示
+    val mediaLandscape: Boolean = false,   // 是否横屏显示
+    
+    // HTML应用配置
+    val htmlEntryFile: String = "index.html",  // HTML入口文件名
+    val htmlEnableJavaScript: Boolean = true,  // 是否启用JavaScript
+    val htmlEnableLocalStorage: Boolean = true, // 是否启用本地存储
+    
+    // 背景音乐配置
+    val bgmEnabled: Boolean = false,       // 是否启用背景音乐
+    val bgmPlaylist: List<BgmShellItem> = emptyList(), // 播放列表
+    val bgmPlayMode: String = "LOOP",      // 播放模式: LOOP, SEQUENTIAL, SHUFFLE
+    val bgmVolume: Float = 0.5f,           // 音量 (0.0-1.0)
+    val bgmAutoPlay: Boolean = true,       // 是否自动播放
+    val bgmShowLyrics: Boolean = true,     // 是否显示歌词
+    val bgmLrcTheme: LrcShellTheme? = null // 歌词主题
 )

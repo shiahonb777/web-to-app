@@ -5,7 +5,10 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.webtoapp.data.model.AdConfig
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.data.model.ApkExportConfig
 import com.webtoapp.data.model.AppType
+import com.webtoapp.data.model.BgmConfig
+import com.webtoapp.data.model.HtmlConfig
 import com.webtoapp.data.model.MediaConfig
 import com.webtoapp.data.model.SplashConfig
 import com.webtoapp.data.model.WebViewConfig
@@ -110,6 +113,39 @@ class Converters {
     @TypeConverter
     fun toMediaConfig(value: String): MediaConfig? = try {
         gson.fromJson(value, MediaConfig::class.java)
+    } catch (e: Exception) {
+        null
+    }
+    
+    // BgmConfig 转换
+    @TypeConverter
+    fun fromBgmConfig(value: BgmConfig?): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toBgmConfig(value: String): BgmConfig? = try {
+        gson.fromJson(value, BgmConfig::class.java)
+    } catch (e: Exception) {
+        null
+    }
+    
+    // HtmlConfig 转换
+    @TypeConverter
+    fun fromHtmlConfig(value: HtmlConfig?): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toHtmlConfig(value: String): HtmlConfig? = try {
+        gson.fromJson(value, HtmlConfig::class.java)
+    } catch (e: Exception) {
+        null
+    }
+    
+    // ApkExportConfig 转换
+    @TypeConverter
+    fun fromApkExportConfig(value: ApkExportConfig?): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toApkExportConfig(value: String): ApkExportConfig? = try {
+        gson.fromJson(value, ApkExportConfig::class.java)
     } catch (e: Exception) {
         null
     }

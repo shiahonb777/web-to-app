@@ -150,7 +150,33 @@ data class ShellConfig(
     val appType: String = "WEB",
     
     @SerializedName("mediaConfig")
-    val mediaConfig: MediaShellConfig = MediaShellConfig()
+    val mediaConfig: MediaShellConfig = MediaShellConfig(),
+    
+    // HTML应用配置
+    @SerializedName("htmlConfig")
+    val htmlConfig: HtmlShellConfig = HtmlShellConfig(),
+    
+    // 背景音乐配置
+    @SerializedName("bgmEnabled")
+    val bgmEnabled: Boolean = false,
+    
+    @SerializedName("bgmPlaylist")
+    val bgmPlaylist: List<BgmShellItem> = emptyList(),
+    
+    @SerializedName("bgmPlayMode")
+    val bgmPlayMode: String = "LOOP",
+    
+    @SerializedName("bgmVolume")
+    val bgmVolume: Float = 0.5f,
+    
+    @SerializedName("bgmAutoPlay")
+    val bgmAutoPlay: Boolean = true,
+    
+    @SerializedName("bgmShowLyrics")
+    val bgmShowLyrics: Boolean = true,
+    
+    @SerializedName("bgmLrcTheme")
+    val bgmLrcTheme: LrcShellTheme? = null
 )
 
 /**
@@ -171,6 +197,23 @@ data class MediaShellConfig(
     
     @SerializedName("landscape")
     val landscape: Boolean = false
+)
+
+/**
+ * HTML应用 Shell 配置
+ */
+data class HtmlShellConfig(
+    @SerializedName("entryFile")
+    val entryFile: String = "index.html",
+    
+    @SerializedName("enableJavaScript")
+    val enableJavaScript: Boolean = true,
+    
+    @SerializedName("enableLocalStorage")
+    val enableLocalStorage: Boolean = true,
+    
+    @SerializedName("backgroundColor")
+    val backgroundColor: String = "#FFFFFF"
 )
 
 /**
@@ -214,4 +257,53 @@ data class ShellUserScript(
     
     @SerializedName("runAt")
     val runAt: String = "DOCUMENT_END"
+)
+
+/**
+ * BGM 项（用于 Shell 配置）
+ */
+data class BgmShellItem(
+    @SerializedName("id")
+    val id: String = "",
+    
+    @SerializedName("name")
+    val name: String = "",
+    
+    @SerializedName("assetPath")
+    val assetPath: String = "",
+    
+    @SerializedName("lrcAssetPath")
+    val lrcAssetPath: String? = null,
+    
+    @SerializedName("sortOrder")
+    val sortOrder: Int = 0
+)
+
+/**
+ * 歌词主题（用于 Shell 配置）
+ */
+data class LrcShellTheme(
+    @SerializedName("id")
+    val id: String = "",
+    
+    @SerializedName("name")
+    val name: String = "",
+    
+    @SerializedName("fontSize")
+    val fontSize: Float = 18f,
+    
+    @SerializedName("textColor")
+    val textColor: String = "#FFFFFF",
+    
+    @SerializedName("highlightColor")
+    val highlightColor: String = "#FFD700",
+    
+    @SerializedName("backgroundColor")
+    val backgroundColor: String = "#80000000",
+    
+    @SerializedName("animationType")
+    val animationType: String = "FADE",
+    
+    @SerializedName("position")
+    val position: String = "BOTTOM"
 )

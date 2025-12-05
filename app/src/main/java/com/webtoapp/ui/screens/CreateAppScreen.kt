@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.data.model.*
+import com.webtoapp.ui.components.BgmCard
+import com.webtoapp.ui.components.IconPickerWithLibrary
 import com.webtoapp.ui.components.VideoTrimmer
 import com.webtoapp.ui.viewmodel.EditState
 import com.webtoapp.ui.viewmodel.MainViewModel
@@ -122,7 +124,10 @@ fun CreateAppScreen(
                 editState = editState,
                 onNameChange = { viewModel.updateEditState { copy(name = it) } },
                 onUrlChange = { viewModel.updateEditState { copy(url = it) } },
-                onSelectIcon = { imagePickerLauncher.launch("image/*") }
+                onSelectIcon = { imagePickerLauncher.launch("image/*") },
+                onSelectIconFromLibrary = { path ->
+                    viewModel.updateEditState { copy(savedIconPath = path, iconUri = null) }
+                }
             )
 
             // 激活码设置
@@ -192,6 +197,11 @@ fun CreateAppScreen(
                         copy(splashConfig = splashConfig.copy(fillScreen = it))
                     }
                 },
+                onEnableAudioChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(enableAudio = it))
+                    }
+                },
                 onVideoTrimChange = { startMs, endMs, totalDurationMs ->
                     viewModel.updateEditState {
                         copy(splashConfig = splashConfig.copy(
@@ -204,10 +214,20 @@ fun CreateAppScreen(
                 onClearMedia = { viewModel.clearSplashMedia() }
             )
 
+            // 背景音乐
+            BgmCard(
+                enabled = editState.bgmEnabled,
+                config = editState.bgmConfig,
+                onEnabledChange = { viewModel.updateEditState { copy(bgmEnabled = it) } },
+                onConfigChange = { viewModel.updateEditState { copy(bgmConfig = it) } }
+            )
+
             // WebView高级设置
             WebViewConfigCard(
                 config = editState.webViewConfig,
-                onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } }
+                onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } },
+                apkExportConfig = editState.apkExportConfig,
+                onApkExportConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } }
             )
 
             // 错误提示
@@ -250,7 +270,8 @@ fun BasicInfoCard(
     editState: EditState,
     onNameChange: (String) -> Unit,
     onUrlChange: (String) -> Unit,
-    onSelectIcon: () -> Unit
+    onSelectIcon: () -> Unit,
+    onSelectIconFromLibrary: (String) -> Unit = {}
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -262,62 +283,13 @@ fun BasicInfoCard(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            // 图标选择
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .border(
-                            width = 2.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                        .clickable { onSelectIcon() },
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    if (editState.iconUri != null) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(editState.iconUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "应用图标",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Icon(
-                                Icons.Outlined.AddPhotoAlternate,
-                                contentDescription = "选择图标",
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text(
-                        text = "应用图标",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text = "点击选择图片作为图标",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            // 图标选择（带图标库功能）
+            IconPickerWithLibrary(
+                iconUri = editState.iconUri,
+                iconPath = editState.savedIconPath,
+                onSelectFromGallery = onSelectIcon,
+                onSelectFromLibrary = onSelectIconFromLibrary
+            )
 
             // 应用名称
             OutlinedTextField(
@@ -519,18 +491,73 @@ fun AnnouncementCard(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("仅显示一次")
-                    Switch(
-                        checked = editState.announcement.showOnce,
-                        onCheckedChange = {
-                            onAnnouncementChange(editState.announcement.copy(showOnce = it))
+                // 显示频率选择
+                Text(
+                    "显示频率",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    // 选项1：仅显示一次
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onAnnouncementChange(editState.announcement.copy(showOnce = true))
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = editState.announcement.showOnce,
+                            onClick = {
+                                onAnnouncementChange(editState.announcement.copy(showOnce = true))
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "仅显示一次",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                "用户点击关闭后不再弹出",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    )
+                    }
+                    
+                    // 选项2：每次启动都显示
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onAnnouncementChange(editState.announcement.copy(showOnce = false))
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = !editState.announcement.showOnce,
+                            onClick = {
+                                onAnnouncementChange(editState.announcement.copy(showOnce = false))
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "每次启动都显示",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                "每次打开应用都会弹出公告",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -647,7 +674,9 @@ fun AdBlockCard(
 @Composable
 fun WebViewConfigCard(
     config: WebViewConfig,
-    onConfigChange: (WebViewConfig) -> Unit
+    onConfigChange: (WebViewConfig) -> Unit,
+    apkExportConfig: ApkExportConfig = ApkExportConfig(),
+    onApkExportConfigChange: (ApkExportConfig) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -737,7 +766,97 @@ fun WebViewConfigCard(
                     scripts = config.injectScripts,
                     onScriptsChange = { onConfigChange(config.copy(injectScripts = it)) }
                 )
+                
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                // APK 导出配置
+                ApkExportSection(
+                    config = apkExportConfig,
+                    onConfigChange = onApkExportConfigChange
+                )
             }
+        }
+    }
+}
+
+/**
+ * APK 导出配置区域
+ */
+@Composable
+fun ApkExportSection(
+    config: ApkExportConfig,
+    onConfigChange: (ApkExportConfig) -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Outlined.Android,
+                null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "APK 导出配置",
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+        
+        Text(
+            text = "以下配置仅在打包APK时生效",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+        )
+        
+        // 自定义包名
+        OutlinedTextField(
+            value = config.customPackageName ?: "",
+            onValueChange = { 
+                onConfigChange(config.copy(customPackageName = it.ifBlank { null }))
+            },
+            label = { Text("自定义包名") },
+            placeholder = { Text("com.example.myapp") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = { 
+                Text("留空则自动生成，格式如：com.example.myapp") 
+            }
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // 版本名和版本号
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedTextField(
+                value = config.customVersionName ?: "",
+                onValueChange = { 
+                    onConfigChange(config.copy(customVersionName = it.ifBlank { null }))
+                },
+                label = { Text("版本名") },
+                placeholder = { Text("1.0.0") },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+            
+            OutlinedTextField(
+                value = config.customVersionCode?.toString() ?: "",
+                onValueChange = { input ->
+                    val code = input.filter { it.isDigit() }.toIntOrNull()
+                    onConfigChange(config.copy(customVersionCode = code))
+                },
+                label = { Text("版本号") },
+                placeholder = { Text("1") },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
         }
     }
 }
@@ -1143,6 +1262,7 @@ fun SplashScreenCard(
     onClickToSkipChange: (Boolean) -> Unit,
     onOrientationChange: (SplashOrientation) -> Unit,
     onFillScreenChange: (Boolean) -> Unit,
+    onEnableAudioChange: (Boolean) -> Unit,
     onVideoTrimChange: (startMs: Long, endMs: Long, totalDurationMs: Long) -> Unit,
     onClearMedia: () -> Unit
 ) {
@@ -1405,6 +1525,28 @@ fun SplashScreenCard(
                             checked = editState.splashConfig.fillScreen,
                             onCheckedChange = onFillScreenChange
                         )
+                    }
+                    
+                    // 启用音频设置（仅视频类型显示）
+                    if (editState.splashConfig.type == SplashType.VIDEO) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("启用音频", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "播放视频启动画面时同时播放音频",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = editState.splashConfig.enableAudio,
+                                onCheckedChange = onEnableAudioChange
+                            )
+                        }
                     }
                 }
             }

@@ -8,6 +8,9 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.content.FileProvider
+import com.webtoapp.core.shell.BgmShellItem
+import com.webtoapp.core.shell.LrcShellTheme
+import com.webtoapp.data.model.LrcData
 import com.webtoapp.data.model.WebApp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -62,8 +65,10 @@ class ApkBuilder(private val context: Context) {
             Log.d("ApkBuilder", "  splashConfig=${webApp.splashConfig}")
             Log.d("ApkBuilder", "  splashMediaPath=${webApp.getSplashMediaPath()}")
             
-            // 生成包名（基于应用名）
-            val packageName = generatePackageName(webApp.name)
+            // 生成包名（优先使用自定义包名，否则基于应用名自动生成）
+            val packageName = webApp.apkExportConfig?.customPackageName?.takeIf { 
+                it.isNotBlank() && it.matches(Regex("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"))
+            } ?: generatePackageName(webApp.name)
             val config = webApp.toApkConfig(packageName)
             
             onProgress(10, "检查模板...")
@@ -85,14 +90,40 @@ class ApkBuilder(private val context: Context) {
             onProgress(30, "注入配置...")
             
             // 获取媒体文件路径（媒体应用使用 url 字段存储媒体路径）
-            val mediaContentPath = if (webApp.appType != com.webtoapp.data.model.AppType.WEB) {
+            val mediaContentPath = if (webApp.appType == com.webtoapp.data.model.AppType.IMAGE || 
+                                       webApp.appType == com.webtoapp.data.model.AppType.VIDEO) {
                 webApp.url // 媒体应用的 url 字段存储的是媒体文件路径
             } else {
                 null
             }
             
+            // 获取 HTML 文件列表（HTML应用）
+            val htmlFiles = if (webApp.appType == com.webtoapp.data.model.AppType.HTML) {
+                webApp.htmlConfig?.files ?: emptyList()
+            } else {
+                emptyList()
+            }
+            
+            // 获取 BGM 播放列表的原始路径
+            val bgmPlaylistPaths = if (webApp.bgmEnabled) {
+                webApp.bgmConfig?.playlist?.map { it.path } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            
+            // 获取 BGM 歌词数据
+            val bgmLrcDataList = if (webApp.bgmEnabled) {
+                webApp.bgmConfig?.playlist?.map { it.lrcData } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            
             // 修改 APK 内容
-            modifyApk(templateApk, unsignedApk, config, webApp.iconPath, webApp.getSplashMediaPath(), mediaContentPath) { progress ->
+            modifyApk(
+                templateApk, unsignedApk, config, webApp.iconPath, 
+                webApp.getSplashMediaPath(), mediaContentPath,
+                bgmPlaylistPaths, bgmLrcDataList, htmlFiles
+            ) { progress ->
                 onProgress(30 + (progress * 0.4).toInt(), "处理资源...")
             }
             
@@ -186,6 +217,9 @@ class ApkBuilder(private val context: Context) {
         iconPath: String?,
         splashMediaPath: String?,
         mediaContentPath: String? = null,
+        bgmPlaylistPaths: List<String> = emptyList(),
+        bgmLrcDataList: List<LrcData?> = emptyList(),
+        htmlFiles: List<com.webtoapp.data.model.HtmlFile> = emptyList(),
         onProgress: (Int) -> Unit
     ) {
         val iconBitmap = iconPath?.let { template.loadBitmap(it) }
@@ -286,6 +320,16 @@ class ApkBuilder(private val context: Context) {
                 if (config.appType != "WEB" && mediaContentPath != null) {
                     val isVideo = config.appType == "VIDEO"
                     addMediaContentToAssets(zipOut, mediaContentPath, isVideo)
+                }
+                
+                // 嵌入背景音乐文件
+                if (config.bgmEnabled && bgmPlaylistPaths.isNotEmpty()) {
+                    addBgmToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList)
+                }
+                
+                // 嵌入 HTML 文件（HTML应用）
+                if (config.appType == "HTML" && htmlFiles.isNotEmpty()) {
+                    addHtmlFilesToAssets(zipOut, htmlFiles)
                 }
             }
         }
@@ -396,6 +440,129 @@ class ApkBuilder(private val context: Context) {
         } catch (e: Exception) {
             Log.e("ApkBuilder", "嵌入媒体应用内容失败", e)
         }
+    }
+    
+    /**
+     * 将背景音乐文件添加到 assets/bgm 目录
+     * 使用 STORED（未压缩）方式，以支持 AssetManager.openFd()
+     */
+    private fun addBgmToAssets(
+        zipOut: ZipOutputStream,
+        bgmPaths: List<String>,
+        lrcDataList: List<LrcData?>
+    ) {
+        Log.d("ApkBuilder", "准备嵌入 ${bgmPaths.size} 个背景音乐文件")
+        
+        bgmPaths.forEachIndexed { index, bgmPath ->
+            try {
+                val bgmFile = File(bgmPath)
+                if (!bgmFile.exists()) {
+                    // 尝试处理 asset:/// 路径
+                    if (bgmPath.startsWith("asset:///")) {
+                        val assetPath = bgmPath.removePrefix("asset:///")
+                        val assetBytes = context.assets.open(assetPath).use { it.readBytes() }
+                        val targetPath = "assets/bgm/bgm_$index.mp3"
+                        writeEntryStoredSimple(zipOut, targetPath, assetBytes)
+                        Log.d("ApkBuilder", "BGM 从 assets 嵌入: $targetPath (${assetBytes.size} bytes)")
+                    } else {
+                        Log.e("ApkBuilder", "BGM 文件不存在: $bgmPath")
+                    }
+                } else {
+                    if (!bgmFile.canRead()) {
+                        Log.e("ApkBuilder", "BGM 文件无法读取: $bgmPath")
+                        return@forEachIndexed
+                    }
+                    
+                    val bgmBytes = bgmFile.readBytes()
+                    if (bgmBytes.isEmpty()) {
+                        Log.e("ApkBuilder", "BGM 文件内容为空: $bgmPath")
+                        return@forEachIndexed
+                    }
+                    
+                    val targetPath = "assets/bgm/bgm_$index.mp3"
+                    writeEntryStoredSimple(zipOut, targetPath, bgmBytes)
+                    Log.d("ApkBuilder", "BGM 已嵌入: $targetPath (${bgmBytes.size} bytes)")
+                }
+                
+                // 嵌入歌词文件（如果有）
+                val lrcData = lrcDataList.getOrNull(index)
+                if (lrcData != null && lrcData.lines.isNotEmpty()) {
+                    val lrcContent = convertLrcDataToLrcString(lrcData)
+                    val lrcPath = "assets/bgm/bgm_$index.lrc"
+                    writeEntryDeflated(zipOut, lrcPath, lrcContent.toByteArray(Charsets.UTF_8))
+                    Log.d("ApkBuilder", "LRC 已嵌入: $lrcPath")
+                }
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "嵌入 BGM 失败: $bgmPath", e)
+            }
+        }
+    }
+    
+    /**
+     * 将 HTML 文件添加到 assets/html 目录
+     * HTML/CSS/JS 文件使用 DEFLATED 压缩（文本文件压缩效果好）
+     */
+    private fun addHtmlFilesToAssets(
+        zipOut: ZipOutputStream,
+        htmlFiles: List<com.webtoapp.data.model.HtmlFile>
+    ) {
+        Log.d("ApkBuilder", "准备嵌入 ${htmlFiles.size} 个 HTML 项目文件")
+        
+        htmlFiles.forEach { htmlFile ->
+            try {
+                val sourceFile = File(htmlFile.path)
+                if (!sourceFile.exists()) {
+                    Log.e("ApkBuilder", "HTML 文件不存在: ${htmlFile.path}")
+                    return@forEach
+                }
+                
+                if (!sourceFile.canRead()) {
+                    Log.e("ApkBuilder", "HTML 文件无法读取: ${htmlFile.path}")
+                    return@forEach
+                }
+                
+                val fileBytes = sourceFile.readBytes()
+                if (fileBytes.isEmpty()) {
+                    Log.w("ApkBuilder", "HTML 文件内容为空: ${htmlFile.path}")
+                    return@forEach
+                }
+                
+                // 保持相对路径结构，存储到 assets/html/ 目录
+                val assetPath = "assets/html/${htmlFile.name}"
+                writeEntryDeflated(zipOut, assetPath, fileBytes)
+                Log.d("ApkBuilder", "HTML 文件已嵌入: $assetPath (${fileBytes.size} bytes)")
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "嵌入 HTML 文件失败: ${htmlFile.path}", e)
+            }
+        }
+    }
+    
+    /**
+     * 将 LrcData 转换为标准 LRC 格式字符串
+     */
+    private fun convertLrcDataToLrcString(lrcData: LrcData): String {
+        val sb = StringBuilder()
+        
+        // 添加元数据
+        lrcData.title?.let { sb.appendLine("[ti:$it]") }
+        lrcData.artist?.let { sb.appendLine("[ar:$it]") }
+        lrcData.album?.let { sb.appendLine("[al:$it]") }
+        sb.appendLine()
+        
+        // 添加歌词行
+        lrcData.lines.forEach { line ->
+            val minutes = line.startTime / 60000
+            val seconds = (line.startTime % 60000) / 1000
+            val centiseconds = (line.startTime % 1000) / 10
+            sb.appendLine("[%02d:%02d.%02d]%s".format(minutes, seconds, centiseconds, line.text))
+            
+            // 如果有翻译，添加翻译行（使用相同时间戳）
+            line.translation?.let { translation ->
+                sb.appendLine("[%02d:%02d.%02d]%s".format(minutes, seconds, centiseconds, translation))
+            }
+        }
+        
+        return sb.toString()
     }
 
     /**
@@ -726,6 +893,8 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         appName = name,
         packageName = packageName,
         targetUrl = url,
+        versionCode = apkExportConfig?.customVersionCode ?: 1,
+        versionName = apkExportConfig?.customVersionName?.takeIf { it.isNotBlank() } ?: "1.0.0",
         iconPath = iconPath,
         activationEnabled = activationEnabled,
         activationCodes = activationCodes,
@@ -757,7 +926,40 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         mediaLoop = mediaConfig?.loop ?: true,
         mediaAutoPlay = mediaConfig?.autoPlay ?: true,
         mediaFillScreen = mediaConfig?.fillScreen ?: true,
-        mediaLandscape = mediaConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE
+        mediaLandscape = mediaConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE,
+        
+        // HTML应用配置
+        htmlEntryFile = htmlConfig?.entryFile ?: "index.html",
+        htmlEnableJavaScript = htmlConfig?.enableJavaScript ?: true,
+        htmlEnableLocalStorage = htmlConfig?.enableLocalStorage ?: true,
+        
+        // 背景音乐配置
+        bgmEnabled = bgmEnabled,
+        bgmPlaylist = bgmConfig?.playlist?.mapIndexed { index, item ->
+            BgmShellItem(
+                id = item.id,
+                name = item.name,
+                assetPath = "bgm/bgm_$index.mp3",  // 将在 APK 中存储为 assets/bgm/bgm_0.mp3 等
+                lrcAssetPath = if (item.lrcData != null) "bgm/bgm_$index.lrc" else null,
+                sortOrder = item.sortOrder
+            )
+        } ?: emptyList(),
+        bgmPlayMode = bgmConfig?.playMode?.name ?: "LOOP",
+        bgmVolume = bgmConfig?.volume ?: 0.5f,
+        bgmAutoPlay = bgmConfig?.autoPlay ?: true,
+        bgmShowLyrics = bgmConfig?.showLyrics ?: true,
+        bgmLrcTheme = bgmConfig?.lrcTheme?.let { theme ->
+            LrcShellTheme(
+                id = theme.id,
+                name = theme.name,
+                fontSize = theme.fontSize,
+                textColor = theme.textColor,
+                highlightColor = theme.highlightColor,
+                backgroundColor = theme.backgroundColor,
+                animationType = theme.animationType.name,
+                position = theme.position.name
+            )
+        }
     )
 }
 

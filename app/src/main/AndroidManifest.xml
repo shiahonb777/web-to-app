@@ -27,6 +27,13 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
+    <!-- 通知权限（Android 13+） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- 前台服务权限 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <application
         android:name=".WebToAppApplication"
         android:allowBackup="true"
@@ -78,6 +85,14 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:theme="@style/Theme.WebToApp.NoActionBar" />
+        
+        <!-- HTML预览Activity（HTML编程AI生成代码预览） -->
+        <activity
+            android:name=".ui.htmlpreview.HtmlPreviewActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.WebToApp" />
 
         <!-- 启动画面中转Activity（用于本地应用快捷方式） -->
         <!-- 使用透明主题，避免显示应用切换动画 -->
@@ -106,6 +121,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- LRC 歌词生成后台服务 -->
+        <service
+            android:name=".core.ai.LrcGenerationService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 

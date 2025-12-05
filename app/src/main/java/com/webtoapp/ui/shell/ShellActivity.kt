@@ -3,7 +3,9 @@ package com.webtoapp.ui.shell
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -43,12 +45,15 @@ import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.data.model.LrcData
+import com.webtoapp.data.model.LrcLine
 import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.UserScript
 import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.ui.webview.ActivationDialog
 import com.webtoapp.ui.webview.AnnouncementDialog
+import com.webtoapp.util.DownloadHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -174,7 +179,10 @@ fun ShellScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showActivationDialog by remember { mutableStateOf(false) }
     var showAnnouncementDialog by remember { mutableStateOf(false) }
-    var isActivated by remember { mutableStateOf(true) }
+    // 激活状态：如果启用了激活码，默认未激活，防止 WebView 在检查完成前加载
+    var isActivated by remember { mutableStateOf(!config.activationEnabled) }
+    // 激活检查是否完成（用于显示加载状态）
+    var isActivationChecked by remember { mutableStateOf(!config.activationEnabled) }
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
 
@@ -220,8 +228,10 @@ fun ShellScreen(
         // 检查激活状态
         if (config.activationEnabled) {
             // Shell 模式使用固定 ID
-            isActivated = activation.getActivationStatus(-1L)
-            if (!isActivated) {
+            val activated = activation.getActivationStatus(-1L)
+            isActivated = activated
+            isActivationChecked = true
+            if (!activated) {
                 showActivationDialog = true
             }
         }
@@ -255,6 +265,171 @@ fun ShellScreen(
                 activity.requestedOrientation = originalOrientation
                 originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
+        }
+    }
+    
+    // ===== 背景音乐播放器 =====
+    var bgmPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var currentBgmIndex by remember { mutableIntStateOf(0) }
+    var isBgmPlaying by remember { mutableStateOf(false) }
+    
+    // ===== 歌词显示 =====
+    var currentLrcData by remember { mutableStateOf<LrcData?>(null) }
+    var currentLrcLineIndex by remember { mutableIntStateOf(-1) }
+    var bgmCurrentPosition by remember { mutableLongStateOf(0L) }
+    
+    // 解析 LRC 文本（必须定义在 loadLrcForCurrentBgm 之前）
+    fun parseLrcText(text: String): LrcData? {
+        val lines = mutableListOf<LrcLine>()
+        val timeRegex = Regex("""\[(\d{2}):(\d{2})\.(\d{2,3})](.*)""")
+        
+        text.lines().forEach { line ->
+            timeRegex.find(line)?.let { match ->
+                val minutes = match.groupValues[1].toLongOrNull() ?: 0
+                val seconds = match.groupValues[2].toLongOrNull() ?: 0
+                val millis = match.groupValues[3].let {
+                    if (it.length == 2) it.toLong() * 10 else it.toLong()
+                }
+                val lyricText = match.groupValues[4].trim()
+                
+                if (lyricText.isNotEmpty()) {
+                    val startTime = minutes * 60000 + seconds * 1000 + millis
+                    lines.add(LrcLine(startTime = startTime, endTime = startTime + 5000, text = lyricText))
+                }
+            }
+        }
+        
+        // 计算结束时间
+        for (i in 0 until lines.size - 1) {
+            lines[i] = lines[i].copy(endTime = lines[i + 1].startTime)
+        }
+        
+        return if (lines.isNotEmpty()) LrcData(lines = lines) else null
+    }
+    
+    // 加载当前 BGM 的 LRC 数据
+    fun loadLrcForCurrentBgm(bgmIndex: Int) {
+        if (!config.bgmShowLyrics) {
+            currentLrcData = null
+            return
+        }
+        
+        val bgmItem = config.bgmPlaylist.getOrNull(bgmIndex) ?: return
+        val lrcPath = bgmItem.lrcAssetPath ?: return
+        
+        try {
+            val lrcAssetPath = lrcPath.removePrefix("assets/")
+            val lrcText = context.assets.open(lrcAssetPath).bufferedReader().readText()
+            currentLrcData = parseLrcText(lrcText)
+            currentLrcLineIndex = -1
+            android.util.Log.d("ShellActivity", "LRC 加载成功: $lrcPath, ${currentLrcData?.lines?.size} 行")
+        } catch (e: Exception) {
+            android.util.Log.e("ShellActivity", "加载 LRC 失败: $lrcPath", e)
+            currentLrcData = null
+        }
+    }
+    
+    // 初始化并播放 BGM
+    LaunchedEffect(config.bgmEnabled) {
+        if (config.bgmEnabled && config.bgmPlaylist.isNotEmpty()) {
+            try {
+                // 创建播放器
+                val player = MediaPlayer()
+                val firstItem = config.bgmPlaylist.first()
+                val assetPath = firstItem.assetPath.removePrefix("assets/")
+                
+                val afd: AssetFileDescriptor = context.assets.openFd(assetPath)
+                player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                afd.close()
+                
+                player.setVolume(config.bgmVolume, config.bgmVolume)
+                player.isLooping = config.bgmPlayMode == "LOOP" && config.bgmPlaylist.size == 1
+                
+                player.setOnCompletionListener {
+                    // 播放下一首
+                    val nextIndex = when (config.bgmPlayMode) {
+                        "SHUFFLE" -> (0 until config.bgmPlaylist.size).random()
+                        "SEQUENTIAL" -> if (currentBgmIndex + 1 < config.bgmPlaylist.size) currentBgmIndex + 1 else -1
+                        else -> (currentBgmIndex + 1) % config.bgmPlaylist.size // LOOP
+                    }
+                    
+                    if (nextIndex >= 0 && nextIndex < config.bgmPlaylist.size) {
+                        currentBgmIndex = nextIndex
+                        try {
+                            player.reset()
+                            val nextItem = config.bgmPlaylist[nextIndex]
+                            val nextAssetPath = nextItem.assetPath.removePrefix("assets/")
+                            val nextAfd = context.assets.openFd(nextAssetPath)
+                            player.setDataSource(nextAfd.fileDescriptor, nextAfd.startOffset, nextAfd.length)
+                            nextAfd.close()
+                            player.prepare()
+                            player.start()
+                            
+                            // 加载新歌曲的歌词
+                            loadLrcForCurrentBgm(nextIndex)
+                        } catch (e: Exception) {
+                            android.util.Log.e("ShellActivity", "播放下一首 BGM 失败", e)
+                        }
+                    }
+                }
+                
+                player.prepare()
+                
+                // 自动播放
+                if (config.bgmAutoPlay) {
+                    player.start()
+                    isBgmPlaying = true
+                }
+                
+                bgmPlayer = player
+                
+                // 加载第一首歌的歌词
+                loadLrcForCurrentBgm(0)
+                
+                android.util.Log.d("ShellActivity", "BGM 播放器初始化成功: ${firstItem.name}")
+            } catch (e: Exception) {
+                android.util.Log.e("ShellActivity", "初始化 BGM 播放器失败", e)
+            }
+        }
+    }
+    
+    // 更新歌词显示（追踪播放进度）
+    LaunchedEffect(isBgmPlaying, currentLrcData) {
+        if (!isBgmPlaying || currentLrcData == null) return@LaunchedEffect
+        
+        while (isBgmPlaying && currentLrcData != null) {
+            bgmPlayer?.let { mp ->
+                try {
+                    if (mp.isPlaying) {
+                        bgmCurrentPosition = mp.currentPosition.toLong()
+                        
+                        // 查找当前应显示的歌词行
+                        val lrcData = currentLrcData
+                        if (lrcData != null) {
+                            val newIndex = lrcData.lines.indexOfLast { it.startTime <= bgmCurrentPosition }
+                            if (newIndex != currentLrcLineIndex) {
+                                currentLrcLineIndex = newIndex
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    // 忽略播放器状态异常
+                }
+            }
+            delay(100)
+        }
+    }
+    
+    // 清理 BGM 播放器
+    DisposableEffect(Unit) {
+        onDispose {
+            bgmPlayer?.let {
+                if (it.isPlaying) {
+                    it.stop()
+                }
+                it.release()
+            }
+            bgmPlayer = null
         }
     }
 
@@ -323,6 +498,25 @@ fun ShellScreen(
                 fileChooserParams: WebChromeClient.FileChooserParams?
             ): Boolean {
                 return onFileChooser(filePathCallback, fileChooserParams)
+            }
+            
+            override fun onDownloadStart(
+                url: String,
+                userAgent: String,
+                contentDisposition: String,
+                mimeType: String,
+                contentLength: Long
+            ) {
+                // 使用系统下载管理器下载到 Download 文件夹
+                DownloadHelper.handleDownload(
+                    context = context,
+                    url = url,
+                    userAgent = userAgent,
+                    contentDisposition = contentDisposition,
+                    mimeType = mimeType,
+                    contentLength = contentLength,
+                    method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER
+                )
             }
         }
     }
@@ -427,8 +621,17 @@ fun ShellScreen(
                 )
             }
 
+            // 激活检查中，显示加载状态
+            if (!isActivationChecked) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
             // 未激活提示
-            if (!isActivated && config.activationEnabled) {
+            else if (!isActivated && config.activationEnabled) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -454,8 +657,42 @@ fun ShellScreen(
                     isVideo = config.appType == "VIDEO",
                     mediaConfig = config.mediaConfig
                 )
+            } else if (config.appType == "HTML") {
+                // HTML应用模式 - 加载嵌入在 APK assets 中的 HTML 文件
+                val htmlEntryFile = config.htmlConfig.entryFile
+                val htmlUrl = "file:///android_asset/html/$htmlEntryFile"
+                
+                AndroidView(
+                    factory = { ctx ->
+                        WebView(ctx).apply {
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            // 配置WebView以支持本地HTML
+                            settings.apply {
+                                javaScriptEnabled = config.htmlConfig.enableJavaScript
+                                domStorageEnabled = config.htmlConfig.enableLocalStorage
+                                allowFileAccess = true
+                                allowContentAccess = true
+                                // 允许本地文件访问（HTML中的相对路径资源）
+                                allowFileAccessFromFileURLs = true
+                                allowUniversalAccessFromFileURLs = true
+                            }
+                            webViewManager.configureWebView(
+                                this,
+                                webViewConfig,
+                                webViewCallbacks
+                            )
+                            onWebViewCreated(this)
+                            webViewRef = this
+                            loadUrl(htmlUrl)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             } else {
-                // WebView
+                // WebView（网页应用）
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
@@ -475,6 +712,48 @@ fun ShellScreen(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+
+            // 歌词显示
+            if (config.bgmShowLyrics && currentLrcData != null && currentLrcLineIndex >= 0) {
+                val lrcTheme = config.bgmLrcTheme
+                val bgColor = try {
+                    Color(android.graphics.Color.parseColor(lrcTheme?.backgroundColor ?: "#80000000"))
+                } catch (e: Exception) {
+                    Color.Black.copy(alpha = 0.5f)
+                }
+                val textColor = try {
+                    Color(android.graphics.Color.parseColor(lrcTheme?.highlightColor ?: "#FFD700"))
+                } catch (e: Exception) {
+                    Color.Yellow
+                }
+                
+                Box(
+                    modifier = Modifier
+                        .align(
+                            when (lrcTheme?.position) {
+                                "TOP" -> Alignment.TopCenter
+                                "CENTER" -> Alignment.Center
+                                else -> Alignment.BottomCenter
+                            }
+                        )
+                        .fillMaxWidth()
+                        .background(bgColor)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val currentLine = currentLrcData?.lines?.getOrNull(currentLrcLineIndex)
+                    currentLine?.let { line ->
+                        Text(
+                            text = line.text,
+                            color = textColor,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
             }
 
             // 错误提示

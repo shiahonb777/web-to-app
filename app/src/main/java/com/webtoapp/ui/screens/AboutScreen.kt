@@ -1,9 +1,15 @@
 package com.webtoapp.ui.screens
 
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.widget.Toast
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,35 +21,37 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Android
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.Computer
-import androidx.compose.material.icons.outlined.Group
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.NewReleases
-import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.webtoapp.R
+import com.webtoapp.util.AppUpdateChecker
+import kotlinx.coroutines.launch
 
 /**
- * 关于作者页面 - 像素/动漫风格
+ * 关于作者页面 - 现代简约风格
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,431 +60,759 @@ fun AboutScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-
-    // 定义一些“动漫/像素”风格的颜色
-    val primaryColor = Color(0xFF6200EE)
-    val accentColor = Color(0xFF03DAC5)
-    val pixelBgColor = Color(0xFFF0F4F8)
-    val cardBgColor = Color.White
-    val borderColor = Color(0xFF333333)
+    val scope = rememberCoroutineScope()
     
-    // 渐变背景
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(Color(0xFFE0F7FA), Color(0xFFF3E5F5))
+    // 当前版本信息
+    val (currentVersionName, currentVersionCode) = remember {
+        AppUpdateChecker.getCurrentVersionInfo(context)
+    }
+    
+    // 检查更新状态
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+    var updateInfo by remember { mutableStateOf<AppUpdateChecker.UpdateInfo?>(null) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var checkError by remember { mutableStateOf<String?>(null) }
+    
+    // 下载状态
+    var isDownloading by remember { mutableStateOf(false) }
+    var downloadId by remember { mutableLongStateOf(-1L) }
+    
+    // 监听下载完成
+    DisposableEffect(downloadId) {
+        if (downloadId == -1L) return@DisposableEffect onDispose {}
+        
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
+                if (id == downloadId) {
+                    isDownloading = false
+                    Toast.makeText(context, "下载完成，正在安装...", Toast.LENGTH_SHORT).show()
+                    AppUpdateChecker.installApk(context, downloadId)
+                }
+            }
+        }
+        
+        context.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+            Context.RECEIVER_EXPORTED)
+        
+        onDispose {
+            try { context.unregisterReceiver(receiver) } catch (_: Exception) {}
+        }
+    }
+    
+    // 主题色
+    val primaryGradient = listOf(Color(0xFF667eea), Color(0xFF764ba2))
+    val accentColor = Color(0xFF667eea)
+    
+    // 动画
+    val infiniteTransition = rememberInfiniteTransition(label = "about")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow"
     )
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "关于作者",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF333333)
-                    )
-                },
+            LargeTopAppBar(
+                title = { Text("关于") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "返回", tint = Color(0xFF333333))
+                        Icon(Icons.Default.ArrowBack, "返回")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
                 )
             )
-        },
-        containerColor = Color.Transparent // 使用 Box 的渐变背景
+        }
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradientBrush)
-                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
+            // 背景装饰
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                accentColor.copy(alpha = 0.1f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+            
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 1. 头像与标题区域（模拟像素风卡片）
-                PixelCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    borderColor = borderColor
+                // ========== 头像与作者信息区 ==========
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // 模拟头像
+                        // 头像（带发光效果）
                         Box(
                             modifier = Modifier
-                                .size(80.dp)
-                                .border(3.dp, borderColor, CircleShape)
-                                .padding(4.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFFD180)),
-                            contentAlignment = Alignment.Center
+                                .drawBehind {
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            colors = listOf(
+                                                Color(0xFF667eea).copy(alpha = glowAlpha),
+                                                Color.Transparent
+                                            )
+                                        ),
+                                        radius = size.minDimension / 2 + 20.dp.toPx()
+                                    )
+                                }
                         ) {
-                            Icon(
-                                Icons.Default.Person,
-                                null,
-                                modifier = Modifier.size(48.dp),
-                                tint = Color.White
+                            Image(
+                                painter = painterResource(id = R.drawable.avatar_shihao),
+                                contentDescription = "作者头像",
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .border(
+                                        width = 3.dp,
+                                        brush = Brush.linearGradient(primaryGradient),
+                                        shape = CircleShape
+                                    ),
+                                contentScale = ContentScale.Crop
                             )
                         }
                         
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
                         
+                        // 作者名
                         Text(
-                            text = "WebToApp",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            color = primaryColor
+                            text = "Shihao",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
                         )
                         
-                        Text(
-                            text = "v1.3.0",
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier
-                                .background(accentColor, RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 2.dp),
-                            color = Color.White
-                        )
+                        Spacer(modifier = Modifier.height(4.dp))
                         
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
+                        // 标语
                         Text(
-                            text = "本应用由作者（shihao）独立开发\n有任何问题都可以找我",
+                            text = "独立开发者 · AI 爱好者",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF555555),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                }
-
-                // 2. 作者联系方式 & 招募
-                PixelCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    borderColor = borderColor,
-                    backgroundColor = Color(0xFFFFF9C4) // 淡黄色背景
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.Group, null, tint = Color(0xFFFF6F00))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "加入我们",
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Text(
-                            "招 AI 编程队友！\n如果你有好的想法，欢迎和我一起实现！",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Divider(color = borderColor.copy(alpha = 0.2f))
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // QQ群
-                        Text(
-                            "作者每天都会在群里和大家互动，交流学习，发布更新消息、体验版和最新安装包。有建议可以给群主反馈！",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF444444)
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // QQ群号复制
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, borderColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text("QQ 群", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                                Text(
-                                    "1041130206",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    val clip = ClipData.newPlainText("QQ群", "1041130206")
-                                    clipboard.setPrimaryClip(clip)
-                                    Toast.makeText(context, "QQ群号已复制", Toast.LENGTH_SHORT).show()
-                                }
-                            ) {
-                                Icon(Icons.Default.ContentCopy, "复制", tint = primaryColor)
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // 作者QQ号复制
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, borderColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text("作者 QQ", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                                Text(
-                                    "2711674184",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    val clip = ClipData.newPlainText("QQ", "2711674184")
-                                    clipboard.setPrimaryClip(clip)
-                                    Toast.makeText(context, "QQ号已复制", Toast.LENGTH_SHORT).show()
-                                }
-                            ) {
-                                Icon(Icons.Default.ContentCopy, "复制", tint = primaryColor)
-                            }
-                        }
-                    }
-                }
-
-                // 3. 树状更新日志
-                PixelCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    borderColor = borderColor
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.NewReleases, null, tint = Color(0xFFD50000))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "更新日志",
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // v1.3 新增功能
-                        Text(
-                            "v1.3.0 ✨ 新增功能",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4CAF50)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.Android, "媒体应用：图片/视频转独立App")
-                        ChangeLogTreeItem(Icons.Outlined.Code, "用户脚本：支持JS脚本注入")
-                        ChangeLogTreeItem(Icons.Outlined.Star, "启动画面：支持图片/视频启动动画")
-                        ChangeLogTreeItem(Icons.Outlined.Build, "视频裁剪器：可视化选择视频片段")
-                        ChangeLogTreeItem(Icons.Outlined.Palette, "视频音频开关：启动画面/媒体应用")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.3 Bug修复
-                        Text(
-                            "v1.3.0 🐛 Bug 修复",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5722)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复快捷方式图标错误使用启动图片")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复数据库schema不匹配导致闪退")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.2.3 Bug修复
-                        Text(
-                            "v1.2.3 🐛 Bug 修复",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5722)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复构建 APK 图标被放大裁剪的问题")
-                        ChangeLogTreeItem(Icons.Outlined.Palette, "遵循 Android Adaptive Icon 规范处理图标")
-                        ChangeLogTreeItem(Icons.Outlined.Star, "提升图标清晰度（使用 xxxhdpi 分辨率）")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.2.2 Bug修复
-                        Text(
-                            "v1.2.2 🐛 Bug 修复",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5722)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 Release 版构建 APK 自定义图标不生效")
-                        ChangeLogTreeItem(Icons.Outlined.Code, "优化 ArscEditor 图标路径替换逻辑")
-                        ChangeLogTreeItem(Icons.Outlined.Build, "清理冗余调试代码，优化代码结构")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.2.1 新增功能
-                        Text(
-                            "v1.2.1 ✨ 新增功能",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4CAF50)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.Star, "全屏模式：隐藏工具栏，更像原生应用")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.2.0 新增功能
-                        Text(
-                            "v1.2.0 ✨ 新增功能",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4CAF50)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.Build, "一键构建独立 APK 安装包")
-                        ChangeLogTreeItem(Icons.Outlined.Android, "应用修改器：修改已安装应用图标/名称")
-                        ChangeLogTreeItem(Icons.Outlined.Code, "克隆安装：生成独立包名的克隆应用")
-                        ChangeLogTreeItem(Icons.Outlined.Computer, "访问电脑版：强制桌面模式")
-                        ChangeLogTreeItem(Icons.Outlined.Security, "启动自动请求运行时权限")
-                        ChangeLogTreeItem(Icons.Outlined.Info, "关于作者页面")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.2.0 优化改进
-                        Text(
-                            "v1.2.0 🔧 优化改进",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2196F3)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.Palette, "全新 Material Design 3 界面")
-                        ChangeLogTreeItem(Icons.Outlined.Star, "优化图标替换逻辑（支持自适应图标）")
-                        ChangeLogTreeItem(Icons.Outlined.Security, "使用官方 apksig 签名库")
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // v1.2.0 Bug修复
-                        Text(
-                            "v1.2.0 🐛 Bug 修复",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5722)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 APK 签名冲突问题")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复主页点击卡片空白问题")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复 resources.arsc 压缩导致安装失败")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复导出APK包名非法导致安装失败")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复导出APK权限/Provider冲突问题")
-                        ChangeLogTreeItem(Icons.Outlined.BugReport, "修复克隆应用多次克隆包名重复问题")
+                        // 应用信息
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    text = "WebToApp",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                modifier = Modifier.clickable {
+                                    // 点击版本号检查更新
+                                    scope.launch {
+                                        isCheckingUpdate = true
+                                        checkError = null
+                                        val result = AppUpdateChecker.checkUpdate(currentVersionCode)
+                                        isCheckingUpdate = false
+                                        result.onSuccess { info ->
+                                            updateInfo = info
+                                            showUpdateDialog = true
+                                        }.onFailure { e ->
+                                            checkError = e.message
+                                            Toast.makeText(context, "检查更新失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "v$currentVersionName",
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                    if (isCheckingUpdate) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(14.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                // ========== 检查更新按钮 ==========
+                ElevatedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clickable(enabled = !isCheckingUpdate && !isDownloading) {
+                            scope.launch {
+                                isCheckingUpdate = true
+                                checkError = null
+                                val result = AppUpdateChecker.checkUpdate(currentVersionCode)
+                                isCheckingUpdate = false
+                                result.onSuccess { info ->
+                                    updateInfo = info
+                                    showUpdateDialog = true
+                                }.onFailure { e ->
+                                    checkError = e.message
+                                    Toast.makeText(context, "检查更新失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Outlined.SystemUpdate,
+                                null,
+                                tint = Color(0xFF2196F3),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    "检查更新",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    if (isDownloading) "正在下载..." 
+                                    else if (isCheckingUpdate) "正在检查..."
+                                    else "当前版本 v$currentVersionName",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        
+                        if (isCheckingUpdate || isDownloading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Outlined.ChevronRight,
+                                null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // ========== 联系卡片区 ==========
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 简介卡片
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Filled.Favorite,
+                                    null,
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "关于这个应用",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                "WebToApp 是我独立开发的一款工具，可以将网站、图片、视频快速转换成独立的 Android 应用。\n\n" +
+                                "如果你有任何问题、建议或想法，欢迎随时联系我！",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 24.sp
+                            )
+                        }
+                    }
+                    
+                    // 联系方式卡片
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.Group,
+                                    null,
+                                    tint = accentColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "加入我们",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                "招 AI 编程队友！有好想法一起实现 🚀",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // QQ群
+                            ContactItem(
+                                icon = Icons.Outlined.Groups,
+                                label = "QQ 群",
+                                value = "1041130206",
+                                description = "交流学习、更新消息、最新安装包",
+                                onCopy = {
+                                    copyToClipboard(context, "QQ群", "1041130206")
+                                }
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // 作者QQ
+                            ContactItem(
+                                icon = Icons.Outlined.Person,
+                                label = "作者 QQ",
+                                value = "2711674184",
+                                description = "问题反馈、合作咨询",
+                                onCopy = {
+                                    copyToClipboard(context, "QQ", "2711674184")
+                                }
+                            )
+                        }
+                    }
+                    
+                    // ========== 更新日志 ==========
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.History,
+                                    null,
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "更新日志",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // v1.5.0
+                            VersionSection(
+                                version = "v1.5.0",
+                                isLatest = true
+                            ) {
+                                ChangeItem("✨", "AI LRC字幕生成：音频转歌词")
+                                ChangeItem("✨", "AI HTML编程：AI辅助生成代码")
+                                ChangeItem("✨", "HTML应用：HTML/CSS/JS转独立App")
+                                ChangeItem("✨", "主题系统：多款精美主题")
+                                ChangeItem("✨", "背景音乐：BGM+LRC歌词同步")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // v1.3.0
+                            VersionSection(version = "v1.3.0") {
+                                ChangeItem("✨", "媒体应用：图片/视频转独立App")
+                                ChangeItem("✨", "用户脚本/启动画面/视频裁剪")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // v1.2.x
+                            VersionSection(version = "v1.2.x") {
+                                ChangeItem("✨", "一键构建 APK / 应用修改器")
+                                ChangeItem("🎨", "Material Design 3 界面")
+                            }
+                        }
+                    }
+                    
+                    // 底部留白
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    // 底部信息
+                    Text(
+                        text = "Made with ❤️ by Shihao",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
+    }
+    
+    // ========== 更新对话框 ==========
+    if (showUpdateDialog && updateInfo != null) {
+        UpdateDialog(
+            updateInfo = updateInfo!!,
+            currentVersion = currentVersionName,
+            isDownloading = isDownloading,
+            onDismiss = { showUpdateDialog = false },
+            onDownload = {
+                if (updateInfo!!.downloadUrl.isNotEmpty()) {
+                    isDownloading = true
+                    downloadId = AppUpdateChecker.downloadApk(
+                        context,
+                        updateInfo!!.downloadUrl,
+                        updateInfo!!.versionName
+                    )
+                    if (downloadId == -1L) {
+                        isDownloading = false
+                        Toast.makeText(context, "下载启动失败", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "开始下载，请查看通知栏", Toast.LENGTH_SHORT).show()
+                        showUpdateDialog = false
+                    }
+                } else {
+                    Toast.makeText(context, "未找到下载链接", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+}
+
+/**
+ * 更新对话框
+ */
+@Composable
+private fun UpdateDialog(
+    updateInfo: AppUpdateChecker.UpdateInfo,
+    currentVersion: String,
+    isDownloading: Boolean,
+    onDismiss: () -> Unit,
+    onDownload: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                if (updateInfo.hasUpdate) Icons.Outlined.SystemUpdate else Icons.Outlined.CheckCircle,
+                null,
+                tint = if (updateInfo.hasUpdate) Color(0xFF2196F3) else Color(0xFF4CAF50),
+                modifier = Modifier.size(48.dp)
+            )
+        },
+        title = {
+            Text(
+                if (updateInfo.hasUpdate) "发现新版本" else "已是最新版本",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (updateInfo.hasUpdate) {
+                    // 版本对比
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(
+                                "v$currentVersion",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                        Icon(
+                            Icons.Outlined.ArrowForward,
+                            null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF4CAF50)
+                        ) {
+                            Text(
+                                updateInfo.versionName,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = FontFamily.Monospace,
+                                color = Color.White
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // 更新说明
+                    if (updateInfo.releaseNotes.isNotEmpty()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ) {
+                            Text(
+                                updateInfo.releaseNotes,
+                                modifier = Modifier.padding(12.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        "建议更新到最新版本以获得更好的体验",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        "当前版本 v$currentVersion 已是最新版本",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (updateInfo.hasUpdate) {
+                Button(
+                    onClick = onDownload,
+                    enabled = !isDownloading
+                ) {
+                    if (isDownloading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(if (isDownloading) "下载中..." else "立即更新")
+                }
+            } else {
+                TextButton(onClick = onDismiss) {
+                    Text("好的")
+                }
+            }
+        },
+        dismissButton = {
+            if (updateInfo.hasUpdate) {
+                TextButton(onClick = onDismiss) {
+                    Text("稍后更新")
+                }
+            }
+        }
+    )
+}
+
+/**
+ * 联系方式项
+ */
+@Composable
+private fun ContactItem(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    description: String,
+    onCopy: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    icon,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            value,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    Text(
+                        description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            
+            FilledTonalIconButton(onClick = onCopy) {
+                Icon(
+                    Icons.Default.ContentCopy,
+                    "复制",
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
 }
 
 /**
- * 自定义像素风卡片容器
+ * 版本区块
  */
 @Composable
-fun PixelCard(
-    modifier: Modifier = Modifier,
-    borderColor: Color = Color.Black,
-    backgroundColor: Color = Color.White,
-    content: @Composable () -> Unit
+private fun VersionSection(
+    version: String,
+    isLatest: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .shadow(4.dp, RoundedCornerShape(12.dp))
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
-    ) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            Text(
+                version,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace
+            )
+            if (isLatest) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFF4CAF50)
+                ) {
+                    Text(
+                        "最新",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        }
         content()
     }
 }
 
 /**
- * 更新日志树状条目
+ * 更新项
  */
 @Composable
-fun ChangeLogTreeItem(
-    icon: ImageVector,
-    text: String,
-    isLast: Boolean = false
-) {
-    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        // 左侧线条
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(32.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .weight(1f)
-                    .background(Color(0xFFE0E0E0))
-            )
-        }
-        
-        // 内容
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .padding(bottom = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 连接点
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .offset(x = (-23).dp) // 调整位置使其在线条上
-                    .background(Color.White, CircleShape)
-                    .border(2.dp, Color(0xFF6200EE), CircleShape)
-            )
-            
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(20.dp)
-                    .offset(x = (-12).dp),
-                tint = Color(0xFF6200EE)
-            )
-            
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace
-            )
-        }
+private fun ChangeItem(emoji: String, text: String) {
+    Row(
+        modifier = Modifier.padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            emoji,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
+
+/**
+ * 复制到剪贴板
+ */
+private fun copyToClipboard(context: Context, label: String, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText(label, text)
+    clipboard.setPrimaryClip(clip)
+    Toast.makeText(context, "${label}已复制", Toast.LENGTH_SHORT).show()
+}
+

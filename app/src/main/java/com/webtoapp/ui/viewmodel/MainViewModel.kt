@@ -7,6 +7,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.data.model.*
+import com.webtoapp.util.BgmStorage
+import com.webtoapp.util.HtmlStorage
 import com.webtoapp.util.MediaStorage
 import com.webtoapp.util.SplashStorage
 import com.webtoapp.data.repository.WebAppRepository
@@ -84,7 +86,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             splashEnabled = webApp.splashEnabled,
             splashConfig = webApp.splashConfig ?: SplashConfig(),
             splashMediaUri = webApp.splashConfig?.mediaPath?.let { Uri.parse(it) },
-            savedSplashPath = webApp.splashConfig?.mediaPath
+            savedSplashPath = webApp.splashConfig?.mediaPath,
+            bgmEnabled = webApp.bgmEnabled,
+            bgmConfig = webApp.bgmConfig ?: BgmConfig(),
+            apkExportConfig = webApp.apkExportConfig ?: ApkExportConfig()
         )
     }
 
@@ -192,6 +197,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     null
                 }
                 
+                // 构建背景音乐配置
+                val bgmConfig = if (state.bgmEnabled && state.bgmConfig.playlist.isNotEmpty()) {
+                    state.bgmConfig
+                } else {
+                    null
+                }
+
+                // 构建 APK 导出配置（仅当有自定义值时才保存）
+                val apkExportConfig = state.apkExportConfig.let { config ->
+                    if (config.customPackageName.isNullOrBlank() && 
+                        config.customVersionName.isNullOrBlank() && 
+                        config.customVersionCode == null) {
+                        null
+                    } else {
+                        config
+                    }
+                }
+
                 val webApp = _currentApp.value?.copy(
                     name = state.name,
                     url = normalizeUrl(state.url),
@@ -206,7 +229,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     adBlockRules = state.adBlockRules,
                     webViewConfig = state.webViewConfig,
                     splashEnabled = state.splashEnabled,
-                    splashConfig = splashConfig
+                    splashConfig = splashConfig,
+                    bgmEnabled = state.bgmEnabled,
+                    bgmConfig = bgmConfig,
+                    apkExportConfig = apkExportConfig
                 ) ?: WebApp(
                     name = state.name,
                     url = normalizeUrl(state.url),
@@ -221,7 +247,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     adBlockRules = state.adBlockRules,
                     webViewConfig = state.webViewConfig,
                     splashEnabled = state.splashEnabled,
-                    splashConfig = splashConfig
+                    splashConfig = splashConfig,
+                    bgmEnabled = state.bgmEnabled,
+                    bgmConfig = bgmConfig,
+                    apkExportConfig = apkExportConfig
                 )
 
                 if (_currentApp.value != null) {
@@ -328,7 +357,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         appType: AppType,
         mediaUri: Uri,
         mediaConfig: MediaConfig,
-        iconUri: Uri?
+        iconUri: Uri?,
+        activationEnabled: Boolean = false,
+        activationCodes: List<String> = emptyList(),
+        bgmEnabled: Boolean = false,
+        bgmConfig: BgmConfig = BgmConfig()
     ) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
@@ -354,13 +387,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 
+                // 保存背景音乐文件（如果启用）
+                val savedBgmConfig = if (bgmEnabled && bgmConfig.playlist.isNotEmpty()) {
+                    val savedPlaylist = bgmConfig.playlist.map { item ->
+                        val savedPath = withContext(Dispatchers.IO) {
+                            BgmStorage.saveBgm(context, android.net.Uri.parse(item.path))
+                        }
+                        item.copy(path = savedPath ?: item.path)
+                    }
+                    bgmConfig.copy(playlist = savedPlaylist)
+                } else {
+                    bgmConfig
+                }
+                
                 // 创建 WebApp 对象
                 val webApp = WebApp(
                     name = name.ifBlank { if (isVideo) "视频应用" else "图片应用" },
                     url = savedMediaPath,  // 对于媒体应用，url 存储媒体路径
                     iconPath = savedIconPath,
                     appType = appType,
-                    mediaConfig = mediaConfig.copy(mediaPath = savedMediaPath)
+                    mediaConfig = mediaConfig.copy(mediaPath = savedMediaPath),
+                    activationEnabled = activationEnabled,
+                    activationCodes = activationCodes,
+                    bgmEnabled = bgmEnabled,
+                    bgmConfig = savedBgmConfig
                 )
                 
                 // 保存到数据库
@@ -369,6 +419,97 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 
                 _uiState.value = UiState.Success("媒体应用创建成功")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = UiState.Error("创建失败: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 保存HTML应用（本地HTML+CSS+JS转APP）
+     */
+    fun saveHtmlApp(
+        name: String,
+        htmlConfig: HtmlConfig,
+        iconUri: Uri?,
+        activationEnabled: Boolean = false,
+        activationCodes: List<String> = emptyList(),
+        bgmEnabled: Boolean = false,
+        bgmConfig: BgmConfig = BgmConfig()
+    ) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            
+            try {
+                val context = getApplication<Application>()
+                
+                // 保存图标（如果有）
+                val savedIconPath = iconUri?.let { uri ->
+                    withContext(Dispatchers.IO) {
+                        IconStorage.saveIconFromUri(context, uri)
+                    }
+                }
+                
+                // 将 HTML 文件从临时目录复制到持久化目录
+                val projectId = HtmlStorage.generateProjectId()
+                val savedHtmlFiles = withContext(Dispatchers.IO) {
+                    htmlConfig.files.mapNotNull { file ->
+                        val savedPath = HtmlStorage.saveFromTempFile(
+                            context, file.path, file.name, projectId
+                        )
+                        if (savedPath != null) {
+                            file.copy(path = savedPath)
+                        } else {
+                            android.util.Log.e("MainViewModel", "无法保存HTML文件: ${file.name}")
+                            null
+                        }
+                    }
+                }
+                
+                // 更新 HtmlConfig 使用持久化路径并填充 projectId
+                val savedHtmlConfig = htmlConfig.copy(
+                    projectId = projectId,
+                    files = savedHtmlFiles
+                )
+                
+                // 保存背景音乐文件（如果启用）
+                val savedBgmConfig = if (bgmEnabled && bgmConfig.playlist.isNotEmpty()) {
+                    val savedPlaylist = bgmConfig.playlist.map { item ->
+                        val savedPath = withContext(Dispatchers.IO) {
+                            BgmStorage.saveBgm(context, android.net.Uri.parse(item.path))
+                        }
+                        item.copy(path = savedPath ?: item.path)
+                    }
+                    bgmConfig.copy(playlist = savedPlaylist)
+                } else {
+                    bgmConfig
+                }
+                
+                // 清理临时文件
+                withContext(Dispatchers.IO) {
+                    HtmlStorage.clearTempFiles(context)
+                }
+                
+                // 创建 WebApp 对象
+                val webApp = WebApp(
+                    name = name.ifBlank { "HTML应用" },
+                    url = "",  // HTML应用不使用此字段，通过 htmlConfig.projectId 加载
+                    iconPath = savedIconPath,
+                    appType = AppType.HTML,
+                    htmlConfig = savedHtmlConfig,
+                    activationEnabled = activationEnabled,
+                    activationCodes = activationCodes,
+                    bgmEnabled = bgmEnabled,
+                    bgmConfig = savedBgmConfig
+                )
+                
+                // 保存到数据库
+                withContext(Dispatchers.IO) {
+                    repository.createWebApp(webApp)
+                }
+                
+                _uiState.value = UiState.Success("HTML应用创建成功")
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uiState.value = UiState.Error("创建失败: ${e.message}")
@@ -410,7 +551,14 @@ data class EditState(
     val splashEnabled: Boolean = false,
     val splashConfig: SplashConfig = SplashConfig(),
     val splashMediaUri: Uri? = null,        // 用于 UI 显示
-    val savedSplashPath: String? = null     // 持久化的本地文件路径
+    val savedSplashPath: String? = null,    // 持久化的本地文件路径
+    
+    // 背景音乐
+    val bgmEnabled: Boolean = false,
+    val bgmConfig: BgmConfig = BgmConfig(),
+    
+    // APK 导出配置（仅打包APK时生效）
+    val apkExportConfig: ApkExportConfig = ApkExportConfig()
 )
 
 /**

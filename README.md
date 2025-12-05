@@ -19,15 +19,20 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 
 - 🌐 **网站转App** - 输入任意网址，生成独立 WebView 应用
 - 🎬 **媒体转App** - 图片/视频一键转换为全屏展示应用
+- 💻 **HTML转App** - HTML/CSS/JS 项目转换为独立应用（新）
+- 🤖 **AI 编程助手** - AI 辅助生成 HTML 代码，实时预览（新）
+- 🎵 **AI 字幕生成** - 音频自动生成 LRC 歌词，时间轴精准（新）
+- 🎨 **主题系统** - 多种精美主题，支持动画效果定制（新）
 - 📦 **一键出包** - 无需 Android Studio，直接生成可安装 APK
-- 🎨 **深度定制** - 自定义图标、名称、启动画面、用户脚本
-- 🛡️ **内置功能** - 广告拦截、激活码验证、公告弹窗
+- 🛡️ **内置功能** - 广告拦截、激活码验证、背景音乐、公告弹窗
 - ⚡ **应用修改器** - 修改已安装应用的图标和名称
 
 ## 🎯 适用场景
 
 - 📱 将常用网站封装为独立 App，桌面一键直达
 - 🎞️ 制作电子相册、视频壁纸、产品展示应用
+- 💻 前端项目快速打包成 Android 应用
+- 🎵 为音频生成同步歌词字幕
 - 🏢 企业内部系统快速 App 化
 - 🎮 游戏/工具类 H5 应用独立封装
 - 🔧 给已安装应用换个喜欢的图标
@@ -36,13 +41,15 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 
 ### 核心功能
 - **URL转App**：输入任意网址，一键生成独立应用
-- **媒体转App**：支持图片/视频转换为独立应用（新）
+- **媒体转App**：支持图片/视频转换为独立应用
+- **HTML转App**：支持 HTML/CSS/JS 项目转换为独立应用（v1.5 新增）
 - **自定义图标**：支持从相册选择自定义应用图标
 - **自定义名称**：自定义应用显示名称
 
 ### 集成功能
 - **启动画面**：支持图片/视频启动动画，内置视频裁剪器
-- **用户脚本注入**：支持自定义 JavaScript 脚本注入（新）
+- **用户脚本注入**：支持自定义 JavaScript 脚本注入
+- **背景音乐**：支持为应用添加 BGM，可配合歌词同步显示（v1.5 新增）
 - **激活码验证**：内置激活码机制，可限制应用使用
 - **弹窗公告**：启动时显示公告信息，支持链接跳转
 - **广告拦截**：内置广告拦截引擎，自动过滤网页广告
@@ -53,11 +60,26 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **构建APK安装包**：直接生成独立APK并安装，无需Android Studio
 - **项目模板导出**：导出完整Android Studio项目，可自行编译APK
 
-### 媒体应用功能（新）
+### 媒体应用功能
 - **图片转App**：选择图片生成全屏展示应用
 - **视频转App**：选择视频生成循环播放应用
 - **显示配置**：支持音频开关、循环播放、自动播放、铺满屏幕
 - **APK打包**：媒体应用支持导出为独立APK
+
+### AI 功能（v1.5 新增）
+- **AI LRC 字幕生成**：使用 AI 分析音频，自动生成时间轴精准的 LRC 歌词
+- **多供应商支持**：Google Gemini、OpenAI GPT-4o、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
+- **AI HTML 编程**：AI 辅助生成和修改 HTML/CSS/JS 代码
+- **会话管理**：支持多会话、模板选择、样式定制
+- **实时预览**：代码生成后可直接预览效果
+- **AI 设置**：统一管理 API 密钥和模型配置
+- **任务管理**：查看和管理 LRC 生成任务状态
+
+### 主题系统（v1.5 新增）
+- **多种主题**：内置多款精美主题风格
+- **深色模式**：支持跟随系统、手动切换
+- **动画效果**：可自定义动画开关和速度
+- **粒子特效**：部分主题支持粒子背景效果
 
 ### 应用图标修改器
 - **应用列表扫描**：自动获取设备上已安装的应用列表
@@ -84,15 +106,22 @@ app/src/main/java/com/webtoapp/
 │   ├── activation/            # 激活码管理
 │   ├── adblock/              # 广告拦截
 │   ├── ads/                  # 广告集成
+│   ├── ai/                   # AI 功能（v1.5 新增）
+│   │   ├── AiApiClient.kt   # AI API 客户端
+│   │   ├── AiConfigManager.kt # AI 配置管理
+│   │   ├── LrcGenerationService.kt # LRC 生成服务
+│   │   ├── LrcTaskManager.kt # 任务管理
+│   │   └── htmlcoding/      # AI HTML 编程（v1.5 新增）
 │   ├── announcement/         # 公告管理
-│   ├── apkbuilder/          # APK构建器（新）
+│   ├── apkbuilder/          # APK构建器
 │   │   ├── ApkBuilder.kt    # 构建核心
 │   │   ├── ApkSigner.kt     # APK签名
 │   │   └── ApkTemplate.kt   # 模板管理
-│   ├── appmodifier/         # 应用修改器（新）
+│   ├── appmodifier/         # 应用修改器
 │   │   ├── AppCloner.kt     # 应用克隆
 │   │   ├── AppListProvider.kt # 应用列表
 │   │   └── InstalledAppInfo.kt # 应用信息
+│   ├── bgm/                 # 背景音乐（v1.5 新增）
 │   ├── export/              # 导出功能
 │   └── webview/             # WebView管理
 ├── data/                      # 数据层
@@ -103,19 +132,25 @@ app/src/main/java/com/webtoapp/
 │   └── repository/          # 数据仓库
 ├── ui/                        # UI层
 │   ├── MainActivity.kt      # 主Activity
-│   ├── media/               # 媒体应用（新）
+│   ├── media/               # 媒体应用
 │   │   └── MediaAppActivity.kt # 媒体展示Activity
 │   ├── navigation/          # 导航
 │   ├── screens/             # 页面
 │   │   ├── HomeScreen.kt    # 主页
 │   │   ├── CreateAppScreen.kt # 创建应用
-│   │   ├── CreateMediaAppScreen.kt # 创建媒体应用（新）
+│   │   ├── CreateMediaAppScreen.kt # 创建媒体应用
+│   │   ├── CreateHtmlAppScreen.kt # 创建HTML应用（v1.5 新增）
+│   │   ├── HtmlCodingScreen.kt # AI HTML编程（v1.5 新增）
+│   │   ├── AiSettingsScreen.kt # AI设置（v1.5 新增）
+│   │   ├── LrcTaskManagerScreen.kt # LRC任务管理（v1.5 新增）
+│   │   ├── ThemeSettingsScreen.kt # 主题设置（v1.5 新增）
+│   │   ├── AboutScreen.kt   # 关于作者
 │   │   └── AppModifierScreen.kt # 应用修改器
-│   ├── theme/               # 主题
+│   ├── theme/               # 主题系统（v1.5 新增）
 │   ├── viewmodel/           # ViewModel
 │   └── webview/             # WebView Activity
 └── util/                      # 工具类
-    └── MediaStorage.kt      # 媒体文件存储（新）
+    └── MediaStorage.kt      # 媒体文件存储
 ```
 
 ## 使用说明
@@ -216,6 +251,29 @@ signingConfigs {
 MIT License
 
 ## 更新日志
+
+### v1.5.0
+**新增功能**
+- AI LRC 字幕生成：使用 AI 分析音频自动生成 LRC 格式歌词
+  - 支持多种 AI 供应商：Google Gemini、OpenAI GPT-4o、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
+  - 时间轴精准对齐，支持中/英/日/韩多语言
+- AI HTML 编程助手：使用 AI 辅助生成和修改 HTML 代码
+  - 支持多种文本/图像生成模型
+  - 会话管理、模板选择、样式定制
+  - 代码块解析、实时预览
+- AI 设置界面：统一管理 API 密钥和模型
+  - 支持添加多个 API Key，实时测试连接
+  - 支持自定义 Base URL，模型列表从 API 实时获取
+- HTML 应用：支持将 HTML/CSS/JS 项目转换为独立 Android 应用
+- 主题系统：全新的主题定制功能
+  - 内置多款精美主题风格，支持深色模式
+  - 可自定义动画效果开关和速度
+- 背景音乐（BGM）：为应用添加背景音乐
+  - 支持 LRC 歌词同步显示、循环播放
+
+**优化改进**
+- 主页 UI 整合 AI 编程、主题设置、AI 设置入口
+- FAB 菜单新增 HTML 应用创建入口
 
 ### v1.3.0
 **新增功能**

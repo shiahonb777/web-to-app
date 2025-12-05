@@ -18,6 +18,11 @@ class WebViewManager(
     private val context: Context,
     private val adBlocker: AdBlocker
 ) {
+    
+    companion object {
+        // 桌面版 Chrome User-Agent
+        private const val DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
 
     /**
      * 配置WebView
@@ -63,10 +68,13 @@ class WebViewManager(
                     userAgentString = ua
                 }
 
-                // 桌面模式
+                // 桌面模式 - 使用完整的桌面版 User-Agent
                 if (config.desktopMode) {
-                    userAgentString = userAgentString.replace("Mobile", "")
+                    userAgentString = DESKTOP_USER_AGENT
                     useWideViewPort = true
+                    loadWithOverviewMode = true
+                    // 设置默认缩放级别以适应桌面版页面
+                    textZoom = 100
                 }
 
                 // 混合内容
@@ -94,6 +102,13 @@ class WebViewManager(
 
             // WebChromeClient
             webChromeClient = createWebChromeClient(callbacks)
+            
+            // 下载监听器
+            if (config.downloadEnabled) {
+                setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+                    callbacks.onDownloadStart(url, userAgent, contentDisposition, mimeType, contentLength)
+                }
+            }
         }
     }
 
@@ -321,4 +336,20 @@ interface WebViewCallbacks {
         filePathCallback: ValueCallback<Array<Uri>>?,
         fileChooserParams: WebChromeClient.FileChooserParams?
     ): Boolean
+    
+    /**
+     * 下载请求回调
+     * @param url 下载链接
+     * @param userAgent User-Agent
+     * @param contentDisposition Content-Disposition 头
+     * @param mimeType MIME类型
+     * @param contentLength 文件大小
+     */
+    fun onDownloadStart(
+        url: String,
+        userAgent: String,
+        contentDisposition: String,
+        mimeType: String,
+        contentLength: Long
+    )
 }

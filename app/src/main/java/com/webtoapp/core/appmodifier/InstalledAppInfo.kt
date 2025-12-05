@@ -60,7 +60,11 @@ data class AppModifyConfig(
     val announcementEnabled: Boolean = false,
     val announcementTitle: String = "",
     val announcementContent: String = "",
-    val announcementLink: String? = null
+    val announcementLink: String? = null,
+    
+    // 背景音乐配置
+    val bgmEnabled: Boolean = false,
+    val bgmConfig: com.webtoapp.data.model.BgmConfig? = null
 )
 
 /**

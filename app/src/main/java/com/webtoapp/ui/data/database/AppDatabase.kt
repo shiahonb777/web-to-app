@@ -14,7 +14,7 @@ import com.webtoapp.data.model.WebApp
  */
 @Database(
     entities = [WebApp::class],
-    version = 4,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

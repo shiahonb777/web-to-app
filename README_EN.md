@@ -19,15 +19,20 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 
 - 🌐 **Website to App** - Wrap any URL into a standalone WebView app
 - 🎬 **Media to App** - Convert images/videos into fullscreen showcase apps
+- 💻 **HTML to App** - Convert HTML/CSS/JS projects into standalone apps (New)
+- 🤖 **AI Coding Assistant** - AI-powered HTML code generation with live preview (New)
+- 🎵 **AI Subtitle Generator** - Generate time-synced LRC lyrics from audio (New)
+- 🎨 **Theme System** - Beautiful themes with animation customization (New)
 - 📦 **One-Click Build** - Generate installable APKs without a PC
-- 🎨 **Deep Customization** - Custom icons, names, splash screens, user scripts
-- 🛡️ **Built-in Tools** - Ad blocker, activation codes, announcements
+- 🛡️ **Built-in Tools** - Ad blocker, activation codes, BGM, announcements
 - ⚡ **App Modifier** - Change icons and names of installed apps
 
 ## 🎯 Use Cases
 
 - 📱 Wrap frequently used websites as standalone apps
 - 🎞️ Create digital albums, video wallpapers, product showcases
+- 💻 Package frontend projects as Android apps
+- 🎵 Generate synchronized lyrics for audio files
 - 🏢 Quickly app-ify enterprise internal systems
 - 🎮 Package H5 games/tools as independent apps
 - 🔧 Customize icons for any installed app
@@ -37,12 +42,14 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 ### Core Features
 - **URL to App**: Enter any website URL to generate a standalone app
 - **Media to App**: Convert images/videos into independent apps
+- **HTML to App**: Convert HTML/CSS/JS projects into standalone apps (v1.5)
 - **Custom Icon**: Select custom app icons from gallery
 - **Custom Name**: Customize the app display name
 
 ### Integrated Features
 - **Splash Screen**: Support image/video splash animations with built-in video trimmer
 - **User Scripts**: Support custom JavaScript injection
+- **Background Music**: Add BGM to apps with LRC lyrics sync (v1.5)
 - **Activation Code**: Built-in activation mechanism to restrict app usage
 - **Announcements**: Display announcements on startup with link support
 - **Ad Blocking**: Built-in ad blocking engine to filter web ads
@@ -57,6 +64,21 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Image to App**: Full-screen image display with fill screen option
 - **Video to App**: Video playback with loop, audio toggle, autoplay
 - **APK Export**: Media apps support standalone APK export
+
+### AI Features (v1.5)
+- **AI LRC Generation**: Analyze audio with AI to generate time-synced LRC lyrics
+- **Multi-Provider Support**: Google Gemini, OpenAI GPT-4o, GLM, Volcano, MiniMax, OpenRouter, etc.
+- **AI HTML Coding**: AI-assisted HTML/CSS/JS code generation
+- **Session Management**: Multi-session, templates, style customization
+- **Live Preview**: Preview generated code in real-time
+- **AI Settings**: Unified API key and model management
+- **Task Management**: View and manage LRC generation tasks
+
+### Theme System (v1.5)
+- **Multiple Themes**: Beautiful built-in theme styles
+- **Dark Mode**: Follow system or manual toggle
+- **Animations**: Customizable animation effects and speed
+- **Particle Effects**: Some themes support particle backgrounds
 
 ### App Modifier
 - **App Scanner**: Automatically scan all installed apps
@@ -105,6 +127,28 @@ cd web-to-app
 MIT License
 
 ## 📜 Changelog
+
+### v1.5.0
+**New Features**
+- AI LRC Subtitle Generation: AI-powered audio-to-LRC conversion
+  - Multiple AI providers: Google Gemini, OpenAI GPT-4o, GLM, Volcano, MiniMax, OpenRouter, etc.
+  - Precise time alignment, multi-language support (CN/EN/JP/KR)
+- AI HTML Coding Assistant: AI-powered code generation
+  - Multiple text/image generation models
+  - Session management, templates, styles
+  - Code block parsing, live preview
+- AI Settings: Unified API key and model management
+  - Multiple API keys, real-time connection testing
+  - Custom Base URL, model list fetched from API
+- HTML App: Convert HTML/CSS/JS projects into standalone Android apps
+- Theme System: Brand new theme customization
+  - Multiple beautiful theme styles, dark mode support
+  - Customizable animation effects and speed
+- Background Music (BGM): Add BGM with LRC lyrics sync
+
+**Improvements**
+- Home UI integration with AI Coding, Theme, AI Settings entries
+- FAB menu adds HTML app creation
 
 ### v1.3.0
 **New Features**

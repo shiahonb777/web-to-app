@@ -40,9 +40,13 @@ fun HomeScreen(
     viewModel: MainViewModel,
     onCreateApp: () -> Unit,
     onCreateMediaApp: () -> Unit = {},
+    onCreateHtmlApp: () -> Unit = {},
     onEditApp: (WebApp) -> Unit,
     onPreviewApp: (WebApp) -> Unit,
     onOpenAppModifier: () -> Unit = {},
+    onOpenAiSettings: () -> Unit = {},
+    onOpenHtmlCoding: () -> Unit = {},
+    onOpenThemeSettings: () -> Unit = {},
     onOpenAbout: () -> Unit = {}
 ) {
     val apps by viewModel.filteredApps.collectAsState()
@@ -73,49 +77,121 @@ fun HomeScreen(
         }
     }
 
+    // 更多菜单状态
+    var showMoreMenu by remember { mutableStateOf(false) }
+    
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     if (isSearchActive) {
+                        // 搜索框 - 限制宽度
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { viewModel.search(it) },
-                            placeholder = { Text("搜索应用...") },
+                            placeholder = { Text("搜索...", style = MaterialTheme.typography.bodyMedium) },
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(max = 200.dp)
+                                .height(48.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline
                             )
                         )
                     } else {
-                        Text("WebToApp")
+                        Text(
+                            "WebToApp",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
                 },
                 actions = {
-                    // 关于作者
-                    IconButton(onClick = onOpenAbout) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = "关于作者"
-                        )
-                    }
-                    // 应用修改器入口
-                    IconButton(onClick = onOpenAppModifier) {
-                        Icon(
-                            imageVector = Icons.Outlined.AppShortcut,
-                            contentDescription = "应用修改器"
-                        )
-                    }
-                    IconButton(onClick = {
-                        isSearchActive = !isSearchActive
-                        if (!isSearchActive) viewModel.search("")
-                    }) {
+                    // 搜索按钮
+                    IconButton(
+                        onClick = {
+                            isSearchActive = !isSearchActive
+                            if (!isSearchActive) viewModel.search("")
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(
                             imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = "搜索"
+                            contentDescription = "搜索",
+                            modifier = Modifier.size(20.dp)
                         )
+                    }
+                    
+                    // 更多菜单
+                    Box {
+                        IconButton(
+                            onClick = { showMoreMenu = true },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "更多",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("AI HTML编程") },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onOpenHtmlCoding()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Code, null, modifier = Modifier.size(20.dp))
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("主题设置") },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onOpenThemeSettings()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Palette, null, modifier = Modifier.size(20.dp))
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("AI 设置") },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onOpenAiSettings()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Settings, null, modifier = Modifier.size(20.dp))
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("应用修改器") },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onOpenAppModifier()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.AppShortcut, null, modifier = Modifier.size(20.dp))
+                                }
+                            )
+                            Divider()
+                            DropdownMenuItem(
+                                text = { Text("关于") },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onOpenAbout()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Info, null, modifier = Modifier.size(20.dp))
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -138,6 +214,16 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // 创建HTML应用
+                        SmallFloatingActionButton(
+                            onClick = {
+                                showFabMenu = false
+                                onCreateHtmlApp()
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Icon(Icons.Outlined.Code, "HTML应用")
+                        }
                         // 创建媒体应用
                         SmallFloatingActionButton(
                             onClick = {

@@ -3,11 +3,32 @@ package com.webtoapp.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Light Theme Colors
+// ==================== 主题状态 ====================
+
+/**
+ * 当前主题的 CompositionLocal
+ */
+val LocalAppTheme = staticCompositionLocalOf { AppThemes.Default }
+
+/**
+ * 动画设置的 CompositionLocal
+ */
+data class AnimationSettings(
+    val enabled: Boolean = true,
+    val particlesEnabled: Boolean = true,
+    val hapticsEnabled: Boolean = true,
+    val speedMultiplier: Float = 1f
+)
+
+val LocalAnimationSettings = staticCompositionLocalOf { AnimationSettings() }
+
+// ==================== 默认配色 ====================
+
+// Light Theme Colors (备用)
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF6750A4),
     onPrimary = Color.White,
@@ -35,7 +56,7 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = Color(0xFFCAC4D0)
 )
 
-// Dark Theme Colors
+// Dark Theme Colors (备用)
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFFD0BCFF),
     onPrimary = Color(0xFF381E72),
@@ -63,27 +84,89 @@ private val DarkColorScheme = darkColorScheme(
     outlineVariant = Color(0xFF49454F)
 )
 
+// ==================== 主题入口 ====================
+
+/**
+ * 应用主题入口
+ * 支持自定义主题和动态取色
+ */
 @Composable
 fun WebToAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,  // 默认关闭动态取色以使用自定义主题
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    
+    // 收集主题设置 - StateFlow 已缓存状态，不会在重组时重置
+    val themeType by themeManager.themeTypeFlow.collectAsState()
+    val darkModeSetting by themeManager.darkModeFlow.collectAsState()
+    val enableAnimations by themeManager.enableAnimationsFlow.collectAsState()
+    val enableParticles by themeManager.enableParticlesFlow.collectAsState()
+    val enableHaptics by themeManager.enableHapticsFlow.collectAsState()
+    val animationSpeed by themeManager.animationSpeedFlow.collectAsState()
+    
+    // 确定是否使用暗色模式
+    val useDarkTheme = when (darkModeSetting) {
+        ThemeManager.DarkModeSettings.SYSTEM -> darkTheme
+        ThemeManager.DarkModeSettings.LIGHT -> false
+        ThemeManager.DarkModeSettings.DARK -> true
+    }
+    
+    // 获取当前主题
+    val currentTheme = AppThemes.getTheme(themeType)
+    
+    // 确定配色方案
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) 
+            if (useDarkTheme) dynamicDarkColorScheme(context) 
             else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        useDarkTheme -> currentTheme.darkColors
+        else -> currentTheme.lightColors
     }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    
+    // 动画设置
+    val animationSettings = AnimationSettings(
+        enabled = enableAnimations,
+        particlesEnabled = enableParticles,
+        hapticsEnabled = enableHaptics,
+        speedMultiplier = animationSpeed.multiplier
     )
+
+    CompositionLocalProvider(
+        LocalAppTheme provides currentTheme,
+        LocalAnimationSettings provides animationSettings
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
+}
+
+/**
+ * 简化版主题入口（用于预览或不需要主题管理的场景）
+ */
+@Composable
+fun WebToAppThemeSimple(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    
+    CompositionLocalProvider(
+        LocalAppTheme provides AppThemes.Default,
+        LocalAnimationSettings provides AnimationSettings()
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 val Typography = Typography()

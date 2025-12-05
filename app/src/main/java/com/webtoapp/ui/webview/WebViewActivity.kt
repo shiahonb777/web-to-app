@@ -39,6 +39,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
+import com.webtoapp.core.bgm.BgmPlayer
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.core.webview.WebViewManager
 import com.webtoapp.data.model.SplashConfig
@@ -47,6 +48,7 @@ import com.webtoapp.data.model.SplashType
 import com.webtoapp.data.model.WebApp
 import android.content.pm.ActivityInfo
 import com.webtoapp.ui.theme.WebToAppTheme
+import com.webtoapp.util.DownloadHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -186,7 +188,10 @@ fun WebViewScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showActivationDialog by remember { mutableStateOf(false) }
     var showAnnouncementDialog by remember { mutableStateOf(false) }
-    var isActivated by remember { mutableStateOf(true) }
+    // 激活状态：默认未激活，防止 WebView 在检查完成前加载
+    var isActivated by remember { mutableStateOf(false) }
+    // 激活检查是否完成
+    var isActivationChecked by remember { mutableStateOf(false) }
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -196,11 +201,21 @@ fun WebViewScreen(
     var splashCountdown by remember { mutableIntStateOf(0) }
     var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
 
+    // 背景音乐播放器
+    val bgmPlayer = remember { BgmPlayer(context) }
+
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
     // 加载应用配置
-    LaunchedEffect(appId) {
+    LaunchedEffect(appId, directUrl) {
+        // 如果是直接URL模式，不需要激活检查
+        if (!directUrl.isNullOrBlank()) {
+            isActivated = true
+            isActivationChecked = true
+            return@LaunchedEffect
+        }
+        
         if (appId > 0) {
             val app = repository.getWebApp(appId)
             webApp = app
@@ -213,10 +228,16 @@ fun WebViewScreen(
 
                 // 检查激活状态
                 if (app.activationEnabled) {
-                    isActivated = activation.getActivationStatus(appId)
-                    if (!isActivated) {
+                    val activated = activation.getActivationStatus(appId)
+                    isActivated = activated
+                    isActivationChecked = true
+                    if (!activated) {
                         showActivationDialog = true
                     }
+                } else {
+                    // 未启用激活码，直接标记为已激活
+                    isActivated = true
+                    isActivationChecked = true
                 }
 
                 // 检查公告
@@ -239,7 +260,27 @@ fun WebViewScreen(
                         }
                     }
                 }
+                
+                // 初始化背景音乐
+                if (app.bgmEnabled && app.bgmConfig != null && isActivated) {
+                    bgmPlayer.initialize(app.bgmConfig)
+                }
+            } else {
+                // app 不存在，直接标记为已激活
+                isActivated = true
+                isActivationChecked = true
             }
+        } else {
+            // appId 无效，直接标记为已激活
+            isActivated = true
+            isActivationChecked = true
+        }
+    }
+    
+    // 释放背景音乐播放器
+    DisposableEffect(Unit) {
+        onDispose {
+            bgmPlayer.release()
         }
     }
 
@@ -328,11 +369,45 @@ fun WebViewScreen(
             ): Boolean {
                 return onFileChooser(filePathCallback, fileChooserParams)
             }
+            
+            override fun onDownloadStart(
+                url: String,
+                userAgent: String,
+                contentDisposition: String,
+                mimeType: String,
+                contentLength: Long
+            ) {
+                // 使用系统下载管理器下载到 Download 文件夹
+                DownloadHelper.handleDownload(
+                    context = context,
+                    url = url,
+                    userAgent = userAgent,
+                    contentDisposition = contentDisposition,
+                    mimeType = mimeType,
+                    contentLength = contentLength,
+                    method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER
+                )
+            }
         }
     }
 
     val webViewManager = remember { WebViewManager(context, adBlocker) }
-    val targetUrl = directUrl ?: webApp?.url ?: ""
+    
+    // 根据应用类型构建目标 URL
+    val targetUrl = remember(directUrl, webApp) {
+        val app = webApp  // 捕获到局部变量以支持智能转换
+        when {
+            !directUrl.isNullOrBlank() -> directUrl
+            app?.appType == com.webtoapp.data.model.AppType.HTML -> {
+                // HTML 应用：从本地文件目录加载
+                val projectId = app.htmlConfig?.projectId ?: ""
+                val entryFile = app.htmlConfig?.entryFile ?: "index.html"
+                val htmlDir = File(context.filesDir, "html_projects/$projectId")
+                "file://${htmlDir.absolutePath}/$entryFile"
+            }
+            else -> app?.url ?: ""
+        }
+    }
     
     // 是否隐藏工具栏（全屏模式）
     val hideToolbar = webApp?.webViewConfig?.hideToolbar == true
@@ -401,8 +476,17 @@ fun WebViewScreen(
                 )
             }
 
+            // 激活检查中，显示加载状态
+            if (!isActivationChecked && webApp?.activationEnabled == true) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
             // 未激活提示
-            if (!isActivated && webApp?.activationEnabled == true) {
+            else if (!isActivated && webApp?.activationEnabled == true) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -422,7 +506,7 @@ fun WebViewScreen(
                         }
                     }
                 }
-            } else if (targetUrl.isNotEmpty()) {
+            } else if (targetUrl.isNotEmpty() && isActivationChecked) {
                 // WebView
                 AndroidView(
                     factory = { ctx ->
@@ -436,6 +520,20 @@ fun WebViewScreen(
                                 webApp?.webViewConfig ?: com.webtoapp.data.model.WebViewConfig(),
                                 webViewCallbacks
                             )
+                            // HTML 应用需要额外配置以支持本地文件访问
+                            val currentApp = webApp
+                            if (currentApp?.appType == com.webtoapp.data.model.AppType.HTML) {
+                                settings.apply {
+                                    allowFileAccess = true
+                                    allowContentAccess = true
+                                    @Suppress("DEPRECATION")
+                                    allowFileAccessFromFileURLs = true
+                                    @Suppress("DEPRECATION")
+                                    allowUniversalAccessFromFileURLs = true
+                                    javaScriptEnabled = currentApp.htmlConfig?.enableJavaScript ?: true
+                                    domStorageEnabled = currentApp.htmlConfig?.enableLocalStorage ?: true
+                                }
+                            }
                             onWebViewCreated(this)
                             webViewRef = this
                             loadUrl(targetUrl)
@@ -732,7 +830,9 @@ fun SplashOverlay(
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(mediaPath)
                                             setSurface(holder.surface)
-                                            setVolume(0f, 0f) // 静音
+                                            // 根据配置决定是否启用音频
+                                            val volume = if (splashConfig.enableAudio) 1f else 0f
+                                            setVolume(volume, volume)
                                             isLooping = false
                                             setOnPreparedListener { 
                                                 // 跳到裁剪起始位置

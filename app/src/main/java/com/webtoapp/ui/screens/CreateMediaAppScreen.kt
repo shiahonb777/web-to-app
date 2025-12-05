@@ -24,8 +24,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.data.model.AppType
+import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.data.model.MediaConfig
 import com.webtoapp.data.model.SplashOrientation
+import com.webtoapp.ui.components.BgmCard
+import com.webtoapp.ui.components.IconPickerWithLibrary
 
 /**
  * 创建媒体应用页面（图片/视频转APP）
@@ -39,7 +42,11 @@ fun CreateMediaAppScreen(
         appType: AppType,
         mediaUri: Uri,
         mediaConfig: MediaConfig,
-        iconUri: Uri?
+        iconUri: Uri?,
+        activationEnabled: Boolean,
+        activationCodes: List<String>,
+        bgmEnabled: Boolean,
+        bgmConfig: BgmConfig
     ) -> Unit
 ) {
     val context = LocalContext.current
@@ -48,6 +55,7 @@ fun CreateMediaAppScreen(
     // 应用信息
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
+    var appIconPath by remember { mutableStateOf<String?>(null) }  // 图标库选择的路径
     
     // 媒体类型和内容
     var mediaType by remember { mutableStateOf(AppType.IMAGE) }
@@ -59,6 +67,14 @@ fun CreateMediaAppScreen(
     var autoPlay by remember { mutableStateOf(true) }
     var fillScreen by remember { mutableStateOf(true) }
     var orientation by remember { mutableStateOf(SplashOrientation.PORTRAIT) }
+    
+    // 激活码
+    var activationEnabled by remember { mutableStateOf(false) }
+    var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
+    
+    // 背景音乐
+    var bgmEnabled by remember { mutableStateOf(false) }
+    var bgmConfig by remember { mutableStateOf(BgmConfig()) }
     
     // 文件选择器
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -86,6 +102,8 @@ fun CreateMediaAppScreen(
                     TextButton(
                         onClick = {
                             mediaUri?.let { uri ->
+                                // 处理图标：优先使用图标库路径，否则使用相册选择的Uri
+                                val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
                                 onCreated(
                                     appName.ifBlank { "媒体应用" },
                                     mediaType,
@@ -98,7 +116,11 @@ fun CreateMediaAppScreen(
                                         fillScreen = fillScreen,
                                         orientation = orientation
                                     ),
-                                    appIcon
+                                    finalIconUri,
+                                    activationEnabled,
+                                    activationCodes,
+                                    bgmEnabled,
+                                    bgmConfig
                                 )
                             }
                         },
@@ -266,46 +288,16 @@ fun CreateMediaAppScreen(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 应用图标
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(MaterialTheme.shapes.medium)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { iconPickerLauncher.launch("image/*") },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (appIcon != null) {
-                                AsyncImage(
-                                    model = appIcon,
-                                    contentDescription = "应用图标",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Outlined.AddAPhoto,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                    // 应用图标（带图标库功能）
+                    IconPickerWithLibrary(
+                        iconUri = appIcon,
+                        iconPath = appIconPath,
+                        onSelectFromGallery = { iconPickerLauncher.launch("image/*") },
+                        onSelectFromLibrary = { path -> 
+                            appIconPath = path 
+                            appIcon = null
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = "应用图标",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = "可选，不设置将使用默认图标",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    )
                 }
             }
             
@@ -378,6 +370,22 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
+            
+            // 激活码设置
+            MediaActivationCard(
+                enabled = activationEnabled,
+                codes = activationCodes,
+                onEnabledChange = { activationEnabled = it },
+                onCodesChange = { activationCodes = it }
+            )
+            
+            // 背景音乐
+            BgmCard(
+                enabled = bgmEnabled,
+                config = bgmConfig,
+                onEnabledChange = { bgmEnabled = it },
+                onConfigChange = { bgmConfig = it }
+            )
             
             // 提示信息
             Card(
@@ -487,5 +495,107 @@ fun SettingsRow(
             )
         }
         trailing()
+    }
+}
+
+/**
+ * 媒体应用激活码设置卡片（简化版）
+ */
+@Composable
+fun MediaActivationCard(
+    enabled: Boolean,
+    codes: List<String>,
+    onEnabledChange: (Boolean) -> Unit,
+    onCodesChange: (List<String>) -> Unit
+) {
+    var newCode by remember { mutableStateOf("") }
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Key,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "激活码验证",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = onEnabledChange
+                )
+            }
+
+            if (enabled) {
+                Text(
+                    text = "启用后，用户需要输入正确的激活码才能使用应用",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // 添加激活码
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newCode,
+                        onValueChange = { newCode = it },
+                        placeholder = { Text("输入激活码") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledIconButton(
+                        onClick = {
+                            if (newCode.isNotBlank()) {
+                                onCodesChange(codes + newCode)
+                                newCode = ""
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Add, "添加")
+                    }
+                }
+
+                // 激活码列表
+                codes.forEachIndexed { index, code ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = code,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = {
+                                onCodesChange(codes.filterIndexed { i, _ -> i != index })
+                            }
+                        ) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                "删除",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
