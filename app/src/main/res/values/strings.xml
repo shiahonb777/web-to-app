@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 使用零宽空格(\u200B)扩展长度，显示为"WebToApp"但有足够字节空间支持长自定义名称 -->
+    <string name="app_name">WebToApp&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;&#x200B;</string>
+    <string name="app_description">将任意网站转换为独立App</string>
+
+    <!-- 主界面 -->
+    <string name="title_my_apps">我的应用</string>
+    <string name="title_create_app">创建应用</string>
+    <string name="title_settings">设置</string>
+
+    <!-- 创建App表单 -->
+    <string name="label_app_name">应用名称</string>
+    <string name="label_url">网站地址</string>
+    <string name="label_icon">应用图标</string>
+    <string name="label_activation">激活码设置</string>
+    <string name="label_ads">广告设置</string>
+    <string name="label_announcement">公告设置</string>
+    <string name="label_ad_block">广告拦截</string>
+
+    <!-- 激活码 -->
+    <string name="enable_activation">启用激活码</string>
+    <string name="activation_codes">激活码列表</string>
+    <string name="add_activation_code">添加激活码</string>
+    <string name="activation_required">需要输入激活码才能使用</string>
+    <string name="enter_activation_code">请输入激活码</string>
+    <string name="invalid_activation_code">激活码无效</string>
+    <string name="activation_success">激活成功</string>
+
+    <!-- 广告 -->
+    <string name="enable_ads">启用广告</string>
+    <string name="ad_type">广告类型</string>
+    <string name="ad_banner">横幅广告</string>
+    <string name="ad_interstitial">插屏广告</string>
+    <string name="ad_splash">开屏广告</string>
+    <string name="ad_unit_id">广告单元ID</string>
+
+    <!-- 公告 -->
+    <string name="enable_announcement">启用公告</string>
+    <string name="announcement_title">公告标题</string>
+    <string name="announcement_content">公告内容</string>
+    <string name="announcement_url">公告链接</string>
+    <string name="show_once">仅显示一次</string>
+
+    <!-- 广告拦截 -->
+    <string name="enable_ad_block">启用广告拦截</string>
+    <string name="ad_block_rules">拦截规则</string>
+    <string name="custom_rules">自定义规则</string>
+
+    <!-- 操作按钮 -->
+    <string name="btn_create">创建应用</string>
+    <string name="btn_preview">预览</string>
+    <string name="btn_export">导出APK</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_delete">删除</string>
+    <string name="btn_edit">编辑</string>
+    <string name="btn_launch">启动</string>
+    <string name="btn_shortcut">创建快捷方式</string>
+    <string name="btn_select_icon">选择图标</string>
+
+    <!-- 提示消息 -->
+    <string name="msg_app_created">应用创建成功</string>
+    <string name="msg_app_deleted">应用已删除</string>
+    <string name="msg_shortcut_created">快捷方式已创建</string>
+    <string name="msg_url_invalid">请输入有效的网址</string>
+    <string name="msg_name_required">请输入应用名称</string>
+    <string name="msg_export_success">APK导出成功</string>
+    <string name="msg_export_failed">APK导出失败</string>
+    <string name="msg_loading">加载中...</string>
+    <string name="msg_no_apps">暂无应用，点击+创建</string>
+
+    <!-- WebView -->
+    <string name="webview_error">页面加载失败</string>
+    <string name="webview_retry">重试</string>
+    <string name="webview_back">返回</string>
+    <string name="webview_forward">前进</string>
+    <string name="webview_refresh">刷新</string>
+    <string name="webview_share">分享</string>
+    <string name="webview_open_browser">在浏览器中打开</string>
+</resources>
