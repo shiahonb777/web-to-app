@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -35,10 +36,11 @@ class AppExporter(private val context: Context) {
      */
     fun createShortcut(webApp: WebApp): ShortcutResult {
         return try {
-            // 准备图标
-            val iconBitmap = prepareIconBitmap(webApp)
+            // 准备图标 - 使用 Adaptive Icon 格式，与 APK 构建保持一致
+            val iconBitmap = prepareAdaptiveIconBitmap(webApp)
             val icon = if (iconBitmap != null) {
-                IconCompat.createWithBitmap(iconBitmap)
+                // 使用 createWithAdaptiveBitmap 让系统自动应用形状遮罩（圆形/方形/圆角等）
+                IconCompat.createWithAdaptiveBitmap(iconBitmap)
             } else {
                 IconCompat.createWithResource(context, android.R.drawable.sym_def_app_icon)
             }
@@ -58,8 +60,9 @@ class AppExporter(private val context: Context) {
                     createShortcutApi26(webApp, icon, launchIntent)
                 }
                 else -> {
-                    // Android 7.x 使用传统广播方式
-                    createShortcutLegacy(webApp, iconBitmap, launchIntent)
+                    // Android 7.x 使用传统广播方式（不支持 Adaptive Icon，使用普通图标）
+                    val legacyBitmap = prepareIconBitmap(webApp)
+                    createShortcutLegacy(webApp, legacyBitmap, launchIntent)
                 }
             }
         } catch (e: Exception) {
@@ -152,26 +155,66 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 准备图标 Bitmap
-     * 支持本地文件路径和 content:// URI
+     * 准备 Adaptive Icon 格式的 Bitmap（Android 8.0+ 快捷方式使用）
+     * 与 APK 构建中的 createAdaptiveForegroundIcon 保持一致：
+     * - 图标放置在 108dp 画布的中间 72dp 安全区域
+     * - 周围 18dp 边距留给系统裁剪
+     */
+    private fun prepareAdaptiveIconBitmap(webApp: WebApp): Bitmap? {
+        val original = loadIconBitmap(webApp) ?: return null
+        
+        // Adaptive Icon 规范：108dp 画布，中间 72dp 为安全区域
+        val size = 192  // 使用 192px 作为画布大小
+        val safeZoneSize = (size * 72f / 108f).toInt()  // 安全区域 = 128px
+        val padding = (size - safeZoneSize) / 2         // 边距 = 32px
+        
+        // 创建透明画布
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        
+        // 将用户图标缩放到安全区域尺寸
+        val scaled = Bitmap.createScaledBitmap(original, safeZoneSize, safeZoneSize, true)
+        
+        // 居中绘制到画布
+        canvas.drawBitmap(scaled, padding.toFloat(), padding.toFloat(), null)
+        
+        // 清理
+        if (scaled !== original) scaled.recycle()
+        original.recycle()
+        
+        return output
+    }
+
+    /**
+     * 准备普通图标 Bitmap（Android 7.x 传统快捷方式使用）
      */
     private fun prepareIconBitmap(webApp: WebApp): Bitmap? {
+        val original = loadIconBitmap(webApp) ?: return null
+        
+        // 调整为适合快捷方式的尺寸 (192x192)
+        val size = 192
+        return Bitmap.createScaledBitmap(original, size, size, true).also {
+            if (it !== original) original.recycle()
+        }
+    }
+
+    /**
+     * 从 WebApp 加载原始图标 Bitmap
+     * 支持本地文件路径和 content:// URI
+     */
+    private fun loadIconBitmap(webApp: WebApp): Bitmap? {
         webApp.iconPath?.let { path ->
             try {
-                val original = when {
+                return when {
                     // 本地文件路径（绝对路径）
                     path.startsWith("/") -> {
                         val file = File(path)
-                        if (file.exists()) {
-                            BitmapFactory.decodeFile(path)
-                        } else null
+                        if (file.exists()) BitmapFactory.decodeFile(path) else null
                     }
                     // file:// URI
                     path.startsWith("file://") -> {
                         val file = File(Uri.parse(path).path ?: return null)
-                        if (file.exists()) {
-                            BitmapFactory.decodeFile(file.absolutePath)
-                        } else null
+                        if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
                     }
                     // content:// URI（向后兼容）
                     else -> {
@@ -179,14 +222,6 @@ class AppExporter(private val context: Context) {
                         context.contentResolver.openInputStream(uri)?.use { stream ->
                             BitmapFactory.decodeStream(stream)
                         }
-                    }
-                }
-                
-                if (original != null) {
-                    // 调整为适合快捷方式的尺寸 (192x192)
-                    val size = 192
-                    return Bitmap.createScaledBitmap(original, size, size, true).also {
-                        if (it !== original) original.recycle()
                     }
                 }
             } catch (e: Exception) {
