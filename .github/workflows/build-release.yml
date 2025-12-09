@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+env:
+  APP_NAME: WebToApp
+  APP_DESCRIPTION: "无需编程，一键将任意网站或媒体转换为独立 Android 应用！"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,12 +51,64 @@ jobs:
           -Pandroid.injected.signing.key.alias=release-key \
           -Pandroid.injected.signing.key.password=webtoapp123
         
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          
+          # 提取版本号（去掉v前缀）
+          VERSION_NUM=${VERSION#v}
+          
+          # 读取 README.md 中的功能特性
+          FEATURES=$(sed -n '/## 📋 功能特性/,/## 技术栈/p' README.md | head -n -2)
+          
+          # 构建发布说明
+          RELEASE_BODY=$(cat <<EOF
+          # 🎉 ${APP_NAME} ${VERSION} 发布
+          
+          ## 📝 简介
+          ${APP_DESCRIPTION}
+          
+          **🔗 项目链接：** [GitHub 仓库](https://github.com/yingcaihuang/web-to-app)
+          
+          ## ✨ 此版本包含
+          - ✅ Debug APK（用于测试）
+          - ✅ Release APK（已签名，可直接安装）
+          
+          ## 🚀 快速开始
+          1. 下载对应的 APK 文件
+          2. 在 Android 设备上安装
+          3. 开始使用 WebToApp 创建你的应用！
+          
+          ## 📖 功能特性
+          ${FEATURES}
+          
+          ## 💾 安装说明
+          - **Debug APK**：用于开发测试，包含调试信息
+          - **Release APK**：生产版本，已优化和签名，推荐使用
+          
+          如有问题或建议，欢迎提交 [Issue](https://github.com/yingcaihuang/web-to-app/issues)
+          
+          ---
+          _自动构建于 $(date '+%Y-%m-%d %H:%M:%S')_
+          EOF
+          )
+          
+          # 保存为环境变量（处理多行文本）
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.release_notes.outputs.version }}
           files: |
             app/build/outputs/apk/debug/app-debug.apk
             app/build/outputs/apk/release/app-release.apk
-          generate_release_notes: true
+          body: ${{ steps.release_notes.outputs.body }}
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
