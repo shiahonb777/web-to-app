@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebToApp 管理后台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>WebToApp</h1>
+                <p>管理后台</p>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li class="nav-item active" data-tab="dashboard">
+                        <a href="#dashboard">
+                            <span class="icon">📊</span>
+                            <span>仪表板</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-tab="apikeys">
+                        <a href="#apikeys">
+                            <span class="icon">🔐</span>
+                            <span>API Key 管理</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-tab="statistics">
+                        <a href="#statistics">
+                            <span class="icon">📈</span>
+                            <span>统计分析</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-tab="logs">
+                        <a href="#logs">
+                            <span class="icon">📝</span>
+                            <span>审计日志</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-tab="settings">
+                        <a href="#settings">
+                            <span class="icon">⚙️</span>
+                            <span>设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 顶部栏 -->
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    <span id="page-title">仪表板</span>
+                </div>
+                <div class="user-profile">
+                    <span class="user-name" id="user-name">Admin</span>
+                    <button class="btn-logout" onclick="logout()">退出登录</button>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content">
+                <!-- 仪表板 -->
+                <section id="dashboard" class="tab-content active">
+                    <div class="dashboard-grid">
+                        <!-- API Key 统计卡片 -->
+                        <div class="card stat-card">
+                            <div class="card-header">
+                                <h3>API Key 统计</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-keys">-</div>
+                                    <div class="stat-label">总数</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="active-keys">-</div>
+                                    <div class="stat-label">活跃</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="revoked-keys">-</div>
+                                    <div class="stat-label">已撤销</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 激活统计卡片 -->
+                        <div class="card stat-card">
+                            <div class="card-header">
+                                <h3>激活统计</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-activations">-</div>
+                                    <div class="stat-label">总激活</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="success-verifications">-</div>
+                                    <div class="stat-label">验证成功</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-devices">-</div>
+                                    <div class="stat-label">设备数</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 图表卡片 -->
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>近 7 天激活趋势</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="activationChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 排名前 5 的应用 -->
+                        <div class="card top-apps-card">
+                            <div class="card-header">
+                                <h3>排名前 5 的应用</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="top-apps-list" class="apps-list">
+                                    <!-- 动态加载 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API Key 管理 -->
+                <section id="apikeys" class="tab-content">
+                    <div class="section-header">
+                        <h2>API Key 管理</h2>
+                        <button class="btn btn-primary" onclick="openGenerateModal()">
+                            + 生成新 Key
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>名称</th>
+                                        <th>Key Prefix</th>
+                                        <th>状态</th>
+                                        <th>权限</th>
+                                        <th>最后使用</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="apikeys-table">
+                                    <!-- 动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 统计分析 -->
+                <section id="statistics" class="tab-content">
+                    <div class="section-header">
+                        <h2>统计分析</h2>
+                        <div class="filter-group">
+                            <select id="app-filter" onchange="loadStatistics()">
+                                <option value="">所有应用</option>
+                            </select>
+                            <select id="period-filter" onchange="loadStatistics()">
+                                <option value="7">最近 7 天</option>
+                                <option value="30">最近 30 天</option>
+                                <option value="90">最近 90 天</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>激活统计</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="statsChart1"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>验证成功率</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="statsChart2"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>设备趋势</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="statsChart3"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>详细数据</h3>
+                            <button class="btn btn-secondary" onclick="exportStatistics()">导出 CSV</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>应用 ID</th>
+                                        <th>总激活</th>
+                                        <th>验证成功</th>
+                                        <th>验证失败</th>
+                                        <th>设备数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stats-table">
+                                    <!-- 动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 审计日志 -->
+                <section id="logs" class="tab-content">
+                    <div class="section-header">
+                        <h2>审计日志</h2>
+                        <div class="filter-group">
+                            <input type="text" id="log-filter" placeholder="搜索..." onchange="loadLogs()">
+                            <select id="log-type-filter" onchange="loadLogs()">
+                                <option value="">所有类型</option>
+                                <option value="generate_key">生成 Key</option>
+                                <option value="revoke_key">撤销 Key</option>
+                                <option value="view_stats">查看统计</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>操作</th>
+                                        <th>资源</th>
+                                        <th>IP 地址</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table">
+                                    <!-- 动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 设置 -->
+                <section id="settings" class="tab-content">
+                    <div class="section-header">
+                        <h2>设置</h2>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>API 密钥设置</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>当前 API Key：</label>
+                                <input type="password" id="current-api-key" readonly>
+                                <button class="btn btn-secondary" onclick="toggleAPIKeyVisibility()">显示/隐藏</button>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-danger" onclick="resetAPIKey()">重置 API Key</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>系统设置</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" checked>
+                                    启用访问日志
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" checked>
+                                    启用性能监控
+                                </label>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 生成 API Key 对话框 -->
+    <div id="generate-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>生成新 API Key</h2>
+                <button class="close-btn" onclick="closeGenerateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Key 名称：</label>
+                    <input type="text" id="key-name" placeholder="例如：Mobile App API">
+                </div>
+                <div class="form-group">
+                    <label>权限：</label>
+                    <div class="permissions-list">
+                        <label><input type="checkbox" value="read:statistics"> 读取统计</label>
+                        <label><input type="checkbox" value="write:keys"> 管理密钥</label>
+                        <label><input type="checkbox" value="read:logs"> 读取日志</label>
+                        <label><input type="checkbox" value="write:config"> 配置管理</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGenerateModal()">取消</button>
+                <button class="btn btn-primary" onclick="generateAPIKey()">生成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 显示 API Key 对话框 -->
+    <div id="key-display-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>API Key 已生成</h2>
+                <button class="close-btn" onclick="closeKeyDisplayModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: red; margin-bottom: 20px;">
+                    ⚠️ 请妥善保管您的 API Key！这是您唯一一次看到完整的密钥。
+                </p>
+                <div class="form-group">
+                    <label>API Key：</label>
+                    <input type="text" id="new-api-key" readonly>
+                    <button class="btn btn-secondary" onclick="copyAPIKey()">复制</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeKeyDisplayModal()">我已保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

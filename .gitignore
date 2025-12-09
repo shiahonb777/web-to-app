@@ -1,4 +1,5 @@
 # Built application files
+*.db
 *.apk
 *.aar
 *.ap_
@@ -79,3 +80,4 @@ obj/
 .idea/encodings.xml
 .idea/scopes/scope_settings.xml
 .idea/vcs.xml
+webtoapp-key-server/data/keyserver.db

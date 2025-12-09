@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebToApp - 管理员登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            padding: 40px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .demo-credentials {
+            background: #f0f4ff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .demo-credentials h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .demo-credentials p {
+            margin-bottom: 5px;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .login-button.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-button.loading .spinner {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>WebToApp</h1>
+            <p>管理员登录</p>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="api-key">API Key：</label>
+                <input 
+                    type="password" 
+                    id="api-key" 
+                    placeholder="输入您的 API Key"
+                    required
+                    autocomplete="off"
+                >
+                <div class="error-message" id="error-message"></div>
+                <div class="success-message" id="success-message"></div>
+            </div>
+
+            <button type="submit" class="login-button" id="login-button">
+                <span class="spinner"></span>
+                登录
+            </button>
+        </form>
+
+        <div class="demo-credentials">
+            <h3>演示模式</h3>
+            <p>点击下方按钮进入演示模式（需要已生成的有效 API Key）：</p>
+            <button 
+                type="button" 
+                class="login-button" 
+                style="margin-top: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"
+                onclick="enterDemoMode()"
+            >
+                进入演示模式
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 检查是否已登录
+        if (localStorage.getItem('apiKey')) {
+            window.location.href = '/index.html';
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const apiKey = document.getElementById('api-key').value.trim();
+            if (!apiKey) {
+                showError('请输入 API Key');
+                return;
+            }
+
+            // 显示加载状态
+            const button = document.getElementById('login-button');
+            button.disabled = true;
+            button.classList.add('loading');
+
+            // 验证 API Key
+            fetch('/api/admin/health', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    // 保存 API Key
+                    localStorage.setItem('apiKey', apiKey);
+                    showSuccess('登录成功，正在跳转...');
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 1000);
+                } else {
+                    showError('API Key 无效，请检查后重试');
+                    button.disabled = false;
+                    button.classList.remove('loading');
+                }
+            }).catch(error => {
+                showError('网络连接失败，请检查服务器是否运行');
+                console.error('登录失败:', error);
+                button.disabled = false;
+                button.classList.remove('loading');
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function enterDemoMode() {
+            showError('演示模式需要有效的 API Key。请先生成一个 API Key，然后输入进行登录。');
+        }
+
+        // 回车键登录
+        document.getElementById('api-key').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('login-form').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
