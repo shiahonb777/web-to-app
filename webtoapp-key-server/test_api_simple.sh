@@ -7,9 +7,11 @@
 ################################################################################
 
 HOST=${1:-localhost}
-PORT=${2:-8080}
-BASE_URL="http://$HOST:$PORT"
+PORT=${2:-443}
+BASE_URL="https://$HOST:$PORT"
 APP_ID="com.webtoapp.test.$(date +%s)"
+# 默认 Admin API Key
+API_KEY="17785327-3a23-4361-b1a9-6098f1332288.41278aa7-f4c3-414d-8b84-808fe58a5045"
 
 # 颜色
 GREEN='\033[0;32m'
@@ -26,16 +28,30 @@ test_api() {
     local method=$2
     local endpoint=$3
     local data=$4
+    local use_auth=${5:-false}
     
     echo -e "${BLUE}[TEST]${NC} $name"
     
-    if [ -z "$data" ]; then
-        response=$(curl -s -X "$method" "$BASE_URL$endpoint" \
-            -H "Content-Type: application/json")
+    if [ "$use_auth" == "true" ]; then
+        if [ -z "$data" ]; then
+            response=$(curl -k -s -X "$method" "$BASE_URL$endpoint" \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $API_KEY")
+        else
+            response=$(curl -k -s -X "$method" "$BASE_URL$endpoint" \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $API_KEY" \
+                -d "$data")
+        fi
     else
-        response=$(curl -s -X "$method" "$BASE_URL$endpoint" \
-            -H "Content-Type: application/json" \
-            -d "$data")
+        if [ -z "$data" ]; then
+            response=$(curl -k -s -X "$method" "$BASE_URL$endpoint" \
+                -H "Content-Type: application/json")
+        else
+            response=$(curl -k -s -X "$method" "$BASE_URL$endpoint" \
+                -H "Content-Type: application/json" \
+                -d "$data")
+        fi
     fi
     
     # 检查响应
@@ -79,11 +95,12 @@ GEN_DATA=$(cat <<EOF
 }
 EOF
 )
-test_api "生成 3 个激活码" "POST" "/api/activation/generate" "$GEN_DATA"
+test_api "生成 3 个激活码" "POST" "/api/activation/generate" "$GEN_DATA" "true"
 
 # 从响应中提取激活码
-GEN_RESPONSE=$(curl -s -X POST "$BASE_URL/api/activation/generate" \
+GEN_RESPONSE=$(curl -k -s -X POST "$BASE_URL/api/activation/generate" \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $API_KEY" \
     -d "$GEN_DATA")
 
 CODE1=$(echo "$GEN_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data['codes'][0]['code'] if data.get('codes') else '')" 2>/dev/null)
@@ -111,17 +128,17 @@ if [ -n "$CODE1" ]; then
 }
 EOF
 )
-    test_api "验证激活码" "POST" "/api/activation/verify" "$VERIFY_DATA"
+    test_api "验证激活码" "POST" "/api/activation/verify" "$VERIFY_DATA" "false"
 fi
 
 # 列表查询
 echo -e "${YELLOW}=== 4️⃣  列表查询 ===${NC}"
-test_api "查询激活码列表" "GET" "/api/activation/list?app_id=$APP_ID&page=1&limit=10"
+test_api "查询激活码列表" "GET" "/api/activation/list?app_id=$APP_ID&page=1&limit=10" "" "true"
 
 # 撤销激活码
 echo -e "${YELLOW}=== 5️⃣  撤销激活码 ===${NC}"
 if [ -n "$CODE2" ]; then
-    test_api "撤销激活码" "DELETE" "/api/activation/$APP_ID/$CODE2"
+    test_api "撤销激活码" "DELETE" "/api/activation/$APP_ID/$CODE2" "" "true"
 fi
 
 # 多设备验证
@@ -142,7 +159,7 @@ if [ -n "$CODE1" ]; then
 }
 EOF
 )
-    test_api "第二台设备验证" "POST" "/api/activation/verify" "$VERIFY_DATA_2"
+    test_api "第二台设备验证" "POST" "/api/activation/verify" "$VERIFY_DATA_2" "false"
 fi
 
 # 总结

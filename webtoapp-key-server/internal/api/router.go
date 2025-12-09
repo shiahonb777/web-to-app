@@ -35,21 +35,24 @@ func SetupRouter(cfg *config.Config, db *gorm.DB) *gin.Engine {
 	// 获取默认管理员 API Key 信息（用于登录页面显示）
 	router.GET("/api/default-admin-key", handlers.GetDefaultAdminKey)
 
-	// 认证 API 路由
-	authRoutes := router.Group("/api/activation")
-	authRoutes.Use(middleware.RequestSignature(cfg))
+	// ===== 激活码公开 API 路由（无需认证）=====
+	// 验证激活码 - 公开端点（客户端需要调用）
+	router.POST("/api/activation/verify", handlers.VerifyActivationCode)
 
-	// 验证激活码
-	authRoutes.POST("/verify", handlers.VerifyActivationCode)
+	// ===== 激活码管理 API 路由（需要 API Key 认证）=====
+	activationRoutes := router.Group("/api/activation")
+	activationRoutes.Use(middleware.APIKeyAuth(db))
+	activationRoutes.Use(middleware.RecordAPIKeyUsage(db))
+	activationRoutes.Use(middleware.AuditLoggerMiddleware(db))
 
-	// 生成激活码
-	authRoutes.POST("/generate", handlers.GenerateActivationCodes)
+	// 生成激活码（需要 API Key 认证）
+	activationRoutes.POST("/generate", handlers.GenerateActivationCodes)
 
-	// 列出激活码
-	authRoutes.GET("/list", handlers.ListActivationCodes)
+	// 列出激活码（需要 API Key 认证）
+	activationRoutes.GET("/list", handlers.ListActivationCodes)
 
-	// 撤销激活码
-	authRoutes.DELETE("/:app_id/:code", handlers.RevokeActivationCode)
+	// 撤销激活码（需要 API Key 认证）
+	activationRoutes.DELETE("/:app_id/:code", handlers.RevokeActivationCode)
 
 	// ===== 管理员 API 路由（需要 API Key 认证）=====
 	adminHandlers := handlers.NewAdminHandlers(db)
