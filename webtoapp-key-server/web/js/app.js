@@ -2,6 +2,14 @@
 const API_BASE_URL = '/api/admin';
 let apiKey = localStorage.getItem('apiKey');
 
+// ========== 全局图表引用 ==========
+let charts = {
+    activationChart: null,
+    statsChart1: null,
+    statsChart2: null,
+    statsChart3: null
+};
+
 // ========== 页面初始化 ==========
 document.addEventListener('DOMContentLoaded', function() {
     // 检查登录状态
@@ -63,18 +71,18 @@ function loadTabData(tabName) {
 
 // ========== 仪表板 ==========
 function loadDashboard() {
-    fetchAPI('/admin/health', {
+    fetchAPI('/health', {
         method: 'GET'
     }).then(data => {
         // 加载 API Key 统计
-        return fetchAPI('/admin/api-keys/stats', { method: 'GET' });
+        return fetchAPI('/api-keys/stats', { method: 'GET' });
     }).then(stats => {
         document.getElementById('total-keys').textContent = stats.total || 0;
         document.getElementById('active-keys').textContent = stats.active || 0;
         document.getElementById('revoked-keys').textContent = stats.revoked || 0;
 
         // 加载应用统计
-        return fetchAPI('/admin/statistics', { method: 'GET' });
+        return fetchAPI('/statistics', { method: 'GET' });
     }).then(data => {
         if (data.total) {
             document.getElementById('total-activations').textContent = data.total.total_activations || 0;
@@ -83,7 +91,7 @@ function loadDashboard() {
         }
 
         // 加载排名前 5 的应用
-        return fetchAPI('/admin/statistics/dashboard', { method: 'GET' });
+        return fetchAPI('/statistics/dashboard', { method: 'GET' });
     }).then(data => {
         if (data.top_apps && data.top_apps.length > 0) {
             const appsList = document.getElementById('top-apps-list');
@@ -110,6 +118,11 @@ function loadDashboard() {
 function initActivationChart() {
     const ctx = document.getElementById('activationChart');
     if (ctx) {
+        // 销毁旧图表
+        if (charts.activationChart) {
+            charts.activationChart.destroy();
+        }
+
         const data = {
             labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
             datasets: [{
@@ -122,7 +135,7 @@ function initActivationChart() {
             }]
         };
 
-        new Chart(ctx, {
+        charts.activationChart = new Chart(ctx, {
             type: 'line',
             data: data,
             options: {
@@ -144,7 +157,7 @@ function initActivationChart() {
 
 // ========== API Key 管理 ==========
 function loadAPIKeys() {
-    fetchAPI('/admin/api-keys', {
+    fetchAPI('/api-keys', {
         method: 'GET'
     }).then(data => {
         const tbody = document.getElementById('apikeys-table');
@@ -198,7 +211,7 @@ function generateAPIKey() {
     const permissions = Array.from(document.querySelectorAll('.permissions-list input[type="checkbox"]:checked'))
         .map(cb => cb.value);
 
-    fetchAPI('/admin/api-keys', {
+    fetchAPI('/api-keys', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -232,7 +245,7 @@ function closeKeyDisplayModal() {
 function revokeAPIKey(id) {
     if (!confirm('确定要撤销这个 API Key 吗？')) return;
 
-    fetchAPI(`/admin/api-keys/${id}`, {
+    fetchAPI(`/api-keys/${id}`, {
         method: 'DELETE'
     }).then(data => {
         showAlert('API Key 已撤销', 'success');
@@ -252,7 +265,7 @@ function loadStatistics() {
     const appFilter = document.getElementById('app-filter')?.value || '';
     const periodFilter = parseInt(document.getElementById('period-filter')?.value || '7');
 
-    fetchAPI('/admin/statistics', {
+    fetchAPI('/statistics', {
         method: 'GET'
     }).then(data => {
         if (data.total) {
@@ -261,7 +274,7 @@ function loadStatistics() {
 
         // 加载趋势数据用于图表
         if (data.top_apps && data.top_apps.length > 0) {
-            return fetchAPI(`/admin/statistics/apps/${data.top_apps[0].app_id}/trends?days=${periodFilter}`, 
+            return fetchAPI(`/statistics/apps/${data.top_apps[0].app_id}/trends?days=${periodFilter}`, 
                 { method: 'GET' });
         }
     }).then(trendData => {
@@ -293,10 +306,15 @@ function renderStatsTable(stats) {
 }
 
 function initStatsCharts(data) {
+    // 销毁旧图表
+    if (charts.statsChart1) charts.statsChart1.destroy();
+    if (charts.statsChart2) charts.statsChart2.destroy();
+    if (charts.statsChart3) charts.statsChart3.destroy();
+
     // 初始化图表 1：激活统计
     const ctx1 = document.getElementById('statsChart1');
     if (ctx1) {
-        new Chart(ctx1, {
+        charts.statsChart1 = new Chart(ctx1, {
             type: 'bar',
             data: {
                 labels: data.map(d => new Date(d.date).toLocaleDateString('zh-CN')),
@@ -323,7 +341,7 @@ function initStatsCharts(data) {
         const successData = data.map(d => d.success_count || 0);
         const failureData = data.map(d => d.failure_count || 0);
         
-        new Chart(ctx2, {
+        charts.statsChart2 = new Chart(ctx2, {
             type: 'doughnut',
             data: {
                 labels: ['成功', '失败'],
@@ -347,7 +365,7 @@ function initStatsCharts(data) {
     // 初始化图表 3：设备趋势
     const ctx3 = document.getElementById('statsChart3');
     if (ctx3) {
-        new Chart(ctx3, {
+        charts.statsChart3 = new Chart(ctx3, {
             type: 'line',
             data: {
                 labels: data.map(d => new Date(d.date).toLocaleDateString('zh-CN')),
@@ -384,7 +402,7 @@ function loadLogs() {
     const filterText = document.getElementById('log-filter')?.value || '';
     const filterType = document.getElementById('log-type-filter')?.value || '';
 
-    fetchAPI('/admin/logs', {
+    fetchAPI('/logs', {
         method: 'GET'
     }).then(data => {
         const tbody = document.getElementById('logs-table');
@@ -409,11 +427,13 @@ function loadLogs() {
                 tbody.appendChild(row);
             });
         } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">暂无日志</td></tr>';
+            const tbody = document.getElementById('logs-table');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无日志数据</td></tr>';
         }
     }).catch(error => {
-        console.error('加载日志失败:', error);
-        showAlert('加载日志失败: ' + error.message, 'danger');
+        // 日志API不可用时显示占位符
+        const tbody = document.getElementById('logs-table');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无日志数据</td></tr>';
     });
 }
 

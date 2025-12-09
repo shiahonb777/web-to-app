@@ -9,9 +9,9 @@ import (
 // Config 应用配置
 type Config struct {
 	// 服务器配置
-	Port           string
-	Env            string
-	LogLevel       string
+	Port     string
+	Env      string
+	LogLevel string
 
 	// 数据库配置
 	DatabasePath string

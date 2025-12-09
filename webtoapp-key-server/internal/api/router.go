@@ -1,6 +1,8 @@
 package api
 
 import (
+	"io/ioutil"
+
 	"github.com/gin-gonic/gin"
 	"github.com/yingcaihuang/webtoapp-key-server/internal/api/handlers"
 	"github.com/yingcaihuang/webtoapp-key-server/internal/api/middleware"
@@ -48,22 +50,57 @@ func SetupRouter(cfg *config.Config, db *gorm.DB) *gin.Engine {
 
 	// API Key 管理
 	apiKeyRoutes := adminRoutes.Group("/api-keys")
-	apiKeyRoutes.POST("", adminHandlers.GenerateAPIKey)                                  // 创建 API Key
-	apiKeyRoutes.GET("", adminHandlers.ListAPIKeys)                                      // 列出 API Keys
-	apiKeyRoutes.GET("/:id", adminHandlers.GetAPIKey)                                    // 获取单个 API Key
-	apiKeyRoutes.PUT("/:id", adminHandlers.UpdateAPIKey)                                 // 更新 API Key
-	apiKeyRoutes.DELETE("/:id", adminHandlers.RevokeAPIKey)                              // 撤销 API Key
-	apiKeyRoutes.GET("/stats", adminHandlers.GetAPIKeyStats)                             // API Key 统计
+	apiKeyRoutes.POST("", adminHandlers.GenerateAPIKey)      // 创建 API Key
+	apiKeyRoutes.GET("", adminHandlers.ListAPIKeys)          // 列出 API Keys
+	apiKeyRoutes.GET("/:id", adminHandlers.GetAPIKey)        // 获取单个 API Key
+	apiKeyRoutes.PUT("/:id", adminHandlers.UpdateAPIKey)     // 更新 API Key
+	apiKeyRoutes.DELETE("/:id", adminHandlers.RevokeAPIKey)  // 撤销 API Key
+	apiKeyRoutes.GET("/stats", adminHandlers.GetAPIKeyStats) // API Key 统计
 
 	// 统计数据
 	statsRoutes := adminRoutes.Group("/statistics")
-	statsRoutes.GET("", adminHandlers.GetStatistics)                                     // 获取总体统计
-	statsRoutes.GET("/dashboard", adminHandlers.GetDashboard)                            // 获取仪表板数据
-	statsRoutes.GET("/apps/:app_id", adminHandlers.GetAppStatistics)                     // 获取应用统计
-	statsRoutes.GET("/apps/:app_id/trends", adminHandlers.GetTrendData)                  // 获取趋势数据
+	statsRoutes.GET("", adminHandlers.GetStatistics)                    // 获取总体统计
+	statsRoutes.GET("/dashboard", adminHandlers.GetDashboard)           // 获取仪表板数据
+	statsRoutes.GET("/apps/:app_id", adminHandlers.GetAppStatistics)    // 获取应用统计
+	statsRoutes.GET("/apps/:app_id/trends", adminHandlers.GetTrendData) // 获取趋势数据
+
+	// 审计日志
+	adminRoutes.GET("/logs", adminHandlers.GetLogs)
 
 	// 管理员健康检查
 	adminRoutes.GET("/health", adminHandlers.HealthCheck)
+
+	// 静态文件服务 - 直接为前端文件提供服务
+	router.GET("/", func(c *gin.Context) {
+		data, err := ioutil.ReadFile("./web/index.html")
+		if err != nil {
+			c.JSON(404, gin.H{"error": "index.html not found"})
+			return
+		}
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		c.String(200, string(data))
+	})
+	router.GET("/index.html", func(c *gin.Context) {
+		data, err := ioutil.ReadFile("./web/index.html")
+		if err != nil {
+			c.JSON(404, gin.H{"error": "index.html not found"})
+			return
+		}
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		c.String(200, string(data))
+	})
+	router.GET("/login.html", func(c *gin.Context) {
+		data, err := ioutil.ReadFile("./web/login.html")
+		if err != nil {
+			c.JSON(404, gin.H{"error": "login.html not found"})
+			return
+		}
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		c.String(200, string(data))
+	})
+	router.Static("/css", "./web/css")
+	router.Static("/js", "./web/js")
+	router.StaticFS("/static", gin.Dir("./web", false))
 
 	return router
 }

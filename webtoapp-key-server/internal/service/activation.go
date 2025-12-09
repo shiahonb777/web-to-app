@@ -92,7 +92,7 @@ func (s *ActivationService) VerifyActivationCode(
 			var existingRecord domain.DeviceRecord
 			queryErr := s.db.Where("device_id = ? AND app_id = ?", req.DeviceID, req.AppID).
 				First(&existingRecord).Error
-			
+
 			if queryErr != nil && !errors.Is(queryErr, gorm.ErrRecordNotFound) {
 				return nil, queryErr
 			}
@@ -110,7 +110,7 @@ func (s *ActivationService) VerifyActivationCode(
 
 	// 记录设备信息或更新激活计数
 	now := time.Now()
-	_, _ = json.Marshal(req.DeviceInfo)  // 验证可序列化
+	_, _ = json.Marshal(req.DeviceInfo) // 验证可序列化
 
 	var deviceRecord domain.DeviceRecord
 	result := s.db.Where("device_id = ? AND app_id = ?", req.DeviceID, req.AppID).
@@ -133,7 +133,7 @@ func (s *ActivationService) VerifyActivationCode(
 	} else {
 		// 更新现有设备记录
 		s.db.Model(&deviceRecord).Updates(map[string]interface{}{
-			"activation_count": gorm.Expr("activation_count + 1"),
+			"activation_count":  gorm.Expr("activation_count + 1"),
 			"last_activated_at": &now,
 		})
 	}

@@ -61,13 +61,13 @@ func (s *StatisticsService) RecordActivation(appID string) error {
 		if err == gorm.ErrRecordNotFound {
 			// 创建新的统计记录
 			stats = domain.Statistics{
-				AppID:                 appID,
-				TotalActivations:      1,
+				AppID:                   appID,
+				TotalActivations:        1,
 				SuccessfulVerifications: 0,
-				FailedVerifications:    0,
-				TotalDevices:          1,
-				ActiveCodes:           0,
-				RevokedCodes:          0,
+				FailedVerifications:     0,
+				TotalDevices:            1,
+				ActiveCodes:             0,
+				RevokedCodes:            0,
 			}
 			return s.db.Create(&stats).Error
 		}
@@ -101,14 +101,14 @@ func (s *StatisticsService) RecordVerification(appID string, success bool) error
 // RecordDailyStats 记录日统计
 func (s *StatisticsService) RecordDailyStats(appID string, verificationCount, successCount, failureCount, newDevices, codesGenerated, codesRevoked int) error {
 	dailyStats := &domain.DailyStats{
-		AppID:            appID,
-		Date:             time.Now(),
-		VerificationCount: verificationCount,
-		SuccessCount:      successCount,
-		FailureCount:      failureCount,
-		NewDevices:        newDevices,
-		CodesGenerated:    codesGenerated,
-		CodesRevoked:      codesRevoked,
+		AppID:             appID,
+		Date:              time.Now(),
+		VerificationCount: int64(verificationCount),
+		SuccessCount:      int64(successCount),
+		FailureCount:      int64(failureCount),
+		NewDevices:        int64(newDevices),
+		CodesGenerated:    int64(codesGenerated),
+		CodesRevoked:      int64(codesRevoked),
 	}
 
 	return s.db.Create(dailyStats).Error

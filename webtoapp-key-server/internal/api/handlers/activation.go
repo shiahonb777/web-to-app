@@ -19,9 +19,11 @@ func InitHandlers(secret string) {
 }
 
 // VerifyActivationCode 验证激活码
+// POST /api/activation/verify
 func VerifyActivationCode(c *gin.Context) {
 	var req domain.VerificationRequest
 
+	// 绑定请求数据
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, domain.VerificationResponse{
 			Success:   false,
@@ -31,6 +33,7 @@ func VerifyActivationCode(c *gin.Context) {
 		return
 	}
 
+	// 调用服务验证激活码
 	response, err := activationService.VerifyActivationCode(&req, signatureSecret)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, domain.VerificationResponse{
@@ -45,9 +48,11 @@ func VerifyActivationCode(c *gin.Context) {
 }
 
 // GenerateActivationCodes 生成激活码
+// POST /api/activation/generate
 func GenerateActivationCodes(c *gin.Context) {
 	var req domain.GenerateRequest
 
+	// 绑定请求数据
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -56,6 +61,7 @@ func GenerateActivationCodes(c *gin.Context) {
 		return
 	}
 
+	// 调用服务生成激活码
 	response, err := activationService.GenerateActivationCodes(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -69,7 +75,9 @@ func GenerateActivationCodes(c *gin.Context) {
 }
 
 // ListActivationCodes 列出激活码
+// GET /api/activation/list
 func ListActivationCodes(c *gin.Context) {
+	// 获取查询参数
 	appID := c.Query("app_id")
 	if appID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -96,6 +104,7 @@ func ListActivationCodes(c *gin.Context) {
 		Limit:  limit,
 	}
 
+	// 调用服务获取列表
 	response, err := activationService.ListActivationCodes(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -109,6 +118,7 @@ func ListActivationCodes(c *gin.Context) {
 }
 
 // RevokeActivationCode 撤销激活码
+// DELETE /api/activation/:app_id/:code
 func RevokeActivationCode(c *gin.Context) {
 	appID := c.Param("app_id")
 	code := c.Param("code")
@@ -121,6 +131,7 @@ func RevokeActivationCode(c *gin.Context) {
 		return
 	}
 
+	// 调用服务撤销激活码
 	err := activationService.RevokeActivationCode(appID, code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -137,6 +148,7 @@ func RevokeActivationCode(c *gin.Context) {
 }
 
 // HealthCheck 健康检查
+// GET /api/health
 func HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

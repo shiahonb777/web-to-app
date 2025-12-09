@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yingcaihuang/webtoapp-key-server/internal/service"
@@ -12,8 +11,8 @@ import (
 
 // AdminHandlers 管理员处理器
 type AdminHandlers struct {
-	apiKeyService      *service.APIKeyService
-	statisticsService  *service.StatisticsService
+	apiKeyService     *service.APIKeyService
+	statisticsService *service.StatisticsService
 }
 
 // NewAdminHandlers 创建管理员处理器
@@ -264,16 +263,44 @@ func (h *AdminHandlers) GetDashboard(c *gin.Context) {
 	topApps, _ := h.statisticsService.GetTopApps(5)
 
 	c.JSON(http.StatusOK, gin.H{
-		"api_keys":  keyStats,
-		"stats":     stats,
-		"top_apps":  topApps,
+		"api_keys": keyStats,
+		"stats":    stats,
+		"top_apps": topApps,
+	})
+}
+
+// GetLogs 获取审计日志
+func (h *AdminHandlers) GetLogs(c *gin.Context) {
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "20")
+
+	pageNum, _ := strconv.Atoi(page)
+	limitNum, _ := strconv.Atoi(limit)
+
+	if pageNum < 1 {
+		pageNum = 1
+	}
+	if limitNum < 1 || limitNum > 100 {
+		limitNum = 20
+	}
+
+	// 从AdminAuditLog表获取日志
+	var logs []interface{}
+	var total int64
+
+	// 这里先返回空数组，因为日志表需要通过middleware自动记录
+	c.JSON(http.StatusOK, gin.H{
+		"data":  logs,
+		"total": total,
+		"page":  pageNum,
+		"limit": limitNum,
 	})
 }
 
 // HealthCheck 健康检查
 func (h *AdminHandlers) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"status": "ok",
+		"status":    "ok",
 		"timestamp": c.GetTime("timestamp"),
 	})
 }

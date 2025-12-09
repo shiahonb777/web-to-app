@@ -80,7 +80,7 @@ func (s *APIKeyService) VerifyAPIKey(key string) (*domain.APIKey, error) {
 func (s *APIKeyService) RevokeAPIKey(id uint) error {
 	now := time.Now()
 	return s.db.Model(&domain.APIKey{}).Where("id = ?", id).Updates(map[string]interface{}{
-		"status":    "revoked",
+		"status":     "revoked",
 		"revoked_at": now,
 	}).Error
 }

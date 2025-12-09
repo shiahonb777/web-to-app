@@ -16,7 +16,7 @@ var DB *gorm.DB
 // Init 初始化数据库
 func Init(cfg *config.Config) error {
 	var err error
-	
+
 	// 创建数据库连接
 	DB, err = gorm.Open(sqlite.Open(cfg.DatabasePath), &gorm.Config{})
 	if err != nil {
@@ -30,6 +30,10 @@ func Init(cfg *config.Config) error {
 		&domain.ActivationKey{},
 		&domain.AuditLog{},
 		&domain.DeviceRecord{},
+		&domain.APIKey{},
+		&domain.Statistics{},
+		&domain.DailyStats{},
+		&domain.AdminAuditLog{},
 	); err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
