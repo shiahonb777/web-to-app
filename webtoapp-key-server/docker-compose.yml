@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  keyserver:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: webtoapp-keyserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./configs:/app/configs
+    environment:
+      - SERVER_PORT=8080
+      - ENV=production
+      - DB_TYPE=sqlite
+      - DB_PATH=/app/data/keyserver.db
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - API_KEY=${API_KEY:-your-api-key}
+      - SIGNATURE_SECRET=${SIGNATURE_SECRET:-signature-secret-key}
+    restart: unless-stopped
+    networks:
+      - webtoapp-network
+
+networks:
+  webtoapp-network:
+    driver: bridge

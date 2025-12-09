@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  env: development
+
+database:
+  type: sqlite
+  path: ./data/keyserver.db
+
+jwt:
+  secret: your-secret-key-change-in-production
+  expire_hours: 24
+
+api:
+  api_key: your-api-key-change-in-production
+  signature_secret: signature-secret-key-change-in-production
+  timestamp_tolerance: 300  # 5 分钟
+
+cors:
+  allowed_origins:
+    - http://localhost:3000
+    - http://localhost:8080
+    - http://localhost:9090
