@@ -347,9 +347,13 @@ class ApkBuilder(private val context: Context) {
                             writeEntryStored(zipOut, entry.name, modifiedData)
                         }
 
-                        // 注意：不再处理 Adaptive Icon XML！
-                        // 旧版本的正确做法是：保留 XML 定义，只通过 ARSC 路径替换来改变 foreground
-                        // 这样 Adaptive Icon 结构保持完整，系统会正确解析 foreground 和 background
+                        // 有自定义图标时，删除 Adaptive Icon 相关资源
+                        // 这样可以强制所有启动器（包括华为/荣耀等）使用 mipmap 目录下的 PNG 图标
+                        // 而不是依赖 Adaptive Icon XML + ARSC 路径替换（某些启动器可能不支持）
+                        iconBitmap != null && shouldDeleteForCustomIcon(entry.name) -> {
+                            Log.d("ApkBuilder", "删除 Adaptive Icon 资源: ${entry.name}")
+                            // 不复制，直接跳过
+                        }
 
                         // 使用自定义图标替换 Launcher 图标 PNG
                         iconBitmap != null && isIconEntry(entry.name) -> {
