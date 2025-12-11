@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![B站主页](b站首页.jpg)
+<img width="400" height="500" alt="payment" src="b站首页.jpg" />
 
 *作者B站主页*
 
