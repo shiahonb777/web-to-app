@@ -19,14 +19,14 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 
 - 🌐 **Website to App** - Wrap any URL into a standalone WebView app
 - 🎬 **Media to App** - Convert images/videos into fullscreen showcase apps
-- 🖼️ **Gallery Mode** - Multi-media carousel gallery with images/videos/HTML/web (New)
+- 🖼️ **Gallery Mode** - Multi-media carousel gallery with images/videos/HTML/web
 - 💻 **HTML to App** - Convert HTML/CSS/JS projects into standalone apps
-- 🧩 **Extension Module System** - Tampermonkey-like scripts, 15+ built-in modules (New)
-- 🤖 **AI Module Development** - AI Agent assists in developing extension modules (New)
-- 🎨 **AI Icon Generator** - Generate beautiful app icons using AI (New)
-- 🎵 **Online Music Search** - Search and download music online for BGM (New)
-- 📢 **Announcement Templates** - 10 beautiful announcement popup templates (New)
-- 🌐 **Auto Web Translation** - Automatic webpage content translation (New)
+- 🧩 **Extension Module System** - Tampermonkey-like scripts, 15+ built-in modules
+- 🤖 **AI Module Development** - AI Agent assists in developing extension modules
+- 🎨 **AI Icon Generator** - Generate beautiful app icons using AI
+- 🎵 **Online Music Search** - Search and download music online for BGM
+- 📢 **Announcement Templates** - 10 beautiful announcement popup templates
+- 🌐 **Auto Web Translation** - Automatic webpage content translation
 - 📦 **One-Click Build** - Generate installable APKs without a PC
 - 🛡️ **Built-in Tools** - Ad blocker, activation codes, BGM, announcements
 - ⚡ **App Modifier** - Change icons and names of installed apps
@@ -47,12 +47,12 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 ### Core Features
 - **URL to App**: Enter any website URL to generate a standalone app
 - **Media to App**: Convert images/videos into independent apps
-- **Gallery Mode**: Multi-media carousel with images/videos/HTML/web mixed (v1.6)
+- **Gallery Mode**: Multi-media carousel with images/videos/HTML/web mixed
 - **HTML to App**: Convert HTML/CSS/JS projects into standalone apps
 - **Custom Icon**: Select from gallery or generate with AI
 - **Custom Name**: Customize the app display name
 
-### Extension Module System (v1.6 New)
+### Extension Module System
 - **Tampermonkey-like Scripts**: Inject custom JavaScript/CSS into webpages
 - **15+ Built-in Modules**: Dark mode, ad blocker, video speed control, copy unlock, image downloader, etc.
 - **30+ Code Templates**: Quickly create common functionality modules
@@ -63,7 +63,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Share Code**: One-click generate share code for easy module sharing
 - **Import/Export**: Support module file import and export
 
-### AI Module Development Agent (v1.6 New)
+### AI Module Development Agent
 - **Natural Language Development**: Describe requirements in natural language, AI generates module code
 - **Syntax Check**: Automatic JavaScript/CSS syntax error detection
 - **Security Scan**: Detect XSS, eval, and other security issues
@@ -74,8 +74,8 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 ### AI Features
 - **Multi-Provider Support**: Google Gemini, OpenAI GPT-4o, GLM, Volcano, MiniMax, OpenRouter, etc.
 - **AI HTML Coding**: AI-assisted HTML/CSS/JS code generation
-- **AI Icon Generator**: Generate app icons using AI (v1.6 New)
-- **Icon Library**: Collect and manage generated icons (v1.6 New)
+- **AI Icon Generator**: Generate app icons using AI
+- **Icon Library**: Collect and manage generated icons
 - **Session Management**: Multi-session, templates, style customization
 - **Live Preview**: Preview generated code in real-time
 - **AI Settings**: Unified API key and model management
@@ -83,12 +83,12 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 ### Integrated Features
 - **Splash Screen**: Support image/video splash animations with built-in video trimmer
 - **Background Music**: Add BGM to apps with LRC lyrics sync
-- **Online Music Search**: Search and download music online for BGM (v1.6 New)
+- **Online Music Search**: Search and download music online for BGM
 - **Activation Code**: Built-in activation mechanism to restrict app usage
 - **Announcements**: Display announcements on startup with link support
-- **Announcement Templates**: 10 beautiful templates (Xiaohongshu, gradient, glassmorphism, neon, etc.) (v1.6 New)
+- **Announcement Templates**: 10 beautiful templates (Xiaohongshu, gradient, glassmorphism, neon, etc.)
 - **Ad Blocking**: Built-in ad blocking engine to filter web ads
-- **Auto Web Translation**: Automatic webpage translation, supports CN/EN/JP, etc. (v1.6 New)
+- **Auto Web Translation**: Automatic webpage translation, supports CN/EN/JP, etc.
 - **Ad Integration**: Reserved ad SDK interfaces (banner/interstitial/splash)
 
 ### Export Options
@@ -99,7 +99,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 ### Media App Features
 - **Image to App**: Full-screen image display with fill screen option
 - **Video to App**: Video playback with loop, audio toggle, autoplay
-- **Gallery Mode**: Multi-media carousel with autoplay, loop, transition animations (v1.6 New)
+- **Gallery Mode**: Multi-media carousel with autoplay, loop, transition animations
 - **Display Config**: Audio toggle, loop, autoplay, fill screen options
 - **APK Export**: Media apps support standalone APK export
 
@@ -148,27 +148,27 @@ app/src/main/java/com/webtoapp/
 │   ├── appmodifier/         # App modifier
 │   ├── bgm/                 # Background music
 │   │   ├── BgmPlayer.kt     # Player
-│   │   ├── OnlineMusicApi.kt # Online music API (v1.6)
-│   │   └── OnlineMusicDownloader.kt # Music downloader (v1.6)
+│   │   ├── OnlineMusicApi.kt # Online music API
+│   │   └── OnlineMusicDownloader.kt # Music downloader
 │   ├── export/              # Export features
-│   ├── extension/           # Extension module system (v1.6)
+│   ├── extension/           # Extension module system
 │   │   ├── ExtensionModule.kt # Module data model
 │   │   ├── ExtensionManager.kt # Module manager
 │   │   ├── BuiltInModules.kt # 15+ built-in modules
 │   │   ├── ModuleTemplates.kt # 30+ code templates
 │   │   ├── CodeSnippets.kt  # Code snippet library
-│   │   └── agent/           # AI Agent system (v1.6)
+│   │   └── agent/           # AI Agent system
 │   │       ├── ModuleAgentEngine.kt # Agent engine
 │   │       ├── AgentToolExecutor.kt # Tool executor
 │   │       └── AgentTool.kt # Tool definitions
 │   ├── shell/               # Shell mode management
 │   └── webview/             # WebView management
 │       ├── WebViewManager.kt
-│       └── TranslateBridge.kt # Translation bridge (v1.6)
+│       └── TranslateBridge.kt # Translation bridge
 ├── data/                      # Data layer
 │   ├── model/               # Data models
 │   │   ├── WebApp.kt
-│   │   └── GalleryConfig.kt # Gallery config (v1.6)
+│   │   └── GalleryConfig.kt # Gallery config
 │   └── repository/          # Data repository
 ├── ui/                        # UI layer
 │   ├── MainActivity.kt      # Main Activity
@@ -179,28 +179,28 @@ app/src/main/java/com/webtoapp/
 │   │   ├── CreateAppScreen.kt # Create app
 │   │   ├── CreateMediaAppScreen.kt # Create media app
 │   │   ├── CreateHtmlAppScreen.kt # Create HTML app
-│   │   ├── ExtensionModuleScreen.kt # Extension modules (v1.6)
-│   │   ├── ModuleEditorScreen.kt # Module editor (v1.6)
-│   │   ├── AiModuleDeveloperScreen.kt # AI module dev (v1.6)
+│   │   ├── ExtensionModuleScreen.kt # Extension modules
+│   │   ├── ModuleEditorScreen.kt # Module editor
+│   │   ├── AiModuleDeveloperScreen.kt # AI module dev
 │   │   ├── HtmlCodingScreen.kt # AI HTML coding
 │   │   ├── AiSettingsScreen.kt # AI settings
 │   │   ├── ThemeSettingsScreen.kt # Theme settings
 │   │   ├── AboutScreen.kt   # About
 │   │   └── AppModifierScreen.kt # App modifier
 │   ├── components/          # Reusable components
-│   │   ├── gallery/         # Gallery components (v1.6)
-│   │   ├── announcement/    # Announcement templates (v1.6)
-│   │   ├── IconGeneratorDialog.kt # AI icon generator (v1.6)
-│   │   ├── IconLibraryDialog.kt # Icon library (v1.6)
-│   │   ├── OnlineMusicSelector.kt # Online music (v1.6)
-│   │   ├── ManualLrcAligner.kt # Manual LRC align (v1.6)
-│   │   ├── ExtensionModuleSelector.kt # Module selector (v1.6)
-│   │   └── CodeSnippetSelector.kt # Code snippets (v1.6)
+│   │   ├── gallery/         # Gallery components
+│   │   ├── announcement/    # Announcement templates
+│   │   ├── IconGeneratorDialog.kt # AI icon generator
+│   │   ├── IconLibraryDialog.kt # Icon library
+│   │   ├── OnlineMusicSelector.kt # Online music
+│   │   ├── ManualLrcAligner.kt # Manual LRC align
+│   │   ├── ExtensionModuleSelector.kt # Module selector
+│   │   └── CodeSnippetSelector.kt # Code snippets
 │   ├── theme/               # Theme system
 │   └── viewmodel/           # ViewModel
 └── util/                      # Utilities
     ├── MediaStorage.kt      # Media file storage
-    └── IconLibraryStorage.kt # Icon library storage (v1.6)
+    └── IconLibraryStorage.kt # Icon library storage
 ```
 
 ## 📖 Usage Guide
@@ -213,13 +213,13 @@ app/src/main/java/com/webtoapp/
 5. (Optional) Select extension modules to enhance functionality
 6. Click Save
 
-### Use Extension Modules (v1.6 New)
+### Use Extension Modules
 1. When creating/editing an app, expand the "Extension Modules" card
 2. Click "Select Modules" to browse available modules
 3. Select desired modules (e.g., dark mode, ad blocker)
 4. Modules will automatically inject and execute when the app runs
 
-### Create Custom Modules (v1.6 New)
+### Create Custom Modules
 1. Go to "Extension Modules" page
 2. Click "+" to create a new module
 3. Choose a template or start from scratch
@@ -227,7 +227,7 @@ app/src/main/java/com/webtoapp/
 5. Write JavaScript/CSS code
 6. Save and test
 
-### AI-Assisted Module Development (v1.6 New)
+### AI-Assisted Module Development
 1. Go to "AI Module Development" page
 2. Describe the functionality you want in natural language
 3. AI will automatically generate module code
@@ -299,7 +299,7 @@ signingConfigs {
 }
 ```
 
-## 🧩 Extension Module System (v1.6 New)
+## 🧩 Extension Module System
 
 ### Built-in Modules
 | Module | Function |
@@ -342,7 +342,7 @@ hideAds();
 new MutationObserver(hideAds).observe(document.body, { childList: true, subtree: true });
 ```
 
-## 📢 Announcement Templates (v1.6 New)
+## 📢 Announcement Templates
 
 10 beautiful announcement popup templates:
 - **Minimal** - Clean and simple
@@ -370,7 +370,7 @@ MIT License
 
 ## 📜 Changelog
 
-### v1.6.0 (In Development)
+### v1.6.0
 **New Features**
 - Extension Module System: Tampermonkey-like JS/CSS injection system
   - 15+ built-in modules (dark mode, ad blocker, video speed, etc.)

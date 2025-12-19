@@ -19,14 +19,14 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 
 - 🌐 **网站转App** - 输入任意网址，生成独立 WebView 应用
 - 🎬 **媒体转App** - 图片/视频一键转换为全屏展示应用
-- 🖼️ **画廊模式** - 多媒体轮播画廊，支持图片/视频/HTML/网页（新）
+- 🖼️ **画廊模式** - 多媒体轮播画廊，支持图片/视频/HTML/网页
 - 💻 **HTML转App** - HTML/CSS/JS 项目转换为独立应用
-- 🧩 **扩展模块系统** - 类油猴脚本，15+ 内置模块，支持自定义开发（新）
-- 🤖 **AI 模块开发** - AI Agent 辅助开发扩展模块，自动生成代码（新）
-- 🎨 **AI 图标生成** - 使用 AI 生成精美应用图标（新）
-- 🎵 **在线音乐搜索** - 在线搜索下载音乐作为 BGM（新）
-- 📢 **公告模板系统** - 10 种精美公告弹窗模板（新）
-- 🌐 **网页自动翻译** - 网页内容自动翻译功能（新）
+- 🧩 **扩展模块系统** - 类油猴脚本，15+ 内置模块，支持自定义开发
+- 🤖 **AI 模块开发** - AI Agent 辅助开发扩展模块，自动生成代码
+- 🎨 **AI 图标生成** - 使用 AI 生成精美应用图标
+- 🎵 **在线音乐搜索** - 在线搜索下载音乐作为 BGM
+- 📢 **公告模板系统** - 10 种精美公告弹窗模板
+- 🌐 **网页自动翻译** - 网页内容自动翻译功能
 - 📦 **一键出包** - 无需 Android Studio，直接生成可安装 APK
 - 🛡️ **内置功能** - 广告拦截、激活码验证、背景音乐、公告弹窗
 - ⚡ **应用修改器** - 修改已安装应用的图标和名称
@@ -47,12 +47,12 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 ### 核心功能
 - **URL转App**：输入任意网址，一键生成独立应用
 - **媒体转App**：支持图片/视频转换为独立应用
-- **画廊模式**：多媒体轮播画廊，支持图片/视频/HTML/网页混合（v1.6 新增）
+- **画廊模式**：多媒体轮播画廊，支持图片/视频/HTML/网页混合
 - **HTML转App**：支持 HTML/CSS/JS 项目转换为独立应用
 - **自定义图标**：支持从相册选择或 AI 生成自定义应用图标
 - **自定义名称**：自定义应用显示名称
 
-### 扩展模块系统（v1.6 新增）
+### 扩展模块系统
 - **类油猴脚本**：向网页注入自定义 JavaScript/CSS 代码
 - **15+ 内置模块**：深色模式、广告拦截、视频倍速、复制解锁、图片下载等
 - **30+ 代码模板**：快速创建常见功能模块
@@ -63,7 +63,7 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **分享码**：一键生成分享码，轻松分享模块
 - **导入导出**：支持模块文件导入导出
 
-### AI 模块开发 Agent（v1.6 新增）
+### AI 模块开发 Agent
 - **自然语言开发**：用自然语言描述需求，AI 自动生成模块代码
 - **语法检查**：自动检查 JavaScript/CSS 语法错误
 - **安全扫描**：检测 XSS、eval 等安全问题
@@ -74,8 +74,8 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 ### AI 功能
 - **多供应商支持**：Google Gemini、OpenAI GPT-4o、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
 - **AI HTML 编程**：AI 辅助生成和修改 HTML/CSS/JS 代码
-- **AI 图标生成**：使用 AI 生成应用图标（v1.6 新增）
-- **图标库**：收藏和管理生成的图标（v1.6 新增）
+- **AI 图标生成**：使用 AI 生成应用图标
+- **图标库**：收藏和管理生成的图标
 - **会话管理**：支持多会话、模板选择、样式定制
 - **实时预览**：代码生成后可直接预览效果
 - **AI 设置**：统一管理 API 密钥和模型配置
@@ -83,12 +83,12 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 ### 集成功能
 - **启动画面**：支持图片/视频启动动画，内置视频裁剪器
 - **背景音乐**：支持为应用添加 BGM，可配合歌词同步显示
-- **在线音乐搜索**：在线搜索下载音乐作为 BGM（v1.6 新增）
+- **在线音乐搜索**：在线搜索下载音乐作为 BGM
 - **激活码验证**：内置激活码机制，可限制应用使用
 - **弹窗公告**：启动时显示公告信息，支持链接跳转
-- **公告模板**：10 种精美公告模板（小红书、渐变、毛玻璃、霓虹等）（v1.6 新增）
+- **公告模板**：10 种精美公告模板（小红书、渐变、毛玻璃、霓虹等）
 - **广告拦截**：内置广告拦截引擎，自动过滤网页广告
-- **网页自动翻译**：网页内容自动翻译，支持中/英/日等语言（v1.6 新增）
+- **网页自动翻译**：网页内容自动翻译，支持中/英/日等语言
 - **广告集成**：预留广告SDK接口（横幅/插屏/开屏）
 
 ### 导出功能
@@ -99,7 +99,7 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 ### 媒体应用功能
 - **图片转App**：选择图片生成全屏展示应用
 - **视频转App**：选择视频生成循环播放应用
-- **画廊模式**：多媒体轮播，支持自动播放、循环、切换动画（v1.6 新增）
+- **画廊模式**：多媒体轮播，支持自动播放、循环、切换动画
 - **显示配置**：支持音频开关、循环播放、自动播放、铺满屏幕
 - **APK打包**：媒体应用支持导出为独立APK
 
@@ -148,27 +148,27 @@ app/src/main/java/com/webtoapp/
 │   ├── appmodifier/         # 应用修改器
 │   ├── bgm/                 # 背景音乐
 │   │   ├── BgmPlayer.kt     # 播放器
-│   │   ├── OnlineMusicApi.kt # 在线音乐API（v1.6 新增）
-│   │   └── OnlineMusicDownloader.kt # 音乐下载器（v1.6 新增）
+│   │   ├── OnlineMusicApi.kt # 在线音乐API
+│   │   └── OnlineMusicDownloader.kt # 音乐下载器
 │   ├── export/              # 导出功能
-│   ├── extension/           # 扩展模块系统（v1.6 新增）
+│   ├── extension/           # 扩展模块系统
 │   │   ├── ExtensionModule.kt # 模块数据模型
 │   │   ├── ExtensionManager.kt # 模块管理器
 │   │   ├── BuiltInModules.kt # 15+ 内置模块
 │   │   ├── ModuleTemplates.kt # 30+ 代码模板
 │   │   ├── CodeSnippets.kt  # 代码片段库
-│   │   └── agent/           # AI Agent 系统（v1.6 新增）
+│   │   └── agent/           # AI Agent 系统
 │   │       ├── ModuleAgentEngine.kt # Agent 引擎
 │   │       ├── AgentToolExecutor.kt # 工具执行器
 │   │       └── AgentTool.kt # 工具定义
 │   ├── shell/               # Shell模式管理
 │   └── webview/             # WebView管理
 │       ├── WebViewManager.kt
-│       └── TranslateBridge.kt # 翻译桥接（v1.6 新增）
+│       └── TranslateBridge.kt # 翻译桥接
 ├── data/                      # 数据层
 │   ├── model/               # 数据模型
 │   │   ├── WebApp.kt
-│   │   └── GalleryConfig.kt # 画廊配置（v1.6 新增）
+│   │   └── GalleryConfig.kt # 画廊配置
 │   └── repository/          # 数据仓库
 ├── ui/                        # UI层
 │   ├── MainActivity.kt      # 主Activity
@@ -179,33 +179,33 @@ app/src/main/java/com/webtoapp/
 │   │   ├── CreateAppScreen.kt # 创建应用
 │   │   ├── CreateMediaAppScreen.kt # 创建媒体应用
 │   │   ├── CreateHtmlAppScreen.kt # 创建HTML应用
-│   │   ├── ExtensionModuleScreen.kt # 扩展模块管理（v1.6 新增）
-│   │   ├── ModuleEditorScreen.kt # 模块编辑器（v1.6 新增）
-│   │   ├── AiModuleDeveloperScreen.kt # AI模块开发（v1.6 新增）
+│   │   ├── ExtensionModuleScreen.kt # 扩展模块管理
+│   │   ├── ModuleEditorScreen.kt # 模块编辑器
+│   │   ├── AiModuleDeveloperScreen.kt # AI模块开发
 │   │   ├── HtmlCodingScreen.kt # AI HTML编程
 │   │   ├── AiSettingsScreen.kt # AI设置
 │   │   ├── ThemeSettingsScreen.kt # 主题设置
 │   │   ├── AboutScreen.kt   # 关于作者
 │   │   └── AppModifierScreen.kt # 应用修改器
 │   ├── components/          # 可复用组件
-│   │   ├── gallery/         # 画廊组件（v1.6 新增）
+│   │   ├── gallery/         # 画廊组件
 │   │   │   ├── GalleryViewer.kt
 │   │   │   ├── HtmlGalleryViewer.kt
 │   │   │   └── WebGalleryViewer.kt
-│   │   ├── announcement/    # 公告模板（v1.6 新增）
+│   │   ├── announcement/    # 公告模板
 │   │   │   ├── AnnouncementTemplates.kt # 10种模板
 │   │   │   └── AnnouncementTemplateSelector.kt
-│   │   ├── IconGeneratorDialog.kt # AI图标生成（v1.6 新增）
-│   │   ├── IconLibraryDialog.kt # 图标库（v1.6 新增）
-│   │   ├── OnlineMusicSelector.kt # 在线音乐选择（v1.6 新增）
-│   │   ├── ManualLrcAligner.kt # 手动LRC对齐（v1.6 新增）
-│   │   ├── ExtensionModuleSelector.kt # 模块选择器（v1.6 新增）
-│   │   └── CodeSnippetSelector.kt # 代码片段选择（v1.6 新增）
+│   │   ├── IconGeneratorDialog.kt # AI图标生成
+│   │   ├── IconLibraryDialog.kt # 图标库
+│   │   ├── OnlineMusicSelector.kt # 在线音乐选择
+│   │   ├── ManualLrcAligner.kt # 手动LRC对齐
+│   │   ├── ExtensionModuleSelector.kt # 模块选择器
+│   │   └── CodeSnippetSelector.kt # 代码片段选择
 │   ├── theme/               # 主题系统
 │   └── viewmodel/           # ViewModel
 └── util/                      # 工具类
     ├── MediaStorage.kt      # 媒体文件存储
-    └── IconLibraryStorage.kt # 图标库存储（v1.6 新增）
+    └── IconLibraryStorage.kt # 图标库存储
 ```
 
 ## 使用说明
@@ -218,13 +218,13 @@ app/src/main/java/com/webtoapp/
 5. （可选）选择扩展模块增强功能
 6. 点击保存
 
-### 使用扩展模块（v1.6 新增）
+### 使用扩展模块
 1. 在创建/编辑应用时，展开"扩展模块"卡片
 2. 点击"选择模块"浏览可用模块
 3. 选择需要的模块（如深色模式、广告拦截等）
 4. 模块会在应用运行时自动注入执行
 
-### 创建自定义模块（v1.6 新增）
+### 创建自定义模块
 1. 进入"扩展模块"页面
 2. 点击"+"创建新模块
 3. 选择模板或从零开始编写
@@ -232,7 +232,7 @@ app/src/main/java/com/webtoapp/
 5. 编写 JavaScript/CSS 代码
 6. 保存并测试
 
-### AI 辅助开发模块（v1.6 新增）
+### AI 辅助开发模块
 1. 进入"AI 模块开发"页面
 2. 用自然语言描述你想要的功能
 3. AI 会自动生成模块代码
@@ -304,7 +304,7 @@ signingConfigs {
 }
 ```
 
-## 扩展模块系统（v1.6 新增）
+## 扩展模块系统
 
 ### 内置模块
 | 模块 | 功能 |
@@ -347,7 +347,7 @@ hideAds();
 new MutationObserver(hideAds).observe(document.body, { childList: true, subtree: true });
 ```
 
-## 公告模板（v1.6 新增）
+## 公告模板
 
 内置 10 种精美公告弹窗模板：
 - **极简风格** - 简洁大方
@@ -387,7 +387,7 @@ MIT License
 
 ## 更新日志
 
-### v1.6.0（开发中）
+### v1.6.0
 **新增功能**
 - 扩展模块系统：类油猴脚本的 JS/CSS 注入系统
   - 15+ 内置模块（深色模式、广告拦截、视频倍速等）
