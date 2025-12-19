@@ -479,9 +479,9 @@ fun AboutScreen(
                                 label = "GitHub",
                                 value = "开源仓库",
                                 description = "Star ⭐ 支持一下",
-                                link = "https://github.com/ashiahonb777/web-to-app",
+                                link = "https://github.com/shiahonb777/web-to-app",
                                 onCopy = {
-                                    copyToClipboard(context, "GitHub地址", "https://github.com/ashiahonb777/web-to-app")
+                                    copyToClipboard(context, "GitHub地址", "https://github.com/shiahonb777/web-to-app")
                                 }
                             )
                         }
