@@ -26,6 +26,11 @@ class AiApiClient(private val context: Context) {
     
     private val gson = Gson()
     
+    /**
+     * 清理 API Key，移除所有换行符和空白字符
+     */
+    private fun String.sanitize(): String = this.replace("\n", "").replace("\r", "").trim()
+    
     private val client = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
@@ -51,7 +56,7 @@ class AiApiClient(private val context: Context) {
                 AiProvider.ANTHROPIC -> {
                     Request.Builder()
                         .url("$baseUrl$modelsEndpoint")
-                        .header("x-api-key", apiKey.apiKey.trim())
+                        .header("x-api-key", apiKey.apiKey.sanitize())
                         .header("anthropic-version", "2023-06-01")
                         .get()
                         .build()
@@ -59,7 +64,7 @@ class AiApiClient(private val context: Context) {
                 else -> {
                     Request.Builder()
                         .url("$baseUrl$modelsEndpoint")
-                        .header("Authorization", "Bearer ${apiKey.apiKey.trim()}")
+                        .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
                         .get()
                         .build()
                 }
@@ -94,7 +99,7 @@ class AiApiClient(private val context: Context) {
                 AiProvider.ANTHROPIC -> {
                     Request.Builder()
                         .url("$baseUrl$modelsEndpoint")
-                        .header("x-api-key", apiKey.apiKey.trim())
+                        .header("x-api-key", apiKey.apiKey.sanitize())
                         .header("anthropic-version", "2023-06-01")
                         .get()
                         .build()
@@ -102,14 +107,14 @@ class AiApiClient(private val context: Context) {
                 AiProvider.GLM -> {
                     Request.Builder()
                         .url("$baseUrl$modelsEndpoint")
-                        .header("Authorization", apiKey.apiKey.trim())
+                        .header("Authorization", apiKey.apiKey.sanitize())
                         .get()
                         .build()
                 }
                 else -> {
                     Request.Builder()
                         .url("$baseUrl$modelsEndpoint")
-                        .header("Authorization", "Bearer ${apiKey.apiKey.trim()}")
+                        .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
                         .get()
                         .build()
                 }
@@ -492,7 +497,7 @@ class AiApiClient(private val context: Context) {
         
         val request = Request.Builder()
             .url("$baseUrl/v1/chat/completions")
-            .header("Authorization", "Bearer $apiKey")
+            .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
         
@@ -754,7 +759,7 @@ class AiApiClient(private val context: Context) {
         
         val request = Request.Builder()
             .url("$baseUrl/v4/chat/completions")
-            .header("Authorization", "Bearer $apiKey")
+            .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
@@ -794,7 +799,7 @@ class AiApiClient(private val context: Context) {
         
         val request = Request.Builder()
             .url("$baseUrl/v3/chat/completions")
-            .header("Authorization", "Bearer $apiKey")
+            .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
@@ -834,7 +839,7 @@ class AiApiClient(private val context: Context) {
         
         val request = Request.Builder()
             .url("$baseUrl/v1/chat/completions")
-            .header("Authorization", "Bearer $apiKey")
+            .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
@@ -849,11 +854,9 @@ class AiApiClient(private val context: Context) {
     
     private fun parseOpenAIChatResponse(body: String): Result<String> {
         return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val content = json.getAsJsonArray("choices")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("message")
-                ?.get("content")?.asString
+val json = gson.fromJson(body, JsonObject::class.java)
+            val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
+            val content = extractContentFrom(choiceObj)
             
             if (content != null) {
                 Result.success(content)
@@ -902,9 +905,14 @@ class AiApiClient(private val context: Context) {
             addProperty("stream", true)
         }
         
+        val streamEndpoint = when (apiKey.provider) {
+            AiProvider.GLM -> "/v4/chat/completions"
+            AiProvider.VOLCANO -> "/v3/chat/completions"
+            else -> "/v1/chat/completions"
+        }
         val request = Request.Builder()
-            .url("$baseUrl/v1/chat/completions")
-            .header("Authorization", "Bearer ${apiKey.apiKey}")
+            .url("$baseUrl$streamEndpoint")
+            .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .header("Accept", "text/event-stream")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
@@ -921,7 +929,8 @@ class AiApiClient(private val context: Context) {
             
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
-                    trySend(StreamEvent.Error("请求失败: ${response.code}"))
+                    val errorBody = response.body?.string() ?: ""
+                    trySend(StreamEvent.Error("请求失败: ${response.code} - $errorBody"))
                     close()
                     return
                 }
@@ -934,44 +943,115 @@ class AiApiClient(private val context: Context) {
                     }
                     
                     val contentBuilder = StringBuilder()
+                    val rawResponseBuilder = StringBuilder() // 记录原始响应用于调试
+                    var doneSent = false
+                    var hasReceivedData = false
                     
-                    while (!reader.exhausted()) {
-                        val line = reader.readUtf8Line() ?: break
-                        
-                        if (line.startsWith("data: ")) {
-                            val data = line.removePrefix("data: ").trim()
-                            
-                            if (data == "[DONE]") {
+                    var currentEvent: String? = null
+                    val dataBuffer = StringBuilder()
+                    
+                    fun flushEvent() {
+                        val payload = dataBuffer.toString().trim()
+                        dataBuffer.setLength(0)
+                        if (payload.isEmpty()) return
+                        hasReceivedData = true
+                        if (payload == "[DONE]" || currentEvent == "done") {
+                            if (!doneSent) {
+                                doneSent = true
                                 trySend(StreamEvent.Done(contentBuilder.toString()))
-                                break
+                            }
+                            return
+                        }
+                        try {
+                            val json = gson.fromJson(payload, JsonObject::class.java)
+                            
+                            // 错误处理
+                            val error = json.getAsJsonObject("error")
+                            if (error != null) {
+                                val errorMsg = error.get("message")?.asString ?: "API返回错误"
+                                trySend(StreamEvent.Error(errorMsg))
+                                close()
+                                return
                             }
                             
-                            try {
-                                val json = gson.fromJson(data, JsonObject::class.java)
-                                val delta = json.getAsJsonArray("choices")
-                                    ?.get(0)?.asJsonObject
-                                    ?.getAsJsonObject("delta")
-                                
-                                val content = delta?.get("content")?.asString
-                                val reasoning = delta?.get("reasoning_content")?.asString
-                                    ?: delta?.get("thinking")?.asString
-                                
-                                if (reasoning != null) {
-                                    trySend(StreamEvent.Thinking(reasoning))
-                                }
-                                
-                                if (content != null) {
+val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
+                            val delta = choiceObj?.getAsJsonObject("delta")
+                            
+                            // 内容提取（兼容多结构）
+                            val content: String? = extractContentFrom(choiceObj)
+                            
+                            // 思考内容提取（兼容多字段）
+                            val reasoning = extractReasoningFrom(choiceObj, delta)
+                            if (reasoning != null) trySend(StreamEvent.Thinking(reasoning))
+                            
+                            if (content != null) {
+                                // 忽略仅空白的首个分片，避免只显示空格
+                                val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
+                                if (shouldAppend) {
                                     contentBuilder.append(content)
                                     trySend(StreamEvent.Content(content, contentBuilder.toString()))
                                 }
-                            } catch (e: Exception) {
-                                // 忽略解析错误，继续处理
                             }
+                        } catch (_: Exception) {
+                            // 忽略无法解析的分片
                         }
                     }
                     
-                    if (contentBuilder.isNotEmpty()) {
-                        trySend(StreamEvent.Done(contentBuilder.toString()))
+                    while (!reader.exhausted()) {
+                        val line = reader.readUtf8Line() ?: break
+                        rawResponseBuilder.append(line).append("\n")
+                        
+                        when {
+                            line.startsWith("event:") -> {
+                                currentEvent = line.removePrefix("event:").trim()
+                            }
+                            line.startsWith("data:") -> {
+                                dataBuffer.append(line.removePrefix("data:").trimStart()).append('\n')
+                            }
+                            line.isBlank() -> {
+                                flushEvent()
+                                if (doneSent) break
+                            }
+                            else -> {
+                                // 某些实现直接输出 JSON 行（非SSE）
+                                try {
+val json = gson.fromJson(line, JsonObject::class.java)
+                                    val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
+                                    val reasoning = extractReasoningFrom(choiceObj, choiceObj?.getAsJsonObject("delta"))
+                                    if (!reasoning.isNullOrBlank()) {
+                                        trySend(StreamEvent.Thinking(reasoning))
+                                    }
+val content = extractContentFrom(choiceObj)
+                                    if (!content.isNullOrEmpty()) {
+                                        val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
+                                        if (shouldAppend) {
+                                            contentBuilder.append(content)
+                                            trySend(StreamEvent.Content(content, contentBuilder.toString()))
+                                        }
+                                    }
+                                } catch (_: Exception) {
+                                    // 忽略非JSON行
+                                }
+                            }
+                        }
+                    }
+                    // 处理最后一个未刷新的事件
+                    if (dataBuffer.isNotEmpty() && !doneSent) {
+                        flushEvent()
+                    }
+                    
+                    // 确保发送Done事件
+                    if (!doneSent) {
+                        if (contentBuilder.isEmpty()) {
+                            val debugInfo = if (!hasReceivedData) {
+                                "未收到任何数据，API可能不支持流式输出"
+                            } else {
+                                "收到数据但解析失败，请检查API格式"
+                            }
+                            trySend(StreamEvent.Error(debugInfo))
+                        } else {
+                            trySend(StreamEvent.Done(contentBuilder.toString()))
+                        }
                     }
                     close()
                 } catch (e: Exception) {
@@ -988,6 +1068,65 @@ class AiApiClient(private val context: Context) {
 /**
  * 流式事件类型
  */
+private fun extractTextFromContentElement(elem: com.google.gson.JsonElement?): String? {
+    if (elem == null || elem.isJsonNull) return null
+    return when {
+        elem.isJsonPrimitive -> elem.asJsonPrimitive.asString
+        elem.isJsonArray -> buildString {
+            elem.asJsonArray.forEach { part ->
+                if (part.isJsonObject) {
+                    val obj = part.asJsonObject
+                    obj.get("text")?.asString?.let { append(it) }
+                    obj.get("content")?.asString?.let { append(it) }
+                } else if (part.isJsonPrimitive) {
+                    append(part.asString)
+                }
+            }
+        }.ifBlank { null }
+        elem.isJsonObject -> {
+            val obj = elem.asJsonObject
+            obj.get("text")?.asString ?: obj.get("content")?.asString
+        }
+        else -> null
+    }
+}
+
+private fun extractReasoningFrom(choiceObj: JsonObject?, deltaObj: JsonObject?): String? {
+    val fromDelta = sequenceOf(
+        deltaObj?.get("reasoning_content"),
+        deltaObj?.get("thinking"),
+        deltaObj?.get("reasoning"),
+        deltaObj?.get("thought"),
+        deltaObj?.get("reasoning_blocks")
+    ).mapNotNull { elem ->
+        when {
+            elem == null || elem.isJsonNull -> null
+            elem.isJsonPrimitive -> elem.asString
+            else -> extractTextFromContentElement(elem)
+        }
+    }.firstOrNull()
+    if (fromDelta != null) return fromDelta
+    return sequenceOf(
+        choiceObj?.get("reasoning_content"),
+        choiceObj?.get("reasoning")
+    ).mapNotNull { elem ->
+        when {
+            elem == null || elem.isJsonNull -> null
+            elem.isJsonPrimitive -> elem.asString
+            else -> extractTextFromContentElement(elem)
+        }
+    }.firstOrNull()
+}
+
+private fun extractContentFrom(choiceObj: JsonObject?): String? {
+    if (choiceObj == null) return null
+    val delta = choiceObj.getAsJsonObject("delta")
+    extractTextFromContentElement(delta?.get("content"))?.let { if (it.isNotBlank()) return it }
+    val message = choiceObj.getAsJsonObject("message")
+    extractTextFromContentElement(message?.get("content"))?.let { if (it.isNotBlank()) return it }
+    return null
+}
+
 sealed class StreamEvent {
     object Started : StreamEvent()
     data class Thinking(val content: String) : StreamEvent()

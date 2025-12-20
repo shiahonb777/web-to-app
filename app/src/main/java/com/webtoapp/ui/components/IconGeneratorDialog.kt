@@ -278,8 +278,6 @@ fun IconGeneratorDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("正在生成...", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }

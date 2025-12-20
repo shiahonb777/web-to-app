@@ -159,8 +159,8 @@ fun HtmlCodingScreen(
             inputText = ""
             attachedImages = emptyList()
             
-            // 设置加载状态
-            chatState = ChatState.Loading
+// 进入流式状态（不显示等待占位）
+            chatState = ChatState.Streaming("")
             
             try {
                 // 获取模型和API Key
@@ -447,15 +447,9 @@ fun HtmlCodingScreen(
                         )
                     }
                     
-                    // 加载状态
-                    if (chatState is ChatState.Loading) {
-                        item {
-                            LoadingIndicator()
-                        }
-                    }
                     
-                    // 流式输出显示
-                    if (chatState is ChatState.Streaming || streamingContent.isNotEmpty() || streamingThinking.isNotEmpty()) {
+                    // 流式输出显示（仅在收到首个分片后渲染）
+                    if (streamingContent.isNotEmpty() || streamingThinking.isNotEmpty()) {
                         item {
                             StreamingMessageBubble(
                                 thinking = streamingThinking,
