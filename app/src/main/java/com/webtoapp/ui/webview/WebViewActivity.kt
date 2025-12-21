@@ -6,10 +6,12 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +42,7 @@ import coil.request.ImageRequest
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.bgm.BgmPlayer
+import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.core.webview.WebViewManager
 import com.webtoapp.data.model.SplashConfig
@@ -47,6 +50,7 @@ import com.webtoapp.data.model.SplashOrientation
 import com.webtoapp.data.model.SplashType
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.model.getActivationCodeStrings
+import com.webtoapp.ui.components.LongPressMenuSheet
 import android.content.pm.ActivityInfo
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
@@ -338,6 +342,12 @@ fun WebViewScreen(
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
+    
+    // 长按菜单状态
+    var showLongPressMenu by remember { mutableStateOf(false) }
+    var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
+    val scope = rememberCoroutineScope()
+    val longPressHandler = remember { LongPressHandler(context, scope) }
 
     // 加载应用配置
     LaunchedEffect(appId, directUrl, testUrl) {
@@ -538,6 +548,25 @@ fun WebViewScreen(
                     method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER
                 )
             }
+            
+            override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
+                // 通过 JS 获取长按元素详情
+                longPressHandler.getLongPressDetails(webView, x, y) { result ->
+                    when (result) {
+                        is LongPressHandler.LongPressResult.Image,
+                        is LongPressHandler.LongPressResult.Video,
+                        is LongPressHandler.LongPressResult.Link,
+                        is LongPressHandler.LongPressResult.ImageLink -> {
+                            longPressResult = result
+                            showLongPressMenu = true
+                        }
+                        else -> {
+                            // 文字或其他，使用默认行为
+                        }
+                    }
+                }
+                return true
+            }
         }
     }
 
@@ -705,6 +734,21 @@ fun WebViewScreen(
                                     domStorageEnabled = currentApp.htmlConfig?.enableLocalStorage ?: true
                                 }
                             }
+                            
+                            // 添加长按监听器
+                            var lastTouchX = 0f
+                            var lastTouchY = 0f
+                            setOnTouchListener { _, event ->
+                                if (event.action == MotionEvent.ACTION_DOWN) {
+                                    lastTouchX = event.x
+                                    lastTouchY = event.y
+                                }
+                                false // 不消费事件，让 WebView 继续处理
+                            }
+                            setOnLongClickListener {
+                                webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
+                            }
+                            
                             onWebViewCreated(this)
                             webViewRef = this
                             loadUrl(targetUrl)
@@ -833,6 +877,38 @@ fun WebViewScreen(
                 onComplete = closeSplash
             )
         }
+    }
+    
+    // 长按菜单
+    if (showLongPressMenu && longPressResult != null) {
+        LongPressMenuSheet(
+            result = longPressResult!!,
+            onDismiss = {
+                showLongPressMenu = false
+                longPressResult = null
+            },
+            onCopyLink = { url ->
+                longPressHandler.copyToClipboard(url)
+            },
+            onSaveImage = { url ->
+                longPressHandler.saveImage(url) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            },
+            onDownloadVideo = { url ->
+                longPressHandler.downloadVideo(url) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            },
+            onOpenInBrowser = { url ->
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "无法打开链接", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
     }
 }
 

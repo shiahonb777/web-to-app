@@ -160,7 +160,27 @@ class ApkTemplate(private val context: Context) {
             "darkMode": "${config.darkMode}",
             "translateEnabled": ${config.translateEnabled},
             "translateTargetLanguage": "${config.translateTargetLanguage}",
-            "translateShowButton": ${config.translateShowButton}
+            "translateShowButton": ${config.translateShowButton},
+            "extensionModuleIds": [${config.extensionModuleIds.joinToString(",") { "\"${escapeJson(it)}\"" }}],
+            "embeddedExtensionModules": [${config.embeddedExtensionModules.joinToString(",") { module ->
+                """{
+                    "id": "${escapeJson(module.id)}",
+                    "name": "${escapeJson(module.name)}",
+                    "description": "${escapeJson(module.description)}",
+                    "icon": "${escapeJson(module.icon)}",
+                    "category": "${module.category}",
+                    "code": "${escapeJson(module.code)}",
+                    "cssCode": "${escapeJson(module.cssCode)}",
+                    "runAt": "${module.runAt}",
+                    "urlMatches": [${module.urlMatches.joinToString(",") { rule ->
+                        """{"pattern":"${escapeJson(rule.pattern)}","isRegex":${rule.isRegex},"exclude":${rule.exclude}}"""
+                    }}],
+                    "configValues": {${module.configValues.entries.joinToString(",") { (k, v) ->
+                        "\"${escapeJson(k)}\":\"${escapeJson(v)}\""
+                    }}},
+                    "enabled": ${module.enabled}
+                }"""
+            }}]
         }
         """.trimIndent()
     }
@@ -380,5 +400,36 @@ data class ApkConfig(
     // 网页自动翻译配置
     val translateEnabled: Boolean = false,        // 是否启用自动翻译
     val translateTargetLanguage: String = "zh-CN", // 目标语言: zh-CN, en, ja
-    val translateShowButton: Boolean = true       // 是否显示翻译按钮
+    val translateShowButton: Boolean = true,      // 是否显示翻译按钮
+    
+    // 扩展模块配置
+    val extensionModuleIds: List<String> = emptyList(), // 启用的扩展模块ID列表
+    val embeddedExtensionModules: List<EmbeddedExtensionModule> = emptyList() // 嵌入的扩展模块完整数据
+)
+
+/**
+ * 嵌入到 APK 中的扩展模块数据
+ * 包含模块执行所需的所有信息
+ */
+data class EmbeddedExtensionModule(
+    val id: String,
+    val name: String,
+    val description: String = "",
+    val icon: String = "📦",
+    val category: String = "OTHER",
+    val code: String = "",
+    val cssCode: String = "",
+    val runAt: String = "DOCUMENT_END",
+    val urlMatches: List<EmbeddedUrlMatchRule> = emptyList(),
+    val configValues: Map<String, String> = emptyMap(),
+    val enabled: Boolean = true
+)
+
+/**
+ * 嵌入的 URL 匹配规则
+ */
+data class EmbeddedUrlMatchRule(
+    val pattern: String,
+    val isRegex: Boolean = false,
+    val exclude: Boolean = false
 )

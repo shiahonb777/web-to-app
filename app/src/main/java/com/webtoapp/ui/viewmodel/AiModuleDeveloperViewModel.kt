@@ -1,12 +1,27 @@
 package com.webtoapp.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.extension.*
 import com.webtoapp.core.extension.agent.*
+import com.webtoapp.data.model.AiFeature
+import com.webtoapp.data.model.SavedModel
+import com.webtoapp.ui.components.aimodule.filterModelsForModuleDevelopment
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+
+// DataStore for module developer preferences
+private val Context.moduleDeveloperDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "module_developer_prefs"
+)
 
 /**
  * AI 模块开发器 ViewModel
@@ -17,6 +32,11 @@ class AiModuleDeveloperViewModel(application: Application) : AndroidViewModel(ap
     
     private val agentEngine = ModuleAgentEngine(application)
     private val extensionManager = ExtensionManager.getInstance(application)
+    private val aiConfigManager = AiConfigManager(application)
+    
+    companion object {
+        private val KEY_SELECTED_MODEL_ID = stringPreferencesKey("selected_model_id")
+    }
     
     // UI 状态
     private val _uiState = MutableStateFlow(AiDeveloperUiState())
@@ -24,6 +44,70 @@ class AiModuleDeveloperViewModel(application: Application) : AndroidViewModel(ap
     
     // Agent 状态
     val agentState = agentEngine.sessionState
+    
+    // 可用模型列表（支持 MODULE_DEVELOPMENT 的模型）
+    val availableModels: StateFlow<List<SavedModel>> = aiConfigManager.savedModelsFlow
+        .map { models -> filterModelsForModuleDevelopment(models) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    
+    // 选中的模型
+    private val _selectedModel = MutableStateFlow<SavedModel?>(null)
+    val selectedModel: StateFlow<SavedModel?> = _selectedModel.asStateFlow()
+    
+    init {
+        // 加载持久化的模型选择
+        loadSelectedModel()
+    }
+    
+    /**
+     * 从 DataStore 加载持久化的模型选择
+     */
+    private fun loadSelectedModel() {
+        viewModelScope.launch {
+            // 组合持久化的模型 ID 和可用模型列表
+            combine(
+                getApplication<Application>().moduleDeveloperDataStore.data
+                    .map { prefs -> prefs[KEY_SELECTED_MODEL_ID] },
+                availableModels
+            ) { savedModelId, models ->
+                // 尝试找到保存的模型
+                val savedModel = savedModelId?.let { id ->
+                    models.find { it.id == id }
+                }
+                // 如果没有保存的模型或保存的模型不可用，使用默认模型
+                savedModel ?: models.find { it.isDefault } ?: models.firstOrNull()
+            }.collect { model ->
+                _selectedModel.value = model
+            }
+        }
+    }
+    
+    /**
+     * 选择模型并持久化
+     */
+    fun selectModel(model: SavedModel) {
+        _selectedModel.value = model
+        viewModelScope.launch {
+            saveSelectedModelId(model.id)
+        }
+    }
+    
+    /**
+     * 保存选中的模型 ID 到 DataStore
+     */
+    private suspend fun saveSelectedModelId(modelId: String) {
+        getApplication<Application>().moduleDeveloperDataStore.edit { prefs ->
+            prefs[KEY_SELECTED_MODEL_ID] = modelId
+        }
+    }
+    
+    /**
+     * 获取持久化的模型 ID
+     */
+    fun getPersistedModelId(): Flow<String?> {
+        return getApplication<Application>().moduleDeveloperDataStore.data
+            .map { prefs -> prefs[KEY_SELECTED_MODEL_ID] }
+    }
     
     /**
      * 开始开发

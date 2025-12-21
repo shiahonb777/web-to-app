@@ -136,9 +136,10 @@ class ApkBuilder(private val context: Context) {
             }
             logger.logKeyValue("最终包名", packageName)
             
-            val config = webApp.toApkConfig(packageName)
+            val config = webApp.toApkConfigWithModules(packageName, context)
             logger.logKeyValue("versionCode", config.versionCode)
             logger.logKeyValue("versionName", config.versionName)
+            logger.logKeyValue("embeddedExtensionModules.size", config.embeddedExtensionModules.size)
             
             onProgress(10, "检查模板...")
             logger.section("获取模板")
@@ -1140,8 +1141,54 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         // 翻译配置
         translateEnabled = translateEnabled,
         translateTargetLanguage = translateConfig?.targetLanguage?.code ?: "zh-CN",
-        translateShowButton = translateConfig?.showFloatingButton ?: true
+        translateShowButton = translateConfig?.showFloatingButton ?: true,
+        // 扩展模块配置
+        extensionModuleIds = extensionModuleIds
     )
+}
+
+/**
+ * WebApp 扩展函数：转换为 ApkConfig（带嵌入模块数据）
+ * @param packageName 包名
+ * @param context 上下文，用于获取扩展模块管理器
+ */
+fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.Context): ApkConfig {
+    val baseConfig = toApkConfig(packageName)
+    
+    // 获取并嵌入扩展模块数据
+    val embeddedModules = if (extensionModuleIds.isNotEmpty()) {
+        try {
+            val extensionManager = com.webtoapp.core.extension.ExtensionManager.getInstance(context)
+            extensionManager.getModulesByIds(extensionModuleIds).map { module ->
+                EmbeddedExtensionModule(
+                    id = module.id,
+                    name = module.name,
+                    description = module.description,
+                    icon = module.icon,
+                    category = module.category.name,
+                    code = module.code,
+                    cssCode = module.cssCode,
+                    runAt = module.runAt.name,
+                    urlMatches = module.urlMatches.map { rule ->
+                        EmbeddedUrlMatchRule(
+                            pattern = rule.pattern,
+                            isRegex = rule.isRegex,
+                            exclude = rule.exclude
+                        )
+                    },
+                    configValues = module.configValues,
+                    enabled = module.enabled
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ApkBuilder", "获取扩展模块数据失败", e)
+            emptyList()
+        }
+    } else {
+        emptyList()
+    }
+    
+    return baseConfig.copy(embeddedExtensionModules = embeddedModules)
 }
 
 /**

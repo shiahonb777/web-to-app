@@ -28,6 +28,9 @@ class WebViewManager(
     
     // 应用配置的扩展模块ID列表
     private var appExtensionModuleIds: List<String> = emptyList()
+    
+    // 嵌入的扩展模块数据（Shell 模式使用）
+    private var embeddedModules: List<com.webtoapp.core.shell.EmbeddedShellModule> = emptyList()
 
     /**
      * 配置WebView
@@ -35,16 +38,20 @@ class WebViewManager(
      * @param config WebView配置
      * @param callbacks 回调接口
      * @param extensionModuleIds 应用配置的扩展模块ID列表（可选）
+     * @param embeddedExtensionModules 嵌入的扩展模块数据（Shell模式使用，可选）
      */
     @SuppressLint("SetJavaScriptEnabled")
     fun configureWebView(
         webView: WebView,
         config: WebViewConfig,
         callbacks: WebViewCallbacks,
-        extensionModuleIds: List<String> = emptyList()
+        extensionModuleIds: List<String> = emptyList(),
+        embeddedExtensionModules: List<com.webtoapp.core.shell.EmbeddedShellModule> = emptyList()
     ) {
         // 保存扩展模块ID列表
         this.appExtensionModuleIds = extensionModuleIds
+        // 保存嵌入的模块数据
+        this.embeddedModules = embeddedExtensionModules
         webView.apply {
             settings.apply {
                 // JavaScript
@@ -334,12 +341,44 @@ class WebViewManager(
         
         // 注入扩展模块代码
         val url = webView.url ?: ""
-        if (appExtensionModuleIds.isNotEmpty()) {
+        
+        // 优先使用嵌入的模块数据（Shell 模式）
+        if (embeddedModules.isNotEmpty()) {
+            injectEmbeddedModules(webView, url, runAt)
+        } else if (appExtensionModuleIds.isNotEmpty()) {
             // 使用应用配置的扩展模块
             injectSpecificModules(webView, url, runAt, appExtensionModuleIds)
         } else {
             // 使用全局启用的扩展模块
             injectExtensionModules(webView, url, runAt)
+        }
+    }
+    
+    /**
+     * 注入嵌入的扩展模块代码（Shell 模式专用）
+     */
+    private fun injectEmbeddedModules(webView: WebView, url: String, runAt: ScriptRunTime) {
+        try {
+            val targetRunAt = runAt.name
+            val matchingModules = embeddedModules.filter { module ->
+                module.enabled && 
+                module.runAt == targetRunAt && 
+                module.matchesUrl(url)
+            }
+            
+            if (matchingModules.isEmpty()) return
+            
+            val injectionCode = matchingModules.joinToString("\n\n") { module ->
+                """
+                // ========== ${module.name} ==========
+                ${module.generateExecutableCode()}
+                """.trimIndent()
+            }
+            
+            webView.evaluateJavascript(injectionCode, null)
+            android.util.Log.d("WebViewManager", "注入嵌入扩展模块代码 (${runAt.name}), 模块数: ${matchingModules.size}")
+        } catch (e: Exception) {
+            android.util.Log.e("WebViewManager", "嵌入扩展模块注入失败", e)
         }
     }
     
@@ -444,4 +483,13 @@ interface WebViewCallbacks {
         mimeType: String,
         contentLength: Long
     )
+    
+    /**
+     * 长按事件回调
+     * @param webView WebView实例
+     * @param x 长按位置X坐标
+     * @param y 长按位置Y坐标
+     * @return 是否消费此事件
+     */
+    fun onLongPress(webView: WebView, x: Float, y: Float): Boolean = false
 }

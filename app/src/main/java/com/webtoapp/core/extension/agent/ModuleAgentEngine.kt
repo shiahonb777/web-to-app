@@ -122,9 +122,10 @@ class ModuleAgentEngine(private val context: Context) {
             emit(AgentEvent.Thought(AgentThought(2, ThoughtType.PLANNING, "制定开发计划...")))
             
             // 调用 AI 生成代码
+            // Requirements: 2.5, 3.1, 3.2 - 使用具体状态消息替代通用加载提示
             emit(AgentEvent.StateChange(AgentSessionState.GENERATING))
             _sessionState.value = AgentSessionState.GENERATING
-            emit(AgentEvent.Thought(AgentThought(3, ThoughtType.GENERATION, "正在生成代码...")))
+            emit(AgentEvent.Thought(AgentThought(3, ThoughtType.GENERATION, "调用 AI 模型生成扩展模块代码...")))
             
             val messages = buildMessages(systemPrompt, requirement, category, existingCode)
             val aiResponse = aiClient.chat(apiKey, savedModel.model, messages)

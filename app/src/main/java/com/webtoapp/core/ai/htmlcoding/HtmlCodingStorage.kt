@@ -853,7 +853,7 @@ object CodeBlockParser {
         
         // 提取代码块
         codeBlockRegex.findAll(response).forEach { match ->
-            val language = match.groupValues[1].ifEmpty { "html" }
+            val language = match.groupValues[1].ifEmpty { "html" }.lowercase()
             val filename = match.groupValues[2].ifEmpty { 
                 match.groupValues[3].ifEmpty { 
                     match.groupValues[4].ifEmpty { null } 
@@ -862,19 +862,33 @@ object CodeBlockParser {
             val content = match.groupValues[5].trim()
             
             if (content.isNotEmpty()) {
+                // 修复JS文件名：统一使用 "js" 作为扩展名
+                val normalizedLanguage = when (language) {
+                    "javascript" -> "js"
+                    else -> language
+                }
+                val actualFilename = filename ?: when (normalizedLanguage) {
+                    "html" -> "index.html"
+                    "css" -> "style.css"
+                    "js" -> "script.js"
+                    else -> "file.$normalizedLanguage"
+                }
+                
                 codeBlocks.add(
                     CodeBlock(
-                        language = language,
-                        filename = filename,
+                        language = normalizedLanguage,
+                        filename = actualFilename,
                         content = content,
-                        isComplete = isCompleteCode(language, content)
+                        isComplete = isCompleteCode(normalizedLanguage, content)
                     )
                 )
             }
         }
         
-        // 清理文本内容中的代码块
+        // 清理文本内容中的代码块，避免重复输出
         textContent = codeBlockRegex.replace(textContent, "").trim()
+        // 移除多余的空行
+        textContent = textContent.replace(Regex("\n{3,}"), "\n\n")
         
         return ParsedAiResponse(
             textContent = textContent,
@@ -888,11 +902,11 @@ object CodeBlockParser {
      * 检查代码是否完整
      */
     private fun isCompleteCode(language: String, content: String): Boolean {
-        return when (language.lowercase()) {
+        return when (language) {
             "html" -> content.contains("<!DOCTYPE", ignoreCase = true) || 
                      content.contains("<html", ignoreCase = true)
             "css" -> true  // CSS片段通常都是完整的
-            "javascript", "js" -> true
+            "js" -> true
             else -> true
         }
     }
@@ -903,7 +917,7 @@ object CodeBlockParser {
     fun mergeToSingleHtml(codeBlocks: List<CodeBlock>): String {
         val htmlBlocks = codeBlocks.filter { it.language == "html" }
         val cssBlocks = codeBlocks.filter { it.language == "css" }
-        val jsBlocks = codeBlocks.filter { it.language == "javascript" || it.language == "js" }
+        val jsBlocks = codeBlocks.filter { it.language == "js" }
         
         // 如果有完整的HTML，尝试合并CSS和JS
         val mainHtml = htmlBlocks.find { it.isComplete }?.content

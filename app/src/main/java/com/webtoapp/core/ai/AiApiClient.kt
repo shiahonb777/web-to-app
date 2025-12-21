@@ -870,6 +870,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
     
     /**
      * 流式聊天 - 返回Flow实时输出内容
+     * 支持 Google Gemini、Anthropic Claude 和 OpenAI 兼容格式
      */
     fun chatStream(
         apiKey: ApiKeyConfig,
@@ -888,35 +889,12 @@ val json = gson.fromJson(body, JsonObject::class.java)
             }
         }
         
-        // 构建请求体
-        val messagesArray = com.google.gson.JsonArray()
-        messages.forEach { msg ->
-            messagesArray.add(JsonObject().apply {
-                addProperty("role", msg["role"])
-                addProperty("content", msg["content"])
-            })
+        // 根据供应商构建不同的请求
+        val request = when (apiKey.provider) {
+            AiProvider.GOOGLE -> buildGeminiStreamRequest(baseUrl, apiKey.apiKey.trim(), model.id, messages, temperature)
+            AiProvider.ANTHROPIC -> buildAnthropicStreamRequest(baseUrl, apiKey.apiKey.sanitize(), model.id, messages, temperature)
+            else -> buildOpenAIStreamRequest(baseUrl, apiKey, model.id, messages, temperature)
         }
-        
-        val body = JsonObject().apply {
-            addProperty("model", model.id)
-            add("messages", messagesArray)
-            addProperty("temperature", temperature)
-            addProperty("max_tokens", 8192)
-            addProperty("stream", true)
-        }
-        
-        val streamEndpoint = when (apiKey.provider) {
-            AiProvider.GLM -> "/v4/chat/completions"
-            AiProvider.VOLCANO -> "/v3/chat/completions"
-            else -> "/v1/chat/completions"
-        }
-        val request = Request.Builder()
-            .url("$baseUrl$streamEndpoint")
-            .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
-            .header("Content-Type", "application/json")
-            .header("Accept", "text/event-stream")
-            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
-            .build()
         
         trySend(StreamEvent.Started)
         
@@ -943,7 +921,6 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     }
                     
                     val contentBuilder = StringBuilder()
-                    val rawResponseBuilder = StringBuilder() // 记录原始响应用于调试
                     var doneSent = false
                     var hasReceivedData = false
                     
@@ -955,7 +932,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                         dataBuffer.setLength(0)
                         if (payload.isEmpty()) return
                         hasReceivedData = true
-                        if (payload == "[DONE]" || currentEvent == "done") {
+                        if (payload == "[DONE]" || currentEvent == "done" || currentEvent == "message_stop") {
                             if (!doneSent) {
                                 doneSent = true
                                 trySend(StreamEvent.Done(contentBuilder.toString()))
@@ -974,22 +951,57 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 return
                             }
                             
-val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
-                            val delta = choiceObj?.getAsJsonObject("delta")
-                            
-                            // 内容提取（兼容多结构）
-                            val content: String? = extractContentFrom(choiceObj)
-                            
-                            // 思考内容提取（兼容多字段）
-                            val reasoning = extractReasoningFrom(choiceObj, delta)
-                            if (reasoning != null) trySend(StreamEvent.Thinking(reasoning))
-                            
-                            if (content != null) {
-                                // 忽略仅空白的首个分片，避免只显示空格
-                                val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
-                                if (shouldAppend) {
-                                    contentBuilder.append(content)
-                                    trySend(StreamEvent.Content(content, contentBuilder.toString()))
+                            // 根据供应商解析响应
+                            when (apiKey.provider) {
+                                AiProvider.GOOGLE -> {
+                                    // Gemini 流式响应格式
+                                    val candidates = json.getAsJsonArray("candidates")
+                                    val content = candidates?.get(0)?.asJsonObject
+                                        ?.getAsJsonObject("content")
+                                        ?.getAsJsonArray("parts")
+                                        ?.get(0)?.asJsonObject
+                                        ?.get("text")?.asString
+                                    if (!content.isNullOrEmpty()) {
+                                        contentBuilder.append(content)
+                                        trySend(StreamEvent.Content(content, contentBuilder.toString()))
+                                    }
+                                }
+                                AiProvider.ANTHROPIC -> {
+                                    // Anthropic 流式响应格式
+                                    val type = json.get("type")?.asString
+                                    when (type) {
+                                        "content_block_delta" -> {
+                                            val delta = json.getAsJsonObject("delta")
+                                            val text = delta?.get("text")?.asString
+                                            if (!text.isNullOrEmpty()) {
+                                                contentBuilder.append(text)
+                                                trySend(StreamEvent.Content(text, contentBuilder.toString()))
+                                            }
+                                        }
+                                        "message_stop" -> {
+                                            if (!doneSent) {
+                                                doneSent = true
+                                                trySend(StreamEvent.Done(contentBuilder.toString()))
+                                            }
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    // OpenAI 兼容格式
+                                    val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
+                                    val delta = choiceObj?.getAsJsonObject("delta")
+                                    
+                                    val content: String? = extractContentFrom(choiceObj)
+                                    val reasoning = extractReasoningFrom(choiceObj, delta)
+                                    if (reasoning != null) trySend(StreamEvent.Thinking(reasoning))
+                                    
+                                    if (content != null) {
+                                        val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
+                                        if (shouldAppend) {
+                                            contentBuilder.append(content)
+                                            trySend(StreamEvent.Content(content, contentBuilder.toString()))
+                                        }
+                                    }
                                 }
                             }
                         } catch (_: Exception) {
@@ -999,7 +1011,6 @@ val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
                     
                     while (!reader.exhausted()) {
                         val line = reader.readUtf8Line() ?: break
-                        rawResponseBuilder.append(line).append("\n")
                         
                         when {
                             line.startsWith("event:") -> {
@@ -1015,13 +1026,13 @@ val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
                             else -> {
                                 // 某些实现直接输出 JSON 行（非SSE）
                                 try {
-val json = gson.fromJson(line, JsonObject::class.java)
+                                    val json = gson.fromJson(line, JsonObject::class.java)
                                     val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
                                     val reasoning = extractReasoningFrom(choiceObj, choiceObj?.getAsJsonObject("delta"))
                                     if (!reasoning.isNullOrBlank()) {
                                         trySend(StreamEvent.Thinking(reasoning))
                                     }
-val content = extractContentFrom(choiceObj)
+                                    val content = extractContentFrom(choiceObj)
                                     if (!content.isNullOrEmpty()) {
                                         val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
                                         if (shouldAppend) {
@@ -1062,6 +1073,143 @@ val content = extractContentFrom(choiceObj)
         })
         
         awaitClose { call.cancel() }
+    }
+    
+    /**
+     * 构建 Google Gemini 流式请求
+     */
+    private fun buildGeminiStreamRequest(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        temperature: Float
+    ): Request {
+        val contents = com.google.gson.JsonArray()
+        var systemInstruction: String? = null
+        
+        messages.forEach { msg ->
+            val role = msg["role"] ?: "user"
+            val content = msg["content"] ?: ""
+            
+            if (role == "system") {
+                systemInstruction = content
+            } else {
+                contents.add(JsonObject().apply {
+                    addProperty("role", if (role == "assistant") "model" else "user")
+                    add("parts", com.google.gson.JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("text", content)
+                        })
+                    })
+                })
+            }
+        }
+        
+        val body = JsonObject().apply {
+            add("contents", contents)
+            systemInstruction?.let { instruction ->
+                add("systemInstruction", JsonObject().apply {
+                    add("parts", com.google.gson.JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("text", instruction)
+                        })
+                    })
+                })
+            }
+            add("generationConfig", JsonObject().apply {
+                addProperty("temperature", temperature)
+                addProperty("maxOutputTokens", 8192)
+            })
+        }
+        
+        // Gemini 流式 API 使用 streamGenerateContent 端点
+        return Request.Builder()
+            .url("$baseUrl/v1beta/models/$modelId:streamGenerateContent?alt=sse&key=$apiKey")
+            .header("Content-Type", "application/json")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+    }
+    
+    /**
+     * 构建 Anthropic Claude 流式请求
+     */
+    private fun buildAnthropicStreamRequest(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        temperature: Float
+    ): Request {
+        val systemMessage = messages.find { it["role"] == "system" }?.get("content")
+        val chatMessages = messages.filter { it["role"] != "system" }
+        
+        val messagesArray = com.google.gson.JsonArray()
+        chatMessages.forEach { msg ->
+            messagesArray.add(JsonObject().apply {
+                addProperty("role", msg["role"])
+                addProperty("content", msg["content"])
+            })
+        }
+        
+        val body = JsonObject().apply {
+            addProperty("model", modelId)
+            add("messages", messagesArray)
+            addProperty("max_tokens", 8192)
+            addProperty("temperature", temperature)
+            addProperty("stream", true)
+            systemMessage?.let { addProperty("system", it) }
+        }
+        
+        return Request.Builder()
+            .url("$baseUrl/v1/messages")
+            .header("x-api-key", apiKey)
+            .header("anthropic-version", "2023-06-01")
+            .header("Content-Type", "application/json")
+            .header("Accept", "text/event-stream")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+    }
+    
+    /**
+     * 构建 OpenAI 兼容格式流式请求
+     */
+    private fun buildOpenAIStreamRequest(
+        baseUrl: String,
+        apiKey: ApiKeyConfig,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        temperature: Float
+    ): Request {
+        val messagesArray = com.google.gson.JsonArray()
+        messages.forEach { msg ->
+            messagesArray.add(JsonObject().apply {
+                addProperty("role", msg["role"])
+                addProperty("content", msg["content"])
+            })
+        }
+        
+        val body = JsonObject().apply {
+            addProperty("model", modelId)
+            add("messages", messagesArray)
+            addProperty("temperature", temperature)
+            addProperty("max_tokens", 8192)
+            addProperty("stream", true)
+        }
+        
+        val streamEndpoint = when (apiKey.provider) {
+            AiProvider.GLM -> "/v4/chat/completions"
+            AiProvider.VOLCANO -> "/v3/chat/completions"
+            else -> "/v1/chat/completions"
+        }
+        
+        return Request.Builder()
+            .url("$baseUrl$streamEndpoint")
+            .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
+            .header("Content-Type", "application/json")
+            .header("Accept", "text/event-stream")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
     }
 }
 

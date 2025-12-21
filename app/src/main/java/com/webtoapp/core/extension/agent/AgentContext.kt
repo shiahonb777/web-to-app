@@ -10,6 +10,178 @@ import com.webtoapp.core.extension.*
  * 管理 Agent 的对话历史、工作状态、生成的代码等上下文信息
  */
 
+// ==================== Agent 流式事件类型 ====================
+
+/**
+ * Agent 状态枚举
+ * 用于表示 Agent 当前的工作状态
+ */
+enum class AgentState(val displayName: String, val icon: String) {
+    IDLE("空闲", "⏸️"),
+    THINKING("思考中", "🤔"),
+    GENERATING("生成中", "✨"),
+    TOOL_CALLING("调用工具", "🔧"),
+    SYNTAX_CHECKING("语法检查", "🔍"),
+    FIXING("修复中", "🩹"),
+    SECURITY_SCANNING("安全扫描", "🔒"),
+    COMPLETED("完成", "✅"),
+    ERROR("错误", "❌")
+}
+
+/**
+ * 工具调用信息
+ * 用于在 UI 中展示工具调用的详细信息
+ */
+data class ToolCallInfo(
+    @SerializedName("tool_name")
+    val toolName: String,
+    @SerializedName("tool_icon")
+    val toolIcon: String = "🔧",
+    @SerializedName("parameters")
+    val parameters: Map<String, Any?> = emptyMap(),
+    @SerializedName("status")
+    val status: ToolStatus = ToolStatus.PENDING,
+    @SerializedName("result")
+    val result: Any? = null,
+    @SerializedName("error")
+    val error: String? = null,
+    @SerializedName("execution_time_ms")
+    val executionTimeMs: Long = 0,
+    @SerializedName("call_id")
+    val callId: String = java.util.UUID.randomUUID().toString()
+) {
+    companion object {
+        /**
+         * 从 ToolCallRequest 创建 ToolCallInfo
+         */
+        fun fromRequest(request: ToolCallRequest): ToolCallInfo {
+            val toolType = AgentToolType.entries.find { 
+                it.name.equals(request.toolName, ignoreCase = true) ||
+                request.toolName.equals(it.name.lowercase().replace("_", ""), ignoreCase = true)
+            }
+            return ToolCallInfo(
+                toolName = request.toolName,
+                toolIcon = toolType?.icon ?: "🔧",
+                parameters = request.arguments,
+                status = ToolStatus.PENDING,
+                callId = request.callId
+            )
+        }
+        
+        /**
+         * 从 ToolCallResult 更新 ToolCallInfo
+         */
+        fun fromResult(info: ToolCallInfo, result: ToolCallResult): ToolCallInfo {
+            return info.copy(
+                status = if (result.success) ToolStatus.SUCCESS else ToolStatus.FAILED,
+                result = result.result,
+                error = result.error,
+                executionTimeMs = result.executionTimeMs
+            )
+        }
+    }
+}
+
+/**
+ * 工具执行状态
+ */
+enum class ToolStatus {
+    PENDING,    // 等待执行
+    EXECUTING,  // 执行中
+    SUCCESS,    // 执行成功
+    FAILED      // 执行失败
+}
+
+/**
+ * Agent 流式事件
+ * 
+ * 用于实时传递 Agent 开发过程中的各种事件，支持流式输出和工具调用可视化
+ * 
+ * Requirements: 2.1, 2.2, 2.3, 2.4, 5.8
+ */
+sealed class AgentStreamEvent {
+    
+    /**
+     * 状态变化事件
+     * 当 Agent 状态发生变化时触发
+     */
+    data class StateChange(val state: AgentState) : AgentStreamEvent()
+    
+    /**
+     * 思考内容事件（流式）
+     * 当 AI 正在思考或推理时触发，用于显示思考过程
+     * 
+     * @param content 本次增量的思考内容
+     * @param fullContent 累积的完整思考内容
+     */
+    data class Thinking(
+        val content: String,
+        val fullContent: String
+    ) : AgentStreamEvent()
+    
+    /**
+     * 生成内容事件（流式）
+     * 当 AI 生成内容时触发，用于实时显示生成的文本
+     * 
+     * @param delta 本次增量的内容
+     * @param fullContent 累积的完整内容
+     */
+    data class Content(
+        val delta: String,
+        val fullContent: String
+    ) : AgentStreamEvent()
+    
+    /**
+     * 工具调用开始事件
+     * 当开始执行工具调用时触发
+     * 
+     * @param toolCall 工具调用信息
+     */
+    data class ToolStart(val toolCall: ToolCallInfo) : AgentStreamEvent()
+    
+    /**
+     * 工具调用完成事件
+     * 当工具调用执行完成时触发
+     * 
+     * @param toolCall 包含执行结果的工具调用信息
+     */
+    data class ToolComplete(val toolCall: ToolCallInfo) : AgentStreamEvent()
+    
+    /**
+     * 模块生成事件
+     * 当成功解析出模块数据时触发
+     * 
+     * @param module 生成的模块数据
+     */
+    data class ModuleGenerated(val module: GeneratedModuleData) : AgentStreamEvent()
+    
+    /**
+     * 错误事件
+     * 当发生错误时触发
+     * 
+     * @param message 错误消息
+     * @param code 错误码（可选）
+     * @param recoverable 是否可恢复
+     * @param rawResponse 原始响应（用于调试）
+     */
+    data class Error(
+        val message: String,
+        val code: String? = null,
+        val recoverable: Boolean = true,
+        val rawResponse: String? = null
+    ) : AgentStreamEvent()
+    
+    /**
+     * 完成事件
+     * 当整个开发流程完成时触发
+     * 
+     * @param module 最终生成的模块数据
+     */
+    data class Completed(val module: GeneratedModuleData) : AgentStreamEvent()
+}
+
+// ==================== 原有代码 ====================
+
 /**
  * Agent 会话状态
  */

@@ -5,6 +5,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,377 +22,328 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.webtoapp.core.ai.htmlcoding.*
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * 消息气泡组件
- */
+// Theme-adaptive code block colors
+@Composable
+fun codeBlockColors(): CodeBlockColors {
+    val isDark = !MaterialTheme.colorScheme.background.luminance().let { it > 0.5f }
+    return if (isDark) {
+        CodeBlockColors(
+            background = Color(0xFF1E1E2E),
+            headerBackground = Color(0xFF313244),
+            text = Color(0xFFCDD6F4),
+            lineNumber = Color(0xFF6C7086),
+            keyword = Color(0xFFCBA6F7),
+            string = Color(0xFFA6E3A1),
+            comment = Color(0xFF6C7086),
+            function = Color(0xFF89B4FA),
+            tag = Color(0xFFF38BA8),
+            attribute = Color(0xFFFAB387),
+            number = Color(0xFFFAB387),
+            operator = Color(0xFF89DCEB)
+        )
+    } else {
+        CodeBlockColors(
+            background = Color(0xFFF8F9FC),
+            headerBackground = Color(0xFFE8EAF0),
+            text = Color(0xFF1E1E2E),
+            lineNumber = Color(0xFF9CA0B0),
+            keyword = Color(0xFF8839EF),
+            string = Color(0xFF40A02B),
+            comment = Color(0xFF9CA0B0),
+            function = Color(0xFF1E66F5),
+            tag = Color(0xFFD20F39),
+            attribute = Color(0xFFFE640B),
+            number = Color(0xFFFE640B),
+            operator = Color(0xFF04A5E5)
+        )
+    }
+}
+
+data class CodeBlockColors(
+    val background: Color,
+    val headerBackground: Color,
+    val text: Color,
+    val lineNumber: Color,
+    val keyword: Color,
+    val string: Color,
+    val comment: Color,
+    val function: Color,
+    val tag: Color,
+    val attribute: Color,
+    val number: Color,
+    val operator: Color
+)
+
+// Simple Markdown text rendering
+@Composable
+fun MarkdownText(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    val annotatedString = parseMarkdown(text, color)
+    SelectionContainer {
+        Text(text = annotatedString, style = style, modifier = modifier)
+    }
+}
+
+@Composable
+private fun parseMarkdown(text: String, baseColor: Color): AnnotatedString {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val codeBackground = MaterialTheme.colorScheme.surfaceVariant
+    return buildAnnotatedString {
+        var i = 0
+        while (i < text.length) {
+            when {
+                text.startsWith("**", i) -> {
+                    val end = text.indexOf("**", i + 2)
+                    if (end != -1) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(text.substring(i + 2, end))
+                        }
+                        i = end + 2
+                    } else { append(text[i]); i++ }
+                }
+                (text.startsWith("*", i) && !text.startsWith("**", i)) || text.startsWith("_", i) -> {
+                    val marker = text[i]
+                    val end = text.indexOf(marker, i + 1)
+                    if (end != -1 && end > i + 1) {
+                        withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
+                            append(text.substring(i + 1, end))
+                        }
+                        i = end + 1
+                    } else { append(text[i]); i++ }
+                }
+                text.startsWith("`", i) && !text.startsWith("```", i) -> {
+                    val end = text.indexOf("`", i + 1)
+                    if (end != -1) {
+                        withStyle(SpanStyle(fontFamily = FontFamily.Monospace, background = codeBackground, color = primaryColor)) {
+                            append(" ${text.substring(i + 1, end)} ")
+                        }
+                        i = end + 1
+                    } else { append(text[i]); i++ }
+                }
+                text.startsWith("[", i) -> {
+                    val textEnd = text.indexOf("]", i)
+                    val urlStart = text.indexOf("(", textEnd)
+                    val urlEnd = text.indexOf(")", urlStart)
+                    if (textEnd != -1 && urlStart == textEnd + 1 && urlEnd != -1) {
+                        withStyle(SpanStyle(color = primaryColor, textDecoration = TextDecoration.Underline)) {
+                            append(text.substring(i + 1, textEnd))
+                        }
+                        i = urlEnd + 1
+                    } else { append(text[i]); i++ }
+                }
+                else -> { append(text[i]); i++ }
+            }
+        }
+    }
+}
+
+
+// Message bubble component
 @Composable
 fun MessageBubble(
     message: HtmlCodingMessage,
     onEditClick: () -> Unit = {},
     onPreviewCode: (CodeBlock) -> Unit = {},
     onCopyCode: (String) -> Unit = {},
+    onDownloadCode: ((CodeBlock) -> Unit)? = null,
+    onExportToProject: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val isUser = message.role == MessageRole.USER
-    
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         if (!isUser) {
-            // AI头像
-            Surface(
-                modifier = Modifier.size(36.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(
-                    Icons.Filled.Code,
-                    contentDescription = null,
-                    modifier = Modifier.padding(8.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            Surface(modifier = Modifier.size(40.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, shadowElevation = 2.dp) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.AutoAwesome, null, Modifier.size(22.dp), MaterialTheme.colorScheme.primary)
+                }
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(Modifier.width(12.dp))
         }
-        
-        Column(
-            modifier = Modifier.weight(1f, fill = false),
-            horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
-        ) {
-            // 消息内容卡片
+        Column(modifier = Modifier.weight(1f, fill = false), horizontalAlignment = if (isUser) Alignment.End else Alignment.Start) {
+            if (!isUser && message.thinking != null) {
+                ThinkingBlock(thinking = message.thinking!!)
+                Spacer(Modifier.height(10.dp))
+            }
             Surface(
-                shape = RoundedCornerShape(
-                    topStart = if (isUser) 16.dp else 4.dp,
-                    topEnd = if (isUser) 4.dp else 16.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
-                color = if (isUser) 
-                    MaterialTheme.colorScheme.primaryContainer 
-                else 
-                    MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(topStart = if (isUser) 20.dp else 4.dp, topEnd = if (isUser) 4.dp else 20.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                shadowElevation = 1.dp,
                 modifier = Modifier.widthIn(max = 500.dp)
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    // 用户消息的图片
+                Column(Modifier.padding(14.dp)) {
                     if (isUser && message.images.isNotEmpty()) {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        ) {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 10.dp)) {
                             items(message.images) { imagePath ->
-                                AsyncImage(
-                                    model = File(imagePath),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Crop
-                                )
+                                Surface(shape = RoundedCornerShape(12.dp), shadowElevation = 2.dp) {
+                                    AsyncImage(model = File(imagePath), contentDescription = null, modifier = Modifier.size(90.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
+                                }
                             }
                         }
                     }
-                    
-                    // 文本内容
                     if (message.content.isNotBlank()) {
-                        SelectionContainer {
-                            Text(
-                                text = message.content,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (isUser) 
-                                    MaterialTheme.colorScheme.onPrimaryContainer 
-                                else 
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        if (isUser) {
+                            SelectionContainer { Text(message.content, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary) }
+                        } else {
+                            MarkdownText(text = message.content, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    
-                    // 编辑标记
                     if (message.isEdited) {
-                        Text(
-                            text = "(已编辑)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+                        Text("(edited)", style = MaterialTheme.typography.labelSmall, color = if (isUser) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
             }
-            
-            // 思考内容（AI消息）
-            if (!isUser && message.thinking != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                ThinkingBlock(thinking = message.thinking!!)
-            }
-            
-            // 代码块（AI消息）
             if (!isUser && message.codeBlocks.isNotEmpty()) {
-                message.codeBlocks.forEach { codeBlock ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CodeBlockCard(
-                        codeBlock = codeBlock,
-                        onPreview = { onPreviewCode(codeBlock) },
-                        onCopy = { onCopyCode(codeBlock.content) }
-                    )
-                }
+                Spacer(Modifier.height(12.dp))
+                CodeBlocksTabContainer(codeBlocks = message.codeBlocks, onPreview = onPreviewCode, onCopy = onCopyCode, onDownload = onDownloadCode, onExportToProject = onExportToProject)
             }
-            
-            // 操作按钮
-            Row(
-                modifier = Modifier.padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Row(modifier = Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (isUser) {
-                    // 用户消息：编辑按钮
-                    IconButton(
-                        onClick = onEditClick,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.Edit,
-                            contentDescription = "编辑",
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.outline
-                        )
+                    IconButton(onClick = onEditClick, modifier = Modifier.size(28.dp)) {
+                        Icon(Icons.Outlined.Edit, "Edit", Modifier.size(16.dp), MaterialTheme.colorScheme.outline)
                     }
                 }
-                
-                // 时间
-                Text(
-                    text = formatTime(message.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                Text(formatTime(message.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
         }
-        
         if (isUser) {
-            Spacer(modifier = Modifier.width(12.dp))
-            // 用户头像
-            Surface(
-                modifier = Modifier.size(36.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    Icons.Filled.Person,
-                    contentDescription = null,
-                    modifier = Modifier.padding(8.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-        }
-    }
-}
-
-/**
- * 思考内容展示组件
- */
-@Composable
-fun ThinkingBlock(
-    thinking: String,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Outlined.Psychology,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "思考过程",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
-                }
-                Icon(
-                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.tertiary
-                )
-            }
-            
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                SelectionContainer {
-                    Text(
-                        text = thinking,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+            Spacer(Modifier.width(12.dp))
+            Surface(modifier = Modifier.size(40.dp), shape = CircleShape, color = MaterialTheme.colorScheme.secondary, shadowElevation = 2.dp) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Person, null, Modifier.size(22.dp), MaterialTheme.colorScheme.onSecondary)
                 }
             }
         }
     }
 }
 
-/**
- * 代码块卡片组件
- */
+
+// Code blocks tab container
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CodeBlockCard(
-    codeBlock: CodeBlock,
-    onPreview: () -> Unit,
-    onCopy: () -> Unit,
+fun CodeBlocksTabContainer(
+    codeBlocks: List<CodeBlock>,
+    onPreview: (CodeBlock) -> Unit,
+    onCopy: (String) -> Unit,
+    onDownload: ((CodeBlock) -> Unit)? = null,
+    onExportToProject: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(true) }
+    val colors = codeBlockColors()
+    val pagerState = rememberPagerState(pageCount = { codeBlocks.size })
+    val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
+    var showMoreMenu by remember { mutableStateOf(false) }
     
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF1E1E1E)
-    ) {
+    Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = colors.background, shadowElevation = 4.dp) {
         Column {
-            // 头部
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF2D2D2D))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // 语言标签
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = getLanguageColor(codeBlock.language)
-                    ) {
-                        Text(
-                            text = codeBlock.language.uppercase(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                    
-                    // 文件名
-                    codeBlock.filename?.let { filename ->
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = filename,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color(0xFFCCCCCC)
-                        )
-                    }
-                }
-                
-                Row {
-                    // 预览按钮（仅HTML）
-                    if (codeBlock.language.lowercase() in listOf("html", "htm")) {
-                        IconButton(
-                            onClick = onPreview,
-                            modifier = Modifier.size(28.dp)
+            Surface(color = colors.headerBackground, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)) {
+                Column {
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        ScrollableTabRow(
+                            selectedTabIndex = pagerState.currentPage,
+                            modifier = Modifier.weight(1f),
+                            containerColor = Color.Transparent,
+                            contentColor = colors.text,
+                            edgePadding = 0.dp,
+                            indicator = { tabPositions ->
+                                if (tabPositions.isNotEmpty() && pagerState.currentPage < tabPositions.size) {
+                                    Box(Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]).height(3.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)))
+                                }
+                            },
+                            divider = {}
                         ) {
-                            Icon(
-                                Icons.Outlined.PlayArrow,
-                                contentDescription = "预览",
-                                tint = Color(0xFF4FC3F7),
-                                modifier = Modifier.size(18.dp)
-                            )
+                            codeBlocks.forEachIndexed { index, block ->
+                                Tab(selected = pagerState.currentPage == index, onClick = { scope.launch { pagerState.animateScrollToPage(index) } }, modifier = Modifier.height(40.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(horizontal = 12.dp)) {
+                                        Surface(shape = RoundedCornerShape(4.dp), color = getLanguageColor(block.language)) {
+                                            Text(block.language.uppercase().take(3), style = MaterialTheme.typography.labelSmall, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp), fontSize = 9.sp)
+                                        }
+                                        Text(block.filename ?: getDefaultFilename(block.language), style = MaterialTheme.typography.labelMedium, color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary else colors.text.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.padding(start = 8.dp)) {
+                            val currentBlock = codeBlocks.getOrNull(pagerState.currentPage)
+                            if (currentBlock?.language in listOf("html", "htm", "css", "js")) {
+                                IconButton(onClick = { currentBlock?.let { onPreview(it) } }, modifier = Modifier.size(32.dp)) {
+                                    Icon(Icons.Outlined.PlayArrow, contentDescription = "Preview", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                            IconButton(onClick = { currentBlock?.let { clipboardManager.setText(AnnotatedString(it.content)); onCopy(it.content) } }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = "Copy", tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            }
+                            if (onDownload != null || onExportToProject != null) {
+                                Box {
+                                    IconButton(onClick = { showMoreMenu = true }, modifier = Modifier.size(32.dp)) {
+                                        Icon(Icons.Outlined.MoreVert, contentDescription = "More", tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                    }
+                                    DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
+                                        onDownload?.let { download -> DropdownMenuItem(text = { Text("Download") }, onClick = { showMoreMenu = false; currentBlock?.let { download(it) } }, leadingIcon = { Icon(Icons.Outlined.Download, null) }) }
+                                        onExportToProject?.let { DropdownMenuItem(text = { Text("Export all") }, onClick = { showMoreMenu = false; it() }, leadingIcon = { Icon(Icons.Outlined.FolderOpen, null) }) }
+                                    }
+                                }
+                            }
                         }
                     }
-                    
-                    // 复制按钮
-                    IconButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(codeBlock.content))
-                            onCopy()
-                        },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.ContentCopy,
-                            contentDescription = "复制",
-                            tint = Color(0xFFAAAAAA),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    
-                    // 展开/收起
-                    IconButton(
-                        onClick = { expanded = !expanded },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = null,
-                            tint = Color(0xFFAAAAAA),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
                 }
             }
-            
-            // 代码内容
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                val horizontalScrollState = rememberScrollState()
-                val verticalScrollState = rememberScrollState()
-                SelectionContainer {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                            .verticalScroll(verticalScrollState)
-                    ) {
-                        Text(
-                            text = codeBlock.content,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
-                            ),
-                            color = Color(0xFFD4D4D4),
-                            modifier = Modifier
-                                .horizontalScroll(horizontalScrollState)
-                                .padding(12.dp)
-                        )
+            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) { page ->
+                CodeContentView(code = codeBlocks[page].content, language = codeBlocks[page].language, colors = colors)
+            }
+            Surface(color = colors.headerBackground.copy(alpha = 0.5f), shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("${pagerState.currentPage + 1} / ${codeBlocks.size} files", style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f))
+                    codeBlocks.getOrNull(pagerState.currentPage)?.let { Text("${it.content.lines().size} lines", style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f)) }
+                }
+            }
+        }
+    }
+}
+
+
+// Code content view with syntax highlighting
+@Composable
+private fun CodeContentView(code: String, language: String, colors: CodeBlockColors, modifier: Modifier = Modifier) {
+    val horizontalScrollState = rememberScrollState()
+    val verticalScrollState = rememberScrollState()
+    val lines = code.lines()
+    SelectionContainer {
+        Row(modifier = modifier.fillMaxWidth().heightIn(max = 350.dp).verticalScroll(verticalScrollState)) {
+            Column(modifier = Modifier.background(colors.headerBackground.copy(alpha = 0.3f)).padding(horizontal = 12.dp, vertical = 12.dp)) {
+                lines.forEachIndexed { index, _ ->
+                    Text("${index + 1}", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp, lineHeight = 20.sp), color = colors.lineNumber)
+                }
+            }
+            Box(modifier = Modifier.weight(1f).horizontalScroll(horizontalScrollState).padding(12.dp)) {
+                Column {
+                    lines.forEach { line ->
+                        Text(highlightSyntax(line, language, colors), style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp, lineHeight = 20.sp))
                     }
                 }
             }
@@ -397,106 +351,283 @@ fun CodeBlockCard(
     }
 }
 
-/**
- * 输入区域组件
- */
 @Composable
-fun ChatInputArea(
-    value: String,
-    onValueChange: (String) -> Unit,
-    images: List<String>,
-    onAddImage: () -> Unit,
-    onRemoveImage: (Int) -> Unit,
-    onSend: () -> Unit,
-    isLoading: Boolean,
-    maxImages: Int = 3,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            // 图片预览
-            if (images.isNotEmpty()) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                ) {
+private fun highlightSyntax(line: String, language: String, colors: CodeBlockColors): AnnotatedString {
+    return buildAnnotatedString {
+        when (language.lowercase()) {
+            "html", "htm", "xml", "svg" -> highlightHtml(line, colors)
+            "css" -> highlightCss(line, colors)
+            "javascript", "js" -> highlightJs(line, colors)
+            "json" -> highlightJson(line, colors)
+            else -> withStyle(SpanStyle(color = colors.text)) { append(line) }
+        }
+    }
+}
+
+private fun AnnotatedString.Builder.highlightHtml(line: String, colors: CodeBlockColors) {
+    var i = 0
+    while (i < line.length) {
+        when {
+            line.startsWith("<!--", i) -> {
+                val end = line.indexOf("-->", i).let { if (it != -1) it + 3 else line.length }
+                withStyle(SpanStyle(color = colors.comment)) { append(line.substring(i, end)) }
+                i = end
+            }
+            line[i] == '<' -> {
+                val tagEnd = line.indexOf('>', i)
+                if (tagEnd != -1) {
+                    highlightHtmlTag(line.substring(i, tagEnd + 1), colors)
+                    i = tagEnd + 1
+                } else { withStyle(SpanStyle(color = colors.text)) { append(line[i]) }; i++ }
+            }
+            else -> { withStyle(SpanStyle(color = colors.text)) { append(line[i]) }; i++ }
+        }
+    }
+}
+
+private fun AnnotatedString.Builder.highlightHtmlTag(tag: String, colors: CodeBlockColors) {
+    var i = 0
+    while (i < tag.length) {
+        when {
+            tag[i] in "<>/" -> { withStyle(SpanStyle(color = colors.operator)) { append(tag[i]) }; i++ }
+            tag[i] == '"' || tag[i] == '\'' -> {
+                val quote = tag[i]
+                val end = tag.indexOf(quote, i + 1)
+                if (end != -1) { withStyle(SpanStyle(color = colors.string)) { append(tag.substring(i, end + 1)) }; i = end + 1 }
+                else { withStyle(SpanStyle(color = colors.string)) { append(tag[i]) }; i++ }
+            }
+            tag[i] == '=' -> { withStyle(SpanStyle(color = colors.operator)) { append(tag[i]) }; i++ }
+            tag[i].isLetter() || tag[i] == '-' || tag[i] == '_' -> {
+                val start = i
+                while (i < tag.length && (tag[i].isLetterOrDigit() || tag[i] == '-' || tag[i] == '_')) i++
+                val word = tag.substring(start, i)
+                val isTagName = start <= 1 || tag[start - 1] == '/' || tag[start - 1] == '<'
+                withStyle(SpanStyle(color = if (isTagName) colors.tag else colors.attribute)) { append(word) }
+            }
+            else -> { withStyle(SpanStyle(color = colors.text)) { append(tag[i]) }; i++ }
+        }
+    }
+}
+
+private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlockColors) {
+    var i = 0
+    while (i < line.length) {
+        when {
+            line.startsWith("/*", i) -> {
+                val end = line.indexOf("*/", i).let { if (it != -1) it + 2 else line.length }
+                withStyle(SpanStyle(color = colors.comment)) { append(line.substring(i, end)) }
+                i = end
+            }
+            line[i] == '"' || line[i] == '\'' -> {
+                val quote = line[i]
+                val end = line.indexOf(quote, i + 1)
+                if (end != -1) { withStyle(SpanStyle(color = colors.string)) { append(line.substring(i, end + 1)) }; i = end + 1 }
+                else { withStyle(SpanStyle(color = colors.string)) { append(line[i]) }; i++ }
+            }
+            line[i].isDigit() || (line[i] == '.' && i + 1 < line.length && line[i + 1].isDigit()) -> {
+                val start = i
+                while (i < line.length && (line[i].isDigit() || line[i] == '.' || line[i].isLetter() || line[i] == '%')) i++
+                withStyle(SpanStyle(color = colors.number)) { append(line.substring(start, i)) }
+            }
+            line[i] == '#' && i + 1 < line.length && line[i + 1].isLetterOrDigit() -> {
+                val start = i; i++
+                while (i < line.length && line[i].isLetterOrDigit()) i++
+                withStyle(SpanStyle(color = colors.number)) { append(line.substring(start, i)) }
+            }
+            else -> { withStyle(SpanStyle(color = colors.text)) { append(line[i]) }; i++ }
+        }
+    }
+}
+
+private fun AnnotatedString.Builder.highlightJs(line: String, colors: CodeBlockColors) {
+    val jsKeywords = setOf("const", "let", "var", "function", "return", "if", "else", "for", "while", "class", "extends", "new", "this", "import", "export", "from", "async", "await", "try", "catch", "throw", "finally", "switch", "case", "break", "continue", "default", "true", "false", "null", "undefined", "typeof", "instanceof")
+    var i = 0
+    while (i < line.length) {
+        when {
+            line.startsWith("//", i) -> { withStyle(SpanStyle(color = colors.comment)) { append(line.substring(i)) }; return }
+            line.startsWith("/*", i) -> {
+                val end = line.indexOf("*/", i).let { if (it != -1) it + 2 else line.length }
+                withStyle(SpanStyle(color = colors.comment)) { append(line.substring(i, end)) }
+                i = end
+            }
+            line[i] == '"' || line[i] == '\'' || line[i] == '`' -> {
+                val quote = line[i]
+                var end = i + 1
+                while (end < line.length && line[end] != quote) { if (line[end] == '\\' && end + 1 < line.length) end++; end++ }
+                if (end < line.length) end++
+                withStyle(SpanStyle(color = colors.string)) { append(line.substring(i, end)) }
+                i = end
+            }
+            line[i].isDigit() -> {
+                val start = i
+                while (i < line.length && (line[i].isDigit() || line[i] == '.')) i++
+                withStyle(SpanStyle(color = colors.number)) { append(line.substring(start, i)) }
+            }
+            line[i].isLetter() || line[i] == '_' || line[i] == '$' -> {
+                val start = i
+                while (i < line.length && (line[i].isLetterOrDigit() || line[i] == '_' || line[i] == '$')) i++
+                val word = line.substring(start, i)
+                val color = when { word in jsKeywords -> colors.keyword; i < line.length && line[i] == '(' -> colors.function; else -> colors.text }
+                withStyle(SpanStyle(color = color)) { append(word) }
+            }
+            else -> { withStyle(SpanStyle(color = colors.text)) { append(line[i]) }; i++ }
+        }
+    }
+}
+
+private fun AnnotatedString.Builder.highlightJson(line: String, colors: CodeBlockColors) {
+    var i = 0
+    while (i < line.length) {
+        when {
+            line[i] == '"' -> {
+                val end = line.indexOf('"', i + 1)
+                if (end != -1) {
+                    val isKey = line.indexOf(':', end) != -1 && line.substring(end, minOf(line.indexOf(':', end) + 1, line.length)).all { it.isWhitespace() || it == ':' }
+                    withStyle(SpanStyle(color = if (isKey) colors.attribute else colors.string)) { append(line.substring(i, end + 1)) }
+                    i = end + 1
+                } else { withStyle(SpanStyle(color = colors.string)) { append(line[i]) }; i++ }
+            }
+            line[i].isDigit() || (line[i] == '-' && i + 1 < line.length && line[i + 1].isDigit()) -> {
+                val start = i; if (line[i] == '-') i++
+                while (i < line.length && (line[i].isDigit() || line[i] == '.')) i++
+                withStyle(SpanStyle(color = colors.number)) { append(line.substring(start, i)) }
+            }
+            line.startsWith("true", i) || line.startsWith("false", i) || line.startsWith("null", i) -> {
+                val word = when { line.startsWith("true", i) -> "true"; line.startsWith("false", i) -> "false"; else -> "null" }
+                withStyle(SpanStyle(color = colors.keyword)) { append(word) }
+                i += word.length
+            }
+            else -> { withStyle(SpanStyle(color = colors.text)) { append(line[i]) }; i++ }
+        }
+    }
+}
+
+
+// Thinking block component
+@Composable
+fun ThinkingBlock(thinking: String, modifier: Modifier = Modifier, defaultExpanded: Boolean = true) {
+    var expanded by remember { mutableStateOf(defaultExpanded) }
+    Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))) {
+        Column(Modifier.padding(14.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }, horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), modifier = Modifier.size(28.dp)) {
+                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary) }
+                    }
+                    Text("Thinking", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+                }
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f), modifier = Modifier.size(28.dp)) {
+                    Box(contentAlignment = Alignment.Center) { Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, Modifier.size(20.dp), MaterialTheme.colorScheme.tertiary) }
+                }
+            }
+            AnimatedVisibility(visible = expanded, enter = expandVertically(tween(300)) + fadeIn(), exit = shrinkVertically(tween(300)) + fadeOut()) {
+                Column {
+                    Spacer(Modifier.height(12.dp))
+                    Divider(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), thickness = 1.dp)
+                    Spacer(Modifier.height(12.dp))
+                    Box(Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState())) {
+                        SelectionContainer { Text(thinking, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp), color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.9f)) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Streaming message bubble
+@Composable
+fun StreamingMessageBubble(thinking: String, content: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.Start) {
+        Surface(modifier = Modifier.size(40.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, shadowElevation = 2.dp) {
+            Box(contentAlignment = Alignment.Center) {
+                val infiniteTransition = rememberInfiniteTransition(label = "avatar")
+                val scale by infiniteTransition.animateFloat(initialValue = 0.9f, targetValue = 1.1f, animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = "scale")
+                Icon(Icons.Filled.AutoAwesome, null, Modifier.size((22 * scale).dp), MaterialTheme.colorScheme.primary)
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f, fill = false), horizontalAlignment = Alignment.Start) {
+            if (thinking.isNotEmpty()) {
+                StreamingThinkingBlock(thinking)
+                Spacer(Modifier.height(10.dp))
+            }
+            if (content.isNotEmpty()) {
+                Surface(shape = RoundedCornerShape(topStart = 4.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 20.dp), color = MaterialTheme.colorScheme.surfaceVariant, shadowElevation = 1.dp, modifier = Modifier.widthIn(max = 500.dp)) {
+                    Column(Modifier.padding(14.dp)) {
+                        Box(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState())) {
+                            MarkdownText(content, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        val infiniteTransition = rememberInfiniteTransition(label = "cursor")
+                        val cursorAlpha by infiniteTransition.animateFloat(initialValue = 0f, targetValue = 1f, animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "cursorAlpha")
+                        Text("|", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary.copy(alpha = cursorAlpha))
+                    }
+                }
+            } else if (thinking.isEmpty()) {
+                Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.widthIn(max = 500.dp)) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        repeat(3) { index ->
+                            val infiniteTransition = rememberInfiniteTransition(label = "dot$index")
+                            val offsetY by infiniteTransition.animateFloat(initialValue = 0f, targetValue = -8f, animationSpec = infiniteRepeatable(tween(400, delayMillis = index * 100), RepeatMode.Reverse), label = "offsetY")
+                            Box(Modifier.offset(y = offsetY.dp).size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StreamingThinkingBlock(thinking: String, modifier: Modifier = Modifier) {
+    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)), modifier = modifier.widthIn(max = 500.dp)) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                val infiniteTransition = rememberInfiniteTransition(label = "thinking")
+                val alpha by infiniteTransition.animateFloat(initialValue = 0.4f, targetValue = 1f, animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "alpha")
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), modifier = Modifier.size(28.dp)) {
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary.copy(alpha = alpha)) }
+                }
+                Text("Thinking...", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+            }
+            Spacer(Modifier.height(10.dp))
+            Divider(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), thickness = 1.dp)
+            Spacer(Modifier.height(10.dp))
+            Box(Modifier.heightIn(max = 150.dp).verticalScroll(rememberScrollState())) {
+                Text(thinking, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp), color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.9f))
+            }
+        }
+    }
+}
+
+
+// Chat input area
+@Composable
+fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<String>, onAddImage: () -> Unit, onRemoveImage: (Int) -> Unit, onSend: () -> Unit, isLoading: Boolean, maxImages: Int = 3, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface, shadowElevation = 8.dp) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            AnimatedVisibility(visible = images.isNotEmpty(), enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                     itemsIndexed(images) { index, imagePath ->
                         Box {
-                            AsyncImage(
-                                model = File(imagePath),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                            IconButton(
-                                onClick = { onRemoveImage(index) },
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .align(Alignment.TopEnd)
-                                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                            ) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "移除",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(12.dp)
-                                )
+                            Surface(shape = RoundedCornerShape(12.dp), shadowElevation = 2.dp) {
+                                AsyncImage(model = File(imagePath), contentDescription = null, modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
+                            }
+                            Surface(modifier = Modifier.size(24.dp).align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp).clickable { onRemoveImage(index) }, shape = CircleShape, color = MaterialTheme.colorScheme.error, shadowElevation = 2.dp) {
+                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.onError, modifier = Modifier.size(14.dp)) }
                             }
                         }
                     }
                 }
             }
-            
-            // 输入行
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // 添加图片按钮
-                IconButton(
-                    onClick = onAddImage,
-                    enabled = images.size < maxImages && !isLoading
-                ) {
-                    Icon(
-                        Icons.Outlined.Image,
-                        contentDescription = "添加图片",
-                        tint = if (images.size < maxImages) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.outline
-                    )
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Surface(shape = CircleShape, color = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(44.dp).clickable(enabled = images.size < maxImages && !isLoading) { onAddImage() }) {
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Image, contentDescription = "Add image", tint = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp)) }
                 }
-                
-                // 输入框
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("描述你想要的HTML页面...") },
-                    maxLines = 5,
-                    enabled = !isLoading,
-                    shape = RoundedCornerShape(24.dp)
-                )
-                
-                // 发送按钮
-                FilledIconButton(
-                    onClick = onSend,
-                    enabled = value.isNotBlank() && !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Icon(Icons.Default.Send, contentDescription = "发送")
+                OutlinedTextField(value = value, onValueChange = onValueChange, modifier = Modifier.weight(1f), placeholder = { Text("Describe the HTML page...", color = MaterialTheme.colorScheme.outline) }, maxLines = 5, enabled = !isLoading, shape = RoundedCornerShape(24.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
+                Surface(shape = CircleShape, color = if (value.isNotBlank() && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(44.dp).clickable(enabled = value.isNotBlank() && !isLoading) { onSend() }, shadowElevation = if (value.isNotBlank() && !isLoading) 4.dp else 0.dp) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (isLoading) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
+                        else Icon(Icons.Default.Send, contentDescription = "Send", tint = if (value.isNotBlank()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
                     }
                 }
             }
@@ -504,695 +635,212 @@ fun ChatInputArea(
     }
 }
 
-/**
- * 会话列表项
- */
+// Session list item
 @Composable
-fun SessionListItem(
-    session: HtmlCodingSession,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        color = if (isSelected) 
-            MaterialTheme.colorScheme.primaryContainer 
-        else 
-            Color.Transparent
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Outlined.Chat,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (isSelected) 
-                    MaterialTheme.colorScheme.onPrimaryContainer 
-                else 
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = session.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "${session.messages.size} 条消息 · ${formatDate(session.updatedAt)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
+fun SessionListItem(session: HtmlCodingSession, isSelected: Boolean, onClick: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).clickable(onClick = onClick), shape = RoundedCornerShape(12.dp), color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(shape = RoundedCornerShape(8.dp), color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(36.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Chat, null, Modifier.size(20.dp), if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.Delete,
-                    contentDescription = "删除",
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(session.title, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(2.dp))
+                Text("${session.messages.size} messages - ${formatDate(session.updatedAt)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, "Delete", Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
         }
     }
 }
 
-/**
- * 检查点列表项
- */
+// Checkpoint list item
 @Composable
-fun CheckpointListItem(
-    checkpoint: ProjectCheckpoint,
-    isCurrent: Boolean,
-    onRestore: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = if (isCurrent) 
-            MaterialTheme.colorScheme.secondaryContainer 
-        else 
-            MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                if (isCurrent) Icons.Filled.CheckCircle else Icons.Outlined.History,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (isCurrent) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = checkpoint.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal
-                )
-                Text(
-                    text = "${checkpoint.files.size} 个文件 · ${formatTime(checkpoint.timestamp)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
+fun CheckpointListItem(checkpoint: ProjectCheckpoint, isCurrent: Boolean, onRestore: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(12.dp), color = if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant, border = if (isCurrent) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(shape = CircleShape, color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), modifier = Modifier.size(32.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(if (isCurrent) Icons.Filled.CheckCircle else Icons.Outlined.History, null, Modifier.size(18.dp), if (isCurrent) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            
-            if (!isCurrent) {
-                TextButton(onClick = onRestore) {
-                    Text("恢复", style = MaterialTheme.typography.labelMedium)
-                }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(checkpoint.name, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
+                Spacer(Modifier.height(2.dp))
+                Text("${checkpoint.files.size} files - ${formatTime(checkpoint.timestamp)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
-            
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.Delete,
-                    contentDescription = "删除",
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            }
+            if (!isCurrent) { FilledTonalButton(onClick = onRestore, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Restore", style = MaterialTheme.typography.labelMedium) }; Spacer(Modifier.width(8.dp)) }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, "Delete", Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
         }
     }
 }
 
-/**
- * 模板卡片组件 - 优化版
- */
+
+// Style template card
 @Composable
-fun StyleTemplateCard(
-    template: StyleTemplate,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val bgColor = template.colorScheme?.let { parseColor(it.background) } 
-        ?: MaterialTheme.colorScheme.surface
-    val textColor = template.colorScheme?.let { parseColor(it.text) } 
-        ?: MaterialTheme.colorScheme.onSurface
-    
-    Surface(
-        modifier = modifier
-            .width(140.dp)
-            .height(180.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        shadowElevation = if (isSelected) 8.dp else 2.dp,
-        border = if (isSelected) 
-            BorderStroke(3.dp, MaterialTheme.colorScheme.primary) 
-        else 
-            null,
-        color = bgColor
-    ) {
+fun StyleTemplateCard(template: StyleTemplate, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val bgColor = template.colorScheme?.let { parseColor(it.background) } ?: MaterialTheme.colorScheme.surface
+    val textColor = template.colorScheme?.let { parseColor(it.text) } ?: MaterialTheme.colorScheme.onSurface
+    Surface(modifier = modifier.width(150.dp).height(190.dp).clickable(onClick = onClick), shape = RoundedCornerShape(20.dp), shadowElevation = if (isSelected) 12.dp else 4.dp, border = if (isSelected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), color = bgColor) {
         Box {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // 顶部：颜色圆点预览
+            Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
                 template.colorScheme?.let { colors ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(colors.primary, colors.secondary, colors.accent).forEach { color ->
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(parseColor(color))
-                                    .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape)
-                            )
+                            Surface(Modifier.size(20.dp), CircleShape, parseColor(color), shadowElevation = 2.dp, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f))) {}
                         }
                     }
                 }
-                
-                // 底部：名称和描述
                 Column {
-                    Text(
-                        text = template.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = template.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = textColor.copy(alpha = 0.7f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 14.sp
-                    )
+                    Text(template.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = textColor)
+                    Spacer(Modifier.height(4.dp))
+                    Text(template.description, style = MaterialTheme.typography.bodySmall, color = textColor.copy(alpha = 0.7f), maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 16.sp)
                 }
             }
-            
-            // 选中标记
             if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(14.dp)
-                    )
+                Surface(modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primary, shadowElevation = 4.dp) {
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp)) }
                 }
             }
         }
     }
 }
 
-/**
- * 风格参考卡片组件
- */
+// Style reference card
 @Composable
-fun StyleReferenceCard(
-    style: StyleReference,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        border = if (isSelected) 
-            BorderStroke(2.dp, MaterialTheme.colorScheme.primary) 
-        else 
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
-        color = if (isSelected) 
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) 
-        else 
-            MaterialTheme.colorScheme.surface
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = style.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
-                )
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Text(
-                        text = style.category.displayName,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
+fun StyleReferenceCard(style: StyleReference, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface, shadowElevation = if (isSelected) 4.dp else 1.dp) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (isSelected) { Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp)) } } }
+                    Text(style.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 }
+                Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.secondaryContainer) { Text(style.category.displayName, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) }
             }
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            Text(
-                text = style.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // 关键词标签 - 使用Row避免嵌套滚动冲突
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState())
-            ) {
-                style.keywords.take(4).forEach { keyword ->
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Text(
-                            text = keyword,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
+            Spacer(Modifier.height(8.dp))
+            Text(style.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                style.keywords.take(4).forEach { keyword -> Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.surfaceVariant) { Text(keyword, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
         }
     }
 }
 
-/**
- * 配置面板组件
- */
+
+// Config panel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfigPanel(
-    config: SessionConfig,
-    onConfigChange: (SessionConfig) -> Unit,
-    textModels: List<com.webtoapp.data.model.SavedModel>,
-    imageModels: List<com.webtoapp.data.model.SavedModel>,
-    rulesTemplates: List<RulesTemplate>,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // 文本模型选择
-        Text("文本模型", style = MaterialTheme.typography.titleSmall)
+fun ConfigPanel(config: SessionConfig, onConfigChange: (SessionConfig) -> Unit, textModels: List<com.webtoapp.data.model.SavedModel>, imageModels: List<com.webtoapp.data.model.SavedModel>, rulesTemplates: List<RulesTemplate>, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text("Session Config", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         
-        var textModelExpanded by remember { mutableStateOf(false) }
-        ExposedDropdownMenuBox(
-            expanded = textModelExpanded,
-            onExpandedChange = { textModelExpanded = it }
-        ) {
-            OutlinedTextField(
-                value = textModels.find { it.id == config.textModelId }?.let { 
-                    it.alias ?: it.model.name 
-                } ?: "请选择模型",
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(textModelExpanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = textModelExpanded,
-                onDismissRequest = { textModelExpanded = false }
-            ) {
-                textModels.forEach { model ->
-                    DropdownMenuItem(
-                        text = { Text(model.alias ?: model.model.name) },
-                        onClick = {
-                            onConfigChange(config.copy(textModelId = model.id))
-                            textModelExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-        
-        // 图像模型选择（可选）
-        Text("图像模型（可选）", style = MaterialTheme.typography.titleSmall)
-        
-        var imageModelExpanded by remember { mutableStateOf(false) }
-        ExposedDropdownMenuBox(
-            expanded = imageModelExpanded,
-            onExpandedChange = { imageModelExpanded = it }
-        ) {
-            OutlinedTextField(
-                value = imageModels.find { it.id == config.imageModelId }?.let { 
-                    it.alias ?: it.model.name 
-                } ?: "不使用图像模型",
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(imageModelExpanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = imageModelExpanded,
-                onDismissRequest = { imageModelExpanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("不使用图像模型") },
-                    onClick = {
-                        onConfigChange(config.copy(imageModelId = null))
-                        imageModelExpanded = false
+        // Text model
+        Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Text Model", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(8.dp))
+                var textModelExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(expanded = textModelExpanded, onExpandedChange = { textModelExpanded = it }) {
+                    OutlinedTextField(value = textModels.find { it.id == config.textModelId }?.let { it.alias ?: it.model.name } ?: "Select model", onValueChange = {}, readOnly = true, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(textModelExpanded) }, modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp))
+                    ExposedDropdownMenu(expanded = textModelExpanded, onDismissRequest = { textModelExpanded = false }) {
+                        textModels.forEach { model -> DropdownMenuItem(text = { Text(model.alias ?: model.model.name) }, onClick = { onConfigChange(config.copy(textModelId = model.id)); textModelExpanded = false }) }
                     }
-                )
-                imageModels.forEach { model ->
-                    DropdownMenuItem(
-                        text = { Text(model.alias ?: model.model.name) },
-                        onClick = {
-                            onConfigChange(config.copy(imageModelId = model.id))
-                            imageModelExpanded = false
-                        }
-                    )
                 }
             }
         }
         
-        // 温度滑块
-        Text("温度: ${String.format("%.1f", config.temperature)}", style = MaterialTheme.typography.titleSmall)
-        Slider(
-            value = config.temperature,
-            onValueChange = { onConfigChange(config.copy(temperature = it)) },
-            valueRange = 0f..2f,
-            steps = 19
-        )
-        Text(
-            text = "低温度(0): 更确定性、更保守\n高温度(2): 更随机、更创意",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline
-        )
+        // Image model
+        Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Image Model (Optional)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(8.dp))
+                var imageModelExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(expanded = imageModelExpanded, onExpandedChange = { imageModelExpanded = it }) {
+                    OutlinedTextField(value = imageModels.find { it.id == config.imageModelId }?.let { it.alias ?: it.model.name } ?: "No image model", onValueChange = {}, readOnly = true, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(imageModelExpanded) }, modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp))
+                    ExposedDropdownMenu(expanded = imageModelExpanded, onDismissRequest = { imageModelExpanded = false }) {
+                        DropdownMenuItem(text = { Text("No image model") }, onClick = { onConfigChange(config.copy(imageModelId = null)); imageModelExpanded = false })
+                        imageModels.forEach { model -> DropdownMenuItem(text = { Text(model.alias ?: model.model.name) }, onClick = { onConfigChange(config.copy(imageModelId = model.id)); imageModelExpanded = false }) }
+                    }
+                }
+            }
+        }
+        
+        // Temperature
+        Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
+            Column(Modifier.padding(16.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Temperature", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) { Text(String.format("%.1f", config.temperature), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
+                }
+                Spacer(Modifier.height(8.dp))
+                Slider(value = config.temperature, onValueChange = { onConfigChange(config.copy(temperature = it)) }, valueRange = 0f..2f, steps = 19)
+                Text("Low(0): Deterministic - High(2): Creative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            }
+        }
         
         Divider()
         
         // Rules
-        Text("对话规则", style = MaterialTheme.typography.titleSmall)
-        
-        // Rules模板选择
-        var showRulesTemplates by remember { mutableStateOf(false) }
-        OutlinedButton(
-            onClick = { showRulesTemplates = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Outlined.LibraryBooks, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("从模板选择")
-        }
-        
-        if (showRulesTemplates) {
-            AlertDialog(
-                onDismissRequest = { showRulesTemplates = false },
-                title = { Text("选择规则模板") },
-                text = {
-                    LazyColumn {
-                        items(rulesTemplates) { template ->
-                            ListItem(
-                                headlineContent = { Text(template.name) },
-                                supportingContent = { Text(template.description) },
-                                modifier = Modifier.clickable {
-                                    onConfigChange(config.copy(rules = template.rules))
-                                    showRulesTemplates = false
-                                }
-                            )
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showRulesTemplates = false }) {
-                        Text("取消")
-                    }
+        Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Rules", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(12.dp))
+                var showRulesTemplates by remember { mutableStateOf(false) }
+                OutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text("Select from templates") }
+                if (showRulesTemplates) {
+                    AlertDialog(onDismissRequest = { showRulesTemplates = false }, title = { Text("Select Rule Template") }, text = {
+                        LazyColumn { items(rulesTemplates) { template -> ListItem(headlineContent = { Text(template.name) }, supportingContent = { Text(template.description) }, modifier = Modifier.clickable { onConfigChange(config.copy(rules = template.rules)); showRulesTemplates = false }) } }
+                    }, confirmButton = { TextButton(onClick = { showRulesTemplates = false }) { Text("Cancel") } })
                 }
-            )
-        }
-        
-        // 当前规则列表
-        config.rules.forEachIndexed { index, rule ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${index + 1}. $rule",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(
-                    onClick = {
-                        val newRules = config.rules.toMutableList()
-                        newRules.removeAt(index)
-                        onConfigChange(config.copy(rules = newRules))
-                    },
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "删除",
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-        }
-        
-        // 添加新规则
-        var newRule by remember { mutableStateOf("") }
-        OutlinedTextField(
-            value = newRule,
-            onValueChange = { newRule = it },
-            placeholder = { Text("添加新规则...") },
-            modifier = Modifier.fillMaxWidth(),
-            trailingIcon = {
-                IconButton(
-                    onClick = {
-                        if (newRule.isNotBlank()) {
-                            onConfigChange(config.copy(rules = config.rules + newRule))
-                            newRule = ""
-                        }
-                    },
-                    enabled = newRule.isNotBlank()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "添加")
-                }
-            },
-            singleLine = true
-        )
-    }
-}
-
-// ==================== 辅助函数 ====================
-
-private fun formatTime(timestamp: Long): String {
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
-}
-
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
-}
-
-private fun getLanguageColor(language: String): Color {
-    return when (language.lowercase()) {
-        "html", "htm" -> Color(0xFFE34C26)
-        "css" -> Color(0xFF264DE4)
-        "javascript", "js" -> Color(0xFFF7DF1E)
-        "svg" -> Color(0xFFFFB13B)
-        "json" -> Color(0xFF000000)
-        else -> Color(0xFF6B7280)
-    }
-}
-
-private fun parseColor(colorString: String): Color {
-    return try {
-        if (colorString.startsWith("#")) {
-            Color(android.graphics.Color.parseColor(colorString))
-        } else if (colorString.startsWith("linear-gradient")) {
-            // 简单处理渐变，取第一个颜色
-            val colorMatch = Regex("#[0-9A-Fa-f]{6}").find(colorString)
-            colorMatch?.let { Color(android.graphics.Color.parseColor(it.value)) } 
-                ?: Color.Gray
-        } else {
-            Color.Gray
-        }
-    } catch (e: Exception) {
-        Color.Gray
-    }
-}
-
-/**
- * 流式输出消息气泡
- */
-@Composable
-fun StreamingMessageBubble(
-    thinking: String,
-    content: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        // AI头像
-        Surface(
-            modifier = Modifier.size(36.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer
-        ) {
-            Icon(
-                Icons.Filled.Code,
-                contentDescription = null,
-                modifier = Modifier.padding(8.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        
-        Column(
-            modifier = Modifier.weight(1f, fill = false),
-            horizontalAlignment = Alignment.Start
-        ) {
-            // 思考过程（实时显示）
-            if (thinking.isNotEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
-                    modifier = Modifier.widthIn(max = 500.dp)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            // 思考动画指示器
-                            val infiniteTransition = rememberInfiniteTransition(label = "thinking")
-                            val alpha by infiniteTransition.animateFloat(
-                                initialValue = 0.3f,
-                                targetValue = 1f,
-                                animationSpec = infiniteRepeatable(
-                                    animation = tween(800),
-                                    repeatMode = RepeatMode.Reverse
-                                ),
-                                label = "alpha"
-                            )
-                            
-                            Icon(
-                                Icons.Outlined.Psychology,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.tertiary.copy(alpha = alpha)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "思考中...",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.tertiary
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        val verticalScrollState = rememberScrollState()
-                        Box(
-                            modifier = Modifier
-                                .heightIn(max = 150.dp)
-                                .verticalScroll(verticalScrollState)
-                        ) {
-                            Text(
-                                text = thinking,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
+                Spacer(Modifier.height(12.dp))
+                config.rules.forEachIndexed { index, rule ->
+                    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("${index + 1}.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.width(8.dp))
+                            Text(rule, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                            IconButton(onClick = { onConfigChange(config.copy(rules = config.rules.toMutableList().apply { removeAt(index) })) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error) }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            
-            // 内容输出（实时显示）
-            if (content.isNotEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp,
-                        topEnd = 16.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp
-                    ),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.widthIn(max = 500.dp)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        val verticalScrollState = rememberScrollState()
-                        Box(
-                            modifier = Modifier
-                                .heightIn(max = 400.dp)
-                                .verticalScroll(verticalScrollState)
-                        ) {
-                            Text(
-                                text = content,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        
-                        // 输入光标动画
-                        val infiniteTransition = rememberInfiniteTransition(label = "cursor")
-                        val cursorAlpha by infiniteTransition.animateFloat(
-                            initialValue = 0f,
-                            targetValue = 1f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(500),
-                                repeatMode = RepeatMode.Reverse
-                            ),
-                            label = "cursorAlpha"
-                        )
-                        Text(
-                            text = "▌",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = cursorAlpha)
-                        )
-                    }
-                }
+                Spacer(Modifier.height(8.dp))
+                var newRule by remember { mutableStateOf("") }
+                OutlinedTextField(value = newRule, onValueChange = { newRule = it }, placeholder = { Text("Add new rule...") }, modifier = Modifier.fillMaxWidth(), trailingIcon = { IconButton(onClick = { if (newRule.isNotBlank()) { onConfigChange(config.copy(rules = config.rules + newRule)); newRule = "" } }, enabled = newRule.isNotBlank()) { Icon(Icons.Default.Add, contentDescription = "Add", tint = if (newRule.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }, singleLine = true, shape = RoundedCornerShape(12.dp))
             }
         }
     }
 }
+
+
+// Helper functions
+private fun formatTime(timestamp: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+private fun formatDate(timestamp: Long): String = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()).format(Date(timestamp))
+
+private fun getLanguageColor(language: String): Color = when (language.lowercase()) {
+    "html", "htm" -> Color(0xFFE34C26)
+    "css" -> Color(0xFF264DE4)
+    "javascript", "js" -> Color(0xFFF0DB4F)
+    "svg" -> Color(0xFFFFB13B)
+    "json" -> Color(0xFF292929)
+    "xml" -> Color(0xFF0060AC)
+    "typescript", "ts" -> Color(0xFF3178C6)
+    else -> Color(0xFF6B7280)
+}
+
+private fun getDefaultFilename(language: String): String = when (language.lowercase()) {
+    "html", "htm" -> "index.html"
+    "css" -> "style.css"
+    "javascript", "js" -> "script.js"
+    "svg" -> "image.svg"
+    "json" -> "data.json"
+    else -> "file.$language"
+}
+
+private fun parseColor(colorString: String): Color = try {
+    if (colorString.startsWith("#")) Color(android.graphics.Color.parseColor(colorString))
+    else if (colorString.startsWith("linear-gradient")) Regex("#[0-9A-Fa-f]{6}").find(colorString)?.let { Color(android.graphics.Color.parseColor(it.value)) } ?: Color.Gray
+    else Color.Gray
+} catch (e: Exception) { Color.Gray }
+
+private fun Color.luminance(): Float = 0.299f * red + 0.587f * green + 0.114f * blue

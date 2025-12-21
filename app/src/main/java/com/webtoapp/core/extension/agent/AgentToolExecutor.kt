@@ -6,6 +6,9 @@ import android.webkit.WebView
 import com.google.gson.Gson
 import com.webtoapp.core.extension.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
@@ -13,7 +16,12 @@ import kotlin.coroutines.resume
 /**
  * Agent 工具执行器
  * 
- * 负责执行 Agent 调用的各种工具
+ * 负责执行 Agent 调用的各种工具，支持：
+ * - 单个工具执行
+ * - 工具链执行（按顺序执行多个工具）
+ * - 工具结果传递（前一个工具的输出可作为后一个工具的输入）
+ * 
+ * Requirements: 5.5
  */
 class AgentToolExecutor(private val context: Context) {
     
@@ -55,6 +63,242 @@ class AgentToolExecutor(private val context: Context) {
                 error = e.message ?: "执行失败",
                 executionTimeMs = System.currentTimeMillis() - startTime
             )
+        }
+    }
+    
+    /**
+     * 执行工具链
+     * 
+     * 按顺序执行多个工具调用，支持工具间的数据传递。
+     * 前一个工具的输出可以通过 {{previous_result}} 占位符传递给后一个工具。
+     * 
+     * @param tools 要执行的工具调用列表
+     * @param stopOnFailure 是否在工具执行失败时停止链式执行，默认为 true
+     * @return Flow<ToolChainEvent> 工具链执行事件流
+     * 
+     * Requirements: 5.5
+     */
+    fun executeChain(
+        tools: List<ToolCallRequest>,
+        stopOnFailure: Boolean = true
+    ): Flow<ToolChainEvent> = flow {
+        if (tools.isEmpty()) {
+            emit(ToolChainEvent.ChainCompleted(emptyList()))
+            return@flow
+        }
+        
+        emit(ToolChainEvent.ChainStarted(tools.size))
+        
+        val results = mutableListOf<ToolCallResult>()
+        var previousResult: Any? = null
+        
+        for ((index, request) in tools.withIndex()) {
+            // 处理参数中的占位符，支持前一个工具结果的传递
+            val processedRequest = processRequestWithPreviousResult(request, previousResult)
+            
+            emit(ToolChainEvent.ToolStarted(index, processedRequest))
+            
+            val result = execute(processedRequest)
+            results.add(result)
+            
+            emit(ToolChainEvent.ToolCompleted(index, result))
+            
+            if (!result.success && stopOnFailure) {
+                emit(ToolChainEvent.ChainFailed(
+                    failedToolIndex = index,
+                    error = result.error ?: "工具执行失败",
+                    completedResults = results
+                ))
+                return@flow
+            }
+            
+            // 保存当前结果供下一个工具使用
+            previousResult = result.result
+        }
+        
+        emit(ToolChainEvent.ChainCompleted(results))
+    }.flowOn(Dispatchers.IO)
+    
+    /**
+     * 执行语法检查和自动修复链
+     * 
+     * 这是一个预定义的工具链，用于：
+     * 1. 执行语法检查
+     * 2. 如果有错误，尝试自动修复
+     * 3. 重新检查修复后的代码
+     * 
+     * @param code 要检查的代码
+     * @param language 代码语言 (javascript/css)
+     * @param maxFixAttempts 最大修复尝试次数，默认为 3
+     * @return Flow<ToolChainEvent> 工具链执行事件流
+     * 
+     * Requirements: 5.3, 5.4, 5.5
+     */
+    fun executeSyntaxCheckAndFixChain(
+        code: String,
+        language: String = "javascript",
+        maxFixAttempts: Int = 3
+    ): Flow<ToolChainEvent> = flow {
+        var currentCode = code
+        var attemptCount = 0
+        val allResults = mutableListOf<ToolCallResult>()
+        
+        emit(ToolChainEvent.ChainStarted(maxFixAttempts * 2)) // 最多 check + fix 循环
+        
+        while (attemptCount < maxFixAttempts) {
+            // 步骤 1: 语法检查
+            val checkRequest = ToolCallRequest(
+                toolName = "syntax_check",
+                arguments = mapOf("code" to currentCode, "language" to language)
+            )
+            
+            emit(ToolChainEvent.ToolStarted(attemptCount * 2, checkRequest))
+            val checkResult = execute(checkRequest)
+            allResults.add(checkResult)
+            emit(ToolChainEvent.ToolCompleted(attemptCount * 2, checkResult))
+            
+            if (!checkResult.success) {
+                emit(ToolChainEvent.ChainFailed(
+                    failedToolIndex = attemptCount * 2,
+                    error = checkResult.error ?: "语法检查执行失败",
+                    completedResults = allResults
+                ))
+                return@flow
+            }
+            
+            val syntaxResult = checkResult.result as? SyntaxCheckResult
+            
+            // 如果语法正确，完成链式执行
+            if (syntaxResult == null || syntaxResult.valid) {
+                emit(ToolChainEvent.ChainCompleted(allResults))
+                return@flow
+            }
+            
+            // 步骤 2: 尝试修复
+            attemptCount++
+            
+            if (attemptCount >= maxFixAttempts) {
+                // 达到最大尝试次数，返回最后的检查结果
+                emit(ToolChainEvent.ChainFailed(
+                    failedToolIndex = attemptCount * 2 - 1,
+                    error = "已达到最大自动修复次数 ($maxFixAttempts 次)，仍有语法错误",
+                    completedResults = allResults
+                ))
+                return@flow
+            }
+            
+            val fixRequest = ToolCallRequest(
+                toolName = "fix_error",
+                arguments = mapOf(
+                    "code" to currentCode,
+                    "language" to language,
+                    "errors" to syntaxResult.errors.map { 
+                        mapOf(
+                            "line" to it.line,
+                            "message" to it.message,
+                            "suggestion" to it.suggestion
+                        )
+                    }
+                )
+            )
+            
+            emit(ToolChainEvent.ToolStarted(attemptCount * 2 - 1, fixRequest))
+            val fixResult = execute(fixRequest)
+            allResults.add(fixResult)
+            emit(ToolChainEvent.ToolCompleted(attemptCount * 2 - 1, fixResult))
+            
+            if (!fixResult.success) {
+                emit(ToolChainEvent.ChainFailed(
+                    failedToolIndex = attemptCount * 2 - 1,
+                    error = fixResult.error ?: "自动修复执行失败",
+                    completedResults = allResults
+                ))
+                return@flow
+            }
+            
+            // 更新代码为修复后的版本
+            val fixResultMap = fixResult.result as? Map<*, *>
+            currentCode = fixResultMap?.get("fixed_code") as? String ?: currentCode
+        }
+        
+        emit(ToolChainEvent.ChainCompleted(allResults))
+    }.flowOn(Dispatchers.IO)
+    
+    /**
+     * 处理请求参数中的占位符
+     * 
+     * 支持的占位符：
+     * - {{previous_result}}: 前一个工具的完整结果
+     * - {{previous_result.field}}: 前一个工具结果中的特定字段
+     */
+    private fun processRequestWithPreviousResult(
+        request: ToolCallRequest,
+        previousResult: Any?
+    ): ToolCallRequest {
+        if (previousResult == null) {
+            return request
+        }
+        
+        val processedArgs = request.arguments.mapValues { (_, value) ->
+            when (value) {
+                is String -> processStringPlaceholder(value, previousResult)
+                else -> value
+            }
+        }
+        
+        return request.copy(arguments = processedArgs)
+    }
+    
+    /**
+     * 处理字符串中的占位符
+     */
+    private fun processStringPlaceholder(value: String, previousResult: Any?): Any? {
+        return when {
+            value == "{{previous_result}}" -> previousResult
+            value.startsWith("{{previous_result.") && value.endsWith("}}") -> {
+                val fieldPath = value.removePrefix("{{previous_result.").removeSuffix("}}")
+                extractFieldFromResult(previousResult, fieldPath)
+            }
+            value.contains("{{previous_result}}") -> {
+                value.replace("{{previous_result}}", previousResult.toString())
+            }
+            else -> value
+        }
+    }
+    
+    /**
+     * 从结果中提取指定字段
+     */
+    private fun extractFieldFromResult(result: Any?, fieldPath: String): Any? {
+        if (result == null) return null
+        
+        return when (result) {
+            is Map<*, *> -> {
+                val parts = fieldPath.split(".", limit = 2)
+                val value = result[parts[0]]
+                if (parts.size > 1 && value != null) {
+                    extractFieldFromResult(value, parts[1])
+                } else {
+                    value
+                }
+            }
+            is SyntaxCheckResult -> {
+                when (fieldPath) {
+                    "valid" -> result.valid
+                    "errors" -> result.errors
+                    "warnings" -> result.warnings
+                    else -> null
+                }
+            }
+            is SecurityScanResult -> {
+                when (fieldPath) {
+                    "safe" -> result.safe
+                    "issues" -> result.issues
+                    "riskLevel" -> result.riskLevel
+                    else -> null
+                }
+            }
+            else -> null
         }
     }
     

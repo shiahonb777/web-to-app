@@ -166,13 +166,11 @@ fun AiModuleDeveloperScreen(
                             "AI 模块开发",
                             fontWeight = FontWeight.Bold
                         )
+                        // 移除通用加载指示器，改为在内容区域显示具体状态
+                        // Requirements: 2.5, 3.1, 3.2
                         if (isDeveloping) {
                             Spacer(modifier = Modifier.width(4.dp))
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            StreamingStatusBadge(state = agentState)
                         }
                     }
                 },
@@ -234,10 +232,11 @@ fun AiModuleDeveloperScreen(
                     }
                 }
                 
-                // 当前状态指示器
+                // 当前状态指示器 - 使用流式内容显示替代通用加载指示器
+                // Requirements: 2.5, 3.1, 3.2
                 if (isDeveloping) {
                     item {
-                        DevelopingStatusCard(state = agentState)
+                        StreamingStatusCard(state = agentState)
                     }
                 }
                 
@@ -408,10 +407,9 @@ private fun InputSection(
                         enabled = !isDeveloping && userInput.isNotBlank()
                     ) {
                         if (isDeveloping) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
+                            // 使用动画点替代 CircularProgressIndicator
+                            // Requirements: 2.5, 3.1, 3.2
+                            SendingIndicator()
                         } else {
                             Icon(
                                 Icons.Default.Send,
@@ -601,10 +599,15 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
 }
 
 /**
- * 开发状态卡片
+ * 流式状态卡片
+ * 
+ * 替代原有的 DevelopingStatusCard，移除通用加载指示器
+ * 使用具体的状态消息和动画效果
+ * 
+ * Requirements: 2.5, 3.1, 3.2
  */
 @Composable
-private fun DevelopingStatusCard(state: AgentSessionState) {
+private fun StreamingStatusCard(state: AgentSessionState) {
     val (icon, text, color) = when (state) {
         AgentSessionState.THINKING -> Triple("🤔", "正在分析需求...", MaterialTheme.colorScheme.primary)
         AgentSessionState.PLANNING -> Triple("📋", "制定开发计划...", MaterialTheme.colorScheme.secondary)
@@ -633,10 +636,151 @@ private fun DevelopingStatusCard(state: AgentSessionState) {
                 color = color
             )
             Spacer(modifier = Modifier.weight(1f))
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = color
+            // 使用打字动画替代 CircularProgressIndicator
+            StreamingDots(color = color)
+        }
+    }
+}
+
+/**
+ * 流式状态徽章
+ * 
+ * 用于顶部栏显示当前状态，替代 CircularProgressIndicator
+ * 
+ * Requirements: 2.5, 3.1, 3.2
+ */
+@Composable
+private fun StreamingStatusBadge(state: AgentSessionState) {
+    val text = when (state) {
+        AgentSessionState.THINKING -> "分析中"
+        AgentSessionState.PLANNING -> "规划中"
+        AgentSessionState.EXECUTING -> "执行中"
+        AgentSessionState.GENERATING -> "生成中"
+        AgentSessionState.REVIEWING -> "审查中"
+        AgentSessionState.FIXING -> "修复中"
+        else -> "处理中"
+    }
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "badge")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "badgeAlpha"
+    )
+    
+    Surface(
+        shape = RoundedCornerShape(6.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = alpha * 0.2f)
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+/**
+ * 流式动画点
+ * 
+ * 替代 CircularProgressIndicator 的动画效果
+ */
+@Composable
+private fun StreamingDots(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "streamingDots")
+    
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(3) { index ->
+            val delay = index * 150
+            val scale by infiniteTransition.animateFloat(
+                initialValue = 0.6f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = 400,
+                        delayMillis = delay,
+                        easing = FastOutSlowInEasing
+                    ),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot$index"
+            )
+            
+            Box(
+                modifier = Modifier
+                    .size((6 * scale).dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = scale))
+            )
+        }
+    }
+}
+
+/**
+ * 开发状态卡片 (保留用于兼容性，但已弃用)
+ * @deprecated 使用 StreamingStatusCard 替代
+ */
+@Deprecated("Use StreamingStatusCard instead", ReplaceWith("StreamingStatusCard(state)"))
+@Composable
+private fun DevelopingStatusCard(state: AgentSessionState) {
+    StreamingStatusCard(state)
+}
+
+/**
+ * 发送中指示器
+ * 
+ * 用于输入框中替代 CircularProgressIndicator
+ * 显示三个跳动的点表示正在处理
+ * 
+ * Requirements: 2.5, 3.1, 3.2
+ */
+@Composable
+private fun SendingIndicator(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "sending")
+    
+    Row(
+        modifier = modifier.size(24.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(3) { index ->
+            val delay = index * 100
+            val offsetY by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = -3f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = 300,
+                        delayMillis = delay,
+                        easing = FastOutSlowInEasing
+                    ),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "sendDot$index"
+            )
+            
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 1.dp)
+                    .offset(y = offsetY.dp)
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
             )
         }
     }

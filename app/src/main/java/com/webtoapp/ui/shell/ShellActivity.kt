@@ -11,6 +11,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
@@ -53,6 +54,7 @@ import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.data.model.Announcement
 import com.webtoapp.data.model.LrcData
@@ -60,6 +62,7 @@ import com.webtoapp.data.model.LrcLine
 import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.UserScript
 import com.webtoapp.data.model.WebViewConfig
+import com.webtoapp.ui.components.LongPressMenuSheet
 import com.webtoapp.ui.theme.ShellTheme
 import com.webtoapp.ui.webview.ActivationDialog
 import com.webtoapp.util.DownloadHelper
@@ -356,42 +359,9 @@ class ShellActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // 清理 WebView 缓存和数据
-        clearWebViewCache()
+        // 只销毁 WebView，不清理存储数据（保留 localStorage 等）
         webView?.destroy()
         super.onDestroy()
-    }
-    
-    /**
-     * 清理 WebView 缓存和数据
-     * 确保每次进入都是重新加载的状态
-     */
-    private fun clearWebViewCache() {
-        try {
-            // 清理 WebView 缓存
-            webView?.clearCache(true)
-            webView?.clearHistory()
-            webView?.clearFormData()
-            
-            // 清理 Cookies
-            val cookieManager = android.webkit.CookieManager.getInstance()
-            cookieManager.removeAllCookies(null)
-            cookieManager.flush()
-            
-            // 清理 WebStorage (localStorage, sessionStorage)
-            android.webkit.WebStorage.getInstance().deleteAllData()
-            
-            // 清理应用的 WebView 缓存目录
-            cacheDir.deleteRecursively()
-            
-            // 清理 WebView 数据库
-            deleteDatabase("webview.db")
-            deleteDatabase("webviewCache.db")
-            
-            android.util.Log.d("ShellActivity", "WebView 缓存已清理")
-        } catch (e: Exception) {
-            android.util.Log.e("ShellActivity", "清理缓存失败: ${e.message}")
-        }
     }
 }
 
@@ -457,6 +427,12 @@ fun ShellScreen(
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
+    
+    // 长按菜单状态
+    var showLongPressMenu by remember { mutableStateOf(false) }
+    var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
+    val scope = rememberCoroutineScope()
+    val longPressHandler = remember { LongPressHandler(context, scope) }
 
     // 初始化配置
     LaunchedEffect(Unit) {
@@ -771,6 +747,25 @@ fun ShellScreen(
                     url, userAgent, contentDisposition, mimeType, contentLength
                 )
             }
+            
+            override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
+                // 通过 JS 获取长按元素详情
+                longPressHandler.getLongPressDetails(webView, x, y) { result ->
+                    when (result) {
+                        is LongPressHandler.LongPressResult.Image,
+                        is LongPressHandler.LongPressResult.Video,
+                        is LongPressHandler.LongPressResult.Link,
+                        is LongPressHandler.LongPressResult.ImageLink -> {
+                            longPressResult = result
+                            showLongPressMenu = true
+                        }
+                        else -> {
+                            // 文字或其他，使用默认行为
+                        }
+                    }
+                }
+                return true
+            }
         }
     }
 
@@ -927,22 +922,42 @@ fun ShellScreen(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
-                            // 配置WebView以支持本地HTML
+                            // 先调用 configureWebView 进行基础配置
+                            webViewManager.configureWebView(
+                                this,
+                                webViewConfig,
+                                webViewCallbacks,
+                                config.extensionModuleIds,
+                                config.embeddedExtensionModules
+                            )
+                            // 然后覆盖 HTML 应用特定的设置（必须在 configureWebView 之后）
+                            // 因为 configureWebView 会将 allowFileAccessFromFileURLs 设为 false
                             settings.apply {
                                 javaScriptEnabled = config.htmlConfig.enableJavaScript
                                 domStorageEnabled = config.htmlConfig.enableLocalStorage
                                 allowFileAccess = true
                                 allowContentAccess = true
-                                // 允许本地文件访问（HTML中的相对路径资源）
+                                // 允许本地文件访问（HTML中的相对路径资源，如 JS/CSS 文件）
+                                @Suppress("DEPRECATION")
                                 allowFileAccessFromFileURLs = true
+                                @Suppress("DEPRECATION")
                                 allowUniversalAccessFromFileURLs = true
                             }
-                            webViewManager.configureWebView(
-                                this,
-                                webViewConfig,
-                                webViewCallbacks,
-                                config.extensionModuleIds
-                            )
+                            
+                            // 添加长按监听器
+                            var lastTouchX = 0f
+                            var lastTouchY = 0f
+                            setOnTouchListener { _, event ->
+                                if (event.action == MotionEvent.ACTION_DOWN) {
+                                    lastTouchX = event.x
+                                    lastTouchY = event.y
+                                }
+                                false
+                            }
+                            setOnLongClickListener {
+                                webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
+                            }
+                            
                             onWebViewCreated(this)
                             webViewRef = this
                             loadUrl(htmlUrl)
@@ -963,8 +978,24 @@ fun ShellScreen(
                                 this,
                                 webViewConfig,
                                 webViewCallbacks,
-                                config.extensionModuleIds
+                                config.extensionModuleIds,
+                                config.embeddedExtensionModules
                             )
+                            
+                            // 添加长按监听器
+                            var lastTouchX = 0f
+                            var lastTouchY = 0f
+                            setOnTouchListener { _, event ->
+                                if (event.action == MotionEvent.ACTION_DOWN) {
+                                    lastTouchX = event.x
+                                    lastTouchY = event.y
+                                }
+                                false // 不消费事件，让 WebView 继续处理
+                            }
+                            setOnLongClickListener {
+                                webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
+                            }
+                            
                             onWebViewCreated(this)
                             webViewRef = this
                             loadUrl(config.targetUrl)
@@ -1137,6 +1168,38 @@ fun ShellScreen(
             onSkip = if (config.splashClickToSkip) { closeSplash } else null,
             // 播放完成回调（始终需要）
             onComplete = closeSplash
+        )
+    }
+    
+    // 长按菜单
+    if (showLongPressMenu && longPressResult != null) {
+        LongPressMenuSheet(
+            result = longPressResult!!,
+            onDismiss = {
+                showLongPressMenu = false
+                longPressResult = null
+            },
+            onCopyLink = { url ->
+                longPressHandler.copyToClipboard(url)
+            },
+            onSaveImage = { url ->
+                longPressHandler.saveImage(url) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            },
+            onDownloadVideo = { url ->
+                longPressHandler.downloadVideo(url) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            },
+            onOpenInBrowser = { url ->
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "无法打开链接", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
     }
     

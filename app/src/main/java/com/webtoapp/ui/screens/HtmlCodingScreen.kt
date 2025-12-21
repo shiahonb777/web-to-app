@@ -2,6 +2,7 @@ package com.webtoapp.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,7 +45,8 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HtmlCodingScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onExportToHtmlProject: ((List<ProjectFile>, String) -> Unit)? = null  // 导出到HTML项目的回调
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -287,20 +289,16 @@ fun HtmlCodingScreen(
         }
     }
     
-    // 预览HTML
+    // 预览HTML（支持合并CSS/JS）
     fun previewHtml(codeBlock: CodeBlock) {
         scope.launch {
             try {
-                // 如果是完整HTML，直接保存
-                val htmlContent = if (codeBlock.isComplete) {
-                    codeBlock.content
-                } else {
-                    // 否则合并所有代码块
-                    currentSession?.messages
-                        ?.flatMap { it.codeBlocks }
-                        ?.let { CodeBlockParser.mergeToSingleHtml(it) }
-                        ?: codeBlock.content
-                }
+                // 始终合并所有代码块，确保CSS和JS都能生效
+                val allCodeBlocks = currentSession?.messages
+                    ?.flatMap { it.codeBlocks }
+                    ?: listOf(codeBlock)
+                
+                val htmlContent = CodeBlockParser.mergeToSingleHtml(allCodeBlocks)
                 
                 val file = storage.saveForPreview(htmlContent)
                 
@@ -312,6 +310,91 @@ fun HtmlCodingScreen(
                 context.startActivity(intent)
             } catch (e: Exception) {
                 Toast.makeText(context, "预览失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // 下载代码到本地（下载目录）
+    fun downloadCode(codeBlock: CodeBlock) {
+        scope.launch {
+            try {
+                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val filename = codeBlock.filename ?: "code.${codeBlock.language}"
+                val file = File(downloadDir, filename)
+                
+                // 如果文件已存在，添加时间戳
+                val actualFile = if (file.exists()) {
+                    val timestamp = System.currentTimeMillis()
+                    val nameWithoutExt = filename.substringBeforeLast(".")
+                    val ext = filename.substringAfterLast(".", "")
+                    File(downloadDir, "${nameWithoutExt}_$timestamp.$ext")
+                } else {
+                    file
+                }
+                
+                actualFile.writeText(codeBlock.content)
+                Toast.makeText(context, "已保存到: ${actualFile.absolutePath}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "下载失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // 导出所有代码到HTML项目
+    fun exportAllToHtmlProject() {
+        scope.launch {
+            try {
+                val allCodeBlocks = currentSession?.messages
+                    ?.flatMap { it.codeBlocks }
+                    ?: emptyList()
+                
+                if (allCodeBlocks.isEmpty()) {
+                    Toast.makeText(context, "没有可导出的代码", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                
+                // 转换为 ProjectFile 列表
+                val files = allCodeBlocks.map { block ->
+                    val filename = block.filename ?: when (block.language) {
+                        "html" -> "index.html"
+                        "css" -> "style.css"
+                        "js" -> "script.js"
+                        else -> "file.${block.language}"
+                    }
+                    val type = when (block.language) {
+                        "html" -> ProjectFileType.HTML
+                        "css" -> ProjectFileType.CSS
+                        "js" -> ProjectFileType.JS
+                        else -> ProjectFileType.OTHER
+                    }
+                    ProjectFile(filename, block.content, type)
+                }
+                
+                // 使用回调导出到HTML项目
+                if (onExportToHtmlProject != null) {
+                    val projectName = currentSession?.title?.take(20) ?: "AI生成项目"
+                    onExportToHtmlProject.invoke(files, projectName)
+                    Toast.makeText(context, "已导出到HTML项目", Toast.LENGTH_SHORT).show()
+                } else {
+                    // 如果没有回调，保存到本地项目目录
+                    val projectName = currentSession?.title?.take(20) ?: "AI生成项目_${System.currentTimeMillis()}"
+                    val result = storage.saveProject(
+                        SaveConfig(
+                            directory = storage.getProjectsDir().absolutePath,
+                            projectName = projectName,
+                            createFolder = true,
+                            overwrite = true
+                        ),
+                        files
+                    )
+                    result.onSuccess { dir ->
+                        Toast.makeText(context, "已保存到: ${dir.absolutePath}", Toast.LENGTH_LONG).show()
+                    }.onFailure { e ->
+                        Toast.makeText(context, "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -443,7 +526,9 @@ fun HtmlCodingScreen(
                             onPreviewCode = { codeBlock -> previewHtml(codeBlock) },
                             onCopyCode = {
                                 Toast.makeText(context, "已复制", Toast.LENGTH_SHORT).show()
-                            }
+                            },
+                            onDownloadCode = { codeBlock -> downloadCode(codeBlock) },
+                            onExportToProject = { exportAllToHtmlProject() }
                         )
                     }
                     
@@ -580,6 +665,10 @@ fun HtmlCodingScreen(
                         scope.launch {
                             storage.rollbackToCheckpoint(session.id, checkpointId)?.let {
                                 currentSession = it
+                                // 重置聊天状态，确保回退后可以正常发送消息
+                                chatState = ChatState.Idle
+                                streamingContent = ""
+                                streamingThinking = ""
                             }
                         }
                     },
@@ -612,6 +701,10 @@ fun HtmlCodingScreen(
                     currentSession?.let { session ->
                         storage.editUserMessage(session.id, message.id, newContent, newImages)?.let {
                             currentSession = it
+                            // 重置聊天状态，确保编辑后可以正常发送消息
+                            chatState = ChatState.Idle
+                            streamingContent = ""
+                            streamingThinking = ""
                         }
                     }
                     editingMessage = null
@@ -705,6 +798,10 @@ fun HtmlCodingScreen(
                     scope.launch {
                         storage.rollbackToConversationCheckpoint(checkpoint.id)?.let {
                             currentSession = it
+                            // 重置聊天状态，确保回退后可以正常发送消息
+                            chatState = ChatState.Idle
+                            streamingContent = ""
+                            streamingThinking = ""
                             Toast.makeText(context, "已回退到: ${checkpoint.name}", Toast.LENGTH_SHORT).show()
                         }
                         showConversationCheckpointsSheet = false

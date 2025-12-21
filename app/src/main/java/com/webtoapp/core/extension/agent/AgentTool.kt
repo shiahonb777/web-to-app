@@ -246,6 +246,53 @@ data class ValidationIssue(
 )
 
 /**
+ * 工具链执行事件
+ * 
+ * 用于跟踪工具链执行过程中的各种事件
+ * 
+ * Requirements: 5.5
+ */
+sealed class ToolChainEvent {
+    /**
+     * 工具链开始执行
+     * @param totalTools 工具链中的工具总数
+     */
+    data class ChainStarted(val totalTools: Int) : ToolChainEvent()
+    
+    /**
+     * 单个工具开始执行
+     * @param toolIndex 工具在链中的索引
+     * @param request 工具调用请求
+     */
+    data class ToolStarted(val toolIndex: Int, val request: ToolCallRequest) : ToolChainEvent()
+    
+    /**
+     * 单个工具执行完成
+     * @param toolIndex 工具在链中的索引
+     * @param result 工具执行结果
+     */
+    data class ToolCompleted(val toolIndex: Int, val result: ToolCallResult) : ToolChainEvent()
+    
+    /**
+     * 工具链执行完成
+     * @param results 所有工具的执行结果
+     */
+    data class ChainCompleted(val results: List<ToolCallResult>) : ToolChainEvent()
+    
+    /**
+     * 工具链执行失败
+     * @param failedToolIndex 失败的工具索引
+     * @param error 错误信息
+     * @param completedResults 已完成的工具结果
+     */
+    data class ChainFailed(
+        val failedToolIndex: Int,
+        val error: String,
+        val completedResults: List<ToolCallResult>
+    ) : ToolChainEvent()
+}
+
+/**
  * 预定义的 Agent 工具集
  */
 object AgentTools {

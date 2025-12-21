@@ -365,6 +365,11 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.7.0
+**Bug Fixes & Improvements**
+- Fixed dozens of known issues
+- Optimized AI Agent programming architecture
+
 ### v1.6.0
 **New Features**
 - Extension Module System: Tampermonkey-like JS/CSS injection system

@@ -335,20 +335,100 @@ fun BasicInfoCard(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
-            // 网站地址
-            OutlinedTextField(
-                value = editState.url,
-                onValueChange = onUrlChange,
-                label = { Text("网站地址") },
-                placeholder = { Text("https://example.com") },
-                leadingIcon = { Icon(Icons.Outlined.Link, null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Done
-                )
-            )
+            // 根据应用类型显示不同内容
+            when (editState.appType) {
+                AppType.WEB -> {
+                    // 网站地址输入框（仅 WEB 类型）
+                    OutlinedTextField(
+                        value = editState.url,
+                        onValueChange = onUrlChange,
+                        label = { Text("网站地址") },
+                        placeholder = { Text("https://example.com") },
+                        leadingIcon = { Icon(Icons.Outlined.Link, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+                }
+                AppType.HTML -> {
+                    // HTML 应用显示文件信息
+                    val htmlConfig = editState.htmlConfig
+                    val fileCount = htmlConfig?.files?.size ?: 0
+                    val entryFile = htmlConfig?.entryFile ?: "index.html"
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Code,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "HTML 应用",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = "入口文件: $entryFile · 共 $fileCount 个文件",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
+                AppType.IMAGE, AppType.VIDEO -> {
+                    // 媒体应用显示文件路径
+                    val mediaPath = editState.url
+                    val isVideo = editState.appType == AppType.VIDEO
+                    val fileName = mediaPath.substringAfterLast("/", "未知文件")
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                if (isVideo) Icons.Outlined.Videocam else Icons.Outlined.Image,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (isVideo) "视频应用" else "图片应用",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = fileName,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

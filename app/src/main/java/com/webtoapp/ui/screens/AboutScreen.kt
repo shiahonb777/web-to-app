@@ -510,11 +510,19 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // v1.6.0
+                            // v1.7.0
                             VersionSection(
-                                version = "v1.6.0",
+                                version = "v1.7.0",
                                 isLatest = true
                             ) {
+                                ChangeItem("🐛", "修复数十个已知问题")
+                                ChangeItem("🤖", "优化AI Agent编程架构")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // v1.6.0
+                            VersionSection(version = "v1.6.0") {
                                 ChangeItem("🧩", "扩展模块系统：类油猴脚本JS/CSS注入")
                                 ChangeItem("🤖", "AI模块开发Agent：自然语言生成模块")
                                 ChangeItem("🎨", "AI图标生成：AI生成应用图标")

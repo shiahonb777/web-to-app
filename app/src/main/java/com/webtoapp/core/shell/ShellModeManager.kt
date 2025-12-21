@@ -219,7 +219,146 @@ data class ShellConfig(
     
     // 扩展模块配置
     @SerializedName("extensionModuleIds")
-    val extensionModuleIds: List<String> = emptyList()
+    val extensionModuleIds: List<String> = emptyList(),
+    
+    // 嵌入的扩展模块完整数据（APK导出时嵌入）
+    @SerializedName("embeddedExtensionModules")
+    val embeddedExtensionModules: List<EmbeddedShellModule> = emptyList()
+)
+
+/**
+ * 嵌入到 Shell APK 中的扩展模块数据
+ */
+data class EmbeddedShellModule(
+    @SerializedName("id")
+    val id: String = "",
+    
+    @SerializedName("name")
+    val name: String = "",
+    
+    @SerializedName("description")
+    val description: String = "",
+    
+    @SerializedName("icon")
+    val icon: String = "📦",
+    
+    @SerializedName("category")
+    val category: String = "OTHER",
+    
+    @SerializedName("code")
+    val code: String = "",
+    
+    @SerializedName("cssCode")
+    val cssCode: String = "",
+    
+    @SerializedName("runAt")
+    val runAt: String = "DOCUMENT_END",
+    
+    @SerializedName("urlMatches")
+    val urlMatches: List<EmbeddedUrlMatch> = emptyList(),
+    
+    @SerializedName("configValues")
+    val configValues: Map<String, String> = emptyMap(),
+    
+    @SerializedName("enabled")
+    val enabled: Boolean = true
+) {
+    /**
+     * 检查 URL 是否匹配此模块
+     */
+    fun matchesUrl(url: String): Boolean {
+        if (urlMatches.isEmpty()) return true
+        
+        val includeRules = urlMatches.filter { !it.exclude }
+        val excludeRules = urlMatches.filter { it.exclude }
+        
+        // 先检查排除规则
+        for (rule in excludeRules) {
+            if (matchRule(url, rule)) return false
+        }
+        
+        // 如果没有包含规则，默认匹配
+        if (includeRules.isEmpty()) return true
+        
+        // 检查包含规则
+        return includeRules.any { matchRule(url, it) }
+    }
+    
+    private fun matchRule(url: String, rule: EmbeddedUrlMatch): Boolean {
+        return if (rule.isRegex) {
+            try {
+                Regex(rule.pattern).containsMatchIn(url)
+            } catch (e: Exception) {
+                false
+            }
+        } else {
+            // 通配符匹配：* 匹配任意字符
+            val regexPattern = rule.pattern
+                .replace(".", "\\.")
+                .replace("*", ".*")
+                .replace("?", ".")
+            try {
+                Regex(regexPattern, RegexOption.IGNORE_CASE).containsMatchIn(url)
+            } catch (e: Exception) {
+                url.contains(rule.pattern, ignoreCase = true)
+            }
+        }
+    }
+    
+    /**
+     * 生成可执行的 JavaScript 代码
+     */
+    fun generateExecutableCode(): String {
+        val configJson = com.google.gson.Gson().toJson(configValues)
+        return """
+            (function() {
+                'use strict';
+                // 模块配置
+                const __MODULE_CONFIG__ = $configJson;
+                const __MODULE_INFO__ = {
+                    id: '${id}',
+                    name: '${name.replace("'", "\\'")}',
+                    version: '1.0.0'
+                };
+                
+                // 配置访问函数
+                function getConfig(key, defaultValue) {
+                    return __MODULE_CONFIG__[key] !== undefined ? __MODULE_CONFIG__[key] : defaultValue;
+                }
+                
+                // CSS 注入
+                ${if (cssCode.isNotBlank()) """
+                (function() {
+                    const style = document.createElement('style');
+                    style.id = 'ext-module-${id}';
+                    style.textContent = `${cssCode.replace("`", "\\`")}`;
+                    (document.head || document.documentElement).appendChild(style);
+                })();
+                """ else ""}
+                
+                // 用户代码
+                try {
+                    $code
+                } catch(e) {
+                    console.error('[ExtModule: ${name}] Error:', e);
+                }
+            })();
+        """.trimIndent()
+    }
+}
+
+/**
+ * 嵌入的 URL 匹配规则
+ */
+data class EmbeddedUrlMatch(
+    @SerializedName("pattern")
+    val pattern: String = "",
+    
+    @SerializedName("isRegex")
+    val isRegex: Boolean = false,
+    
+    @SerializedName("exclude")
+    val exclude: Boolean = false
 )
 
 /**

@@ -79,6 +79,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             url = webApp.url,
             iconUri = webApp.iconPath?.let { Uri.parse(it) },
             savedIconPath = webApp.iconPath,  // 保留已有的本地路径
+            appType = webApp.appType,  // 保留应用类型
+            mediaConfig = webApp.mediaConfig,  // 保留媒体配置
+            htmlConfig = webApp.htmlConfig,  // 保留HTML配置
             activationEnabled = webApp.activationEnabled,
             activationCodes = webApp.activationCodes,
             activationCodeList = webApp.activationCodeList,
@@ -247,6 +250,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     name = state.name,
                     url = normalizeUrl(state.url),
                     iconPath = iconPath,
+                    appType = state.appType,  // 保留应用类型
+                    mediaConfig = state.mediaConfig,  // 保留媒体配置
+                    htmlConfig = state.htmlConfig,  // 保留HTML配置
                     activationEnabled = state.activationEnabled,
                     activationCodes = activationCodeStrings,
                     activationCodeList = state.activationCodeList,
@@ -356,13 +362,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = UiState.Error("请输入应用名称")
                 false
             }
-            // 检查URL
-            state.url.isBlank() -> {
+            // 只有 WEB 类型需要验证 URL
+            state.appType == AppType.WEB && state.url.isBlank() -> {
                 _uiState.value = UiState.Error("请输入网站地址")
                 false
             }
-            !isValidUrl(state.url) -> {
+            state.appType == AppType.WEB && !isValidUrl(state.url) -> {
                 _uiState.value = UiState.Error("请输入有效的网址")
+                false
+            }
+            // HTML 类型需要有 HTML 文件
+            state.appType == AppType.HTML && (state.htmlConfig?.files?.isEmpty() != false) -> {
+                _uiState.value = UiState.Error("请选择 HTML 文件")
+                false
+            }
+            // IMAGE/VIDEO 类型需要有媒体文件路径
+            (state.appType == AppType.IMAGE || state.appType == AppType.VIDEO) && state.url.isBlank() -> {
+                _uiState.value = UiState.Error("媒体文件路径不能为空")
                 false
             }
             else -> true
@@ -555,6 +571,15 @@ data class EditState(
     val iconUri: Uri? = null,           // 用于 UI 显示
     val savedIconPath: String? = null,  // 持久化的本地文件路径
     val iconBitmap: Bitmap? = null,
+    
+    // 应用类型（用于区分 WEB/HTML/IMAGE/VIDEO）
+    val appType: AppType = AppType.WEB,
+    
+    // 媒体应用配置（IMAGE/VIDEO 类型）
+    val mediaConfig: MediaConfig? = null,
+    
+    // HTML应用配置（HTML 类型）
+    val htmlConfig: HtmlConfig? = null,
 
     // 激活码
     val activationEnabled: Boolean = false,
