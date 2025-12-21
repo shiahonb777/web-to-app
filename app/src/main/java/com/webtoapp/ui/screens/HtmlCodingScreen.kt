@@ -46,7 +46,8 @@ import java.io.File
 @Composable
 fun HtmlCodingScreen(
     onBack: () -> Unit,
-    onExportToHtmlProject: ((List<ProjectFile>, String) -> Unit)? = null  // 导出到HTML项目的回调
+    onExportToHtmlProject: ((List<ProjectFile>, String) -> Unit)? = null,  // 导出到HTML项目的回调
+    onNavigateToAiSettings: () -> Unit = {}  // 导航到AI设置的回调
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -597,6 +598,10 @@ fun HtmlCodingScreen(
                     textModels = textModels,
                     imageModels = imageModels,
                     rulesTemplates = HtmlCodingPrompts.rulesTemplates,
+                    onNavigateToAiSettings = {
+                        showConfigSheet = false
+                        onNavigateToAiSettings()
+                    },
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
             } ?: run {

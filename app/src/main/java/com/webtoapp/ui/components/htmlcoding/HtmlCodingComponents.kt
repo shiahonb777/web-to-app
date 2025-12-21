@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.webtoapp.core.ai.htmlcoding.*
+import com.webtoapp.ui.components.aimodule.ModelSelector
+import com.webtoapp.ui.components.aimodule.ProviderIcon
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -304,8 +306,8 @@ fun CodeBlocksTabContainer(
                                         Icon(Icons.Outlined.MoreVert, contentDescription = "More", tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                                     }
                                     DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
-                                        onDownload?.let { download -> DropdownMenuItem(text = { Text("Download") }, onClick = { showMoreMenu = false; currentBlock?.let { download(it) } }, leadingIcon = { Icon(Icons.Outlined.Download, null) }) }
-                                        onExportToProject?.let { DropdownMenuItem(text = { Text("Export all") }, onClick = { showMoreMenu = false; it() }, leadingIcon = { Icon(Icons.Outlined.FolderOpen, null) }) }
+                                        onDownload?.let { download -> DropdownMenuItem(text = { Text("下载") }, onClick = { showMoreMenu = false; currentBlock?.let { download(it) } }, leadingIcon = { Icon(Icons.Outlined.Download, null) }) }
+                                        onExportToProject?.let { DropdownMenuItem(text = { Text("导出全部") }, onClick = { showMoreMenu = false; it() }, leadingIcon = { Icon(Icons.Outlined.FolderOpen, null) }) }
                                     }
                                 }
                             }
@@ -318,8 +320,8 @@ fun CodeBlocksTabContainer(
             }
             Surface(color = colors.headerBackground.copy(alpha = 0.5f), shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("${pagerState.currentPage + 1} / ${codeBlocks.size} files", style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f))
-                    codeBlocks.getOrNull(pagerState.currentPage)?.let { Text("${it.content.lines().size} lines", style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f)) }
+                    Text("${pagerState.currentPage + 1} / ${codeBlocks.size} 个文件", style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f))
+                    codeBlocks.getOrNull(pagerState.currentPage)?.let { Text("${it.content.lines().size} 行", style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f)) }
                 }
             }
         }
@@ -514,7 +516,7 @@ fun ThinkingBlock(thinking: String, modifier: Modifier = Modifier, defaultExpand
                     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), modifier = Modifier.size(28.dp)) {
                         Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary) }
                     }
-                    Text("Thinking", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+                    Text("思考中", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
                 }
                 Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f), modifier = Modifier.size(28.dp)) {
                     Box(contentAlignment = Alignment.Center) { Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, Modifier.size(20.dp), MaterialTheme.colorScheme.tertiary) }
@@ -587,7 +589,7 @@ private fun StreamingThinkingBlock(thinking: String, modifier: Modifier = Modifi
                 Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), modifier = Modifier.size(28.dp)) {
                     Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary.copy(alpha = alpha)) }
                 }
-                Text("Thinking...", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+                Text("思考中...", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
             }
             Spacer(Modifier.height(10.dp))
             Divider(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), thickness = 1.dp)
@@ -613,7 +615,7 @@ fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<S
                                 AsyncImage(model = File(imagePath), contentDescription = null, modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
                             }
                             Surface(modifier = Modifier.size(24.dp).align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp).clickable { onRemoveImage(index) }, shape = CircleShape, color = MaterialTheme.colorScheme.error, shadowElevation = 2.dp) {
-                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.onError, modifier = Modifier.size(14.dp)) }
+                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Close, contentDescription = "移除", tint = MaterialTheme.colorScheme.onError, modifier = Modifier.size(14.dp)) }
                             }
                         }
                     }
@@ -621,13 +623,13 @@ fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<S
             }
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Surface(shape = CircleShape, color = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(44.dp).clickable(enabled = images.size < maxImages && !isLoading) { onAddImage() }) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Image, contentDescription = "Add image", tint = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp)) }
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Image, contentDescription = "添加图片", tint = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp)) }
                 }
-                OutlinedTextField(value = value, onValueChange = onValueChange, modifier = Modifier.weight(1f), placeholder = { Text("Describe the HTML page...", color = MaterialTheme.colorScheme.outline) }, maxLines = 5, enabled = !isLoading, shape = RoundedCornerShape(24.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
+                OutlinedTextField(value = value, onValueChange = onValueChange, modifier = Modifier.weight(1f), placeholder = { Text("描述你想要的 HTML 页面...", color = MaterialTheme.colorScheme.outline) }, maxLines = 5, enabled = !isLoading, shape = RoundedCornerShape(24.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
                 Surface(shape = CircleShape, color = if (value.isNotBlank() && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(44.dp).clickable(enabled = value.isNotBlank() && !isLoading) { onSend() }, shadowElevation = if (value.isNotBlank() && !isLoading) 4.dp else 0.dp) {
                     Box(contentAlignment = Alignment.Center) {
                         if (isLoading) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
-                        else Icon(Icons.Default.Send, contentDescription = "Send", tint = if (value.isNotBlank()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
+                        else Icon(Icons.Default.Send, contentDescription = "发送", tint = if (value.isNotBlank()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
                     }
                 }
             }
@@ -647,9 +649,9 @@ fun SessionListItem(session: HtmlCodingSession, isSelected: Boolean, onClick: ()
             Column(Modifier.weight(1f)) {
                 Text(session.title, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(2.dp))
-                Text("${session.messages.size} messages - ${formatDate(session.updatedAt)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text("${session.messages.size} 条消息 - ${formatDate(session.updatedAt)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, "Delete", Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, "删除", Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
         }
     }
 }
@@ -666,10 +668,10 @@ fun CheckpointListItem(checkpoint: ProjectCheckpoint, isCurrent: Boolean, onRest
             Column(Modifier.weight(1f)) {
                 Text(checkpoint.name, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
                 Spacer(Modifier.height(2.dp))
-                Text("${checkpoint.files.size} files - ${formatTime(checkpoint.timestamp)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text("${checkpoint.files.size} 个文件 - ${formatTime(checkpoint.timestamp)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
-            if (!isCurrent) { FilledTonalButton(onClick = onRestore, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Restore", style = MaterialTheme.typography.labelMedium) }; Spacer(Modifier.width(8.dp)) }
-            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, "Delete", Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
+            if (!isCurrent) { FilledTonalButton(onClick = onRestore, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 12.dp)) { Text("恢复", style = MaterialTheme.typography.labelMedium) }; Spacer(Modifier.width(8.dp)) }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, "删除", Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
         }
     }
 }
@@ -731,38 +733,43 @@ fun StyleReferenceCard(style: StyleReference, isSelected: Boolean, onClick: () -
 // Config panel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfigPanel(config: SessionConfig, onConfigChange: (SessionConfig) -> Unit, textModels: List<com.webtoapp.data.model.SavedModel>, imageModels: List<com.webtoapp.data.model.SavedModel>, rulesTemplates: List<RulesTemplate>, modifier: Modifier = Modifier) {
+fun ConfigPanel(
+    config: SessionConfig, 
+    onConfigChange: (SessionConfig) -> Unit, 
+    textModels: List<com.webtoapp.data.model.SavedModel>, 
+    imageModels: List<com.webtoapp.data.model.SavedModel>, 
+    rulesTemplates: List<RulesTemplate>, 
+    onNavigateToAiSettings: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Text("Session Config", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("会话配置", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         
-        // Text model
+        // Text model - 使用 ModelSelector 组件
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
-                Text("Text Model", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text("文本模型", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
-                var textModelExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = textModelExpanded, onExpandedChange = { textModelExpanded = it }) {
-                    OutlinedTextField(value = textModels.find { it.id == config.textModelId }?.let { it.alias ?: it.model.name } ?: "Select model", onValueChange = {}, readOnly = true, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(textModelExpanded) }, modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp))
-                    ExposedDropdownMenu(expanded = textModelExpanded, onDismissRequest = { textModelExpanded = false }) {
-                        textModels.forEach { model -> DropdownMenuItem(text = { Text(model.alias ?: model.model.name) }, onClick = { onConfigChange(config.copy(textModelId = model.id)); textModelExpanded = false }) }
-                    }
-                }
+                ModelSelector(
+                    selectedModel = textModels.find { it.id == config.textModelId },
+                    availableModels = textModels,
+                    onModelSelected = { model -> onConfigChange(config.copy(textModelId = model.id)) },
+                    onConfigureClick = onNavigateToAiSettings
+                )
             }
         }
         
-        // Image model
+        // Image model - 使用自定义的图像模型选择器
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
-                Text("Image Model (Optional)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text("图像模型（可选）", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
-                var imageModelExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = imageModelExpanded, onExpandedChange = { imageModelExpanded = it }) {
-                    OutlinedTextField(value = imageModels.find { it.id == config.imageModelId }?.let { it.alias ?: it.model.name } ?: "No image model", onValueChange = {}, readOnly = true, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(imageModelExpanded) }, modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp))
-                    ExposedDropdownMenu(expanded = imageModelExpanded, onDismissRequest = { imageModelExpanded = false }) {
-                        DropdownMenuItem(text = { Text("No image model") }, onClick = { onConfigChange(config.copy(imageModelId = null)); imageModelExpanded = false })
-                        imageModels.forEach { model -> DropdownMenuItem(text = { Text(model.alias ?: model.model.name) }, onClick = { onConfigChange(config.copy(imageModelId = model.id)); imageModelExpanded = false }) }
-                    }
-                }
+                ImageModelSelector(
+                    selectedModel = imageModels.find { it.id == config.imageModelId },
+                    availableModels = imageModels,
+                    onModelSelected = { model -> onConfigChange(config.copy(imageModelId = model?.id)) },
+                    onConfigureClick = onNavigateToAiSettings
+                )
             }
         }
         
@@ -770,12 +777,12 @@ fun ConfigPanel(config: SessionConfig, onConfigChange: (SessionConfig) -> Unit, 
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Temperature", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("温度", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) { Text(String.format("%.1f", config.temperature), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
                 }
                 Spacer(Modifier.height(8.dp))
                 Slider(value = config.temperature, onValueChange = { onConfigChange(config.copy(temperature = it)) }, valueRange = 0f..2f, steps = 19)
-                Text("Low(0): Deterministic - High(2): Creative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text("低(0): 确定性输出 - 高(2): 创意性输出", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
         }
         
@@ -784,14 +791,14 @@ fun ConfigPanel(config: SessionConfig, onConfigChange: (SessionConfig) -> Unit, 
         // Rules
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
-                Text("Rules", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text("规则", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(12.dp))
                 var showRulesTemplates by remember { mutableStateOf(false) }
-                OutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text("Select from templates") }
+                OutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text("从模板选择") }
                 if (showRulesTemplates) {
-                    AlertDialog(onDismissRequest = { showRulesTemplates = false }, title = { Text("Select Rule Template") }, text = {
+                    AlertDialog(onDismissRequest = { showRulesTemplates = false }, title = { Text("选择规则模板") }, text = {
                         LazyColumn { items(rulesTemplates) { template -> ListItem(headlineContent = { Text(template.name) }, supportingContent = { Text(template.description) }, modifier = Modifier.clickable { onConfigChange(config.copy(rules = template.rules)); showRulesTemplates = false }) } }
-                    }, confirmButton = { TextButton(onClick = { showRulesTemplates = false }) { Text("Cancel") } })
+                    }, confirmButton = { TextButton(onClick = { showRulesTemplates = false }) { Text("取消") } })
                 }
                 Spacer(Modifier.height(12.dp))
                 config.rules.forEachIndexed { index, rule ->
@@ -800,14 +807,202 @@ fun ConfigPanel(config: SessionConfig, onConfigChange: (SessionConfig) -> Unit, 
                             Text("${index + 1}.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(8.dp))
                             Text(rule, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                            IconButton(onClick = { onConfigChange(config.copy(rules = config.rules.toMutableList().apply { removeAt(index) })) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error) }
+                            IconButton(onClick = { onConfigChange(config.copy(rules = config.rules.toMutableList().apply { removeAt(index) })) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = "删除", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error) }
                         }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
                 var newRule by remember { mutableStateOf("") }
-                OutlinedTextField(value = newRule, onValueChange = { newRule = it }, placeholder = { Text("Add new rule...") }, modifier = Modifier.fillMaxWidth(), trailingIcon = { IconButton(onClick = { if (newRule.isNotBlank()) { onConfigChange(config.copy(rules = config.rules + newRule)); newRule = "" } }, enabled = newRule.isNotBlank()) { Icon(Icons.Default.Add, contentDescription = "Add", tint = if (newRule.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }, singleLine = true, shape = RoundedCornerShape(12.dp))
+                OutlinedTextField(value = newRule, onValueChange = { newRule = it }, placeholder = { Text("添加新规则...") }, modifier = Modifier.fillMaxWidth(), trailingIcon = { IconButton(onClick = { if (newRule.isNotBlank()) { onConfigChange(config.copy(rules = config.rules + newRule)); newRule = "" } }, enabled = newRule.isNotBlank()) { Icon(Icons.Default.Add, contentDescription = "添加", tint = if (newRule.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }, singleLine = true, shape = RoundedCornerShape(12.dp))
             }
+        }
+    }
+}
+
+/**
+ * 图像模型选择器（支持"不使用"选项）
+ */
+@Composable
+private fun ImageModelSelector(
+    selectedModel: com.webtoapp.data.model.SavedModel?,
+    availableModels: List<com.webtoapp.data.model.SavedModel>,
+    onModelSelected: (com.webtoapp.data.model.SavedModel?) -> Unit,
+    onConfigureClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Box(modifier = modifier) {
+        // 选择器按钮
+        Surface(
+            onClick = { expanded = true },
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // 供应商图标
+                ProviderIcon(
+                    provider = selectedModel?.model?.provider,
+                    modifier = Modifier.size(28.dp)
+                )
+                
+                // 模型信息
+                Column(modifier = Modifier.weight(1f)) {
+                    if (selectedModel != null) {
+                        Text(
+                            selectedModel.alias ?: selectedModel.model.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            selectedModel.model.provider.displayName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text(
+                            "不使用图像模型",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                // 下拉箭头
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = "展开",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        
+        // 下拉菜单
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.widthIn(min = 280.dp, max = 360.dp).heightIn(max = 400.dp)
+        ) {
+            // 不使用选项
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("🚫", style = MaterialTheme.typography.labelMedium)
+                        }
+                        Text("不使用图像模型")
+                    }
+                },
+                onClick = {
+                    onModelSelected(null)
+                    expanded = false
+                },
+                modifier = Modifier.background(
+                    if (selectedModel == null) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    else MaterialTheme.colorScheme.surface
+                )
+            )
+            
+            if (availableModels.isNotEmpty()) {
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                Text(
+                    "选择图像模型",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                
+                availableModels.forEach { model ->
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                ProviderIcon(
+                                    provider = model.model.provider,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        model.alias ?: model.model.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (selectedModel?.id == model.id) FontWeight.Bold else FontWeight.Normal,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        model.model.provider.displayName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                if (selectedModel?.id == model.id) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = "已选中",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        },
+                        onClick = {
+                            onModelSelected(model)
+                            expanded = false
+                        },
+                        modifier = Modifier.background(
+                            if (selectedModel?.id == model.id) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            else MaterialTheme.colorScheme.surface
+                        )
+                    )
+                }
+            }
+            
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            // 配置更多模型
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "配置更多模型",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                onClick = {
+                    expanded = false
+                    onConfigureClick()
+                }
+            )
         }
     }
 }

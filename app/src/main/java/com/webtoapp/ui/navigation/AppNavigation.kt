@@ -25,7 +25,7 @@ import com.webtoapp.ui.screens.HtmlCodingScreen
 import com.webtoapp.ui.screens.ThemeSettingsScreen
 import com.webtoapp.ui.screens.ExtensionModuleScreen
 import com.webtoapp.ui.screens.ModuleEditorScreen
-import com.webtoapp.ui.screens.AiModuleDeveloperScreen
+import com.webtoapp.ui.screens.aimodule.AiModuleDeveloperScreenRefactored
 import com.webtoapp.ui.viewmodel.MainViewModel
 import com.webtoapp.ui.webview.WebViewActivity
 
@@ -186,7 +186,10 @@ fun AppNavigation() {
         // HTML编程AI
         composable(Routes.HTML_CODING) {
             HtmlCodingScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToAiSettings = {
+                    navController.navigate(Routes.AI_SETTINGS)
+                }
             )
         }
 
@@ -243,11 +246,14 @@ fun AppNavigation() {
         
         // AI 模块开发器
         composable(Routes.AI_MODULE_DEVELOPER) {
-            AiModuleDeveloperScreen(
+            AiModuleDeveloperScreenRefactored(
                 onNavigateBack = { navController.popBackStack() },
                 onModuleCreated = { module ->
                     // 模块创建成功后返回
                     navController.popBackStack()
+                },
+                onNavigateToAiSettings = {
+                    navController.navigate(Routes.AI_SETTINGS)
                 }
             )
         }
