@@ -817,31 +817,34 @@ class HtmlCodingStorage(private val context: Context) {
 object CodeBlockParser {
     
     /**
-     * 改进的代码块正则表达式
+     * 代码块正则表达式
      * 
      * 支持多种格式：
-     * 1. ```language\ncode```
-     * 2. ```language\n// 文件名: xxx\ncode```
-     * 3. ```\ncode``` (无语言标识，默认html)
+     * 1. ```language\ncode``` (语言后有换行)
+     * 2. ```language code``` (语言后直接是代码，兼容某些AI)
+     * 3. ```\ncode``` (无语言标识)
+     * 4. ``` code ``` (无语言，无换行)
+     * 
+     * 关键：使用非贪婪匹配，确保正确匹配结束的 ```
      */
     private val codeBlockRegex = Regex(
-        """```(\w*)[ \t]*\r?\n([\s\S]*?)```""",
+        """```(\w*)[ \t]*\r?\n?([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
     
     // 文件名注释的正则表达式（支持多种格式）
     private val filenameCommentRegex = Regex(
-        """^(?:<!--\s*文件名[:：]\s*([^\n]+?)\s*-->\s*\r?\n|/\*\s*文件名[:：]\s*([^\n]+?)\s*\*/\s*\r?\n|//\s*文件名[:：]\s*([^\n]+?)\s*\r?\n|#\s*文件名[:：]\s*([^\n]+?)\s*\r?\n)""",
+        """^(?:<!--\s*文件名[:：]\s*([^\n]+?)\s*-->\s*\r?\n?|/\*\s*文件名[:：]\s*([^\n]+?)\s*\*/\s*\r?\n?|//\s*文件名[:：]\s*([^\n]+?)\s*\r?\n?|#\s*文件名[:：]\s*([^\n]+?)\s*\r?\n?)""",
         setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE)
     )
     
     private val thinkingRegex = Regex(
-        """<thinking>([\s\S]*?)</thinking>|```thinking[ \t]*\r?\n([\s\S]*?)```""",
+        """<thinking>([\s\S]*?)</thinking>|```thinking[ \t]*\r?\n?([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
     
     private val imageGenRegex = Regex(
-        """```image-gen[ \t]*\r?\n([\s\S]*?)```""",
+        """```image-gen[ \t]*\r?\n?([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
 
@@ -872,8 +875,10 @@ object CodeBlockParser {
             textContent = textContent.replace(match.value, "[图像生成请求]")
         }
         
-        // 提取代码块
+        // 提取代码块 - 使用主正则
+        val matchedRanges = mutableListOf<IntRange>()
         codeBlockRegex.findAll(response).forEach { match ->
+            matchedRanges.add(match.range)
             val rawLanguage = match.groupValues[1].trim().lowercase()
             var rawContent = match.groupValues[2]
             
@@ -894,31 +899,10 @@ object CodeBlockParser {
             
             if (content.isNotEmpty()) {
                 // 根据语言标识符或内容推断语言类型
-                val language = when {
-                    rawLanguage.isNotEmpty() -> when (rawLanguage) {
-                        "javascript" -> "js"
-                        "htm" -> "html"
-                        "stylesheet" -> "css"
-                        else -> rawLanguage
-                    }
-                    // 如果没有语言标识，尝试从内容推断
-                    content.contains("<!DOCTYPE", ignoreCase = true) || 
-                    content.contains("<html", ignoreCase = true) ||
-                    content.trimStart().startsWith("<") -> "html"
-                    content.contains("{") && (content.contains(":") || content.contains(";")) &&
-                    !content.contains("function") && !content.contains("=>") -> "css"
-                    else -> "html"  // 默认为 html
-                }
+                val language = inferLanguage(rawLanguage, content)
                 
                 // 生成默认文件名
-                val actualFilename = filename?.takeIf { it.isNotBlank() } ?: when (language) {
-                    "html" -> "index.html"
-                    "css" -> "styles.css"
-                    "js" -> "script.js"
-                    "svg" -> "image.svg"
-                    "json" -> "data.json"
-                    else -> "file.$language"
-                }
+                val actualFilename = filename?.takeIf { it.isNotBlank() } ?: getDefaultFilename(language)
                 
                 codeBlocks.add(
                     CodeBlock(
@@ -929,6 +913,11 @@ object CodeBlockParser {
                     )
                 )
             }
+        }
+        
+        // 如果主正则没有匹配到任何代码块，尝试备用解析
+        if (codeBlocks.isEmpty()) {
+            parseCodeBlocksFallback(response, codeBlocks)
         }
         
         // 清理文本内容中的代码块，避免重复输出
@@ -942,6 +931,79 @@ object CodeBlockParser {
             codeBlocks = codeBlocks,
             imageRequests = imageRequests
         )
+    }
+    
+    /**
+     * 备用代码块解析方法
+     * 当主正则失败时使用，采用更宽松的匹配策略
+     */
+    private fun parseCodeBlocksFallback(response: String, codeBlocks: MutableList<CodeBlock>) {
+        // 备用正则：更宽松的匹配，支持各种边界情况
+        val fallbackRegex = Regex("""```\s*(\w*)\s*([\s\S]*?)```""")
+        
+        fallbackRegex.findAll(response).forEach { match ->
+            val rawLanguage = match.groupValues[1].trim().lowercase()
+            val rawContent = match.groupValues[2].trim()
+            
+            if (rawLanguage == "thinking" || rawLanguage == "image-gen") {
+                return@forEach
+            }
+            
+            if (rawContent.isNotEmpty()) {
+                val language = inferLanguage(rawLanguage, rawContent)
+                val filename = getDefaultFilename(language)
+                
+                codeBlocks.add(
+                    CodeBlock(
+                        language = language,
+                        filename = filename,
+                        content = rawContent,
+                        isComplete = isCompleteCode(language, rawContent)
+                    )
+                )
+            }
+        }
+    }
+    
+    /**
+     * 推断语言类型
+     */
+    private fun inferLanguage(rawLanguage: String, content: String): String {
+        return when {
+            rawLanguage.isNotEmpty() -> when (rawLanguage) {
+                "javascript" -> "js"
+                "htm" -> "html"
+                "stylesheet" -> "css"
+                else -> rawLanguage
+            }
+            // 如果没有语言标识，尝试从内容推断
+            content.contains("<!DOCTYPE", ignoreCase = true) || 
+            content.contains("<html", ignoreCase = true) ||
+            (content.trimStart().startsWith("<") && content.contains(">")) -> "html"
+            content.trimStart().startsWith("{") && content.contains(":") -> {
+                // 可能是 CSS 或 JSON
+                if (content.contains("\"") && !content.contains(";")) "json" else "css"
+            }
+            content.contains("function") || content.contains("const ") || 
+            content.contains("let ") || content.contains("var ") ||
+            content.contains("=>") -> "js"
+            content.contains("{") && content.contains(";") -> "css"
+            else -> "html"  // 默认为 html
+        }
+    }
+    
+    /**
+     * 获取默认文件名
+     */
+    private fun getDefaultFilename(language: String): String {
+        return when (language) {
+            "html" -> "index.html"
+            "css" -> "styles.css"
+            "js" -> "script.js"
+            "svg" -> "image.svg"
+            "json" -> "data.json"
+            else -> "file.$language"
+        }
     }
     
     /**
