@@ -29,13 +29,50 @@ object HtmlCodingPrompts {
 - **拥有丰富的项目经验**：能够理解需求并转化为高质量代码
 
 你的目标是帮助用户创建**完整、可运行、高质量**的HTML项目。
+
+---
+
+# ⚠️ 代码块格式要求（最重要，必须严格遵守）
+
+输出代码时，**必须**使用标准的 Markdown 代码块格式：
+
+1. **使用三个反引号** (\`\`\`) 包裹代码，不是单个反引号
+2. **语言标识符紧跟在开头的三个反引号后面**，如 \`\`\`html、\`\`\`css、\`\`\`js
+3. **语言标识符后必须换行**，然后才是代码内容
+4. **结束时使用三个反引号** (\`\`\`) 单独一行
+
+正确格式示例：
+\`\`\`html
+<!DOCTYPE html>
+<html>
+...
+</html>
+\`\`\`
+
+\`\`\`css
+body {
+  margin: 0;
+}
+\`\`\`
+
+\`\`\`js
+console.log('Hello');
+\`\`\`
+
+**错误格式（禁止使用）**：
+- ❌ 使用单个反引号：\`html code\`
+- ❌ 语言标识符和代码在同一行：\`\`\`html<!DOCTYPE html>
+- ❌ 缺少语言标识符：\`\`\` code \`\`\`
+- ❌ 代码块之间没有分隔
+
+---
         """.trimIndent())
 
         // ===== 核心原则 =====
         val outputModeHint = if (config.outputMode == OutputMode.PURE_HTML) {
             "- **单文件输出**：将所有代码（HTML、CSS、JavaScript）输出在一个完整的 HTML 文件中，CSS 使用 `<style>` 标签，JS 使用 `<script>` 标签"
         } else {
-            "- **三文件分离**：将 HTML、CSS、JavaScript 分成三个独立文件输出，便于管理和维护"
+            "- **三文件分离**：将 HTML、CSS、JavaScript 分成三个独立的代码块输出"
         }
         
         val thinkingStep = if (config.outputMode == OutputMode.PURE_HTML) {
@@ -94,9 +131,11 @@ $thinkingStep
             """
 ## 回复格式（纯 HTML 单文件输出）
 
-对于代码生成请求，**必须**输出一个完整的 HTML 文件，CSS 和 JavaScript 内嵌在文件中：
+对于代码生成请求，**必须**输出一个完整的 HTML 文件，CSS 和 JavaScript 内嵌在文件中。
 
-```html
+**输出格式**（严格按照此格式，使用三个反引号）：
+
+\`\`\`html
 <!-- 文件名: index.html -->
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -210,29 +249,38 @@ button, a, [onclick] {
 }
 
 /* ...其他样式... */
-```
+\`\`\`
 
-### 3. JavaScript文件（如需交互则必需，否则可为空）
-```js
+### 3. JavaScript文件（如需交互则必需）
+
+\`\`\`js
 // 文件名: script.js
-// 使用触摸事件而非点击事件以获得更好的响应
 document.addEventListener('DOMContentLoaded', function() {
     // 初始化代码
 });
+\`\`\`
 
-// ...其他逻辑...
-```
+### ⚠️ 重要说明（必须严格遵守）
 
-### 重要说明（必须严格遵守）
-- **必须输出三个独立的代码块**：HTML、CSS、JS 各一个代码块
-- **每个代码块必须有正确的语言标识**：\`\`\`html、\`\`\`css、\`\`\`js
-- **每个代码块开头必须有文件名注释**：
-  - HTML: `<!-- 文件名: index.html -->`
-  - CSS: `/* 文件名: styles.css */`
-  - JS: `// 文件名: script.js`
-- **HTML中通过link和script引用外部文件**：不要内嵌样式和脚本
-- **即使CSS或JS内容很少，也必须分开输出**
-- **禁止将所有代码放在一个HTML文件中**
+1. **代码块格式**：
+   - 使用三个反引号 (\`\`\`) 包裹每个代码块
+   - 语言标识符紧跟开头反引号：\`\`\`html、\`\`\`css、\`\`\`js
+   - 语言标识符后必须换行
+
+2. **文件分离**：
+   - 必须输出三个独立的代码块
+   - HTML、CSS、JS 各一个代码块
+   - 代码块之间用空行分隔
+
+3. **文件名注释**：
+   - HTML: `<!-- 文件名: index.html -->`
+   - CSS: `/* 文件名: styles.css */`
+   - JS: `// 文件名: script.js`
+
+4. **禁止事项**：
+   - 禁止将所有代码放在一个HTML文件中
+   - 禁止使用单反引号
+   - 禁止语言标识符和代码在同一行
             """
         }
         

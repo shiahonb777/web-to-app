@@ -820,15 +820,21 @@ object CodeBlockParser {
      * 代码块正则表达式
      * 
      * 支持多种格式：
-     * 1. ```language\ncode``` (语言后有换行)
-     * 2. ```language code``` (语言后直接是代码，兼容某些AI)
-     * 3. ```\ncode``` (无语言标识)
-     * 4. ``` code ``` (无语言，无换行)
+     * 1. ```language\ncode``` (标准三反引号)
+     * 2. `language\ncode` (单反引号，某些AI会这样输出)
+     * 3. ```language code``` (语言后直接是代码)
+     * 4. ```\ncode``` (无语言标识)
      * 
-     * 关键：使用非贪婪匹配，确保正确匹配结束的 ```
+     * 关键：使用非贪婪匹配，确保正确匹配结束的反引号
      */
     private val codeBlockRegex = Regex(
         """```(\w*)[ \t]*\r?\n?([\s\S]*?)```""",
+        RegexOption.MULTILINE
+    )
+    
+    // 单反引号代码块（备用）
+    private val singleBacktickRegex = Regex(
+        """`\s*(\w+)\s*\r?\n([\s\S]*?)`(?!`)""",
         RegexOption.MULTILINE
     )
     
@@ -938,10 +944,20 @@ object CodeBlockParser {
      * 当主正则失败时使用，采用更宽松的匹配策略
      */
     private fun parseCodeBlocksFallback(response: String, codeBlocks: MutableList<CodeBlock>) {
-        // 备用正则：更宽松的匹配，支持各种边界情况
-        val fallbackRegex = Regex("""```\s*(\w*)\s*([\s\S]*?)```""")
+        // 备用正则1：更宽松的三反引号匹配
+        val fallbackRegex1 = Regex("""```\s*(\w*)\s*([\s\S]*?)```""")
         
-        fallbackRegex.findAll(response).forEach { match ->
+        // 备用正则2：单反引号匹配（某些AI会这样输出）
+        val fallbackRegex2 = Regex("""`\s*(\w+)\s*([\s\S]*?)`(?!`)""")
+        
+        // 备用正则3：基于语言标识符的分段匹配（处理没有结束标记的情况）
+        // 匹配 `html、`css、`js 等开头的代码块
+        val fallbackRegex3 = Regex("""`(html|css|js|javascript)\s*([\s\S]*?)(?=`(?:html|css|js|javascript)|$)""", RegexOption.IGNORE_CASE)
+        
+        var foundAny = false
+        
+        // 尝试备用正则1
+        fallbackRegex1.findAll(response).forEach { match ->
             val rawLanguage = match.groupValues[1].trim().lowercase()
             val rawContent = match.groupValues[2].trim()
             
@@ -949,7 +965,7 @@ object CodeBlockParser {
                 return@forEach
             }
             
-            if (rawContent.isNotEmpty()) {
+            if (rawContent.isNotEmpty() && rawContent.length > 10) {
                 val language = inferLanguage(rawLanguage, rawContent)
                 val filename = getDefaultFilename(language)
                 
@@ -961,7 +977,104 @@ object CodeBlockParser {
                         isComplete = isCompleteCode(language, rawContent)
                     )
                 )
+                foundAny = true
             }
+        }
+        
+        // 如果备用正则1没找到，尝试备用正则2（单反引号）
+        if (!foundAny) {
+            fallbackRegex2.findAll(response).forEach { match ->
+                val rawLanguage = match.groupValues[1].trim().lowercase()
+                val rawContent = match.groupValues[2].trim()
+                
+                if (rawContent.isNotEmpty() && rawContent.length > 50) {
+                    val language = inferLanguage(rawLanguage, rawContent)
+                    val filename = getDefaultFilename(language)
+                    
+                    codeBlocks.add(
+                        CodeBlock(
+                            language = language,
+                            filename = filename,
+                            content = rawContent,
+                            isComplete = isCompleteCode(language, rawContent)
+                        )
+                    )
+                    foundAny = true
+                }
+            }
+        }
+        
+        // 如果还是没找到，尝试基于内容特征的智能分割
+        if (!foundAny) {
+            parseCodeBlocksByContent(response, codeBlocks)
+        }
+    }
+    
+    /**
+     * 基于内容特征的智能代码块分割
+     * 当所有正则都失败时，尝试根据代码特征识别代码块
+     */
+    private fun parseCodeBlocksByContent(response: String, codeBlocks: MutableList<CodeBlock>) {
+        // 查找 HTML 内容（以 <!DOCTYPE 或 <html 开头）
+        val htmlPattern = Regex("""(<!DOCTYPE[\s\S]*?</html>|<html[\s\S]*?</html>)""", RegexOption.IGNORE_CASE)
+        htmlPattern.find(response)?.let { match ->
+            val content = match.groupValues[1].trim()
+            if (content.length > 50) {
+                codeBlocks.add(
+                    CodeBlock(
+                        language = "html",
+                        filename = "index.html",
+                        content = content,
+                        isComplete = true
+                    )
+                )
+            }
+        }
+        
+        // 查找 CSS 内容（包含选择器和属性）
+        val cssPattern = Regex("""(/\*[\s\S]*?\*/\s*)?([\w\-\.\#\[\]:\s,]+\s*\{[\s\S]*?\}[\s\S]*?)(?=\n\n|\z|/\*|//\s*文件名)""")
+        val cssMatches = cssPattern.findAll(response)
+        val cssContent = StringBuilder()
+        cssMatches.forEach { match ->
+            val content = match.value.trim()
+            // 确保是 CSS 而不是 JS 对象
+            if (content.contains("{") && content.contains("}") && 
+                content.contains(":") && content.contains(";") &&
+                !content.contains("function") && !content.contains("=>") &&
+                !content.contains("const ") && !content.contains("let ")) {
+                cssContent.append(content).append("\n\n")
+            }
+        }
+        if (cssContent.isNotEmpty() && cssContent.length > 50) {
+            codeBlocks.add(
+                CodeBlock(
+                    language = "css",
+                    filename = "styles.css",
+                    content = cssContent.toString().trim(),
+                    isComplete = true
+                )
+            )
+        }
+        
+        // 查找 JS 内容（包含函数定义或变量声明）
+        val jsPattern = Regex("""(//[^\n]*\n)?((?:function\s+\w+|const\s+\w+|let\s+\w+|var\s+\w+|document\.|window\.)[\s\S]*?)(?=\n\n\n|\z)""")
+        val jsMatches = jsPattern.findAll(response)
+        val jsContent = StringBuilder()
+        jsMatches.forEach { match ->
+            val content = match.value.trim()
+            if (content.length > 30) {
+                jsContent.append(content).append("\n\n")
+            }
+        }
+        if (jsContent.isNotEmpty() && jsContent.length > 50) {
+            codeBlocks.add(
+                CodeBlock(
+                    language = "js",
+                    filename = "script.js",
+                    content = jsContent.toString().trim(),
+                    isComplete = true
+                )
+            )
         }
     }
     
