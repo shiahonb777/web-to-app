@@ -149,10 +149,11 @@ $thinkingStep
 </html>
 ```
 
-### 重要说明
-- **只输出一个 HTML 文件**：所有 CSS 放在 `<style>` 标签中，所有 JS 放在 `<script>` 标签中
-- **CSS 放在 `<head>` 中**：使用 `<style>` 标签
-- **JS 放在 `</body>` 前**：使用 `<script>` 标签
+### 重要说明（必须严格遵守）
+- **只输出一个 HTML 代码块**：所有 CSS 放在 `<style>` 标签中，所有 JS 放在 `<script>` 标签中
+- **禁止输出多个代码块**：不要分开输出 CSS 和 JS 文件
+- **CSS 放在 `<head>` 中**：使用 `<style>` 标签内嵌
+- **JS 放在 `</body>` 前**：使用 `<script>` 标签内嵌
 - **文件名固定**：使用 index.html
             """
         } else {
