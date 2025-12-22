@@ -77,8 +77,21 @@ fun HtmlCodingScreen(
     
     // 当前会话
     var currentSession by remember { mutableStateOf<HtmlCodingSession?>(null) }
+    
+    // 从 sessions Flow 同步 currentSession
+    // 注意：只有当 sessions 更新时才同步，避免覆盖本地修改
     LaunchedEffect(currentSessionId, sessions) {
-        currentSession = sessions.find { it.id == currentSessionId }
+        val sessionFromFlow = sessions.find { it.id == currentSessionId }
+        // 只有当 Flow 中的会话比本地更新时才同步
+        if (sessionFromFlow != null) {
+            if (currentSession == null || 
+                currentSession?.id != sessionFromFlow.id ||
+                sessionFromFlow.updatedAt > (currentSession?.updatedAt ?: 0)) {
+                currentSession = sessionFromFlow
+            }
+        } else if (currentSessionId == null) {
+            currentSession = null
+        }
     }
     
     // UI状态
@@ -591,13 +604,25 @@ fun HtmlCodingScreen(
         ModalBottomSheet(
             onDismissRequest = { showConfigSheet = false }
         ) {
-            currentSession?.let { session ->
+            // 如果没有当前会话，先创建一个
+            val sessionForConfig = currentSession ?: run {
+                // 使用 LaunchedEffect 创建会话
+                var newSession by remember { mutableStateOf<HtmlCodingSession?>(null) }
+                LaunchedEffect(Unit) {
+                    newSession = storage.createSession()
+                    currentSession = newSession
+                }
+                newSession
+            }
+            
+            sessionForConfig?.let { session ->
                 ConfigPanel(
                     config = session.config,
                     onConfigChange = { newConfig ->
                         scope.launch {
-                            storage.updateSession(session.copy(config = newConfig))
-                            currentSession = session.copy(config = newConfig)
+                            val updatedSession = session.copy(config = newConfig, updatedAt = System.currentTimeMillis())
+                            storage.updateSession(updatedSession)
+                            currentSession = updatedSession
                         }
                     },
                     textModels = textModels,
@@ -610,11 +635,13 @@ fun HtmlCodingScreen(
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
             } ?: run {
-                Text(
-                    "请先创建或选择一个会话",
-                    modifier = Modifier.padding(32.dp),
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                // 正在创建会话，显示加载状态
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
         }
     }

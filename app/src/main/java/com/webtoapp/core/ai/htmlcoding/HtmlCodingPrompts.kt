@@ -212,7 +212,7 @@ button, a, [onclick] {
 ```
 
 ### 3. JavaScript文件（如需交互则必需，否则可为空）
-```javascript
+```js
 // 文件名: script.js
 // 使用触摸事件而非点击事件以获得更好的响应
 document.addEventListener('DOMContentLoaded', function() {
@@ -222,10 +222,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // ...其他逻辑...
 ```
 
-### 重要说明
-- **始终输出三个文件**：即使CSS或JS内容很少，也要分开输出
-- **HTML中通过link和script引用**：不要内嵌样式和脚本
-- **文件名固定**：使用 index.html、styles.css、script.js
+### 重要说明（必须严格遵守）
+- **必须输出三个独立的代码块**：HTML、CSS、JS 各一个代码块
+- **每个代码块必须有正确的语言标识**：\`\`\`html、\`\`\`css、\`\`\`js
+- **每个代码块开头必须有文件名注释**：
+  - HTML: `<!-- 文件名: index.html -->`
+  - CSS: `/* 文件名: styles.css */`
+  - JS: `// 文件名: script.js`
+- **HTML中通过link和script引用外部文件**：不要内嵌样式和脚本
+- **即使CSS或JS内容很少，也必须分开输出**
+- **禁止将所有代码放在一个HTML文件中**
             """
         }
         
