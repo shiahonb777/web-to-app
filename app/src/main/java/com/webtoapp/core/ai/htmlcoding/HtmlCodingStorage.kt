@@ -806,21 +806,47 @@ class HtmlCodingStorage(private val context: Context) {
 
 /**
  * 从AI响应中解析代码块
+ * 
+ * 修复问题：
+ * 1. 正则表达式必须要求语言标识符后有换行符，避免语言和代码内容混淆
+ * 2. 使用更精确的正则表达式匹配代码块
+ * 3. 确保文件名不会和代码内容拼接
+ * 4. 支持没有语言标识符的代码块
  */
 object CodeBlockParser {
     
+    /**
+     * 改进的代码块正则表达式
+     * 
+     * 关键修复：
+     * 1. 语言标识符后必须有换行符或空白符 `\s*\n`
+     * 2. 使用非贪婪匹配 `[\s\S]*?` 来匹配代码内容
+     * 3. 文件名注释是可选的，但必须在单独的行上
+     * 4. 支持没有语言标识符的代码块（默认为 html）
+     * 
+     * 匹配格式：
+     * ```language
+     * code content
+     * ```
+     * 
+     * 或带文件名注释：
+     * ```javascript
+     * // 文件名: script.js
+     * code content
+     * ```
+     */
     private val codeBlockRegex = Regex(
-        """```(\w+)?(?:\s*\n)?(?:<!--\s*文件名:\s*(.+?)\s*-->|/\*\s*文件名:\s*(.+?)\s*\*/|//\s*文件名:\s*(.+?)\s*\n)?\s*([\s\S]*?)```""",
+        """```(\w+)?[ \t]*\n((?:<!--\s*文件名:\s*([^\n]+?)\s*-->\s*\n|/\*\s*文件名:\s*([^\n]+?)\s*\*/\s*\n|//\s*文件名:\s*([^\n]+?)\s*\n)?)([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
     
     private val thinkingRegex = Regex(
-        """<thinking>([\s\S]*?)</thinking>|```thinking\s*([\s\S]*?)```""",
+        """<thinking>([\s\S]*?)</thinking>|```thinking[ \t]*\n([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
     
     private val imageGenRegex = Regex(
-        """```image-gen\s*([\s\S]*?)```""",
+        """```image-gen[ \t]*\n([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
 
@@ -853,13 +879,19 @@ object CodeBlockParser {
         
         // 提取代码块
         codeBlockRegex.findAll(response).forEach { match ->
+            // group 1: 语言标识符
+            // group 2: 文件名注释行（整行，包含注释标记）
+            // group 3: HTML注释中的文件名
+            // group 4: CSS注释中的文件名
+            // group 5: JS注释中的文件名
+            // group 6: 代码内容
             val language = match.groupValues[1].ifEmpty { "html" }.lowercase()
-            val filename = match.groupValues[2].ifEmpty { 
-                match.groupValues[3].ifEmpty { 
-                    match.groupValues[4].ifEmpty { null } 
+            val filename = match.groupValues[3].trim().ifEmpty { 
+                match.groupValues[4].trim().ifEmpty { 
+                    match.groupValues[5].trim().ifEmpty { null } 
                 } 
             }
-            val content = match.groupValues[5].trim()
+            val content = match.groupValues[6].trim()
             
             if (content.isNotEmpty()) {
                 // 修复JS文件名：统一使用 "js" 作为扩展名
@@ -867,7 +899,7 @@ object CodeBlockParser {
                     "javascript" -> "js"
                     else -> language
                 }
-                val actualFilename = filename ?: when (normalizedLanguage) {
+                val actualFilename = filename?.takeIf { it.isNotBlank() } ?: when (normalizedLanguage) {
                     "html" -> "index.html"
                     "css" -> "style.css"
                     "js" -> "script.js"
@@ -913,11 +945,16 @@ object CodeBlockParser {
     
     /**
      * 合并多个代码块为完整HTML文件
+     * 
+     * 修复问题：
+     * 1. 确保 CSS 和 JS 正确插入到 HTML 中
+     * 2. 处理 HTML 结构不规范的情况
+     * 3. 避免重复插入已存在的内联样式/脚本
      */
     fun mergeToSingleHtml(codeBlocks: List<CodeBlock>): String {
         val htmlBlocks = codeBlocks.filter { it.language == "html" }
         val cssBlocks = codeBlocks.filter { it.language == "css" }
-        val jsBlocks = codeBlocks.filter { it.language == "js" }
+        val jsBlocks = codeBlocks.filter { it.language == "js" || it.language == "javascript" }
         
         // 如果有完整的HTML，尝试合并CSS和JS
         val mainHtml = htmlBlocks.find { it.isComplete }?.content
@@ -925,50 +962,133 @@ object CodeBlockParser {
         if (mainHtml != null) {
             var result = mainHtml
             
-            // 在</head>前插入CSS
+            // 检查 HTML 中是否已经有内联的 style 和 script 标签
+            val hasInlineStyle = result.contains("<style", ignoreCase = true)
+            val hasInlineScript = result.contains("<script", ignoreCase = true) && 
+                                  !result.contains("<script[^>]*src=".toRegex(RegexOption.IGNORE_CASE))
+            
+            // 移除 HTML 中已有的外部 CSS/JS 引用（因为我们会内联它们）
+            // 这样可以避免文件找不到的问题
+            result = result.replace(Regex("""<link[^>]*href=["'](?!http)[^"']*\.css["'][^>]*>""", RegexOption.IGNORE_CASE), "")
+            result = result.replace(Regex("""<script[^>]*src=["'](?!http)[^"']*\.js["'][^>]*></script>""", RegexOption.IGNORE_CASE), "")
+            
+            // 在</head>前插入CSS（如果有独立的CSS块且HTML中没有相同内容）
+            // 注意：如果 HTML 已经有内联样式，仍然添加额外的 CSS 块（它们可能是补充样式）
             if (cssBlocks.isNotEmpty()) {
-                val cssContent = cssBlocks.joinToString("\n") { it.content }
+                val cssContent = cssBlocks.joinToString("\n\n") { it.content }
                 val styleTag = "<style>\n$cssContent\n</style>"
-                result = if (result.contains("</head>")) {
-                    result.replace("</head>", "$styleTag\n</head>")
-                } else {
-                    result.replace("<body", "$styleTag\n<body")
+                
+                result = when {
+                    result.contains("</head>", ignoreCase = true) -> {
+                        result.replaceFirst(Regex("</head>", RegexOption.IGNORE_CASE), "$styleTag\n</head>")
+                    }
+                    result.contains("<body", ignoreCase = true) -> {
+                        result.replaceFirst(Regex("<body", RegexOption.IGNORE_CASE), "$styleTag\n<body")
+                    }
+                    result.contains("<html", ignoreCase = true) -> {
+                        // 在 <html> 后插入 <head> 和样式
+                        result.replaceFirst(Regex("(<html[^>]*>)", RegexOption.IGNORE_CASE), "$1\n<head>\n$styleTag\n</head>")
+                    }
+                    else -> {
+                        // 没有标准结构，在开头添加
+                        "$styleTag\n$result"
+                    }
                 }
             }
             
-            // 在</body>前插入JS
+            // 在</body>前插入JS（确保 DOM 加载完成后执行）
+            // 只有当有独立的 JS 代码块时才添加
             if (jsBlocks.isNotEmpty()) {
-                val jsContent = jsBlocks.joinToString("\n") { it.content }
-                val scriptTag = "<script>\n$jsContent\n</script>"
-                result = if (result.contains("</body>")) {
-                    result.replace("</body>", "$scriptTag\n</body>")
+                val jsContent = jsBlocks.joinToString("\n\n") { it.content }
+                // 如果 HTML 中已经有内联脚本，不要包装 JS（避免重复包装）
+                // 直接添加额外的 JS 代码
+                val finalJs = if (hasInlineScript) {
+                    // HTML 已有内联脚本，直接添加额外代码（不包装）
+                    jsContent
                 } else {
-                    result + scriptTag
+                    // 没有内联脚本，包装 JS 确保 DOM 加载完成后执行
+                    wrapJsForDomReady(jsContent)
+                }
+                val scriptTag = "<script>\n$finalJs\n</script>"
+                
+                result = when {
+                    result.contains("</body>", ignoreCase = true) -> {
+                        result.replaceFirst(Regex("</body>", RegexOption.IGNORE_CASE), "$scriptTag\n</body>")
+                    }
+                    result.contains("</html>", ignoreCase = true) -> {
+                        result.replaceFirst(Regex("</html>", RegexOption.IGNORE_CASE), "$scriptTag\n</html>")
+                    }
+                    else -> {
+                        // 在末尾添加
+                        "$result\n$scriptTag"
+                    }
                 }
             }
             
             return result
         }
         
-        // 没有完整HTML，构建一个
-        val css = cssBlocks.joinToString("\n") { it.content }
-        val js = jsBlocks.joinToString("\n") { it.content }
+        // 没有完整HTML，构建一个标准的 HTML5 文档
+        val css = cssBlocks.joinToString("\n\n") { it.content }
+        val js = jsBlocks.joinToString("\n\n") { it.content }
         val htmlContent = htmlBlocks.joinToString("\n") { it.content }
+        
+        // 包装 JS 确保 DOM 加载完成后执行
+        val wrappedJs = if (js.isNotEmpty()) wrapJsForDomReady(js) else ""
         
         return """
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>预览</title>
     ${if (css.isNotEmpty()) "<style>\n$css\n</style>" else ""}
 </head>
 <body>
 $htmlContent
-${if (js.isNotEmpty()) "<script>\n$js\n</script>" else ""}
+${if (wrappedJs.isNotEmpty()) "<script>\n$wrappedJs\n</script>" else ""}
 </body>
 </html>
         """.trimIndent()
+    }
+    
+    /**
+     * 包装 JS 代码，确保在 DOM 加载完成后执行
+     * 避免 JS 执行时 DOM 元素还未创建的问题
+     * 
+     * 修复：使用更安全的包装方式，保持全局作用域的函数可访问
+     */
+    private fun wrapJsForDomReady(jsContent: String): String {
+        val trimmedContent = jsContent.trim()
+        if (trimmedContent.isEmpty()) return ""
+        
+        // 检查 JS 是否已经有 DOMContentLoaded 或 window.onload 包装
+        val hasWrapper = trimmedContent.contains("DOMContentLoaded", ignoreCase = true) ||
+                        trimmedContent.contains("window.onload", ignoreCase = true) ||
+                        trimmedContent.contains("addEventListener('load'", ignoreCase = true) ||
+                        trimmedContent.contains("addEventListener(\"load\"", ignoreCase = true) ||
+                        trimmedContent.contains("\$(document).ready", ignoreCase = true) ||
+                        trimmedContent.contains("\$(function()", ignoreCase = true)
+        
+        return if (hasWrapper) {
+            trimmedContent
+        } else {
+            // 直接使用 DOMContentLoaded 包装，不使用 IIFE
+            // 这样可以保持全局作用域的函数定义可访问
+            """
+// 确保 DOM 加载完成后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+$trimmedContent
+    });
+} else {
+    // DOM 已经加载完成，直接执行
+    (function() {
+$trimmedContent
+    })();
+}
+            """.trimIndent()
+        }
     }
 }

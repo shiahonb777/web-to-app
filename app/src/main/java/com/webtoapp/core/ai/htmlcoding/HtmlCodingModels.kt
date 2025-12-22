@@ -21,6 +21,14 @@ data class HtmlCodingSession(
 )
 
 /**
+ * 代码输出模式
+ */
+enum class OutputMode(val displayName: String, val description: String) {
+    PURE_HTML("纯 HTML", "所有代码内嵌在单个 HTML 文件中"),
+    SEPARATED("HTML + CSS + JS", "三文件分离输出，便于管理维护")
+}
+
+/**
  * 会话配置
  */
 data class SessionConfig(
@@ -29,7 +37,8 @@ data class SessionConfig(
     val temperature: Float = 0.7f,             // 温度 0.0-2.0
     val rules: List<String> = listOf("使用中文进行对话"),  // 规则列表
     val selectedTemplateId: String? = null,    // 选中的模板ID
-    val selectedStyleId: String? = null        // 选中的风格ID
+    val selectedStyleId: String? = null,       // 选中的风格ID
+    val outputMode: OutputMode = OutputMode.SEPARATED  // 输出模式，默认三文件分离
 )
 
 /**

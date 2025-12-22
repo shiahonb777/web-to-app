@@ -37,6 +37,7 @@ object Routes {
     const val CREATE_APP = "create_app"
     const val CREATE_MEDIA_APP = "create_media_app"
     const val CREATE_HTML_APP = "create_html_app"
+    const val CREATE_HTML_APP_WITH_IMPORT = "create_html_app?importDir={importDir}&projectName={projectName}"
     const val EDIT_APP = "edit_app/{appId}"
     const val PREVIEW = "preview/{appId}"
     const val APP_MODIFIER = "app_modifier"
@@ -131,8 +132,28 @@ fun AppNavigation() {
             )
         }
         
-        // 创建HTML应用
-        composable(Routes.CREATE_HTML_APP) {
+        // 创建HTML应用（支持从AI编程导入）
+        composable(
+            route = "${Routes.CREATE_HTML_APP}?importDir={importDir}&projectName={projectName}",
+            arguments = listOf(
+                navArgument("importDir") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("projectName") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val importDir = backStackEntry.arguments?.getString("importDir")?.let {
+                try { java.net.URLDecoder.decode(it, "UTF-8") } catch (e: Exception) { null }
+            }
+            val projectName = backStackEntry.arguments?.getString("projectName")?.let {
+                try { java.net.URLDecoder.decode(it, "UTF-8") } catch (e: Exception) { null }
+            }
             CreateHtmlAppScreen(
                 onBack = { navController.popBackStack() },
                 onCreated = { name, htmlConfig, iconUri, themeType ->
@@ -140,7 +161,9 @@ fun AppNavigation() {
                         name, htmlConfig, iconUri, themeType
                     )
                     navController.popBackStack()
-                }
+                },
+                importDir = importDir,
+                importProjectName = projectName
             )
         }
 
@@ -187,6 +210,23 @@ fun AppNavigation() {
         composable(Routes.HTML_CODING) {
             HtmlCodingScreen(
                 onBack = { navController.popBackStack() },
+                onExportToHtmlProject = { files, projectName ->
+                    // 将AI生成的代码导出到HTML项目创建页面
+                    // 保存文件到临时目录，然后导航到创建HTML应用页面
+                    val context = navController.context
+                    val tempDir = java.io.File(context.cacheDir, "ai_html_export").apply { 
+                        if (exists()) deleteRecursively()
+                        mkdirs() 
+                    }
+                    
+                    // 保存所有文件
+                    files.forEach { file ->
+                        java.io.File(tempDir, file.name).writeText(file.content)
+                    }
+                    
+                    // 导航到创建HTML应用页面（带参数）
+                    navController.navigate("${Routes.CREATE_HTML_APP}?importDir=${java.net.URLEncoder.encode(tempDir.absolutePath, "UTF-8")}&projectName=${java.net.URLEncoder.encode(projectName, "UTF-8")}")
+                },
                 onNavigateToAiSettings = {
                     navController.navigate(Routes.AI_SETTINGS)
                 }

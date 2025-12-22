@@ -32,6 +32,18 @@ object HtmlCodingPrompts {
         """.trimIndent())
 
         // ===== 核心原则 =====
+        val outputModeHint = if (config.outputMode == OutputMode.PURE_HTML) {
+            "- **单文件输出**：将所有代码（HTML、CSS、JavaScript）输出在一个完整的 HTML 文件中，CSS 使用 `<style>` 标签，JS 使用 `<script>` 标签"
+        } else {
+            "- **三文件分离**：将 HTML、CSS、JavaScript 分成三个独立文件输出，便于管理和维护"
+        }
+        
+        val thinkingStep = if (config.outputMode == OutputMode.PURE_HTML) {
+            "4. 【结构规划】规划HTML结构、CSS布局、JS逻辑（单文件内嵌）"
+        } else {
+            "4. 【结构规划】规划HTML结构、CSS布局、JS逻辑（三文件分离）"
+        }
+        
         sb.appendLine("""
 
 # 核心原则
@@ -53,7 +65,7 @@ object HtmlCodingPrompts {
 
 ## 2. 代码质量要求
 - **完整性**：生成的代码必须是完整可运行的，包含所有必要的标签、样式和脚本
-- **三文件分离**：将 HTML、CSS、JavaScript 分成三个独立文件输出，便于管理和维护
+$outputModeHint
 - **现代实践**：使用语义化HTML标签、CSS变量、Flexbox/Grid布局
 - **移动端适配**：使用 vw/vh/rem 等相对单位，禁止使用固定像素大小的布局
 
@@ -71,25 +83,80 @@ object HtmlCodingPrompts {
 1. 【需求分析】理解用户真正想要什么
 2. 【移动端考量】这是手机APP，如何适配触摸和屏幕比例
 3. 【方案设计】确定技术方案和实现路径
-4. 【结构规划】规划HTML结构、CSS布局、JS逻辑（三文件分离）
+$thinkingStep
 5. 【细节考量】考虑边界情况、触摸体验、性能
-6. 【代码实现】按HTML→CSS→JS顺序分别生成完整代码
+6. 【代码实现】生成完整代码
 ```
         """.trimIndent())
 
         // ===== 交互规范 =====
-        sb.appendLine("""
+        val outputFormatSection = if (config.outputMode == OutputMode.PURE_HTML) {
+            """
+## 回复格式（纯 HTML 单文件输出）
 
-# 交互规范
+对于代码生成请求，**必须**输出一个完整的 HTML 文件，CSS 和 JavaScript 内嵌在文件中：
 
-## 需求澄清
-当遇到以下情况时，**必须先提出疑问和方案建议**，而不是盲目执行：
+```html
+<!-- 文件名: index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>应用标题</title>
+    <style>
+        /* 移动端基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-1. **需求不明确**：关键信息缺失时，列出需要确认的问题
-2. **需求不合理**：技术上难以实现或存在更好方案时，说明原因并提供替代方案
-3. **需求有歧义**：可能有多种理解时，列出不同解读并询问用户意图
-4. **功能冲突**：新需求与已有功能冲突时，说明影响并征求意见
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
+        /* 安全区域适配 */
+        body {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* 触摸优化 */
+        button, a, [onclick] {
+            min-width: 44px;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+
+        /* ...其他样式... */
+    </style>
+</head>
+<body>
+    <!-- 页面结构 -->
+
+    <script>
+        // 使用触摸事件而非点击事件以获得更好的响应
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化代码
+        });
+
+        // ...其他逻辑...
+    </script>
+</body>
+</html>
+```
+
+### 重要说明
+- **只输出一个 HTML 文件**：所有 CSS 放在 `<style>` 标签中，所有 JS 放在 `<script>` 标签中
+- **CSS 放在 `<head>` 中**：使用 `<style>` 标签
+- **JS 放在 `</body>` 前**：使用 `<script>` 标签
+- **文件名固定**：使用 index.html
+            """
+        } else {
+            """
 ## 回复格式（三文件分离输出）
 
 对于代码生成请求，**必须**按以下格式输出三个独立文件：
@@ -159,6 +226,22 @@ document.addEventListener('DOMContentLoaded', function() {
 - **始终输出三个文件**：即使CSS或JS内容很少，也要分开输出
 - **HTML中通过link和script引用**：不要内嵌样式和脚本
 - **文件名固定**：使用 index.html、styles.css、script.js
+            """
+        }
+        
+        sb.appendLine("""
+
+# 交互规范
+
+## 需求澄清
+当遇到以下情况时，**必须先提出疑问和方案建议**，而不是盲目执行：
+
+1. **需求不明确**：关键信息缺失时，列出需要确认的问题
+2. **需求不合理**：技术上难以实现或存在更好方案时，说明原因并提供替代方案
+3. **需求有歧义**：可能有多种理解时，列出不同解读并询问用户意图
+4. **功能冲突**：新需求与已有功能冲突时，说明影响并征求意见
+
+$outputFormatSection
         """.trimIndent())
 
         // ===== 用户规则 =====

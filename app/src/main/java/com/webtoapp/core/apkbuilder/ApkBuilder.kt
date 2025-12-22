@@ -623,7 +623,10 @@ class ApkBuilder(private val context: Context) {
     
     /**
      * 将 HTML 文件添加到 assets/html 目录
-     * HTML/CSS/JS 文件使用 DEFLATED 压缩（文本文件压缩效果好）
+     * 
+     * 重要修复：将 CSS 和 JS 内联到 HTML 文件中，而不是作为独立文件
+     * 这样可以避免 WebView 加载本地文件时的路径引用问题
+     * 
      * @return 成功嵌入的文件数量
      */
     private fun addHtmlFilesToAssets(
@@ -634,16 +637,64 @@ class ApkBuilder(private val context: Context) {
         
         // 打印所有文件路径用于调试
         htmlFiles.forEachIndexed { index, file ->
-            Log.d("ApkBuilder", "  [$index] name=${file.name}, path=${file.path}")
+            Log.d("ApkBuilder", "  [$index] name=${file.name}, path=${file.path}, type=${file.type}")
         }
+        
+        // 分类文件
+        val htmlFilesList = htmlFiles.filter { 
+            it.type == com.webtoapp.data.model.HtmlFileType.HTML || 
+            it.name.endsWith(".html", ignoreCase = true) || 
+            it.name.endsWith(".htm", ignoreCase = true)
+        }
+        val cssFilesList = htmlFiles.filter { 
+            it.type == com.webtoapp.data.model.HtmlFileType.CSS || 
+            it.name.endsWith(".css", ignoreCase = true)
+        }
+        val jsFilesList = htmlFiles.filter { 
+            it.type == com.webtoapp.data.model.HtmlFileType.JS || 
+            it.name.endsWith(".js", ignoreCase = true)
+        }
+        val otherFiles = htmlFiles.filter { file ->
+            file !in htmlFilesList && file !in cssFilesList && file !in jsFilesList
+        }
+        
+        Log.d("ApkBuilder", "文件分类: HTML=${htmlFilesList.size}, CSS=${cssFilesList.size}, JS=${jsFilesList.size}, Other=${otherFiles.size}")
         
         var successCount = 0
         
-        htmlFiles.forEach { htmlFile ->
+        // 读取 CSS 内容
+        val cssContent = cssFilesList.mapNotNull { cssFile ->
+            try {
+                val file = File(cssFile.path)
+                if (file.exists() && file.canRead()) {
+                    file.readText()
+                } else null
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "读取 CSS 文件失败: ${cssFile.path}", e)
+                null
+            }
+        }.joinToString("\n\n")
+        
+        // 读取 JS 内容
+        val jsContent = jsFilesList.mapNotNull { jsFile ->
+            try {
+                val file = File(jsFile.path)
+                if (file.exists() && file.canRead()) {
+                    file.readText()
+                } else null
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "读取 JS 文件失败: ${jsFile.path}", e)
+                null
+            }
+        }.joinToString("\n\n")
+        
+        Log.d("ApkBuilder", "CSS 内容长度: ${cssContent.length}, JS 内容长度: ${jsContent.length}")
+        
+        // 处理 HTML 文件，将 CSS 和 JS 内联
+        htmlFilesList.forEach { htmlFile ->
             try {
                 val sourceFile = File(htmlFile.path)
-                Log.d("ApkBuilder", "检查文件: ${htmlFile.path}")
-                Log.d("ApkBuilder", "  exists=${sourceFile.exists()}, canRead=${sourceFile.canRead()}, absolutePath=${sourceFile.absolutePath}")
+                Log.d("ApkBuilder", "处理 HTML 文件: ${htmlFile.path}")
                 
                 if (!sourceFile.exists()) {
                     Log.e("ApkBuilder", "HTML 文件不存在: ${htmlFile.path}")
@@ -655,24 +706,113 @@ class ApkBuilder(private val context: Context) {
                     return@forEach
                 }
                 
-                val fileBytes = sourceFile.readBytes()
-                if (fileBytes.isEmpty()) {
+                var htmlContent = sourceFile.readText()
+                if (htmlContent.isEmpty()) {
                     Log.w("ApkBuilder", "HTML 文件内容为空: ${htmlFile.path}")
                     return@forEach
                 }
                 
-                // 保持相对路径结构，存储到 assets/html/ 目录
+                // 移除 HTML 中已有的本地 CSS/JS 引用（因为我们会内联它们）
+                htmlContent = htmlContent.replace(Regex("""<link[^>]*href=["'](?!http)[^"']*\.css["'][^>]*>""", RegexOption.IGNORE_CASE), "")
+                htmlContent = htmlContent.replace(Regex("""<script[^>]*src=["'](?!http)[^"']*\.js["'][^>]*></script>""", RegexOption.IGNORE_CASE), "")
+                
+                // 内联 CSS
+                if (cssContent.isNotEmpty()) {
+                    val styleTag = "<style>\n$cssContent\n</style>"
+                    htmlContent = when {
+                        htmlContent.contains("</head>", ignoreCase = true) -> {
+                            htmlContent.replaceFirst(Regex("</head>", RegexOption.IGNORE_CASE), "$styleTag\n</head>")
+                        }
+                        htmlContent.contains("<body", ignoreCase = true) -> {
+                            htmlContent.replaceFirst(Regex("<body", RegexOption.IGNORE_CASE), "$styleTag\n<body")
+                        }
+                        else -> "$styleTag\n$htmlContent"
+                    }
+                }
+                
+                // 内联 JS（包装确保 DOM 加载完成后执行）
+                if (jsContent.isNotEmpty()) {
+                    val wrappedJs = wrapJsForDomReady(jsContent)
+                    val scriptTag = "<script>\n$wrappedJs\n</script>"
+                    htmlContent = when {
+                        htmlContent.contains("</body>", ignoreCase = true) -> {
+                            htmlContent.replaceFirst(Regex("</body>", RegexOption.IGNORE_CASE), "$scriptTag\n</body>")
+                        }
+                        htmlContent.contains("</html>", ignoreCase = true) -> {
+                            htmlContent.replaceFirst(Regex("</html>", RegexOption.IGNORE_CASE), "$scriptTag\n</html>")
+                        }
+                        else -> "$htmlContent\n$scriptTag"
+                    }
+                }
+                
+                // 保存到 assets/html/ 目录
                 val assetPath = "assets/html/${htmlFile.name}"
-                writeEntryDeflated(zipOut, assetPath, fileBytes)
-                Log.d("ApkBuilder", "HTML 文件已嵌入: $assetPath (${fileBytes.size} bytes)")
+                writeEntryDeflated(zipOut, assetPath, htmlContent.toByteArray(Charsets.UTF_8))
+                Log.d("ApkBuilder", "HTML 文件已嵌入(内联CSS/JS): $assetPath (${htmlContent.length} bytes)")
                 successCount++
             } catch (e: Exception) {
                 Log.e("ApkBuilder", "嵌入 HTML 文件失败: ${htmlFile.path}", e)
             }
         }
         
+        // 处理其他文件（图片、字体等）
+        otherFiles.forEach { otherFile ->
+            try {
+                val sourceFile = File(otherFile.path)
+                if (sourceFile.exists() && sourceFile.canRead()) {
+                    val fileBytes = sourceFile.readBytes()
+                    if (fileBytes.isNotEmpty()) {
+                        val assetPath = "assets/html/${otherFile.name}"
+                        writeEntryDeflated(zipOut, assetPath, fileBytes)
+                        Log.d("ApkBuilder", "其他文件已嵌入: $assetPath (${fileBytes.size} bytes)")
+                        successCount++
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "嵌入其他文件失败: ${otherFile.path}", e)
+            }
+        }
+        
         Log.d("ApkBuilder", "HTML 文件嵌入完成: $successCount/${htmlFiles.size} 成功")
         return successCount
+    }
+    
+    /**
+     * 包装 JS 代码，确保在 DOM 加载完成后执行
+     * 
+     * 修复：使用更安全的包装方式，保持全局作用域的函数可访问
+     */
+    private fun wrapJsForDomReady(jsContent: String): String {
+        val trimmedContent = jsContent.trim()
+        if (trimmedContent.isEmpty()) return ""
+        
+        // 检查 JS 是否已经有 DOMContentLoaded 或 window.onload 包装
+        val hasWrapper = trimmedContent.contains("DOMContentLoaded", ignoreCase = true) ||
+                        trimmedContent.contains("window.onload", ignoreCase = true) ||
+                        trimmedContent.contains("addEventListener('load'", ignoreCase = true) ||
+                        trimmedContent.contains("addEventListener(\"load\"", ignoreCase = true) ||
+                        trimmedContent.contains("\$(document).ready", ignoreCase = true) ||
+                        trimmedContent.contains("\$(function()", ignoreCase = true)
+        
+        return if (hasWrapper) {
+            trimmedContent
+        } else {
+            // 直接使用 DOMContentLoaded 包装，不使用 IIFE
+            // 这样可以保持全局作用域的函数定义可访问
+            """
+// 确保 DOM 加载完成后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+$trimmedContent
+    });
+} else {
+    // DOM 已经加载完成，直接执行
+    (function() {
+$trimmedContent
+    })();
+}
+            """.trimIndent()
+        }
     }
     
     /**

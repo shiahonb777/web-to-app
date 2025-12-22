@@ -219,6 +219,15 @@ private fun WebView.setupWebView(
         displayZoomControls = false
         setSupportZoom(true)
         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        // 允许本地文件访问（HTML中的相对路径资源，如 JS/CSS 文件）
+        @Suppress("DEPRECATION")
+        allowFileAccessFromFileURLs = true
+        @Suppress("DEPRECATION")
+        allowUniversalAccessFromFileURLs = true
+        // 确保 JavaScript 可以正常执行
+        javaScriptCanOpenWindowsAutomatically = true
+        // 支持数据库
+        databaseEnabled = true
     }
     
     webViewClient = object : WebViewClient() {

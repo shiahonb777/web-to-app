@@ -47,13 +47,15 @@ fun CreateHtmlAppScreen(
         htmlConfig: HtmlConfig?,
         iconUri: Uri?,
         themeType: String
-    ) -> Unit
+    ) -> Unit,
+    importDir: String? = null,  // 从AI编程导入的目录
+    importProjectName: String? = null  // 导入的项目名称
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     
     // 应用信息
-    var appName by remember { mutableStateOf("") }
+    var appName by remember { mutableStateOf(importProjectName ?: "") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
     
@@ -61,6 +63,41 @@ fun CreateHtmlAppScreen(
     var htmlFile by remember { mutableStateOf<HtmlFile?>(null) }
     var cssFile by remember { mutableStateOf<HtmlFile?>(null) }
     var jsFile by remember { mutableStateOf<HtmlFile?>(null) }
+    
+    // 从AI编程导入文件
+    LaunchedEffect(importDir) {
+        if (importDir != null) {
+            val dir = java.io.File(importDir)
+            if (dir.exists() && dir.isDirectory) {
+                dir.listFiles()?.forEach { file ->
+                    when {
+                        file.name.endsWith(".html", ignoreCase = true) || 
+                        file.name.endsWith(".htm", ignoreCase = true) -> {
+                            htmlFile = HtmlFile(
+                                name = file.name,
+                                path = file.absolutePath,
+                                type = HtmlFileType.HTML
+                            )
+                        }
+                        file.name.endsWith(".css", ignoreCase = true) -> {
+                            cssFile = HtmlFile(
+                                name = file.name,
+                                path = file.absolutePath,
+                                type = HtmlFileType.CSS
+                            )
+                        }
+                        file.name.endsWith(".js", ignoreCase = true) -> {
+                            jsFile = HtmlFile(
+                                name = file.name,
+                                path = file.absolutePath,
+                                type = HtmlFileType.JS
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
     
     // 配置选项
     var enableJavaScript by remember { mutableStateOf(true) }

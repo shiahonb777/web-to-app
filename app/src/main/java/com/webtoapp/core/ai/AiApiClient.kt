@@ -871,6 +871,8 @@ val json = gson.fromJson(body, JsonObject::class.java)
     /**
      * 流式聊天 - 返回Flow实时输出内容
      * 支持 Google Gemini、Anthropic Claude 和 OpenAI 兼容格式
+     * 
+     * 优化：添加节流机制，减少UI更新频率，避免卡顿
      */
     fun chatStream(
         apiKey: ApiKeyConfig,

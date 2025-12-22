@@ -24,7 +24,7 @@ object AppUpdateChecker {
     private const val RELEASES_PAGE_URL = "https://gitee.com/ashiahonb777/web-to-app/releases"
     
     // 下载地址模板（{VERSION} 会被替换为实际版本号）
-    private const val DOWNLOAD_URL_TEMPLATE = "https://gitee.com/ashiahonb777/web-to-app/releases/download/v{VERSION}/web-to-app-{VERSION}.apk"
+    private const val DOWNLOAD_URL_TEMPLATE = "https://gitee.com/ashiahonb777/web-to-app/releases/download/v{VERSION}/web-to-app-{VERSION}.APK"
     
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)

@@ -134,17 +134,22 @@ fun HtmlCodingScreen(
     fun sendMessage() {
         if (inputText.isBlank() || chatState !is ChatState.Idle) return
         
-        val session = currentSession ?: return
-        val config = session.config
-        
-        // 检查模型配置
-        if (config.textModelId == null) {
-            Toast.makeText(context, "请先选择文本模型", Toast.LENGTH_SHORT).show()
-            showConfigSheet = true
-            return
-        }
-        
         scope.launch {
+            // 如果没有当前会话，先创建一个新会话
+            val session = currentSession ?: run {
+                val newSession = storage.createSession()
+                currentSession = newSession
+                newSession
+            }
+            val config = session.config
+            
+            // 检查模型配置
+            if (config.textModelId == null) {
+                Toast.makeText(context, "请先选择文本模型", Toast.LENGTH_SHORT).show()
+                showConfigSheet = true
+                return@launch
+            }
+            
             // 创建用户消息
             val userMessage = HtmlCodingMessage(
                 role = MessageRole.USER,
