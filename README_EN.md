@@ -369,6 +369,12 @@ MIT License
 **Bug Fixes & Improvements**
 - Fixed dozens of known issues
 - Optimized AI Agent programming architecture
+- Immersive fullscreen mode for exported APKs
+  - Status bar and navigation bar fully transparent
+  - Content fills the entire screen
+  - Support for notch/punch-hole displays
+  - Auto-hide virtual buttons during video playback
+- Extended app name length support (up to ~60 Chinese characters)
 
 ### v1.6.0
 **New Features**
