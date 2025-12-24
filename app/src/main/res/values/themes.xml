@@ -29,17 +29,22 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- 全屏沉浸式主题 - 用于全屏WebView和快捷方式 -->
+    <!-- 全屏沉浸式主题 - 用于导出的独立App（Shell/Media） -->
     <style name="Theme.WebToApp.Fullscreen" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <!-- 状态栏和导航栏完全透明 -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- 支持刘海屏/挖孔屏，内容延伸到刘海区域 -->
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
+        <!-- 禁用半透明效果，使用完全透明 -->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
+        <!-- 内容绘制到系统栏下方 -->
+        <item name="android:fitsSystemWindows">false</item>
     </style>
 
     <style name="Theme.WebToApp.Splash" parent="Theme.SplashScreen">

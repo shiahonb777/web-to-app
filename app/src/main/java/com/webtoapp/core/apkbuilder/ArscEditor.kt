@@ -24,26 +24,25 @@ class ArscEditor {
      * 这是因为 ARSC 字符串池的结构限制，无法改变字符串的实际字节长度
      * 
      * @param arscData 原始 ARSC 数据
-     * @param oldAppName 原应用名（用于定位）
+     * @param oldAppName 原应用名（用于定位，包含不间断空格填充）
      * @param newAppName 新应用名
      * @return 修改后的 ARSC 数据
      */
     fun modifyAppName(arscData: ByteArray, oldAppName: String, newAppName: String): ByteArray {
-        Log.d(TAG, "modifyAppName: old='$oldAppName', new='$newAppName'")
+        Log.d(TAG, "modifyAppName: old length=${oldAppName.length}chars, new='$newAppName'")
         
-        // 尝试多种格式的旧名称（AAPT2可能trim空格）
-        val trimmed = oldAppName.trim()
+        // 优先尝试完整的带填充版本
         val oldNameVariants = listOf(
-            oldAppName,                    // 原始带空格版本
-            trimmed,                       // trim后的版本
-            oldAppName.lowercase(),        // 全小写（兼容被手动改成 webtoapp 的情况）
-            trimmed.lowercase(),           // trim 后再转小写
-            "WebToApp",                    // 兼容默认模板名（无空格）
-            "webtoapp"                     // 兼容默认模板名的小写形式
+            oldAppName,                              // 原始带不间断空格填充版本（优先）
+            oldAppName.replace('\u00A0', ' '),       // 不间断空格转普通空格
+            oldAppName.trim(),                       // trim 两端
+            "WebToApp",                              // 兼容默认模板名（无填充）
+            "webtoapp"                               // 兼容小写形式
         ).distinct()
         
         var result = arscData
         var usedEncoding = "none"
+        var matchedVariant = ""
         
         for (oldName in oldNameVariants) {
             if (usedEncoding != "none") break
@@ -54,7 +53,9 @@ class ArscEditor {
             
             if (utf8Changed) {
                 result = utf8Result
-                usedEncoding = "utf8(${oldName.length}chars)"
+                usedEncoding = "utf8"
+                matchedVariant = "variant(${oldName.length}chars)"
+                Log.d(TAG, "UTF-8 match found, oldBytes=${oldName.toByteArray(Charsets.UTF_8).size}")
             } else {
                 // 如果没找到，尝试 UTF-16LE 编码查找
                 val utf16Result = replaceStringByBytes(result, oldName, newAppName, Charsets.UTF_16LE)
@@ -62,12 +63,14 @@ class ArscEditor {
                 
                 if (utf16Changed) {
                     result = utf16Result
-                    usedEncoding = "utf16(${oldName.length}chars)"
+                    usedEncoding = "utf16"
+                    matchedVariant = "variant(${oldName.length}chars)"
+                    Log.d(TAG, "UTF-16LE match found, oldBytes=${oldName.toByteArray(Charsets.UTF_16LE).size}")
                 }
             }
         }
 
-        Log.d(TAG, "modifyAppName completed: encoding=$usedEncoding")
+        Log.d(TAG, "modifyAppName completed: encoding=$usedEncoding, $matchedVariant")
         
         return result
     }

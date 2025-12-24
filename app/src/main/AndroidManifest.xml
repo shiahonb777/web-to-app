@@ -49,6 +49,9 @@
     <!-- 前台服务权限 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    
+    <!-- WakeLock 权限（保持 CPU 运行） -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".WebToAppApplication"
@@ -74,12 +77,13 @@
         </activity>
 
         <!-- WebView容器Activity -->
+        <!-- 使用全屏沉浸式主题，内容铺满整个屏幕 -->
         <activity
             android:name=".ui.webview.WebViewActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="true"
             android:hardwareAccelerated="true"
-            android:theme="@style/Theme.WebToApp.NoActionBar">
+            android:theme="@style/Theme.WebToApp.Fullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -87,20 +91,22 @@
         </activity>
 
         <!-- Shell模式Activity（用于导出的独立App） -->
+        <!-- 使用全屏沉浸式主题，内容铺满整个屏幕 -->
         <activity
             android:name=".ui.shell.ShellActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="false"
             android:hardwareAccelerated="true"
-            android:theme="@style/Theme.WebToApp.NoActionBar" />
+            android:theme="@style/Theme.WebToApp.Fullscreen" />
         
         <!-- 媒体应用Activity（图片/视频展示App） -->
+        <!-- 使用全屏沉浸式主题，视频/图片铺满整个屏幕 -->
         <activity
             android:name=".ui.media.MediaAppActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="false"
             android:hardwareAccelerated="true"
-            android:theme="@style/Theme.WebToApp.NoActionBar" />
+            android:theme="@style/Theme.WebToApp.Fullscreen" />
         
         <!-- HTML预览Activity（HTML编程AI生成代码预览） -->
         <activity
@@ -137,6 +143,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        
+        <!-- AI 生成前台服务 -->
+        <service
+            android:name=".core.ai.AiGenerationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 

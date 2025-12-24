@@ -497,6 +497,9 @@ $it
             """.trimIndent()
         } ?: ""
         
+        // 获取 NativeBridge API 文档
+        val nativeBridgeApi = com.webtoapp.core.webview.NativeBridge.getApiDocumentation()
+        
         return """
 你是一个专业的 WebToApp 扩展模块开发专家。你的任务是根据用户需求生成高质量的扩展模块代码。
 
@@ -505,6 +508,8 @@ WebToApp 扩展模块是注入到网页中执行的 JavaScript/CSS 代码，类�
 模块会在 WebView 加载网页时自动注入执行。
 
 ## 可用的内置 API
+
+### 模块配置 API
 ```javascript
 // 获取用户配置值
 getConfig(key: string, defaultValue: any): any
@@ -516,6 +521,8 @@ __MODULE_INFO__ = { id: string, name: string, version: string }
 __MODULE_CONFIG__ = { [key: string]: any }
 ```
 
+$nativeBridgeApi
+
 ## 代码规范要求
 1. 使用 'use strict' 严格模式
 2. 代码已被包装在 IIFE 中，无需再次包装
@@ -525,6 +532,7 @@ __MODULE_CONFIG__ = { [key: string]: any }
 6. 使用 MutationObserver 监听动态内容
 7. 避免使用 eval、document.write 等不安全函数
 8. 添加清晰的注释说明
+9. 优先使用 NativeBridge API 实现原生功能（如保存图片、分享、震动等）
 
 ## 模块分类
 可用分类：CONTENT_FILTER(内容过滤), CONTENT_ENHANCE(内容增强), STYLE_MODIFIER(样式修改), 
@@ -572,6 +580,7 @@ $existingCodeHint
 2. 字符串中的特殊字符需要正确转义
 3. 如果用户没有指定 URL 匹配规则，url_matches 留空数组表示匹配所有网站
 4. config_items 用于让用户自定义模块行为，如果不需要配置项则留空数组
+5. 当需要保存图片/视频、分享、复制、震动等原生功能时，使用 NativeBridge API
         """.trimIndent()
     }
 

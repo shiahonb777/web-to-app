@@ -211,7 +211,8 @@ class DownloadBridge(
     }
     
     /**
-     * 保存 Base64 编码的文件到下载目录
+     * 保存 Base64 编码的文件
+     * 媒体文件（图片/视频）会保存到相册，其他文件保存到下载目录
      * @param base64Data Base64 编码的文件数据
      * @param filename 文件名
      * @param mimeType MIME 类型
@@ -226,47 +227,28 @@ class DownloadBridge(
                 // 确保文件名安全
                 val safeFilename = sanitizeFilename(filename)
                 
-                // 获取下载目录
-                val downloadDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    // Android 10+ 使用应用专属目录或 MediaStore
-                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-                        ?: context.filesDir
+                // 检查是否为媒体文件
+                if (com.webtoapp.util.MediaSaver.isMediaFile(mimeType, safeFilename)) {
+                    // 媒体文件保存到相册
+                    val result = com.webtoapp.util.MediaSaver.saveFromBytes(
+                        context, decodedBytes, safeFilename, mimeType
+                    )
+                    
+                    withContext(Dispatchers.Main) {
+                        when (result) {
+                            is com.webtoapp.util.MediaSaver.SaveResult.Success -> {
+                                val typeText = if (mimeType.startsWith("image/")) "图片" else "视频"
+                                Toast.makeText(context, "${typeText}已保存到相册", Toast.LENGTH_SHORT).show()
+                            }
+                            is com.webtoapp.util.MediaSaver.SaveResult.Error -> {
+                                Toast.makeText(context, "保存失败: ${result.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 } else {
-                    // Android 9 及以下使用公共下载目录
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    // 非媒体文件保存到下载目录
+                    saveToDownloads(decodedBytes, safeFilename)
                 }
-                
-                // 确保目录存在
-                if (!downloadDir.exists()) {
-                    downloadDir.mkdirs()
-                }
-                
-                // 处理文件名冲突
-                var targetFile = File(downloadDir, safeFilename)
-                var counter = 1
-                val nameWithoutExt = safeFilename.substringBeforeLast(".")
-                val ext = if (safeFilename.contains(".")) ".${safeFilename.substringAfterLast(".")}" else ""
-                
-                while (targetFile.exists()) {
-                    targetFile = File(downloadDir, "${nameWithoutExt}_$counter$ext")
-                    counter++
-                }
-                
-                // 写入文件
-                FileOutputStream(targetFile).use { fos ->
-                    fos.write(decodedBytes)
-                }
-                
-                // 通知用户
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        "已保存到: ${targetFile.name}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                
-                android.util.Log.d("DownloadBridge", "文件已保存: ${targetFile.absolutePath}")
                 
             } catch (e: Exception) {
                 android.util.Log.e("DownloadBridge", "保存文件失败", e)
@@ -279,6 +261,51 @@ class DownloadBridge(
                 }
             }
         }
+    }
+    
+    /**
+     * 保存文件到下载目录（非媒体文件）
+     */
+    private suspend fun saveToDownloads(bytes: ByteArray, filename: String) {
+        // 获取下载目录
+        val downloadDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                ?: context.filesDir
+        } else {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        }
+        
+        // 确保目录存在
+        if (!downloadDir.exists()) {
+            downloadDir.mkdirs()
+        }
+        
+        // 处理文件名冲突
+        var targetFile = File(downloadDir, filename)
+        var counter = 1
+        val nameWithoutExt = filename.substringBeforeLast(".")
+        val ext = if (filename.contains(".")) ".${filename.substringAfterLast(".")}" else ""
+        
+        while (targetFile.exists()) {
+            targetFile = File(downloadDir, "${nameWithoutExt}_$counter$ext")
+            counter++
+        }
+        
+        // 写入文件
+        FileOutputStream(targetFile).use { fos ->
+            fos.write(bytes)
+        }
+        
+        // 通知用户
+        withContext(Dispatchers.Main) {
+            Toast.makeText(
+                context,
+                "已保存到: ${targetFile.name}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        
+        android.util.Log.d("DownloadBridge", "文件已保存: ${targetFile.absolutePath}")
     }
     
     /**

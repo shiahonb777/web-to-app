@@ -8,6 +8,9 @@ import android.os.Environment
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * 下载处理工具类
@@ -32,6 +35,8 @@ object DownloadHelper {
      * @param contentLength 文件大小
      * @param method 下载方式
      * @param showEnhancedNotification 是否显示增强通知（带进度和打开按钮）
+     * @param saveToGallery 是否将媒体文件保存到相册（默认 true）
+     * @param scope 协程作用域（保存到相册时需要）
      */
     fun handleDownload(
         context: Context,
@@ -41,7 +46,9 @@ object DownloadHelper {
         mimeType: String,
         contentLength: Long,
         method: DownloadMethod = DownloadMethod.DOWNLOAD_MANAGER,
-        showEnhancedNotification: Boolean = true
+        showEnhancedNotification: Boolean = true,
+        saveToGallery: Boolean = true,
+        scope: CoroutineScope? = null
     ) {
         // 检查是否为 Blob URL（blob: 协议无法通过 DownloadManager 下载）
         if (url.startsWith("blob:")) {
@@ -50,8 +57,6 @@ object DownloadHelper {
                 "Blob 下载将由应用内部处理",
                 Toast.LENGTH_SHORT
             ).show()
-            // Blob URL 由 DownloadBridge 的 JavaScript 注入处理
-            // 这里不需要额外操作，因为 JS 会拦截并处理
             return
         }
         
@@ -62,7 +67,14 @@ object DownloadHelper {
                 "Data URL 下载将由应用内部处理",
                 Toast.LENGTH_SHORT
             ).show()
-            // Data URL 由 DownloadBridge 的 JavaScript 注入处理
+            return
+        }
+        
+        val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+        
+        // 检查是否为媒体文件，如果是且启用了保存到相册，则使用 MediaSaver
+        if (saveToGallery && MediaSaver.isMediaFile(mimeType, fileName) && scope != null) {
+            saveMediaToGallery(context, url, fileName, mimeType, scope)
             return
         }
         
@@ -72,6 +84,39 @@ object DownloadHelper {
             }
             DownloadMethod.BROWSER -> {
                 openInBrowser(context, url)
+            }
+        }
+    }
+    
+    /**
+     * 保存媒体文件到相册
+     */
+    private fun saveMediaToGallery(
+        context: Context,
+        url: String,
+        fileName: String,
+        mimeType: String,
+        scope: CoroutineScope
+    ) {
+        val mediaType = MediaSaver.getMediaType(mimeType) ?: MediaSaver.getMediaTypeByExtension(fileName)
+        val typeText = when (mediaType) {
+            MediaSaver.MediaType.IMAGE -> "图片"
+            MediaSaver.MediaType.VIDEO -> "视频"
+            else -> "文件"
+        }
+        
+        Toast.makeText(context, "正在保存${typeText}到相册...", Toast.LENGTH_SHORT).show()
+        
+        scope.launch(Dispatchers.Main) {
+            val result = MediaSaver.saveFromUrl(context, url, fileName, mimeType)
+            
+            when (result) {
+                is MediaSaver.SaveResult.Success -> {
+                    Toast.makeText(context, "${typeText}已保存到相册", Toast.LENGTH_SHORT).show()
+                }
+                is MediaSaver.SaveResult.Error -> {
+                    Toast.makeText(context, "保存失败: ${result.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

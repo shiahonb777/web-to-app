@@ -134,7 +134,6 @@ fun StreamingMessageBubble(
                 } else {
                     // 显示内容和可选的打字光标
                     Row(verticalAlignment = Alignment.Bottom) {
-                        // 使用 Markdown 渲染内容
                         val textColor = if (isUser) {
                             MaterialTheme.colorScheme.onPrimaryContainer
                         } else {
@@ -142,12 +141,37 @@ fun StreamingMessageBubble(
                         }
                         
                         SelectionContainer(modifier = Modifier.weight(1f, fill = false)) {
-                            MarkdownStyledText(
-                                text = content,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = textColor,
-                                lineHeight = 22.sp
-                            )
+                            // 检测是否包含代码内容（代码块或HTML标签）
+                            // 如果是代码内容，使用纯文本显示，避免Markdown渲染破坏代码
+                            val isCodeContent = content.contains("```") || 
+                                content.contains("<!DOCTYPE") || 
+                                content.contains("<html") ||
+                                content.contains("<style>") ||
+                                content.contains("<script>") ||
+                                content.contains("function ") ||
+                                content.contains("const ") ||
+                                content.contains("let ") ||
+                                content.contains("var ")
+                            
+                            if (isCodeContent) {
+                                // 代码内容使用纯文本，保留所有字符
+                                Text(
+                                    text = content,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = FontFamily.Monospace
+                                    ),
+                                    color = textColor,
+                                    lineHeight = 22.sp
+                                )
+                            } else {
+                                // 普通文本使用 Markdown 渲染
+                                MarkdownStyledText(
+                                    text = content,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = textColor,
+                                    lineHeight = 22.sp
+                                )
+                            }
                         }
                         
                         // 流式输出时显示打字光标

@@ -52,7 +52,6 @@ import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.model.getActivationCodeStrings
 import com.webtoapp.ui.components.LongPressMenuSheet
 import android.content.pm.ActivityInfo
-import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -109,15 +108,43 @@ class WebViewActivity : AppCompatActivity() {
 
     private var immersiveFullscreenEnabled: Boolean = false
 
-    private fun applyImmersiveFullscreen(enabled: Boolean) {
-        WindowCompat.setDecorFitsSystemWindows(window, !enabled)
+    /**
+     * 应用沉浸式全屏模式
+     * 
+     * @param enabled 是否启用沉浸式模式
+     * @param hideNavBar 是否同时隐藏导航栏（视频全屏时为 true）
+     */
+    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true) {
+        // 让内容延伸到系统栏下方
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        // 设置状态栏和导航栏为完全透明
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        
+        // 支持刘海屏/挖孔屏
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = 
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             if (enabled) {
-                controller.hide(WindowInsetsCompat.Type.systemBars())
+                // 隐藏状态栏
+                controller.hide(WindowInsetsCompat.Type.statusBars())
+                if (hideNavBar) {
+                    // 同时隐藏导航栏（完全沉浸式）
+                    controller.hide(WindowInsetsCompat.Type.navigationBars())
+                }
+                // 从边缘滑动时临时显示系统栏
                 controller.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
+                // 显示系统栏但保持透明
                 controller.show(WindowInsetsCompat.Type.systemBars())
+                // 根据背景色设置状态栏图标颜色
+                controller.isAppearanceLightStatusBars = false
+                controller.isAppearanceLightNavigationBars = false
             }
         }
     }
@@ -197,8 +224,9 @@ class WebViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 立即启用边到边全屏模式
-        enableEdgeToEdge()
+        // 默认启用沉浸式模式（状态栏透明，内容铺满屏幕）
+        immersiveFullscreenEnabled = true
+        applyImmersiveFullscreen(immersiveFullscreenEnabled)
 
         val appId = intent.getLongExtra(EXTRA_APP_ID, -1)
         val directUrl = intent.getStringExtra(EXTRA_URL)
@@ -208,7 +236,7 @@ class WebViewActivity : AppCompatActivity() {
         val testModuleIds = intent.getStringArrayListExtra(EXTRA_TEST_MODULE_IDS)
 
         setContent {
-            WebToAppTheme {
+            WebToAppTheme { _ ->
                 WebViewScreen(
                     appId = appId,
                     directUrl = directUrl,
@@ -219,6 +247,9 @@ class WebViewActivity : AppCompatActivity() {
                         // 添加下载桥接（支持 Blob/Data URL 下载）
                         val downloadBridge = com.webtoapp.core.webview.DownloadBridge(this@WebViewActivity, lifecycleScope)
                         wv.addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
+                        // 添加原生能力桥接（供扩展模块调用）
+                        val nativeBridge = com.webtoapp.core.webview.NativeBridge(this@WebViewActivity, lifecycleScope)
+                        wv.addJavascriptInterface(nativeBridge, com.webtoapp.core.webview.NativeBridge.JS_INTERFACE_NAME)
                     },
                     onFileChooser = { callback, _ ->
                         filePathCallback = callback
@@ -538,6 +569,7 @@ fun WebViewScreen(
                 contentLength: Long
             ) {
                 // 使用系统下载管理器下载到 Download 文件夹
+                // 媒体文件会自动保存到相册
                 DownloadHelper.handleDownload(
                     context = context,
                     url = url,
@@ -545,7 +577,8 @@ fun WebViewScreen(
                     contentDisposition = contentDisposition,
                     mimeType = mimeType,
                     contentLength = contentLength,
-                    method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER
+                    method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER,
+                    scope = scope
                 )
             }
             
@@ -598,6 +631,8 @@ fun WebViewScreen(
     }
 
     Scaffold(
+        // 在沉浸式模式下，不添加任何内边距
+        contentWindowInsets = if (hideToolbar) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         modifier = if (hideToolbar) Modifier.fillMaxSize() else Modifier,
         topBar = {
             if (!hideToolbar) {

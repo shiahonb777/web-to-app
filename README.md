@@ -324,9 +324,26 @@ signingConfigs {
 - 安全隐私、反追踪、社交增强、购物助手
 - 阅读模式、翻译工具、开发调试、其他
 
-### 模块开发
+### NativeBridge API（原生能力）
+扩展模块可以通过 `window.NativeBridge` 调用 Android 原生功能：
+
+| API | 功能 |
+|-----|------|
+| `showToast(msg, duration?)` | 显示 Toast 提示 |
+| `vibrate(ms?)` | 触发震动反馈 |
+| `copyToClipboard(text)` | 复制到剪贴板 |
+| `share(title, text, url?)` | 调用系统分享 |
+| `saveImageToGallery(url)` | 保存图片到相册 |
+| `saveVideoToGallery(url)` | 保存视频到相册 |
+| `openUrl(url)` | 用浏览器打开链接 |
+| `openApp(packageName)` | 打开其他应用 |
+| `getDeviceInfo()` | 获取设备信息 |
+| `isNetworkAvailable()` | 检查网络状态 |
+| `saveToFile(content, filename)` | 保存文件 |
+
+### 模块开发示例
 ```javascript
-// 示例：自动隐藏广告
+// 示例1：自动隐藏广告
 const selectors = getConfig('selectors', '.ad-banner').split('\n');
 function hideAds() {
     selectors.forEach(sel => {
@@ -337,6 +354,21 @@ function hideAds() {
 }
 hideAds();
 new MutationObserver(hideAds).observe(document.body, { childList: true, subtree: true });
+
+// 示例2：一键保存图片（使用 NativeBridge）
+document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        NativeBridge.saveImageToGallery(img.src);
+        NativeBridge.vibrate(50);
+        NativeBridge.showToast('图片已保存');
+    });
+});
+
+// 示例3：分享当前页面
+function shareCurrentPage() {
+    NativeBridge.share(document.title, '分享给你一个有趣的页面', location.href);
+}
 ```
 
 ## 公告模板

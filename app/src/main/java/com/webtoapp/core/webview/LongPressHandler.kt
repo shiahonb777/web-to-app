@@ -1,6 +1,5 @@
 package com.webtoapp.core.webview
 
-import android.app.DownloadManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentValues
@@ -16,6 +15,7 @@ import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.webkit.WebView
 import android.widget.Toast
+import com.webtoapp.util.MediaSaver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -320,34 +320,37 @@ class LongPressHandler(
     }
     
     /**
-     * 下载视频
+     * 下载视频并保存到相册
      */
     fun downloadVideo(videoUrl: String, onResult: (Boolean, String) -> Unit) {
-        try {
-            if (videoUrl.startsWith("blob:")) {
-                onResult(false, "Blob 视频需要通过页面下载")
-                return
-            }
+        if (videoUrl.startsWith("blob:")) {
+            onResult(false, "Blob 视频需要通过页面下载")
+            return
+        }
+        
+        scope.launch(Dispatchers.Main) {
+            // 先显示提示
+            Toast.makeText(context, "正在下载视频...", Toast.LENGTH_SHORT).show()
             
             val fileName = URLUtil.guessFileName(videoUrl, null, "video/mp4")
                 ?: "VIDEO_${System.currentTimeMillis()}.mp4"
             
-            val request = DownloadManager.Request(Uri.parse(videoUrl)).apply {
-                setTitle(fileName)
-                setDescription("正在下载视频...")
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "WebToApp/$fileName")
-                setAllowedOverMetered(true)
-                setAllowedOverRoaming(true)
+            val result = MediaSaver.saveFromUrl(
+                context = context,
+                url = videoUrl,
+                fileName = fileName,
+                mimeType = "video/mp4"
+            )
+            
+            when (result) {
+                is MediaSaver.SaveResult.Success -> {
+                    onResult(true, "视频已保存到相册")
+                }
+                is MediaSaver.SaveResult.Error -> {
+                    android.util.Log.e("LongPressHandler", "下载视频失败: ${result.message}")
+                    onResult(false, result.message)
+                }
             }
-            
-            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            downloadManager.enqueue(request)
-            
-            onResult(true, "开始下载: $fileName")
-        } catch (e: Exception) {
-            android.util.Log.e("LongPressHandler", "下载视频失败", e)
-            onResult(false, "下载失败: ${e.message}")
         }
     }
     

@@ -16,17 +16,10 @@ data class HtmlCodingSession(
     val checkpoints: List<ProjectCheckpoint> = emptyList(),  // 版本检查点
     val currentCheckpointIndex: Int = -1,                     // 当前检查点索引
     val config: SessionConfig = SessionConfig(),
+    val projectDir: String? = null,                           // 项目文件夹路径
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
-
-/**
- * 代码输出模式
- */
-enum class OutputMode(val displayName: String, val description: String) {
-    PURE_HTML("纯 HTML", "所有代码内嵌在单个 HTML 文件中"),
-    SEPARATED("HTML + CSS + JS", "三文件分离输出，便于管理维护")
-}
 
 /**
  * 会话配置
@@ -38,8 +31,51 @@ data class SessionConfig(
     val rules: List<String> = listOf("使用中文进行对话"),  // 规则列表
     val selectedTemplateId: String? = null,    // 选中的模板ID
     val selectedStyleId: String? = null,       // 选中的风格ID
-    val outputMode: OutputMode = OutputMode.SEPARATED  // 输出模式，默认三文件分离
+    // 工具包配置
+    val enabledTools: Set<HtmlToolType> = setOf(HtmlToolType.WRITE_HTML)  // 启用的工具
 )
+
+/**
+ * HTML 工具类型
+ */
+enum class HtmlToolType(
+    val displayName: String,
+    val description: String,
+    val icon: String,
+    val requiresImageModel: Boolean = false  // 是否需要图像模型
+) {
+    WRITE_HTML(
+        displayName = "写入 HTML",
+        description = "创建或覆盖完整的 HTML 页面",
+        icon = "📝"
+    ),
+    EDIT_HTML(
+        displayName = "编辑 HTML",
+        description = "在指定位置替换、插入或删除代码片段",
+        icon = "✏️"
+    ),
+    GENERATE_IMAGE(
+        displayName = "AI 图像生成",
+        description = "使用 AI 生成图像并嵌入到 HTML 中作为插图",
+        icon = "🎨",
+        requiresImageModel = true
+    ),
+    GET_CONSOLE_LOGS(
+        displayName = "获取控制台日志",
+        description = "获取页面运行时的 console.log 输出和错误信息",
+        icon = "📋"
+    ),
+    CHECK_SYNTAX(
+        displayName = "语法检查",
+        description = "检查 HTML/CSS/JavaScript 语法错误",
+        icon = "🔍"
+    ),
+    AUTO_FIX(
+        displayName = "自动修复",
+        description = "自动修复检测到的语法错误",
+        icon = "🔧"
+    )
+}
 
 /**
  * 对话消息
@@ -50,10 +86,22 @@ data class HtmlCodingMessage(
     val content: String,
     val images: List<String> = emptyList(),    // 图片路径列表（最多3张）
     val thinking: String? = null,               // 思考过程（如有）
-    val codeBlocks: List<CodeBlock> = emptyList(), // 提取的代码块
+    val codeBlocks: List<CodeBlock> = emptyList(), // 提取的代码块（兼容旧数据）
+    val fileRefs: List<FileReference> = emptyList(), // 文件引用（新机制）
     val timestamp: Long = System.currentTimeMillis(),
     val isEdited: Boolean = false,              // 是否被编辑过
     val originalContent: String? = null         // 原始内容（编辑前）
+)
+
+/**
+ * 文件引用（指向项目文件夹中的实际文件）
+ */
+data class FileReference(
+    val filename: String,           // 文件名 (如 index_v2.html)
+    val baseName: String,           // 基础文件名 (如 index)
+    val version: Int,               // 版本号
+    val type: ProjectFileType,      // 文件类型
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 /**
@@ -106,6 +154,7 @@ enum class ProjectFileType(val extension: String, val mimeType: String) {
     JS("js", "application/javascript"),
     SVG("svg", "image/svg+xml"),
     JSON("json", "application/json"),
+    IMAGE("png", "image/png"),
     OTHER("txt", "text/plain")
 }
 

@@ -44,8 +44,10 @@ class ApkBuilder(private val context: Context) {
     private val tempDir = File(context.cacheDir, "apk_build_temp").apply { mkdirs() }
     
     // 原始应用名（用于替换）
-    // 使用空格填充，确保有足够字节空间支持长自定义名称（约90字节，支持约30个中文字符）
-    private val originalAppName = "WebToApp                                                                                        "
+    // 使用不间断空格(\u00A0)填充，确保有足够字节空间支持长自定义名称
+    // 注意：必须与 strings.xml 中的 app_name 完全一致！
+    // 总长度：8(WebToApp) + 88(填充) = 96 字符，UTF-8 下不间断空格占 2 字节，总共约 184 字节
+    private val originalAppName = "WebToApp" + "\u00A0".repeat(88)
     private val originalPackageName = "com.webtoapp"
 
     /**
@@ -719,12 +721,14 @@ class ApkBuilder(private val context: Context) {
                 // 内联 CSS
                 if (cssContent.isNotEmpty()) {
                     val styleTag = "<style>\n$cssContent\n</style>"
+                    // 使用 Regex.escapeReplacement 转义替换字符串，避免 ${...} 被解析为命名组
+                    val escapedStyleTag = Regex.escapeReplacement(styleTag)
                     htmlContent = when {
                         htmlContent.contains("</head>", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("</head>", RegexOption.IGNORE_CASE), "$styleTag\n</head>")
+                            htmlContent.replaceFirst(Regex("</head>", RegexOption.IGNORE_CASE), "$escapedStyleTag\n</head>")
                         }
                         htmlContent.contains("<body", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("<body", RegexOption.IGNORE_CASE), "$styleTag\n<body")
+                            htmlContent.replaceFirst(Regex("<body", RegexOption.IGNORE_CASE), "$escapedStyleTag\n<body")
                         }
                         else -> "$styleTag\n$htmlContent"
                     }
@@ -734,12 +738,14 @@ class ApkBuilder(private val context: Context) {
                 if (jsContent.isNotEmpty()) {
                     val wrappedJs = wrapJsForDomReady(jsContent)
                     val scriptTag = "<script>\n$wrappedJs\n</script>"
+                    // 使用 Regex.escapeReplacement 转义替换字符串，避免 ${...} 被解析为命名组
+                    val escapedScriptTag = Regex.escapeReplacement(scriptTag)
                     htmlContent = when {
                         htmlContent.contains("</body>", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("</body>", RegexOption.IGNORE_CASE), "$scriptTag\n</body>")
+                            htmlContent.replaceFirst(Regex("</body>", RegexOption.IGNORE_CASE), "$escapedScriptTag\n</body>")
                         }
                         htmlContent.contains("</html>", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("</html>", RegexOption.IGNORE_CASE), "$scriptTag\n</html>")
+                            htmlContent.replaceFirst(Regex("</html>", RegexOption.IGNORE_CASE), "$escapedScriptTag\n</html>")
                         }
                         else -> "$htmlContent\n$scriptTag"
                     }

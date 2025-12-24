@@ -87,14 +87,35 @@ private val DarkColorScheme = darkColorScheme(
 // ==================== 主题入口 ====================
 
 /**
- * 应用主题入口
+ * 当前是否为深色主题的 CompositionLocal
+ */
+val LocalIsDarkTheme = staticCompositionLocalOf { false }
+
+/**
+ * 应用主题入口（简化版，不需要 isDarkTheme 回调）
  * 支持自定义主题和动态取色
  */
 @Composable
 fun WebToAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,  // 默认关闭动态取色以使用自定义主题
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
+) {
+    WebToAppTheme(darkTheme, dynamicColor) { _ ->
+        content()
+    }
+}
+
+/**
+ * 应用主题入口
+ * 支持自定义主题和动态取色
+ * @param content 接收一个 Boolean 参数表示当前是否为深色主题
+ */
+@Composable
+fun WebToAppTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,  // 默认关闭动态取色以使用自定义主题
+    content: @Composable (isDarkTheme: Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val themeManager = remember { ThemeManager.getInstance(context) }
@@ -137,12 +158,13 @@ fun WebToAppTheme(
 
     CompositionLocalProvider(
         LocalAppTheme provides currentTheme,
-        LocalAnimationSettings provides animationSettings
+        LocalAnimationSettings provides animationSettings,
+        LocalIsDarkTheme provides useDarkTheme
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
-            content = content
+            content = { content(useDarkTheme) }
         )
     }
 }

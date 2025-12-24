@@ -94,7 +94,7 @@ data class CodeBlockColors(
     val operator: Color
 )
 
-// Simple Markdown text rendering
+// Simple Markdown text rendering - 对代码内容禁用Markdown
 @Composable
 fun MarkdownText(
     text: String,
@@ -102,9 +102,26 @@ fun MarkdownText(
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
-    val annotatedString = parseMarkdown(text, color)
+    // 检测是否包含代码内容
+    val isCodeContent = text.contains("```") || 
+        text.contains("<!DOCTYPE") || 
+        text.contains("<html") ||
+        text.contains("<style>") ||
+        text.contains("<script>") ||
+        text.contains("function ") ||
+        text.contains("const ") ||
+        text.contains("let ") ||
+        text.contains("var ")
+    
     SelectionContainer {
-        Text(text = annotatedString, style = style, modifier = modifier)
+        if (isCodeContent) {
+            // 代码内容使用纯文本，保留所有字符
+            Text(text = text, style = style, color = color, modifier = modifier)
+        } else {
+            // 普通文本使用 Markdown 渲染
+            val annotatedString = parseMarkdown(text, color)
+            Text(text = annotatedString, style = style, modifier = modifier)
+        }
     }
 }
 
@@ -331,7 +348,7 @@ fun CodeBlocksTabContainer(
 
 // Code content view with syntax highlighting
 @Composable
-private fun CodeContentView(code: String, language: String, colors: CodeBlockColors, modifier: Modifier = Modifier) {
+internal fun CodeContentView(code: String, language: String, colors: CodeBlockColors, modifier: Modifier = Modifier) {
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
     val lines = code.lines()
@@ -786,54 +803,112 @@ fun ConfigPanel(
             }
         }
         
-        // Output Mode - 输出模式选择
+        Divider()
+        
+        // 工具包配置
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
-                Text("输出模式", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutputMode.entries.forEach { mode ->
-                        val isSelected = config.outputMode == mode
-                        Surface(
-                            onClick = { onConfigChange(config.copy(outputMode = mode)) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            ),
-                            modifier = Modifier.weight(1f)
+                    Text("工具包", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "${config.enabledTools.size} 个已启用",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "选择 AI 可以使用的工具，启用更多工具可以增强 AI 的能力",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                Spacer(Modifier.height(12.dp))
+                
+                HtmlToolType.entries.forEach { toolType ->
+                    val isEnabled = toolType in config.enabledTools
+                    val isRequired = toolType == HtmlToolType.WRITE_HTML
+                    
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isEnabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) 
+                               else MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    imageVector = if (mode == OutputMode.PURE_HTML) Icons.Outlined.Description else Icons.Outlined.Folder,
-                                    contentDescription = null,
-                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(Modifier.height(6.dp))
+                            Text(
+                                toolType.icon,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        toolType.displayName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (isRequired) {
+                                        Spacer(Modifier.width(8.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                        ) {
+                                            Text(
+                                                "必需",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    // 需要图像模型的工具显示提示
+                                    if (toolType.requiresImageModel && config.imageModelId.isNullOrBlank()) {
+                                        Spacer(Modifier.width(8.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = MaterialTheme.colorScheme.errorContainer
+                                        ) {
+                                            Text(
+                                                "需选择图像模型",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
                                 Text(
-                                    mode.displayName,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    toolType.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline
                                 )
                             }
+                            // 需要图像模型但未配置时禁用开关
+                            val canEnable = !toolType.requiresImageModel || !config.imageModelId.isNullOrBlank()
+                            Switch(
+                                checked = isEnabled && canEnable,
+                                onCheckedChange = { checked ->
+                                    if ((!isRequired || checked) && canEnable) {
+                                        val newTools = if (checked) {
+                                            config.enabledTools + toolType
+                                        } else {
+                                            config.enabledTools - toolType
+                                        }
+                                        onConfigChange(config.copy(enabledTools = newTools))
+                                    }
+                                },
+                                enabled = !isRequired && canEnable
+                            )
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    config.outputMode.description,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
             }
         }
         
@@ -1090,3 +1165,424 @@ private fun parseColor(colorString: String): Color = try {
 } catch (e: Exception) { Color.Gray }
 
 private fun Color.luminance(): Float = 0.299f * red + 0.587f * green + 0.114f * blue
+
+
+// ==================== 项目文件面板组件 ====================
+
+/**
+ * 项目文件面板 - 显示会话的项目文件夹内容
+ */
+@Composable
+fun ProjectFilesPanel(
+    files: List<ProjectFileInfo>,
+    selectedFile: ProjectFileInfo?,
+    onFileClick: (ProjectFileInfo) -> Unit,
+    onPreviewClick: (ProjectFileInfo) -> Unit,
+    onRefresh: () -> Unit,
+    isExpanded: Boolean,
+    onExpandChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+        shadowElevation = 8.dp
+    ) {
+        Column {
+            // 标题栏
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onExpandChange(!isExpanded) },
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Folder,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            "项目文件",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        ) {
+                            Text(
+                                "${files.size}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        IconButton(onClick = onRefresh, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                Icons.Outlined.Refresh,
+                                contentDescription = "刷新",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Icon(
+                            if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                            contentDescription = if (isExpanded) "收起" else "展开",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+            
+            // 文件列表
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                if (files.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Outlined.FolderOpen,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "暂无文件",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            Text(
+                                "AI 生成的代码将保存在这里",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                } else {
+                    // 按基础文件名分组
+                    val groupedFiles = files.groupBy { it.getBaseName() }
+                    
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        groupedFiles.forEach { (baseName, versions) ->
+                            val sortedVersions = versions.sortedByDescending { it.version }
+                            val latestVersion = sortedVersions.first()
+                            
+                            item(key = baseName) {
+                                FileGroupItem(
+                                    baseName = baseName,
+                                    latestFile = latestVersion,
+                                    versions = sortedVersions,
+                                    isSelected = selectedFile?.getBaseName() == baseName,
+                                    onFileClick = onFileClick,
+                                    onPreviewClick = onPreviewClick
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 文件组项目 - 显示一个文件的所有版本
+ */
+@Composable
+private fun FileGroupItem(
+    baseName: String,
+    latestFile: ProjectFileInfo,
+    versions: List<ProjectFileInfo>,
+    isSelected: Boolean,
+    onFileClick: (ProjectFileInfo) -> Unit,
+    onPreviewClick: (ProjectFileInfo) -> Unit
+) {
+    var showVersions by remember { mutableStateOf(false) }
+    
+    Column {
+        // 主文件项（最新版本）
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onFileClick(latestFile) },
+            shape = RoundedCornerShape(10.dp),
+            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    else MaterialTheme.colorScheme.surface,
+            border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // 文件图标
+                FileTypeIcon(type = latestFile.type, modifier = Modifier.size(32.dp))
+                
+                // 文件信息
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            latestFile.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (latestFile.version > 1) {
+                            Spacer(Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
+                            ) {
+                                Text(
+                                    "v${latestFile.version}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                    Text(
+                        "${latestFile.formatSize()} · ${latestFile.formatTime()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+                
+                // 版本历史按钮
+                if (versions.size > 1) {
+                    IconButton(
+                        onClick = { showVersions = !showVersions },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            if (showVersions) Icons.Default.ExpandLess else Icons.Default.History,
+                            contentDescription = "版本历史",
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+                
+                // 预览按钮
+                if (latestFile.type == ProjectFileType.HTML) {
+                    IconButton(
+                        onClick = { onPreviewClick(latestFile) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.PlayArrow,
+                            contentDescription = "预览",
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+        
+        // 版本历史列表
+        AnimatedVisibility(
+            visible = showVersions && versions.size > 1,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 42.dp, top = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                versions.drop(1).forEach { version ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onFileClick(version) },
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.History,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                            Text(
+                                version.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                version.formatTime(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            if (version.type == ProjectFileType.HTML) {
+                                IconButton(
+                                    onClick = { onPreviewClick(version) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.PlayArrow,
+                                        contentDescription = "预览",
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 文件类型图标
+ */
+@Composable
+fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
+    val (icon, color) = when (type) {
+        ProjectFileType.HTML -> Icons.Outlined.Code to Color(0xFFE34C26)
+        ProjectFileType.CSS -> Icons.Outlined.Palette to Color(0xFF264DE4)
+        ProjectFileType.JS -> Icons.Outlined.Javascript to Color(0xFFF0DB4F)
+        ProjectFileType.JSON -> Icons.Outlined.DataObject to Color(0xFF292929)
+        ProjectFileType.SVG -> Icons.Outlined.Image to Color(0xFFFFB13B)
+        ProjectFileType.IMAGE -> Icons.Outlined.Image to Color(0xFF4CAF50)
+        ProjectFileType.OTHER -> Icons.Outlined.InsertDriveFile to Color(0xFF6B7280)
+    }
+    
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = color.copy(alpha = 0.1f)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                icon,
+                contentDescription = type.name,
+                tint = color,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+/**
+ * 文件预览面板
+ */
+@Composable
+fun FilePreviewPanel(
+    file: ProjectFileInfo?,
+    content: String?,
+    onClose: () -> Unit,
+    onPreview: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (file == null || content == null) return
+    
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
+    ) {
+        Column {
+            // 标题栏
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    FileTypeIcon(type = file.type, modifier = Modifier.size(28.dp))
+                    Column {
+                        Text(
+                            file.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            "${content.lines().size} 行 · ${file.formatSize()}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (file.type == ProjectFileType.HTML) {
+                        FilledTonalButton(
+                            onClick = onPreview,
+                            contentPadding = PaddingValues(horizontal = 12.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("预览")
+                        }
+                    }
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Default.Close, contentDescription = "关闭")
+                    }
+                }
+            }
+            
+            // 代码内容
+            val colors = codeBlockColors()
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp),
+                color = colors.background
+            ) {
+                CodeContentView(
+                    code = content,
+                    language = file.getExtension(),
+                    colors = colors
+                )
+            }
+        }
+    }
+}

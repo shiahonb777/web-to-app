@@ -83,7 +83,7 @@ class MediaAppActivity : AppCompatActivity() {
         }
         
         setContent {
-            WebToAppTheme {
+            WebToAppTheme { _ ->
                 MediaAppScreen(
                     config = config,
                     onExit = { finish() }
@@ -125,12 +125,38 @@ class MediaAppActivity : AppCompatActivity() {
     }
     
     private fun setupFullscreen() {
+        // 让内容延伸到系统栏下方
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        // 设置状态栏和导航栏为完全透明
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        
+        // 保持屏幕常亮
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         
+        // 支持刘海屏/挖孔屏，内容延伸到刘海区域
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = 
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        
+        // 隐藏系统栏（状态栏 + 导航栏）
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.systemBars())
+            // 从边缘滑动时临时显示系统栏
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+    
+    /**
+     * 窗口获得焦点时重新应用沉浸式模式
+     * 防止用户从边缘滑出系统栏后不自动隐藏
+     */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            setupFullscreen()
         }
     }
     

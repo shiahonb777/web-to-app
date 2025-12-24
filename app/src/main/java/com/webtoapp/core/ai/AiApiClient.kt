@@ -998,10 +998,22 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                     if (reasoning != null) trySend(StreamEvent.Thinking(reasoning))
                                     
                                     if (content != null) {
+                                        // 调试：检测空格字符
+                                        val spaceCount = content.count { it == ' ' }
+                                        val hasSpecialSpaces = content.any { it.code in listOf(0x00A0, 0x3000, 0x2003, 0x2002) }
+                                        if (spaceCount > 0 || hasSpecialSpaces) {
+                                            android.util.Log.d("AiApiClient", "🔍 StreamChat Space Debug - content: '$content'")
+                                            android.util.Log.d("AiApiClient", "🔍 StreamChat Space Debug - length: ${content.length}, spaceCount: $spaceCount")
+                                            android.util.Log.d("AiApiClient", "🔍 StreamChat Space Debug - charCodes: ${content.map { "${it}(${it.code})" }}")
+                                        }
+                                        
+                                        // 注意：之前这里会跳过开头的纯空白内容，可能导致空格丢失
                                         val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
                                         if (shouldAppend) {
                                             contentBuilder.append(content)
                                             trySend(StreamEvent.Content(content, contentBuilder.toString()))
+                                        } else {
+                                            android.util.Log.w("AiApiClient", "⚠️ Skipped whitespace-only content at start: '$content'")
                                         }
                                     }
                                 }
@@ -1213,6 +1225,891 @@ val json = gson.fromJson(body, JsonObject::class.java)
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
     }
+    
+    // ==================== Tool Calling 接口 ====================
+    
+    /**
+     * 带工具调用的聊天接口
+     * 支持 OpenAI 兼容格式的 Function Calling
+     */
+    suspend fun chatWithTools(
+        apiKey: ApiKeyConfig,
+        model: AiModel,
+        messages: List<Map<String, String>>,
+        tools: List<Map<String, Any>>,
+        temperature: Float = 0.7f
+    ): Result<ToolCallResponse> = withContext(Dispatchers.IO) {
+        try {
+            val baseUrl = when {
+                !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
+                apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
+                else -> return@withContext Result.failure(Exception("未配置API地址"))
+            }
+            
+            when (apiKey.provider) {
+                AiProvider.GOOGLE -> chatWithToolsGemini(baseUrl, apiKey.apiKey.trim(), model.id, messages, tools, temperature)
+                AiProvider.ANTHROPIC -> chatWithToolsAnthropic(baseUrl, apiKey.apiKey.sanitize(), model.id, messages, tools, temperature)
+                else -> chatWithToolsOpenAI(baseUrl, apiKey.apiKey.sanitize(), model.id, messages, tools, temperature)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * OpenAI 格式的 Tool Calling
+     */
+    private fun chatWithToolsOpenAI(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        tools: List<Map<String, Any>>,
+        temperature: Float
+    ): Result<ToolCallResponse> {
+        val messagesArray = com.google.gson.JsonArray()
+        messages.forEach { msg ->
+            messagesArray.add(JsonObject().apply {
+                addProperty("role", msg["role"])
+                addProperty("content", msg["content"])
+            })
+        }
+        
+        val toolsArray = com.google.gson.JsonArray()
+        tools.forEach { tool ->
+            toolsArray.add(gson.toJsonTree(tool))
+        }
+        
+        val body = JsonObject().apply {
+            addProperty("model", modelId)
+            add("messages", messagesArray)
+            add("tools", toolsArray)
+            addProperty("temperature", temperature)
+            addProperty("max_tokens", 16384)
+        }
+        
+        val request = Request.Builder()
+            .url("$baseUrl/v1/chat/completions")
+            .header("Authorization", "Bearer $apiKey")
+            .header("Content-Type", "application/json")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+        
+        val response = client.newCall(request).execute()
+        return if (response.isSuccessful) {
+            parseOpenAIToolResponse(response.body?.string() ?: "")
+        } else {
+            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+        }
+    }
+    
+    /**
+     * 解析 OpenAI Tool Calling 响应
+     */
+    private fun parseOpenAIToolResponse(body: String): Result<ToolCallResponse> {
+        return try {
+            val json = gson.fromJson(body, JsonObject::class.java)
+            val choice = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
+            val message = choice?.getAsJsonObject("message")
+            
+            val textContent = message?.get("content")?.asString ?: ""
+            val toolCallsJson = message?.getAsJsonArray("tool_calls")
+            
+            val toolCalls = toolCallsJson?.mapNotNull { tc ->
+                val tcObj = tc.asJsonObject
+                val function = tcObj.getAsJsonObject("function")
+                val id = tcObj.get("id")?.asString ?: ""
+                val name = function?.get("name")?.asString ?: return@mapNotNull null
+                val argsStr = function.get("arguments")?.asString ?: "{}"
+                val args = try {
+                    gson.fromJson(argsStr, Map::class.java) as Map<String, Any?>
+                } catch (e: Exception) {
+                    emptyMap()
+                }
+                ToolCallData(id, name, args)
+            } ?: emptyList()
+            
+            Result.success(ToolCallResponse(
+                textContent = textContent,
+                toolCalls = toolCalls
+            ))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Gemini 格式的 Tool Calling
+     */
+    private fun chatWithToolsGemini(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        tools: List<Map<String, Any>>,
+        temperature: Float
+    ): Result<ToolCallResponse> {
+        val contents = com.google.gson.JsonArray()
+        var systemInstruction: String? = null
+        
+        messages.forEach { msg ->
+            val role = msg["role"] ?: "user"
+            val content = msg["content"] ?: ""
+            
+            if (role == "system") {
+                systemInstruction = content
+            } else {
+                contents.add(JsonObject().apply {
+                    addProperty("role", if (role == "assistant") "model" else "user")
+                    add("parts", com.google.gson.JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("text", content)
+                        })
+                    })
+                })
+            }
+        }
+        
+        // 转换工具格式为 Gemini 格式
+        val geminiTools = com.google.gson.JsonArray()
+        val functionDeclarations = com.google.gson.JsonArray()
+        
+        tools.forEach { tool ->
+            val function = tool["function"] as? Map<*, *> ?: return@forEach
+            functionDeclarations.add(JsonObject().apply {
+                addProperty("name", function["name"] as? String ?: "")
+                addProperty("description", function["description"] as? String ?: "")
+                add("parameters", gson.toJsonTree(function["parameters"]))
+            })
+        }
+        
+        geminiTools.add(JsonObject().apply {
+            add("functionDeclarations", functionDeclarations)
+        })
+        
+        val body = JsonObject().apply {
+            add("contents", contents)
+            add("tools", geminiTools)
+            systemInstruction?.let { instruction ->
+                add("systemInstruction", JsonObject().apply {
+                    add("parts", com.google.gson.JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("text", instruction)
+                        })
+                    })
+                })
+            }
+            add("generationConfig", JsonObject().apply {
+                addProperty("temperature", temperature)
+                addProperty("maxOutputTokens", 16384)
+            })
+        }
+        
+        val request = Request.Builder()
+            .url("$baseUrl/v1beta/models/$modelId:generateContent?key=$apiKey")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+        
+        val response = client.newCall(request).execute()
+        return if (response.isSuccessful) {
+            parseGeminiToolResponse(response.body?.string() ?: "")
+        } else {
+            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+        }
+    }
+    
+    /**
+     * 解析 Gemini Tool Calling 响应
+     */
+    private fun parseGeminiToolResponse(body: String): Result<ToolCallResponse> {
+        return try {
+            val json = gson.fromJson(body, JsonObject::class.java)
+            val parts = json.getAsJsonArray("candidates")
+                ?.get(0)?.asJsonObject
+                ?.getAsJsonObject("content")
+                ?.getAsJsonArray("parts")
+            
+            var textContent = ""
+            val toolCalls = mutableListOf<ToolCallData>()
+            
+            parts?.forEach { part ->
+                val partObj = part.asJsonObject
+                
+                // 文本内容
+                partObj.get("text")?.asString?.let {
+                    textContent += it
+                }
+                
+                // 函数调用
+                partObj.getAsJsonObject("functionCall")?.let { fc ->
+                    val name = fc.get("name")?.asString ?: return@let
+                    val args = fc.getAsJsonObject("args")?.let { argsObj ->
+                        gson.fromJson(argsObj, Map::class.java) as Map<String, Any?>
+                    } ?: emptyMap()
+                    toolCalls.add(ToolCallData(
+                        id = java.util.UUID.randomUUID().toString(),
+                        name = name,
+                        arguments = args
+                    ))
+                }
+            }
+            
+            Result.success(ToolCallResponse(
+                textContent = textContent,
+                toolCalls = toolCalls
+            ))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Anthropic 格式的 Tool Calling
+     */
+    private fun chatWithToolsAnthropic(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        tools: List<Map<String, Any>>,
+        temperature: Float
+    ): Result<ToolCallResponse> {
+        val systemMessage = messages.find { it["role"] == "system" }?.get("content")
+        val chatMessages = messages.filter { it["role"] != "system" }
+        
+        val messagesArray = com.google.gson.JsonArray()
+        chatMessages.forEach { msg ->
+            messagesArray.add(JsonObject().apply {
+                addProperty("role", msg["role"])
+                addProperty("content", msg["content"])
+            })
+        }
+        
+        // 转换工具格式为 Anthropic 格式
+        val anthropicTools = com.google.gson.JsonArray()
+        tools.forEach { tool ->
+            val function = tool["function"] as? Map<*, *> ?: return@forEach
+            anthropicTools.add(JsonObject().apply {
+                addProperty("name", function["name"] as? String ?: "")
+                addProperty("description", function["description"] as? String ?: "")
+                add("input_schema", gson.toJsonTree(function["parameters"]))
+            })
+        }
+        
+        val body = JsonObject().apply {
+            addProperty("model", modelId)
+            add("messages", messagesArray)
+            add("tools", anthropicTools)
+            addProperty("max_tokens", 16384)
+            addProperty("temperature", temperature)
+            systemMessage?.let { addProperty("system", it) }
+        }
+        
+        val request = Request.Builder()
+            .url("$baseUrl/v1/messages")
+            .header("x-api-key", apiKey)
+            .header("anthropic-version", "2023-06-01")
+            .header("Content-Type", "application/json")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+        
+        val response = client.newCall(request).execute()
+        return if (response.isSuccessful) {
+            parseAnthropicToolResponse(response.body?.string() ?: "")
+        } else {
+            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+        }
+    }
+    
+    /**
+     * 解析 Anthropic Tool Calling 响应
+     */
+    private fun parseAnthropicToolResponse(body: String): Result<ToolCallResponse> {
+        return try {
+            val json = gson.fromJson(body, JsonObject::class.java)
+            val content = json.getAsJsonArray("content")
+            
+            var textContent = ""
+            val toolCalls = mutableListOf<ToolCallData>()
+            
+            content?.forEach { block ->
+                val blockObj = block.asJsonObject
+                val type = blockObj.get("type")?.asString
+                
+                when (type) {
+                    "text" -> {
+                        textContent += blockObj.get("text")?.asString ?: ""
+                    }
+                    "tool_use" -> {
+                        val id = blockObj.get("id")?.asString ?: ""
+                        val name = blockObj.get("name")?.asString ?: ""
+                        val input = blockObj.getAsJsonObject("input")?.let { inputObj ->
+                            gson.fromJson(inputObj, Map::class.java) as Map<String, Any?>
+                        } ?: emptyMap()
+                        toolCalls.add(ToolCallData(id, name, input))
+                    }
+                }
+            }
+            
+            Result.success(ToolCallResponse(
+                textContent = textContent,
+                toolCalls = toolCalls
+            ))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // ==================== 流式 Tool Calling 接口 ====================
+    
+    /**
+     * 流式带工具调用的聊天接口
+     * 支持实时输出工具参数（如 HTML 代码）
+     */
+    fun chatStreamWithTools(
+        apiKey: ApiKeyConfig,
+        model: AiModel,
+        messages: List<Map<String, String>>,
+        tools: List<Map<String, Any>>,
+        temperature: Float = 0.7f
+    ): Flow<ToolStreamEvent> = callbackFlow {
+        val baseUrl = when {
+            !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
+            apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
+            else -> {
+                trySend(ToolStreamEvent.Error("未配置API地址"))
+                close()
+                return@callbackFlow
+            }
+        }
+        
+        // 构建请求
+        val request = buildOpenAIStreamWithToolsRequest(baseUrl, apiKey, model.id, messages, tools, temperature)
+        
+        trySend(ToolStreamEvent.Started)
+        
+        val call = client.newCall(request)
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                trySend(ToolStreamEvent.Error(e.message ?: "连接失败"))
+                close(e)
+            }
+            
+            override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    val errorBody = response.body?.string() ?: ""
+                    trySend(ToolStreamEvent.Error("请求失败: ${response.code} - $errorBody"))
+                    close()
+                    return
+                }
+                
+                try {
+                    val reader = response.body?.source() ?: run {
+                        trySend(ToolStreamEvent.Error("响应体为空"))
+                        close()
+                        return
+                    }
+                    
+                    val textBuilder = StringBuilder()
+                    val thinkingBuilder = StringBuilder()
+                    
+                    // 工具调用状态
+                    val toolCallsMap = mutableMapOf<Int, ToolCallState>()
+                    val completedToolCalls = mutableListOf<ToolCallInfo>()
+                    
+                    var doneSent = false
+                    val dataBuffer = StringBuilder()
+                    
+                    // 处理单个 JSON chunk
+                    fun processStreamChunk(
+                        json: JsonObject,
+                        textBuilder: StringBuilder,
+                        thinkingBuilder: StringBuilder,
+                        toolCallsMap: MutableMap<Int, ToolCallState>,
+                        completedToolCalls: MutableList<ToolCallInfo>
+                    ) {
+                        val choicesArray = json.getAsJsonArray("choices")
+                        if (choicesArray == null || choicesArray.size() == 0) return
+                        
+                        val choiceObj = choicesArray.get(0)?.asJsonObject ?: return
+                        val delta = choiceObj.getAsJsonObject("delta")
+                        val finishReason = choiceObj.get("finish_reason")?.let { 
+                            if (it.isJsonNull) null else it.asString 
+                        }
+                        
+                        // 处理文本内容
+                        delta?.get("content")?.let { contentElem ->
+                            if (!contentElem.isJsonNull) {
+                                val content = contentElem.asString
+                                if (content.isNotEmpty()) {
+                                    // 调试：检测空格字符
+                                    val spaceCount = content.count { it == ' ' }
+                                    val hasSpecialSpaces = content.any { it.code in listOf(0x00A0, 0x3000, 0x2003, 0x2002) }
+                                    if (spaceCount > 0 || hasSpecialSpaces) {
+                                        android.util.Log.d("AiApiClient", "🔍 Space Debug - content: '$content'")
+                                        android.util.Log.d("AiApiClient", "🔍 Space Debug - length: ${content.length}, spaceCount: $spaceCount, hasSpecialSpaces: $hasSpecialSpaces")
+                                        android.util.Log.d("AiApiClient", "🔍 Space Debug - charCodes: ${content.map { "${it}(${it.code})" }}")
+                                    }
+                                    textBuilder.append(content)
+                                    android.util.Log.d("AiApiClient", "TextDelta: ${content.take(50)}...")
+                                    trySend(ToolStreamEvent.TextDelta(content, textBuilder.toString()))
+                                }
+                            }
+                        }
+                        
+                        // 处理思考内容 - 支持多种字段名
+                        // MiniMax 使用 reasoning_content
+                        val thinkingContent = delta?.get("reasoning_content")?.let { 
+                            if (!it.isJsonNull) it.asString else null 
+                        } ?: delta?.get("reasoning")?.let { 
+                            if (!it.isJsonNull) it.asString else null 
+                        } ?: delta?.get("thinking")?.let { 
+                            if (!it.isJsonNull) it.asString else null 
+                        }
+                        
+                        if (!thinkingContent.isNullOrEmpty()) {
+                            thinkingBuilder.append(thinkingContent)
+                            android.util.Log.d("AiApiClient", "ThinkingDelta: ${thinkingContent.take(50)}...")
+                            trySend(ToolStreamEvent.ThinkingDelta(thinkingContent, thinkingBuilder.toString()))
+                        }
+                        
+                        // 处理工具调用
+                        delta?.getAsJsonArray("tool_calls")?.forEach { tc ->
+                            val tcObj = tc.asJsonObject
+                            val index = tcObj.get("index")?.asInt ?: 0
+                            
+                            android.util.Log.d("AiApiClient", "Tool call chunk: index=$index, tcObj=$tcObj")
+                            
+                            val state = toolCallsMap.getOrPut(index) { ToolCallState() }
+                            
+                            tcObj.get("id")?.asString?.let { id ->
+                                if (state.id.isEmpty()) {
+                                    state.id = id
+                                    android.util.Log.d("AiApiClient", "Tool call id: $id")
+                                }
+                            }
+                            
+                            tcObj.getAsJsonObject("function")?.let { func ->
+                                func.get("name")?.asString?.let { name ->
+                                    if (state.name.isEmpty()) {
+                                        state.name = name
+                                        android.util.Log.d("AiApiClient", "Tool call name: $name")
+                                        trySend(ToolStreamEvent.ToolCallStart(name, state.id))
+                                    }
+                                }
+                                
+                                func.get("arguments")?.asString?.let { argsDelta ->
+                                    state.arguments.append(argsDelta)
+                                    android.util.Log.d("AiApiClient", "Tool arguments delta: ${argsDelta.take(100)}..., total: ${state.arguments.length}")
+                                    trySend(ToolStreamEvent.ToolArgumentsDelta(
+                                        state.id,
+                                        argsDelta,
+                                        state.arguments.toString()
+                                    ))
+                                }
+                            }
+                        }
+                        
+                        // 检查是否完成
+                        if (finishReason == "tool_calls" || finishReason == "stop") {
+                            android.util.Log.d("AiApiClient", "Finish reason: $finishReason, toolCallsMap size: ${toolCallsMap.size}")
+                            toolCallsMap.values.forEach { state ->
+                                android.util.Log.d("AiApiClient", "Tool state: name=${state.name}, id=${state.id}, args length=${state.arguments.length}")
+                                if (state.name.isNotEmpty()) {
+                                    val info = ToolCallInfo(state.id, state.name, state.arguments.toString())
+                                    completedToolCalls.add(info)
+                                    trySend(ToolStreamEvent.ToolCallComplete(
+                                        state.id,
+                                        state.name,
+                                        state.arguments.toString()
+                                    ))
+                                }
+                            }
+                        }
+                    }
+                    
+                    while (!reader.exhausted()) {
+                        val line = reader.readUtf8Line() ?: break
+                        
+                        when {
+                            line.startsWith("data:") -> {
+                                val data = line.removePrefix("data:").trimStart()
+                                if (data == "[DONE]") {
+                                    if (!doneSent) {
+                                        doneSent = true
+                                        android.util.Log.d("AiApiClient", "Stream done, textBuilder length: ${textBuilder.length}, thinkingBuilder length: ${thinkingBuilder.length}")
+                                        trySend(ToolStreamEvent.Done(textBuilder.toString(), completedToolCalls))
+                                    }
+                                } else if (data.isNotEmpty()) {
+                                    // 累积数据到 buffer
+                                    dataBuffer.append(data)
+                                    
+                                    // 尝试解析累积的 JSON
+                                    val fullPayload = dataBuffer.toString()
+                                    try {
+                                        val json = gson.fromJson(fullPayload, JsonObject::class.java)
+                                        // 解析成功，处理这个事件并清空 buffer
+                                        android.util.Log.d("AiApiClient", "Parsed JSON chunk, length: ${fullPayload.length}")
+                                        dataBuffer.setLength(0)
+                                        processStreamChunk(json, textBuilder, thinkingBuilder, toolCallsMap, completedToolCalls)
+                                    } catch (e: Exception) {
+                                        // JSON 不完整，保留 buffer 继续累积
+                                        android.util.Log.d("AiApiClient", "JSON incomplete, buffer size: ${dataBuffer.length}, waiting for more data...")
+                                    }
+                                }
+                            }
+                            line.isBlank() -> {
+                                // 空行表示事件结束，尝试处理累积的数据
+                                if (dataBuffer.isNotEmpty()) {
+                                    val payload = dataBuffer.toString().trim()
+                                    dataBuffer.setLength(0)
+                                    if (payload.isNotEmpty() && payload != "[DONE]") {
+                                        try {
+                                            val json = gson.fromJson(payload, JsonObject::class.java)
+                                            processStreamChunk(json, textBuilder, thinkingBuilder, toolCallsMap, completedToolCalls)
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("AiApiClient", "Final parse error: ${e.message}")
+                                        }
+                                    }
+                                }
+                                if (doneSent) break
+                            }
+                        }
+                    }
+                    
+                    // 处理最后的数据
+                    if (dataBuffer.isNotEmpty() && !doneSent) {
+                        val payload = dataBuffer.toString().trim()
+                        dataBuffer.setLength(0)
+                        if (payload.isNotEmpty() && payload != "[DONE]") {
+                            try {
+                                val json = gson.fromJson(payload, JsonObject::class.java)
+                                processStreamChunk(json, textBuilder, thinkingBuilder, toolCallsMap, completedToolCalls)
+                            } catch (e: Exception) {
+                                android.util.Log.e("AiApiClient", "Final buffer parse error: ${e.message}")
+                            }
+                        }
+                    }
+                    
+                    if (!doneSent) {
+                        android.util.Log.d("AiApiClient", "Final Done: text=${textBuilder.length}, thinking=${thinkingBuilder.length}, tools=${completedToolCalls.size}")
+                        trySend(ToolStreamEvent.Done(textBuilder.toString(), completedToolCalls))
+                    }
+                    
+                    close()
+                } catch (e: Exception) {
+                    trySend(ToolStreamEvent.Error(e.message ?: "读取响应失败"))
+                    close(e)
+                }
+            }
+        })
+        
+        awaitClose { call.cancel() }
+    }
+    
+    /**
+     * 工具调用状态（用于流式解析）
+     */
+    private class ToolCallState {
+        var id: String = ""
+        var name: String = ""
+        val arguments = StringBuilder()
+    }
+    
+    /**
+     * 构建 OpenAI 格式的流式工具调用请求
+     */
+    private fun buildOpenAIStreamWithToolsRequest(
+        baseUrl: String,
+        apiKey: ApiKeyConfig,
+        modelId: String,
+        messages: List<Map<String, String>>,
+        tools: List<Map<String, Any>>,
+        temperature: Float
+    ): Request {
+        val messagesArray = com.google.gson.JsonArray()
+        messages.forEach { msg ->
+            messagesArray.add(JsonObject().apply {
+                addProperty("role", msg["role"])
+                addProperty("content", msg["content"])
+            })
+        }
+        
+        val toolsArray = com.google.gson.JsonArray()
+        tools.forEach { tool ->
+            toolsArray.add(gson.toJsonTree(tool))
+        }
+        
+        val body = JsonObject().apply {
+            addProperty("model", modelId)
+            add("messages", messagesArray)
+            add("tools", toolsArray)
+            addProperty("temperature", temperature)
+            addProperty("max_tokens", 16384)
+            addProperty("stream", true)
+            
+            // 强制模型使用工具（如果提供了工具）
+            // 根据模型类型选择合适的 tool_choice 值
+            // 某些模型（如 DeepSeek、GLM）可能不支持 "required"
+            if (tools.isNotEmpty()) {
+                val modelLower = modelId.lowercase()
+                val toolChoice = when {
+                    // DeepSeek 模型使用 "auto"，因为 "required" 可能不被支持
+                    modelLower.contains("deepseek") -> "auto"
+                    // GLM 模型使用 "auto"
+                    modelLower.contains("glm") -> "auto"
+                    // Qwen 模型使用 "auto"
+                    modelLower.contains("qwen") -> "auto"
+                    // 豆包模型使用 "auto"
+                    modelLower.contains("doubao") -> "auto"
+                    // OpenAI 和其他支持 "required" 的模型
+                    else -> "required"
+                }
+                addProperty("tool_choice", toolChoice)
+            }
+            
+            // 为支持思考模式的模型添加特殊参数
+            val modelLower = modelId.lowercase()
+            when {
+                // DeepSeek 思考模型
+                modelLower.contains("deepseek") && (modelLower.contains("reasoner") || modelLower.contains("r1")) -> {
+                    // DeepSeek R1 默认启用思考，无需额外参数
+                }
+                // Qwen 思考模型
+                modelLower.contains("qwen") && modelLower.contains("qwq") -> {
+                    // QwQ 默认启用思考
+                }
+                // Claude 思考模式 (需要 extended_thinking)
+                modelLower.contains("claude") && modelLower.contains("thinking") -> {
+                    add("thinking", JsonObject().apply {
+                        addProperty("type", "enabled")
+                        addProperty("budget_tokens", 10000)
+                    })
+                }
+            }
+            
+            // 启用流式选项以获取更多信息
+            add("stream_options", JsonObject().apply {
+                addProperty("include_usage", true)
+            })
+        }
+        
+        val streamEndpoint = when (apiKey.provider) {
+            AiProvider.GLM -> "/v4/chat/completions"
+            AiProvider.VOLCANO -> "/v3/chat/completions"
+            else -> "/v1/chat/completions"
+        }
+        
+        return Request.Builder()
+            .url("$baseUrl$streamEndpoint")
+            .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
+            .header("Content-Type", "application/json")
+            .header("Accept", "text/event-stream")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+    }
+    
+    // ==================== 图像生成接口 ====================
+    
+    /**
+     * 生成图像
+     * @return 返回 base64 编码的图像数据
+     */
+    suspend fun generateImage(
+        context: Context,
+        prompt: String,
+        apiKey: ApiKeyConfig,
+        model: SavedModel,
+        width: Int = 512,
+        height: Int = 512
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val baseUrl = when {
+                !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
+                apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
+                else -> return@withContext Result.failure(Exception("未配置API地址"))
+            }
+            
+            when (apiKey.provider) {
+                AiProvider.OPENAI, AiProvider.OPENROUTER -> {
+                    generateImageWithDallE(baseUrl, apiKey.apiKey, model.model.id, prompt, width, height)
+                }
+                AiProvider.GOOGLE -> {
+                    generateImageWithGemini(baseUrl, apiKey.apiKey, model.model.id, prompt)
+                }
+                else -> {
+                    // 尝试使用 OpenAI 兼容格式
+                    generateImageWithOpenAICompatible(baseUrl, apiKey.apiKey, model.model.id, prompt, width, height)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * 使用 DALL-E 格式生成图像
+     */
+    private fun generateImageWithDallE(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        prompt: String,
+        width: Int,
+        height: Int
+    ): Result<String> {
+        val size = "${width}x${height}"
+        
+        val body = JsonObject().apply {
+            addProperty("model", modelId)
+            addProperty("prompt", prompt)
+            addProperty("n", 1)
+            addProperty("size", size)
+            addProperty("response_format", "b64_json")
+        }
+        
+        val request = Request.Builder()
+            .url("$baseUrl/v1/images/generations")
+            .header("Authorization", "Bearer ${apiKey.sanitize()}")
+            .header("Content-Type", "application/json")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+        
+        val response = client.newCall(request).execute()
+        return if (response.isSuccessful) {
+            parseImageFromDallEResponse(response.body?.string() ?: "")
+        } else {
+            val errorBody = response.body?.string() ?: ""
+            Result.failure(Exception("图像生成失败: ${response.code} - $errorBody"))
+        }
+    }
+    
+    /**
+     * 使用 Gemini 生成图像
+     */
+    private fun generateImageWithGemini(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        prompt: String
+    ): Result<String> {
+        val parts = com.google.gson.JsonArray().apply {
+            add(JsonObject().apply { addProperty("text", prompt) })
+        }
+        
+        val body = JsonObject().apply {
+            add("contents", com.google.gson.JsonArray().apply {
+                add(JsonObject().apply { add("parts", parts) })
+            })
+            add("generationConfig", JsonObject().apply {
+                addProperty("temperature", 0.8)
+                add("responseModalities", com.google.gson.JsonArray().apply { 
+                    add("IMAGE")
+                    add("TEXT") 
+                })
+            })
+        }
+        
+        val request = Request.Builder()
+            .url("$baseUrl/v1beta/models/$modelId:generateContent?key=$apiKey")
+            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .build()
+        
+        val response = client.newCall(request).execute()
+        return if (response.isSuccessful) {
+            parseImageFromGeminiImageResponse(response.body?.string() ?: "")
+        } else {
+            val errorBody = response.body?.string() ?: ""
+            Result.failure(Exception("图像生成失败: ${response.code} - $errorBody"))
+        }
+    }
+    
+    /**
+     * 使用 OpenAI 兼容格式生成图像
+     */
+    private fun generateImageWithOpenAICompatible(
+        baseUrl: String,
+        apiKey: String,
+        modelId: String,
+        prompt: String,
+        width: Int,
+        height: Int
+    ): Result<String> {
+        // 尝试 DALL-E 格式
+        return generateImageWithDallE(baseUrl, apiKey, modelId, prompt, width, height)
+    }
+    
+    /**
+     * 解析 DALL-E 响应
+     */
+    private fun parseImageFromDallEResponse(body: String): Result<String> {
+        return try {
+            val json = gson.fromJson(body, JsonObject::class.java)
+            val data = json.getAsJsonArray("data")?.get(0)?.asJsonObject
+            val b64Json = data?.get("b64_json")?.asString
+            
+            if (b64Json != null) {
+                Result.success(b64Json)
+            } else {
+                // 尝试获取 URL 并下载
+                val url = data?.get("url")?.asString
+                if (url != null) {
+                    downloadImageAsBase64(url)
+                } else {
+                    Result.failure(Exception("未找到图像数据"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * 解析 Gemini 图像响应
+     */
+    private fun parseImageFromGeminiImageResponse(body: String): Result<String> {
+        return try {
+            val json = gson.fromJson(body, JsonObject::class.java)
+            val parts = json.getAsJsonArray("candidates")
+                ?.get(0)?.asJsonObject
+                ?.getAsJsonObject("content")
+                ?.getAsJsonArray("parts")
+            
+            parts?.forEach { part ->
+                val inlineData = part.asJsonObject.getAsJsonObject("inlineData")
+                    ?: part.asJsonObject.getAsJsonObject("inline_data")
+                if (inlineData != null) {
+                    val data = inlineData.get("data")?.asString
+                    if (data != null) return Result.success(data)
+                }
+            }
+            Result.failure(Exception("未找到图像数据"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * 下载图像并转为 base64
+     */
+    private fun downloadImageAsBase64(url: String): Result<String> {
+        return try {
+            val request = Request.Builder().url(url).get().build()
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val bytes = response.body?.bytes()
+                if (bytes != null) {
+                    Result.success(Base64.encodeToString(bytes, Base64.NO_WRAP))
+                } else {
+                    Result.failure(Exception("下载图像失败"))
+                }
+            } else {
+                Result.failure(Exception("下载图像失败: ${response.code}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 
 /**
@@ -1232,7 +2129,7 @@ private fun extractTextFromContentElement(elem: com.google.gson.JsonElement?): S
                     append(part.asString)
                 }
             }
-        }.ifBlank { null }
+        }.ifEmpty { null }  // 改用 ifEmpty 而不是 ifBlank，保留空格
         elem.isJsonObject -> {
             val obj = elem.asJsonObject
             obj.get("text")?.asString ?: obj.get("content")?.asString
@@ -1271,9 +2168,10 @@ private fun extractReasoningFrom(choiceObj: JsonObject?, deltaObj: JsonObject?):
 private fun extractContentFrom(choiceObj: JsonObject?): String? {
     if (choiceObj == null) return null
     val delta = choiceObj.getAsJsonObject("delta")
-    extractTextFromContentElement(delta?.get("content"))?.let { if (it.isNotBlank()) return it }
+    // 注意：不要使用 isNotBlank()，因为空格也是有效内容（如 CSS 中的空格）
+    extractTextFromContentElement(delta?.get("content"))?.let { if (it.isNotEmpty()) return it }
     val message = choiceObj.getAsJsonObject("message")
-    extractTextFromContentElement(message?.get("content"))?.let { if (it.isNotBlank()) return it }
+    extractTextFromContentElement(message?.get("content"))?.let { if (it.isNotEmpty()) return it }
     return null
 }
 
@@ -1284,3 +2182,41 @@ sealed class StreamEvent {
     data class Done(val fullContent: String) : StreamEvent()
     data class Error(val message: String) : StreamEvent()
 }
+
+/**
+ * Tool Calling 响应
+ */
+data class ToolCallResponse(
+    val textContent: String = "",
+    val thinking: String = "",
+    val toolCalls: List<ToolCallData> = emptyList()
+)
+
+data class ToolCallData(
+    val id: String,
+    val name: String,
+    val arguments: Map<String, Any?>
+)
+
+/**
+ * 流式工具调用事件
+ */
+sealed class ToolStreamEvent {
+    object Started : ToolStreamEvent()
+    data class TextDelta(val delta: String, val accumulated: String) : ToolStreamEvent()
+    data class ThinkingDelta(val delta: String, val accumulated: String) : ToolStreamEvent()
+    data class ToolCallStart(val toolName: String, val toolCallId: String) : ToolStreamEvent()
+    data class ToolArgumentsDelta(val toolCallId: String, val delta: String, val accumulated: String) : ToolStreamEvent()
+    data class ToolCallComplete(val toolCallId: String, val toolName: String, val arguments: String) : ToolStreamEvent()
+    data class Done(val textContent: String, val toolCalls: List<ToolCallInfo>) : ToolStreamEvent()
+    data class Error(val message: String) : ToolStreamEvent()
+}
+
+/**
+ * 工具调用信息
+ */
+data class ToolCallInfo(
+    val id: String,
+    val name: String,
+    val arguments: String
+)

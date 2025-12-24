@@ -98,7 +98,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         }
 
         setContent {
-            WebToAppTheme {
+            WebToAppTheme { _ ->
                 SplashLauncherScreen(
                     targetPackage = targetPackage,
                     hasValidSplash = hasValidSplash,

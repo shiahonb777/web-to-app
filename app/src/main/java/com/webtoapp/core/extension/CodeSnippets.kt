@@ -12,6 +12,9 @@ object CodeSnippets {
      * 获取所有代码块（按分类）
      */
     fun getAll(): List<CodeSnippetCategory> = listOf(
+        // 原生能力（新增）
+        nativeBridgeOperations(),
+        
         // 基础操作
         domOperations(),
         styleOperations(),
@@ -70,6 +73,8 @@ object CodeSnippets {
      * 获取热门代码块
      */
     fun getPopular(): List<CodeSnippet> = listOf(
+        getByCategory("native")?.snippets?.find { it.id == "native-save-image" },
+        getByCategory("native")?.snippets?.find { it.id == "native-share" },
         getByCategory("dom")?.snippets?.find { it.id == "dom-hide-element" },
         getByCategory("style")?.snippets?.find { it.id == "style-inject-css" },
         getByCategory("ui")?.snippets?.find { it.id == "ui-floating-button" },
@@ -77,6 +82,262 @@ object CodeSnippets {
         getByCategory("adblocker")?.snippets?.find { it.id == "ad-hide-common" },
         getByCategory("events")?.snippets?.find { it.id == "event-mutation" }
     ).filterNotNull()
+    
+    // ==================== 原生能力 (NativeBridge) ====================
+    private fun nativeBridgeOperations() = CodeSnippetCategory(
+        id = "native",
+        name = "原生能力",
+        icon = "📱",
+        description = "调用 Android 原生功能：保存图片、分享、震动、剪贴板等",
+        snippets = listOf(
+            CodeSnippet(
+                id = "native-toast",
+                name = "显示 Toast 提示",
+                description = "显示原生 Toast 消息提示",
+                code = """// 短提示
+NativeBridge.showToast('操作成功');
+
+// 长提示
+NativeBridge.showToast('请稍候，正在处理...', 'long');""",
+                tags = listOf("提示", "Toast", "消息")
+            ),
+            CodeSnippet(
+                id = "native-vibrate",
+                name = "震动反馈",
+                description = "触发手机震动",
+                code = """// 短震动（100ms）
+NativeBridge.vibrate();
+
+// 自定义时长震动
+NativeBridge.vibrate(500);
+
+// 模式震动（震动-暂停-震动）
+NativeBridge.vibratePattern('100,200,100,200');""",
+                tags = listOf("震动", "反馈", "触感")
+            ),
+            CodeSnippet(
+                id = "native-copy",
+                name = "复制到剪贴板",
+                description = "复制文本到系统剪贴板",
+                code = """function copyText(text) {
+    const success = NativeBridge.copyToClipboard(text);
+    if (success) {
+        NativeBridge.showToast('已复制到剪贴板');
+        NativeBridge.vibrate(50);
+    } else {
+        NativeBridge.showToast('复制失败');
+    }
+}
+
+// 使用示例：复制选中文本
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('copy-btn')) {
+        const text = e.target.dataset.text;
+        copyText(text);
+    }
+});""",
+                tags = listOf("复制", "剪贴板", "clipboard")
+            ),
+            CodeSnippet(
+                id = "native-share",
+                name = "分享内容",
+                description = "调用系统分享功能",
+                code = """// 分享文本和链接
+function shareContent(title, text, url) {
+    NativeBridge.share(title, text, url);
+}
+
+// 分享当前页面
+function shareCurrentPage() {
+    NativeBridge.share(
+        document.title,
+        '我发现了一个有趣的页面',
+        location.href
+    );
+}
+
+// 添加分享按钮
+const shareBtn = document.createElement('button');
+shareBtn.textContent = '分享';
+shareBtn.onclick = shareCurrentPage;""",
+                tags = listOf("分享", "share", "社交")
+            ),
+            CodeSnippet(
+                id = "native-save-image",
+                name = "保存图片到相册",
+                description = "将图片保存到手机相册",
+                code = """// 保存图片到相册
+function saveImage(imageUrl, filename) {
+    NativeBridge.saveImageToGallery(imageUrl, filename || '');
+}
+
+// 为所有图片添加长按保存功能
+document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (confirm('保存图片到相册？')) {
+            saveImage(img.src);
+        }
+    });
+});""",
+                tags = listOf("保存", "图片", "相册", "下载")
+            ),
+            CodeSnippet(
+                id = "native-save-video",
+                name = "保存视频到相册",
+                description = "将视频保存到手机相册",
+                code = """// 保存视频到相册
+function saveVideo(videoUrl, filename) {
+    NativeBridge.saveVideoToGallery(videoUrl, filename || '');
+}
+
+// 为视频添加下载按钮
+document.querySelectorAll('video').forEach(video => {
+    const btn = document.createElement('button');
+    btn.textContent = '保存视频';
+    btn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:999;';
+    btn.onclick = () => saveVideo(video.src);
+    video.parentElement.style.position = 'relative';
+    video.parentElement.appendChild(btn);
+});""",
+                tags = listOf("保存", "视频", "相册", "下载")
+            ),
+            CodeSnippet(
+                id = "native-open-url",
+                name = "用浏览器打开链接",
+                description = "使用系统浏览器打开外部链接",
+                code = """// 用系统浏览器打开链接
+function openInBrowser(url) {
+    NativeBridge.openUrl(url);
+}
+
+// 拦截外部链接，用浏览器打开
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.href && !link.href.startsWith(location.origin)) {
+        e.preventDefault();
+        openInBrowser(link.href);
+    }
+});""",
+                tags = listOf("浏览器", "链接", "外部")
+            ),
+            CodeSnippet(
+                id = "native-device-info",
+                name = "获取设备信息",
+                description = "获取手机设备和应用信息",
+                code = """// 获取设备信息
+const deviceInfo = JSON.parse(NativeBridge.getDeviceInfo());
+console.log('设备型号:', deviceInfo.model);
+console.log('Android 版本:', deviceInfo.androidVersion);
+console.log('屏幕尺寸:', deviceInfo.screenWidth, 'x', deviceInfo.screenHeight);
+
+// 获取应用信息
+const appInfo = JSON.parse(NativeBridge.getAppInfo());
+console.log('应用版本:', appInfo.versionName);
+
+// 根据设备调整布局
+if (deviceInfo.screenWidth < 400) {
+    document.body.classList.add('small-screen');
+}""",
+                tags = listOf("设备", "信息", "屏幕")
+            ),
+            CodeSnippet(
+                id = "native-network",
+                name = "检查网络状态",
+                description = "检查网络连接状态和类型",
+                code = """// 检查网络是否可用
+if (NativeBridge.isNetworkAvailable()) {
+    console.log('网络可用');
+} else {
+    NativeBridge.showToast('当前无网络连接');
+}
+
+// 获取网络类型
+const networkType = NativeBridge.getNetworkType();
+console.log('网络类型:', networkType); // wifi, mobile, none
+
+// 根据网络类型调整行为
+if (networkType === 'mobile') {
+    // 移动网络下减少数据使用
+    document.querySelectorAll('video').forEach(v => v.preload = 'none');
+}""",
+                tags = listOf("网络", "WiFi", "流量")
+            ),
+            CodeSnippet(
+                id = "native-save-file",
+                name = "保存文件",
+                description = "将内容保存为文件",
+                code = """// 保存文本文件
+function saveTextFile(content, filename) {
+    NativeBridge.saveToFile(content, filename, 'text/plain');
+}
+
+// 保存 JSON 文件
+function saveJsonFile(data, filename) {
+    const json = JSON.stringify(data, null, 2);
+    NativeBridge.saveToFile(json, filename, 'application/json');
+}
+
+// 导出页面数据
+const pageData = {
+    title: document.title,
+    url: location.href,
+    content: document.body.innerText.substring(0, 1000)
+};
+saveJsonFile(pageData, 'page_data.json');""",
+                tags = listOf("保存", "文件", "导出")
+            ),
+            CodeSnippet(
+                id = "native-image-download-btn",
+                name = "图片下载按钮",
+                description = "为图片添加悬浮下载按钮",
+                code = """// 为所有图片添加下载按钮
+function addImageDownloadButtons() {
+    document.querySelectorAll('img').forEach(img => {
+        if (img.dataset.downloadBtn) return;
+        img.dataset.downloadBtn = 'true';
+        
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:relative;display:inline-block;';
+        
+        const btn = document.createElement('button');
+        btn.textContent = '💾';
+        btn.style.cssText = `
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        `;
+        
+        wrapper.onmouseenter = () => btn.style.opacity = '1';
+        wrapper.onmouseleave = () => btn.style.opacity = '0';
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            NativeBridge.saveImageToGallery(img.src);
+            NativeBridge.vibrate(50);
+        };
+        
+        img.parentNode.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+        wrapper.appendChild(btn);
+    });
+}
+
+addImageDownloadButtons();
+new MutationObserver(addImageDownloadButtons)
+    .observe(document.body, { childList: true, subtree: true });""",
+                tags = listOf("图片", "下载", "按钮", "悬浮")
+            )
+        )
+    )
 
     // ==================== DOM 操作 ====================
     private fun domOperations() = CodeSnippetCategory(

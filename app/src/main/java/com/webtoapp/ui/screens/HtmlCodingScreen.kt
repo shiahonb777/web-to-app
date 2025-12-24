@@ -1,8 +1,12 @@
 package com.webtoapp.ui.screens
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Environment
+import android.os.IBinder
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,8 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
+import com.webtoapp.core.ai.AiGenerationService
 import com.webtoapp.core.ai.StreamEvent
 import com.webtoapp.core.ai.htmlcoding.*
 import com.webtoapp.data.model.AiFeature
@@ -35,6 +41,7 @@ import com.webtoapp.data.model.ModelCapability
 import com.webtoapp.data.model.SavedModel
 import com.webtoapp.ui.components.htmlcoding.*
 import com.webtoapp.ui.htmlpreview.HtmlPreviewActivity
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
@@ -56,6 +63,7 @@ fun HtmlCodingScreen(
     val storage = remember { HtmlCodingStorage(context) }
     val configManager = remember { AiConfigManager(context) }
     val apiClient = remember { AiApiClient(context) }
+    val htmlAgent = remember { HtmlCodingAgent(context) }
     
     // 状态 - 使用try-catch包装防止异常导致白屏
     var isLoading by remember { mutableStateOf(true) }
@@ -84,9 +92,14 @@ fun HtmlCodingScreen(
         val sessionFromFlow = sessions.find { it.id == currentSessionId }
         // 只有当 Flow 中的会话比本地更新时才同步
         if (sessionFromFlow != null) {
-            if (currentSession == null || 
+            val shouldUpdate = currentSession == null || 
                 currentSession?.id != sessionFromFlow.id ||
-                sessionFromFlow.updatedAt > (currentSession?.updatedAt ?: 0)) {
+                sessionFromFlow.updatedAt > (currentSession?.updatedAt ?: 0)
+            
+            android.util.Log.d("HtmlCodingScreen", "LaunchedEffect: sessionFromFlow=${sessionFromFlow.id}, currentSession=${currentSession?.id}, shouldUpdate=$shouldUpdate, flowUpdatedAt=${sessionFromFlow.updatedAt}, localUpdatedAt=${currentSession?.updatedAt}")
+            
+            if (shouldUpdate) {
+                android.util.Log.d("HtmlCodingScreen", "LaunchedEffect: Updating currentSession from Flow")
                 currentSession = sessionFromFlow
             }
         } else if (currentSessionId == null) {
@@ -100,6 +113,58 @@ fun HtmlCodingScreen(
     var chatState by remember { mutableStateOf<ChatState>(ChatState.Idle) }
     var streamingContent by remember { mutableStateOf("") }
     var streamingThinking by remember { mutableStateOf("") }
+    
+    // 记录当前正在生成的会话ID，用于隔离不同会话的流式输出
+    var generatingSessionId by remember { mutableStateOf<String?>(null) }
+    
+    // 项目文件相关状态
+    val projectFileManager = remember { ProjectFileManager(context) }
+    var projectFiles by remember { mutableStateOf<List<ProjectFileInfo>>(emptyList()) }
+    var selectedProjectFile by remember { mutableStateOf<ProjectFileInfo?>(null) }
+    var selectedFileContent by remember { mutableStateOf<String?>(null) }
+    var isFilesPanelExpanded by remember { mutableStateOf(true) }
+    
+    // 当会话变化时刷新项目文件列表
+    LaunchedEffect(currentSessionId) {
+        currentSessionId?.let { sessionId ->
+            projectFiles = projectFileManager.listFiles(sessionId)
+            selectedProjectFile = null
+            selectedFileContent = null
+        } ?: run {
+            projectFiles = emptyList()
+            selectedProjectFile = null
+            selectedFileContent = null
+        }
+    }
+    
+    // 刷新项目文件列表的函数
+    fun refreshProjectFiles() {
+        currentSessionId?.let { sessionId ->
+            projectFiles = projectFileManager.listFiles(sessionId)
+        }
+    }
+    
+    // 当前事件收集 Job，用于在新任务开始时取消旧的收集
+    var eventCollectorJob by remember { mutableStateOf<Job?>(null) }
+    
+    // 当前服务连接引用，用于在新任务开始时解绑旧的连接
+    var currentServiceConnection by remember { mutableStateOf<ServiceConnection?>(null) }
+    var isServiceBound by remember { mutableStateOf(false) }
+    
+    // 会话切换时，清空当前会话的流式状态（但不中断后台任务）
+    LaunchedEffect(currentSessionId) {
+        // 如果切换到的会话不是正在生成的会话，清空流式显示
+        if (currentSessionId != generatingSessionId) {
+            streamingContent = ""
+            streamingThinking = ""
+            // 重置聊天状态为空闲（UI层面），后台任务继续运行
+            if (chatState is ChatState.Streaming || chatState is ChatState.GeneratingImage) {
+                chatState = ChatState.Idle
+            }
+            android.util.Log.d("HtmlCodingScreen", "Session switched: cleared streaming state, currentSessionId=$currentSessionId, generatingSessionId=$generatingSessionId")
+        }
+    }
+    
     var showDrawer by remember { mutableStateOf(false) }
     var showConfigSheet by remember { mutableStateOf(false) }
     var showTemplatesSheet by remember { mutableStateOf(false) }
@@ -143,9 +208,18 @@ fun HtmlCodingScreen(
         }
     }
     
-    // 发送消息函数
+    // 发送消息函数 - 使用前台服务保持后台运行
     fun sendMessage() {
-        if (inputText.isBlank() || chatState !is ChatState.Idle) return
+        android.util.Log.d("HtmlCodingScreen", "sendMessage called: inputText='${inputText.take(50)}', chatState=$chatState, currentSession=${currentSession?.id}, generatingSessionId=$generatingSessionId")
+        
+        if (inputText.isBlank()) {
+            android.util.Log.d("HtmlCodingScreen", "sendMessage: inputText is blank, returning")
+            return
+        }
+        if (chatState !is ChatState.Idle) {
+            android.util.Log.d("HtmlCodingScreen", "sendMessage: chatState is not Idle ($chatState), returning")
+            return
+        }
         
         scope.launch {
             // 如果没有当前会话，先创建一个新会话
@@ -176,130 +250,258 @@ fun HtmlCodingScreen(
             
             // 清空输入
             val sentText = inputText
-            val sentImages = attachedImages
             inputText = ""
             attachedImages = emptyList()
             
-// 进入流式状态（不显示等待占位）
+            // 进入流式状态
             chatState = ChatState.Streaming("")
             
+            // 记录正在生成的会话ID
+            val targetSessionId = session.id
+            generatingSessionId = targetSessionId
+            
             try {
-                // 获取模型和API Key
+                // 获取模型
                 val textModel = savedModels.find { it.id == config.textModelId }
-                val imageModel = config.imageModelId?.let { id -> savedModels.find { it.id == id } }
-                val apiKey = textModel?.let { model ->
-                    apiKeys.find { it.id == model.apiKeyId }
+                if (textModel == null) {
+                    throw Exception("模型配置无效")
                 }
                 
-                if (textModel == null || apiKey == null) {
-                    throw Exception("模型或API Key配置无效")
-                }
-                
-                // 构建系统提示词
-                val systemPrompt = HtmlCodingPrompts.buildSystemPrompt(
-                    config = config,
-                    hasImageModel = imageModel != null,
-                    selectedTemplate = config.selectedTemplateId?.let { HtmlCodingPrompts.getTemplateById(it) },
-                    selectedStyle = config.selectedStyleId?.let { HtmlCodingPrompts.getStyleById(it) }
-                )
-                
-                // 构建消息历史
-                val messages = buildList {
-                    add(mapOf("role" to "system", "content" to systemPrompt))
-                    updatedSession?.messages?.forEach { msg ->
-                        val role = when (msg.role) {
-                            MessageRole.USER -> "user"
-                            MessageRole.ASSISTANT -> "assistant"
-                            MessageRole.SYSTEM -> "system"
-                        }
-                        add(mapOf("role" to role, "content" to msg.content))
-                    }
-                }
+                // 设置当前HTML（用于edit_html工具）
+                val currentHtml = updatedSession?.messages
+                    ?.flatMap { it.codeBlocks }
+                    ?.lastOrNull { it.language == "html" }
+                    ?.content
                 
                 // 重置流式状态
                 streamingContent = ""
                 streamingThinking = ""
                 
-                // 使用流式API
-                val thinkingBuilder = StringBuilder()
-                var finalContent = ""
+                // 启动前台服务
+                val serviceIntent = Intent(context, AiGenerationService::class.java)
+                ContextCompat.startForegroundService(context, serviceIntent)
                 
-                apiClient.chatStream(
-                    apiKey = apiKey,
-                    model = textModel.model,
-                    messages = messages,
-                    temperature = config.temperature
-                ).collect { event ->
-                    when (event) {
-                        is StreamEvent.Started -> {
-                            chatState = ChatState.Streaming("")
-                        }
-                        is StreamEvent.Thinking -> {
-                            thinkingBuilder.append(event.content)
-                            streamingThinking = thinkingBuilder.toString()
-                        }
-                        is StreamEvent.Content -> {
-                            streamingContent = event.accumulated
-                            finalContent = event.accumulated
-                        }
-                        is StreamEvent.Done -> {
-                            finalContent = event.fullContent
+                // 取消之前的事件收集 Job
+                eventCollectorJob?.cancel()
+                eventCollectorJob = null
+                android.util.Log.d("HtmlCodingScreen", "Cancelled previous event collector job")
+                
+                // 解绑之前的服务连接（如果存在）
+                if (isServiceBound && currentServiceConnection != null) {
+                    try {
+                        context.unbindService(currentServiceConnection!!)
+                        android.util.Log.d("HtmlCodingScreen", "Unbound previous service connection")
+                    } catch (e: Exception) {
+                        android.util.Log.e("HtmlCodingScreen", "Error unbinding previous service", e)
+                    }
+                    isServiceBound = false
+                    currentServiceConnection = null
+                }
+                
+                // 绑定服务并开始生成
+                val serviceConnection = object : ServiceConnection {
+                    override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                        val service = (binder as AiGenerationService.LocalBinder).getService()
+                        isServiceBound = true
+                        
+                        // 监听服务事件 - 保存 Job 引用以便后续取消
+                        eventCollectorJob = scope.launch {
+                            val thinkingBuilder = StringBuilder()
+                            var finalHtmlContent: String? = null
+                            var textContent = ""
                             
-                            // 解析最终响应
-                            val parsed = CodeBlockParser.parseResponse(finalContent)
+                            // 检查是否应该更新UI（当前会话与生成会话匹配）
+                            fun shouldUpdateUI(): Boolean = currentSessionId == targetSessionId
                             
-                            // 创建AI消息
-                            val aiMessage = HtmlCodingMessage(
-                                role = MessageRole.ASSISTANT,
-                                content = parsed.textContent,
-                                thinking = if (thinkingBuilder.isNotEmpty()) thinkingBuilder.toString() else parsed.thinking,
-                                codeBlocks = parsed.codeBlocks
-                            )
+                            android.util.Log.d("HtmlCodingScreen", "Started event collector for session: $targetSessionId")
                             
-                            // 添加到会话
-                            val finalSession = storage.addMessage(session.id, aiMessage)
-                            currentSession = finalSession
-                            
-                            // 自动保存到代码库（如果有代码块）
-                            if (parsed.codeBlocks.isNotEmpty()) {
-                                storage.addToCodeLibrary(
-                                    sessionId = session.id,
-                                    messageId = aiMessage.id,
-                                    userPrompt = userMessage.content,
-                                    codeBlocks = parsed.codeBlocks,
-                                    conversationContext = session.messages.takeLast(3).joinToString("\n") { 
-                                        "${it.role}: ${it.content.take(100)}" 
+                            service.eventFlow.collect { event ->
+                                android.util.Log.d("HtmlCodingScreen", "Received event: ${event::class.simpleName} for session: $targetSessionId")
+                                when (event) {
+                                    is HtmlAgentEvent.StateChange -> {
+                                        if (shouldUpdateUI()) {
+                                            when (event.state) {
+                                                HtmlAgentState.GENERATING -> chatState = ChatState.Streaming("")
+                                                HtmlAgentState.COMPLETED -> { /* 稍后处理 */ }
+                                                HtmlAgentState.ERROR -> { /* 错误在Error事件中处理 */ }
+                                                HtmlAgentState.IDLE -> { /* 空闲 */ }
+                                            }
+                                        }
                                     }
-                                )
-                            }
-                            
-                            // 创建对话检查点
-                            storage.createConversationCheckpoint(
-                                sessionId = session.id,
-                                name = "对话 #${(finalSession?.messages?.size ?: 0) / 2}"
-                            )
-                            
-                            // 清空流式状态
-                            streamingContent = ""
-                            streamingThinking = ""
-                            
-                            // 处理图像生成请求
-                            if (imageModel != null && parsed.imageRequests.isNotEmpty()) {
-                                val imageApiKey = apiKeys.find { it.id == imageModel.apiKeyId }
-                                if (imageApiKey != null) {
-                                    parsed.imageRequests.forEach { request ->
-                                        chatState = ChatState.GeneratingImage(request.prompt)
+                                    is HtmlAgentEvent.TextDelta -> {
+                                        textContent = event.accumulated
+                                        if (shouldUpdateUI()) {
+                                            streamingContent = event.accumulated
+                                        }
+                                    }
+                                    is HtmlAgentEvent.ThinkingDelta -> {
+                                        thinkingBuilder.clear()
+                                        thinkingBuilder.append(event.accumulated)
+                                        if (shouldUpdateUI()) {
+                                            streamingThinking = event.accumulated
+                                        }
+                                    }
+                                    is HtmlAgentEvent.ToolCallStart -> {
+                                        android.util.Log.d("HtmlCodingScreen", "Tool call started: ${event.toolName}")
+                                    }
+                                    is HtmlAgentEvent.CodeDelta -> {
+                                        if (shouldUpdateUI()) {
+                                            streamingContent = "正在生成代码...\n\n```html\n${event.accumulated}\n```"
+                                        }
+                                    }
+                                    is HtmlAgentEvent.ToolExecuted -> {
+                                        android.util.Log.d("HtmlCodingScreen", "Tool executed: ${event.result.toolName}, success=${event.result.success}")
+                                    }
+                                    is HtmlAgentEvent.FileCreated -> {
+                                        android.util.Log.d("HtmlCodingScreen", "File created: ${event.fileInfo.name}, version=${event.fileInfo.version}")
+                                        // 刷新项目文件列表
+                                        if (shouldUpdateUI()) {
+                                            projectFiles = projectFileManager.listFiles(targetSessionId)
+                                        }
+                                    }
+                                    is HtmlAgentEvent.HtmlComplete -> {
+                                        finalHtmlContent = event.html
+                                        android.util.Log.d("HtmlCodingScreen", "HTML complete, length=${event.html.length}")
+                                    }
+                                    is HtmlAgentEvent.AutoPreview -> { }
+                                    is HtmlAgentEvent.ImageGenerating -> {
+                                        if (shouldUpdateUI()) {
+                                            chatState = ChatState.GeneratingImage(event.prompt)
+                                        }
+                                    }
+                                    is HtmlAgentEvent.ImageGenerated -> {
+                                        android.util.Log.d("HtmlCodingScreen", "Image generated for: ${event.prompt}")
+                                    }
+                                    is HtmlAgentEvent.Completed -> {
+                                        val finalTextContent = event.textContent.ifBlank { textContent }
+                                        
+                                        val codeBlocks = if (finalHtmlContent != null) {
+                                            listOf(CodeBlock(
+                                                language = "html",
+                                                content = finalHtmlContent!!,
+                                                filename = "index.html",
+                                                isComplete = true
+                                            ))
+                                        } else {
+                                            emptyList()
+                                        }
+                                        
+                                        val messageContent = when {
+                                            finalTextContent.isNotBlank() -> finalTextContent
+                                            codeBlocks.isNotEmpty() -> "代码已生成，请查看下方预览"
+                                            else -> "我是 HTML 编程助手，有什么可以帮助你的吗？"
+                                        }
+                                        
+                                        val aiMessage = HtmlCodingMessage(
+                                            role = MessageRole.ASSISTANT,
+                                            content = messageContent,
+                                            thinking = thinkingBuilder.toString().takeIf { it.isNotBlank() },
+                                            codeBlocks = codeBlocks
+                                        )
+                                        
+                                        // 无论当前显示哪个会话，都要保存消息到目标会话
+                                        val finalSession = storage.addMessage(targetSessionId, aiMessage)
+                                        
+                                        // 只有当前显示的是目标会话时才更新UI
+                                        if (shouldUpdateUI()) {
+                                            currentSession = finalSession
+                                        }
+                                        
+                                        if (codeBlocks.isNotEmpty()) {
+                                            storage.addToCodeLibrary(
+                                                sessionId = targetSessionId,
+                                                messageId = aiMessage.id,
+                                                userPrompt = userMessage.content,
+                                                codeBlocks = codeBlocks,
+                                                conversationContext = session.messages.takeLast(3).joinToString("\n") { 
+                                                    "${it.role}: ${it.content.take(100)}" 
+                                                }
+                                            )
+                                        }
+                                        
+                                        storage.createConversationCheckpoint(
+                                            sessionId = targetSessionId,
+                                            name = "对话 #${(finalSession?.messages?.size ?: 0) / 2}"
+                                        )
+                                        
+                                        // 清理生成状态
+                                        if (generatingSessionId == targetSessionId) {
+                                            generatingSessionId = null
+                                        }
+                                        
+                                        // 只有当前显示的是目标会话时才清空流式状态
+                                        if (shouldUpdateUI()) {
+                                            streamingContent = ""
+                                            streamingThinking = ""
+                                            chatState = ChatState.Idle
+                                        }
+                                        
+                                        // 解绑服务
+                                        if (isServiceBound && currentServiceConnection != null) {
+                                            try {
+                                                context.unbindService(currentServiceConnection!!)
+                                                isServiceBound = false
+                                                currentServiceConnection = null
+                                                android.util.Log.d("HtmlCodingScreen", "Service unbound after completion")
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("HtmlCodingScreen", "Error unbinding service", e)
+                                            }
+                                        }
+                                    }
+                                    is HtmlAgentEvent.Error -> {
+                                        // 清理生成状态
+                                        if (generatingSessionId == targetSessionId) {
+                                            generatingSessionId = null
+                                        }
+                                        
+                                        // 只有当前显示的是目标会话时才更新UI
+                                        if (shouldUpdateUI()) {
+                                            chatState = ChatState.Error(event.message)
+                                            Toast.makeText(context, "错误: ${event.message}", Toast.LENGTH_LONG).show()
+                                            chatState = ChatState.Idle
+                                            streamingContent = ""
+                                            streamingThinking = ""
+                                        } else {
+                                            // 后台会话出错，显示通知
+                                            android.util.Log.w("HtmlCodingScreen", "Background session $targetSessionId error: ${event.message}")
+                                        }
+                                        
+                                        // 解绑服务
+                                        if (isServiceBound && currentServiceConnection != null) {
+                                            try {
+                                                context.unbindService(currentServiceConnection!!)
+                                                isServiceBound = false
+                                                currentServiceConnection = null
+                                                android.util.Log.d("HtmlCodingScreen", "Service unbound after error")
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("HtmlCodingScreen", "Error unbinding service", e)
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
-                        is StreamEvent.Error -> {
-                            throw Exception(event.message)
-                        }
+                        
+                        // 开始生成
+                        service.startGeneration(
+                            requirement = sentText,
+                            currentHtml = currentHtml,
+                            sessionConfig = config,
+                            model = textModel,
+                            sessionId = targetSessionId  // 传递会话ID用于文件操作
+                        )
+                    }
+                    
+                    override fun onServiceDisconnected(name: ComponentName?) {
+                        isServiceBound = false
+                        currentServiceConnection = null
                     }
                 }
                 
-                chatState = ChatState.Idle
+                // 保存服务连接引用
+                currentServiceConnection = serviceConnection
+                context.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+                
             } catch (e: Exception) {
                 chatState = ChatState.Error(e.message ?: "发送失败")
                 Toast.makeText(context, "错误: ${e.message}", Toast.LENGTH_LONG).show()
@@ -308,16 +510,12 @@ fun HtmlCodingScreen(
         }
     }
     
-    // 预览HTML（支持合并CSS/JS）
+    // 预览HTML
     fun previewHtml(codeBlock: CodeBlock) {
         scope.launch {
             try {
-                // 始终合并所有代码块，确保CSS和JS都能生效
-                val allCodeBlocks = currentSession?.messages
-                    ?.flatMap { it.codeBlocks }
-                    ?: listOf(codeBlock)
-                
-                val htmlContent = CodeBlockParser.mergeToSingleHtml(allCodeBlocks)
+                // 直接使用代码块的内容，不再合并
+                val htmlContent = codeBlock.content
                 
                 val file = storage.saveForPreview(htmlContent)
                 
@@ -329,6 +527,31 @@ fun HtmlCodingScreen(
                 context.startActivity(intent)
             } catch (e: Exception) {
                 Toast.makeText(context, "预览失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // 预览项目文件
+    fun previewProjectFile(fileInfo: ProjectFileInfo) {
+        scope.launch {
+            try {
+                val intent = Intent(context, HtmlPreviewActivity::class.java).apply {
+                    putExtra(HtmlPreviewActivity.EXTRA_FILE_PATH, fileInfo.path)
+                    putExtra(HtmlPreviewActivity.EXTRA_TITLE, fileInfo.name)
+                }
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "预览失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // 选择项目文件并加载内容
+    fun selectProjectFile(fileInfo: ProjectFileInfo) {
+        scope.launch {
+            selectedProjectFile = fileInfo
+            currentSessionId?.let { sessionId ->
+                selectedFileContent = projectFileManager.readFile(sessionId, fileInfo.name)
             }
         }
     }
@@ -525,47 +748,90 @@ fun HtmlCodingScreen(
                     }
                 )
             } else {
-                // 消息列表
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    items(
-                        items = currentSession?.messages ?: emptyList(),
-                        key = { it.id }
-                    ) { message ->
-                        MessageBubble(
-                            message = message,
-                            onEditClick = {
-                                if (message.role == MessageRole.USER) {
-                                    editingMessage = message
-                                }
-                            },
-                            onPreviewCode = { codeBlock -> previewHtml(codeBlock) },
-                            onCopyCode = {
-                                Toast.makeText(context, "已复制", Toast.LENGTH_SHORT).show()
-                            },
-                            onDownloadCode = { codeBlock -> downloadCode(codeBlock) },
-                            onExportToProject = { exportAllToHtmlProject() }
-                        )
-                    }
-                    
-                    
-                    // 流式输出显示（仅在收到首个分片后渲染）
-                    if (streamingContent.isNotEmpty() || streamingThinking.isNotEmpty()) {
-                        item {
-                            StreamingMessageBubble(
-                                thinking = streamingThinking,
-                                content = streamingContent
+                // 主内容区域 - 使用 Box 叠加消息列表和文件面板
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // 消息列表
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = if (projectFiles.isNotEmpty() && isFilesPanelExpanded) 200.dp else 60.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        items(
+                            items = currentSession?.messages ?: emptyList(),
+                            key = { it.id }
+                        ) { message ->
+                            MessageBubble(
+                                message = message,
+                                onEditClick = {
+                                    if (message.role == MessageRole.USER) {
+                                        editingMessage = message
+                                    }
+                                },
+                                onPreviewCode = { codeBlock -> previewHtml(codeBlock) },
+                                onCopyCode = {
+                                    Toast.makeText(context, "已复制", Toast.LENGTH_SHORT).show()
+                                },
+                                onDownloadCode = { codeBlock -> downloadCode(codeBlock) },
+                                onExportToProject = { exportAllToHtmlProject() }
                             )
+                        }
+                        
+                        
+                        // 流式输出显示（仅在收到首个分片后渲染）
+                        if (streamingContent.isNotEmpty() || streamingThinking.isNotEmpty()) {
+                            item {
+                                StreamingMessageBubble(
+                                    thinking = streamingThinking,
+                                    content = streamingContent
+                                )
+                            }
+                        }
+                        
+                        if (chatState is ChatState.GeneratingImage) {
+                            item {
+                                ImageGeneratingIndicator(
+                                    prompt = (chatState as ChatState.GeneratingImage).prompt
+                                )
+                            }
                         }
                     }
                     
-                    if (chatState is ChatState.GeneratingImage) {
-                        item {
-                            ImageGeneratingIndicator(
-                                prompt = (chatState as ChatState.GeneratingImage).prompt
+                    // 项目文件面板 - 底部固定
+                    if (currentSession != null) {
+                        Column(
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        ) {
+                            // 文件预览面板（选中文件时显示）
+                            AnimatedVisibility(
+                                visible = selectedProjectFile != null && selectedFileContent != null,
+                                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                            ) {
+                                FilePreviewPanel(
+                                    file = selectedProjectFile,
+                                    content = selectedFileContent,
+                                    onClose = {
+                                        selectedProjectFile = null
+                                        selectedFileContent = null
+                                    },
+                                    onPreview = {
+                                        selectedProjectFile?.let { previewProjectFile(it) }
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                            
+                            // 项目文件列表面板
+                            ProjectFilesPanel(
+                                files = projectFiles,
+                                selectedFile = selectedProjectFile,
+                                onFileClick = { fileInfo -> selectProjectFile(fileInfo) },
+                                onPreviewClick = { fileInfo -> previewProjectFile(fileInfo) },
+                                onRefresh = { refreshProjectFiles() },
+                                isExpanded = isFilesPanelExpanded,
+                                onExpandChange = { isFilesPanelExpanded = it }
                             )
                         }
                     }
@@ -706,6 +972,8 @@ fun HtmlCodingScreen(
                                 chatState = ChatState.Idle
                                 streamingContent = ""
                                 streamingThinking = ""
+                                // 清除正在生成的会话ID，允许新的消息发送
+                                generatingSessionId = null
                             }
                         }
                     },
@@ -833,13 +1101,50 @@ fun HtmlCodingScreen(
                 checkpoints = conversationCheckpoints,
                 onRollback = { checkpoint ->
                     scope.launch {
-                        storage.rollbackToConversationCheckpoint(checkpoint.id)?.let {
-                            currentSession = it
+                        android.util.Log.d("HtmlCodingScreen", "Rolling back to checkpoint: ${checkpoint.id}, name: ${checkpoint.name}")
+                        android.util.Log.d("HtmlCodingScreen", "Before rollback: chatState=$chatState, generatingSessionId=$generatingSessionId")
+                        
+                        storage.rollbackToConversationCheckpoint(checkpoint.id)?.let { restoredSession ->
+                            android.util.Log.d("HtmlCodingScreen", "Rollback successful, restoredSession: ${restoredSession.id}, messages: ${restoredSession.messages.size}")
+                            
                             // 重置聊天状态，确保回退后可以正常发送消息
                             chatState = ChatState.Idle
                             streamingContent = ""
                             streamingThinking = ""
-                            Toast.makeText(context, "已回退到: ${checkpoint.name}", Toast.LENGTH_SHORT).show()
+                            // 清除正在生成的会话ID，允许新的消息发送
+                            generatingSessionId = null
+                            
+                            // 检查最后一条消息是否是用户消息
+                            val lastMessage = restoredSession.messages.lastOrNull()
+                            android.util.Log.d("HtmlCodingScreen", "Last message role: ${lastMessage?.role}, content: ${lastMessage?.content?.take(50)}")
+                            
+                            if (lastMessage?.role == MessageRole.USER) {
+                                // 将最后一条用户消息填入输入框，方便用户重新发送
+                                inputText = lastMessage.content
+                                attachedImages = lastMessage.images
+                                android.util.Log.d("HtmlCodingScreen", "Set inputText to: ${inputText.take(50)}")
+                                
+                                // 重要：从会话中移除这条用户消息，避免重复添加
+                                // 用户点击发送时会重新添加这条消息
+                                val sessionWithoutLastUserMessage = restoredSession.copy(
+                                    messages = restoredSession.messages.dropLast(1),
+                                    updatedAt = System.currentTimeMillis() + 1000 // 确保时间戳更新，防止被 Flow 覆盖
+                                )
+                                currentSession = sessionWithoutLastUserMessage
+                                // 同步更新存储
+                                storage.updateSession(sessionWithoutLastUserMessage)
+                                android.util.Log.d("HtmlCodingScreen", "Updated currentSession, messages: ${sessionWithoutLastUserMessage.messages.size}")
+                                
+                                Toast.makeText(context, "已回退到: ${checkpoint.name}\n最后的消息已填入输入框，点击发送重新生成", Toast.LENGTH_LONG).show()
+                            } else {
+                                currentSession = restoredSession
+                                Toast.makeText(context, "已回退到: ${checkpoint.name}", Toast.LENGTH_SHORT).show()
+                            }
+                            
+                            android.util.Log.d("HtmlCodingScreen", "After rollback: chatState=$chatState, inputText='${inputText.take(50)}'")
+                        } ?: run {
+                            android.util.Log.e("HtmlCodingScreen", "Rollback failed: rollbackToConversationCheckpoint returned null")
+                            Toast.makeText(context, "回退失败", Toast.LENGTH_SHORT).show()
                         }
                         showConversationCheckpointsSheet = false
                     }
