@@ -99,6 +99,7 @@ class ApkTemplate(private val context: Context) {
             "versionName": "${escapeJson(config.versionName)}",
             "activationEnabled": ${config.activationEnabled},
             "activationCodes": [${config.activationCodes.joinToString(",") { "\"${escapeJson(it)}\"" }}],
+            "activationRequireEveryTime": ${config.activationRequireEveryTime},
             "adBlockEnabled": ${config.adBlockEnabled},
             "adBlockRules": [${config.adBlockRules.joinToString(",") { "\"${escapeJson(it)}\"" }}],
             "announcementEnabled": ${config.announcementEnabled},
@@ -321,6 +322,7 @@ data class ApkConfig(
     // 激活码
     val activationEnabled: Boolean = false,
     val activationCodes: List<String> = emptyList(),
+    val activationRequireEveryTime: Boolean = false,
     
     // 广告拦截
     val adBlockEnabled: Boolean = false,

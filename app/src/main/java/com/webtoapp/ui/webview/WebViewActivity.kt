@@ -438,11 +438,19 @@ fun WebViewScreen(
 
                 // 检查激活状态
                 if (app.activationEnabled) {
-                    val activated = activation.isActivated(appId).first()
-                    isActivated = activated
-                    isActivationChecked = true
-                    if (!activated) {
+                    // 如果配置为每次都需要验证，则重置激活状态
+                    if (app.activationRequireEveryTime) {
+                        activation.resetActivation(appId)
+                        isActivated = false
+                        isActivationChecked = true
                         showActivationDialog = true
+                    } else {
+                        val activated = activation.isActivated(appId).first()
+                        isActivated = activated
+                        isActivationChecked = true
+                        if (!activated) {
+                            showActivationDialog = true
+                        }
                     }
                 } else {
                     // 未启用激活码，直接标记为已激活

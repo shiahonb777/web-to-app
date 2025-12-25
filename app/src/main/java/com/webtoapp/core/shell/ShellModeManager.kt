@@ -102,6 +102,9 @@ data class ShellConfig(
 
     @SerializedName("activationCodes")
     val activationCodes: List<String> = emptyList(),
+    
+    @SerializedName("activationRequireEveryTime")
+    val activationRequireEveryTime: Boolean = false,
 
     // 广告拦截配置
     @SerializedName("adBlockEnabled")

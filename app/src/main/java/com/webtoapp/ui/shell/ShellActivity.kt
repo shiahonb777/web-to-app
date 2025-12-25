@@ -510,12 +510,20 @@ fun ShellScreen(
 
         // 检查激活状态
         if (config.activationEnabled) {
-            // Shell 模式使用固定 ID
-            val activated = activation.isActivated(-1L).first()
-            isActivated = activated
-            isActivationChecked = true
-            if (!activated) {
+            // 如果配置为每次都需要验证，则重置激活状态
+            if (config.activationRequireEveryTime) {
+                activation.resetActivation(-1L)
+                isActivated = false
+                isActivationChecked = true
                 showActivationDialog = true
+            } else {
+                // Shell 模式使用固定 ID
+                val activated = activation.isActivated(-1L).first()
+                isActivated = activated
+                isActivationChecked = true
+                if (!activated) {
+                    showActivationDialog = true
+                }
             }
         }
 

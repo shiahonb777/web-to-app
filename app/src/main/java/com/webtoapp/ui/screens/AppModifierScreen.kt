@@ -316,6 +316,7 @@ fun AppModifyFullScreen(
     // 激活码配置状态
     var activationEnabled by remember { mutableStateOf(false) }
     var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
+    var activationRequireEveryTime by remember { mutableStateOf(false) }
     var newActivationCode by remember { mutableStateOf("") }
     
     // 公告配置状态
@@ -391,6 +392,7 @@ fun AppModifyFullScreen(
             splashEnableAudio = splashEnableAudio,
             activationEnabled = activationEnabled,
             activationCodes = activationCodes,
+            activationRequireEveryTime = activationRequireEveryTime,
             announcementEnabled = announcementEnabled,
             announcementTitle = announcementTitle,
             announcementContent = announcementContent,
@@ -579,8 +581,10 @@ fun AppModifyFullScreen(
             ActivationCard(
                 enabled = activationEnabled,
                 codes = activationCodes,
+                requireEveryTime = activationRequireEveryTime,
                 onEnabledChange = { activationEnabled = it },
-                onCodesChange = { activationCodes = it }
+                onCodesChange = { activationCodes = it },
+                onRequireEveryTimeChange = { activationRequireEveryTime = it }
             )
             
             // 公告设置卡片
@@ -673,8 +677,10 @@ fun AppModifyFullScreen(
 private fun ActivationCard(
     enabled: Boolean,
     codes: List<String>,
+    requireEveryTime: Boolean,
     onEnabledChange: (Boolean) -> Unit,
-    onCodesChange: (List<String>) -> Unit
+    onCodesChange: (List<String>) -> Unit,
+    onRequireEveryTimeChange: (Boolean) -> Unit
 ) {
     var newCode by remember { mutableStateOf("") }
     
@@ -700,6 +706,24 @@ private fun ActivationCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                
+                // 每次启动都需要验证选项
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("每次启动都需要验证", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            if (requireEveryTime) "每次打开应用都需要输入激活码" else "激活一次后永久有效",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(checked = requireEveryTime, onCheckedChange = onRequireEveryTimeChange)
+                }
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 

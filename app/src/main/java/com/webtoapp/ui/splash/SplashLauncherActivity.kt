@@ -49,6 +49,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         // 激活码配置
         const val EXTRA_ACTIVATION_ENABLED = "activation_enabled"
         const val EXTRA_ACTIVATION_CODES = "activation_codes"
+        const val EXTRA_ACTIVATION_REQUIRE_EVERY_TIME = "activation_require_every_time"
         // 公告配置
         const val EXTRA_ANNOUNCEMENT_ENABLED = "announcement_enabled"
         const val EXTRA_ANNOUNCEMENT_TITLE = "announcement_title"
@@ -71,6 +72,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         val enableAudio = intent.getBooleanExtra(EXTRA_SPLASH_ENABLE_AUDIO, false)
         // 激活码配置（从逗号分隔的字符串解析）
         val activationEnabled = intent.getBooleanExtra(EXTRA_ACTIVATION_ENABLED, false)
+        val activationRequireEveryTime = intent.getBooleanExtra(EXTRA_ACTIVATION_REQUIRE_EVERY_TIME, false)
         val activationCodesStr = intent.getStringExtra(EXTRA_ACTIVATION_CODES) ?: ""
         val activationCodes = if (activationCodesStr.isNotBlank()) {
             activationCodesStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -111,6 +113,7 @@ class SplashLauncherActivity : AppCompatActivity() {
                     fillScreen = fillScreen,
                     enableAudio = enableAudio,
                     activationEnabled = activationEnabled,
+                    activationRequireEveryTime = activationRequireEveryTime,
                     activationCodes = activationCodes,
                     announcementEnabled = announcementEnabled,
                     announcementTitle = announcementTitle,
@@ -153,6 +156,7 @@ fun SplashLauncherScreen(
     fillScreen: Boolean,
     enableAudio: Boolean = false,
     activationEnabled: Boolean = false,
+    activationRequireEveryTime: Boolean = false,
     activationCodes: List<String> = emptyList(),
     announcementEnabled: Boolean = false,
     announcementTitle: String = "",
@@ -161,10 +165,22 @@ fun SplashLauncherScreen(
     onLaunchTarget: () -> Unit
 ) {
     val context = LocalContext.current
+    val activation = com.webtoapp.WebToAppApplication.activation
+    val scope = rememberCoroutineScope()
     
-    // 激活状态
+    // 激活状态 - 如果配置为每次都需要验证，则始终显示激活对话框
     var isActivated by remember { mutableStateOf(!activationEnabled) }
     var showActivationDialog by remember { mutableStateOf(activationEnabled) }
+    
+    // 如果配置为每次都需要验证，在启动时重置激活状态
+    LaunchedEffect(activationRequireEveryTime) {
+        if (activationEnabled && activationRequireEveryTime) {
+            // 使用固定 ID -2 表示 SplashLauncher 的激活状态
+            activation.resetActivation(-2L)
+            isActivated = false
+            showActivationDialog = true
+        }
+    }
     
     // 公告状态
     var showAnnouncementDialog by remember { mutableStateOf(false) }

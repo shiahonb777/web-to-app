@@ -55,6 +55,7 @@ data class AppModifyConfig(
     // 激活码配置
     val activationEnabled: Boolean = false,
     val activationCodes: List<String> = emptyList(),
+    val activationRequireEveryTime: Boolean = false,
     
     // 弹窗公告配置
     val announcementEnabled: Boolean = false,

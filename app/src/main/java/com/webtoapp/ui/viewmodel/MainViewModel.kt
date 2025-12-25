@@ -85,6 +85,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             activationEnabled = webApp.activationEnabled,
             activationCodes = webApp.activationCodes,
             activationCodeList = webApp.activationCodeList,
+            activationRequireEveryTime = webApp.activationRequireEveryTime,
             adsEnabled = webApp.adsEnabled,
             adConfig = webApp.adConfig ?: AdConfig(),
             announcementEnabled = webApp.announcementEnabled,
@@ -256,6 +257,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     activationEnabled = state.activationEnabled,
                     activationCodes = activationCodeStrings,
                     activationCodeList = state.activationCodeList,
+                    activationRequireEveryTime = state.activationRequireEveryTime,
                     adsEnabled = state.adsEnabled,
                     adConfig = state.adConfig,
                     announcementEnabled = state.announcementEnabled,
@@ -284,6 +286,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         activationEnabled = state.activationEnabled,
                         activationCodes = activationCodeStrings,
                         activationCodeList = state.activationCodeList,
+                        activationRequireEveryTime = state.activationRequireEveryTime,
                         adsEnabled = state.adsEnabled,
                         adConfig = state.adConfig,
                         announcementEnabled = state.announcementEnabled,
@@ -585,6 +588,7 @@ data class EditState(
     val activationEnabled: Boolean = false,
     val activationCodes: List<String> = emptyList(),  // 旧格式（兼容性）
     val activationCodeList: List<com.webtoapp.core.activation.ActivationCode> = emptyList(),  // 新格式
+    val activationRequireEveryTime: Boolean = false,  // 是否每次启动都需要验证
 
     // 广告
     val adsEnabled: Boolean = false,

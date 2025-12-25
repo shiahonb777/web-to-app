@@ -1213,6 +1213,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         iconPath = iconPath,
         activationEnabled = activationEnabled,
         activationCodes = activationCodes,
+        activationRequireEveryTime = activationRequireEveryTime,
         adBlockEnabled = adBlockEnabled,
         adBlockRules = adBlockRules,
         announcementEnabled = announcementEnabled,

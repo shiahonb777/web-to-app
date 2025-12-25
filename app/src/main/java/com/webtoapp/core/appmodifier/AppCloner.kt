@@ -125,6 +125,7 @@ class AppCloner(private val context: Context) {
                     // 激活码配置（使用逗号分隔的字符串，因为 PersistableBundle 不支持 ArrayList）
                     putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_ENABLED, config.activationEnabled)
                     putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_CODES, config.activationCodes.joinToString(","))
+                    putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_REQUIRE_EVERY_TIME, config.activationRequireEveryTime)
                     // 公告配置
                     putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_ENABLED, config.announcementEnabled)
                     putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_TITLE, config.announcementTitle)

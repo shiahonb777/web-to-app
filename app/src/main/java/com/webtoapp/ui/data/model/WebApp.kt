@@ -41,6 +41,7 @@ data class WebApp(
     val activationEnabled: Boolean = false,
     val activationCodes: List<String> = emptyList(),  // 旧格式（兼容性）
     val activationCodeList: List<com.webtoapp.core.activation.ActivationCode> = emptyList(),  // 新格式
+    val activationRequireEveryTime: Boolean = false,  // 是否每次启动都需要验证
     val isActivated: Boolean = false,
 
     // 广告配置
