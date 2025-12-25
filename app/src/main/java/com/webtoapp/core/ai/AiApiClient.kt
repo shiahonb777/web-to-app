@@ -32,9 +32,10 @@ class AiApiClient(private val context: Context) {
     private fun String.sanitize(): String = this.replace("\n", "").replace("\r", "").trim()
     
     private val client = OkHttpClient.Builder()
-        .connectTimeout(60, TimeUnit.SECONDS)
-        .readTimeout(120, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        .connectTimeout(90, TimeUnit.SECONDS)
+        .readTimeout(300, TimeUnit.SECONDS)  // 流式响应需要更长的读取超时
+        .writeTimeout(90, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)  // 启用连接失败重试
         .build()
     
     /**
@@ -903,7 +904,18 @@ val json = gson.fromJson(body, JsonObject::class.java)
         val call = client.newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                trySend(StreamEvent.Error(e.message ?: "连接失败"))
+                val errorMsg = when {
+                    e.message?.contains("connection abort", ignoreCase = true) == true -> 
+                        "网络连接中断，请检查网络后重试"
+                    e.message?.contains("timeout", ignoreCase = true) == true -> 
+                        "请求超时，请检查网络连接"
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true -> 
+                        "无法连接服务器，请检查网络或API地址"
+                    e.message?.contains("Connection refused", ignoreCase = true) == true -> 
+                        "服务器拒绝连接，请检查API地址是否正确"
+                    else -> e.message ?: "网络连接失败"
+                }
+                trySend(StreamEvent.Error(errorMsg))
                 close(e)
             }
             
@@ -1591,7 +1603,18 @@ val json = gson.fromJson(body, JsonObject::class.java)
         val call = client.newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                trySend(ToolStreamEvent.Error(e.message ?: "连接失败"))
+                val errorMsg = when {
+                    e.message?.contains("connection abort", ignoreCase = true) == true -> 
+                        "网络连接中断，请检查网络后重试"
+                    e.message?.contains("timeout", ignoreCase = true) == true -> 
+                        "请求超时，请检查网络连接"
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true -> 
+                        "无法连接服务器，请检查网络或API地址"
+                    e.message?.contains("Connection refused", ignoreCase = true) == true -> 
+                        "服务器拒绝连接，请检查API地址是否正确"
+                    else -> e.message ?: "网络连接失败"
+                }
+                trySend(ToolStreamEvent.Error(errorMsg))
                 close(e)
             }
             
