@@ -24,8 +24,10 @@ import java.util.concurrent.TimeUnit
 fun ActivationCodeCard(
     enabled: Boolean,
     activationCodes: List<ActivationCode>,
+    requireEveryTime: Boolean = false,
     onEnabledChange: (Boolean) -> Unit,
-    onCodesChange: (List<ActivationCode>) -> Unit
+    onCodesChange: (List<ActivationCode>) -> Unit,
+    onRequireEveryTimeChange: (Boolean) -> Unit = {}
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -63,6 +65,31 @@ fun ActivationCodeCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                
+                // 每次启动都需要验证选项
+                Divider(modifier = Modifier.padding(vertical = 4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "每次启动都需要验证",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = if (requireEveryTime) "每次打开应用都需要输入激活码" else "激活一次后永久有效",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = requireEveryTime,
+                        onCheckedChange = onRequireEveryTimeChange
+                    )
+                }
+                Divider(modifier = Modifier.padding(vertical = 4.dp))
 
                 // 添加激活码按钮
                 Button(

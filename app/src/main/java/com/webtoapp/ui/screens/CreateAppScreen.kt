@@ -139,8 +139,10 @@ fun CreateAppScreen(
             ActivationCodeCard(
                 enabled = editState.activationEnabled,
                 activationCodes = editState.activationCodeList,
+                requireEveryTime = editState.activationRequireEveryTime,
                 onEnabledChange = { viewModel.updateEditState { copy(activationEnabled = it) } },
-                onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } }
+                onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } },
+                onRequireEveryTimeChange = { viewModel.updateEditState { copy(activationRequireEveryTime = it) } }
             )
 
             // 公告设置
