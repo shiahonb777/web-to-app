@@ -163,23 +163,11 @@ class ApkTemplate(private val context: Context) {
             "translateShowButton": ${config.translateShowButton},
             "extensionModuleIds": [${config.extensionModuleIds.joinToString(",") { "\"${escapeJson(it)}\"" }}],
             "embeddedExtensionModules": [${config.embeddedExtensionModules.joinToString(",") { module ->
-                """{
-                    "id": "${escapeJson(module.id)}",
-                    "name": "${escapeJson(module.name)}",
-                    "description": "${escapeJson(module.description)}",
-                    "icon": "${escapeJson(module.icon)}",
-                    "category": "${module.category}",
-                    "code": "${escapeJson(module.code)}",
-                    "cssCode": "${escapeJson(module.cssCode)}",
-                    "runAt": "${module.runAt}",
-                    "urlMatches": [${module.urlMatches.joinToString(",") { rule ->
-                        """{"pattern":"${escapeJson(rule.pattern)}","isRegex":${rule.isRegex},"exclude":${rule.exclude}}"""
-                    }}],
-                    "configValues": {${module.configValues.entries.joinToString(",") { (k, v) ->
-                        "\"${escapeJson(k)}\":\"${escapeJson(v)}\""
-                    }}},
-                    "enabled": ${module.enabled}
-                }"""
+                """{"id":"${escapeJson(module.id)}","name":"${escapeJson(module.name)}","description":"${escapeJson(module.description)}","icon":"${escapeJson(module.icon)}","category":"${module.category}","code":"${escapeJson(module.code)}","cssCode":"${escapeJson(module.cssCode)}","runAt":"${module.runAt}","urlMatches":[${module.urlMatches.joinToString(",") { rule ->
+                    """{"pattern":"${escapeJson(rule.pattern)}","isRegex":${rule.isRegex},"exclude":${rule.exclude}}"""
+                }}],"configValues":{${module.configValues.entries.joinToString(",") { (k, v) ->
+                    "\"${escapeJson(k)}\":\"${escapeJson(v)}\""
+                }}},"enabled":${module.enabled}}"""
             }}]
         }
         """.trimIndent()

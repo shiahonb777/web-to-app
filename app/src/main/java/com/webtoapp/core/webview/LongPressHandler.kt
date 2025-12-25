@@ -81,72 +81,114 @@ class LongPressHandler(
     
     /**
      * 通过 JS 获取更详细的长按信息
+     * 
+     * 注意：x, y 是相对于 WebView 视图的坐标（来自 MotionEvent）
+     * 需要转换为页面视口坐标才能正确使用 document.elementFromPoint()
      */
     fun getLongPressDetails(webView: WebView, x: Float, y: Float, callback: (LongPressResult) -> Unit) {
+        // 获取 WebView 的缩放比例
+        val scale = webView.scale
+        
+        // 将视图坐标转换为页面坐标
+        // MotionEvent 的坐标是相对于 WebView 视图的像素坐标
+        // document.elementFromPoint() 需要的是 CSS 像素坐标（考虑缩放）
+        val pageX = x / scale
+        val pageY = y / scale
+        
         val js = """
             (function() {
-                var elem = document.elementFromPoint($x, $y);
-                if (!elem) return JSON.stringify({type: 'none'});
-                
-                var result = {type: 'none'};
-                
-                // 检查是否是图片
-                if (elem.tagName === 'IMG') {
-                    result = {
-                        type: 'image',
-                        url: elem.src,
-                        alt: elem.alt || ''
-                    };
-                    // 检查图片是否在链接内
-                    var parent = elem.parentElement;
-                    while (parent) {
-                        if (parent.tagName === 'A' && parent.href) {
-                            result.type = 'imageLink';
-                            result.linkUrl = parent.href;
-                            break;
-                        }
-                        parent = parent.parentElement;
+                try {
+                    // 使用传入的坐标（已经是 CSS 像素）
+                    var x = $pageX;
+                    var y = $pageY;
+                    
+                    var elem = document.elementFromPoint(x, y);
+                    if (!elem) {
+                        console.log('WebToApp: No element at (' + x + ', ' + y + ')');
+                        return JSON.stringify({type: 'none'});
                     }
-                }
-                // 检查是否是视频
-                else if (elem.tagName === 'VIDEO') {
-                    result = {
-                        type: 'video',
-                        url: elem.src || elem.currentSrc || ''
-                    };
-                    // 检查 source 标签
-                    if (!result.url) {
-                        var source = elem.querySelector('source');
-                        if (source) result.url = source.src;
-                    }
-                }
-                // 检查是否是链接
-                else if (elem.tagName === 'A') {
-                    var href = elem.href || '';
-                    if (href.match(/\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i)) {
-                        result = {type: 'video', url: href};
-                    } else {
-                        result = {type: 'link', url: href, title: elem.textContent || ''};
-                    }
-                }
-                // 向上查找链接
-                else {
-                    var parent = elem.parentElement;
-                    while (parent) {
-                        if (parent.tagName === 'A' && parent.href) {
-                            var href = parent.href;
-                            if (href.match(/\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i)) {
-                                result = {type: 'video', url: href};
-                            } else {
-                                result = {type: 'link', url: href, title: parent.textContent || ''};
+                    
+                    console.log('WebToApp: Element at (' + x + ', ' + y + '): ' + elem.tagName + ', class=' + elem.className);
+                    
+                    var result = {type: 'none'};
+                    
+                    // 向上遍历查找可交互元素（最多 10 层）
+                    var current = elem;
+                    var depth = 0;
+                    while (current && depth < 10) {
+                        var tagName = current.tagName ? current.tagName.toUpperCase() : '';
+                        
+                        // 检查是否是图片
+                        if (tagName === 'IMG' && current.src) {
+                            result = {
+                                type: 'image',
+                                url: current.src,
+                                alt: current.alt || ''
+                            };
+                            // 继续向上查找是否在链接内
+                            var parent = current.parentElement;
+                            while (parent) {
+                                if (parent.tagName && parent.tagName.toUpperCase() === 'A' && parent.href) {
+                                    result.type = 'imageLink';
+                                    result.linkUrl = parent.href;
+                                    break;
+                                }
+                                parent = parent.parentElement;
                             }
                             break;
                         }
-                        parent = parent.parentElement;
+                        
+                        // 检查是否是视频
+                        if (tagName === 'VIDEO') {
+                            var videoUrl = current.src || current.currentSrc || '';
+                            if (!videoUrl) {
+                                var source = current.querySelector('source');
+                                if (source) videoUrl = source.src;
+                            }
+                            if (videoUrl) {
+                                result = {type: 'video', url: videoUrl};
+                                break;
+                            }
+                        }
+                        
+                        // 检查是否是链接
+                        if (tagName === 'A' && current.href) {
+                            var href = current.href;
+                            if (href.match(/\.(mp4|webm|ogg|mov|avi|mkv|m3u8)(\?|#|$)/i)) {
+                                result = {type: 'video', url: href};
+                            } else {
+                                result = {
+                                    type: 'link', 
+                                    url: href, 
+                                    title: (current.textContent || '').trim().substring(0, 100)
+                                };
+                            }
+                            break;
+                        }
+                        
+                        // 检查背景图片
+                        if (result.type === 'none') {
+                            var style = window.getComputedStyle(current);
+                            var bgImage = style.backgroundImage;
+                            if (bgImage && bgImage !== 'none' && bgImage.startsWith('url(')) {
+                                var bgUrl = bgImage.slice(5, -2).replace(/['"]/g, '');
+                                if (bgUrl && !bgUrl.startsWith('data:image/svg')) {
+                                    result = {type: 'image', url: bgUrl, alt: 'background'};
+                                    // 不 break，继续向上查找可能的链接
+                                }
+                            }
+                        }
+                        
+                        current = current.parentElement;
+                        depth++;
                     }
+                    
+                    console.log('WebToApp: Result type=' + result.type);
+                    return JSON.stringify(result);
+                } catch (e) {
+                    console.error('WebToApp: Error in getLongPressDetails', e);
+                    return JSON.stringify({type: 'none', error: e.message});
                 }
-                
-                return JSON.stringify(result);
             })();
         """.trimIndent()
         
@@ -168,7 +210,7 @@ class LongPressHandler(
                     "video" -> callback(LongPressResult.Video(result.getString("url")))
                     "link" -> callback(LongPressResult.Link(
                         result.getString("url"),
-                        result.optString("title", null)
+                        result.optString("title")?.takeIf { it.isNotEmpty() }
                     ))
                     "imageLink" -> callback(LongPressResult.ImageLink(
                         result.getString("url"),

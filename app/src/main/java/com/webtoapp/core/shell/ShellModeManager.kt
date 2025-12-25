@@ -44,9 +44,13 @@ class ShellModeManager(private val context: Context) {
             context.assets.open(CONFIG_FILE).use { inputStream ->
                 InputStreamReader(inputStream).use { reader ->
                     val jsonStr = reader.readText()
-                    android.util.Log.d("ShellModeManager", "配置文件内容: $jsonStr")
+                    android.util.Log.d("ShellModeManager", "配置文件内容长度: ${jsonStr.length}")
                     val config = Gson().fromJson(jsonStr, ShellConfig::class.java)
                     android.util.Log.d("ShellModeManager", "解析结果: targetUrl=${config?.targetUrl}, splashEnabled=${config?.splashEnabled}")
+                    android.util.Log.d("ShellModeManager", "扩展模块: extensionModuleIds=${config?.extensionModuleIds?.size ?: 0}, embeddedExtensionModules=${config?.embeddedExtensionModules?.size ?: 0}")
+                    config?.embeddedExtensionModules?.forEach { module ->
+                        android.util.Log.d("ShellModeManager", "  嵌入模块: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}, codeLength=${module.code.length}")
+                    }
                     // 验证配置有效性
                     // HTML应用不需要targetUrl，使用嵌入的HTML文件
                     // 媒体应用也不需要targetUrl，使用嵌入的媒体文件

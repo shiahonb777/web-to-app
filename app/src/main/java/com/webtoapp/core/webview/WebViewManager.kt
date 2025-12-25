@@ -52,6 +52,12 @@ class WebViewManager(
         this.appExtensionModuleIds = extensionModuleIds
         // 保存嵌入的模块数据
         this.embeddedModules = embeddedExtensionModules
+        
+        // 调试日志：确认扩展模块配置
+        android.util.Log.d("WebViewManager", "configureWebView: extensionModuleIds=${extensionModuleIds.size}, embeddedModules=${embeddedExtensionModules.size}")
+        embeddedExtensionModules.forEach { module ->
+            android.util.Log.d("WebViewManager", "  嵌入模块: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}")
+        }
         webView.apply {
             settings.apply {
                 // JavaScript
@@ -176,18 +182,18 @@ class WebViewManager(
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 callbacks.onPageStarted(url)
-                // 注入 DOCUMENT_START 脚本
-                view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_START) }
+                // 注入 DOCUMENT_START 脚本（使用传入的 url 参数，因为此时 webView.url 可能还是旧值）
+                view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_START, url) }
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 // 注入 DOCUMENT_END 脚本
-                view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_END) }
+                view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_END, url) }
                 callbacks.onPageFinished(url)
                 // 注入 DOCUMENT_IDLE 脚本（延迟执行）
                 view?.postDelayed({
-                    injectScripts(view, config.injectScripts, ScriptRunTime.DOCUMENT_IDLE)
+                    injectScripts(view, config.injectScripts, ScriptRunTime.DOCUMENT_IDLE, view.url)
                 }, 500)
             }
 
@@ -311,8 +317,12 @@ class WebViewManager(
     
     /**
      * 注入用户脚本
+     * @param webView WebView实例
+     * @param scripts 用户脚本列表
+     * @param runAt 运行时机
+     * @param pageUrl 当前页面URL（可选，如果不提供则从webView获取）
      */
-    private fun injectScripts(webView: WebView, scripts: List<UserScript>, runAt: ScriptRunTime) {
+    private fun injectScripts(webView: WebView, scripts: List<UserScript>, runAt: ScriptRunTime, pageUrl: String? = null) {
         // 在 DOCUMENT_START 时注入下载桥接脚本（确保最早注入）
         if (runAt == ScriptRunTime.DOCUMENT_START) {
             injectDownloadBridgeScript(webView)
@@ -340,7 +350,11 @@ class WebViewManager(
             }
         
         // 注入扩展模块代码
-        val url = webView.url ?: ""
+        // 优先使用传入的 pageUrl，因为在 onPageStarted 时 webView.url 可能还是旧值
+        val url = pageUrl ?: webView.url ?: ""
+        
+        // 调试日志
+        android.util.Log.d("WebViewManager", "injectScripts: runAt=${runAt.name}, url=$url, embeddedModules=${embeddedModules.size}, appExtensionModuleIds=${appExtensionModuleIds.size}")
         
         // 优先使用嵌入的模块数据（Shell 模式）
         if (embeddedModules.isNotEmpty()) {
@@ -360,13 +374,25 @@ class WebViewManager(
     private fun injectEmbeddedModules(webView: WebView, url: String, runAt: ScriptRunTime) {
         try {
             val targetRunAt = runAt.name
+            
+            // 调试日志：显示过滤前的状态
+            android.util.Log.d("WebViewManager", "injectEmbeddedModules: url=$url, runAt=$targetRunAt, totalModules=${embeddedModules.size}")
+            
             val matchingModules = embeddedModules.filter { module ->
-                module.enabled && 
-                module.runAt == targetRunAt && 
-                module.matchesUrl(url)
+                val enabledMatch = module.enabled
+                val runAtMatch = module.runAt == targetRunAt
+                val urlMatch = module.matchesUrl(url)
+                
+                // 调试日志：显示每个模块的匹配情况
+                android.util.Log.d("WebViewManager", "  模块[${module.name}]: enabled=$enabledMatch, runAt=${module.runAt}==$targetRunAt?$runAtMatch, urlMatch=$urlMatch")
+                
+                enabledMatch && runAtMatch && urlMatch
             }
             
-            if (matchingModules.isEmpty()) return
+            if (matchingModules.isEmpty()) {
+                android.util.Log.d("WebViewManager", "injectEmbeddedModules: 没有匹配的模块")
+                return
+            }
             
             val injectionCode = matchingModules.joinToString("\n\n") { module ->
                 """

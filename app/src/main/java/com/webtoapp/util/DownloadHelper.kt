@@ -105,6 +105,9 @@ object DownloadHelper {
             else -> "文件"
         }
         
+        val notificationManager = DownloadNotificationManager.getInstance(context)
+        val progressNotificationId = notificationManager.showIndeterminateProgress(fileName)
+        
         Toast.makeText(context, "正在保存${typeText}到相册...", Toast.LENGTH_SHORT).show()
         
         scope.launch(Dispatchers.Main) {
@@ -113,9 +116,19 @@ object DownloadHelper {
             when (result) {
                 is MediaSaver.SaveResult.Success -> {
                     Toast.makeText(context, "${typeText}已保存到相册", Toast.LENGTH_SHORT).show()
+                    
+                    // 显示完成通知
+                    notificationManager.showMediaSaveComplete(
+                        fileName = fileName,
+                        uri = result.uri,
+                        mimeType = mimeType,
+                        isImage = mediaType == MediaSaver.MediaType.IMAGE,
+                        progressNotificationId = progressNotificationId
+                    )
                 }
                 is MediaSaver.SaveResult.Error -> {
                     Toast.makeText(context, "保存失败: ${result.message}", Toast.LENGTH_SHORT).show()
+                    notificationManager.showSaveFailed(fileName, result.message, progressNotificationId)
                 }
             }
         }

@@ -6,6 +6,7 @@ import android.os.Environment
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import com.webtoapp.util.DownloadNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,6 +27,7 @@ class DownloadBridge(
     private val context: Context,
     private val scope: CoroutineScope
 ) {
+    private val notificationManager = DownloadNotificationManager.getInstance(context)
     companion object {
         const val JS_INTERFACE_NAME = "AndroidDownload"
         
@@ -220,6 +222,9 @@ class DownloadBridge(
     @JavascriptInterface
     fun saveBase64File(base64Data: String, filename: String, mimeType: String) {
         scope.launch(Dispatchers.IO) {
+            // 显示进度通知
+            val progressNotificationId = notificationManager.showIndeterminateProgress(filename)
+            
             try {
                 // 解码 Base64 数据
                 val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
@@ -237,36 +242,61 @@ class DownloadBridge(
                     withContext(Dispatchers.Main) {
                         when (result) {
                             is com.webtoapp.util.MediaSaver.SaveResult.Success -> {
-                                val typeText = if (mimeType.startsWith("image/")) "图片" else "视频"
+                                val isImage = mimeType.startsWith("image/")
+                                val typeText = if (isImage) "图片" else "视频"
                                 Toast.makeText(context, "${typeText}已保存到相册", Toast.LENGTH_SHORT).show()
+                                
+                                // 显示完成通知
+                                notificationManager.showMediaSaveComplete(
+                                    fileName = safeFilename,
+                                    uri = result.uri,
+                                    mimeType = mimeType,
+                                    isImage = isImage,
+                                    progressNotificationId = progressNotificationId
+                                )
                             }
                             is com.webtoapp.util.MediaSaver.SaveResult.Error -> {
                                 Toast.makeText(context, "保存失败: ${result.message}", Toast.LENGTH_SHORT).show()
+                                notificationManager.showSaveFailed(safeFilename, result.message, progressNotificationId)
                             }
                         }
                     }
                 } else {
                     // 非媒体文件保存到下载目录
-                    saveToDownloads(decodedBytes, safeFilename)
+                    val savedFile = saveToDownloadsInternal(decodedBytes, safeFilename)
+                    
+                    withContext(Dispatchers.Main) {
+                        if (savedFile != null) {
+                            Toast.makeText(context, "已保存到: ${savedFile.name}", Toast.LENGTH_LONG).show()
+                            
+                            // 显示完成通知
+                            notificationManager.showSaveComplete(
+                                fileName = savedFile.name,
+                                filePath = savedFile.absolutePath,
+                                mimeType = mimeType,
+                                progressNotificationId = progressNotificationId
+                            )
+                        } else {
+                            Toast.makeText(context, "保存失败", Toast.LENGTH_SHORT).show()
+                            notificationManager.showSaveFailed(safeFilename, "无法写入文件", progressNotificationId)
+                        }
+                    }
                 }
                 
             } catch (e: Exception) {
                 android.util.Log.e("DownloadBridge", "保存文件失败", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        "保存失败: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, "保存失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    notificationManager.showSaveFailed(filename, e.message ?: "未知错误", progressNotificationId)
                 }
             }
         }
     }
     
     /**
-     * 保存文件到下载目录（非媒体文件）
+     * 保存文件到下载目录（内部方法，返回保存的文件）
      */
-    private suspend fun saveToDownloads(bytes: ByteArray, filename: String) {
+    private fun saveToDownloadsInternal(bytes: ByteArray, filename: String): File? {
         // 获取下载目录
         val downloadDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
@@ -292,20 +322,16 @@ class DownloadBridge(
         }
         
         // 写入文件
-        FileOutputStream(targetFile).use { fos ->
-            fos.write(bytes)
+        return try {
+            FileOutputStream(targetFile).use { fos ->
+                fos.write(bytes)
+            }
+            android.util.Log.d("DownloadBridge", "文件已保存: ${targetFile.absolutePath}")
+            targetFile
+        } catch (e: Exception) {
+            android.util.Log.e("DownloadBridge", "写入文件失败", e)
+            null
         }
-        
-        // 通知用户
-        withContext(Dispatchers.Main) {
-            Toast.makeText(
-                context,
-                "已保存到: ${targetFile.name}",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-        
-        android.util.Log.d("DownloadBridge", "文件已保存: ${targetFile.absolutePath}")
     }
     
     /**

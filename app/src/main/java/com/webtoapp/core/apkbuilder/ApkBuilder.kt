@@ -143,6 +143,11 @@ class ApkBuilder(private val context: Context) {
             logger.logKeyValue("versionName", config.versionName)
             logger.logKeyValue("embeddedExtensionModules.size", config.embeddedExtensionModules.size)
             
+            // 详细记录每个嵌入的扩展模块
+            config.embeddedExtensionModules.forEachIndexed { index, module ->
+                logger.log("  嵌入模块[$index]: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}, codeLength=${module.code.length}")
+            }
+            
             onProgress(10, "检查模板...")
             logger.section("获取模板")
             
@@ -1323,7 +1328,9 @@ fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.
                         )
                     },
                     configValues = module.configValues,
-                    enabled = module.enabled
+                    // 重要修复：用户选择了模块就意味着要启用它
+                    // 内置模块默认 enabled=false，但嵌入到 APK 时应该设为 true
+                    enabled = true
                 )
             }
         } catch (e: Exception) {

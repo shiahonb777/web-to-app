@@ -181,6 +181,33 @@ class WebViewActivity : AppCompatActivity() {
         pendingGeolocationCallback = null
     }
     
+    // 通知权限请求launcher（Android 13+）
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            android.util.Log.d("WebViewActivity", "通知权限已授予")
+        } else {
+            android.util.Log.d("WebViewActivity", "通知权限被拒绝")
+        }
+    }
+    
+    /**
+     * 请求通知权限（Android 13+）
+     */
+    private fun requestNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            
+            if (!hasPermission) {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+    
     /**
      * 处理WebView权限请求，先请求Android系统权限
      */
@@ -223,6 +250,9 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 请求通知权限（Android 13+），用于显示下载进度和完成通知
+        requestNotificationPermissionIfNeeded()
         
         // 默认启用沉浸式模式（状态栏透明，内容铺满屏幕）
         immersiveFullscreenEnabled = true
@@ -771,12 +801,16 @@ fun WebViewScreen(
                             }
                             
                             // 添加长按监听器
+                            // 持续跟踪触摸位置，确保长按时使用最新坐标
                             var lastTouchX = 0f
                             var lastTouchY = 0f
                             setOnTouchListener { _, event ->
-                                if (event.action == MotionEvent.ACTION_DOWN) {
-                                    lastTouchX = event.x
-                                    lastTouchY = event.y
+                                when (event.action) {
+                                    MotionEvent.ACTION_DOWN,
+                                    MotionEvent.ACTION_MOVE -> {
+                                        lastTouchX = event.x
+                                        lastTouchY = event.y
+                                    }
                                 }
                                 false // 不消费事件，让 WebView 继续处理
                             }

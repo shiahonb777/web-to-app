@@ -20,7 +20,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - 🌐 **Website to App** - Wrap any URL into a standalone WebView app
 - 🎬 **Media to App** - Convert images/videos into fullscreen showcase apps
 - 💻 **HTML to App** - Convert HTML/CSS/JS projects into standalone apps
-- 🧩 **Extension Module System** - Tampermonkey-like scripts, 15+ built-in modules
+- 🧩 **Extension Module System** - Tampermonkey-like scripts, 9 feature-rich built-in modules
 - 🤖 **AI Module Development** - AI Agent assists in developing extension modules
 - 🎨 **AI Icon Generator** - Generate beautiful app icons using AI
 - 🎵 **Online Music Search** - Search and download music online for BGM
@@ -52,7 +52,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 
 ### Extension Module System
 - **Tampermonkey-like Scripts**: Inject custom JavaScript/CSS into webpages
-- **15+ Built-in Modules**: Dark mode, ad blocker, video speed control, copy unlock, image downloader, etc.
+- **9 Built-in Modules**: Video downloader, Bilibili/Douyin/Xiaohongshu video extractor, video enhancer, web analyzer, dark mode, privacy protection, content enhancer
 - **30+ Code Templates**: Quickly create common functionality modules
 - **Module Categories**: 20+ categories (content filter, style modifier, function enhance, media, etc.)
 - **URL Match Rules**: Support wildcards and regex patterns
@@ -151,7 +151,7 @@ app/src/main/java/com/webtoapp/
 │   ├── extension/           # Extension module system
 │   │   ├── ExtensionModule.kt # Module data model
 │   │   ├── ExtensionManager.kt # Module manager
-│   │   ├── BuiltInModules.kt # 15+ built-in modules
+│   │   ├── BuiltInModules.kt # 9 built-in modules
 │   │   ├── ModuleTemplates.kt # 30+ code templates
 │   │   ├── CodeSnippets.kt  # Code snippet library
 │   │   └── agent/           # AI Agent system
@@ -299,21 +299,15 @@ signingConfigs {
 ### Built-in Modules
 | Module | Function |
 |--------|----------|
-| 🚫 Element Blocker | Block page elements via CSS selectors |
-| 🌙 Dark Mode | Force dark display on any webpage |
-| 📜 Auto Scroll | Automatic page scrolling for reading |
-| 📋 Copy Unlock | Remove webpage copy protection |
-| 🖼️ Image Downloader | Long press images to show download button |
-| ⏩ Video Speed Control | Add speed control to videos |
-| 🛡️ Enhanced Ad Blocker | More powerful ad filtering |
-| 📖 Reading Mode | Extract content for clean reading |
-| 🔤 Custom Font | Replace webpage fonts |
-| 🌐 Translation Helper | Quick translate selected text |
-| ⬆️ Scroll to Top | Floating back-to-top button |
-| 🔍 Page Zoom | Custom page zoom ratio |
-| 🔄 Auto Refresh | Timed automatic page refresh |
-| 🌙 Night Shield | Reduce blue light, protect eyes |
-| 🔎 Quick Search | Quick search selected text |
+| ⬇️ Video Downloader | Auto-detect webpage videos, supports MP4 and Blob stream download |
+| 📺 Bilibili Video Extractor | Extract Bilibili highest quality video and audio stream URLs |
+| 🎬 Douyin Video Extractor | Extract Douyin watermark-free video URLs |
+| 📱 Xiaohongshu Video Extractor | Extract Xiaohongshu video playback URLs |
+| ⚡ Video Enhancer | Speed control (0.5x-5x), picture-in-picture, background play, block app redirect |
+| 🔧 Web Analyzer | Element inspector, network monitor, cookie manager, console injection |
+| 🌙 Advanced Dark Mode | Smart color inversion, image brightness control, scheduled toggle |
+| 🛡️ Privacy Protection | Ad blocking, anti-fingerprint tracking, click hijack protection, external link warning |
+| 📝 Content Enhancer | Force copy, selection translate, long screenshot, Markdown conversion |
 
 ### Module Categories
 - Content Filter, Content Enhance, Style Modifier, Theme
@@ -379,7 +373,7 @@ MIT License
 ### v1.6.0
 **New Features**
 - Extension Module System: Tampermonkey-like JS/CSS injection system
-  - 15+ built-in modules (dark mode, ad blocker, video speed, etc.)
+  - 9 feature-rich built-in modules (video download, platform video extractors, video enhancer, web analyzer, dark mode, privacy protection, content enhancer)
   - 30+ code templates for quick module creation
   - 20+ module categories covering common needs
   - URL match rules support (wildcards/regex)
