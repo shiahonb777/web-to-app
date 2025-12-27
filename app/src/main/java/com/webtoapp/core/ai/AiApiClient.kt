@@ -36,6 +36,7 @@ class AiApiClient(private val context: Context) {
         .readTimeout(300, TimeUnit.SECONDS)  // 流式响应需要更长的读取超时
         .writeTimeout(90, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)  // 启用连接失败重试
+        .connectionPool(ConnectionPool(5, 30, TimeUnit.SECONDS))  // 连接池配置
         .build()
     
     /**
@@ -922,7 +923,29 @@ val json = gson.fromJson(body, JsonObject::class.java)
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
                     val errorBody = response.body?.string() ?: ""
-                    trySend(StreamEvent.Error("请求失败: ${response.code} - $errorBody"))
+                    response.body?.close()
+                    
+                    // 解析错误信息
+                    val errorMsg = when (response.code) {
+                        400 -> {
+                            try {
+                                val json = gson.fromJson(errorBody, JsonObject::class.java)
+                                val error = json.getAsJsonObject("error")
+                                val message = error?.get("message")?.asString ?: errorBody
+                                "请求参数错误: $message"
+                            } catch (e: Exception) {
+                                "请求参数错误: $errorBody"
+                            }
+                        }
+                        401 -> "API Key 无效或已过期，请检查设置"
+                        403 -> "API 访问被拒绝，请检查权限或配额"
+                        404 -> "模型不存在或 API 端点错误，请检查模型名称"
+                        429 -> "请求过于频繁，请稍后重试"
+                        500, 502, 503 -> "服务器错误，请稍后重试"
+                        else -> "请求失败: ${response.code} - $errorBody"
+                    }
+                    
+                    trySend(StreamEvent.Error(errorMsg))
                     close()
                     return
                 }
@@ -1090,8 +1113,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             trySend(StreamEvent.Done(contentBuilder.toString()))
                         }
                     }
+                    // 确保关闭 response body
+                    response.body?.close()
                     close()
                 } catch (e: Exception) {
+                    response.body?.close()
                     trySend(StreamEvent.Error(e.message ?: "读取响应失败"))
                     close(e)
                 }
@@ -1621,7 +1647,30 @@ val json = gson.fromJson(body, JsonObject::class.java)
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
                     val errorBody = response.body?.string() ?: ""
-                    trySend(ToolStreamEvent.Error("请求失败: ${response.code} - $errorBody"))
+                    response.body?.close()
+                    
+                    // 解析错误信息
+                    val errorMsg = when (response.code) {
+                        400 -> {
+                            // 尝试解析具体错误
+                            try {
+                                val json = gson.fromJson(errorBody, JsonObject::class.java)
+                                val error = json.getAsJsonObject("error")
+                                val message = error?.get("message")?.asString ?: errorBody
+                                "请求参数错误: $message"
+                            } catch (e: Exception) {
+                                "请求参数错误: $errorBody"
+                            }
+                        }
+                        401 -> "API Key 无效或已过期，请检查设置"
+                        403 -> "API 访问被拒绝，请检查权限或配额"
+                        404 -> "模型不存在或 API 端点错误，请检查模型名称"
+                        429 -> "请求过于频繁，请稍后重试"
+                        500, 502, 503 -> "服务器错误，请稍后重试"
+                        else -> "请求失败: ${response.code} - $errorBody"
+                    }
+                    
+                    trySend(ToolStreamEvent.Error(errorMsg))
                     close()
                     return
                 }
@@ -1819,8 +1868,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
                         trySend(ToolStreamEvent.Done(textBuilder.toString(), completedToolCalls))
                     }
                     
+                    // 确保关闭 response body
+                    response.body?.close()
                     close()
                 } catch (e: Exception) {
+                    response.body?.close()
                     trySend(ToolStreamEvent.Error(e.message ?: "读取响应失败"))
                     close(e)
                 }
@@ -1876,6 +1928,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             // 某些模型（如 DeepSeek、GLM）可能不支持 "required"
             if (tools.isNotEmpty()) {
                 val modelLower = modelId.lowercase()
+                val providerName = apiKey.provider.name.lowercase()
                 val toolChoice = when {
                     // DeepSeek 模型使用 "auto"，因为 "required" 可能不被支持
                     modelLower.contains("deepseek") -> "auto"
@@ -1885,8 +1938,14 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     modelLower.contains("qwen") -> "auto"
                     // 豆包模型使用 "auto"
                     modelLower.contains("doubao") -> "auto"
+                    // 硅基流动平台的模型使用 "auto"
+                    providerName == "siliconflow" -> "auto"
+                    // MiniMax 模型使用 "auto"
+                    providerName == "minimax" || modelLower.contains("minimax") -> "auto"
+                    // 火山引擎使用 "auto"
+                    providerName == "volcano" -> "auto"
                     // OpenAI 和其他支持 "required" 的模型
-                    else -> "required"
+                    else -> "auto"  // 改为默认使用 "auto"，更兼容
                 }
                 addProperty("tool_choice", toolChoice)
             }
