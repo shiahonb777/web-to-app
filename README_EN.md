@@ -359,6 +359,11 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.7.2
+**Bug Fixes**
+- Fixed JS file picker compatibility issue on some systems
+- Fixed video fullscreen not auto-rotating to landscape, now auto-rotates and fills screen
+
 ### v1.7.1
 **Bug Fixes & New Features**
 - Fixed long-press image save not working on Xiaohongshu and similar sites

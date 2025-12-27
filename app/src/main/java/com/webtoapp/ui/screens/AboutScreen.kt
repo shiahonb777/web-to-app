@@ -510,11 +510,19 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // v1.7.1
+                            // v1.7.2
                             VersionSection(
-                                version = "v1.7.1",
+                                version = "v1.7.2",
                                 isLatest = true
                             ) {
+                                ChangeItem("🐛", "修复JS文件选择器兼容性问题")
+                                ChangeItem("🐛", "修复视频全屏未自动横屏")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // v1.7.1
+                            VersionSection(version = "v1.7.1") {
                                 ChangeItem("🐛", "修复小红书等网站图片长按无法保存")
                                 ChangeItem("✨", "新增小红书图片下载器模块")
                                 ChangeItem("🐛", "修复Blob格式文件导出失败")
