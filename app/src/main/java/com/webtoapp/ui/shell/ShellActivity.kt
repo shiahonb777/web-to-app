@@ -91,6 +91,9 @@ class ShellActivity : AppCompatActivity() {
 
     private var immersiveFullscreenEnabled: Boolean = false
     private var translateBridge: TranslateBridge? = null
+    
+    // 视频全屏前的屏幕方向
+    private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
     /**
      * 应用沉浸式全屏模式
@@ -408,6 +411,10 @@ class ShellActivity : AppCompatActivity() {
     }
 
     private fun showCustomView(view: View) {
+        // 保存当前屏幕方向，进入横屏全屏模式
+        originalOrientationBeforeFullscreen = requestedOrientation
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        
         val decorView = window.decorView as FrameLayout
         decorView.addView(
             view,
@@ -426,6 +433,11 @@ class ShellActivity : AppCompatActivity() {
             customViewCallback?.onCustomViewHidden()
             customView = null
             customViewCallback = null
+            
+            // 恢复原来的屏幕方向
+            requestedOrientation = originalOrientationBeforeFullscreen
+            originalOrientationBeforeFullscreen = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            
             applyImmersiveFullscreen(immersiveFullscreenEnabled)
         }
     }
