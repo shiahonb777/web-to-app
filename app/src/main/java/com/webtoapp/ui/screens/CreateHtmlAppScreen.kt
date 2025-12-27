@@ -290,7 +290,7 @@ fun CreateHtmlAppScreen(
                         icon = Icons.Outlined.Javascript,
                         file = jsFile,
                         required = false,
-                        onSelect = { jsPickerLauncher.launch("application/javascript") },
+                        onSelect = { jsPickerLauncher.launch("*/*") },
                         onClear = { jsFile = null }
                     )
                 }
