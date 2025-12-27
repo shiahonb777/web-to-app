@@ -434,7 +434,16 @@ data class WebViewShellConfig(
     val landscapeMode: Boolean = false,
     
     @SerializedName("injectScripts")
-    val injectScripts: List<ShellUserScript> = emptyList()
+    val injectScripts: List<ShellUserScript> = emptyList(),
+    
+    @SerializedName("statusBarColorMode")
+    val statusBarColorMode: String = "THEME", // THEME, TRANSPARENT, CUSTOM
+    
+    @SerializedName("statusBarColor")
+    val statusBarColor: String? = null, // 自定义状态栏颜色（仅 CUSTOM 模式生效）
+    
+    @SerializedName("statusBarDarkIcons")
+    val statusBarDarkIcons: Boolean? = null // 状态栏图标颜色：true=深色图标，false=浅色图标，null=自动
 )
 
 /**

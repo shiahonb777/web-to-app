@@ -131,6 +131,15 @@ data class Announcement(
 )
 
 /**
+ * 状态栏颜色模式
+ */
+enum class StatusBarColorMode {
+    THEME,      // 跟随主题色（默认）
+    TRANSPARENT,// 完全透明
+    CUSTOM      // 自定义颜色
+}
+
+/**
  * WebView配置
  */
 data class WebViewConfig(
@@ -148,7 +157,10 @@ data class WebViewConfig(
     val openExternalLinks: Boolean = false, // 外部链接是否在浏览器打开
     val hideToolbar: Boolean = false, // 隐藏工具栏（全屏模式，无浏览器特征）
     val landscapeMode: Boolean = false, // 横屏模式
-    val injectScripts: List<UserScript> = emptyList() // 用户自定义注入脚本
+    val injectScripts: List<UserScript> = emptyList(), // 用户自定义注入脚本
+    val statusBarColorMode: StatusBarColorMode = StatusBarColorMode.THEME, // 状态栏颜色模式
+    val statusBarColor: String? = null, // 自定义状态栏颜色（仅 CUSTOM 模式生效，如 "#FF5722"）
+    val statusBarDarkIcons: Boolean? = null // 状态栏图标颜色：true=深色图标，false=浅色图标，null=自动
 )
 
 /**

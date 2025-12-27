@@ -94,20 +94,87 @@ class ShellActivity : AppCompatActivity() {
     
     // 视频全屏前的屏幕方向
     private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    
+    // 状态栏配置缓存
+    private var statusBarColorMode: String = "THEME"
+    private var statusBarCustomColor: String? = null
+    private var statusBarDarkIcons: Boolean? = null
+
+    /**
+     * 应用状态栏颜色配置
+     * 
+     * @param colorMode 颜色模式：THEME（跟随主题）、TRANSPARENT（透明）、CUSTOM（自定义）
+     * @param customColor 自定义颜色（仅 CUSTOM 模式生效）
+     * @param darkIcons 图标颜色：true=深色图标，false=浅色图标，null=自动
+     * @param isDarkTheme 当前是否为深色主题
+     */
+    private fun applyStatusBarColor(
+        colorMode: String,
+        customColor: String?,
+        darkIcons: Boolean?,
+        isDarkTheme: Boolean
+    ) {
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        
+        when (colorMode) {
+            "TRANSPARENT" -> {
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                // 自动判断图标颜色
+                val useDarkIcons = darkIcons ?: !isDarkTheme
+                controller.isAppearanceLightStatusBars = useDarkIcons
+            }
+            "CUSTOM" -> {
+                // 自定义颜色
+                val color = try {
+                    android.graphics.Color.parseColor(customColor ?: "#FFFFFF")
+                } catch (e: Exception) {
+                    android.graphics.Color.WHITE
+                }
+                window.statusBarColor = color
+                
+                // 根据颜色亮度自动判断图标颜色，或使用用户指定的
+                val useDarkIcons = darkIcons ?: isColorLight(color)
+                controller.isAppearanceLightStatusBars = useDarkIcons
+            }
+            else -> {
+                // THEME 模式：跟随主题
+                // 深色主题用深色背景+浅色图标，浅色主题用浅色背景+深色图标
+                if (isDarkTheme) {
+                    window.statusBarColor = android.graphics.Color.parseColor("#1C1B1F") // Material3 深色背景
+                    controller.isAppearanceLightStatusBars = false
+                } else {
+                    window.statusBarColor = android.graphics.Color.parseColor("#FFFBFE") // Material3 浅色背景
+                    controller.isAppearanceLightStatusBars = true
+                }
+            }
+        }
+        
+        // 导航栏也跟随设置
+        controller.isAppearanceLightNavigationBars = controller.isAppearanceLightStatusBars
+    }
+    
+    /**
+     * 判断颜色是否为浅色（用于自动选择图标颜色）
+     */
+    private fun isColorLight(color: Int): Boolean {
+        val red = android.graphics.Color.red(color)
+        val green = android.graphics.Color.green(color)
+        val blue = android.graphics.Color.blue(color)
+        // 使用相对亮度公式
+        val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+        return luminance > 0.5
+    }
 
     /**
      * 应用沉浸式全屏模式
      * 
      * @param enabled 是否启用沉浸式模式
      * @param hideNavBar 是否同时隐藏导航栏（视频全屏时为 true）
+     * @param isDarkTheme 当前是否为深色主题（用于状态栏颜色）
      */
-    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true) {
+    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true, isDarkTheme: Boolean = false) {
         // 让内容延伸到系统栏下方
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
-        // 设置状态栏和导航栏为完全透明
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
         
         // 支持刘海屏/挖孔屏
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -117,6 +184,10 @@ class ShellActivity : AppCompatActivity() {
         
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             if (enabled) {
+                // 沉浸式模式：隐藏状态栏，透明背景
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                
                 // 隐藏状态栏
                 controller.hide(WindowInsetsCompat.Type.statusBars())
                 if (hideNavBar) {
@@ -127,11 +198,12 @@ class ShellActivity : AppCompatActivity() {
                 controller.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
-                // 显示系统栏但保持透明
+                // 非沉浸式模式：显示系统栏，应用状态栏颜色配置
                 controller.show(WindowInsetsCompat.Type.systemBars())
-                // 根据背景色设置状态栏图标颜色
-                controller.isAppearanceLightStatusBars = false
-                controller.isAppearanceLightNavigationBars = false
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                
+                // 应用状态栏颜色配置
+                applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
             }
         }
     }
@@ -351,6 +423,11 @@ class ShellActivity : AppCompatActivity() {
         // 请求通知权限（Android 13+），用于显示下载进度和完成通知
         requestNotificationPermissionIfNeeded()
         
+        // 读取状态栏配置
+        statusBarColorMode = config.webViewConfig.statusBarColorMode
+        statusBarCustomColor = config.webViewConfig.statusBarColor
+        statusBarDarkIcons = config.webViewConfig.statusBarDarkIcons
+        
         // 默认启用沉浸式模式（状态栏透明，内容铺满屏幕）
         // 不再设置固定的状态栏颜色，让内容延伸到状态栏下方
         immersiveFullscreenEnabled = true  // 默认启用沉浸式
@@ -361,6 +438,16 @@ class ShellActivity : AppCompatActivity() {
                 themeTypeName = config.themeType,
                 darkModeSetting = config.darkMode
             ) {
+                // 获取当前主题状态
+                val isDarkTheme = com.webtoapp.ui.theme.LocalIsDarkTheme.current
+                
+                // 当主题变化时更新状态栏颜色
+                LaunchedEffect(isDarkTheme, statusBarColorMode) {
+                    if (!immersiveFullscreenEnabled) {
+                        applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                    }
+                }
+                
                 ShellScreen(
                     config = config,
                     onWebViewCreated = { wv ->

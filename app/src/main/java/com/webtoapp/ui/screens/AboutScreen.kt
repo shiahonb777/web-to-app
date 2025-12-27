@@ -510,11 +510,20 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // v1.7.2
+                            // v1.7.3
                             VersionSection(
-                                version = "v1.7.2",
+                                version = "v1.7.3",
                                 isLatest = true
                             ) {
+                                ChangeItem("✨", "状态栏颜色跟随主题：默认跟随主题色彩")
+                                ChangeItem("✨", "支持自定义状态栏背景颜色")
+                                ChangeItem("🐛", "修复状态栏文字看不清的问题")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // v1.7.2
+                            VersionSection(version = "v1.7.2") {
                                 ChangeItem("🐛", "修复JS文件选择器兼容性问题")
                                 ChangeItem("🐛", "修复视频全屏未自动横屏")
                             }

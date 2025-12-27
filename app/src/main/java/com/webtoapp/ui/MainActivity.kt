@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
         }
         android.util.Log.d("MainActivity", "普通模式，显示主界面")
 
+        // 启用边到边显示
         enableEdgeToEdge()
 
         requestNecessaryPermissions()
@@ -73,13 +74,28 @@ class MainActivity : ComponentActivity() {
         // 检查快捷方式权限
         checkShortcutPermission()
 
+        // 设置窗口装饰以支持边到边显示
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         setContent {
             WebToAppTheme { isDarkTheme ->
-                // 根据主题设置状态栏图标颜色
+                // 根据主题设置状态栏颜色（跟随主题色）
                 LaunchedEffect(isDarkTheme) {
                     val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-                    // 浅色主题时使用深色状态栏图标，深色主题时使用浅色状态栏图标
-                    windowInsetsController.isAppearanceLightStatusBars = !isDarkTheme
+                    
+                    // 主应用使用主题色状态栏
+                    if (isDarkTheme) {
+                        // 深色主题：深色背景 + 浅色图标
+                        window.statusBarColor = android.graphics.Color.parseColor("#1C1B1F")
+                        windowInsetsController.isAppearanceLightStatusBars = false
+                    } else {
+                        // 浅色主题：浅色背景 + 深色图标
+                        window.statusBarColor = android.graphics.Color.parseColor("#FFFBFE")
+                        windowInsetsController.isAppearanceLightStatusBars = true
+                    }
+                    
+                    // 导航栏保持透明
+                    window.navigationBarColor = android.graphics.Color.TRANSPARENT
                     windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
                 }
                 

@@ -359,6 +359,12 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.7.3
+**New Features & Improvements**
+- Status bar color follows theme: Defaults to theme color, light background for light theme, dark background for dark theme
+- Support custom status bar background color: Choose transparent, follow theme, or custom color
+- Fixed status bar text visibility issue
+
 ### v1.7.2
 **Bug Fixes**
 - Fixed JS file picker compatibility issue on some systems

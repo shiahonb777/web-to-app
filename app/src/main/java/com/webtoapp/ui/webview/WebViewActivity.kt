@@ -110,20 +110,84 @@ class WebViewActivity : AppCompatActivity() {
     
     // 视频全屏前的屏幕方向
     private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    
+    // 状态栏配置缓存
+    private var statusBarColorMode: com.webtoapp.data.model.StatusBarColorMode = com.webtoapp.data.model.StatusBarColorMode.THEME
+    private var statusBarCustomColor: String? = null
+    private var statusBarDarkIcons: Boolean? = null
+
+    /**
+     * 应用状态栏颜色配置
+     * 
+     * @param colorMode 颜色模式
+     * @param customColor 自定义颜色（仅 CUSTOM 模式生效）
+     * @param darkIcons 图标颜色：true=深色图标，false=浅色图标，null=自动
+     * @param isDarkTheme 当前是否为深色主题
+     */
+    private fun applyStatusBarColor(
+        colorMode: com.webtoapp.data.model.StatusBarColorMode,
+        customColor: String?,
+        darkIcons: Boolean?,
+        isDarkTheme: Boolean
+    ) {
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        
+        when (colorMode) {
+            com.webtoapp.data.model.StatusBarColorMode.TRANSPARENT -> {
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                // 自动判断图标颜色
+                val useDarkIcons = darkIcons ?: !isDarkTheme
+                controller.isAppearanceLightStatusBars = useDarkIcons
+            }
+            com.webtoapp.data.model.StatusBarColorMode.CUSTOM -> {
+                // 自定义颜色
+                val color = try {
+                    android.graphics.Color.parseColor(customColor ?: "#FFFFFF")
+                } catch (e: Exception) {
+                    android.graphics.Color.WHITE
+                }
+                window.statusBarColor = color
+                
+                // 根据颜色亮度自动判断图标颜色，或使用用户指定的
+                val useDarkIcons = darkIcons ?: isColorLight(color)
+                controller.isAppearanceLightStatusBars = useDarkIcons
+            }
+            else -> {
+                // THEME 模式：跟随主题
+                if (isDarkTheme) {
+                    window.statusBarColor = android.graphics.Color.parseColor("#1C1B1F")
+                    controller.isAppearanceLightStatusBars = false
+                } else {
+                    window.statusBarColor = android.graphics.Color.parseColor("#FFFBFE")
+                    controller.isAppearanceLightStatusBars = true
+                }
+            }
+        }
+        
+        controller.isAppearanceLightNavigationBars = controller.isAppearanceLightStatusBars
+    }
+    
+    /**
+     * 判断颜色是否为浅色
+     */
+    private fun isColorLight(color: Int): Boolean {
+        val red = android.graphics.Color.red(color)
+        val green = android.graphics.Color.green(color)
+        val blue = android.graphics.Color.blue(color)
+        val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+        return luminance > 0.5
+    }
 
     /**
      * 应用沉浸式全屏模式
      * 
      * @param enabled 是否启用沉浸式模式
      * @param hideNavBar 是否同时隐藏导航栏（视频全屏时为 true）
+     * @param isDarkTheme 当前是否为深色主题
      */
-    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true) {
+    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true, isDarkTheme: Boolean = false) {
         // 让内容延伸到系统栏下方
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
-        // 设置状态栏和导航栏为完全透明
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
         
         // 支持刘海屏/挖孔屏
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
@@ -133,21 +197,22 @@ class WebViewActivity : AppCompatActivity() {
         
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             if (enabled) {
-                // 隐藏状态栏
+                // 沉浸式模式：隐藏状态栏，透明背景
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                
                 controller.hide(WindowInsetsCompat.Type.statusBars())
                 if (hideNavBar) {
-                    // 同时隐藏导航栏（完全沉浸式）
                     controller.hide(WindowInsetsCompat.Type.navigationBars())
                 }
-                // 从边缘滑动时临时显示系统栏
                 controller.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
-                // 显示系统栏但保持透明
+                // 非沉浸式模式：显示系统栏，应用状态栏颜色配置
                 controller.show(WindowInsetsCompat.Type.systemBars())
-                // 根据背景色设置状态栏图标颜色
-                controller.isAppearanceLightStatusBars = false
-                controller.isAppearanceLightNavigationBars = false
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                
+                applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
             }
         }
     }
@@ -269,12 +334,25 @@ class WebViewActivity : AppCompatActivity() {
         val testModuleIds = intent.getStringArrayListExtra(EXTRA_TEST_MODULE_IDS)
 
         setContent {
-            WebToAppTheme { _ ->
+            WebToAppTheme { isDarkTheme ->
+                // 当主题变化时更新状态栏颜色
+                LaunchedEffect(isDarkTheme, statusBarColorMode) {
+                    if (!immersiveFullscreenEnabled) {
+                        applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                    }
+                }
+                
                 WebViewScreen(
                     appId = appId,
                     directUrl = directUrl,
                     testUrl = testUrl,
                     testModuleIds = testModuleIds,
+                    onStatusBarConfigChanged = { colorMode, customColor, darkIcons ->
+                        // 更新状态栏配置
+                        statusBarColorMode = colorMode
+                        statusBarCustomColor = customColor
+                        statusBarDarkIcons = darkIcons
+                    },
                     onWebViewCreated = { wv -> 
                         webView = wv
                         // 添加下载桥接（支持 Blob/Data URL 下载）
@@ -372,6 +450,7 @@ fun WebViewScreen(
     directUrl: String?,
     testUrl: String? = null,
     testModuleIds: List<String>? = null,
+    onStatusBarConfigChanged: ((com.webtoapp.data.model.StatusBarColorMode, String?, Boolean?) -> Unit)? = null,
     onWebViewCreated: (WebView) -> Unit,
     onFileChooser: (ValueCallback<Array<Uri>>?, WebChromeClient.FileChooserParams?) -> Boolean,
     onShowCustomView: (View, WebChromeClient.CustomViewCallback?) -> Unit,
@@ -421,6 +500,17 @@ fun WebViewScreen(
     var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
     val scope = rememberCoroutineScope()
     val longPressHandler = remember { LongPressHandler(context, scope) }
+    
+    // 当 webApp 加载完成后，通知状态栏配置
+    LaunchedEffect(webApp) {
+        webApp?.let { app ->
+            onStatusBarConfigChanged?.invoke(
+                app.webViewConfig.statusBarColorMode,
+                app.webViewConfig.statusBarColor,
+                app.webViewConfig.statusBarDarkIcons
+            )
+        }
+    }
 
     // 加载应用配置
     LaunchedEffect(appId, directUrl, testUrl) {
