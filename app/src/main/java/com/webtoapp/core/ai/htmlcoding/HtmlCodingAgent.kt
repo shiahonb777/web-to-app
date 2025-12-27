@@ -1365,10 +1365,18 @@ class HtmlCodingAgent(private val context: Context) {
             appendLine()
             
             if (!currentHtml.isNullOrBlank()) {
+                // 限制 HTML 代码长度，避免超出 API token 限制
+                val maxHtmlLength = 8000  // 约 2000-3000 tokens
+                val truncatedHtml = if (currentHtml.length > maxHtmlLength) {
+                    val truncated = currentHtml.take(maxHtmlLength)
+                    "$truncated\n\n... [代码已截断，共 ${currentHtml.length} 字符] ..."
+                } else {
+                    currentHtml
+                }
                 appendLine("# 当前代码")
                 appendLine("用户已有以下代码，修改时请在此基础上：")
                 appendLine("```html")
-                appendLine(currentHtml)
+                appendLine(truncatedHtml)
                 appendLine("```")
                 appendLine()
             }
@@ -1565,9 +1573,17 @@ class HtmlCodingAgent(private val context: Context) {
             appendLine()
             
             if (!currentHtml.isNullOrBlank()) {
+                // 限制 HTML 代码长度，避免超出 API token 限制
+                val maxHtmlLength = 8000  // 约 2000-3000 tokens
+                val truncatedHtml = if (currentHtml.length > maxHtmlLength) {
+                    val truncated = currentHtml.take(maxHtmlLength)
+                    "$truncated\n\n... [代码已截断，共 ${currentHtml.length} 字符] ..."
+                } else {
+                    currentHtml
+                }
                 appendLine("# 当前代码")
                 appendLine("用户已有以下代码，修改时请在此基础上：")
-                appendLine(currentHtml)
+                appendLine(truncatedHtml)
                 appendLine()
             }
             
