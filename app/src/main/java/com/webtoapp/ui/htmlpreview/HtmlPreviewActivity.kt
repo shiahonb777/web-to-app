@@ -42,6 +42,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
 import com.webtoapp.ui.theme.WebToAppTheme
 import java.io.File
 import java.text.SimpleDateFormat
@@ -200,12 +201,22 @@ private fun HtmlPreviewScreen(
             
             // WebView
             Box(modifier = Modifier.weight(1f)) {
+                val activity = context as? ComponentActivity
+                val lifecycleScope = activity?.lifecycleScope
+                
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
                             webView = this
                             // 设置WebView背景为白色，避免继承主题颜色
                             setBackgroundColor(android.graphics.Color.WHITE)
+                            
+                            // 添加下载桥接（支持 Blob/Data URL 下载）
+                            lifecycleScope?.let { scope ->
+                                val downloadBridge = com.webtoapp.core.webview.DownloadBridge(ctx, scope)
+                                addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
+                            }
+                            
                             setupWebView(
                                 onProgressChanged = { progress ->
                                     loadProgress = progress
@@ -322,12 +333,16 @@ private fun WebView.setupWebView(
             super.onPageFinished(view, url)
             onPageFinished()
             
+            // 注入下载桥接脚本（支持 Blob/Data URL 下载）
+            view?.evaluateJavascript(com.webtoapp.core.webview.DownloadBridge.getInjectionScript(), null)
+            
             // 调试：检查 JavaScript 是否可用
             view?.evaluateJavascript("""
                 (function() {
                     console.log('[DEBUG] JavaScript is working!');
                     console.log('[DEBUG] Document ready state: ' + document.readyState);
                     console.log('[DEBUG] Script tags count: ' + document.getElementsByTagName('script').length);
+                    console.log('[DEBUG] DownloadBridge available: ' + (typeof window.isNativeDownloadAvailable === 'function' ? window.isNativeDownloadAvailable() : 'unknown'));
                     var scripts = document.getElementsByTagName('script');
                     for (var i = 0; i < scripts.length; i++) {
                         var script = scripts[i];

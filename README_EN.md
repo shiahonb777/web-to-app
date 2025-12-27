@@ -359,6 +359,14 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.7.1
+**Bug Fixes & New Features**
+- Fixed long-press image save not working on Xiaohongshu and similar sites
+- Added Xiaohongshu image downloader module with batch download support
+- Fixed Blob format file (e.g., JSON) export failure
+- Fixed CSS/JS not working after HTML project import
+- Fixed duplicate app name display in recent tasks list
+
 ### v1.7.0
 **Bug Fixes & Improvements**
 - Fixed dozens of known issues

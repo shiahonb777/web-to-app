@@ -80,6 +80,36 @@ object HtmlStorage {
     }
     
     /**
+     * 保存处理后的 HTML 内容到持久化目录
+     * @param context 上下文
+     * @param htmlContent 处理后的 HTML 内容（已内联 CSS/JS）
+     * @param fileName 文件名
+     * @param projectId 项目ID
+     * @return 保存后的文件路径，失败返回 null
+     */
+    fun saveProcessedHtml(
+        context: Context,
+        htmlContent: String,
+        fileName: String,
+        projectId: String
+    ): String? {
+        return try {
+            val projectDir = getProjectDir(context, projectId)
+            val targetFile = File(projectDir, fileName)
+            
+            // 确保父目录存在
+            targetFile.parentFile?.mkdirs()
+            
+            // 写入处理后的 HTML 内容
+            targetFile.writeText(htmlContent, Charsets.UTF_8)
+            targetFile.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+    
+    /**
      * 删除项目所有文件
      */
     fun deleteProject(context: Context, projectId: String) {

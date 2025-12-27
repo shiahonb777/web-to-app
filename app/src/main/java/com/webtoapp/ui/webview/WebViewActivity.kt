@@ -540,6 +540,9 @@ fun WebViewScreen(
                 webViewRef?.let {
                     canGoBack = it.canGoBack()
                     canGoForward = it.canGoForward()
+                    
+                    // 注入长按增强脚本（绕过小红书等网站的长按限制）
+                    longPressHandler.injectLongPressEnhancer(it)
                 }
             }
 

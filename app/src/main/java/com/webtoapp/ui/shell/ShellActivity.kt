@@ -332,6 +332,19 @@ class ShellActivity : AppCompatActivity() {
             return
         }
         
+        // 设置任务列表中显示的应用名称（修复双重名称显示问题）
+        // 使用 setTaskDescription 明确设置任务描述，避免系统自动拼接 Application label 和 Activity label
+        setTaskDescription(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                android.app.ActivityManager.TaskDescription.Builder()
+                    .setLabel(config.appName)
+                    .build()
+            } else {
+                @Suppress("DEPRECATION")
+                android.app.ActivityManager.TaskDescription(config.appName)
+            }
+        )
+        
         // 请求通知权限（Android 13+），用于显示下载进度和完成通知
         requestNotificationPermissionIfNeeded()
         
@@ -750,6 +763,9 @@ fun ShellScreen(
                     if (config.translateEnabled) {
                         injectTranslateScript(it, config.translateTargetLanguage, config.translateShowButton)
                     }
+                    
+                    // 注入长按增强脚本（绕过小红书等网站的长按限制）
+                    longPressHandler.injectLongPressEnhancer(it)
                 }
             }
 

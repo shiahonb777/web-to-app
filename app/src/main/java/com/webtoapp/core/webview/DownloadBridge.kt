@@ -41,10 +41,71 @@ class DownloadBridge(
                 if (window._downloadBridgeInjected) return;
                 window._downloadBridgeInjected = true;
                 
-                // 保存原始的 createElement 方法
-                const originalCreateElement = document.createElement.bind(document);
+                console.log('[DownloadBridge] Starting injection...');
                 
-                // 拦截 a 标签的点击事件
+                // 保存原始方法
+                const originalCreateElement = document.createElement.bind(document);
+                const originalCreateObjectURL = URL.createObjectURL.bind(URL);
+                const originalRevokeObjectURL = URL.revokeObjectURL.bind(URL);
+                
+                // Blob URL 映射表
+                const blobUrlMap = new Map();
+                
+                // 拦截 URL.createObjectURL
+                URL.createObjectURL = function(blob) {
+                    const url = originalCreateObjectURL(blob);
+                    if (blob instanceof Blob) {
+                        blobUrlMap.set(url, blob);
+                        console.log('[DownloadBridge] Blob URL created:', url, 'type:', blob.type, 'size:', blob.size);
+                    }
+                    return url;
+                };
+                
+                // 拦截 URL.revokeObjectURL
+                URL.revokeObjectURL = function(url) {
+                    // 延迟删除，给下载处理留时间
+                    setTimeout(() => {
+                        blobUrlMap.delete(url);
+                    }, 5000);
+                    return originalRevokeObjectURL(url);
+                };
+                
+                // 拦截 document.createElement，监控 <a> 标签的创建和点击
+                document.createElement = function(tagName) {
+                    const element = originalCreateElement(tagName);
+                    
+                    if (tagName.toLowerCase() === 'a') {
+                        // 拦截 click 方法
+                        const originalClick = element.click.bind(element);
+                        element.click = function() {
+                            const href = element.href || '';
+                            const download = element.getAttribute('download');
+                            
+                            console.log('[DownloadBridge] <a>.click() intercepted:', href.substring(0, 100), 'download:', download);
+                            
+                            // 处理 blob: URL
+                            if (href.startsWith('blob:') && download) {
+                                console.log('[DownloadBridge] Handling blob download programmatically');
+                                handleBlobDownload(href, download);
+                                return; // 阻止默认行为
+                            }
+                            
+                            // 处理 data: URL
+                            if (href.startsWith('data:') && download) {
+                                console.log('[DownloadBridge] Handling data URL download programmatically');
+                                handleDataUrlDownload(href, download);
+                                return; // 阻止默认行为
+                            }
+                            
+                            // 其他情况执行原始 click
+                            return originalClick();
+                        };
+                    }
+                    
+                    return element;
+                };
+                
+                // 拦截 a 标签的点击事件（处理已存在的 a 标签）
                 document.addEventListener('click', function(e) {
                     let target = e.target;
                     // 向上查找 a 标签
@@ -60,6 +121,7 @@ class DownloadBridge(
                         if (href.startsWith('blob:') && download) {
                             e.preventDefault();
                             e.stopPropagation();
+                            console.log('[DownloadBridge] Handling blob download from click event');
                             handleBlobDownload(href, download);
                             return false;
                         }
@@ -68,6 +130,7 @@ class DownloadBridge(
                         if (href.startsWith('data:') && download) {
                             e.preventDefault();
                             e.stopPropagation();
+                            console.log('[DownloadBridge] Handling data URL download from click event');
                             handleDataUrlDownload(href, download);
                             return false;
                         }
@@ -77,35 +140,60 @@ class DownloadBridge(
                 // 处理 Blob URL 下载
                 async function handleBlobDownload(blobUrl, filename) {
                     try {
+                        console.log('[DownloadBridge] handleBlobDownload:', blobUrl, filename);
+                        
                         // 显示下载中提示
                         if (window.AndroidDownload && window.AndroidDownload.showToast) {
-                            window.AndroidDownload.showToast('正在准备下载...');
+                            window.AndroidDownload.showToast('正在准备下载: ' + filename);
                         }
                         
-                        const response = await fetch(blobUrl);
-                        const blob = await response.blob();
+                        // 优先从缓存获取 Blob
+                        let blob = blobUrlMap.get(blobUrl);
+                        
+                        if (!blob) {
+                            // 尝试 fetch
+                            console.log('[DownloadBridge] Blob not in cache, trying fetch...');
+                            try {
+                                const response = await fetch(blobUrl);
+                                blob = await response.blob();
+                            } catch (fetchError) {
+                                console.error('[DownloadBridge] Fetch failed:', fetchError);
+                                alert('无法获取文件数据，请重试');
+                                return;
+                            }
+                        }
+                        
+                        console.log('[DownloadBridge] Blob obtained, type:', blob.type, 'size:', blob.size);
+                        
                         const reader = new FileReader();
                         
                         reader.onloadend = function() {
-                            const base64Data = reader.result.split(',')[1];
-                            const mimeType = blob.type || 'application/octet-stream';
-                            
-                            if (window.AndroidDownload && window.AndroidDownload.saveBase64File) {
-                                window.AndroidDownload.saveBase64File(base64Data, filename, mimeType);
-                            } else {
-                                console.error('AndroidDownload bridge not available');
-                                alert('下载功能不可用');
+                            try {
+                                const base64Data = reader.result.split(',')[1];
+                                const mimeType = blob.type || getMimeTypeFromFilename(filename) || 'application/octet-stream';
+                                
+                                console.log('[DownloadBridge] Sending to native, base64 length:', base64Data ? base64Data.length : 0);
+                                
+                                if (window.AndroidDownload && window.AndroidDownload.saveBase64File) {
+                                    window.AndroidDownload.saveBase64File(base64Data, filename, mimeType);
+                                } else {
+                                    console.error('[DownloadBridge] AndroidDownload bridge not available');
+                                    alert('下载功能不可用，请确保应用已正确配置');
+                                }
+                            } catch (e) {
+                                console.error('[DownloadBridge] Error processing blob:', e);
+                                alert('处理文件失败: ' + e.message);
                             }
                         };
                         
                         reader.onerror = function() {
-                            console.error('Failed to read blob');
+                            console.error('[DownloadBridge] FileReader error');
                             alert('读取文件失败');
                         };
                         
                         reader.readAsDataURL(blob);
                     } catch (error) {
-                        console.error('Blob download error:', error);
+                        console.error('[DownloadBridge] Blob download error:', error);
                         alert('下载失败: ' + error.message);
                     }
                 }
@@ -113,48 +201,60 @@ class DownloadBridge(
                 // 处理 Data URL 下载
                 function handleDataUrlDownload(dataUrl, filename) {
                     try {
+                        console.log('[DownloadBridge] handleDataUrlDownload:', filename);
+                        
                         const parts = dataUrl.split(',');
                         const meta = parts[0];
                         const base64Data = parts[1];
                         
                         // 提取 MIME 类型
                         const mimeMatch = meta.match(/data:([^;]+)/);
-                        const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+                        const mimeType = mimeMatch ? mimeMatch[1] : getMimeTypeFromFilename(filename) || 'application/octet-stream';
                         
                         if (window.AndroidDownload && window.AndroidDownload.saveBase64File) {
                             window.AndroidDownload.saveBase64File(base64Data, filename, mimeType);
                         } else {
-                            console.error('AndroidDownload bridge not available');
+                            console.error('[DownloadBridge] AndroidDownload bridge not available');
                             alert('下载功能不可用');
                         }
                     } catch (error) {
-                        console.error('Data URL download error:', error);
+                        console.error('[DownloadBridge] Data URL download error:', error);
                         alert('下载失败: ' + error.message);
                     }
                 }
                 
-                // 拦截 URL.createObjectURL 创建的下载
-                const originalCreateObjectURL = URL.createObjectURL.bind(URL);
-                const blobUrlMap = new Map();
-                
-                URL.createObjectURL = function(blob) {
-                    const url = originalCreateObjectURL(blob);
-                    if (blob instanceof Blob) {
-                        blobUrlMap.set(url, blob);
-                    }
-                    return url;
-                };
-                
-                // 拦截 URL.revokeObjectURL
-                const originalRevokeObjectURL = URL.revokeObjectURL.bind(URL);
-                URL.revokeObjectURL = function(url) {
-                    blobUrlMap.delete(url);
-                    return originalRevokeObjectURL(url);
-                };
+                // 根据文件名猜测 MIME 类型
+                function getMimeTypeFromFilename(filename) {
+                    const ext = filename.split('.').pop().toLowerCase();
+                    const mimeTypes = {
+                        'json': 'application/json',
+                        'txt': 'text/plain',
+                        'html': 'text/html',
+                        'htm': 'text/html',
+                        'css': 'text/css',
+                        'js': 'application/javascript',
+                        'xml': 'application/xml',
+                        'csv': 'text/csv',
+                        'pdf': 'application/pdf',
+                        'zip': 'application/zip',
+                        'png': 'image/png',
+                        'jpg': 'image/jpeg',
+                        'jpeg': 'image/jpeg',
+                        'gif': 'image/gif',
+                        'webp': 'image/webp',
+                        'svg': 'image/svg+xml',
+                        'mp3': 'audio/mpeg',
+                        'mp4': 'video/mp4',
+                        'webm': 'video/webm'
+                    };
+                    return mimeTypes[ext] || null;
+                }
                 
                 // 提供全局下载方法供 HTML 应用调用
                 window.nativeDownload = function(data, filename, mimeType) {
-                    mimeType = mimeType || 'application/octet-stream';
+                    mimeType = mimeType || getMimeTypeFromFilename(filename) || 'application/octet-stream';
+                    
+                    console.log('[DownloadBridge] nativeDownload called:', filename, mimeType);
                     
                     if (typeof data === 'string') {
                         // 字符串数据，转为 Base64
@@ -197,7 +297,12 @@ class DownloadBridge(
                     window.nativeDownload(text, filename || 'text.txt', 'text/plain');
                 };
                 
-                console.log('[DownloadBridge] Injection complete');
+                // 检查桥接是否可用
+                window.isNativeDownloadAvailable = function() {
+                    return !!(window.AndroidDownload && window.AndroidDownload.saveBase64File);
+                };
+                
+                console.log('[DownloadBridge] Injection complete, bridge available:', window.isNativeDownloadAvailable());
             })();
         """.trimIndent()
     }
@@ -295,15 +400,100 @@ class DownloadBridge(
     
     /**
      * 保存文件到下载目录（内部方法，返回保存的文件）
+     * Android 10+ 使用 MediaStore API 保存到公共下载目录
+     * Android 9 及以下使用传统文件 API
      */
     private fun saveToDownloadsInternal(bytes: ByteArray, filename: String): File? {
-        // 获取下载目录
-        val downloadDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-                ?: context.filesDir
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Android 10+ 使用 MediaStore API 保存到公共下载目录
+            saveToDownloadsMediaStore(bytes, filename)
         } else {
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            // Android 9 及以下使用传统方式
+            saveToDownloadsLegacy(bytes, filename)
         }
+    }
+    
+    /**
+     * Android 10+ 使用 MediaStore API 保存到公共下载目录
+     */
+    private fun saveToDownloadsMediaStore(bytes: ByteArray, filename: String): File? {
+        try {
+            val contentValues = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, filename)
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, getMimeType(filename))
+                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/WebToApp")
+                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+            }
+            
+            val uri = context.contentResolver.insert(
+                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                contentValues
+            ) ?: return null
+            
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.write(bytes)
+            }
+            
+            // 标记文件写入完成
+            contentValues.clear()
+            contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+            context.contentResolver.update(uri, contentValues, null, null)
+            
+            // 返回一个虚拟 File 对象用于显示路径
+            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val appDir = File(downloadDir, "WebToApp")
+            android.util.Log.d("DownloadBridge", "文件已保存到公共下载目录: ${appDir.absolutePath}/$filename")
+            return File(appDir, filename)
+            
+        } catch (e: Exception) {
+            android.util.Log.e("DownloadBridge", "MediaStore 保存失败，尝试备用方案", e)
+            // 降级到应用私有目录
+            return saveToAppPrivateDir(bytes, filename)
+        }
+    }
+    
+    /**
+     * Android 9 及以下使用传统文件 API
+     */
+    private fun saveToDownloadsLegacy(bytes: ByteArray, filename: String): File? {
+        val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val appDir = File(downloadDir, "WebToApp")
+        
+        // 确保目录存在
+        if (!appDir.exists()) {
+            appDir.mkdirs()
+        }
+        
+        // 处理文件名冲突
+        var targetFile = File(appDir, filename)
+        var counter = 1
+        val nameWithoutExt = filename.substringBeforeLast(".")
+        val ext = if (filename.contains(".")) ".${filename.substringAfterLast(".")}" else ""
+        
+        while (targetFile.exists()) {
+            targetFile = File(appDir, "${nameWithoutExt}_$counter$ext")
+            counter++
+        }
+        
+        // 写入文件
+        return try {
+            FileOutputStream(targetFile).use { fos ->
+                fos.write(bytes)
+            }
+            android.util.Log.d("DownloadBridge", "文件已保存: ${targetFile.absolutePath}")
+            targetFile
+        } catch (e: Exception) {
+            android.util.Log.e("DownloadBridge", "写入文件失败", e)
+            null
+        }
+    }
+    
+    /**
+     * 保存到应用私有目录（备用方案）
+     */
+    private fun saveToAppPrivateDir(bytes: ByteArray, filename: String): File? {
+        val downloadDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            ?: context.filesDir
         
         // 确保目录存在
         if (!downloadDir.exists()) {
@@ -326,11 +516,38 @@ class DownloadBridge(
             FileOutputStream(targetFile).use { fos ->
                 fos.write(bytes)
             }
-            android.util.Log.d("DownloadBridge", "文件已保存: ${targetFile.absolutePath}")
+            android.util.Log.d("DownloadBridge", "文件已保存到应用目录: ${targetFile.absolutePath}")
             targetFile
         } catch (e: Exception) {
             android.util.Log.e("DownloadBridge", "写入文件失败", e)
             null
+        }
+    }
+    
+    /**
+     * 根据文件名获取 MIME 类型
+     */
+    private fun getMimeType(filename: String): String {
+        val ext = filename.substringAfterLast(".", "").lowercase()
+        return when (ext) {
+            "json" -> "application/json"
+            "txt" -> "text/plain"
+            "html", "htm" -> "text/html"
+            "css" -> "text/css"
+            "js" -> "application/javascript"
+            "xml" -> "application/xml"
+            "csv" -> "text/csv"
+            "pdf" -> "application/pdf"
+            "zip" -> "application/zip"
+            "png" -> "image/png"
+            "jpg", "jpeg" -> "image/jpeg"
+            "gif" -> "image/gif"
+            "webp" -> "image/webp"
+            "svg" -> "image/svg+xml"
+            "mp3" -> "audio/mpeg"
+            "mp4" -> "video/mp4"
+            "webm" -> "video/webm"
+            else -> "application/octet-stream"
         }
     }
     

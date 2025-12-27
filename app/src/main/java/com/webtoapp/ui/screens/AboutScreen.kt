@@ -510,11 +510,22 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // v1.7.0
+                            // v1.7.1
                             VersionSection(
-                                version = "v1.7.0",
+                                version = "v1.7.1",
                                 isLatest = true
                             ) {
+                                ChangeItem("🐛", "修复小红书等网站图片长按无法保存")
+                                ChangeItem("✨", "新增小红书图片下载器模块")
+                                ChangeItem("🐛", "修复Blob格式文件导出失败")
+                                ChangeItem("🐛", "修复HTML项目CSS/JS不生效")
+                                ChangeItem("🐛", "修复任务列表显示双重名称")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // v1.7.0
+                            VersionSection(version = "v1.7.0") {
                                 ChangeItem("🐛", "修复数十个已知问题")
                                 ChangeItem("🤖", "优化AI Agent编程架构")
                             }

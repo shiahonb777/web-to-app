@@ -16,6 +16,7 @@ object BuiltInModules {
         bilibiliVideoExtractor(),
         douyinVideoExtractor(),
         xiaohongshuVideoExtractor(),
+        xiaohongshuImageDownloader(),  // 新增：小红书图片下载器
         videoEnhancer(),
         webAnalyzer(),
         advancedDarkMode(),
@@ -1192,6 +1193,546 @@ object BuiltInModules {
             UrlMatchRule("*://xhslink.com/*")
         ),
         code = XIAOHONGSHU_EXTRACTOR_CODE.trimIndent()
+    )
+    
+    // ==================== 小红书图片下载器 ====================
+    
+    private const val XIAOHONGSHU_IMAGE_DOWNLOADER_CODE = """
+(function() {
+    'use strict';
+    
+    // 防止重复注入
+    if (window.__wtaXhsImageDownloader) return;
+    window.__wtaXhsImageDownloader = true;
+    
+    console.log('[XhsImageDownloader] 初始化小红书图片下载器');
+    
+    let imagePanel = null;
+    let currentImages = [];
+    let downloadBtn = null;
+    
+    // ========== 1. 绕过长按事件阻止 ==========
+    function bypassLongPressBlock() {
+        var eventsToBlock = ['contextmenu', 'touchstart', 'touchmove', 'touchend'];
+        
+        eventsToBlock.forEach(function(eventType) {
+            document.addEventListener(eventType, function(e) {
+                var target = e.target;
+                var isImageRelated = false;
+                var current = target;
+                var depth = 0;
+                
+                while (current && depth < 10) {
+                    var tagName = current.tagName ? current.tagName.toUpperCase() : '';
+                    if (tagName === 'IMG' || tagName === 'CANVAS') {
+                        isImageRelated = true;
+                        break;
+                    }
+                    var style = window.getComputedStyle(current);
+                    if (style.backgroundImage && style.backgroundImage !== 'none' && 
+                        style.backgroundImage.includes('url(')) {
+                        isImageRelated = true;
+                        break;
+                    }
+                    if (current.className && typeof current.className === 'string' && (
+                        current.className.includes('note-image') ||
+                        current.className.includes('swiper') ||
+                        current.className.includes('carousel') ||
+                        current.className.includes('slide') ||
+                        current.className.includes('image')
+                    )) {
+                        isImageRelated = true;
+                        break;
+                    }
+                    current = current.parentElement;
+                    depth++;
+                }
+                
+                if (isImageRelated) {
+                    e.stopPropagation();
+                }
+            }, true);
+        });
+        
+        function removeEventBlockers() {
+            var elements = document.querySelectorAll('img, canvas, [class*="image"], [class*="swiper"], [class*="carousel"], [class*="slide"]');
+            elements.forEach(function(el) {
+                el.style.webkitTouchCallout = 'default';
+                el.style.webkitUserSelect = 'auto';
+                el.style.userSelect = 'auto';
+                el.style.pointerEvents = 'auto';
+                el.removeAttribute('oncontextmenu');
+                el.removeAttribute('ontouchstart');
+            });
+        }
+        
+        removeEventBlockers();
+        var observer = new MutationObserver(removeEventBlockers);
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        console.log('[XhsImageDownloader] 长按阻止已绕过');
+    }
+    
+    // ========== 2. 提取页面所有图片 ==========
+    function extractAllImages() {
+        var images = new Set();
+        
+        document.querySelectorAll('img').forEach(function(img) {
+            var src = img.src || img.dataset.src || img.getAttribute('data-lazy-src');
+            if (src && isValidImageUrl(src)) {
+                images.add(getHighResUrl(src));
+            }
+        });
+        
+        document.querySelectorAll('*').forEach(function(el) {
+            var style = window.getComputedStyle(el);
+            var bgImage = style.backgroundImage;
+            if (bgImage && bgImage !== 'none') {
+                var matches = bgImage.match(/url\(['"]?([^'")\s]+)['"]?\)/g);
+                if (matches) {
+                    matches.forEach(function(match) {
+                        var url = match.replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
+                        if (isValidImageUrl(url)) {
+                            images.add(getHighResUrl(url));
+                        }
+                    });
+                }
+            }
+        });
+        
+        var xhsSelectors = [
+            '[class*="note-image"] img',
+            '[class*="swiper-slide"] img',
+            '[class*="carousel"] img',
+            '[class*="media-container"] img',
+            '.note-content img',
+            '.feed-card img',
+            '[data-v-] img'
+        ];
+        
+        xhsSelectors.forEach(function(selector) {
+            try {
+                document.querySelectorAll(selector).forEach(function(img) {
+                    var src = img.src || img.dataset.src;
+                    if (src && isValidImageUrl(src)) {
+                        images.add(getHighResUrl(src));
+                    }
+                });
+            } catch (e) {}
+        });
+        
+        try {
+            var scripts = document.querySelectorAll('script');
+            scripts.forEach(function(script) {
+                var text = script.textContent || '';
+                var urlMatches = text.match(/https?:\/\/[^"'\s]*(?:xhscdn|xiaohongshu)[^"'\s]*\.(?:jpg|jpeg|png|webp|gif)[^"'\s]*/gi);
+                if (urlMatches) {
+                    urlMatches.forEach(function(url) {
+                        if (isValidImageUrl(url)) {
+                            images.add(getHighResUrl(url));
+                        }
+                    });
+                }
+            });
+        } catch (e) {}
+        
+        return Array.from(images);
+    }
+    
+    function isValidImageUrl(url) {
+        if (!url) return false;
+        if (url.startsWith('data:image/svg')) return false;
+        if (url.includes('avatar') || url.includes('icon') || url.includes('logo')) return false;
+        if (url.includes('loading') || url.includes('placeholder')) return false;
+        if (url.includes('xhscdn') || url.includes('xiaohongshu')) return true;
+        if (url.match(/\.(jpg|jpeg|png|webp|gif)(\?|#|$)/i)) return true;
+        return false;
+    }
+    
+    function getHighResUrl(url) {
+        if (!url) return url;
+        url = url.replace(/\?imageView2\/\d+\/w\/\d+\/format\/\w+/i, '');
+        url = url.replace(/\?x-oss-process=[^&]+/i, '');
+        url = url.replace(/!nd_dft_[^!]+/i, '');
+        url = url.replace(/\/\d+x\d+\//i, '/');
+        url = url.replace(/^http:/, 'https:');
+        return url;
+    }
+    
+    // ========== 3. 创建下载按钮 ==========
+    function createDownloadButton() {
+        if (downloadBtn) return downloadBtn;
+        
+        downloadBtn = document.createElement('div');
+        downloadBtn.id = 'wta-xhs-download-btn';
+        downloadBtn.innerHTML = '🖼️';
+        downloadBtn.style.cssText = 
+            'position: fixed; bottom: 140px; right: 20px; width: 56px; height: 56px;' +
+            'border-radius: 50%; background: linear-gradient(135deg, #ff2442 0%, #ff6b81 100%);' +
+            'color: white; display: flex; align-items: center; justify-content: center;' +
+            'font-size: 24px; cursor: pointer; z-index: 999999;' +
+            'box-shadow: 0 4px 15px rgba(255, 36, 66, 0.4); transition: transform 0.2s;';
+        
+        downloadBtn.addEventListener('click', function() {
+            currentImages = extractAllImages();
+            if (currentImages.length > 0) {
+                showImagePanel();
+            } else {
+                showToast('未找到可下载的图片');
+            }
+        });
+        
+        downloadBtn.addEventListener('touchstart', function() {
+            downloadBtn.style.transform = 'scale(0.95)';
+        }, { passive: true });
+        
+        downloadBtn.addEventListener('touchend', function() {
+            downloadBtn.style.transform = 'scale(1)';
+        }, { passive: true });
+        
+        document.body.appendChild(downloadBtn);
+        return downloadBtn;
+    }
+    
+    // ========== 4. 创建图片选择面板 ==========
+    function showImagePanel() {
+        if (imagePanel) imagePanel.remove();
+        
+        imagePanel = document.createElement('div');
+        imagePanel.id = 'wta-xhs-image-panel';
+        imagePanel.style.cssText = 
+            'position: fixed; bottom: 0; left: 0; right: 0; max-height: 70vh;' +
+            'background: rgba(30, 30, 30, 0.98); border-radius: 20px 20px 0 0;' +
+            'z-index: 9999999; display: flex; flex-direction: column;' +
+            'animation: wtaSlideUp 0.3s ease; backdrop-filter: blur(10px);';
+        
+        if (!document.getElementById('wta-xhs-style')) {
+            var style = document.createElement('style');
+            style.id = 'wta-xhs-style';
+            style.textContent = 
+                '@keyframes wtaSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }' +
+                '.wta-img-item { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }' +
+                '.wta-img-item:active { transform: scale(0.95); }' +
+                '.wta-img-item img { width: 100%; height: 100%; object-fit: cover; }' +
+                '.wta-img-item .wta-check { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px;' +
+                '  border-radius: 50%; background: rgba(255,255,255,0.3); border: 2px solid white;' +
+                '  display: flex; align-items: center; justify-content: center; font-size: 14px; }' +
+                '.wta-img-item.selected .wta-check { background: #ff2442; border-color: #ff2442; }';
+            document.head.appendChild(style);
+        }
+        
+        var header = document.createElement('div');
+        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);';
+        header.innerHTML = 
+            '<div style="color: white; font-size: 16px; font-weight: 600;">选择图片 (' + currentImages.length + ')</div>' +
+            '<div style="display: flex; gap: 12px;">' +
+            '  <button id="wta-select-all" style="background: #444; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer;">全选</button>' +
+            '  <button id="wta-close-panel" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">×</button>' +
+            '</div>';
+        imagePanel.appendChild(header);
+        
+        var grid = document.createElement('div');
+        grid.style.cssText = 'display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 16px; overflow-y: auto; max-height: calc(70vh - 140px);';
+        
+        var selectedImages = new Set();
+        
+        currentImages.forEach(function(url) {
+            var item = document.createElement('div');
+            item.className = 'wta-img-item';
+            item.dataset.url = url;
+            item.style.cssText = 'aspect-ratio: 1;';
+            item.innerHTML = '<img src="' + url + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'"><div class="wta-check">✓</div>';
+            
+            item.addEventListener('click', function() {
+                if (selectedImages.has(url)) {
+                    selectedImages.delete(url);
+                    item.classList.remove('selected');
+                } else {
+                    selectedImages.add(url);
+                    item.classList.add('selected');
+                }
+                updateDownloadButton();
+            });
+            
+            grid.appendChild(item);
+        });
+        
+        imagePanel.appendChild(grid);
+        
+        var footer = document.createElement('div');
+        footer.style.cssText = 'padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(30, 30, 30, 0.98);';
+        footer.innerHTML = '<button id="wta-download-selected" style="width: 100%; background: linear-gradient(135deg, #ff2442 0%, #ff6b81 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">下载选中 (0)</button>';
+        imagePanel.appendChild(footer);
+        
+        document.body.appendChild(imagePanel);
+        
+        document.getElementById('wta-close-panel').addEventListener('click', function() {
+            imagePanel.remove();
+            imagePanel = null;
+        });
+        
+        document.getElementById('wta-select-all').addEventListener('click', function() {
+            var items = grid.querySelectorAll('.wta-img-item');
+            var allSelected = selectedImages.size === currentImages.length;
+            
+            if (allSelected) {
+                selectedImages.clear();
+                items.forEach(function(item) { item.classList.remove('selected'); });
+            } else {
+                currentImages.forEach(function(url) { selectedImages.add(url); });
+                items.forEach(function(item) { item.classList.add('selected'); });
+            }
+            updateDownloadButton();
+        });
+        
+        document.getElementById('wta-download-selected').addEventListener('click', function() {
+            if (selectedImages.size === 0) {
+                showToast('请先选择图片');
+                return;
+            }
+            downloadImages(Array.from(selectedImages));
+        });
+        
+        function updateDownloadButton() {
+            var btn = document.getElementById('wta-download-selected');
+            btn.textContent = '下载选中 (' + selectedImages.size + ')';
+        }
+    }
+    
+    // ========== 5. 下载图片 ==========
+    function downloadImages(urls) {
+        var total = urls.length;
+        var completed = 0;
+        var failed = 0;
+        
+        showToast('开始下载 ' + total + ' 张图片...');
+        
+        urls.forEach(function(url, index) {
+            setTimeout(function() {
+                downloadSingleImage(url, function(success) {
+                    if (success) completed++; else failed++;
+                    
+                    if (completed + failed === total) {
+                        if (failed === 0) {
+                            showToast('全部 ' + total + ' 张图片下载完成！');
+                        } else {
+                            showToast('下载完成：成功 ' + completed + ' 张，失败 ' + failed + ' 张');
+                        }
+                        if (imagePanel) { imagePanel.remove(); imagePanel = null; }
+                    }
+                });
+            }, index * 500);
+        });
+    }
+    
+    function downloadSingleImage(url, callback) {
+        var filename = 'xhs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '.jpg';
+        
+        if (typeof NativeBridge !== 'undefined' && NativeBridge.saveImageToGallery) {
+            try {
+                NativeBridge.saveImageToGallery(url, filename);
+                callback(true);
+                return;
+            } catch (e) {}
+        }
+        
+        fetch(url, { mode: 'cors' })
+            .then(function(response) { return response.blob(); })
+            .then(function(blob) {
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+                callback(true);
+            })
+            .catch(function(e) { callback(false); });
+    }
+    
+    // ========== 6. 长按保存单张图片 ==========
+    function enableLongPressSave() {
+        var longPressTimer = null;
+        var longPressTarget = null;
+        
+        document.addEventListener('touchstart', function(e) {
+            var target = e.target;
+            var imageUrl = findImageUrl(target);
+            
+            if (imageUrl) {
+                longPressTarget = { element: target, url: imageUrl };
+                longPressTimer = setTimeout(function() {
+                    showSingleImageMenu(longPressTarget.url, e.touches[0]);
+                }, 500);
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', function() {
+            clearTimeout(longPressTimer);
+            longPressTarget = null;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function() {
+            clearTimeout(longPressTimer);
+            longPressTarget = null;
+        }, { passive: true });
+    }
+    
+    function findImageUrl(element) {
+        var current = element;
+        var depth = 0;
+        
+        while (current && depth < 10) {
+            if (current.tagName === 'IMG' && current.src) {
+                return getHighResUrl(current.src);
+            }
+            
+            var style = window.getComputedStyle(current);
+            var bgImage = style.backgroundImage;
+            if (bgImage && bgImage !== 'none' && bgImage.includes('url(')) {
+                var match = bgImage.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+                if (match && isValidImageUrl(match[1])) {
+                    return getHighResUrl(match[1]);
+                }
+            }
+            
+            var img = current.querySelector('img');
+            if (img && img.src && isValidImageUrl(img.src)) {
+                return getHighResUrl(img.src);
+            }
+            
+            current = current.parentElement;
+            depth++;
+        }
+        
+        return null;
+    }
+    
+    function showSingleImageMenu(url, touch) {
+        var existing = document.getElementById('wta-single-image-menu');
+        if (existing) existing.remove();
+        
+        var menu = document.createElement('div');
+        menu.id = 'wta-single-image-menu';
+        menu.style.cssText = 
+            'position: fixed; top: ' + Math.min(touch.clientY, window.innerHeight - 150) + 'px;' +
+            'left: ' + Math.min(touch.clientX - 75, window.innerWidth - 160) + 'px;' +
+            'background: rgba(40, 40, 40, 0.98); border-radius: 12px; padding: 8px 0;' +
+            'z-index: 99999999; min-width: 150px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);';
+        
+        menu.innerHTML = 
+            '<div class="wta-menu-item" data-action="save" style="padding: 12px 20px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px;">' +
+            '  <span>💾</span><span>保存图片</span></div>' +
+            '<div class="wta-menu-item" data-action="copy" style="padding: 12px 20px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px;">' +
+            '  <span>📋</span><span>复制链接</span></div>';
+        
+        document.body.appendChild(menu);
+        
+        menu.querySelectorAll('.wta-menu-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var action = item.dataset.action;
+                if (action === 'save') {
+                    downloadSingleImage(url, function(success) {
+                        showToast(success ? '图片已保存' : '保存失败');
+                    });
+                } else if (action === 'copy') {
+                    copyToClipboard(url);
+                    showToast('链接已复制');
+                }
+                menu.remove();
+            });
+        });
+        
+        setTimeout(function() {
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target)) {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }, 100);
+    }
+    
+    function showToast(message) {
+        var existing = document.getElementById('wta-xhs-toast');
+        if (existing) existing.remove();
+        
+        var toast = document.createElement('div');
+        toast.id = 'wta-xhs-toast';
+        toast.textContent = message;
+        toast.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);' +
+            'background: rgba(0,0,0,0.85); color: white; padding: 14px 28px; border-radius: 12px;' +
+            'font-size: 14px; z-index: 999999999;';
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.remove(); }, 2500);
+    }
+    
+    function copyToClipboard(text) {
+        if (typeof NativeBridge !== 'undefined' && NativeBridge.copyToClipboard) {
+            NativeBridge.copyToClipboard(text);
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function() { fallbackCopy(text); });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+    
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
+    
+    function init() {
+        if (!location.hostname.includes('xiaohongshu.com') && !location.hostname.includes('xhslink.com')) {
+            return;
+        }
+        
+        bypassLongPressBlock();
+        createDownloadButton();
+        enableLongPressSave();
+        
+        console.log('[XhsImageDownloader] 小红书图片下载器已初始化');
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        setTimeout(init, 500);
+    }
+})();
+"""
+
+    /**
+     * 小红书图片下载器
+     * 绕过长按限制，支持批量下载图片
+     */
+    private fun xiaohongshuImageDownloader() = ExtensionModule(
+        id = "builtin-xiaohongshu-image-downloader",
+        name = "小红书图片下载",
+        description = "绕过小红书长按限制，支持长按保存单张图片或批量下载笔记中的所有图片",
+        icon = "🖼️",
+        category = ModuleCategory.MEDIA,
+        tags = listOf("小红书", "图片", "下载", "批量"),
+        version = ModuleVersion(1, "1.0.0", "初始版本"),
+        author = ModuleAuthor("WebToApp"),
+        builtIn = true,
+        enabled = false,
+        runAt = ModuleRunTime.DOCUMENT_END,
+        permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.DOWNLOAD, ModulePermission.CLIPBOARD),
+        urlMatches = listOf(
+            UrlMatchRule("*://www.xiaohongshu.com/*"),
+            UrlMatchRule("*://xhslink.com/*")
+        ),
+        code = XIAOHONGSHU_IMAGE_DOWNLOADER_CODE.trimIndent()
     )
     
     // ==================== 通用视频增强模块 ====================

@@ -46,6 +46,91 @@ class LongPressHandler(
     }
     
     /**
+     * 注入JS代码绕过网站的长按事件阻止
+     * 适用于小红书等阻止长按保存图片的网站
+     */
+    fun injectLongPressEnhancer(webView: WebView) {
+        val js = """
+            (function() {
+                if (window.__wtaLongPressEnhanced) return;
+                window.__wtaLongPressEnhanced = true;
+                
+                console.log('[WebToApp] 注入长按增强脚本');
+                
+                // 阻止网站禁用长按的事件
+                var eventsToBlock = ['contextmenu', 'touchstart', 'touchmove', 'touchend', 'touchcancel'];
+                
+                eventsToBlock.forEach(function(eventType) {
+                    document.addEventListener(eventType, function(e) {
+                        // 检查是否是图片相关元素
+                        var target = e.target;
+                        var isImageRelated = false;
+                        var current = target;
+                        var depth = 0;
+                        
+                        while (current && depth < 10) {
+                            var tagName = current.tagName ? current.tagName.toUpperCase() : '';
+                            if (tagName === 'IMG' || tagName === 'CANVAS') {
+                                isImageRelated = true;
+                                break;
+                            }
+                            // 检查背景图片
+                            var style = window.getComputedStyle(current);
+                            if (style.backgroundImage && style.backgroundImage !== 'none' && 
+                                style.backgroundImage.includes('url(')) {
+                                isImageRelated = true;
+                                break;
+                            }
+                            // 检查小红书特殊容器
+                            if (current.className && (
+                                current.className.includes('note-image') ||
+                                current.className.includes('swiper') ||
+                                current.className.includes('carousel') ||
+                                current.className.includes('image')
+                            )) {
+                                isImageRelated = true;
+                                break;
+                            }
+                            current = current.parentElement;
+                            depth++;
+                        }
+                        
+                        if (isImageRelated) {
+                            e.stopPropagation();
+                        }
+                    }, true);
+                });
+                
+                // 移除元素上的事件阻止属性
+                function removeEventBlockers() {
+                    var elements = document.querySelectorAll('img, canvas, [class*="image"], [class*="swiper"], [class*="carousel"]');
+                    elements.forEach(function(el) {
+                        el.style.webkitTouchCallout = 'default';
+                        el.style.webkitUserSelect = 'auto';
+                        el.style.userSelect = 'auto';
+                        el.removeAttribute('oncontextmenu');
+                        el.removeAttribute('ontouchstart');
+                        el.removeAttribute('ontouchmove');
+                        el.removeAttribute('ontouchend');
+                    });
+                }
+                
+                removeEventBlockers();
+                
+                // 监听DOM变化持续移除
+                var observer = new MutationObserver(function() {
+                    removeEventBlockers();
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+                
+                console.log('[WebToApp] 长按增强脚本注入完成');
+            })();
+        """.trimIndent()
+        
+        webView.evaluateJavascript(js, null)
+    }
+    
+    /**
      * 解析 WebView 长按结果
      */
     fun parseLongPressResult(webView: WebView): LongPressResult {
@@ -84,6 +169,11 @@ class LongPressHandler(
      * 
      * 注意：x, y 是相对于 WebView 视图的坐标（来自 MotionEvent）
      * 需要转换为页面视口坐标才能正确使用 document.elementFromPoint()
+     * 
+     * 增强功能：
+     * - 支持检测 background-image 渲染的图片
+     * - 支持检测 canvas 渲染的图片（转为 dataURL）
+     * - 支持小红书等网站的特殊图片容器
      */
     fun getLongPressDetails(webView: WebView, x: Float, y: Float, callback: (LongPressResult) -> Unit) {
         // 获取 WebView 的缩放比例
@@ -112,10 +202,76 @@ class LongPressHandler(
                     
                     var result = {type: 'none'};
                     
-                    // 向上遍历查找可交互元素（最多 10 层）
+                    // 辅助函数：提取背景图片URL
+                    function extractBgImageUrl(element) {
+                        var style = window.getComputedStyle(element);
+                        var bgImage = style.backgroundImage;
+                        if (bgImage && bgImage !== 'none') {
+                            // 支持多个 url() 的情况
+                            var matches = bgImage.match(/url\(['"]?([^'")\s]+)['"]?\)/g);
+                            if (matches && matches.length > 0) {
+                                var url = matches[0].replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
+                                if (url && !url.startsWith('data:image/svg') && !url.includes('gradient')) {
+                                    return url;
+                                }
+                            }
+                        }
+                        return null;
+                    }
+                    
+                    // 辅助函数：检测小红书等网站的特殊图片容器
+                    function findXhsImage(element) {
+                        // 小红书图片通常在特定的容器中
+                        var selectors = [
+                            'img[src*="xhscdn"]',
+                            'img[src*="xiaohongshu"]',
+                            '[class*="note-image"] img',
+                            '[class*="swiper-slide"] img',
+                            '[class*="carousel"] img',
+                            '[class*="image-container"] img',
+                            '[class*="media"] img',
+                            '[data-v-] img'  // Vue 组件中的图片
+                        ];
+                        
+                        // 先检查当前元素及其子元素
+                        for (var i = 0; i < selectors.length; i++) {
+                            var img = element.querySelector(selectors[i]);
+                            if (img && img.src) return img.src;
+                        }
+                        
+                        // 向上查找父容器中的图片
+                        var parent = element;
+                        var depth = 0;
+                        while (parent && depth < 5) {
+                            for (var i = 0; i < selectors.length; i++) {
+                                var img = parent.querySelector(selectors[i]);
+                                if (img && img.src) return img.src;
+                            }
+                            parent = parent.parentElement;
+                            depth++;
+                        }
+                        
+                        return null;
+                    }
+                    
+                    // 辅助函数：从 canvas 提取图片
+                    function extractCanvasImage(canvas) {
+                        try {
+                            if (canvas.width > 10 && canvas.height > 10) {
+                                return canvas.toDataURL('image/png');
+                            }
+                        } catch (e) {
+                            console.log('WebToApp: Canvas extraction failed (CORS)', e);
+                        }
+                        return null;
+                    }
+                    
+                    // 向上遍历查找可交互元素（最多 15 层，增加深度以适应复杂DOM）
                     var current = elem;
                     var depth = 0;
-                    while (current && depth < 10) {
+                    var foundBgImage = null;
+                    
+                    while (current && depth < 15) {
                         var tagName = current.tagName ? current.tagName.toUpperCase() : '';
                         
                         // 检查是否是图片
@@ -136,6 +292,15 @@ class LongPressHandler(
                                 parent = parent.parentElement;
                             }
                             break;
+                        }
+                        
+                        // 检查 canvas 元素
+                        if (tagName === 'CANVAS') {
+                            var canvasUrl = extractCanvasImage(current);
+                            if (canvasUrl) {
+                                result = {type: 'image', url: canvasUrl, alt: 'canvas'};
+                                break;
+                            }
                         }
                         
                         // 检查是否是视频
@@ -166,21 +331,30 @@ class LongPressHandler(
                             break;
                         }
                         
-                        // 检查背景图片
+                        // 检查背景图片（保存第一个找到的，但继续向上查找更好的结果）
+                        if (!foundBgImage) {
+                            var bgUrl = extractBgImageUrl(current);
+                            if (bgUrl) {
+                                foundBgImage = bgUrl;
+                            }
+                        }
+                        
+                        // 检查小红书等特殊图片容器
                         if (result.type === 'none') {
-                            var style = window.getComputedStyle(current);
-                            var bgImage = style.backgroundImage;
-                            if (bgImage && bgImage !== 'none' && bgImage.startsWith('url(')) {
-                                var bgUrl = bgImage.slice(5, -2).replace(/['"]/g, '');
-                                if (bgUrl && !bgUrl.startsWith('data:image/svg')) {
-                                    result = {type: 'image', url: bgUrl, alt: 'background'};
-                                    // 不 break，继续向上查找可能的链接
-                                }
+                            var xhsImg = findXhsImage(current);
+                            if (xhsImg) {
+                                result = {type: 'image', url: xhsImg, alt: 'xhs'};
+                                break;
                             }
                         }
                         
                         current = current.parentElement;
                         depth++;
+                    }
+                    
+                    // 如果没找到标准图片，使用背景图片
+                    if (result.type === 'none' && foundBgImage) {
+                        result = {type: 'image', url: foundBgImage, alt: 'background'};
                     }
                     
                     console.log('WebToApp: Result type=' + result.type);

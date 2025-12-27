@@ -487,6 +487,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     
     /**
      * 保存HTML应用（本地HTML+CSS+JS转APP）
+     * 
+     * 重要：将 CSS 和 JS 内联到 HTML 文件中，确保在 WebView 中正确加载
      */
     fun saveHtmlApp(
         name: String,
@@ -511,20 +513,109 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 
-                // 单HTML模式
+                // 单HTML模式 - 使用 HtmlProjectProcessor 处理文件
                 val projectId = HtmlStorage.generateProjectId()
                 val savedHtmlFiles = withContext(Dispatchers.IO) {
-                    htmlConfig?.files?.mapNotNull { file ->
+                    val files = htmlConfig?.files ?: emptyList()
+                    
+                    // 分类文件
+                    val htmlFiles = files.filter { 
+                        it.type == com.webtoapp.data.model.HtmlFileType.HTML || 
+                        it.name.endsWith(".html", ignoreCase = true) || 
+                        it.name.endsWith(".htm", ignoreCase = true)
+                    }
+                    val cssFiles = files.filter { 
+                        it.type == com.webtoapp.data.model.HtmlFileType.CSS || 
+                        it.name.endsWith(".css", ignoreCase = true)
+                    }
+                    val jsFiles = files.filter { 
+                        it.type == com.webtoapp.data.model.HtmlFileType.JS || 
+                        it.name.endsWith(".js", ignoreCase = true)
+                    }
+                    val otherFiles = files.filter { file ->
+                        file !in htmlFiles && file !in cssFiles && file !in jsFiles
+                    }
+                    
+                    android.util.Log.d("MainViewModel", "HTML文件分类: HTML=${htmlFiles.size}, CSS=${cssFiles.size}, JS=${jsFiles.size}, Other=${otherFiles.size}")
+                    
+                    // 读取 CSS 内容
+                    val cssContent = cssFiles.mapNotNull { cssFile ->
+                        try {
+                            val file = java.io.File(cssFile.path)
+                            if (file.exists() && file.canRead()) {
+                                com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(file, null)
+                            } else null
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainViewModel", "读取 CSS 文件失败: ${cssFile.path}", e)
+                            null
+                        }
+                    }.joinToString("\n\n")
+                    
+                    // 读取 JS 内容
+                    val jsContent = jsFiles.mapNotNull { jsFile ->
+                        try {
+                            val file = java.io.File(jsFile.path)
+                            if (file.exists() && file.canRead()) {
+                                com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(file, null)
+                            } else null
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainViewModel", "读取 JS 文件失败: ${jsFile.path}", e)
+                            null
+                        }
+                    }.joinToString("\n\n")
+                    
+                    android.util.Log.d("MainViewModel", "CSS 内容长度: ${cssContent.length}, JS 内容长度: ${jsContent.length}")
+                    
+                    // 处理 HTML 文件，内联 CSS 和 JS
+                    val processedHtmlFiles = htmlFiles.mapNotNull { htmlFile ->
+                        try {
+                            val sourceFile = java.io.File(htmlFile.path)
+                            if (!sourceFile.exists() || !sourceFile.canRead()) {
+                                android.util.Log.e("MainViewModel", "HTML 文件不存在或无法读取: ${htmlFile.path}")
+                                return@mapNotNull null
+                            }
+                            
+                            // 读取 HTML 内容
+                            var htmlContent = com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(sourceFile, null)
+                            
+                            // 使用 HtmlProjectProcessor 处理 HTML 内容（内联 CSS/JS）
+                            htmlContent = com.webtoapp.util.HtmlProjectProcessor.processHtmlContent(
+                                htmlContent = htmlContent,
+                                cssContent = cssContent.takeIf { it.isNotBlank() },
+                                jsContent = jsContent.takeIf { it.isNotBlank() },
+                                fixPaths = true
+                            )
+                            
+                            // 保存处理后的 HTML 文件
+                            val savedPath = HtmlStorage.saveProcessedHtml(
+                                context, htmlContent, htmlFile.name, projectId
+                            )
+                            
+                            if (savedPath != null) {
+                                android.util.Log.d("MainViewModel", "HTML 文件已保存(内联CSS/JS): ${htmlFile.name}")
+                                htmlFile.copy(path = savedPath)
+                            } else {
+                                android.util.Log.e("MainViewModel", "无法保存处理后的 HTML 文件: ${htmlFile.name}")
+                                null
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainViewModel", "处理 HTML 文件失败: ${htmlFile.path}", e)
+                            null
+                        }
+                    }
+                    
+                    // 保存其他文件（图片、字体等）
+                    val savedOtherFiles = otherFiles.mapNotNull { file ->
                         val savedPath = HtmlStorage.saveFromTempFile(
                             context, file.path, file.name, projectId
                         )
                         if (savedPath != null) {
                             file.copy(path = savedPath)
-                        } else {
-                            android.util.Log.e("MainViewModel", "无法保存HTML文件: ${file.name}")
-                            null
-                        }
-                    } ?: emptyList()
+                        } else null
+                    }
+                    
+                    // 返回所有保存的文件（只包含 HTML 和其他文件，CSS/JS 已内联）
+                    processedHtmlFiles + savedOtherFiles
                 }
                 
                 val savedHtmlConfig = htmlConfig?.copy(

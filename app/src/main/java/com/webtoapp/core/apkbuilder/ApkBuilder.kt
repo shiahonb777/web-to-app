@@ -634,6 +634,11 @@ class ApkBuilder(private val context: Context) {
      * 重要修复：将 CSS 和 JS 内联到 HTML 文件中，而不是作为独立文件
      * 这样可以避免 WebView 加载本地文件时的路径引用问题
      * 
+     * 增强功能：
+     * 1. 自动检测和修复资源路径引用
+     * 2. 正确处理文件编码
+     * 3. 安全包装 JS 代码确保 DOM 加载后执行
+     * 
      * @return 成功嵌入的文件数量
      */
     private fun addHtmlFilesToAssets(
@@ -669,12 +674,13 @@ class ApkBuilder(private val context: Context) {
         
         var successCount = 0
         
-        // 读取 CSS 内容
+        // 读取 CSS 内容（使用正确编码）
         val cssContent = cssFilesList.mapNotNull { cssFile ->
             try {
                 val file = File(cssFile.path)
                 if (file.exists() && file.canRead()) {
-                    file.readText()
+                    val encoding = detectFileEncoding(file)
+                    com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(file, encoding)
                 } else null
             } catch (e: Exception) {
                 Log.e("ApkBuilder", "读取 CSS 文件失败: ${cssFile.path}", e)
@@ -682,12 +688,13 @@ class ApkBuilder(private val context: Context) {
             }
         }.joinToString("\n\n")
         
-        // 读取 JS 内容
+        // 读取 JS 内容（使用正确编码）
         val jsContent = jsFilesList.mapNotNull { jsFile ->
             try {
                 val file = File(jsFile.path)
                 if (file.exists() && file.canRead()) {
-                    file.readText()
+                    val encoding = detectFileEncoding(file)
+                    com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(file, encoding)
                 } else null
             } catch (e: Exception) {
                 Log.e("ApkBuilder", "读取 JS 文件失败: ${jsFile.path}", e)
@@ -697,7 +704,7 @@ class ApkBuilder(private val context: Context) {
         
         Log.d("ApkBuilder", "CSS 内容长度: ${cssContent.length}, JS 内容长度: ${jsContent.length}")
         
-        // 处理 HTML 文件，将 CSS 和 JS 内联
+        // 处理 HTML 文件，使用 HtmlProjectProcessor 进行处理
         htmlFilesList.forEach { htmlFile ->
             try {
                 val sourceFile = File(htmlFile.path)
@@ -713,48 +720,22 @@ class ApkBuilder(private val context: Context) {
                     return@forEach
                 }
                 
-                var htmlContent = sourceFile.readText()
+                // 使用正确编码读取 HTML
+                val encoding = detectFileEncoding(sourceFile)
+                var htmlContent = com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(sourceFile, encoding)
+                
                 if (htmlContent.isEmpty()) {
                     Log.w("ApkBuilder", "HTML 文件内容为空: ${htmlFile.path}")
                     return@forEach
                 }
                 
-                // 移除 HTML 中已有的本地 CSS/JS 引用（因为我们会内联它们）
-                htmlContent = htmlContent.replace(Regex("""<link[^>]*href=["'](?!http)[^"']*\.css["'][^>]*>""", RegexOption.IGNORE_CASE), "")
-                htmlContent = htmlContent.replace(Regex("""<script[^>]*src=["'](?!http)[^"']*\.js["'][^>]*></script>""", RegexOption.IGNORE_CASE), "")
-                
-                // 内联 CSS
-                if (cssContent.isNotEmpty()) {
-                    val styleTag = "<style>\n$cssContent\n</style>"
-                    // 使用 Regex.escapeReplacement 转义替换字符串，避免 ${...} 被解析为命名组
-                    val escapedStyleTag = Regex.escapeReplacement(styleTag)
-                    htmlContent = when {
-                        htmlContent.contains("</head>", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("</head>", RegexOption.IGNORE_CASE), "$escapedStyleTag\n</head>")
-                        }
-                        htmlContent.contains("<body", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("<body", RegexOption.IGNORE_CASE), "$escapedStyleTag\n<body")
-                        }
-                        else -> "$styleTag\n$htmlContent"
-                    }
-                }
-                
-                // 内联 JS（包装确保 DOM 加载完成后执行）
-                if (jsContent.isNotEmpty()) {
-                    val wrappedJs = wrapJsForDomReady(jsContent)
-                    val scriptTag = "<script>\n$wrappedJs\n</script>"
-                    // 使用 Regex.escapeReplacement 转义替换字符串，避免 ${...} 被解析为命名组
-                    val escapedScriptTag = Regex.escapeReplacement(scriptTag)
-                    htmlContent = when {
-                        htmlContent.contains("</body>", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("</body>", RegexOption.IGNORE_CASE), "$escapedScriptTag\n</body>")
-                        }
-                        htmlContent.contains("</html>", ignoreCase = true) -> {
-                            htmlContent.replaceFirst(Regex("</html>", RegexOption.IGNORE_CASE), "$escapedScriptTag\n</html>")
-                        }
-                        else -> "$htmlContent\n$scriptTag"
-                    }
-                }
+                // 使用 HtmlProjectProcessor 处理 HTML 内容
+                htmlContent = com.webtoapp.util.HtmlProjectProcessor.processHtmlContent(
+                    htmlContent = htmlContent,
+                    cssContent = cssContent.takeIf { it.isNotBlank() },
+                    jsContent = jsContent.takeIf { it.isNotBlank() },
+                    fixPaths = true
+                )
                 
                 // 保存到 assets/html/ 目录
                 val assetPath = "assets/html/${htmlFile.name}"
@@ -786,6 +767,30 @@ class ApkBuilder(private val context: Context) {
         
         Log.d("ApkBuilder", "HTML 文件嵌入完成: $successCount/${htmlFiles.size} 成功")
         return successCount
+    }
+    
+    /**
+     * 检测文件编码
+     */
+    private fun detectFileEncoding(file: File): String {
+        return try {
+            val bytes = file.readBytes().take(1000).toByteArray()
+            
+            // 检查 BOM
+            when {
+                bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte() -> "UTF-8"
+                bytes.size >= 2 && bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte() -> "UTF-16BE"
+                bytes.size >= 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() -> "UTF-16LE"
+                else -> {
+                    // 尝试检测 charset 声明
+                    val content = String(bytes, Charsets.ISO_8859_1)
+                    val charsetMatch = Regex("""charset=["']?([^"'\s>]+)""", RegexOption.IGNORE_CASE).find(content)
+                    charsetMatch?.groupValues?.get(1)?.uppercase() ?: "UTF-8"
+                }
+            }
+        } catch (e: Exception) {
+            "UTF-8"
+        }
     }
     
     /**

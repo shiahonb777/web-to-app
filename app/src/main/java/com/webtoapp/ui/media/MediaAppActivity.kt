@@ -72,6 +72,18 @@ class MediaAppActivity : AppCompatActivity() {
             return
         }
         
+        // 设置任务列表中显示的应用名称（修复双重名称显示问题）
+        setTaskDescription(
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                android.app.ActivityManager.TaskDescription.Builder()
+                    .setLabel(config.appName)
+                    .build()
+            } else {
+                @Suppress("DEPRECATION")
+                android.app.ActivityManager.TaskDescription(config.appName)
+            }
+        )
+        
         // 设置全屏
         setupFullscreen()
         

@@ -32,6 +32,7 @@ import com.webtoapp.data.model.HtmlConfig
 import com.webtoapp.data.model.HtmlFile
 import com.webtoapp.data.model.HtmlFileType
 import com.webtoapp.ui.components.IconPickerWithLibrary
+import com.webtoapp.util.HtmlProjectProcessor
 import java.io.File
 
 /**
@@ -107,8 +108,31 @@ fun CreateHtmlAppScreen(
     // 主题配置
     var themeType by remember { mutableStateOf("AURORA") }
     
+    // 项目分析结果
+    var projectAnalysis by remember { mutableStateOf<HtmlProjectProcessor.ProjectAnalysis?>(null) }
+    var showAnalysisDialog by remember { mutableStateOf(false) }
+    
+    // 当文件变化时重新分析
+    LaunchedEffect(htmlFile, cssFile, jsFile) {
+        if (htmlFile != null) {
+            projectAnalysis = HtmlProjectProcessor.analyzeProject(
+                htmlFilePath = htmlFile?.path,
+                cssFilePath = cssFile?.path,
+                jsFilePath = jsFile?.path
+            )
+        } else {
+            projectAnalysis = null
+        }
+    }
+    
     // 判断是否可以创建
     val canCreate = htmlFile != null
+    
+    // 是否有问题需要关注
+    val hasIssues = projectAnalysis?.issues?.any { 
+        it.severity == HtmlProjectProcessor.IssueSeverity.ERROR || 
+        it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
+    } == true
     
     // HTML文件选择器
     val htmlPickerLauncher = rememberLauncherForActivityResult(
@@ -385,6 +409,72 @@ fun CreateHtmlAppScreen(
                 }
             }
             
+            // 项目问题警告卡片
+            if (hasIssues && projectAnalysis != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "检测到项目问题",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                val errorCount = projectAnalysis!!.issues.count { 
+                                    it.severity == HtmlProjectProcessor.IssueSeverity.ERROR 
+                                }
+                                val warningCount = projectAnalysis!!.issues.count { 
+                                    it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
+                                }
+                                Text(
+                                    text = buildString {
+                                        if (errorCount > 0) append("$errorCount 个错误")
+                                        if (errorCount > 0 && warningCount > 0) append("，")
+                                        if (warningCount > 0) append("$warningCount 个警告")
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "应用会自动修复路径问题并内联CSS/JS，但建议查看详情确认",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(
+                            onClick = { showAnalysisDialog = true },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Icon(
+                                Icons.Outlined.Visibility,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("查看分析结果")
+                        }
+                    }
+                }
+            }
+            
             // 提示信息
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -434,7 +524,296 @@ fun CreateHtmlAppScreen(
                     )
                 }
             }
+            
+            // 路径引用提示
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        Icons.Outlined.FolderOpen,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "关于文件引用",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "• 应用会自动将CSS和JS内联到HTML中\n• 绝对路径（如 /css/style.css）会自动转换\n• 建议使用相对路径（如 ./style.css）",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
         }
+    }
+    
+    // 项目分析结果对话框
+    if (showAnalysisDialog && projectAnalysis != null) {
+        ProjectAnalysisDialog(
+            analysis = projectAnalysis!!,
+            onDismiss = { showAnalysisDialog = false }
+        )
+    }
+}
+
+/**
+ * 项目分析结果对话框
+ */
+@Composable
+private fun ProjectAnalysisDialog(
+    analysis: HtmlProjectProcessor.ProjectAnalysis,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Analytics,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("项目分析结果")
+            }
+        },
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 文件信息
+                item {
+                    Text(
+                        text = "文件信息",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        analysis.htmlFiles.forEach { file ->
+                            FileInfoRow(file, "HTML")
+                        }
+                        analysis.cssFiles.forEach { file ->
+                            FileInfoRow(file, "CSS")
+                        }
+                        analysis.jsFiles.forEach { file ->
+                            FileInfoRow(file, "JS")
+                        }
+                    }
+                }
+                
+                // 问题列表
+                if (analysis.issues.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "检测到的问题",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    items(analysis.issues) { issue ->
+                        IssueCard(issue)
+                    }
+                }
+                
+                // 建议
+                if (analysis.suggestions.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "建议",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    items(analysis.suggestions) { suggestion ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                Icons.Outlined.Lightbulb,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = suggestion,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                // 自动修复说明
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                Icons.Outlined.AutoFixHigh,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "应用会自动处理：路径修复、CSS/JS内联、编码转换、viewport适配",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("知道了")
+            }
+        }
+    )
+}
+
+/**
+ * 文件信息行
+ */
+@Composable
+private fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                MaterialTheme.shapes.small
+            )
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = type,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer,
+                    MaterialTheme.shapes.extraSmall
+                )
+                .padding(horizontal = 6.dp, vertical = 2.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = file.name,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "编码: ${file.encoding ?: "UTF-8"} | 大小: ${formatFileSize(file.size)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * 问题卡片
+ */
+@Composable
+private fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
+    val (icon, containerColor, contentColor) = when (issue.severity) {
+        HtmlProjectProcessor.IssueSeverity.ERROR -> Triple(
+            Icons.Outlined.Error,
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer
+        )
+        HtmlProjectProcessor.IssueSeverity.WARNING -> Triple(
+            Icons.Outlined.Warning,
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer
+        )
+        HtmlProjectProcessor.IssueSeverity.INFO -> Triple(
+            Icons.Outlined.Info,
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+    
+    Card(
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = issue.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor
+                )
+            }
+            if (issue.file != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "文件: ${issue.file}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor.copy(alpha = 0.7f)
+                )
+            }
+            if (issue.suggestion != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "💡 ${issue.suggestion}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 格式化文件大小
+ */
+private fun formatFileSize(size: Long): String {
+    return when {
+        size < 1024 -> "$size B"
+        size < 1024 * 1024 -> "${size / 1024} KB"
+        else -> String.format("%.1f MB", size / (1024.0 * 1024.0))
     }
 }
 
