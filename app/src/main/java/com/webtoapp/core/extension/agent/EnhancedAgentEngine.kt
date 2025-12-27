@@ -1,6 +1,7 @@
 package com.webtoapp.core.extension.agent
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.webtoapp.core.ai.AiApiClient
@@ -18,12 +19,19 @@ import kotlinx.coroutines.flow.*
  * - 流式输出 (developWithStream)
  * - ReAct 循环
  * - 工具链调用
- * - 自动修复（最多3次）
+ * - 自动修复（最多3次，使用迭代而非递归）
  * - 上下文保持
+ * - 超时保护
  * 
  * Requirements: 2.1, 2.6, 5.2
  */
 class EnhancedAgentEngine(private val context: Context) {
+    
+    companion object {
+        private const val TAG = "EnhancedAgentEngine"
+        private const val STREAM_TIMEOUT_MS = 120_000L  // 2分钟超时
+        private const val MAX_FIX_ATTEMPTS = 3
+    }
     
     private val gson = Gson()
     private val aiConfigManager = AiConfigManager(context)
@@ -55,6 +63,7 @@ class EnhancedAgentEngine(private val context: Context) {
         // 初始化工作记忆
         workingMemory.currentRequirement = requirement
         workingMemory.addUserMessage(requirement)
+        workingMemory.resetFixAttempts()  // 重置修复计数
         
         try {
             // 获取 AI 配置
@@ -87,45 +96,70 @@ class EnhancedAgentEngine(private val context: Context) {
             val systemPrompt = buildSystemPrompt(category, existingCode)
             val messages = buildMessages(systemPrompt, requirement, category, existingCode)
             
-            // 使用流式 API 调用
+            // 使用流式 API 调用（带超时保护）
             emit(AgentStreamEvent.StateChange(AgentState.GENERATING))
             _currentState.value = AgentState.GENERATING
             
             val contentBuilder = StringBuilder()
             val thinkingBuilder = StringBuilder()
+            var streamCompleted = false
             
-            aiClient.chatStream(apiKey, selectedModel.model, messages)
-                .collect { event ->
-                    when (event) {
-                        is StreamEvent.Started -> {
-                            // 流开始
+            try {
+                withTimeout(STREAM_TIMEOUT_MS) {
+                    aiClient.chatStream(apiKey, selectedModel.model, messages)
+                        .collect { event ->
+                            when (event) {
+                                is StreamEvent.Started -> {
+                                    Log.d(TAG, "Stream started")
+                                }
+                                is StreamEvent.Thinking -> {
+                                    thinkingBuilder.append(event.content)
+                                    emit(AgentStreamEvent.Thinking(event.content, thinkingBuilder.toString()))
+                                }
+                                is StreamEvent.Content -> {
+                                    contentBuilder.clear()
+                                    contentBuilder.append(event.accumulated)
+                                    emit(AgentStreamEvent.Content(event.delta, event.accumulated))
+                                }
+                                is StreamEvent.Done -> {
+                                    streamCompleted = true
+                                    Log.d(TAG, "Stream done, content length: ${event.fullContent.length}")
+                                }
+                                is StreamEvent.Error -> {
+                                    throw Exception(event.message)
+                                }
+                            }
                         }
-                        is StreamEvent.Thinking -> {
-                            thinkingBuilder.append(event.content)
-                            emit(AgentStreamEvent.Thinking(event.content, thinkingBuilder.toString()))
-                        }
-                        is StreamEvent.Content -> {
-                            contentBuilder.clear()
-                            contentBuilder.append(event.accumulated)
-                            emit(AgentStreamEvent.Content(event.delta, event.accumulated))
-                        }
-                        is StreamEvent.Done -> {
-                            // 流完成，解析生成的模块
-                            val responseText = event.fullContent
-                            processGeneratedContent(responseText, apiKey, selectedModel, category)
-                                .collect { agentEvent -> emit(agentEvent) }
-                        }
-                        is StreamEvent.Error -> {
-                            emit(AgentStreamEvent.Error(
-                                message = event.message,
-                                recoverable = true,
-                                rawResponse = contentBuilder.toString().takeIf { it.isNotEmpty() }
-                            ))
-                        }
-                    }
                 }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "Stream timeout after ${STREAM_TIMEOUT_MS}ms")
+                emit(AgentStreamEvent.Error(
+                    message = "请求超时，请检查网络连接后重试",
+                    code = "TIMEOUT",
+                    recoverable = true,
+                    rawResponse = contentBuilder.toString().takeIf { it.isNotEmpty() }
+                ))
+                return@flow
+            }
             
+            if (!streamCompleted || contentBuilder.isEmpty()) {
+                emit(AgentStreamEvent.Error(
+                    message = "AI 响应为空，请重试",
+                    code = "EMPTY_RESPONSE",
+                    recoverable = true
+                ))
+                return@flow
+            }
+            
+            // 流完成，处理生成的内容
+            val responseText = contentBuilder.toString()
+            processGeneratedContentIterative(responseText, apiKey, selectedModel, category)
+                .collect { agentEvent -> emit(agentEvent) }
+            
+        } catch (e: CancellationException) {
+            throw e  // 重新抛出取消异常
         } catch (e: Exception) {
+            Log.e(TAG, "Error in developWithStream", e)
             emit(AgentStreamEvent.StateChange(AgentState.ERROR))
             _currentState.value = AgentState.ERROR
             workingMemory.lastError = e.message
@@ -138,18 +172,18 @@ class EnhancedAgentEngine(private val context: Context) {
 
     
     /**
-     * 处理生成的内容
+     * 处理生成的内容（迭代版本，避免递归 Flow 问题）
      * 解析模块、执行语法检查、自动修复
      */
-    private fun processGeneratedContent(
+    private fun processGeneratedContentIterative(
         responseText: String,
         apiKey: ApiKeyConfig,
         savedModel: SavedModel,
         category: ModuleCategory?
     ): Flow<AgentStreamEvent> = flow {
         // 解析生成的模块
-        val generatedModule = parseGeneratedModule(responseText)
-        if (generatedModule == null) {
+        val parsedModule = parseGeneratedModule(responseText)
+        if (parsedModule == null) {
             emit(AgentStreamEvent.Error(
                 message = "无法解析 AI 生成的代码",
                 rawResponse = responseText
@@ -157,41 +191,82 @@ class EnhancedAgentEngine(private val context: Context) {
             return@flow
         }
         
-        workingMemory.updateModule(generatedModule)
-        emit(AgentStreamEvent.ModuleGenerated(generatedModule))
+        var currentModule: GeneratedModuleData = parsedModule
+        workingMemory.updateModule(currentModule)
+        emit(AgentStreamEvent.ModuleGenerated(currentModule))
         
-        // 执行语法检查
-        emit(AgentStreamEvent.StateChange(AgentState.SYNTAX_CHECKING))
-        _currentState.value = AgentState.SYNTAX_CHECKING
+        // 语法检查和自动修复循环（迭代而非递归）
+        var fixAttempt = 0
+        var syntaxValid = false
         
-        val syntaxCheckRequest = ToolCallRequest(
-            toolName = "syntax_check",
-            arguments = mapOf("code" to generatedModule.jsCode, "language" to "javascript")
-        )
-        
-        val syntaxToolInfo = ToolCallInfo.fromRequest(syntaxCheckRequest)
-            .copy(status = ToolStatus.EXECUTING)
-        emit(AgentStreamEvent.ToolStart(syntaxToolInfo))
-        workingMemory.recordToolCall(syntaxToolInfo)
-        
-        val syntaxResult = toolExecutor.execute(syntaxCheckRequest)
-        val completedSyntaxInfo = ToolCallInfo.fromResult(syntaxToolInfo, syntaxResult)
-        emit(AgentStreamEvent.ToolComplete(completedSyntaxInfo))
-        workingMemory.updateToolCallResult(syntaxToolInfo.callId, syntaxResult)
-        
-        val syntaxCheck = syntaxResult.result as? SyntaxCheckResult
-        
-        if (syntaxCheck != null && !syntaxCheck.valid) {
-            // 尝试自动修复
-            tryAutoFix(generatedModule, syntaxCheck, apiKey, savedModel)
-                .collect { emit(it) }
+        while (fixAttempt <= MAX_FIX_ATTEMPTS && !syntaxValid) {
+            // 执行语法检查
+            emit(AgentStreamEvent.StateChange(AgentState.SYNTAX_CHECKING))
+            _currentState.value = AgentState.SYNTAX_CHECKING
+            
+            val syntaxCheckRequest = ToolCallRequest(
+                toolName = "syntax_check",
+                arguments = mapOf("code" to currentModule.jsCode, "language" to "javascript")
+            )
+            
+            val syntaxToolInfo = ToolCallInfo.fromRequest(syntaxCheckRequest)
+                .copy(status = ToolStatus.EXECUTING)
+            emit(AgentStreamEvent.ToolStart(syntaxToolInfo))
+            workingMemory.recordToolCall(syntaxToolInfo)
+            
+            val syntaxResult = toolExecutor.execute(syntaxCheckRequest)
+            val completedSyntaxInfo = ToolCallInfo.fromResult(syntaxToolInfo, syntaxResult)
+            emit(AgentStreamEvent.ToolComplete(completedSyntaxInfo))
+            workingMemory.updateToolCallResult(syntaxToolInfo.callId, syntaxResult)
+            
+            val syntaxCheck = syntaxResult.result as? SyntaxCheckResult
+            
+            if (syntaxCheck == null || syntaxCheck.valid) {
+                syntaxValid = true
+                Log.d(TAG, "Syntax check passed")
+            } else {
+                // 语法有错误，尝试修复
+                fixAttempt++
+                
+                if (fixAttempt > MAX_FIX_ATTEMPTS) {
+                    // 达到最大修复次数
+                    val errorMessage = buildAutoFixLimitErrorMessage(syntaxCheck)
+                    emit(AgentStreamEvent.Error(
+                        message = errorMessage,
+                        code = "MAX_FIX_ATTEMPTS_REACHED",
+                        recoverable = true
+                    ))
+                    break
+                }
+                
+                Log.d(TAG, "Syntax errors found, attempting fix $fixAttempt/$MAX_FIX_ATTEMPTS")
+                
+                // 尝试修复
+                emit(AgentStreamEvent.StateChange(AgentState.FIXING))
+                _currentState.value = AgentState.FIXING
+                
+                val fixedModule = tryFixSyntaxErrors(currentModule, syntaxCheck, apiKey, savedModel, fixAttempt)
+                
+                if (fixedModule != null) {
+                    currentModule = fixedModule
+                    workingMemory.updateModule(currentModule)
+                    emit(AgentStreamEvent.ModuleGenerated(currentModule))
+                } else {
+                    // 修复失败
+                    emit(AgentStreamEvent.Error(
+                        message = "自动修复失败，请手动检查代码",
+                        code = "AUTO_FIX_FAILED",
+                        recoverable = true
+                    ))
+                    break
+                }
+            }
         }
         
         // 执行安全扫描
         emit(AgentStreamEvent.StateChange(AgentState.SECURITY_SCANNING))
         _currentState.value = AgentState.SECURITY_SCANNING
         
-        val currentModule = workingMemory.currentModule ?: generatedModule
         val securityRequest = ToolCallRequest(
             toolName = "security_scan",
             arguments = mapOf("code" to currentModule.jsCode)
@@ -227,43 +302,24 @@ class EnhancedAgentEngine(private val context: Context) {
     }
     
     /**
-     * 尝试自动修复语法错误
-     * 最多尝试 3 次
+     * 尝试修复语法错误（单次修复，不递归）
      * 
-     * Requirements: 5.3, 5.4
+     * @return 修复后的模块，如果修复失败返回 null
      */
-    private suspend fun tryAutoFix(
+    private suspend fun tryFixSyntaxErrors(
         module: GeneratedModuleData,
         syntaxResult: SyntaxCheckResult,
         apiKey: ApiKeyConfig,
-        savedModel: SavedModel
-    ): Flow<AgentStreamEvent> = flow {
-        // 检查是否还可以尝试修复
-        if (!workingMemory.canAttemptFix()) {
-            val errorMessage = buildAutoFixLimitErrorMessage(syntaxResult)
-            emit(AgentStreamEvent.Error(
-                message = errorMessage,
-                code = "MAX_FIX_ATTEMPTS_REACHED",
-                recoverable = true
-            ))
-            return@flow
-        }
-        
-        emit(AgentStreamEvent.StateChange(AgentState.FIXING))
-        _currentState.value = AgentState.FIXING
-        workingMemory.incrementFixAttempt()
-        
-        val currentAttempt = workingMemory.fixAttemptCount
-        val maxAttempts = workingMemory.maxFixAttempts
-        
-        // 构建修复提示
+        savedModel: SavedModel,
+        attemptNumber: Int
+    ): GeneratedModuleData? {
         val errorMessages = syntaxResult.errors.joinToString("\n") { error ->
             "- 第 ${error.line} 行, 第 ${error.column} 列: ${error.message}" +
                 (error.suggestion?.let { "\n  建议: $it" } ?: "")
         }
         
         val fixPrompt = """
-请修复以下 JavaScript 代码中的语法错误（第 $currentAttempt/$maxAttempts 次尝试）：
+请修复以下 JavaScript 代码中的语法错误（第 $attemptNumber/$MAX_FIX_ATTEMPTS 次尝试）：
 
 **错误列表**：
 $errorMessages
@@ -282,99 +338,31 @@ ${module.jsCode}
             mapOf("role" to "user", "content" to fixPrompt)
         )
         
-        // 记录修复工具调用
-        val fixToolInfo = ToolCallInfo(
-            toolName = "ai_fix_code",
-            toolIcon = "🩹",
-            parameters = mapOf(
-                "attempt" to currentAttempt,
-                "max_attempts" to maxAttempts,
-                "error_count" to syntaxResult.errors.size
-            ),
-            status = ToolStatus.EXECUTING
-        )
-        emit(AgentStreamEvent.ToolStart(fixToolInfo))
-        workingMemory.recordToolCall(fixToolInfo)
-        
-        val response = aiClient.chat(apiKey, savedModel.model, messages)
-        
-        if (response.isSuccess) {
-            val fixedCode = response.getOrNull() ?: run {
-                val failedInfo = fixToolInfo.copy(
-                    status = ToolStatus.FAILED,
-                    error = "AI 返回空响应"
-                )
-                emit(AgentStreamEvent.ToolComplete(failedInfo))
-                return@flow
+        return try {
+            val response = withTimeout(60_000) {
+                aiClient.chat(apiKey, savedModel.model, messages)
             }
             
-            // 提取代码块
-            val codePattern = Regex("```(?:javascript|js)\\s*([\\s\\S]*?)\\s*```")
-            val code = codePattern.find(fixedCode)?.groupValues?.get(1) ?: fixedCode
-            
-            val fixedModule = module.copy(jsCode = code.trim())
-            workingMemory.updateModule(fixedModule)
-            
-            // 更新工具调用状态
-            val completedFixInfo = fixToolInfo.copy(
-                status = ToolStatus.SUCCESS,
-                result = mapOf("fixed_code_length" to code.trim().length)
-            )
-            emit(AgentStreamEvent.ToolComplete(completedFixInfo))
-            
-            emit(AgentStreamEvent.ModuleGenerated(fixedModule))
-            
-            // 重新检查语法
-            emit(AgentStreamEvent.StateChange(AgentState.SYNTAX_CHECKING))
-            _currentState.value = AgentState.SYNTAX_CHECKING
-            
-            val recheckRequest = ToolCallRequest(
-                toolName = "syntax_check",
-                arguments = mapOf("code" to fixedModule.jsCode, "language" to "javascript")
-            )
-            
-            val recheckToolInfo = ToolCallInfo.fromRequest(recheckRequest)
-                .copy(status = ToolStatus.EXECUTING)
-            emit(AgentStreamEvent.ToolStart(recheckToolInfo))
-            workingMemory.recordToolCall(recheckToolInfo)
-            
-            val recheckResult = toolExecutor.execute(recheckRequest)
-            val completedRecheckInfo = ToolCallInfo.fromResult(recheckToolInfo, recheckResult)
-            emit(AgentStreamEvent.ToolComplete(completedRecheckInfo))
-            workingMemory.updateToolCallResult(recheckToolInfo.callId, recheckResult)
-            
-            val newSyntaxCheck = recheckResult.result as? SyntaxCheckResult
-            
-            if (newSyntaxCheck != null && !newSyntaxCheck.valid) {
-                // 仍有错误，检查是否可以继续尝试
-                if (workingMemory.canAttemptFix()) {
-                    // 递归尝试修复
-                    tryAutoFix(fixedModule, newSyntaxCheck, apiKey, savedModel)
-                        .collect { emit(it) }
-                } else {
-                    // 达到最大尝试次数
-                    val errorMessage = buildAutoFixLimitErrorMessage(newSyntaxCheck)
-                    emit(AgentStreamEvent.Error(
-                        message = errorMessage,
-                        code = "MAX_FIX_ATTEMPTS_REACHED",
-                        recoverable = true
-                    ))
-                }
+            if (response.isSuccess) {
+                val fixedCode = response.getOrNull() ?: return null
+                
+                // 提取代码块
+                val codePattern = Regex("```(?:javascript|js)\\s*([\\s\\S]*?)\\s*```")
+                val code = codePattern.find(fixedCode)?.groupValues?.get(1) ?: fixedCode
+                
+                if (code.isBlank()) return null
+                
+                module.copy(jsCode = code.trim())
+            } else {
+                Log.e(TAG, "Fix request failed: ${response.exceptionOrNull()?.message}")
+                null
             }
-            // 如果语法正确，不需要额外操作，流程会继续
-        } else {
-            // AI 调用失败
-            val failedInfo = fixToolInfo.copy(
-                status = ToolStatus.FAILED,
-                error = response.exceptionOrNull()?.message ?: "AI 调用失败"
-            )
-            emit(AgentStreamEvent.ToolComplete(failedInfo))
-            
-            emit(AgentStreamEvent.Error(
-                message = "自动修复失败: ${response.exceptionOrNull()?.message}",
-                code = "AI_FIX_FAILED",
-                recoverable = true
-            ))
+        } catch (e: TimeoutCancellationException) {
+            Log.e(TAG, "Fix request timeout")
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Fix request error", e)
+            null
         }
     }
     
@@ -390,7 +378,7 @@ ${module.jsCode}
         } else ""
         
         return """
-已达到最大自动修复次数 (${workingMemory.maxFixAttempts}次)，代码仍有语法错误，请手动修复：
+已达到最大自动修复次数 (${MAX_FIX_ATTEMPTS}次)，代码仍有语法错误，请手动修复：
 $errorSummary$moreErrors
         """.trimIndent()
     }

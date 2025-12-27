@@ -361,7 +361,6 @@ private fun CodeContentArea(
 ) {
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
-    val lines = code.lines()
     
     var textFieldValue by remember(code) { 
         mutableStateOf(TextFieldValue(code)) 
@@ -374,15 +373,21 @@ private fun CodeContentArea(
         }
     }
     
+    // 根据模式选择显示的内容源
+    // 可编辑模式：使用 textFieldValue.text（实时编辑内容）
+    // 只读模式：使用 code 参数
+    val displayText = if (isEditable) textFieldValue.text else code
+    val displayLines = displayText.lines()
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 200.dp, max = 400.dp)
             .verticalScroll(verticalScrollState)
     ) {
-        // 行号列
+        // 行号列 - 使用 displayLines 确保行号与内容同步
         LineNumberColumn(
-            lineCount = lines.size,
+            lineCount = displayLines.size,
             colors = colors
         )
         
@@ -394,7 +399,7 @@ private fun CodeContentArea(
                 .padding(12.dp)
         ) {
             if (isEditable) {
-                // 可编辑模式
+                // 可编辑模式 - 使用透明文本 + 语法高亮装饰层
                 BasicTextField(
                     value = textFieldValue,
                     onValueChange = { newValue ->
@@ -405,16 +410,16 @@ private fun CodeContentArea(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
                         lineHeight = 20.sp,
-                        color = colors.text
+                        color = Color.Transparent // 输入层文本透明，只显示光标
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     modifier = Modifier.fillMaxWidth()
                 ) { innerTextField ->
                     // 显示语法高亮的装饰器
                     Box {
-                        // 背景高亮层
+                        // 语法高亮层 - 使用 displayLines 确保与输入同步
                         Column {
-                            lines.forEach { line ->
+                            displayLines.forEach { line ->
                                 Text(
                                     text = highlightSyntax(line, language, colors),
                                     style = TextStyle(
@@ -425,17 +430,17 @@ private fun CodeContentArea(
                                 )
                             }
                         }
-                        // 实际输入层（透明）
+                        // 实际输入层（透明文本，只显示光标和处理输入）
                         Box(modifier = Modifier.matchParentSize()) {
                             innerTextField()
                         }
                     }
                 }
             } else {
-                // 只读模式
+                // 只读模式 - 使用 displayLines（已从 code 计算）
                 SelectionContainer {
                     Column {
-                        lines.forEach { line ->
+                        displayLines.forEach { line ->
                             Text(
                                 text = highlightSyntax(line, language, colors),
                                 style = TextStyle(

@@ -30,6 +30,7 @@
     </style>
 
     <!-- 全屏沉浸式主题 - 用于导出的独立App（Shell/Media） -->
+    <!-- 注意：此主题仅用于需要强制全屏的场景（如媒体应用） -->
     <style name="Theme.WebToApp.Fullscreen" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -45,6 +46,22 @@
         <item name="android:windowTranslucentNavigation">false</item>
         <!-- 内容绘制到系统栏下方 -->
         <item name="android:fitsSystemWindows">false</item>
+    </style>
+    
+    <!-- Shell模式主题 - 用于导出的独立App，支持动态控制全屏 -->
+    <!-- 不强制全屏，由代码根据配置动态控制 -->
+    <style name="Theme.WebToApp.Shell" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <!-- 状态栏和导航栏透明，但不隐藏 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- 支持刘海屏/挖孔屏 -->
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
+        <!-- 禁用半透明效果 -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
     </style>
 
     <style name="Theme.WebToApp.Splash" parent="Theme.SplashScreen">

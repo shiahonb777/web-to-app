@@ -359,6 +359,14 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.7.4
+**Bug Fixes**
+- Fixed HTML app not showing status bar issue
+- Fixed some system apps showing empty names
+- Fixed code block content overlay issue in AI Module Developer
+- Fixed tool calling failure in AI HTML Coding
+- Optimized AI HTML Coding prompts and model compatibility
+
 ### v1.7.3
 **New Features & Improvements**
 - Status bar color follows theme: Defaults to theme color, light background for light theme, dark background for dark theme

@@ -37,6 +37,7 @@ class HtmlCodingAgent(private val context: Context) {
     
     companion object {
         private const val TAG = "HtmlCodingAgent"
+        private const val STREAM_TIMEOUT_MS = 120_000L  // 2分钟超时
     }
     
     // 当前 HTML 代码（用于编辑操作，兼容旧逻辑）
@@ -950,6 +951,11 @@ class HtmlCodingAgent(private val context: Context) {
     /**
      * 流式开发 HTML
      * 文件直接写入项目文件夹，支持版本迭代
+     * 
+     * 修复：
+     * 1. 使用 emitAll 替代嵌套 collect
+     * 2. 添加超时保护
+     * 3. 简化 HTML 提取逻辑
      */
     fun developWithStream(
         requirement: String,
@@ -1002,240 +1008,73 @@ class HtmlCodingAgent(private val context: Context) {
                 currentHtmlCode = currentHtml
             }
             
-            // 构建系统提示词
-            val systemPrompt = buildToolCallingSystemPrompt(sessionConfig, currentHtmlCode.takeIf { it.isNotBlank() })
-            val messages = listOf(
-                mapOf("role" to "system", "content" to systemPrompt),
-                mapOf("role" to "user", "content" to requirement)
-            )
+            // 检查模型是否支持工具调用
+            // 某些模型/平台不支持 OpenAI 格式的工具调用
+            val modelId = selectedModel.model.id.lowercase()
+            val providerName = apiKey.provider.name.lowercase()
+            val baseUrl = (apiKey.baseUrl ?: "").lowercase()
             
-            // 构建工具定义 - 支持两种方式：代码在参数中或在文本流中
-            val tools = listOf(
-                mapOf(
-                    "type" to "function",
-                    "function" to mapOf(
-                        "name" to "write_html",
-                        "description" to "创建 HTML 文件并写入代码。将完整的 HTML 代码作为 html 参数传入。",
-                        "parameters" to mapOf(
-                            "type" to "object",
-                            "properties" to mapOf(
-                                "html" to mapOf(
-                                    "type" to "string",
-                                    "description" to "完整的 HTML 代码，包含 <!DOCTYPE html> 声明"
-                                ),
-                                "filename" to mapOf(
-                                    "type" to "string",
-                                    "description" to "文件名，默认为 index.html"
-                                )
-                            ),
-                            "required" to listOf("html")
-                        )
-                    )
-                )
-            )
-            
-            Log.d(TAG, "Using tool calling mode with write_html tool")
-            
-            val htmlBuilder = StringBuilder()
-            val thinkingBuilder = StringBuilder()
-            val textBuilder = StringBuilder()
-            var toolCallStarted = false
-            var isCapturingCodeFromText = false  // 从文本流中捕获代码
-            var isCapturingCodeFromArgs = false  // 从工具参数中捕获代码
-            var codeBlockStarted = false
-            
-            // 尝试使用工具调用模式
-            try {
-                aiClient.chatStreamWithTools(
-                    apiKey = apiKey,
-                    model = selectedModel.model,
-                    messages = messages,
-                    tools = tools,
-                    temperature = 0.7f
-                ).collect { event ->
-                    when (event) {
-                        is ToolStreamEvent.Started -> {
-                            emit(HtmlAgentEvent.StateChange(HtmlAgentState.GENERATING))
-                        }
-                        is ToolStreamEvent.ThinkingDelta -> {
-                            thinkingBuilder.append(event.delta)
-                            emit(HtmlAgentEvent.ThinkingDelta(event.delta, event.accumulated))
-                        }
-                        is ToolStreamEvent.TextDelta -> {
-                            val accumulated = event.accumulated
-                            
-                            // 如果已经从工具参数获取了代码，文本流只作为普通文本处理
-                            if (isCapturingCodeFromArgs) {
-                                textBuilder.append(event.delta)
-                                emit(HtmlAgentEvent.TextDelta(event.delta, textBuilder.toString()))
-                                return@collect
-                            }
-                            
-                            // 检测代码块开始 ```html（备选方案：AI 在文本中输出代码）
-                            if (!codeBlockStarted && accumulated.contains("```html")) {
-                                codeBlockStarted = true
-                                isCapturingCodeFromText = true
-                                if (!toolCallStarted) {
-                                    toolCallStarted = true
-                                    emit(HtmlAgentEvent.ToolCallStart("write_html", "text-stream"))
-                                }
-                                
-                                // 提取代码块开始前的文本
-                                val codeBlockIndex = accumulated.indexOf("```html")
-                                val textBefore = accumulated.substring(0, codeBlockIndex)
-                                if (textBefore.isNotBlank()) {
-                                    textBuilder.append(textBefore)
-                                }
-                                
-                                // 提取代码块开始后的内容
-                                val codeStart = codeBlockIndex + 7
-                                val actualStart = if (codeStart < accumulated.length && accumulated[codeStart] == '\n') {
-                                    codeStart + 1
-                                } else {
-                                    codeStart
-                                }
-                                if (actualStart < accumulated.length) {
-                                    val codeContent = accumulated.substring(actualStart)
-                                    val endIndex = codeContent.indexOf("```")
-                                    val code = if (endIndex >= 0) {
-                                        isCapturingCodeFromText = false
-                                        codeContent.substring(0, endIndex)
-                                    } else {
-                                        codeContent
-                                    }
-                                    if (code.isNotEmpty()) {
-                                        htmlBuilder.clear()
-                                        htmlBuilder.append(code)
-                                        emit(HtmlAgentEvent.CodeDelta(code, htmlBuilder.toString()))
-                                    }
-                                }
-                            } else if (isCapturingCodeFromText) {
-                                // 检测代码块结束 ```
-                                if (event.delta.contains("```")) {
-                                    val remainingCode = event.delta.substringBefore("```")
-                                    if (remainingCode.isNotEmpty()) {
-                                        htmlBuilder.append(remainingCode)
-                                        emit(HtmlAgentEvent.CodeDelta(remainingCode, htmlBuilder.toString()))
-                                    }
-                                    isCapturingCodeFromText = false
-                                    // 代码块后的文本
-                                    val textAfter = event.delta.substringAfter("```", "")
-                                    if (textAfter.isNotBlank()) {
-                                        textBuilder.append(textAfter)
-                                        emit(HtmlAgentEvent.TextDelta(textAfter, textBuilder.toString()))
-                                    }
-                                } else {
-                                    htmlBuilder.append(event.delta)
-                                    emit(HtmlAgentEvent.CodeDelta(event.delta, htmlBuilder.toString()))
-                                }
-                            } else {
-                                // 普通文本
-                                textBuilder.append(event.delta)
-                                emit(HtmlAgentEvent.TextDelta(event.delta, textBuilder.toString()))
-                            }
-                        }
-                        is ToolStreamEvent.ToolCallStart -> {
-                            Log.d(TAG, "Tool call started: ${event.toolName}")
-                            if (event.toolName == "write_html" && !toolCallStarted) {
-                                toolCallStarted = true
-                                isCapturingCodeFromArgs = true
-                                htmlBuilder.clear()
-                                emit(HtmlAgentEvent.ToolCallStart(event.toolName, event.toolCallId))
-                            }
-                        }
-                        is ToolStreamEvent.ToolArgumentsDelta -> {
-                            // 从工具参数中提取 HTML 代码（主要方案）
-                            if (isCapturingCodeFromArgs) {
-                                val args = event.accumulated
-                                // 尝试从 JSON 参数中提取 HTML
-                                val htmlContent = extractHtmlFromArgs(args)
-                                if (htmlContent.isNotEmpty() && htmlContent != htmlBuilder.toString()) {
-                                    val delta = if (htmlBuilder.isEmpty()) {
-                                        htmlContent
-                                    } else {
-                                        // 计算增量
-                                        if (htmlContent.startsWith(htmlBuilder.toString())) {
-                                            htmlContent.substring(htmlBuilder.length)
-                                        } else {
-                                            htmlContent
-                                        }
-                                    }
-                                    htmlBuilder.clear()
-                                    htmlBuilder.append(htmlContent)
-                                    if (delta.isNotEmpty()) {
-                                        emit(HtmlAgentEvent.CodeDelta(delta, htmlBuilder.toString()))
-                                    }
-                                }
-                            }
-                        }
-                        is ToolStreamEvent.ToolCallComplete -> {
-                            Log.d(TAG, "Tool call complete: ${event.toolName}, args length: ${event.arguments.length}")
-                            if (event.toolName == "write_html") {
-                                // 最终提取完整的 HTML
-                                val finalHtml = extractHtmlFromArgs(event.arguments)
-                                if (finalHtml.isNotEmpty()) {
-                                    htmlBuilder.clear()
-                                    htmlBuilder.append(finalHtml)
-                                    emit(HtmlAgentEvent.CodeDelta("", htmlBuilder.toString()))
-                                }
-                                isCapturingCodeFromArgs = false
-                            }
-                        }
-                        is ToolStreamEvent.Done -> {
-                            val finalHtml = htmlBuilder.toString().trim()
-                            Log.d(TAG, "Stream done, finalHtml length: ${finalHtml.length}")
-                            
-                            if (finalHtml.isNotEmpty()) {
-                                currentHtmlCode = finalHtml
-                                
-                                // 写入文件到项目文件夹
-                                var fileInfo: ProjectFileInfo? = null
-                                val sid = currentSessionId
-                                if (sid != null) {
-                                    val existingFiles = projectFileManager.listFiles(sid)
-                                    val hasExisting = existingFiles.any { it.getBaseName() == "index" }
-                                    
-                                    fileInfo = projectFileManager.createFile(
-                                        sessionId = sid,
-                                        filename = "index.html",
-                                        content = finalHtml,
-                                        createNewVersion = hasExisting
-                                    )
-                                    
-                                    Log.d(TAG, "File created: ${fileInfo.name}, version=${fileInfo.version}")
-                                    
-                                    // 发送文件创建事件
-                                    emit(HtmlAgentEvent.FileCreated(fileInfo, isNewVersion = hasExisting))
-                                }
-                                
-                                val result = ToolExecutionResult(
-                                    success = true,
-                                    toolName = "write_html",
-                                    result = finalHtml,
-                                    isHtml = true,
-                                    fileInfo = fileInfo
-                                )
-                                emit(HtmlAgentEvent.ToolExecuted(result))
-                                emit(HtmlAgentEvent.HtmlComplete(finalHtml))
-                            }
-                            
-                            emit(HtmlAgentEvent.StateChange(HtmlAgentState.COMPLETED))
-                            emit(HtmlAgentEvent.Completed(textBuilder.toString(), emptyList()))
-                        }
-                        is ToolStreamEvent.Error -> {
-                            Log.w(TAG, "Tool calling failed: ${event.message}, falling back to simple mode")
-                            throw Exception(event.message)
-                        }
-                    }
+            // 检测不支持工具调用的情况
+            val supportsToolCalling = when {
+                // SiliconFlow 平台的某些模型可能不支持工具调用
+                baseUrl.contains("siliconflow") -> {
+                    // 只有明确支持工具调用的模型才使用
+                    modelId.contains("gpt") || modelId.contains("claude") || modelId.contains("glm-4")
                 }
-            } catch (e: Exception) {
-                // 回退到简单流式模式
-                Log.w(TAG, "Falling back to simple stream mode: ${e.message}")
-                developWithSimpleStream(requirement, currentHtmlCode.takeIf { it.isNotBlank() }, sessionConfig, selectedModel, apiKey).collect { event ->
-                    emit(event)
+                // Qwen 模型在某些平台可能不支持
+                modelId.contains("qwen") && !modelId.contains("qwen-max") -> {
+                    // Qwen-Max 支持工具调用，其他 Qwen 模型可能不支持
+                    false
+                }
+                // DeepSeek Coder 可能不支持工具调用
+                modelId.contains("deepseek") && modelId.contains("coder") -> false
+                // 默认假设支持
+                else -> true
+            }
+            
+            Log.d(TAG, "Model: $modelId, Provider: $providerName, BaseUrl: $baseUrl, SupportsToolCalling: $supportsToolCalling")
+            
+            // 尝试使用工具调用模式，失败则回退到简单模式
+            var useSimpleMode = !supportsToolCalling  // 如果不支持工具调用，直接使用简单模式
+            var toolCallError: String? = null
+            
+            if (!useSimpleMode) {
+                try {
+                    // 带超时的工具调用模式
+                    withTimeout(STREAM_TIMEOUT_MS) {
+                        developWithToolCalling(requirement, sessionConfig, selectedModel, apiKey)
+                            .collect { event -> emit(event) }
+                    }
+                } catch (e: TimeoutCancellationException) {
+                    Log.w(TAG, "Tool calling timeout, falling back to simple mode")
+                    useSimpleMode = true
+                    toolCallError = "请求超时"
+                } catch (e: Exception) {
+                    Log.w(TAG, "Tool calling failed: ${e.message}, falling back to simple mode")
+                    useSimpleMode = true
+                    toolCallError = e.message
+                }
+            } else {
+                Log.d(TAG, "Skipping tool calling mode (not supported), using simple mode directly")
+            }
+            
+            // 回退到简单模式
+            if (useSimpleMode) {
+                Log.d(TAG, "Using simple stream mode as fallback")
+                try {
+                    withTimeout(STREAM_TIMEOUT_MS) {
+                        developWithSimpleStreamInternal(requirement, currentHtmlCode.takeIf { it.isNotBlank() }, sessionConfig, selectedModel, apiKey)
+                            .collect { event -> emit(event) }
+                    }
+                } catch (e: TimeoutCancellationException) {
+                    emit(HtmlAgentEvent.Error("请求超时，请检查网络连接后重试"))
+                } catch (e: Exception) {
+                    emit(HtmlAgentEvent.Error("发生错误: ${e.message ?: toolCallError ?: "未知错误"}"))
                 }
             }
             
+        } catch (e: CancellationException) {
+            throw e  // 重新抛出取消异常
         } catch (e: Exception) {
             Log.e(TAG, "Error in developWithStream", e)
             emit(HtmlAgentEvent.Error("发生错误: ${e.message}"))
@@ -1243,81 +1082,598 @@ class HtmlCodingAgent(private val context: Context) {
     }.flowOn(Dispatchers.IO)
     
     /**
-     * 从工具参数中提取 HTML 代码
-     * 支持多种格式：JSON 对象、直接 HTML、带转义的字符串
+     * 使用工具调用模式开发 HTML（内部方法）
      */
-    private fun extractHtmlFromArgs(args: String): String {
+    private fun developWithToolCalling(
+        requirement: String,
+        sessionConfig: SessionConfig?,
+        selectedModel: SavedModel,
+        apiKey: ApiKeyConfig
+    ): Flow<HtmlAgentEvent> = flow {
+        // 获取启用的工具
+        val enabledTools = getEnabledTools(sessionConfig)
+        
+        // 构建系统提示词（包含启用的工具描述）
+        val systemPrompt = buildToolCallingSystemPrompt(sessionConfig, currentHtmlCode.takeIf { it.isNotBlank() }, enabledTools)
+        val messages = listOf(
+            mapOf("role" to "system", "content" to systemPrompt),
+            mapOf("role" to "user", "content" to requirement)
+        )
+        
+        // 将启用的工具转换为 OpenAI 格式
+        val tools = enabledTools.map { it.toOpenAiFormat() }
+        
+        Log.d(TAG, "Using tool calling mode with ${enabledTools.size} tools: ${enabledTools.map { it.name }}")
+        
+        val htmlBuilder = StringBuilder()
+        val thinkingBuilder = StringBuilder()
+        val textBuilder = StringBuilder()
+        var toolCallStarted = false
+        var isCapturingCodeFromText = false
+        var isCapturingCodeFromArgs = false
+        var codeBlockStarted = false
+        var streamCompleted = false
+        
+        // 跟踪当前工具调用
+        var currentToolName = ""
+        var currentToolCallId = ""
+        val currentToolArgs = StringBuilder()
+        val pendingToolCalls = mutableListOf<Triple<String, String, String>>() // (toolName, toolCallId, arguments)
+        
+        aiClient.chatStreamWithTools(
+            apiKey = apiKey,
+            model = selectedModel.model,
+            messages = messages,
+            tools = tools,
+            temperature = 0.7f
+        ).collect { event ->
+            when (event) {
+                is ToolStreamEvent.Started -> {
+                    emit(HtmlAgentEvent.StateChange(HtmlAgentState.GENERATING))
+                }
+                is ToolStreamEvent.ThinkingDelta -> {
+                    thinkingBuilder.append(event.delta)
+                    emit(HtmlAgentEvent.ThinkingDelta(event.delta, event.accumulated))
+                }
+                is ToolStreamEvent.TextDelta -> {
+                    val accumulated = event.accumulated
+                    
+                    // 如果已经从工具参数获取了代码，文本流只作为普通文本处理
+                    if (isCapturingCodeFromArgs) {
+                        textBuilder.append(event.delta)
+                        emit(HtmlAgentEvent.TextDelta(event.delta, textBuilder.toString()))
+                        return@collect
+                    }
+                    
+                    // 检测代码块开始 ```html 或 ```（备选方案：AI 在文本中输出代码）
+                    if (!codeBlockStarted) {
+                        // 检测 ```html 代码块
+                        val htmlCodeBlockIndex = accumulated.indexOf("```html", ignoreCase = true)
+                        // 检测 ``` 代码块（后面跟着 HTML 内容）
+                        val genericCodeBlockIndex = if (htmlCodeBlockIndex < 0) {
+                            val idx = accumulated.indexOf("```")
+                            // 检查 ``` 后面是否是 HTML 内容
+                            if (idx >= 0) {
+                                val afterBlock = accumulated.substring(idx + 3).trimStart()
+                                if (afterBlock.startsWith("<!DOCTYPE", ignoreCase = true) || 
+                                    afterBlock.startsWith("<html", ignoreCase = true) ||
+                                    afterBlock.startsWith("<head", ignoreCase = true) ||
+                                    afterBlock.startsWith("<body", ignoreCase = true)) {
+                                    idx
+                                } else -1
+                            } else -1
+                        } else -1
+                        
+                        val codeBlockIndex = if (htmlCodeBlockIndex >= 0) htmlCodeBlockIndex else genericCodeBlockIndex
+                        val codeBlockMarkerLength = if (htmlCodeBlockIndex >= 0) 7 else 3  // "```html" vs "```"
+                        
+                        if (codeBlockIndex >= 0) {
+                            codeBlockStarted = true
+                            isCapturingCodeFromText = true
+                            if (!toolCallStarted) {
+                                toolCallStarted = true
+                                emit(HtmlAgentEvent.ToolCallStart("write_html", "text-stream"))
+                            }
+                            
+                            // 提取代码块开始前的文本
+                            val textBefore = accumulated.substring(0, codeBlockIndex)
+                            if (textBefore.isNotBlank()) {
+                                textBuilder.append(textBefore)
+                            }
+                            
+                            // 提取代码块开始后的内容
+                            val codeStart = codeBlockIndex + codeBlockMarkerLength
+                            val actualStart = if (codeStart < accumulated.length && accumulated[codeStart] == '\n') {
+                                codeStart + 1
+                            } else {
+                                codeStart
+                            }
+                            if (actualStart < accumulated.length) {
+                                val codeContent = accumulated.substring(actualStart)
+                                val endIndex = codeContent.indexOf("```")
+                                val code = if (endIndex >= 0) {
+                                    isCapturingCodeFromText = false
+                                    codeContent.substring(0, endIndex)
+                                } else {
+                                    codeContent
+                                }
+                                if (code.isNotEmpty()) {
+                                    htmlBuilder.clear()
+                                    htmlBuilder.append(code)
+                                    emit(HtmlAgentEvent.CodeDelta(code, htmlBuilder.toString()))
+                                }
+                            }
+                            return@collect
+                        }
+                        
+                        // 检测直接的 HTML 内容（不带代码块标记）
+                        val doctypeIndex = accumulated.indexOf("<!DOCTYPE", ignoreCase = true)
+                        val htmlTagIndex = accumulated.indexOf("<html", ignoreCase = true)
+                        val directHtmlIndex = when {
+                            doctypeIndex >= 0 && htmlTagIndex >= 0 -> minOf(doctypeIndex, htmlTagIndex)
+                            doctypeIndex >= 0 -> doctypeIndex
+                            htmlTagIndex >= 0 -> htmlTagIndex
+                            else -> -1
+                        }
+                        
+                        if (directHtmlIndex >= 0) {
+                            codeBlockStarted = true
+                            isCapturingCodeFromText = true
+                            if (!toolCallStarted) {
+                                toolCallStarted = true
+                                emit(HtmlAgentEvent.ToolCallStart("write_html", "text-stream"))
+                            }
+                            
+                            // 提取 HTML 开始前的文本
+                            val textBefore = accumulated.substring(0, directHtmlIndex)
+                            if (textBefore.isNotBlank()) {
+                                textBuilder.append(textBefore)
+                            }
+                            
+                            // 提取 HTML 内容
+                            val htmlContent = accumulated.substring(directHtmlIndex)
+                            if (htmlContent.isNotEmpty()) {
+                                htmlBuilder.clear()
+                                htmlBuilder.append(htmlContent)
+                                emit(HtmlAgentEvent.CodeDelta(htmlContent, htmlBuilder.toString()))
+                            }
+                            return@collect
+                        }
+                    }
+                    
+                    if (isCapturingCodeFromText) {
+                        // 检测代码块结束 ```
+                        if (event.delta.contains("```")) {
+                            val remainingCode = event.delta.substringBefore("```")
+                            if (remainingCode.isNotEmpty()) {
+                                htmlBuilder.append(remainingCode)
+                                emit(HtmlAgentEvent.CodeDelta(remainingCode, htmlBuilder.toString()))
+                            }
+                            isCapturingCodeFromText = false
+                            // 代码块后的文本
+                            val textAfter = event.delta.substringAfter("```", "")
+                            if (textAfter.isNotBlank()) {
+                                textBuilder.append(textAfter)
+                                emit(HtmlAgentEvent.TextDelta(textAfter, textBuilder.toString()))
+                            }
+                        } else {
+                            htmlBuilder.append(event.delta)
+                            emit(HtmlAgentEvent.CodeDelta(event.delta, htmlBuilder.toString()))
+                        }
+                    } else {
+                        // 普通文本
+                        textBuilder.append(event.delta)
+                        emit(HtmlAgentEvent.TextDelta(event.delta, textBuilder.toString()))
+                    }
+                }
+                is ToolStreamEvent.ToolCallStart -> {
+                    Log.d(TAG, "Tool call started: ${event.toolName}")
+                    currentToolName = event.toolName
+                    currentToolCallId = event.toolCallId
+                    currentToolArgs.clear()
+                    toolCallStarted = true
+                    emit(HtmlAgentEvent.ToolCallStart(event.toolName, event.toolCallId))
+                    
+                    // 只有 write_html 和 edit_html 需要捕获代码
+                    if (event.toolName == "write_html" || event.toolName == "edit_html") {
+                        isCapturingCodeFromArgs = true
+                        htmlBuilder.clear()
+                    }
+                }
+                is ToolStreamEvent.ToolArgumentsDelta -> {
+                    currentToolArgs.clear()
+                    currentToolArgs.append(event.accumulated)
+                    
+                    // 只有 write_html 需要实时显示代码
+                    if (currentToolName == "write_html" && isCapturingCodeFromArgs) {
+                        val args = event.accumulated
+                        // 尝试从 JSON 参数中提取 HTML
+                        val htmlContent = extractHtmlFromArgsIncremental(args)
+                        if (htmlContent.isNotEmpty() && htmlContent != htmlBuilder.toString()) {
+                            val delta = if (htmlBuilder.isEmpty()) {
+                                htmlContent
+                            } else {
+                                // 计算增量
+                                if (htmlContent.startsWith(htmlBuilder.toString())) {
+                                    htmlContent.substring(htmlBuilder.length)
+                                } else {
+                                    htmlContent
+                                }
+                            }
+                            htmlBuilder.clear()
+                            htmlBuilder.append(htmlContent)
+                            if (delta.isNotEmpty()) {
+                                emit(HtmlAgentEvent.CodeDelta(delta, htmlBuilder.toString()))
+                            }
+                        }
+                    }
+                }
+                is ToolStreamEvent.ToolCallComplete -> {
+                    Log.d(TAG, "Tool call complete: ${event.toolName}, args length: ${event.arguments.length}")
+                    
+                    // 记录工具调用，稍后统一执行
+                    pendingToolCalls.add(Triple(event.toolName, event.toolCallId, event.arguments))
+                    
+                    // 对于 write_html，提取最终 HTML
+                    if (event.toolName == "write_html") {
+                        val finalHtml = extractHtmlFromArgsFinal(event.arguments)
+                        if (finalHtml.isNotEmpty()) {
+                            htmlBuilder.clear()
+                            htmlBuilder.append(finalHtml)
+                            emit(HtmlAgentEvent.CodeDelta("", htmlBuilder.toString()))
+                        }
+                        isCapturingCodeFromArgs = false
+                    }
+                    
+                    // 重置当前工具状态
+                    currentToolName = ""
+                    currentToolCallId = ""
+                    currentToolArgs.clear()
+                }
+                is ToolStreamEvent.Done -> {
+                    streamCompleted = true
+                    var finalHtml = htmlBuilder.toString().trim()
+                    val finalText = textBuilder.toString().trim()
+                    Log.d(TAG, "Stream done, finalHtml length: ${finalHtml.length}, finalText length: ${finalText.length}, pendingToolCalls: ${pendingToolCalls.size}")
+                    
+                    // 如果没有从工具调用获取到 HTML，尝试从文本内容中提取
+                    // 这是为了兼容不支持原生工具调用的模型（如某些 Qwen 模型）
+                    if (finalHtml.isEmpty() && finalText.isNotEmpty()) {
+                        Log.d(TAG, "No HTML from tool calls, trying to extract from text content")
+                        val extractedHtml = extractHtmlFromText(finalText)
+                        if (extractedHtml.isNotEmpty()) {
+                            Log.d(TAG, "Extracted HTML from text, length: ${extractedHtml.length}")
+                            finalHtml = extractedHtml
+                            htmlBuilder.clear()
+                            htmlBuilder.append(finalHtml)
+                        }
+                    }
+                    
+                    // 如果有待处理的工具调用，执行它们
+                    if (pendingToolCalls.isNotEmpty()) {
+                        for ((toolName, _, arguments) in pendingToolCalls) {
+                            Log.d(TAG, "Executing pending tool call: $toolName")
+                            
+                            when (toolName) {
+                                "write_html" -> {
+                                    // write_html 已经在上面处理了 HTML 提取
+                                    if (finalHtml.isNotEmpty()) {
+                                        currentHtmlCode = finalHtml
+                                        
+                                        // 写入文件到项目文件夹
+                                        var fileInfo: ProjectFileInfo? = null
+                                        val sid = currentSessionId
+                                        if (sid != null) {
+                                            val existingFiles = projectFileManager.listFiles(sid)
+                                            val hasExisting = existingFiles.any { it.getBaseName() == "index" }
+                                            
+                                            fileInfo = projectFileManager.createFile(
+                                                sessionId = sid,
+                                                filename = "index.html",
+                                                content = finalHtml,
+                                                createNewVersion = hasExisting
+                                            )
+                                            
+                                            Log.d(TAG, "File created: ${fileInfo.name}, version=${fileInfo.version}")
+                                            emit(HtmlAgentEvent.FileCreated(fileInfo, isNewVersion = hasExisting))
+                                        }
+                                        
+                                        val result = ToolExecutionResult(
+                                            success = true,
+                                            toolName = "write_html",
+                                            result = finalHtml,
+                                            isHtml = true,
+                                            fileInfo = fileInfo
+                                        )
+                                        emit(HtmlAgentEvent.ToolExecuted(result))
+                                        emit(HtmlAgentEvent.HtmlComplete(finalHtml))
+                                    }
+                                }
+                                "edit_html", "get_console_logs", "check_syntax", "auto_fix" -> {
+                                    // 执行其他工具
+                                    val result = executeToolCall(toolName, arguments)
+                                    emit(HtmlAgentEvent.ToolExecuted(result))
+                                    
+                                    // 如果是 edit_html 且成功，更新 HTML
+                                    if (toolName == "edit_html" && result.success && result.isHtml) {
+                                        currentHtmlCode = result.result
+                                        emit(HtmlAgentEvent.HtmlComplete(result.result))
+                                        
+                                        // 写入文件
+                                        val sid = currentSessionId
+                                        if (sid != null) {
+                                            val existingFiles = projectFileManager.listFiles(sid)
+                                            val hasExisting = existingFiles.any { it.getBaseName() == "index" }
+                                            
+                                            val fileInfo = projectFileManager.createFile(
+                                                sessionId = sid,
+                                                filename = "index.html",
+                                                content = result.result,
+                                                createNewVersion = hasExisting
+                                            )
+                                            emit(HtmlAgentEvent.FileCreated(fileInfo, isNewVersion = hasExisting))
+                                        }
+                                    }
+                                }
+                                "generate_image" -> {
+                                    // 图像生成需要异步处理
+                                    val result = executeToolCall(toolName, arguments)
+                                    if (result.isImageGeneration && result.result.startsWith("IMAGE_GENERATION_PENDING:")) {
+                                        // 解析图像生成参数
+                                        val params = result.result.removePrefix("IMAGE_GENERATION_PENDING:").split("|")
+                                        if (params.size >= 3) {
+                                            val prompt = params[0]
+                                            val style = params[1]
+                                            val size = params[2]
+                                            emit(HtmlAgentEvent.ImageGenerating(prompt))
+                                            
+                                            // 执行图像生成
+                                            val imageResult = executeImageGeneration(prompt, style, size, sessionConfig)
+                                            emit(HtmlAgentEvent.ToolExecuted(imageResult))
+                                            
+                                            if (imageResult.success && imageResult.imageData != null) {
+                                                emit(HtmlAgentEvent.ImageGenerated(imageResult.imageData, prompt))
+                                            }
+                                        }
+                                    } else {
+                                        emit(HtmlAgentEvent.ToolExecuted(result))
+                                    }
+                                }
+                                else -> {
+                                    Log.w(TAG, "Unknown tool: $toolName")
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 如果没有工具调用但有文本内容
+                    if (pendingToolCalls.isEmpty() && finalText.isNotEmpty()) {
+                        Log.d(TAG, "No tool calls, but has text content")
+                        
+                        // 如果从文本中提取到了 HTML，执行写入操作
+                        if (finalHtml.isNotEmpty()) {
+                            Log.d(TAG, "Executing write_html from extracted HTML")
+                            currentHtmlCode = finalHtml
+                            
+                            // 写入文件到项目文件夹
+                            var fileInfo: ProjectFileInfo? = null
+                            val sid = currentSessionId
+                            if (sid != null) {
+                                val existingFiles = projectFileManager.listFiles(sid)
+                                val hasExisting = existingFiles.any { it.getBaseName() == "index" }
+                                
+                                fileInfo = projectFileManager.createFile(
+                                    sessionId = sid,
+                                    filename = "index.html",
+                                    content = finalHtml,
+                                    createNewVersion = hasExisting
+                                )
+                                
+                                Log.d(TAG, "File created from extracted HTML: ${fileInfo.name}, version=${fileInfo.version}")
+                                emit(HtmlAgentEvent.FileCreated(fileInfo, isNewVersion = hasExisting))
+                            }
+                            
+                            val result = ToolExecutionResult(
+                                success = true,
+                                toolName = "write_html",
+                                result = finalHtml,
+                                isHtml = true,
+                                fileInfo = fileInfo
+                            )
+                            emit(HtmlAgentEvent.ToolExecuted(result))
+                            emit(HtmlAgentEvent.HtmlComplete(finalHtml))
+                        } else {
+                            // AI 返回了文字但没有代码，检查是否是"承诺要做但没做"的情况
+                            val textLower = finalText.lowercase()
+                            val isPromiseWithoutAction = textLower.contains("我来") || 
+                                textLower.contains("我将") || 
+                                textLower.contains("我会") ||
+                                textLower.contains("让我") ||
+                                textLower.contains("i will") ||
+                                textLower.contains("i'll") ||
+                                textLower.contains("let me")
+                            
+                            if (isPromiseWithoutAction) {
+                                Log.w(TAG, "AI promised to create but didn't output code, triggering fallback")
+                                throw Exception("AI 承诺创建但未输出代码，触发回退")
+                            }
+                            // 如果只是普通对话（如问候、解释等），允许通过
+                            Log.d(TAG, "AI returned text without code, treating as conversation")
+                        }
+                    }
+                    
+                    // 如果工具调用模式没有返回任何有效内容，抛出异常触发回退
+                    if (pendingToolCalls.isEmpty() && finalHtml.isEmpty() && finalText.isEmpty()) {
+                        Log.w(TAG, "Tool calling returned empty content, will fallback to simple mode")
+                        throw Exception("工具调用返回空内容")
+                    }
+                    
+                    emit(HtmlAgentEvent.StateChange(HtmlAgentState.COMPLETED))
+                    emit(HtmlAgentEvent.Completed(textBuilder.toString(), emptyList()))
+                }
+                is ToolStreamEvent.Error -> {
+                    throw Exception(event.message)
+                }
+            }
+        }
+        
+        // 如果流没有正常完成，抛出异常
+        if (!streamCompleted) {
+            throw Exception("流式响应未正常完成")
+        }
+    }
+    
+    /**
+     * 从工具参数中提取 HTML 内容（增量模式，用于流式传输）
+     * 简化版本，专注于从不完整 JSON 中提取
+     */
+    private fun extractHtmlFromArgsIncremental(args: String): String {
         if (args.isBlank()) return ""
         
         val trimmed = args.trim()
         
-        // 1. 尝试作为 JSON 对象解析
+        // 查找 "html": " 后的内容（流式传输时 JSON 可能不完整）
+        val htmlKeyIndex = trimmed.indexOf("\"html\"")
+        if (htmlKeyIndex < 0) return ""
+        
+        // 找到冒号后的引号
+        val colonIndex = trimmed.indexOf(':', htmlKeyIndex + 6)
+        if (colonIndex < 0) return ""
+        
+        val quoteIndex = trimmed.indexOf('"', colonIndex + 1)
+        if (quoteIndex < 0) return ""
+        
+        // 提取引号后的内容
+        val startIndex = quoteIndex + 1
+        if (startIndex >= trimmed.length) return ""
+        
+        // 找到结束引号（考虑转义）
+        var endIndex = startIndex
+        var escaped = false
+        while (endIndex < trimmed.length) {
+            val c = trimmed[endIndex]
+            if (escaped) {
+                escaped = false
+            } else if (c == '\\') {
+                escaped = true
+            } else if (c == '"') {
+                break
+            }
+            endIndex++
+        }
+        
+        if (endIndex <= startIndex) return ""
+        
+        // 解码转义字符
+        val extracted = trimmed.substring(startIndex, endIndex)
+        return decodeJsonString(extracted)
+    }
+    
+    /**
+     * 从工具参数中提取 HTML 内容（最终模式，用于完整 JSON）
+     */
+    private fun extractHtmlFromArgsFinal(args: String): String {
+        if (args.isBlank()) return ""
+        
+        val trimmed = args.trim()
+        
+        // 1. 尝试作为完整 JSON 对象解析
         try {
             val json = JsonParser.parseString(trimmed)
             if (json.isJsonObject) {
                 val obj = json.asJsonObject
-                // 尝试不同的字段名
                 val content = obj.get("html")?.asString 
                     ?: obj.get("content")?.asString
                     ?: obj.get("code")?.asString
                 if (!content.isNullOrBlank()) {
                     return content
                 }
-            } else if (json.isJsonPrimitive && json.asJsonPrimitive.isString) {
-                return json.asString
             }
         } catch (e: Exception) {
-            // JSON 解析失败，尝试其他方式
+            Log.d(TAG, "JSON parse failed, trying incremental extraction: ${e.message}")
         }
         
-        // 2. 尝试从不完整的 JSON 中提取（流式传输时 JSON 可能不完整）
-        // 查找 "html": " 或 "content": " 或 "code": " 后的内容
-        val patterns = listOf(
-            "\"html\"\\s*:\\s*\"" to "\"",
-            "\"content\"\\s*:\\s*\"" to "\"",
-            "\"code\"\\s*:\\s*\"" to "\""
-        )
+        // 2. 回退到增量提取
+        return extractHtmlFromArgsIncremental(trimmed)
+    }
+    
+    /**
+     * 解码 JSON 字符串中的转义字符
+     */
+    private fun decodeJsonString(str: String): String {
+        return str
+            .replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\r", "\r")
+            .replace("\\\"", "\"")
+            .replace("\\\\/", "/")
+            .replace("\\\\", "\\")
+    }
+    
+    /**
+     * 从文本内容中提取 HTML 代码
+     * 用于兼容不支持原生工具调用的模型
+     * 
+     * 支持以下格式：
+     * 1. ```html ... ``` 代码块
+     * 2. 直接的 <!DOCTYPE html> ... </html> 内容
+     * 3. 直接的 <html> ... </html> 内容
+     */
+    private fun extractHtmlFromText(text: String): String {
+        if (text.isBlank()) return ""
         
-        for ((startPattern, _) in patterns) {
-            val regex = Regex(startPattern)
-            val match = regex.find(trimmed)
-            if (match != null) {
-                val startIndex = match.range.last + 1
-                // 找到对应的结束引号（考虑转义）
-                var endIndex = startIndex
-                var escaped = false
-                while (endIndex < trimmed.length) {
-                    val c = trimmed[endIndex]
-                    if (escaped) {
-                        escaped = false
-                    } else if (c == '\\') {
-                        escaped = true
-                    } else if (c == '"') {
-                        break
-                    }
-                    endIndex++
-                }
-                
-                if (endIndex > startIndex) {
-                    val extracted = trimmed.substring(startIndex, endIndex)
-                    // 解码转义字符
-                    val decoded = extracted
-                        .replace("\\n", "\n")
-                        .replace("\\t", "\t")
-                        .replace("\\\"", "\"")
-                        .replace("\\\\", "\\")
-                    if (decoded.isNotBlank()) {
-                        return decoded
-                    }
-                }
+        // 1. 尝试从 ```html 代码块中提取
+        val codeBlockPattern = Pattern.compile("```html\\s*\\n?([\\s\\S]*?)```", Pattern.CASE_INSENSITIVE)
+        val codeBlockMatcher = codeBlockPattern.matcher(text)
+        if (codeBlockMatcher.find()) {
+            val extracted = codeBlockMatcher.group(1)?.trim() ?: ""
+            if (extracted.isNotEmpty()) {
+                Log.d(TAG, "Extracted HTML from code block, length: ${extracted.length}")
+                return extracted
             }
         }
         
-        // 3. 如果以 <!DOCTYPE 或 <html 开头，直接作为 HTML
-        if (trimmed.startsWith("<!DOCTYPE", ignoreCase = true) || 
-            trimmed.startsWith("<html", ignoreCase = true) ||
-            (trimmed.startsWith("<") && trimmed.contains("</html>", ignoreCase = true))) {
-            return trimmed
+        // 2. 尝试从 ``` 代码块中提取（不带语言标记）
+        val genericCodeBlockPattern = Pattern.compile("```\\s*\\n?([\\s\\S]*?)```")
+        val genericMatcher = genericCodeBlockPattern.matcher(text)
+        while (genericMatcher.find()) {
+            val extracted = genericMatcher.group(1)?.trim() ?: ""
+            // 检查是否是 HTML 内容
+            if (extracted.contains("<!DOCTYPE", ignoreCase = true) || 
+                extracted.contains("<html", ignoreCase = true)) {
+                Log.d(TAG, "Extracted HTML from generic code block, length: ${extracted.length}")
+                return extracted
+            }
+        }
+        
+        // 3. 尝试直接提取 <!DOCTYPE html> ... </html>
+        val doctypePattern = Pattern.compile("(<!DOCTYPE\\s+html[\\s\\S]*?</html>)", Pattern.CASE_INSENSITIVE)
+        val doctypeMatcher = doctypePattern.matcher(text)
+        if (doctypeMatcher.find()) {
+            val extracted = doctypeMatcher.group(1)?.trim() ?: ""
+            if (extracted.isNotEmpty()) {
+                Log.d(TAG, "Extracted HTML from DOCTYPE pattern, length: ${extracted.length}")
+                return extracted
+            }
+        }
+        
+        // 4. 尝试直接提取 <html> ... </html>
+        val htmlPattern = Pattern.compile("(<html[\\s\\S]*?</html>)", Pattern.CASE_INSENSITIVE)
+        val htmlMatcher = htmlPattern.matcher(text)
+        if (htmlMatcher.find()) {
+            val extracted = htmlMatcher.group(1)?.trim() ?: ""
+            if (extracted.isNotEmpty()) {
+                Log.d(TAG, "Extracted HTML from html tag pattern, length: ${extracted.length}")
+                return extracted
+            }
+        }
+        
+        // 5. 如果文本本身就是以 <!DOCTYPE 或 <html 开头，直接返回
+        val trimmedText = text.trim()
+        if (trimmedText.startsWith("<!DOCTYPE", ignoreCase = true) || 
+            trimmedText.startsWith("<html", ignoreCase = true)) {
+            Log.d(TAG, "Text itself is HTML, length: ${trimmedText.length}")
+            return trimmedText
         }
         
         return ""
@@ -1325,31 +1681,122 @@ class HtmlCodingAgent(private val context: Context) {
     
     /**
      * 构建工具调用模式的系统提示词
+     * @param config 会话配置
+     * @param currentHtml 当前 HTML 代码
+     * @param enabledTools 启用的工具列表
      */
-    private fun buildToolCallingSystemPrompt(config: SessionConfig?, currentHtml: String?): String {
+    private fun buildToolCallingSystemPrompt(config: SessionConfig?, currentHtml: String?, enabledTools: List<HtmlTool> = emptyList()): String {
+        val hasWriteHtml = enabledTools.any { it.name == "write_html" }
+        val hasEditHtml = enabledTools.any { it.name == "edit_html" }
+        val hasCheckSyntax = enabledTools.any { it.name == "check_syntax" }
+        val hasGetConsoleLogs = enabledTools.any { it.name == "get_console_logs" }
+        val hasAutoFix = enabledTools.any { it.name == "auto_fix" }
+        val hasGenerateImage = enabledTools.any { it.name == "generate_image" }
+        
         return buildString {
             appendLine("你是移动端前端开发专家，为手机APP WebView创建HTML页面。")
             appendLine()
             
-            appendLine("# 【强制规则】工具使用")
-            appendLine("你必须且只能通过 write_html 工具来提交代码。这是强制要求！")
+            // 【最重要的规则】直接执行，不要解释
+            appendLine("# 【最重要规则】直接执行")
+            appendLine("- 当用户要求创建/修改网页时，**立即**调用工具或输出代码")
+            appendLine("- **禁止**先说\"我来为您创建...\"然后不输出代码")
+            appendLine("- **禁止**只解释要做什么而不实际执行")
+            appendLine("- 如果要创建网页，必须在回复中包含完整的 HTML 代码")
             appendLine()
+            
+            // 工具使用规则
+            appendLine("# 工具使用")
+            if (enabledTools.isNotEmpty()) {
+                appendLine("可用工具：")
+                enabledTools.forEach { tool ->
+                    appendLine("- **${tool.name}**: ${tool.description}")
+                }
+                appendLine()
+            }
+            
             appendLine("## 必须使用工具的情况：")
-            appendLine("- 创建新网页")
-            appendLine("- 修改现有代码")
-            appendLine("- 生成任何 HTML/CSS/JavaScript 代码")
+            appendLine("- 创建新网页 → 使用 write_html")
+            if (hasEditHtml) {
+                appendLine("- 小范围修改代码 → 使用 edit_html")
+            }
+            if (hasCheckSyntax) {
+                appendLine("- 检查代码语法 → 使用 check_syntax")
+            }
+            if (hasGetConsoleLogs) {
+                appendLine("- 查看运行时错误 → 使用 get_console_logs")
+            }
+            if (hasAutoFix) {
+                appendLine("- 自动修复错误 → 使用 auto_fix")
+            }
+            if (hasGenerateImage) {
+                appendLine("- 生成图像 → 使用 generate_image")
+            }
             appendLine()
-            appendLine("## 工具调用方式：")
-            appendLine("调用 write_html 工具，将完整的 HTML 代码作为 html 参数传入。")
+            
+            // 工具详细说明
+            appendLine("## 工具详细说明")
             appendLine()
-            appendLine("## 禁止行为：")
-            appendLine("- 禁止在回复文本中直接输出代码")
-            appendLine("- 禁止使用 ```html 代码块展示代码")
-            appendLine("- 禁止说\"这是代码\"然后粘贴代码")
-            appendLine()
-            appendLine("## 正确示例：")
-            appendLine("用户：\"创建一个红色按钮\"")
-            appendLine("你应该：调用 write_html 工具，html 参数包含完整的 HTML 代码")
+            
+            if (hasWriteHtml) {
+                appendLine("### write_html")
+                appendLine("创建或完全重写 HTML 页面。将完整的 HTML 代码作为 html 参数传入。")
+                appendLine("参数：")
+                appendLine("- html (必需): 完整的 HTML 代码，包含 <!DOCTYPE html> 声明")
+                appendLine("- filename (可选): 文件名，默认为 index.html")
+                appendLine()
+            }
+            
+            if (hasEditHtml) {
+                appendLine("### edit_html")
+                appendLine("编辑现有 HTML 代码的指定部分。适合小范围精确修改。")
+                appendLine("参数：")
+                appendLine("- operation (必需): 操作类型 - replace/insert_before/insert_after/delete")
+                appendLine("- target (必需): 要定位的目标代码片段（必须精确匹配现有代码）")
+                appendLine("- content (可选): 新的代码内容（delete 操作时可省略）")
+                appendLine()
+            }
+            
+            if (hasCheckSyntax) {
+                appendLine("### check_syntax")
+                appendLine("检查代码语法错误，返回错误列表和位置信息。")
+                appendLine("参数：")
+                appendLine("- code (必需): 要检查的代码内容")
+                appendLine("- language (可选): 代码语言 - html/css/javascript")
+                appendLine()
+            }
+            
+            if (hasGetConsoleLogs) {
+                appendLine("### get_console_logs")
+                appendLine("获取页面运行时的控制台日志和 JavaScript 错误。")
+                appendLine("参数：")
+                appendLine("- filter (可选): 日志过滤类型 - all/error/warn/log")
+                appendLine()
+            }
+            
+            if (hasAutoFix) {
+                appendLine("### auto_fix")
+                appendLine("根据错误信息自动修复代码问题。")
+                appendLine("参数：")
+                appendLine("- code (必需): 需要修复的原始代码")
+                appendLine("- errors (必需): 需要修复的错误描述列表")
+                appendLine()
+            }
+            
+            if (hasGenerateImage) {
+                appendLine("### generate_image")
+                appendLine("使用 AI 生成图像，返回 base64 格式可直接嵌入 HTML。")
+                appendLine("参数：")
+                appendLine("- prompt (必需): 图像描述")
+                appendLine("- style (可选): 风格 - realistic/cartoon/illustration/icon/abstract/minimalist")
+                appendLine("- size (可选): 尺寸 - small/medium/large")
+                appendLine()
+            }
+            
+            appendLine("## 输出方式")
+            appendLine("- 优先使用工具调用（如 write_html）来输出代码")
+            appendLine("- 如果无法使用工具调用，可以使用 ```html 代码块输出完整 HTML 代码")
+            appendLine("- 不要在普通文本中混入代码片段")
             appendLine()
             
             appendLine("# 回复格式")
@@ -1390,6 +1837,167 @@ class HtmlCodingAgent(private val context: Context) {
     
     /**
      * 简单流式模式（回退方案，从文本中提取 HTML）
+     * 内部方法，不再嵌套 collect
+     */
+    private fun developWithSimpleStreamInternal(
+        requirement: String,
+        currentHtml: String?,
+        sessionConfig: SessionConfig?,
+        selectedModel: SavedModel,
+        apiKey: ApiKeyConfig
+    ): Flow<HtmlAgentEvent> = flow {
+        val systemPrompt = buildSimpleSystemPrompt(sessionConfig, currentHtml)
+        val messages = listOf(
+            mapOf("role" to "system", "content" to systemPrompt),
+            mapOf("role" to "user", "content" to requirement)
+        )
+        
+        Log.d(TAG, "Using simple stream mode (fallback)")
+        
+        val htmlBuilder = StringBuilder()
+        val thinkingBuilder = StringBuilder()
+        val textBuilder = StringBuilder()
+        val pendingBuffer = StringBuilder()
+        var isCapturingHtml = false
+        var htmlStarted = false
+        var streamCompleted = false
+        
+        aiClient.chatStream(
+            apiKey = apiKey,
+            model = selectedModel.model,
+            messages = messages,
+            temperature = 0.7f
+        ).collect { event ->
+            when (event) {
+                is com.webtoapp.core.ai.StreamEvent.Started -> {
+                    emit(HtmlAgentEvent.StateChange(HtmlAgentState.GENERATING))
+                }
+                is com.webtoapp.core.ai.StreamEvent.Thinking -> {
+                    thinkingBuilder.append(event.content)
+                    emit(HtmlAgentEvent.ThinkingDelta(event.content, thinkingBuilder.toString()))
+                }
+                is com.webtoapp.core.ai.StreamEvent.Content -> {
+                    val content = event.delta
+                    val accumulated = event.accumulated
+                    
+                    // 检测 HTML 开始
+                    if (!htmlStarted && (accumulated.contains("<!DOCTYPE", ignoreCase = true) || 
+                        accumulated.contains("<html", ignoreCase = true))) {
+                        htmlStarted = true
+                        isCapturingHtml = true
+                        // 找到 HTML 开始位置
+                        val htmlStart = accumulated.indexOf("<!DOCTYPE", ignoreCase = true)
+                            .takeIf { it >= 0 } 
+                            ?: accumulated.indexOf("<html", ignoreCase = true)
+                        if (htmlStart >= 0) {
+                            pendingBuffer.clear()
+                            val textBeforeHtml = accumulated.substring(0, htmlStart)
+                            if (textBeforeHtml.isNotBlank()) {
+                                textBuilder.clear()
+                                textBuilder.append(textBeforeHtml)
+                            }
+                            htmlBuilder.append(accumulated.substring(htmlStart))
+                            emit(HtmlAgentEvent.ToolCallStart("write_html", "auto"))
+                            emit(HtmlAgentEvent.CodeDelta(accumulated.substring(htmlStart), htmlBuilder.toString()))
+                        }
+                    } else if (isCapturingHtml) {
+                        htmlBuilder.append(content)
+                        emit(HtmlAgentEvent.CodeDelta(content, htmlBuilder.toString()))
+                    } else {
+                        // 检查是否可能是 HTML 开始的不完整标签
+                        val combinedText = pendingBuffer.toString() + content
+                        val potentialHtmlStart = combinedText.lastIndexOf('<')
+                        
+                        if (potentialHtmlStart >= 0) {
+                            val afterLessThan = combinedText.substring(potentialHtmlStart)
+                            val couldBeDoctype = "<!DOCTYPE".startsWith(afterLessThan, ignoreCase = true)
+                            val couldBeHtml = "<html".startsWith(afterLessThan, ignoreCase = true)
+                            
+                            if ((couldBeDoctype || couldBeHtml) && afterLessThan.length < 9) {
+                                val safeText = combinedText.substring(0, potentialHtmlStart)
+                                if (safeText.isNotEmpty()) {
+                                    textBuilder.append(safeText)
+                                    emit(HtmlAgentEvent.TextDelta(safeText, textBuilder.toString()))
+                                }
+                                pendingBuffer.clear()
+                                pendingBuffer.append(afterLessThan)
+                            } else {
+                                if (pendingBuffer.isNotEmpty()) {
+                                    textBuilder.append(pendingBuffer)
+                                    emit(HtmlAgentEvent.TextDelta(pendingBuffer.toString(), textBuilder.toString()))
+                                    pendingBuffer.clear()
+                                }
+                                textBuilder.append(content)
+                                emit(HtmlAgentEvent.TextDelta(content, textBuilder.toString()))
+                            }
+                        } else {
+                            if (pendingBuffer.isNotEmpty()) {
+                                textBuilder.append(pendingBuffer)
+                                emit(HtmlAgentEvent.TextDelta(pendingBuffer.toString(), textBuilder.toString()))
+                                pendingBuffer.clear()
+                            }
+                            textBuilder.append(content)
+                            emit(HtmlAgentEvent.TextDelta(content, textBuilder.toString()))
+                        }
+                    }
+                }
+                is com.webtoapp.core.ai.StreamEvent.Done -> {
+                    streamCompleted = true
+                    if (pendingBuffer.isNotEmpty()) {
+                        textBuilder.append(pendingBuffer)
+                        pendingBuffer.clear()
+                    }
+                    
+                    val finalHtml = htmlBuilder.toString().trim()
+                    
+                    if (finalHtml.isNotEmpty()) {
+                        currentHtmlCode = finalHtml
+                        
+                        // 写入文件到项目文件夹
+                        var fileInfo: ProjectFileInfo? = null
+                        val sid = currentSessionId
+                        if (sid != null) {
+                            val existingFiles = projectFileManager.listFiles(sid)
+                            val hasExisting = existingFiles.any { it.getBaseName() == "index" }
+                            
+                            fileInfo = projectFileManager.createFile(
+                                sessionId = sid,
+                                filename = "index.html",
+                                content = finalHtml,
+                                createNewVersion = hasExisting
+                            )
+                            
+                            Log.d(TAG, "SimpleStream: File created: ${fileInfo.name}, version=${fileInfo.version}")
+                            emit(HtmlAgentEvent.FileCreated(fileInfo, isNewVersion = hasExisting))
+                        }
+                        
+                        val result = ToolExecutionResult(
+                            success = true,
+                            toolName = "write_html",
+                            result = finalHtml,
+                            isHtml = true,
+                            fileInfo = fileInfo
+                        )
+                        emit(HtmlAgentEvent.ToolExecuted(result))
+                        emit(HtmlAgentEvent.HtmlComplete(finalHtml))
+                    }
+                    
+                    emit(HtmlAgentEvent.StateChange(HtmlAgentState.COMPLETED))
+                    emit(HtmlAgentEvent.Completed(textBuilder.toString(), emptyList()))
+                }
+                is com.webtoapp.core.ai.StreamEvent.Error -> {
+                    throw Exception(event.message)
+                }
+            }
+        }
+        
+        if (!streamCompleted) {
+            throw Exception("流式响应未正常完成")
+        }
+    }
+    
+    /**
+     * 简单流式模式（公开方法，保持向后兼容）
      */
     private fun developWithSimpleStream(
         requirement: String,

@@ -8,7 +8,7 @@ import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.ai.ToolStreamEvent as ApiToolStreamEvent
 import com.webtoapp.data.model.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.UUID
 
@@ -21,6 +21,11 @@ import java.util.UUID
  * 3. 上下文工程（对话历史 + 代码状态 + 工具结果）
  * 4. ReAct 循环（推理 -> 行动 -> 观察）
  * 5. 流式工具调用解析
+ * 
+ * 修复：
+ * - 添加超时保护
+ * - 改进 ReAct 循环的终止条件
+ * - 优化工具结果消息格式
  */
 class HtmlCodingToolSystem(private val context: Context) {
     
@@ -31,6 +36,7 @@ class HtmlCodingToolSystem(private val context: Context) {
     companion object {
         private const val TAG = "HtmlCodingToolSystem"
         private const val MAX_TOOL_ITERATIONS = 5  // 最大工具调用轮次
+        private const val STREAM_TIMEOUT_MS = 90_000L  // 90秒超时
     }
     
     // ==================== 工具定义 ====================
@@ -502,6 +508,11 @@ ${agentContext.currentHtml}
     
     /**
      * 执行 Agent 对话（带工具调用的 ReAct 循环）
+     * 
+     * 修复：
+     * - 添加超时保护
+     * - 改进循环终止条件
+     * - 优化错误处理
      */
     fun chat(
         userMessage: String,
@@ -518,6 +529,7 @@ ${agentContext.currentHtml}
         // ReAct 循环
         while (agentContext.iterationCount < MAX_TOOL_ITERATIONS) {
             agentContext.iterationCount++
+            Log.d(TAG, "ReAct iteration ${agentContext.iterationCount}/$MAX_TOOL_ITERATIONS")
             
             val messages = buildMessages(agentContext, config)
             val contentBuilder = StringBuilder()
@@ -525,76 +537,90 @@ ${agentContext.currentHtml}
             var currentToolCallId = ""
             var currentToolName = ""
             val currentToolArgs = StringBuilder()
+            var streamCompleted = false
             
             // 调用 AI
             emit(AgentEvent.Thinking("正在思考..."))
             
             try {
-                // 尝试使用原生工具调用 API
-                aiClient.chatStreamWithTools(
-                    apiKey = apiKey,
-                    model = model.model,
-                    messages = messages.map { 
-                        mapOf("role" to (it["role"] as String), "content" to (it["content"] as String))
-                    },
-                    tools = tools.map { it.toOpenAIFormat() }
-                ).collect { event ->
-                    when (event) {
-                        is ApiToolStreamEvent.Started -> {
-                            // 流开始
-                        }
-                        is ApiToolStreamEvent.TextDelta -> {
-                            contentBuilder.clear()
-                            contentBuilder.append(event.accumulated)
-                            emit(AgentEvent.Content(event.delta, event.accumulated))
-                        }
-                        is ApiToolStreamEvent.ThinkingDelta -> {
-                            emit(AgentEvent.Thinking(event.accumulated))
-                        }
-                        is ApiToolStreamEvent.ToolCallStart -> {
-                            currentToolCallId = event.toolCallId
-                            currentToolName = event.toolName
-                            currentToolArgs.clear()
-                            emit(AgentEvent.ToolCallStart(event.toolName, event.toolCallId))
-                        }
-                        is ApiToolStreamEvent.ToolArgumentsDelta -> {
-                            currentToolArgs.clear()
-                            currentToolArgs.append(event.accumulated)
-                            // 实时显示工具参数（如 HTML 代码）
-                            emit(AgentEvent.ToolArgumentsStreaming(
-                                currentToolName,
-                                event.toolCallId,
-                                event.delta,
-                                event.accumulated
-                            ))
-                        }
-                        is ApiToolStreamEvent.ToolCallComplete -> {
-                            toolCalls.add(ToolCall(
-                                id = event.toolCallId,
-                                name = event.toolName,
-                                arguments = event.arguments
-                            ))
-                            emit(AgentEvent.ToolCallComplete(event.toolName, event.toolCallId, event.arguments))
-                        }
-                        is ApiToolStreamEvent.Done -> {
-                            // 流完成
-                        }
-                        is ApiToolStreamEvent.Error -> {
-                            // 如果原生工具调用失败，尝试从文本中解析
-                            val textToolCalls = parseToolCallsFromText(contentBuilder.toString())
-                            if (textToolCalls.isNotEmpty()) {
-                                toolCalls.addAll(textToolCalls)
-                            } else {
-                                emit(AgentEvent.Error(event.message))
+                // 带超时的 AI 调用
+                withTimeout(STREAM_TIMEOUT_MS) {
+                    aiClient.chatStreamWithTools(
+                        apiKey = apiKey,
+                        model = model.model,
+                        messages = messages.map { 
+                            mapOf("role" to (it["role"] as String), "content" to (it["content"] as String))
+                        },
+                        tools = tools.map { it.toOpenAIFormat() }
+                    ).collect { event ->
+                        when (event) {
+                            is ApiToolStreamEvent.Started -> {
+                                // 流开始
+                            }
+                            is ApiToolStreamEvent.TextDelta -> {
+                                contentBuilder.clear()
+                                contentBuilder.append(event.accumulated)
+                                emit(AgentEvent.Content(event.delta, event.accumulated))
+                            }
+                            is ApiToolStreamEvent.ThinkingDelta -> {
+                                emit(AgentEvent.Thinking(event.accumulated))
+                            }
+                            is ApiToolStreamEvent.ToolCallStart -> {
+                                currentToolCallId = event.toolCallId
+                                currentToolName = event.toolName
+                                currentToolArgs.clear()
+                                emit(AgentEvent.ToolCallStart(event.toolName, event.toolCallId))
+                            }
+                            is ApiToolStreamEvent.ToolArgumentsDelta -> {
+                                currentToolArgs.clear()
+                                currentToolArgs.append(event.accumulated)
+                                // 实时显示工具参数（如 HTML 代码）
+                                emit(AgentEvent.ToolArgumentsStreaming(
+                                    currentToolName,
+                                    event.toolCallId,
+                                    event.delta,
+                                    event.accumulated
+                                ))
+                            }
+                            is ApiToolStreamEvent.ToolCallComplete -> {
+                                toolCalls.add(ToolCall(
+                                    id = event.toolCallId,
+                                    name = event.toolName,
+                                    arguments = event.arguments
+                                ))
+                                emit(AgentEvent.ToolCallComplete(event.toolName, event.toolCallId, event.arguments))
+                            }
+                            is ApiToolStreamEvent.Done -> {
+                                streamCompleted = true
+                            }
+                            is ApiToolStreamEvent.Error -> {
+                                // 如果原生工具调用失败，尝试从文本中解析
+                                val textToolCalls = parseToolCallsFromText(contentBuilder.toString())
+                                if (textToolCalls.isNotEmpty()) {
+                                    toolCalls.addAll(textToolCalls)
+                                } else {
+                                    throw Exception(event.message)
+                                }
                             }
                         }
                     }
                 }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "AI call timeout")
+                emit(AgentEvent.Error("请求超时，请重试"))
+                break
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Log.e(TAG, "Tool calling failed, trying text parsing", e)
-                // 如果原生工具调用失败，尝试从文本中解析
+                Log.e(TAG, "AI call failed", e)
+                // 尝试从已收到的文本中解析工具调用
                 val textToolCalls = parseToolCallsFromText(contentBuilder.toString())
-                toolCalls.addAll(textToolCalls)
+                if (textToolCalls.isNotEmpty()) {
+                    toolCalls.addAll(textToolCalls)
+                } else {
+                    emit(AgentEvent.Error("AI 调用失败: ${e.message}"))
+                    break
+                }
             }
             
             // 记录助手消息
@@ -605,11 +631,13 @@ ${agentContext.currentHtml}
             
             // 如果没有工具调用，结束循环
             if (toolCalls.isEmpty()) {
+                Log.d(TAG, "No tool calls, ending ReAct loop")
                 emit(AgentEvent.Completed(contentBuilder.toString(), agentContext.currentHtml))
                 break
             }
             
             // 执行工具调用
+            var hasHtmlUpdate = false
             for (call in toolCalls) {
                 emit(AgentEvent.ToolExecuting(call.name, call.id))
                 
@@ -617,6 +645,7 @@ ${agentContext.currentHtml}
                     @Suppress("UNCHECKED_CAST")
                     gson.fromJson(call.arguments, Map::class.java) as Map<String, Any?>
                 } catch (e: Exception) {
+                    Log.w(TAG, "Failed to parse tool arguments: ${e.message}")
                     mapOf<String, Any?>()
                 }
                 
@@ -626,6 +655,7 @@ ${agentContext.currentHtml}
                 // 更新 HTML 状态
                 if (result.isHtml && result.result is String) {
                     agentContext.currentHtml = result.result
+                    hasHtmlUpdate = true
                 }
                 
                 // 添加工具结果到上下文
@@ -639,10 +669,19 @@ ${agentContext.currentHtml}
                     emit(AgentEvent.PreviewRequested(agentContext.currentHtml))
                 }
             }
+            
+            // 如果有 HTML 更新且是 write_html 工具，可能不需要继续循环
+            if (hasHtmlUpdate && toolCalls.any { it.name == "write_html" }) {
+                Log.d(TAG, "HTML updated via write_html, completing")
+                emit(AgentEvent.HtmlUpdated(agentContext.currentHtml, "HTML 已更新"))
+                emit(AgentEvent.Completed(contentBuilder.toString(), agentContext.currentHtml))
+                break
+            }
         }
         
         if (agentContext.iterationCount >= MAX_TOOL_ITERATIONS) {
             emit(AgentEvent.Warning("达到最大工具调用次数限制"))
+            emit(AgentEvent.Completed("", agentContext.currentHtml))
         }
         
     }.flowOn(Dispatchers.IO)

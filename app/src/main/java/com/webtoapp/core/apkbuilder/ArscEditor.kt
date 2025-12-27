@@ -13,8 +13,9 @@ class ArscEditor {
 
     companion object {
         private const val TAG = "ArscEditor"
-        // 使用空格字符填充，与strings.xml中的占位符保持一致
-        private const val PAD_CHAR = ' '
+        // 使用空字符填充，空字符不会显示且作为字符串终止符
+        // 注意：不能使用普通空格，否则某些桌面启动器会显示空格或不显示应用名
+        private const val PAD_CHAR = '\u0000'
     }
 
     /**

@@ -322,8 +322,9 @@ class WebViewActivity : AppCompatActivity() {
         // 请求通知权限（Android 13+），用于显示下载进度和完成通知
         requestNotificationPermissionIfNeeded()
         
-        // 默认启用沉浸式模式（状态栏透明，内容铺满屏幕）
-        immersiveFullscreenEnabled = true
+        // 初始化时不启用沉浸式模式，等待 WebApp 配置加载后再根据 hideToolbar 决定
+        // 这样可以确保非全屏模式下状态栏正常显示
+        immersiveFullscreenEnabled = false
         applyImmersiveFullscreen(immersiveFullscreenEnabled)
 
         val appId = intent.getLongExtra(EXTRA_APP_ID, -1)

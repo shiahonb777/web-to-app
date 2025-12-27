@@ -77,13 +77,13 @@
         </activity>
 
         <!-- WebView容器Activity -->
-        <!-- 使用全屏沉浸式主题，内容铺满整个屏幕 -->
+        <!-- 使用Shell主题，支持动态控制是否全屏 -->
         <activity
             android:name=".ui.webview.WebViewActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="true"
             android:hardwareAccelerated="true"
-            android:theme="@style/Theme.WebToApp.Fullscreen">
+            android:theme="@style/Theme.WebToApp.Shell">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -91,13 +91,13 @@
         </activity>
 
         <!-- Shell模式Activity（用于导出的独立App） -->
-        <!-- 使用全屏沉浸式主题，内容铺满整个屏幕 -->
+        <!-- 使用Shell主题，支持动态控制是否全屏 -->
         <activity
             android:name=".ui.shell.ShellActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="false"
             android:hardwareAccelerated="true"
-            android:theme="@style/Theme.WebToApp.Fullscreen" />
+            android:theme="@style/Theme.WebToApp.Shell" />
         
         <!-- 媒体应用Activity（图片/视频展示App） -->
         <!-- 使用全屏沉浸式主题，视频/图片铺满整个屏幕 -->

@@ -960,6 +960,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     val contentBuilder = StringBuilder()
                     var doneSent = false
                     var hasReceivedData = false
+                    var lastReceivedPayload = ""  // 记录最后收到的数据，用于调试
                     
                     var currentEvent: String? = null
                     val dataBuffer = StringBuilder()
@@ -969,6 +970,8 @@ val json = gson.fromJson(body, JsonObject::class.java)
                         dataBuffer.setLength(0)
                         if (payload.isEmpty()) return
                         hasReceivedData = true
+                        lastReceivedPayload = payload.take(500)  // 保存最后收到的数据（截取前500字符）
+                        android.util.Log.d("AiApiClient", "StreamChat received payload: ${payload.take(200)}...")
                         if (payload == "[DONE]" || currentEvent == "done" || currentEvent == "message_stop") {
                             if (!doneSent) {
                                 doneSent = true
@@ -1106,7 +1109,9 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             val debugInfo = if (!hasReceivedData) {
                                 "未收到任何数据，API可能不支持流式输出"
                             } else {
-                                "收到数据但解析失败，请检查API格式"
+                                // 记录详细日志帮助调试
+                                android.util.Log.e("AiApiClient", "StreamChat 解析失败，最后收到的数据: $lastReceivedPayload")
+                                "API返回数据格式异常，请查看日志或尝试其他模型。数据预览: ${lastReceivedPayload.take(100)}..."
                             }
                             trySend(StreamEvent.Error(debugInfo))
                         } else {
@@ -1700,14 +1705,22 @@ val json = gson.fromJson(body, JsonObject::class.java)
                         toolCallsMap: MutableMap<Int, ToolCallState>,
                         completedToolCalls: MutableList<ToolCallInfo>
                     ) {
+                        // 记录原始 JSON 用于调试
+                        android.util.Log.d("AiApiClient", "📦 Raw chunk: ${json.toString().take(300)}...")
+                        
                         val choicesArray = json.getAsJsonArray("choices")
-                        if (choicesArray == null || choicesArray.size() == 0) return
+                        if (choicesArray == null || choicesArray.size() == 0) {
+                            android.util.Log.w("AiApiClient", "⚠️ No choices in response: ${json.toString().take(200)}")
+                            return
+                        }
                         
                         val choiceObj = choicesArray.get(0)?.asJsonObject ?: return
                         val delta = choiceObj.getAsJsonObject("delta")
                         val finishReason = choiceObj.get("finish_reason")?.let { 
                             if (it.isJsonNull) null else it.asString 
                         }
+                        
+                        android.util.Log.d("AiApiClient", "📝 Delta: ${delta?.toString()?.take(200) ?: "null"}, finishReason: $finishReason")
                         
                         // 处理文本内容
                         delta?.get("content")?.let { contentElem ->
@@ -1745,12 +1758,13 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             trySend(ToolStreamEvent.ThinkingDelta(thinkingContent, thinkingBuilder.toString()))
                         }
                         
-                        // 处理工具调用
+                        // 处理工具调用 - 支持多种格式
+                        // 1. OpenAI 标准格式: delta.tool_calls
                         delta?.getAsJsonArray("tool_calls")?.forEach { tc ->
                             val tcObj = tc.asJsonObject
                             val index = tcObj.get("index")?.asInt ?: 0
                             
-                            android.util.Log.d("AiApiClient", "Tool call chunk: index=$index, tcObj=$tcObj")
+                            android.util.Log.d("AiApiClient", "Tool call chunk (delta.tool_calls): index=$index, tcObj=$tcObj")
                             
                             val state = toolCallsMap.getOrPut(index) { ToolCallState() }
                             
@@ -1782,8 +1796,95 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             }
                         }
                         
+                        // 2. 旧版 OpenAI 格式: delta.function_call
+                        if (toolCallsMap.isEmpty()) {
+                            delta?.getAsJsonObject("function_call")?.let { funcCall ->
+                                android.util.Log.d("AiApiClient", "Tool call chunk (delta.function_call): $funcCall")
+                                
+                                val state = toolCallsMap.getOrPut(0) { ToolCallState() }
+                                
+                                funcCall.get("name")?.asString?.let { name ->
+                                    if (state.name.isEmpty()) {
+                                        state.name = name
+                                        state.id = "func_call_0"
+                                        android.util.Log.d("AiApiClient", "Function call name: $name")
+                                        trySend(ToolStreamEvent.ToolCallStart(name, state.id))
+                                    }
+                                }
+                                
+                                funcCall.get("arguments")?.asString?.let { argsDelta ->
+                                    state.arguments.append(argsDelta)
+                                    android.util.Log.d("AiApiClient", "Function arguments delta: ${argsDelta.take(100)}...")
+                                    trySend(ToolStreamEvent.ToolArgumentsDelta(
+                                        state.id,
+                                        argsDelta,
+                                        state.arguments.toString()
+                                    ))
+                                }
+                            }
+                        }
+                        
+                        // 3. 某些模型在 message 而不是 delta 中返回工具调用（非流式部分）
+                        if (toolCallsMap.isEmpty()) {
+                            choiceObj.getAsJsonObject("message")?.let { message ->
+                                message.getAsJsonArray("tool_calls")?.forEach { tc ->
+                                    val tcObj = tc.asJsonObject
+                                    val index = tcObj.get("index")?.asInt ?: toolCallsMap.size
+                                    
+                                    android.util.Log.d("AiApiClient", "Tool call chunk (message.tool_calls): index=$index, tcObj=$tcObj")
+                                    
+                                    val state = toolCallsMap.getOrPut(index) { ToolCallState() }
+                                    
+                                    tcObj.get("id")?.asString?.let { id ->
+                                        state.id = id
+                                    }
+                                    
+                                    tcObj.getAsJsonObject("function")?.let { func ->
+                                        func.get("name")?.asString?.let { name ->
+                                            state.name = name
+                                            trySend(ToolStreamEvent.ToolCallStart(name, state.id))
+                                        }
+                                        
+                                        func.get("arguments")?.asString?.let { args ->
+                                            state.arguments.clear()
+                                            state.arguments.append(args)
+                                            trySend(ToolStreamEvent.ToolArgumentsDelta(
+                                                state.id,
+                                                args,
+                                                args
+                                            ))
+                                        }
+                                    }
+                                }
+                                
+                                // 旧版格式: message.function_call
+                                message.getAsJsonObject("function_call")?.let { funcCall ->
+                                    android.util.Log.d("AiApiClient", "Tool call chunk (message.function_call): $funcCall")
+                                    
+                                    val state = toolCallsMap.getOrPut(0) { ToolCallState() }
+                                    
+                                    funcCall.get("name")?.asString?.let { name ->
+                                        state.name = name
+                                        state.id = "func_call_0"
+                                        trySend(ToolStreamEvent.ToolCallStart(name, state.id))
+                                    }
+                                    
+                                    funcCall.get("arguments")?.asString?.let { args ->
+                                        state.arguments.clear()
+                                        state.arguments.append(args)
+                                        trySend(ToolStreamEvent.ToolArgumentsDelta(
+                                            state.id,
+                                            args,
+                                            args
+                                        ))
+                                    }
+                                }
+                            }
+                        }
+                        
                         // 检查是否完成
-                        if (finishReason == "tool_calls" || finishReason == "stop") {
+                        // 支持多种 finish_reason: tool_calls, function_call, stop
+                        if (finishReason == "tool_calls" || finishReason == "function_call" || finishReason == "stop") {
                             android.util.Log.d("AiApiClient", "Finish reason: $finishReason, toolCallsMap size: ${toolCallsMap.size}")
                             toolCallsMap.values.forEach { state ->
                                 android.util.Log.d("AiApiClient", "Tool state: name=${state.name}, id=${state.id}, args length=${state.arguments.length}")
@@ -1982,12 +2083,19 @@ val json = gson.fromJson(body, JsonObject::class.java)
             else -> "/v1/chat/completions"
         }
         
+        // 记录完整的请求体用于调试
+        val requestBodyJson = gson.toJson(body)
+        android.util.Log.d("AiApiClient", "🔧 Tool calling request URL: $baseUrl$streamEndpoint")
+        android.util.Log.d("AiApiClient", "🔧 Tool calling request model: $modelId")
+        android.util.Log.d("AiApiClient", "🔧 Tool calling request tools count: ${tools.size}")
+        android.util.Log.d("AiApiClient", "🔧 Tool calling request body (first 1000 chars): ${requestBodyJson.take(1000)}")
+        
         return Request.Builder()
             .url("$baseUrl$streamEndpoint")
             .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .header("Accept", "text/event-stream")
-            .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
+            .post(requestBodyJson.toRequestBody("application/json".toMediaType()))
             .build()
     }
     

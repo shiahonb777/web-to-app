@@ -428,9 +428,9 @@ class ShellActivity : AppCompatActivity() {
         statusBarCustomColor = config.webViewConfig.statusBarColor
         statusBarDarkIcons = config.webViewConfig.statusBarDarkIcons
         
-        // 默认启用沉浸式模式（状态栏透明，内容铺满屏幕）
-        // 不再设置固定的状态栏颜色，让内容延伸到状态栏下方
-        immersiveFullscreenEnabled = true  // 默认启用沉浸式
+        // 根据配置决定是否启用沉浸式全屏模式
+        // hideToolbar=true 时启用沉浸式（隐藏状态栏），否则显示状态栏
+        immersiveFullscreenEnabled = config.webViewConfig.hideToolbar
         applyImmersiveFullscreen(immersiveFullscreenEnabled)
 
         setContent {

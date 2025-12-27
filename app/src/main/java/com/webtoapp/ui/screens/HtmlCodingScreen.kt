@@ -374,6 +374,7 @@ fun HtmlCodingScreen(
                                     }
                                     is HtmlAgentEvent.Completed -> {
                                         val finalTextContent = event.textContent.ifBlank { textContent }
+                                        val thinkingContent = thinkingBuilder.toString()
                                         
                                         val codeBlocks = if (finalHtmlContent != null) {
                                             listOf(CodeBlock(
@@ -386,16 +387,37 @@ fun HtmlCodingScreen(
                                             emptyList()
                                         }
                                         
+                                        // 如果没有文本内容也没有代码，说明 AI 没有返回有效响应
+                                        // 显示详细的调试信息帮助用户诊断问题
                                         val messageContent = when {
                                             finalTextContent.isNotBlank() -> finalTextContent
                                             codeBlocks.isNotEmpty() -> "代码已生成，请查看下方预览"
-                                            else -> "我是 HTML 编程助手，有什么可以帮助你的吗？"
+                                            else -> {
+                                                val debugInfo = buildString {
+                                                    appendLine("⚠️ AI 未返回有效内容")
+                                                    appendLine()
+                                                    appendLine("调试信息：")
+                                                    appendLine("• 文本内容: ${if (event.textContent.isBlank()) "空" else "'${event.textContent.take(100)}...'"}")
+                                                    appendLine("• 流式内容: ${if (textContent.isBlank()) "空" else "'${textContent.take(100)}...'"}")
+                                                    appendLine("• 思考内容: ${if (thinkingContent.isBlank()) "空" else "'${thinkingContent.take(100)}...'"}")
+                                                    appendLine("• HTML代码: ${if (finalHtmlContent == null) "空" else "${finalHtmlContent!!.length}字符"}")
+                                                    appendLine()
+                                                    appendLine("可能原因：")
+                                                    appendLine("1. API 返回格式不兼容")
+                                                    appendLine("2. 模型不支持当前请求")
+                                                    appendLine("3. API Key 配额不足")
+                                                    appendLine()
+                                                    appendLine("建议：尝试更换模型或检查 API 设置")
+                                                }
+                                                android.util.Log.w("HtmlCodingScreen", debugInfo)
+                                                debugInfo
+                                            }
                                         }
                                         
                                         val aiMessage = HtmlCodingMessage(
                                             role = MessageRole.ASSISTANT,
                                             content = messageContent,
-                                            thinking = thinkingBuilder.toString().takeIf { it.isNotBlank() },
+                                            thinking = thinkingContent.takeIf { it.isNotBlank() },
                                             codeBlocks = codeBlocks
                                         )
                                         
@@ -454,10 +476,18 @@ fun HtmlCodingScreen(
                                             generatingSessionId = null
                                         }
                                         
+                                        // 将错误消息保存到会话中，方便用户查看和复制
+                                        val errorMessage = HtmlCodingMessage(
+                                            role = MessageRole.ASSISTANT,
+                                            content = "❌ 错误: ${event.message}",
+                                            thinking = null,
+                                            codeBlocks = emptyList()
+                                        )
+                                        val updatedSession = storage.addMessage(targetSessionId, errorMessage)
+                                        
                                         // 只有当前显示的是目标会话时才更新UI
                                         if (shouldUpdateUI()) {
-                                            chatState = ChatState.Error(event.message)
-                                            Toast.makeText(context, "错误: ${event.message}", Toast.LENGTH_LONG).show()
+                                            currentSession = updatedSession
                                             chatState = ChatState.Idle
                                             streamingContent = ""
                                             streamingThinking = ""

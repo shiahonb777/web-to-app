@@ -510,10 +510,23 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // v1.7.4
+                            VersionSection(
+                                version = "v1.7.4",
+                                isLatest = true
+                            ) {
+                                ChangeItem("🐛", "修复HTML应用不显示状态栏的问题")
+                                ChangeItem("🐛", "修复部分系统应用名称显示为空")
+                                ChangeItem("🐛", "修复AI模块开发代码块内容叠加")
+                                ChangeItem("🐛", "修复AI HTML编程工具调用失败")
+                                ChangeItem("✨", "优化AI HTML编程提示词和模型兼容性")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             // v1.7.3
                             VersionSection(
-                                version = "v1.7.3",
-                                isLatest = true
+                                version = "v1.7.3"
                             ) {
                                 ChangeItem("✨", "状态栏颜色跟随主题：默认跟随主题色彩")
                                 ChangeItem("✨", "支持自定义状态栏背景颜色")

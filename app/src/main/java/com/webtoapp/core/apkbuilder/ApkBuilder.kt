@@ -1235,11 +1235,9 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         zoomEnabled = webViewConfig.zoomEnabled,
         desktopMode = webViewConfig.desktopMode,
         userAgent = webViewConfig.userAgent,
-        // HTML应用、媒体应用默认隐藏工具栏
-        hideToolbar = webViewConfig.hideToolbar || 
-            appType == com.webtoapp.data.model.AppType.HTML ||
-            appType == com.webtoapp.data.model.AppType.IMAGE ||
-            appType == com.webtoapp.data.model.AppType.VIDEO,
+        // 使用用户配置的 hideToolbar 设置，不再强制 HTML/媒体应用隐藏工具栏
+        // 用户可以在创建应用时选择是否启用全屏模式
+        hideToolbar = webViewConfig.hideToolbar,
         landscapeMode = webViewConfig.landscapeMode,
         injectScripts = webViewConfig.injectScripts,
         splashEnabled = splashEnabled,
