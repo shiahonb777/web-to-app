@@ -1299,7 +1299,12 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         translateTargetLanguage = translateConfig?.targetLanguage?.code ?: "zh-CN",
         translateShowButton = translateConfig?.showFloatingButton ?: true,
         // 扩展模块配置
-        extensionModuleIds = extensionModuleIds
+        extensionModuleIds = extensionModuleIds,
+        // 自启动配置
+        bootStartEnabled = autoStartConfig?.bootStartEnabled ?: false,
+        scheduledStartEnabled = autoStartConfig?.scheduledStartEnabled ?: false,
+        scheduledTime = autoStartConfig?.scheduledTime ?: "08:00",
+        scheduledDays = autoStartConfig?.scheduledDays ?: listOf(1, 2, 3, 4, 5, 6, 7)
     )
 }
 

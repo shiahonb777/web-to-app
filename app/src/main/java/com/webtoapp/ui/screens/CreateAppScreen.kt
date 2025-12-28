@@ -27,6 +27,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.ActivationCodeCard
+import com.webtoapp.ui.components.AutoStartCard
 import com.webtoapp.ui.components.BgmCard
 import com.webtoapp.ui.components.IconPickerWithLibrary
 import com.webtoapp.ui.components.VideoTrimmer
@@ -260,6 +261,12 @@ fun CreateAppScreen(
                 config = editState.translateConfig,
                 onEnabledChange = { viewModel.updateEditState { copy(translateEnabled = it) } },
                 onConfigChange = { viewModel.updateEditState { copy(translateConfig = it) } }
+            )
+            
+            // 自启动设置
+            AutoStartCard(
+                config = editState.autoStartConfig,
+                onConfigChange = { viewModel.updateEditState { copy(autoStartConfig = it) } }
             )
 
             // WebView高级设置

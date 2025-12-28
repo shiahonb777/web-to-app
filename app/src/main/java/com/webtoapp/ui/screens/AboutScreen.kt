@@ -345,6 +345,13 @@ fun AboutScreen(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
+                // ========== 数据备份卡片 ==========
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    com.webtoapp.ui.components.DataBackupCard()
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
                 // ========== 联系卡片区 ==========
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -510,10 +517,21 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // v1.7.6
+                            VersionSection(
+                                version = "v1.7.6",
+                                isLatest = true
+                            ) {
+                                ChangeItem("✨", "开机自启动和定时自启动功能")
+                                ChangeItem("💾", "数据备份：一键导出/导入所有数据")
+                                ChangeItem("✨", "全屏模式状态栏透明叠加显示")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             // v1.7.5
                             VersionSection(
-                                version = "v1.7.5",
-                                isLatest = true
+                                version = "v1.7.5"
                             ) {
                                 ChangeItem("✨", "全屏模式下可选择显示状态栏")
                                 ChangeItem("🐛", "修复HTML项目长按文字无法复制")

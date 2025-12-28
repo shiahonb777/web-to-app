@@ -70,7 +70,7 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **调试测试页面**：内置测试页面验证模块效果
 
 ### AI 功能
-- **多供应商支持**：Google Gemini、OpenAI GPT-4o、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
+- **多供应商支持**：Google Gemini、OpenAI、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
 - **AI HTML 编程**：AI 辅助生成和修改 HTML/CSS/JS 代码
 - **AI 图标生成**：使用 AI 生成应用图标
 - **图标库**：收藏和管理生成的图标
@@ -404,6 +404,12 @@ function shareCurrentPage() {
 MIT License
 
 ## 更新日志
+
+### v1.7.6
+**新功能与优化**
+- 开机自启动和定时自启动功能
+- 数据备份：一键导出/导入所有应用数据
+- 全屏模式状态栏透明叠加显示
 
 ### v1.7.5
 **新功能与优化**

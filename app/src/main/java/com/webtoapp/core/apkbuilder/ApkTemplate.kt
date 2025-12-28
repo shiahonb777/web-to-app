@@ -170,7 +170,10 @@ class ApkTemplate(private val context: Context) {
                 }}],"configValues":{${module.configValues.entries.joinToString(",") { (k, v) ->
                     "\"${escapeJson(k)}\":\"${escapeJson(v)}\""
                 }}},"enabled":${module.enabled}}"""
-            }}]
+            }}],
+            "autoStartConfig": ${if (config.bootStartEnabled || config.scheduledStartEnabled) {
+                """{"bootStartEnabled":${config.bootStartEnabled},"scheduledStartEnabled":${config.scheduledStartEnabled},"scheduledTime":"${config.scheduledTime}","scheduledDays":[${config.scheduledDays.joinToString(",")}]}"""
+            } else "null"}
         }
         """.trimIndent()
     }
@@ -396,7 +399,14 @@ data class ApkConfig(
     
     // 扩展模块配置
     val extensionModuleIds: List<String> = emptyList(), // 启用的扩展模块ID列表
-    val embeddedExtensionModules: List<EmbeddedExtensionModule> = emptyList() // 嵌入的扩展模块完整数据
+    val embeddedExtensionModules: List<EmbeddedExtensionModule> = emptyList(), // 嵌入的扩展模块完整数据
+    
+    // 自启动配置
+    val autoStartEnabled: Boolean = false,
+    val bootStartEnabled: Boolean = false,
+    val scheduledStartEnabled: Boolean = false,
+    val scheduledTime: String = "08:00",
+    val scheduledDays: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7)
 )
 
 /**

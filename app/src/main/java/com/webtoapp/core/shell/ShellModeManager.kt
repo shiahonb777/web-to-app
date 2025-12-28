@@ -230,7 +230,11 @@ data class ShellConfig(
     
     // 嵌入的扩展模块完整数据（APK导出时嵌入）
     @SerializedName("embeddedExtensionModules")
-    val embeddedExtensionModules: List<EmbeddedShellModule> = emptyList()
+    val embeddedExtensionModules: List<EmbeddedShellModule> = emptyList(),
+    
+    // 自启动配置
+    @SerializedName("autoStartConfig")
+    val autoStartConfig: AutoStartShellConfig? = null
 )
 
 /**
@@ -513,4 +517,21 @@ data class LrcShellTheme(
     
     @SerializedName("position")
     val position: String = "BOTTOM"
+)
+
+/**
+ * 自启动配置（用于 Shell 配置）
+ */
+data class AutoStartShellConfig(
+    @SerializedName("bootStartEnabled")
+    val bootStartEnabled: Boolean = false,
+    
+    @SerializedName("scheduledStartEnabled")
+    val scheduledStartEnabled: Boolean = false,
+    
+    @SerializedName("scheduledTime")
+    val scheduledTime: String = "08:00",
+    
+    @SerializedName("scheduledDays")
+    val scheduledDays: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7)
 )

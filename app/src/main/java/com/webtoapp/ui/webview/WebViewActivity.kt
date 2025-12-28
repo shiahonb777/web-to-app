@@ -187,9 +187,6 @@ class WebViewActivity : AppCompatActivity() {
      * @param isDarkTheme 当前是否为深色主题
      */
     private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true, isDarkTheme: Boolean = false) {
-        // 让内容延伸到系统栏下方
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        
         // 支持刘海屏/挖孔屏
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode = 
@@ -203,11 +200,15 @@ class WebViewActivity : AppCompatActivity() {
                 
                 // 根据配置决定是否显示状态栏
                 if (showStatusBarInFullscreen) {
-                    // 全屏模式但显示状态栏
+                    // 全屏模式但显示状态栏：状态栏透明叠加在内容上
+                    WindowCompat.setDecorFitsSystemWindows(window, false)
+                    window.statusBarColor = android.graphics.Color.TRANSPARENT
                     controller.show(WindowInsetsCompat.Type.statusBars())
-                    applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                    // 设置状态栏图标颜色（根据主题自动选择深色或浅色图标）
+                    controller.isAppearanceLightStatusBars = !isDarkTheme
                 } else {
                     // 完全沉浸式：隐藏状态栏
+                    WindowCompat.setDecorFitsSystemWindows(window, false)
                     window.statusBarColor = android.graphics.Color.TRANSPARENT
                     controller.hide(WindowInsetsCompat.Type.statusBars())
                 }
@@ -219,6 +220,7 @@ class WebViewActivity : AppCompatActivity() {
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
                 // 非沉浸式模式：显示系统栏，应用状态栏颜色配置
+                WindowCompat.setDecorFitsSystemWindows(window, true)
                 controller.show(WindowInsetsCompat.Type.systemBars())
                 window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 

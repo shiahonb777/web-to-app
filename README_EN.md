@@ -70,7 +70,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Debug Test Pages**: Built-in test pages to verify module effects
 
 ### AI Features
-- **Multi-Provider Support**: Google Gemini, OpenAI GPT-4o, GLM, Volcano, MiniMax, OpenRouter, etc.
+- **Multi-Provider Support**: Google Gemini, OpenAI, GLM, Volcano, MiniMax, OpenRouter, etc.
 - **AI HTML Coding**: AI-assisted HTML/CSS/JS code generation
 - **AI Icon Generator**: Generate app icons using AI
 - **Icon Library**: Collect and manage generated icons
@@ -358,6 +358,12 @@ new MutationObserver(hideAds).observe(document.body, { childList: true, subtree:
 MIT License
 
 ## 📜 Changelog
+
+### v1.7.6
+**New Features & Improvements**
+- Boot auto-start and scheduled auto-start functionality
+- Data backup: One-click export/import all app data
+- Transparent status bar overlay in fullscreen mode
 
 ### v1.7.5
 **New Features & Improvements**

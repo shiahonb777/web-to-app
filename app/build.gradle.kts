@@ -21,8 +21,8 @@ android {
         applicationId = "com.webtoapp"
         minSdk = 23
         targetSdk = 34
-        versionCode = 22
-        versionName = "1.7.5"
+        versionCode = 23
+        versionName = "1.7.6"
 
         vectorDrawables {
             useSupportLibrary = true

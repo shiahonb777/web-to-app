@@ -104,7 +104,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             translateEnabled = webApp.translateEnabled,
             translateConfig = webApp.translateConfig ?: TranslateConfig(),
             extensionModuleEnabled = webApp.extensionModuleIds.isNotEmpty(),
-            extensionModuleIds = webApp.extensionModuleIds.toSet()
+            extensionModuleIds = webApp.extensionModuleIds.toSet(),
+            autoStartConfig = webApp.autoStartConfig
         )
     }
 
@@ -273,7 +274,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     themeType = currentThemeType,
                     translateEnabled = state.translateEnabled,
                     translateConfig = translateConfig,
-                    extensionModuleIds = extensionModuleIds
+                    extensionModuleIds = extensionModuleIds,
+                    autoStartConfig = state.autoStartConfig
                 ) ?: run {
                     // 将新格式激活码转换为字符串列表（用于兼容性）
                     val activationCodeStrings = state.activationCodeList.map { it.toJson() } + state.activationCodes
@@ -302,7 +304,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         themeType = currentThemeType,
                         translateEnabled = state.translateEnabled,
                         translateConfig = translateConfig,
-                        extensionModuleIds = extensionModuleIds
+                        extensionModuleIds = extensionModuleIds,
+                        autoStartConfig = state.autoStartConfig
                     )
                 }
 
@@ -718,7 +721,10 @@ data class EditState(
     
     // 扩展模块
     val extensionModuleEnabled: Boolean = false,
-    val extensionModuleIds: Set<String> = emptySet()
+    val extensionModuleIds: Set<String> = emptySet(),
+    
+    // 自启动配置
+    val autoStartConfig: AutoStartConfig? = null
 )
 
 /**

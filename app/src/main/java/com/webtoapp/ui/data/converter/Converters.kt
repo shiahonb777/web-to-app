@@ -7,6 +7,7 @@ import com.webtoapp.data.model.AdConfig
 import com.webtoapp.data.model.Announcement
 import com.webtoapp.data.model.ApkExportConfig
 import com.webtoapp.data.model.AppType
+import com.webtoapp.data.model.AutoStartConfig
 import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.data.model.HtmlConfig
 import com.webtoapp.data.model.MediaConfig
@@ -177,6 +178,17 @@ class Converters {
         } catch (e: Exception) {
             emptyList()
         }
+    }
+    
+    // AutoStartConfig 转换
+    @TypeConverter
+    fun fromAutoStartConfig(value: AutoStartConfig?): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toAutoStartConfig(value: String): AutoStartConfig? = try {
+        gson.fromJson(value, AutoStartConfig::class.java)
+    } catch (e: Exception) {
+        null
     }
     
 }

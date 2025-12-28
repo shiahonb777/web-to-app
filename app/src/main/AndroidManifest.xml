@@ -52,6 +52,13 @@
     
     <!-- WakeLock 权限（保持 CPU 运行） -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- 开机自启动权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- 精确闹钟权限（Android 12+） -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:name=".WebToAppApplication"
@@ -150,6 +157,26 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        
+        <!-- 开机广播接收器 -->
+        <receiver
+            android:name=".core.autostart.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- 定时启动广播接收器 -->
+        <receiver
+            android:name=".core.autostart.ScheduledStartReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.webtoapp.ACTION_SCHEDULED_START" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

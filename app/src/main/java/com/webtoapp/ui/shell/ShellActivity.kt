@@ -174,9 +174,6 @@ class ShellActivity : AppCompatActivity() {
      * @param isDarkTheme 当前是否为深色主题（用于状态栏颜色）
      */
     private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean = true, isDarkTheme: Boolean = false) {
-        // 让内容延伸到系统栏下方
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        
         // 支持刘海屏/挖孔屏
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode = 
@@ -190,11 +187,15 @@ class ShellActivity : AppCompatActivity() {
                 
                 // 根据配置决定是否显示状态栏
                 if (showStatusBarInFullscreen) {
-                    // 全屏模式但显示状态栏
+                    // 全屏模式但显示状态栏：状态栏透明叠加在内容上
+                    WindowCompat.setDecorFitsSystemWindows(window, false)
+                    window.statusBarColor = android.graphics.Color.TRANSPARENT
                     controller.show(WindowInsetsCompat.Type.statusBars())
-                    applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                    // 设置状态栏图标颜色（根据主题自动选择深色或浅色图标）
+                    controller.isAppearanceLightStatusBars = !isDarkTheme
                 } else {
                     // 完全沉浸式：隐藏状态栏
+                    WindowCompat.setDecorFitsSystemWindows(window, false)
                     window.statusBarColor = android.graphics.Color.TRANSPARENT
                     controller.hide(WindowInsetsCompat.Type.statusBars())
                 }
@@ -208,6 +209,7 @@ class ShellActivity : AppCompatActivity() {
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
                 // 非沉浸式模式：显示系统栏，应用状态栏颜色配置
+                WindowCompat.setDecorFitsSystemWindows(window, true)
                 controller.show(WindowInsetsCompat.Type.systemBars())
                 window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 
@@ -414,6 +416,22 @@ class ShellActivity : AppCompatActivity() {
         if (config == null) {
             finish()
             return
+        }
+        
+        // 注册自启动配置（如果启用）
+        config.autoStartConfig?.let { autoStartConfig ->
+            val autoStartManager = com.webtoapp.core.autostart.AutoStartManager(this)
+            // 设置开机自启动
+            autoStartManager.setBootStart(0L, autoStartConfig.bootStartEnabled)
+            // 设置定时自启动
+            if (autoStartConfig.scheduledStartEnabled) {
+                autoStartManager.setScheduledStart(
+                    appId = 0L,
+                    enabled = true,
+                    time = autoStartConfig.scheduledTime,
+                    days = autoStartConfig.scheduledDays
+                )
+            }
         }
         
         // 设置任务列表中显示的应用名称（修复双重名称显示问题）

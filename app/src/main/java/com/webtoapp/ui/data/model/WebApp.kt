@@ -79,6 +79,9 @@ data class WebApp(
     
     // 扩展模块配置
     val extensionModuleIds: List<String> = emptyList(),  // 启用的扩展模块ID列表
+    
+    // 自启动配置
+    val autoStartConfig: AutoStartConfig? = null,
 
     // 元数据
     val createdAt: Long = System.currentTimeMillis(),
@@ -462,3 +465,14 @@ fun WebApp.getActivationCodeStrings(): List<String> {
     
     return strings
 }
+
+/**
+ * 自启动配置
+ */
+data class AutoStartConfig(
+    val bootStartEnabled: Boolean = false,      // 开机自启动
+    val scheduledStartEnabled: Boolean = false, // 定时自启动
+    val scheduledTime: String = "08:00",        // 定时启动时间（HH:mm 格式）
+    val scheduledDays: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7), // 启动日期（1-7 代表周一到周日）
+    val scheduledRepeat: Boolean = true         // 是否重复（每天/每周）
+)
