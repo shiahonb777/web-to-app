@@ -127,6 +127,7 @@ class ApkTemplate(private val context: Context) {
                 "desktopMode": ${config.desktopMode},
                 "userAgent": ${config.userAgent?.let { "\"${escapeJson(it)}\"" } ?: "null"},
                 "hideToolbar": ${config.hideToolbar},
+                "showStatusBarInFullscreen": ${config.showStatusBarInFullscreen},
                 "landscapeMode": ${config.landscapeMode},
                 "injectScripts": [${config.injectScripts.joinToString(",") { script ->
                     """{"name":"${escapeJson(script.name)}","code":"${escapeJson(script.code)}","enabled":${script.enabled},"runAt":"${script.runAt.name}"}"""
@@ -346,6 +347,7 @@ data class ApkConfig(
     val desktopMode: Boolean = false,
     val userAgent: String? = null,
     val hideToolbar: Boolean = false,
+    val showStatusBarInFullscreen: Boolean = false,  // 全屏模式下是否显示状态栏
     val landscapeMode: Boolean = false, // 横屏模式
     val injectScripts: List<UserScript> = emptyList(), // 用户注入脚本
     

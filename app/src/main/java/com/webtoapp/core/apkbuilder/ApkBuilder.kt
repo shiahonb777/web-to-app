@@ -1238,6 +1238,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         // 使用用户配置的 hideToolbar 设置，不再强制 HTML/媒体应用隐藏工具栏
         // 用户可以在创建应用时选择是否启用全屏模式
         hideToolbar = webViewConfig.hideToolbar,
+        showStatusBarInFullscreen = webViewConfig.showStatusBarInFullscreen,
         landscapeMode = webViewConfig.landscapeMode,
         injectScripts = webViewConfig.injectScripts,
         splashEnabled = splashEnabled,

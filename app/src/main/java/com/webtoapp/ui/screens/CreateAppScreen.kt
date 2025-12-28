@@ -180,9 +180,15 @@ fun CreateAppScreen(
             // 全屏模式
             FullscreenModeCard(
                 enabled = editState.webViewConfig.hideToolbar,
+                showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
                 onEnabledChange = {
                     viewModel.updateEditState {
                         copy(webViewConfig = webViewConfig.copy(hideToolbar = it))
+                    }
+                },
+                onShowStatusBarChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(showStatusBarInFullscreen = it))
                     }
                 }
             )
@@ -1104,32 +1110,63 @@ fun DesktopModeCard(
 @Composable
 fun FullscreenModeCard(
     enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit
+    showStatusBar: Boolean = false,
+    onEnabledChange: (Boolean) -> Unit,
+    onShowStatusBarChange: (Boolean) -> Unit = {}
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.Fullscreen,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "全屏模式",
-                    style = MaterialTheme.typography.titleMedium
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Fullscreen,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "全屏模式",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = onEnabledChange
                 )
             }
-            Switch(
-                checked = enabled,
-                onCheckedChange = onEnabledChange
-            )
+            
+            // 全屏模式下显示状态栏选项
+            if (enabled) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Divider()
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "显示状态栏",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "全屏模式下仍显示状态栏，可解决导航栏问题",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Switch(
+                        checked = showStatusBar,
+                        onCheckedChange = onShowStatusBarChange
+                    )
+                }
+            }
         }
     }
 }

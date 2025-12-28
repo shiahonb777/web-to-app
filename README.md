@@ -120,7 +120,7 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **数据库**：Room
 - **网络**：OkHttp
 - **图片加载**：Coil
-- **最低支持**：Android 7.0 (API 24)
+- **最低支持**：Android 6.0 (API 23)
 
 ## 项目结构
 
@@ -404,6 +404,12 @@ function shareCurrentPage() {
 MIT License
 
 ## 更新日志
+
+### v1.7.5
+**新功能与优化**
+- 全屏模式下可选择显示状态栏：解决不开全屏模式会出现导航栏的问题
+- 修复 HTML 项目长按文字无法复制的问题
+- 支持 Android 6.0 系统（API 23）
 
 ### v1.7.4
 **Bug 修复**

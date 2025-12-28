@@ -120,7 +120,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Database**: Room
 - **Network**: OkHttp
 - **Image Loading**: Coil
-- **Min SDK**: Android 7.0 (API 24)
+- **Min SDK**: Android 6.0 (API 23)
 
 ## 📁 Project Structure
 
@@ -358,6 +358,12 @@ new MutationObserver(hideAds).observe(document.body, { childList: true, subtree:
 MIT License
 
 ## 📜 Changelog
+
+### v1.7.5
+**New Features & Improvements**
+- Show status bar option in fullscreen mode: Solves the navigation bar issue when not using fullscreen mode
+- Fixed long-press text cannot be copied in HTML projects
+- Support Android 6.0 (API 23)
 
 ### v1.7.4
 **Bug Fixes**

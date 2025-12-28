@@ -156,6 +156,7 @@ data class WebViewConfig(
     val downloadEnabled: Boolean = true,
     val openExternalLinks: Boolean = false, // 外部链接是否在浏览器打开
     val hideToolbar: Boolean = false, // 隐藏工具栏（全屏模式，无浏览器特征）
+    val showStatusBarInFullscreen: Boolean = false, // 全屏模式下是否显示状态栏
     val landscapeMode: Boolean = false, // 横屏模式
     val injectScripts: List<UserScript> = emptyList(), // 用户自定义注入脚本
     val statusBarColorMode: StatusBarColorMode = StatusBarColorMode.THEME, // 状态栏颜色模式

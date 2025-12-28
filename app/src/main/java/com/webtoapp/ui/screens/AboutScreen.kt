@@ -510,10 +510,21 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // v1.7.5
+                            VersionSection(
+                                version = "v1.7.5",
+                                isLatest = true
+                            ) {
+                                ChangeItem("✨", "全屏模式下可选择显示状态栏")
+                                ChangeItem("🐛", "修复HTML项目长按文字无法复制")
+                                ChangeItem("📱", "支持Android 6.0系统")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             // v1.7.4
                             VersionSection(
-                                version = "v1.7.4",
-                                isLatest = true
+                                version = "v1.7.4"
                             ) {
                                 ChangeItem("🐛", "修复HTML应用不显示状态栏的问题")
                                 ChangeItem("🐛", "修复部分系统应用名称显示为空")

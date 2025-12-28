@@ -90,6 +90,7 @@ class ShellActivity : AppCompatActivity() {
     private var pendingGeolocationCallback: GeolocationPermissions.Callback? = null
 
     private var immersiveFullscreenEnabled: Boolean = false
+    private var showStatusBarInFullscreen: Boolean = false  // 全屏模式下是否显示状态栏
     private var translateBridge: TranslateBridge? = null
     
     // 视频全屏前的屏幕方向
@@ -184,12 +185,20 @@ class ShellActivity : AppCompatActivity() {
         
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             if (enabled) {
-                // 沉浸式模式：隐藏状态栏，透明背景
-                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                // 沉浸式模式
                 window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 
-                // 隐藏状态栏
-                controller.hide(WindowInsetsCompat.Type.statusBars())
+                // 根据配置决定是否显示状态栏
+                if (showStatusBarInFullscreen) {
+                    // 全屏模式但显示状态栏
+                    controller.show(WindowInsetsCompat.Type.statusBars())
+                    applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                } else {
+                    // 完全沉浸式：隐藏状态栏
+                    window.statusBarColor = android.graphics.Color.TRANSPARENT
+                    controller.hide(WindowInsetsCompat.Type.statusBars())
+                }
+                
                 if (hideNavBar) {
                     // 同时隐藏导航栏（完全沉浸式）
                     controller.hide(WindowInsetsCompat.Type.navigationBars())
@@ -427,6 +436,7 @@ class ShellActivity : AppCompatActivity() {
         statusBarColorMode = config.webViewConfig.statusBarColorMode
         statusBarCustomColor = config.webViewConfig.statusBarColor
         statusBarDarkIcons = config.webViewConfig.statusBarDarkIcons
+        showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
         
         // 根据配置决定是否启用沉浸式全屏模式
         // hideToolbar=true 时启用沉浸式（隐藏状态栏），否则显示状态栏
@@ -938,6 +948,16 @@ fun ShellScreen(
             }
             
             override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
+                // 先同步检查 hitTestResult，判断是否需要拦截
+                val hitResult = webView.hitTestResult
+                val type = hitResult.type
+                
+                // 如果是编辑框或未知类型，不拦截，让 WebView 处理默认的文字选择
+                if (type == WebView.HitTestResult.EDIT_TEXT_TYPE ||
+                    type == WebView.HitTestResult.UNKNOWN_TYPE) {
+                    return false
+                }
+                
                 // 通过 JS 获取长按元素详情
                 longPressHandler.getLongPressDetails(webView, x, y) { result ->
                     when (result) {
@@ -948,12 +968,21 @@ fun ShellScreen(
                             longPressResult = result
                             showLongPressMenu = true
                         }
-                        else -> {
-                            // 文字或其他，使用默认行为
+                        is LongPressHandler.LongPressResult.Text,
+                        is LongPressHandler.LongPressResult.None -> {
+                            // 文字或空白区域，不显示菜单
                         }
                     }
                 }
-                return true
+                
+                // 对于图片、链接等类型，拦截事件显示自定义菜单
+                return when (type) {
+                    WebView.HitTestResult.IMAGE_TYPE,
+                    WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
+                    WebView.HitTestResult.SRC_ANCHOR_TYPE,
+                    WebView.HitTestResult.ANCHOR_TYPE -> true
+                    else -> false  // 其他情况不拦截，允许默认的文字选择
+                }
             }
         }
     }
