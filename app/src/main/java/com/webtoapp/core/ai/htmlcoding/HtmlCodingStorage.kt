@@ -343,7 +343,7 @@ class HtmlCodingStorage(private val context: Context) {
         val files = mutableListOf<ProjectFile>()
         session.messages.take(messageIndex).forEach { message ->
             message.codeBlocks.forEach { block ->
-                val filename = block.filename ?: "index.${block.language}"
+                val filename = block.filename?.takeIf { it.isNotBlank() } ?: "index.${block.language}"
                 val type = when (block.language.lowercase()) {
                     "html" -> ProjectFileType.HTML
                     "css" -> ProjectFileType.CSS
@@ -549,7 +549,7 @@ class HtmlCodingStorage(private val context: Context) {
         
         val previewHtml = CodeBlockParser.mergeToSingleHtml(codeBlocks)
         val files = codeBlocks.map { block ->
-            val filename = block.filename ?: "index.${block.language}"
+            val filename = block.filename?.takeIf { it.isNotBlank() } ?: "index.${block.language}"
             val type = when (block.language.lowercase()) {
                 "html" -> ProjectFileType.HTML
                 "css" -> ProjectFileType.CSS

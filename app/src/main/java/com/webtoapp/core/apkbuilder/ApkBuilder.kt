@@ -8,6 +8,11 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.content.FileProvider
+import com.webtoapp.core.crypto.AssetEncryptor
+import com.webtoapp.core.crypto.EncryptedApkBuilder
+import com.webtoapp.core.crypto.EncryptionConfig
+import com.webtoapp.core.crypto.KeyManager
+import com.webtoapp.core.crypto.toHexString
 import com.webtoapp.core.shell.BgmShellItem
 import com.webtoapp.core.shell.LrcShellTheme
 import com.webtoapp.data.model.LrcData
@@ -17,6 +22,7 @@ import kotlinx.coroutines.withContext
 import java.io.*
 import java.util.zip.*
 import java.util.zip.CRC32
+import javax.crypto.SecretKey
 
 /**
  * APK 构建器
@@ -28,7 +34,8 @@ import java.util.zip.CRC32
  * 3. 修改 AndroidManifest.xml 中的包名（使每个导出的 App 独立）
  * 4. 修改 resources.arsc 中的应用名称
  * 5. 替换图标资源
- * 6. 重新签名
+ * 6. 可选：加密资源文件
+ * 7. 重新签名
  */
 class ApkBuilder(private val context: Context) {
 
@@ -38,6 +45,8 @@ class ApkBuilder(private val context: Context) {
     private val axmlRebuilder = AxmlRebuilder()
     private val arscEditor = ArscEditor()
     private val logger = BuildLogger(context)
+    private val encryptedApkBuilder = EncryptedApkBuilder(context)
+    private val keyManager = KeyManager(context)
     
     // 输出目录
     private val outputDir = File(context.getExternalFilesDir(null), "built_apks").apply { mkdirs() }
@@ -66,6 +75,10 @@ class ApkBuilder(private val context: Context) {
         try {
             onProgress(0, "准备构建...")
             
+            // 获取加密配置
+            val encryptionConfig = webApp.apkExportConfig?.encryptionConfig?.toEncryptionConfig()
+                ?: EncryptionConfig.DISABLED
+            
             // 记录 WebApp 完整配置
             logger.section("WebApp 配置")
             logger.logKeyValue("appName", webApp.name)
@@ -77,6 +90,12 @@ class ApkBuilder(private val context: Context) {
             logger.logKeyValue("activationEnabled", webApp.activationEnabled)
             logger.logKeyValue("adBlockEnabled", webApp.adBlockEnabled)
             logger.logKeyValue("translateEnabled", webApp.translateEnabled)
+            logger.logKeyValue("encryptionEnabled", encryptionConfig.enabled)
+            if (encryptionConfig.enabled) {
+                logger.logKeyValue("encryptConfig", encryptionConfig.encryptConfig)
+                logger.logKeyValue("encryptHtml", encryptionConfig.encryptHtml)
+                logger.logKeyValue("encryptMedia", encryptionConfig.encryptMedia)
+            }
             
             // APK 导出配置
             logger.section("APK 导出配置")
@@ -215,14 +234,31 @@ class ApkBuilder(private val context: Context) {
                 emptyList()
             }
             
+            // 生成加密密钥（如果启用加密）
+            // 重要：使用 JarSigner 的证书签名哈希，确保打包时和运行时使用相同的签名
+            val encryptionKey: SecretKey? = if (encryptionConfig.enabled) {
+                logger.section("生成加密密钥")
+                val signatureHash = signer.getCertificateSignatureHash()
+                logger.logKeyValue("签名哈希", signatureHash.toHexString().take(32) + "...")
+                keyManager.generateKeyForPackage(packageName, signatureHash).also {
+                    logger.log("加密密钥已生成（使用目标签名）")
+                }
+            } else null
+            
             // 修改 APK 内容
             logger.section("修改 APK 内容")
+            if (encryptionConfig.enabled) {
+                onProgress(30, "加密资源...")
+                logger.log("启用加密模式")
+            }
             modifyApk(
                 templateApk, unsignedApk, config, webApp.iconPath, 
                 webApp.getSplashMediaPath(), mediaContentPath,
-                bgmPlaylistPaths, bgmLrcDataList, htmlFiles
+                bgmPlaylistPaths, bgmLrcDataList, htmlFiles,
+                encryptionConfig, encryptionKey
             ) { progress ->
-                onProgress(30 + (progress * 0.4).toInt(), "处理资源...")
+                val msg = if (encryptionConfig.enabled) "加密并处理资源..." else "处理资源..."
+                onProgress(30 + (progress * 0.4).toInt(), msg)
             }
             
             onProgress(70, "签名 APK...")
@@ -307,12 +343,13 @@ class ApkBuilder(private val context: Context) {
 
     /**
      * 修改 APK 内容
-     * 1. 注入配置文件
+     * 1. 注入配置文件（可选加密）
      * 2. 修改包名
      * 3. 修改应用名
      * 4. 替换/添加图标
-     * 5. 嵌入启动画面媒体
-     * 6. 嵌入媒体应用内容
+     * 5. 嵌入启动画面媒体（可选加密）
+     * 6. 嵌入媒体应用内容（可选加密）
+     * 7. 嵌入 HTML 文件（可选加密）
      */
     private fun modifyApk(
         sourceApk: File,
@@ -324,12 +361,19 @@ class ApkBuilder(private val context: Context) {
         bgmPlaylistPaths: List<String> = emptyList(),
         bgmLrcDataList: List<LrcData?> = emptyList(),
         htmlFiles: List<com.webtoapp.data.model.HtmlFile> = emptyList(),
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED,
+        encryptionKey: SecretKey? = null,
         onProgress: (Int) -> Unit
     ) {
-        logger.log("modifyApk 开始")
+        logger.log("modifyApk 开始, 加密=${encryptionConfig.enabled}")
         val iconBitmap = iconPath?.let { template.loadBitmap(it) }
         var hasConfigFile = false
         val replacedIconPaths = mutableSetOf<String>() // 记录已替换的图标路径
+        
+        // 创建加密器（如果启用加密）
+        val assetEncryptor = if (encryptionConfig.enabled && encryptionKey != null) {
+            AssetEncryptor(encryptionKey)
+        } else null
         
         ZipFile(sourceApk).use { zipIn ->
             ZipOutputStream(FileOutputStream(outputApk)).use { zipOut ->
@@ -388,7 +432,7 @@ class ApkBuilder(private val context: Context) {
                         // 替换/添加配置文件
                         entry.name == ApkTemplate.CONFIG_PATH -> {
                             hasConfigFile = true
-                            writeConfigEntry(zipOut, config)
+                            writeConfigEntry(zipOut, config, assetEncryptor, encryptionConfig)
                         }
                         
                         // 替换图标（如果 APK 中存在 PNG 图标）
@@ -406,7 +450,15 @@ class ApkBuilder(private val context: Context) {
                 
                 // 如果原 APK 没有配置文件，添加一个
                 if (!hasConfigFile) {
-                    writeConfigEntry(zipOut, config)
+                    writeConfigEntry(zipOut, config, assetEncryptor, encryptionConfig)
+                }
+                
+                // 写入加密元数据（如果启用加密）
+                if (encryptionConfig.enabled) {
+                    // 使用 JarSigner 的证书签名哈希，确保与加密密钥派生使用相同的签名
+                    val signatureHash = signer.getCertificateSignatureHash()
+                    encryptedApkBuilder.writeEncryptionMetadata(zipOut, encryptionConfig, config.packageName, signatureHash)
+                    logger.log("已写入加密元数据")
                 }
                 
                 // 如果有图标但 APK 中没有 PNG 图标文件，主动添加
@@ -423,28 +475,33 @@ class ApkBuilder(private val context: Context) {
                 // 嵌入启动画面媒体文件
                 Log.d("ApkBuilder", "启动画面配置: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath, splashType=${config.splashType}")
                 if (config.splashEnabled && splashMediaPath != null) {
-                    addSplashMediaToAssets(zipOut, splashMediaPath, config.splashType)
+                    addSplashMediaToAssets(zipOut, splashMediaPath, config.splashType, assetEncryptor, encryptionConfig)
                 } else {
                     Log.w("ApkBuilder", "跳过嵌入启动画面: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath")
+                }
+                
+                // 嵌入状态栏背景图片（如果配置了图片背景）
+                if (config.statusBarBackgroundType == "IMAGE" && !config.statusBarBackgroundImage.isNullOrEmpty()) {
+                    addStatusBarBackgroundToAssets(zipOut, config.statusBarBackgroundImage)
                 }
                 
                 // 嵌入媒体应用内容（单媒体模式：图片/视频转APP）
                 if (config.appType != "WEB" && mediaContentPath != null) {
                     logger.log("嵌入单媒体内容: $mediaContentPath")
                     val isVideo = config.appType == "VIDEO"
-                    addMediaContentToAssets(zipOut, mediaContentPath, isVideo)
+                    addMediaContentToAssets(zipOut, mediaContentPath, isVideo, assetEncryptor, encryptionConfig)
                 }
                 
                 // 嵌入背景音乐文件
                 if (config.bgmEnabled && bgmPlaylistPaths.isNotEmpty()) {
                     logger.log("嵌入BGM: ${bgmPlaylistPaths.size} 个文件")
-                    addBgmToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList)
+                    addBgmToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList, assetEncryptor, encryptionConfig)
                 }
                 
                 // 嵌入 HTML 文件（HTML应用）
                 if (config.appType == "HTML" && htmlFiles.isNotEmpty()) {
                     logger.section("嵌入HTML文件")
-                    val embeddedCount = addHtmlFilesToAssets(zipOut, htmlFiles)
+                    val embeddedCount = addHtmlFilesToAssets(zipOut, htmlFiles, assetEncryptor, encryptionConfig)
                     logger.logKeyValue("HTML文件嵌入数量", embeddedCount)
                     if (embeddedCount == 0) {
                         logger.warn("HTML应用没有成功嵌入任何文件！")
@@ -464,13 +521,17 @@ class ApkBuilder(private val context: Context) {
      * 重要：必须使用 STORED（未压缩）方式存储！
      * 因为 AssetManager.openFd() 只支持未压缩的 assets 文件。
      * 如果使用 DEFLATED 压缩，openFd() 会抛出 FileNotFoundException。
+     * 
+     * 注意：如果启用加密，则无法使用 openFd()，需要先解密到临时文件
      */
     private fun addSplashMediaToAssets(
         zipOut: ZipOutputStream,
         mediaPath: String,
-        splashType: String
+        splashType: String,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
     ) {
-        Log.d("ApkBuilder", "准备嵌入启动画面媒体: path=$mediaPath, type=$splashType")
+        Log.d("ApkBuilder", "准备嵌入启动画面媒体: path=$mediaPath, type=$splashType, encrypt=${encryptionConfig.encryptSplash}")
         
         val mediaFile = File(mediaPath)
         if (!mediaFile.exists()) {
@@ -485,7 +546,7 @@ class ApkBuilder(private val context: Context) {
 
         // 根据类型确定文件名
         val extension = if (splashType == "VIDEO") "mp4" else "png"
-        val assetPath = "assets/splash_media.$extension"
+        val assetPath = "splash_media.$extension"
 
         try {
             val mediaBytes = mediaFile.readBytes()
@@ -494,12 +555,53 @@ class ApkBuilder(private val context: Context) {
                 return
             }
             
-            // 使用 STORED（未压缩）方式存储，确保 AssetManager.openFd() 可以读取
-            // 这是关键修复：openFd() 只支持未压缩的 assets 文件！
-            writeEntryStoredSimple(zipOut, assetPath, mediaBytes)
-            Log.d("ApkBuilder", "启动画面媒体已嵌入(STORED): $assetPath (${mediaBytes.size} bytes)")
+            if (encryptionConfig.encryptSplash && encryptor != null) {
+                // 加密启动画面
+                val encryptedData = encryptor.encrypt(mediaBytes, assetPath)
+                writeEntryDeflated(zipOut, "assets/${assetPath}.enc", encryptedData)
+                Log.d("ApkBuilder", "启动画面媒体已加密嵌入: assets/${assetPath}.enc (${encryptedData.size} bytes)")
+            } else {
+                // 使用 STORED（未压缩）方式存储，确保 AssetManager.openFd() 可以读取
+                writeEntryStoredSimple(zipOut, "assets/$assetPath", mediaBytes)
+                Log.d("ApkBuilder", "启动画面媒体已嵌入(STORED): assets/$assetPath (${mediaBytes.size} bytes)")
+            }
         } catch (e: Exception) {
             Log.e("ApkBuilder", "嵌入启动画面媒体失败: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * 将状态栏背景图片添加到 assets 目录
+     */
+    private fun addStatusBarBackgroundToAssets(
+        zipOut: ZipOutputStream,
+        imagePath: String
+    ) {
+        Log.d("ApkBuilder", "准备嵌入状态栏背景图片: path=$imagePath")
+        
+        val imageFile = File(imagePath)
+        if (!imageFile.exists()) {
+            Log.e("ApkBuilder", "状态栏背景图片不存在: $imagePath")
+            return
+        }
+        
+        if (!imageFile.canRead()) {
+            Log.e("ApkBuilder", "状态栏背景图片无法读取: $imagePath")
+            return
+        }
+        
+        try {
+            val imageBytes = imageFile.readBytes()
+            if (imageBytes.isEmpty()) {
+                Log.e("ApkBuilder", "状态栏背景图片内容为空: $imagePath")
+                return
+            }
+            
+            // 使用 DEFLATED 压缩方式存储（图片不需要 openFd）
+            writeEntryDeflated(zipOut, "assets/statusbar_background.png", imageBytes)
+            Log.d("ApkBuilder", "状态栏背景图片已嵌入: assets/statusbar_background.png (${imageBytes.size} bytes)")
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "嵌入状态栏背景图片失败: ${e.message}", e)
         }
     }
     
@@ -525,13 +627,17 @@ class ApkBuilder(private val context: Context) {
     /**
      * 将媒体应用内容添加到 assets 目录
      * 使用 STORED（未压缩）方式，以支持 AssetManager.openFd()
+     * 
+     * 注意：如果启用加密，则无法使用 openFd()，需要先解密到临时文件
      */
     private fun addMediaContentToAssets(
         zipOut: ZipOutputStream,
         mediaPath: String,
-        isVideo: Boolean
+        isVideo: Boolean,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
     ) {
-        Log.d("ApkBuilder", "准备嵌入媒体应用内容: path=$mediaPath, isVideo=$isVideo")
+        Log.d("ApkBuilder", "准备嵌入媒体应用内容: path=$mediaPath, isVideo=$isVideo, encrypt=${encryptionConfig.encryptMedia}")
         
         val mediaFile = File(mediaPath)
         if (!mediaFile.exists()) {
@@ -546,7 +652,7 @@ class ApkBuilder(private val context: Context) {
 
         // 根据类型确定文件名
         val extension = if (isVideo) "mp4" else "png"
-        val assetPath = "assets/media_content.$extension"
+        val assetName = "media_content.$extension"
 
         try {
             val mediaBytes = mediaFile.readBytes()
@@ -556,8 +662,16 @@ class ApkBuilder(private val context: Context) {
                 return
             }
             
-            writeEntryStoredSimple(zipOut, assetPath, mediaBytes)
-            Log.d("ApkBuilder", "媒体应用内容已嵌入: $assetPath (${mediaBytes.size} bytes)")
+            if (encryptionConfig.encryptMedia && encryptor != null) {
+                // 加密媒体内容
+                val encryptedData = encryptor.encrypt(mediaBytes, assetName)
+                writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
+                Log.d("ApkBuilder", "媒体应用内容已加密嵌入: assets/${assetName}.enc (${encryptedData.size} bytes)")
+            } else {
+                // 使用 STORED（未压缩）方式存储
+                writeEntryStoredSimple(zipOut, "assets/$assetName", mediaBytes)
+                Log.d("ApkBuilder", "媒体应用内容已嵌入(STORED): assets/$assetName (${mediaBytes.size} bytes)")
+            }
         } catch (e: Exception) {
             Log.e("ApkBuilder", "嵌入媒体应用内容失败", e)
         }
@@ -575,27 +689,32 @@ class ApkBuilder(private val context: Context) {
     /**
      * 将背景音乐文件添加到 assets/bgm 目录
      * 使用 STORED（未压缩）方式，以支持 AssetManager.openFd()
+     * 
+     * 注意：如果启用加密，则无法使用 openFd()，需要先解密到临时文件
      */
     private fun addBgmToAssets(
         zipOut: ZipOutputStream,
         bgmPaths: List<String>,
-        lrcDataList: List<LrcData?>
+        lrcDataList: List<LrcData?>,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
     ) {
-        Log.d("ApkBuilder", "准备嵌入 ${bgmPaths.size} 个背景音乐文件")
+        Log.d("ApkBuilder", "准备嵌入 ${bgmPaths.size} 个背景音乐文件, encrypt=${encryptionConfig.encryptBgm}")
         
         bgmPaths.forEachIndexed { index, bgmPath ->
             try {
+                val assetName = "bgm/bgm_$index.mp3"
+                var bgmBytes: ByteArray? = null
+                
                 val bgmFile = File(bgmPath)
                 if (!bgmFile.exists()) {
                     // 尝试处理 asset:/// 路径
                     if (bgmPath.startsWith("asset:///")) {
                         val assetPath = bgmPath.removePrefix("asset:///")
-                        val assetBytes = context.assets.open(assetPath).use { it.readBytes() }
-                        val targetPath = "assets/bgm/bgm_$index.mp3"
-                        writeEntryStoredSimple(zipOut, targetPath, assetBytes)
-                        Log.d("ApkBuilder", "BGM 从 assets 嵌入: $targetPath (${assetBytes.size} bytes)")
+                        bgmBytes = context.assets.open(assetPath).use { it.readBytes() }
                     } else {
                         Log.e("ApkBuilder", "BGM 文件不存在: $bgmPath")
+                        return@forEachIndexed
                     }
                 } else {
                     if (!bgmFile.canRead()) {
@@ -603,24 +722,41 @@ class ApkBuilder(private val context: Context) {
                         return@forEachIndexed
                     }
                     
-                    val bgmBytes = bgmFile.readBytes()
+                    bgmBytes = bgmFile.readBytes()
                     if (bgmBytes.isEmpty()) {
                         Log.e("ApkBuilder", "BGM 文件内容为空: $bgmPath")
                         return@forEachIndexed
                     }
-                    
-                    val targetPath = "assets/bgm/bgm_$index.mp3"
-                    writeEntryStoredSimple(zipOut, targetPath, bgmBytes)
-                    Log.d("ApkBuilder", "BGM 已嵌入: $targetPath (${bgmBytes.size} bytes)")
                 }
                 
-                // 嵌入歌词文件（如果有）
+                if (bgmBytes != null) {
+                    if (encryptionConfig.encryptBgm && encryptor != null) {
+                        // 加密 BGM
+                        val encryptedData = encryptor.encrypt(bgmBytes, assetName)
+                        writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
+                        Log.d("ApkBuilder", "BGM 已加密嵌入: assets/${assetName}.enc (${encryptedData.size} bytes)")
+                    } else {
+                        // 使用 STORED（未压缩）方式存储
+                        writeEntryStoredSimple(zipOut, "assets/$assetName", bgmBytes)
+                        Log.d("ApkBuilder", "BGM 已嵌入(STORED): assets/$assetName (${bgmBytes.size} bytes)")
+                    }
+                }
+                
+                // 嵌入歌词文件（如果有）- 歌词文件较小，可以选择加密
                 val lrcData = lrcDataList.getOrNull(index)
                 if (lrcData != null && lrcData.lines.isNotEmpty()) {
                     val lrcContent = convertLrcDataToLrcString(lrcData)
-                    val lrcPath = "assets/bgm/bgm_$index.lrc"
-                    writeEntryDeflated(zipOut, lrcPath, lrcContent.toByteArray(Charsets.UTF_8))
-                    Log.d("ApkBuilder", "LRC 已嵌入: $lrcPath")
+                    val lrcAssetName = "bgm/bgm_$index.lrc"
+                    val lrcBytes = lrcContent.toByteArray(Charsets.UTF_8)
+                    
+                    if (encryptionConfig.encryptBgm && encryptor != null) {
+                        val encryptedLrc = encryptor.encrypt(lrcBytes, lrcAssetName)
+                        writeEntryDeflated(zipOut, "assets/${lrcAssetName}.enc", encryptedLrc)
+                        Log.d("ApkBuilder", "LRC 已加密嵌入: assets/${lrcAssetName}.enc")
+                    } else {
+                        writeEntryDeflated(zipOut, "assets/$lrcAssetName", lrcBytes)
+                        Log.d("ApkBuilder", "LRC 已嵌入: assets/$lrcAssetName")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ApkBuilder", "嵌入 BGM 失败: $bgmPath", e)
@@ -638,12 +774,15 @@ class ApkBuilder(private val context: Context) {
      * 1. 自动检测和修复资源路径引用
      * 2. 正确处理文件编码
      * 3. 安全包装 JS 代码确保 DOM 加载后执行
+     * 4. 支持加密 HTML/CSS/JS 文件
      * 
      * @return 成功嵌入的文件数量
      */
     private fun addHtmlFilesToAssets(
         zipOut: ZipOutputStream,
-        htmlFiles: List<com.webtoapp.data.model.HtmlFile>
+        htmlFiles: List<com.webtoapp.data.model.HtmlFile>,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
     ): Int {
         Log.d("ApkBuilder", "准备嵌入 ${htmlFiles.size} 个 HTML 项目文件")
         
@@ -739,8 +878,17 @@ class ApkBuilder(private val context: Context) {
                 
                 // 保存到 assets/html/ 目录
                 val assetPath = "assets/html/${htmlFile.name}"
-                writeEntryDeflated(zipOut, assetPath, htmlContent.toByteArray(Charsets.UTF_8))
-                Log.d("ApkBuilder", "HTML 文件已嵌入(内联CSS/JS): $assetPath (${htmlContent.length} bytes)")
+                val htmlBytes = htmlContent.toByteArray(Charsets.UTF_8)
+                
+                if (encryptionConfig.encryptHtml && encryptor != null) {
+                    // 加密 HTML 文件
+                    val encryptedData = encryptor.encrypt(htmlBytes, "html/${htmlFile.name}")
+                    writeEntryDeflated(zipOut, "${assetPath}.enc", encryptedData)
+                    Log.d("ApkBuilder", "HTML 文件已加密嵌入: ${assetPath}.enc (${encryptedData.size} bytes)")
+                } else {
+                    writeEntryDeflated(zipOut, assetPath, htmlBytes)
+                    Log.d("ApkBuilder", "HTML 文件已嵌入(内联CSS/JS): $assetPath (${htmlContent.length} bytes)")
+                }
                 successCount++
             } catch (e: Exception) {
                 Log.e("ApkBuilder", "嵌入 HTML 文件失败: ${htmlFile.path}", e)
@@ -755,8 +903,17 @@ class ApkBuilder(private val context: Context) {
                     val fileBytes = sourceFile.readBytes()
                     if (fileBytes.isNotEmpty()) {
                         val assetPath = "assets/html/${otherFile.name}"
-                        writeEntryDeflated(zipOut, assetPath, fileBytes)
-                        Log.d("ApkBuilder", "其他文件已嵌入: $assetPath (${fileBytes.size} bytes)")
+                        val assetName = "html/${otherFile.name}"
+                        
+                        // 其他文件（如图片）根据 encryptMedia 配置决定是否加密
+                        if (encryptionConfig.encryptMedia && encryptor != null) {
+                            val encryptedData = encryptor.encrypt(fileBytes, assetName)
+                            writeEntryDeflated(zipOut, "${assetPath}.enc", encryptedData)
+                            Log.d("ApkBuilder", "其他文件已加密嵌入: ${assetPath}.enc (${encryptedData.size} bytes)")
+                        } else {
+                            writeEntryDeflated(zipOut, assetPath, fileBytes)
+                            Log.d("ApkBuilder", "其他文件已嵌入: $assetPath (${fileBytes.size} bytes)")
+                        }
                         successCount++
                     }
                 }
@@ -1002,14 +1159,28 @@ $trimmedContent
     }
 
     /**
-     * 写入配置文件条目
+     * 写入配置文件条目（支持加密）
      */
-    private fun writeConfigEntry(zipOut: ZipOutputStream, config: ApkConfig) {
+    private fun writeConfigEntry(
+        zipOut: ZipOutputStream, 
+        config: ApkConfig,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
+    ) {
         val configJson = template.createConfigJson(config)
         Log.d("ApkBuilder", "写入配置文件: splashEnabled=${config.splashEnabled}, splashType=${config.splashType}")
         Log.d("ApkBuilder", "配置JSON内容: $configJson")
-        val data = configJson.toByteArray(Charsets.UTF_8)
-        writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
+        
+        if (encryptionConfig.encryptConfig && encryptor != null) {
+            // 加密配置文件
+            val encryptedData = encryptor.encryptJson(configJson, "app_config.json")
+            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH + ".enc", encryptedData)
+            Log.d("ApkBuilder", "配置文件已加密")
+        } else {
+            // 明文写入
+            val data = configJson.toByteArray(Charsets.UTF_8)
+            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
+        }
     }
 
     /**
@@ -1204,7 +1375,10 @@ $trimmedContent
 fun WebApp.toApkConfig(packageName: String): ApkConfig {
     // HTML应用和媒体应用不使用targetUrl，设置占位符避免配置验证失败
     val effectiveTargetUrl = when (appType) {
-        com.webtoapp.data.model.AppType.HTML -> "file:///android_asset/html/${htmlConfig?.entryFile ?: "index.html"}"
+        com.webtoapp.data.model.AppType.HTML -> {
+            val entryFile = htmlConfig?.getValidEntryFile() ?: "index.html"
+            "file:///android_asset/html/$entryFile"
+        }
         com.webtoapp.data.model.AppType.IMAGE, com.webtoapp.data.model.AppType.VIDEO -> "asset://media_content"
         else -> url
     }
@@ -1241,6 +1415,14 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         showStatusBarInFullscreen = webViewConfig.showStatusBarInFullscreen,
         landscapeMode = webViewConfig.landscapeMode,
         injectScripts = webViewConfig.injectScripts,
+        // 状态栏配置
+        statusBarColorMode = webViewConfig.statusBarColorMode.name,
+        statusBarColor = webViewConfig.statusBarColor,
+        statusBarDarkIcons = webViewConfig.statusBarDarkIcons,
+        statusBarBackgroundType = webViewConfig.statusBarBackgroundType.name,
+        statusBarBackgroundImage = webViewConfig.statusBarBackgroundImage,
+        statusBarBackgroundAlpha = webViewConfig.statusBarBackgroundAlpha,
+        statusBarHeightDp = webViewConfig.statusBarHeightDp,
         splashEnabled = splashEnabled,
         splashType = splashConfig?.type?.name ?: "IMAGE",
         splashDuration = splashConfig?.duration ?: 3,
@@ -1259,7 +1441,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         mediaLandscape = mediaConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE,
         
         // HTML应用配置
-        htmlEntryFile = htmlConfig?.entryFile ?: "index.html",
+        htmlEntryFile = htmlConfig?.getValidEntryFile() ?: "index.html",
         htmlEnableJavaScript = htmlConfig?.enableJavaScript ?: true,
         htmlEnableLocalStorage = htmlConfig?.enableLocalStorage ?: true,
         htmlLandscapeMode = htmlConfig?.landscapeMode ?: false,

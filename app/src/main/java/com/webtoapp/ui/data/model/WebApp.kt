@@ -143,6 +143,14 @@ enum class StatusBarColorMode {
 }
 
 /**
+ * 状态栏背景类型
+ */
+enum class StatusBarBackgroundType {
+    COLOR,  // 纯色背景（使用 statusBarColor）
+    IMAGE   // 图片背景
+}
+
+/**
  * WebView配置
  */
 data class WebViewConfig(
@@ -164,7 +172,12 @@ data class WebViewConfig(
     val injectScripts: List<UserScript> = emptyList(), // 用户自定义注入脚本
     val statusBarColorMode: StatusBarColorMode = StatusBarColorMode.THEME, // 状态栏颜色模式
     val statusBarColor: String? = null, // 自定义状态栏颜色（仅 CUSTOM 模式生效，如 "#FF5722"）
-    val statusBarDarkIcons: Boolean? = null // 状态栏图标颜色：true=深色图标，false=浅色图标，null=自动
+    val statusBarDarkIcons: Boolean? = null, // 状态栏图标颜色：true=深色图标，false=浅色图标，null=自动
+    // 状态栏背景配置（新增）
+    val statusBarBackgroundType: StatusBarBackgroundType = StatusBarBackgroundType.COLOR, // 背景类型
+    val statusBarBackgroundImage: String? = null, // 裁剪后的图片路径
+    val statusBarBackgroundAlpha: Float = 1.0f, // 透明度 0.0-1.0
+    val statusBarHeightDp: Int = 0 // 自定义高度dp（0=系统默认）
 )
 
 /**
@@ -246,7 +259,17 @@ data class HtmlConfig(
     val allowFileAccess: Boolean = true,           // 是否允许文件访问
     val backgroundColor: String = "#FFFFFF",       // 背景颜色
     val landscapeMode: Boolean = false             // 横屏模式
-)
+) {
+    /**
+     * 获取有效的入口文件名
+     * 验证 entryFile 必须有文件名部分（不能只是 .html 或空字符串）
+     */
+    fun getValidEntryFile(): String {
+        return entryFile.takeIf { 
+            it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
+        } ?: "index.html"
+    }
+}
 
 /**
  * HTML项目中的单个文件
@@ -400,8 +423,58 @@ data class BgmConfig(
 data class ApkExportConfig(
     val customPackageName: String? = null,       // 自定义包名（如 com.example.myapp）
     val customVersionName: String? = null,       // 自定义版本名（如 1.0.0）
-    val customVersionCode: Int? = null           // 自定义版本号（如 1）
+    val customVersionCode: Int? = null,          // 自定义版本号（如 1）
+    val encryptionConfig: ApkEncryptionConfig = ApkEncryptionConfig()  // 加密配置
 )
+
+/**
+ * APK 加密配置
+ */
+data class ApkEncryptionConfig(
+    val enabled: Boolean = false,                // 是否启用加密
+    val encryptConfig: Boolean = true,           // 加密配置文件
+    val encryptHtml: Boolean = true,             // 加密 HTML/CSS/JS
+    val encryptMedia: Boolean = false,           // 加密媒体文件（图片/视频）
+    val encryptSplash: Boolean = false,          // 加密启动画面
+    val encryptBgm: Boolean = false,             // 加密背景音乐
+    val customPassword: String? = null           // 自定义密码（可选，增强安全性）
+) {
+    companion object {
+        /** 不加密 */
+        val DISABLED = ApkEncryptionConfig(enabled = false)
+        
+        /** 基础加密（仅加密代码和配置） */
+        val BASIC = ApkEncryptionConfig(
+            enabled = true,
+            encryptConfig = true,
+            encryptHtml = true,
+            encryptMedia = false
+        )
+        
+        /** 完全加密（加密所有资源） */
+        val FULL = ApkEncryptionConfig(
+            enabled = true,
+            encryptConfig = true,
+            encryptHtml = true,
+            encryptMedia = true,
+            encryptSplash = true,
+            encryptBgm = true
+        )
+    }
+    
+    /** 转换为内部加密配置 */
+    fun toEncryptionConfig(): com.webtoapp.core.crypto.EncryptionConfig {
+        return com.webtoapp.core.crypto.EncryptionConfig(
+            enabled = enabled,
+            encryptConfig = encryptConfig,
+            encryptHtml = encryptHtml,
+            encryptMedia = encryptMedia,
+            encryptSplash = encryptSplash,
+            encryptBgm = encryptBgm,
+            customPassword = customPassword
+        )
+    }
+}
 
 /**
  * 翻译目标语言

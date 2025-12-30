@@ -25,6 +25,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -515,7 +516,14 @@ fun WebViewScreen(
     val scope = rememberCoroutineScope()
     val longPressHandler = remember { LongPressHandler(context, scope) }
     
-    // 当 webApp 加载完成后，通知状态栏配置
+    // 状态栏背景配置（用于预览时显示）
+    var statusBarBackgroundType by remember { mutableStateOf("COLOR") }
+    var statusBarBackgroundColor by remember { mutableStateOf<String?>(null) }
+    var statusBarBackgroundImage by remember { mutableStateOf<String?>(null) }
+    var statusBarBackgroundAlpha by remember { mutableFloatStateOf(1.0f) }
+    var statusBarHeightDp by remember { mutableIntStateOf(0) }
+    
+    // 当 webApp 加载完成后，通知状态栏配置并更新本地状态
     LaunchedEffect(webApp) {
         webApp?.let { app ->
             onStatusBarConfigChanged?.invoke(
@@ -524,6 +532,12 @@ fun WebViewScreen(
                 app.webViewConfig.statusBarDarkIcons,
                 app.webViewConfig.showStatusBarInFullscreen
             )
+            // 更新状态栏背景配置
+            statusBarBackgroundType = app.webViewConfig.statusBarBackgroundType.name
+            statusBarBackgroundColor = app.webViewConfig.statusBarColor
+            statusBarBackgroundImage = app.webViewConfig.statusBarBackgroundImage
+            statusBarBackgroundAlpha = app.webViewConfig.statusBarBackgroundAlpha
+            statusBarHeightDp = app.webViewConfig.statusBarHeightDp
         }
     }
 
@@ -794,7 +808,7 @@ fun WebViewScreen(
             app?.appType == com.webtoapp.data.model.AppType.HTML -> {
                 // HTML 应用：从本地文件目录加载
                 val projectId = app.htmlConfig?.projectId ?: ""
-                val entryFile = app.htmlConfig?.entryFile ?: "index.html"
+                val entryFile = app.htmlConfig?.getValidEntryFile() ?: "index.html"
                 val htmlDir = File(context.filesDir, "html_projects/$projectId")
                 "file://${htmlDir.absolutePath}/$entryFile"
             }
@@ -812,7 +826,7 @@ fun WebViewScreen(
     Scaffold(
         // 在沉浸式模式下，不添加任何内边距
         contentWindowInsets = if (hideToolbar) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
-        modifier = if (hideToolbar) Modifier.fillMaxSize() else Modifier,
+        modifier = if (hideToolbar) Modifier.fillMaxSize().imePadding() else Modifier.imePadding(),
         topBar = {
             if (!hideToolbar) {
                 TopAppBar(
@@ -1002,6 +1016,19 @@ fun WebViewScreen(
                         }
                     }
                 }
+            }
+            
+            // 状态栏背景覆盖层（在全屏模式下显示状态栏时）
+            // 放在 Box 内部最上层，覆盖在所有内容之上
+            if (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) {
+                com.webtoapp.ui.components.StatusBarOverlay(
+                    show = true,
+                    backgroundType = statusBarBackgroundType,
+                    backgroundColor = statusBarBackgroundColor,
+                    backgroundImagePath = statusBarBackgroundImage,
+                    alpha = statusBarBackgroundAlpha,
+                    heightDp = statusBarHeightDp
+                )
             }
         }
     }

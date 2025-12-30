@@ -21,11 +21,32 @@ android {
         applicationId = "com.webtoapp"
         minSdk = 23
         targetSdk = 34
-        versionCode = 23
-        versionName = "1.7.6"
+        versionCode = 24
+        versionName = "1.7.7"
 
         vectorDrawables {
             useSupportLibrary = true
+        }
+        
+        // NDK 配置
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+        
+        // CMake 配置
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17"
+                arguments += "-DANDROID_STL=c++_shared"
+            }
+        }
+    }
+    
+    // 外部 Native 构建配置
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
         }
     }
 
@@ -62,6 +83,10 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        // 确保 native 库不被压缩，否则安装会失败
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 }

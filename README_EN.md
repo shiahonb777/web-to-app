@@ -359,6 +359,11 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.7.7
+**New Features**
+- Status bar style configuration: Custom height, background color/image, transparency
+- APK encryption protection: Encrypt configuration files and resources
+
 ### v1.7.6
 **New Features & Improvements**
 - Boot auto-start and scheduled auto-start functionality

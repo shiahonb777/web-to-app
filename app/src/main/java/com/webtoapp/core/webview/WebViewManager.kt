@@ -7,11 +7,13 @@ import android.net.Uri
 import android.os.Build
 import android.webkit.*
 import com.webtoapp.core.adblock.AdBlocker
+import com.webtoapp.core.crypto.SecureAssetLoader
 import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.extension.ModuleRunTime
 import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.UserScript
 import com.webtoapp.data.model.WebViewConfig
+import java.io.ByteArrayInputStream
 
 /**
  * WebView管理器 - 配置和管理WebView
@@ -155,6 +157,13 @@ class WebViewManager(
                     if (adBlocker.isEnabled() && adBlocker.shouldBlock(it)) {
                         return adBlocker.createEmptyResponse()
                     }
+                    
+                    // 拦截对 android_asset 的请求，处理加密资源
+                    val url = it.url?.toString() ?: ""
+                    if (url.startsWith("file:///android_asset/")) {
+                        val assetPath = url.removePrefix("file:///android_asset/")
+                        return loadEncryptedAsset(assetPath)
+                    }
                 }
                 return super.shouldInterceptRequest(view, request)
             }
@@ -221,6 +230,84 @@ class WebViewManager(
                 callbacks.onSslError(error?.toString() ?: "SSL Error")
             }
         }
+    }
+    
+    /**
+     * 加载加密的 asset 资源
+     * 如果资源被加密，则解密后返回；否则返回原始资源
+     * 
+     * @param assetPath asset 路径（不含 file:///android_asset/ 前缀）
+     * @return WebResourceResponse 或 null（让系统处理）
+     */
+    private fun loadEncryptedAsset(assetPath: String): WebResourceResponse? {
+        return try {
+            val secureLoader = SecureAssetLoader.getInstance(context)
+            
+            // 检查资源是否存在（加密或未加密）
+            if (!secureLoader.assetExists(assetPath)) {
+                android.util.Log.d("WebViewManager", "资源不存在: $assetPath")
+                return null
+            }
+            
+            // 加载资源（自动处理加密/未加密）
+            val data = secureLoader.loadAsset(assetPath)
+            val mimeType = getMimeType(assetPath)
+            val encoding = if (isTextMimeType(mimeType)) "UTF-8" else null
+            
+            android.util.Log.d("WebViewManager", "加载资源: $assetPath (${data.size} bytes, $mimeType)")
+            
+            WebResourceResponse(
+                mimeType,
+                encoding,
+                ByteArrayInputStream(data)
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("WebViewManager", "加载资源失败: $assetPath", e)
+            null
+        }
+    }
+    
+    /**
+     * 根据文件扩展名获取 MIME 类型
+     */
+    private fun getMimeType(path: String): String {
+        val extension = path.substringAfterLast('.', "").lowercase()
+        return when (extension) {
+            "html", "htm" -> "text/html"
+            "css" -> "text/css"
+            "js" -> "application/javascript"
+            "json" -> "application/json"
+            "xml" -> "application/xml"
+            "txt" -> "text/plain"
+            "png" -> "image/png"
+            "jpg", "jpeg" -> "image/jpeg"
+            "gif" -> "image/gif"
+            "webp" -> "image/webp"
+            "svg" -> "image/svg+xml"
+            "ico" -> "image/x-icon"
+            "mp3" -> "audio/mpeg"
+            "wav" -> "audio/wav"
+            "ogg" -> "audio/ogg"
+            "mp4" -> "video/mp4"
+            "webm" -> "video/webm"
+            "woff" -> "font/woff"
+            "woff2" -> "font/woff2"
+            "ttf" -> "font/ttf"
+            "otf" -> "font/otf"
+            "eot" -> "application/vnd.ms-fontobject"
+            else -> "application/octet-stream"
+        }
+    }
+    
+    /**
+     * 判断是否为文本类型的 MIME
+     */
+    private fun isTextMimeType(mimeType: String): Boolean {
+        return mimeType.startsWith("text/") ||
+               mimeType == "application/javascript" ||
+               mimeType == "application/json" ||
+               mimeType == "application/xml" ||
+               mimeType == "image/svg+xml"
     }
 
     /**

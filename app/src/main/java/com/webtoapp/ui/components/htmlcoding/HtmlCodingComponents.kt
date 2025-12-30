@@ -302,7 +302,7 @@ fun CodeBlocksTabContainer(
                                         Surface(shape = RoundedCornerShape(4.dp), color = getLanguageColor(block.language)) {
                                             Text(block.language.uppercase().take(3), style = MaterialTheme.typography.labelSmall, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp), fontSize = 9.sp)
                                         }
-                                        Text(block.filename ?: getDefaultFilename(block.language), style = MaterialTheme.typography.labelMedium, color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary else colors.text.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(block.filename?.takeIf { it.isNotBlank() } ?: getDefaultFilename(block.language), style = MaterialTheme.typography.labelMedium, color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary else colors.text.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     }
                                 }
                             }

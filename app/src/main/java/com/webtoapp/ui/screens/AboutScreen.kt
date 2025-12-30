@@ -517,10 +517,20 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // v1.7.7
+                            VersionSection(
+                                version = "v1.7.7",
+                                isLatest = true
+                            ) {
+                                ChangeItem("🎨", "状态栏样式配置：自定义高度/背景/透明度")
+                                ChangeItem("🔐", "APK加密保护：配置和资源文件加密")
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             // v1.7.6
                             VersionSection(
-                                version = "v1.7.6",
-                                isLatest = true
+                                version = "v1.7.6"
                             ) {
                                 ChangeItem("✨", "开机自启动和定时自启动功能")
                                 ChangeItem("💾", "数据备份：一键导出/导入所有数据")

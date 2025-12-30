@@ -66,6 +66,15 @@ class JarSigner(private val context: Context) {
     fun getSignerType(): SignerType = currentSignerType
     
     /**
+     * 获取签名证书的 SHA-256 哈希
+     * 用于加密密钥派生，确保打包时和运行时使用相同的签名
+     */
+    fun getCertificateSignatureHash(): ByteArray {
+        val cert = certificate ?: throw IllegalStateException("证书未初始化")
+        return java.security.MessageDigest.getInstance("SHA-256").digest(cert.encoded)
+    }
+    
+    /**
      * 获取签名证书信息
      */
     fun getCertificateInfo(): String? {

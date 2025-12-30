@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -30,6 +31,7 @@ import com.webtoapp.ui.components.ActivationCodeCard
 import com.webtoapp.ui.components.AutoStartCard
 import com.webtoapp.ui.components.BgmCard
 import com.webtoapp.ui.components.IconPickerWithLibrary
+import com.webtoapp.ui.components.StatusBarConfigCard
 import com.webtoapp.ui.components.VideoTrimmer
 import com.webtoapp.ui.components.announcement.AnnouncementDialog
 import com.webtoapp.ui.components.announcement.AnnouncementConfig
@@ -182,6 +184,7 @@ fun CreateAppScreen(
             FullscreenModeCard(
                 enabled = editState.webViewConfig.hideToolbar,
                 showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
+                webViewConfig = editState.webViewConfig,
                 onEnabledChange = {
                     viewModel.updateEditState {
                         copy(webViewConfig = webViewConfig.copy(hideToolbar = it))
@@ -190,6 +193,11 @@ fun CreateAppScreen(
                 onShowStatusBarChange = {
                     viewModel.updateEditState {
                         copy(webViewConfig = webViewConfig.copy(showStatusBarInFullscreen = it))
+                    }
+                },
+                onWebViewConfigChange = { newConfig ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = newConfig)
                     }
                 }
             )
@@ -372,7 +380,7 @@ fun BasicInfoCard(
                     // HTML 应用显示文件信息
                     val htmlConfig = editState.htmlConfig
                     val fileCount = htmlConfig?.files?.size ?: 0
-                    val entryFile = htmlConfig?.entryFile ?: "index.html"
+                    val entryFile = htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
                     
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -1118,9 +1126,13 @@ fun DesktopModeCard(
 fun FullscreenModeCard(
     enabled: Boolean,
     showStatusBar: Boolean = false,
+    webViewConfig: WebViewConfig = WebViewConfig(),
     onEnabledChange: (Boolean) -> Unit,
-    onShowStatusBarChange: (Boolean) -> Unit = {}
+    onShowStatusBarChange: (Boolean) -> Unit = {},
+    onWebViewConfigChange: (WebViewConfig) -> Unit = {}
 ) {
+    var statusBarConfigExpanded by remember { mutableStateOf(false) }
+    
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -1172,6 +1184,59 @@ fun FullscreenModeCard(
                         checked = showStatusBar,
                         onCheckedChange = onShowStatusBarChange
                     )
+                }
+                
+                // 状态栏配置（仅在显示状态栏时可用）
+                if (showStatusBar) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // 状态栏配置展开/收起
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { statusBarConfigExpanded = !statusBarConfigExpanded },
+                        color = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Tune,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = "状态栏样式配置",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                            Icon(
+                                if (statusBarConfigExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                    
+                    // 状态栏配置内容
+                    if (statusBarConfigExpanded) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        StatusBarConfigCard(
+                            config = webViewConfig,
+                            onConfigChange = onWebViewConfigChange
+                        )
+                    }
                 }
             }
         }

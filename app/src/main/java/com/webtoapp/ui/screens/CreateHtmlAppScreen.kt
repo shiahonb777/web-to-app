@@ -193,7 +193,10 @@ fun CreateHtmlAppScreen(
     val htmlFiles = remember(htmlFile, cssFile, jsFile) {
         listOfNotNull(htmlFile, cssFile, jsFile)
     }
-    val entryFile = htmlFile?.name ?: "index.html"
+    // 验证 entryFile：必须有文件名部分（不能只是 .html）
+    val entryFile = htmlFile?.name?.takeIf { 
+        it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
+    } ?: "index.html"
     
     // 图标选择器
     val iconPickerLauncher = rememberLauncherForActivityResult(

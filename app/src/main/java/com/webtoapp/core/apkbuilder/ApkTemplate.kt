@@ -131,7 +131,14 @@ class ApkTemplate(private val context: Context) {
                 "landscapeMode": ${config.landscapeMode},
                 "injectScripts": [${config.injectScripts.joinToString(",") { script ->
                     """{"name":"${escapeJson(script.name)}","code":"${escapeJson(script.code)}","enabled":${script.enabled},"runAt":"${script.runAt.name}"}"""
-                }}]
+                }}],
+                "statusBarColorMode": "${config.statusBarColorMode}",
+                "statusBarColor": ${config.statusBarColor?.let { "\"${escapeJson(it)}\"" } ?: "null"},
+                "statusBarDarkIcons": ${config.statusBarDarkIcons ?: "null"},
+                "statusBarBackgroundType": "${config.statusBarBackgroundType}",
+                "statusBarBackgroundImage": ${if (config.statusBarBackgroundType == "IMAGE" && !config.statusBarBackgroundImage.isNullOrEmpty()) "\"statusbar_background.png\"" else "null"},
+                "statusBarBackgroundAlpha": ${config.statusBarBackgroundAlpha},
+                "statusBarHeightDp": ${config.statusBarHeightDp}
             },
             "appType": "${config.appType}",
             "mediaConfig": {
@@ -353,6 +360,15 @@ data class ApkConfig(
     val showStatusBarInFullscreen: Boolean = false,  // 全屏模式下是否显示状态栏
     val landscapeMode: Boolean = false, // 横屏模式
     val injectScripts: List<UserScript> = emptyList(), // 用户注入脚本
+    
+    // 状态栏配置
+    val statusBarColorMode: String = "THEME", // THEME, TRANSPARENT, CUSTOM
+    val statusBarColor: String? = null, // 自定义状态栏颜色
+    val statusBarDarkIcons: Boolean? = null, // 状态栏图标颜色
+    val statusBarBackgroundType: String = "COLOR", // COLOR, IMAGE
+    val statusBarBackgroundImage: String? = null, // 裁剪后的图片路径
+    val statusBarBackgroundAlpha: Float = 1.0f, // 透明度 0.0-1.0
+    val statusBarHeightDp: Int = 0, // 自定义高度dp（0=系统默认）
     
     // 启动画面配置
     val splashEnabled: Boolean = false,

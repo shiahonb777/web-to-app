@@ -3,11 +3,14 @@ package com.webtoapp.core.shell
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.webtoapp.core.crypto.AssetDecryptor
+import com.webtoapp.core.crypto.CryptoConstants
 import java.io.InputStreamReader
 
 /**
  * Shell 模式管理器
  * 检测应用是否以 Shell 模式运行（独立 WebApp）
+ * 支持加密和非加密配置文件
  */
 class ShellModeManager(private val context: Context) {
 
@@ -17,6 +20,7 @@ class ShellModeManager(private val context: Context) {
 
     private var cachedConfig: ShellConfig? = null
     private var configLoaded = false
+    private val assetDecryptor = AssetDecryptor(context)
 
     /**
      * 检查是否为 Shell 模式（存在有效的配置文件）
@@ -33,7 +37,7 @@ class ShellModeManager(private val context: Context) {
     }
 
     /**
-     * 加载配置文件
+     * 加载配置文件（支持加密和非加密）
      */
     private fun loadConfig(): ShellConfig? {
         if (configLoaded) return cachedConfig
@@ -41,32 +45,35 @@ class ShellModeManager(private val context: Context) {
         configLoaded = true
         cachedConfig = try {
             android.util.Log.d("ShellModeManager", "尝试加载配置文件: $CONFIG_FILE")
-            context.assets.open(CONFIG_FILE).use { inputStream ->
-                InputStreamReader(inputStream).use { reader ->
-                    val jsonStr = reader.readText()
-                    android.util.Log.d("ShellModeManager", "配置文件内容长度: ${jsonStr.length}")
-                    val config = Gson().fromJson(jsonStr, ShellConfig::class.java)
-                    android.util.Log.d("ShellModeManager", "解析结果: targetUrl=${config?.targetUrl}, splashEnabled=${config?.splashEnabled}")
-                    android.util.Log.d("ShellModeManager", "扩展模块: extensionModuleIds=${config?.extensionModuleIds?.size ?: 0}, embeddedExtensionModules=${config?.embeddedExtensionModules?.size ?: 0}")
-                    config?.embeddedExtensionModules?.forEach { module ->
-                        android.util.Log.d("ShellModeManager", "  嵌入模块: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}, codeLength=${module.code.length}")
-                    }
-                    // 验证配置有效性
-                    // HTML应用不需要targetUrl，使用嵌入的HTML文件
-                    // 媒体应用也不需要targetUrl，使用嵌入的媒体文件
-                    val isValid = when {
-                        config?.appType == "HTML" -> config.htmlConfig.entryFile.isNotBlank()
-                        config?.appType == "IMAGE" || config?.appType == "VIDEO" -> true // 媒体应用
-                        else -> !config?.targetUrl.isNullOrBlank() // WEB应用需要targetUrl
-                    }
-                    if (!isValid) {
-                        android.util.Log.w("ShellModeManager", "配置无效: appType=${config?.appType}, targetUrl=${config?.targetUrl}")
-                        null
-                    } else {
-                        android.util.Log.d("ShellModeManager", "配置有效，进入 Shell 模式, appType=${config?.appType}")
-                        config
-                    }
+            
+            // 使用 AssetDecryptor 自动处理加密/非加密配置
+            val jsonStr = assetDecryptor.loadAssetAsString(CONFIG_FILE)
+            
+            android.util.Log.d("ShellModeManager", "配置文件内容长度: ${jsonStr.length}")
+            val config = Gson().fromJson(jsonStr, ShellConfig::class.java)
+            android.util.Log.d("ShellModeManager", "解析结果: targetUrl=${config?.targetUrl}, splashEnabled=${config?.splashEnabled}")
+            android.util.Log.d("ShellModeManager", "扩展模块: extensionModuleIds=${config?.extensionModuleIds?.size ?: 0}, embeddedExtensionModules=${config?.embeddedExtensionModules?.size ?: 0}")
+            config?.embeddedExtensionModules?.forEach { module ->
+                android.util.Log.d("ShellModeManager", "  嵌入模块: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}, codeLength=${module.code.length}")
+            }
+            // 验证配置有效性
+            // HTML应用不需要targetUrl，使用嵌入的HTML文件
+            // 媒体应用也不需要targetUrl，使用嵌入的媒体文件
+            val isValid = when {
+                config?.appType == "HTML" -> {
+                    // 验证 entryFile 必须有文件名部分（不能只是 .html 或空字符串）
+                    val entryFile = config.htmlConfig.entryFile
+                    entryFile.isNotBlank() && entryFile.substringBeforeLast(".").isNotBlank()
                 }
+                config?.appType == "IMAGE" || config?.appType == "VIDEO" -> true // 媒体应用
+                else -> !config?.targetUrl.isNullOrBlank() // WEB应用需要targetUrl
+            }
+            if (!isValid) {
+                android.util.Log.w("ShellModeManager", "配置无效: appType=${config?.appType}, targetUrl=${config?.targetUrl}")
+                null
+            } else {
+                android.util.Log.d("ShellModeManager", "配置有效，进入 Shell 模式, appType=${config?.appType}")
+                config
             }
         } catch (e: Exception) {
             android.util.Log.e("ShellModeManager", "加载配置文件失败", e)
@@ -74,6 +81,15 @@ class ShellModeManager(private val context: Context) {
         }
 
         return cachedConfig
+    }
+    
+    /**
+     * 重新加载配置
+     */
+    fun reload() {
+        configLoaded = false
+        cachedConfig = null
+        assetDecryptor.clearCache()
     }
 }
 
@@ -410,7 +426,17 @@ data class HtmlShellConfig(
     
     @SerializedName("landscapeMode")
     val landscapeMode: Boolean = false
-)
+) {
+    /**
+     * 获取有效的入口文件名
+     * 验证 entryFile 必须有文件名部分（不能只是 .html 或空字符串）
+     */
+    fun getValidEntryFile(): String {
+        return entryFile.takeIf { 
+            it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
+        } ?: "index.html"
+    }
+}
 
 /**
  * WebView Shell 配置
@@ -450,7 +476,19 @@ data class WebViewShellConfig(
     val statusBarColor: String? = null, // 自定义状态栏颜色（仅 CUSTOM 模式生效）
     
     @SerializedName("statusBarDarkIcons")
-    val statusBarDarkIcons: Boolean? = null // 状态栏图标颜色：true=深色图标，false=浅色图标，null=自动
+    val statusBarDarkIcons: Boolean? = null, // 状态栏图标颜色：true=深色图标，false=浅色图标，null=自动
+    
+    @SerializedName("statusBarBackgroundType")
+    val statusBarBackgroundType: String = "COLOR", // COLOR, IMAGE
+    
+    @SerializedName("statusBarBackgroundImage")
+    val statusBarBackgroundImage: String? = null, // 裁剪后的图片路径（assets中的路径）
+    
+    @SerializedName("statusBarBackgroundAlpha")
+    val statusBarBackgroundAlpha: Float = 1.0f, // 透明度 0.0-1.0
+    
+    @SerializedName("statusBarHeightDp")
+    val statusBarHeightDp: Int = 0 // 自定义高度dp（0=系统默认）
 )
 
 /**

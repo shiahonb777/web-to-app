@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -552,7 +553,7 @@ fun HtmlCodingScreen(
                 // 启动预览Activity
                 val intent = Intent(context, HtmlPreviewActivity::class.java).apply {
                     putExtra(HtmlPreviewActivity.EXTRA_FILE_PATH, file.absolutePath)
-                    putExtra(HtmlPreviewActivity.EXTRA_TITLE, codeBlock.filename ?: "预览")
+                    putExtra(HtmlPreviewActivity.EXTRA_TITLE, codeBlock.filename?.takeIf { it.isNotBlank() } ?: "预览")
                 }
                 context.startActivity(intent)
             } catch (e: Exception) {
@@ -591,7 +592,7 @@ fun HtmlCodingScreen(
         scope.launch {
             try {
                 val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val filename = codeBlock.filename ?: "code.${codeBlock.language}"
+                val filename = codeBlock.filename?.takeIf { it.isNotBlank() } ?: "code.${codeBlock.language}"
                 val file = File(downloadDir, filename)
                 
                 // 如果文件已存在，添加时间戳
@@ -627,7 +628,7 @@ fun HtmlCodingScreen(
                 
                 // 转换为 ProjectFile 列表
                 val files = allCodeBlocks.map { block ->
-                    val filename = block.filename ?: when (block.language) {
+                    val filename = block.filename?.takeIf { it.isNotBlank() } ?: when (block.language) {
                         "html" -> "index.html"
                         "css" -> "style.css"
                         "js" -> "script.js"
@@ -681,6 +682,7 @@ fun HtmlCodingScreen(
     }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
                 title = {

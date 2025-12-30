@@ -8,6 +8,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -489,7 +491,7 @@ fun AppCard(
                             app.mediaConfig?.mediaPath ?: app.url
                         }
                         com.webtoapp.data.model.AppType.HTML -> {
-                            app.htmlConfig?.entryFile ?: "index.html"
+                            app.htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
                         }
                         else -> app.url
                     },
@@ -664,13 +666,19 @@ fun BuildApkDialog(
     var isBuilding by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
     var progressText by remember { mutableStateOf("准备中...") }
+    
+    // 加密配置状态
+    var encryptionConfig by remember { 
+        mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig()) 
+    }
 
     AlertDialog(
         onDismissRequest = { if (!isBuilding) onDismiss() },
         title = { Text("构建 APK") },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
                 // 应用信息
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -692,7 +700,7 @@ fun BuildApkDialog(
                                     webApp.mediaConfig?.mediaPath ?: webApp.url
                                 }
                                 com.webtoapp.data.model.AppType.HTML -> {
-                                    webApp.htmlConfig?.entryFile ?: "index.html"
+                                    webApp.htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
                                 }
                                 else -> webApp.url
                             },
@@ -703,6 +711,14 @@ fun BuildApkDialog(
                         )
                     }
                 }
+                
+                Divider()
+                
+                // 加密配置
+                com.webtoapp.ui.components.EncryptionConfigCard(
+                    config = encryptionConfig,
+                    onConfigChange = { encryptionConfig = it }
+                )
                 
                 Divider()
                 
@@ -739,7 +755,13 @@ fun BuildApkDialog(
                     onClick = {
                         isBuilding = true
                         scope.launch {
-                            val result = apkBuilder.buildApk(webApp) { p, t ->
+                            // 将加密配置应用到 WebApp
+                            val webAppWithEncryption = webApp.copy(
+                                apkExportConfig = (webApp.apkExportConfig ?: com.webtoapp.data.model.ApkExportConfig()).copy(
+                                    encryptionConfig = encryptionConfig
+                                )
+                            )
+                            val result = apkBuilder.buildApk(webAppWithEncryption) { p, t ->
                                 progress = p
                                 progressText = t
                             }

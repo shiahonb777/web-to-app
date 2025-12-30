@@ -35,6 +35,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -100,6 +101,10 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarColorMode: String = "THEME"
     private var statusBarCustomColor: String? = null
     private var statusBarDarkIcons: Boolean? = null
+    private var statusBarBackgroundType: String = "COLOR"
+    private var statusBarBackgroundImage: String? = null
+    private var statusBarBackgroundAlpha: Float = 1.0f
+    private var statusBarHeightDp: Int = 0
 
     /**
      * 应用状态栏颜色配置
@@ -454,6 +459,10 @@ class ShellActivity : AppCompatActivity() {
         statusBarColorMode = config.webViewConfig.statusBarColorMode
         statusBarCustomColor = config.webViewConfig.statusBarColor
         statusBarDarkIcons = config.webViewConfig.statusBarDarkIcons
+        statusBarBackgroundType = config.webViewConfig.statusBarBackgroundType
+        statusBarBackgroundImage = config.webViewConfig.statusBarBackgroundImage
+        statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha
+        statusBarHeightDp = config.webViewConfig.statusBarHeightDp
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
         
         // 根据配置决定是否启用沉浸式全屏模式
@@ -508,7 +517,13 @@ class ShellActivity : AppCompatActivity() {
                         if (customView == null) {
                             applyImmersiveFullscreen(enabled)
                         }
-                    }
+                    },
+                    // 状态栏配置
+                    statusBarBackgroundType = statusBarBackgroundType,
+                    statusBarBackgroundColor = statusBarCustomColor,
+                    statusBarBackgroundImage = statusBarBackgroundImage,
+                    statusBarBackgroundAlpha = statusBarBackgroundAlpha,
+                    statusBarHeightDp = statusBarHeightDp
                 )
             }
         }
@@ -580,7 +595,13 @@ fun ShellScreen(
     onFileChooser: (ValueCallback<Array<Uri>>?, WebChromeClient.FileChooserParams?) -> Boolean,
     onShowCustomView: (View, WebChromeClient.CustomViewCallback?) -> Unit,
     onHideCustomView: () -> Unit,
-    onFullscreenModeChanged: (Boolean) -> Unit
+    onFullscreenModeChanged: (Boolean) -> Unit,
+    // 状态栏配置
+    statusBarBackgroundType: String = "COLOR",
+    statusBarBackgroundColor: String? = null,
+    statusBarBackgroundImage: String? = null,
+    statusBarBackgroundAlpha: Float = 1.0f,
+    statusBarHeightDp: Int = 0
 ) {
     val context = LocalContext.current
     val activity = context as android.app.Activity
@@ -1055,6 +1076,7 @@ fun ShellScreen(
     Scaffold(
         // 在沉浸式模式下，不添加任何内边距
         contentWindowInsets = if (hideToolbar) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
+        modifier = Modifier.imePadding(),
         topBar = {
             if (!hideToolbar) {
                 TopAppBar(
@@ -1151,7 +1173,7 @@ fun ShellScreen(
                 )
             } else if (config.appType == "HTML") {
                 // HTML应用模式 - 加载嵌入在 APK assets 中的 HTML 文件
-                val htmlEntryFile = config.htmlConfig.entryFile
+                val htmlEntryFile = config.htmlConfig.getValidEntryFile()
                 val htmlUrl = "file:///android_asset/html/$htmlEntryFile"
                 
                 AndroidView(
@@ -1447,6 +1469,19 @@ fun ShellScreen(
                     Toast.makeText(context, "无法打开链接", Toast.LENGTH_SHORT).show()
                 }
             }
+        )
+    }
+    
+    // 状态栏背景覆盖层（在全屏模式下显示状态栏时）
+    // 放在 Box 内部最上层，覆盖在所有内容之上
+    if (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) {
+        com.webtoapp.ui.components.StatusBarOverlay(
+            show = true,
+            backgroundType = statusBarBackgroundType,
+            backgroundColor = statusBarBackgroundColor,
+            backgroundImagePath = statusBarBackgroundImage,
+            alpha = statusBarBackgroundAlpha,
+            heightDp = statusBarHeightDp
         )
     }
     
