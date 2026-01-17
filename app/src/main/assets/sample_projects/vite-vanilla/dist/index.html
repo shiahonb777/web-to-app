@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite 天气应用</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="weather-card">
+            <div class="header">
+                <h1>🌤️ 天气预报</h1>
+                <p class="subtitle">Vite + Vanilla JS 示例</p>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="cityInput" placeholder="输入城市名称..." value="北京">
+                <button id="searchBtn">查询</button>
+            </div>
+            
+            <div class="weather-display">
+                <div class="city-name" id="cityName">北京</div>
+                <div class="temperature" id="temperature">23°</div>
+                <div class="weather-icon" id="weatherIcon">☀️</div>
+                <div class="description" id="description">晴朗</div>
+                
+                <div class="details">
+                    <div class="detail-item">
+                        <span class="label">湿度</span>
+                        <span class="value" id="humidity">45%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">风速</span>
+                        <span class="value" id="wind">12 km/h</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">体感</span>
+                        <span class="value" id="feelsLike">25°</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="forecast">
+                <div class="forecast-item">
+                    <span class="day">周一</span>
+                    <span class="icon">🌤️</span>
+                    <span class="temp">24°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">周二</span>
+                    <span class="icon">⛅</span>
+                    <span class="temp">22°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">周三</span>
+                    <span class="icon">🌧️</span>
+                    <span class="temp">18°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">周四</span>
+                    <span class="icon">☀️</span>
+                    <span class="temp">26°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">周五</span>
+                    <span class="icon">🌤️</span>
+                    <span class="temp">25°</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

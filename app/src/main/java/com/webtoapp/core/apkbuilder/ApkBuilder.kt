@@ -1,0 +1,1717 @@
+package com.webtoapp.core.apkbuilder
+
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import androidx.core.content.FileProvider
+import com.webtoapp.core.crypto.AssetEncryptor
+import com.webtoapp.core.crypto.EncryptedApkBuilder
+import com.webtoapp.core.crypto.EncryptionConfig
+import com.webtoapp.core.crypto.KeyManager
+import com.webtoapp.core.crypto.toHexString
+import com.webtoapp.core.shell.BgmShellItem
+import com.webtoapp.core.shell.LrcShellTheme
+import com.webtoapp.data.model.LrcData
+import com.webtoapp.data.model.WebApp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.*
+import java.util.zip.*
+import java.util.zip.CRC32
+import javax.crypto.SecretKey
+
+/**
+ * APK 构建器
+ * 负责将 WebApp 配置打包成独立的 APK 安装包
+ * 
+ * 工作原理：
+ * 1. 复制当前应用 APK 作为模板（因为当前应用支持 Shell 模式）
+ * 2. 注入 app_config.json 配置文件到 assets 目录
+ * 3. 修改 AndroidManifest.xml 中的包名（使每个导出的 App 独立）
+ * 4. 修改 resources.arsc 中的应用名称
+ * 5. 替换图标资源
+ * 6. 可选：加密资源文件
+ * 7. 重新签名
+ */
+class ApkBuilder(private val context: Context) {
+
+    private val template = ApkTemplate(context)
+    private val signer = JarSigner(context)
+    private val axmlEditor = AxmlEditor()
+    private val axmlRebuilder = AxmlRebuilder()
+    private val arscEditor = ArscEditor()
+    private val logger = BuildLogger(context)
+    private val encryptedApkBuilder = EncryptedApkBuilder(context)
+    private val keyManager = KeyManager(context)
+    
+    // 输出目录
+    private val outputDir = File(context.getExternalFilesDir(null), "built_apks").apply { mkdirs() }
+    private val tempDir = File(context.cacheDir, "apk_build_temp").apply { mkdirs() }
+    
+    // 原始应用名（用于替换）
+    // 使用不间断空格(\u00A0)填充，确保有足够字节空间支持长自定义名称
+    // 注意：必须与 strings.xml 中的 app_name 完全一致！
+    // 总长度：8(WebToApp) + 88(填充) = 96 字符，UTF-8 下不间断空格占 2 字节，总共约 184 字节
+    private val originalAppName = "WebToApp" + "\u00A0".repeat(88)
+    private val originalPackageName = "com.webtoapp"
+    
+    /**
+     * 清理临时目录
+     * 删除所有临时构建文件，释放存储空间
+     */
+    fun cleanTempFiles() {
+        try {
+            tempDir.listFiles()?.forEach { file ->
+                if (file.isDirectory) {
+                    file.deleteRecursively()
+                } else {
+                    file.delete()
+                }
+            }
+            Log.d("ApkBuilder", "临时文件已清理")
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "清理临时文件失败", e)
+        }
+    }
+    
+    /**
+     * 获取临时目录大小（字节）
+     */
+    fun getTempDirSize(): Long {
+        return tempDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
+    
+    /**
+     * 清理旧的构建产物（保留最近 N 个）
+     */
+    fun cleanOldBuilds(keepCount: Int = 5) {
+        try {
+            val apkFiles = outputDir.listFiles { file -> file.extension == "apk" }
+                ?.sortedByDescending { it.lastModified() }
+                ?: return
+            
+            if (apkFiles.size > keepCount) {
+                apkFiles.drop(keepCount).forEach { file ->
+                    file.delete()
+                    Log.d("ApkBuilder", "删除旧构建: ${file.name}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "清理旧构建失败", e)
+        }
+    }
+
+    /**
+     * 构建 APK
+     * @param webApp WebApp 配置
+     * @param onProgress 进度回调 (0-100)
+     * @return 构建结果
+     */
+    suspend fun buildApk(
+        webApp: WebApp,
+        onProgress: (Int, String) -> Unit = { _, _ -> }
+    ): BuildResult = withContext(Dispatchers.IO) {
+        // 开始日志记录
+        val logFile = logger.startNewLog(webApp.name)
+        
+        try {
+            onProgress(0, "准备构建...")
+            
+            // 获取加密配置
+            val encryptionConfig = webApp.apkExportConfig?.encryptionConfig?.toEncryptionConfig()
+                ?: EncryptionConfig.DISABLED
+            
+            // 记录 WebApp 完整配置
+            logger.section("WebApp 配置")
+            logger.logKeyValue("appName", webApp.name)
+            logger.logKeyValue("appType", webApp.appType)
+            logger.logKeyValue("url", webApp.url)
+            logger.logKeyValue("iconPath", webApp.iconPath)
+            logger.logKeyValue("splashEnabled", webApp.splashEnabled)
+            logger.logKeyValue("bgmEnabled", webApp.bgmEnabled)
+            logger.logKeyValue("activationEnabled", webApp.activationEnabled)
+            logger.logKeyValue("adBlockEnabled", webApp.adBlockEnabled)
+            logger.logKeyValue("translateEnabled", webApp.translateEnabled)
+            logger.logKeyValue("encryptionEnabled", encryptionConfig.enabled)
+            if (encryptionConfig.enabled) {
+                logger.logKeyValue("encryptConfig", encryptionConfig.encryptConfig)
+                logger.logKeyValue("encryptHtml", encryptionConfig.encryptHtml)
+                logger.logKeyValue("encryptMedia", encryptionConfig.encryptMedia)
+            }
+            
+            // APK 导出配置
+            logger.section("APK 导出配置")
+            logger.logKeyValue("customPackageName", webApp.apkExportConfig?.customPackageName)
+            logger.logKeyValue("customVersionCode", webApp.apkExportConfig?.customVersionCode)
+            logger.logKeyValue("customVersionName", webApp.apkExportConfig?.customVersionName)
+            
+            // WebView 配置
+            logger.section("WebView 配置")
+            logger.logKeyValue("hideToolbar", webApp.webViewConfig.hideToolbar)
+            logger.logKeyValue("javaScriptEnabled", webApp.webViewConfig.javaScriptEnabled)
+            logger.logKeyValue("desktopMode", webApp.webViewConfig.desktopMode)
+            logger.logKeyValue("landscapeMode", webApp.webViewConfig.landscapeMode)
+            
+            // 媒体配置
+            logger.section("媒体配置")
+            logger.logKeyValue("mediaConfig", webApp.mediaConfig)
+            logger.logKeyValue("mediaConfig.mediaPath", webApp.mediaConfig?.mediaPath)
+            
+            // HTML 配置
+            if (webApp.appType == com.webtoapp.data.model.AppType.HTML) {
+                logger.section("HTML 配置")
+                logger.logKeyValue("htmlConfig.projectId", webApp.htmlConfig?.projectId)
+                logger.logKeyValue("htmlConfig.entryFile", webApp.htmlConfig?.entryFile)
+                logger.logKeyValue("htmlConfig.files.size", webApp.htmlConfig?.files?.size ?: 0)
+                webApp.htmlConfig?.files?.forEachIndexed { index, file ->
+                    val exists = File(file.path).exists()
+                    logger.log("  file[$index]: name=${file.name}, path=${file.path}, exists=$exists")
+                }
+            }
+            
+            // 启动画面配置
+            logger.section("启动画面配置")
+            logger.logKeyValue("splashEnabled", webApp.splashEnabled)
+            logger.logKeyValue("splashConfig.type", webApp.splashConfig?.type)
+            logger.logKeyValue("splashConfig.mediaPath", webApp.splashConfig?.mediaPath)
+            logger.logKeyValue("splashMediaPath (getSplashMediaPath)", webApp.getSplashMediaPath())
+            
+            // BGM 配置
+            logger.section("BGM 配置")
+            logger.logKeyValue("bgmEnabled", webApp.bgmEnabled)
+            logger.logKeyValue("bgmConfig.playlist.size", webApp.bgmConfig?.playlist?.size ?: 0)
+            
+            // 同时保留原有的 Logcat 日志
+            Log.d("ApkBuilder", "构建开始 - WebApp配置:")
+            Log.d("ApkBuilder", "  appName=${webApp.name}")
+            Log.d("ApkBuilder", "  appType=${webApp.appType}")
+            
+            // 生成包名
+            logger.section("生成包名")
+            val customPkg = webApp.apkExportConfig?.customPackageName?.takeIf { 
+                it.isNotBlank() && 
+                it.matches(Regex("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"))
+            }
+            val packageName = customPkg ?: generatePackageName(webApp.name)
+            
+            if (webApp.apkExportConfig?.customPackageName?.isNotBlank() == true && customPkg == null) {
+                logger.warn("自定义包名格式不正确，使用自动生成的包名: $packageName")
+            }
+            logger.logKeyValue("最终包名", packageName)
+            
+            val config = webApp.toApkConfigWithModules(packageName, context)
+            logger.logKeyValue("versionCode", config.versionCode)
+            logger.logKeyValue("versionName", config.versionName)
+            logger.logKeyValue("embeddedExtensionModules.size", config.embeddedExtensionModules.size)
+            
+            // 详细记录每个嵌入的扩展模块
+            config.embeddedExtensionModules.forEachIndexed { index, module ->
+                logger.log("  嵌入模块[$index]: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}, codeLength=${module.code.length}")
+            }
+            
+            onProgress(10, "检查模板...")
+            logger.section("获取模板")
+            
+            val templateApk = getOrCreateTemplate()
+            if (templateApk == null) {
+                logger.error("无法获取模板 APK")
+                logger.endLog(false, "无法获取模板 APK")
+                return@withContext BuildResult.Error("无法获取模板 APK")
+            }
+            logger.logKeyValue("模板路径", templateApk.absolutePath)
+            logger.logKeyValue("模板大小", "${templateApk.length() / 1024} KB")
+            
+            onProgress(20, "准备资源...")
+            logger.section("准备文件")
+            
+            val unsignedApk = File(tempDir, "${packageName}_unsigned.apk")
+            val signedApk = File(outputDir, "${sanitizeFileName(webApp.name)}_v${config.versionName}.APK")
+            logger.logKeyValue("未签名APK路径", unsignedApk.absolutePath)
+            logger.logKeyValue("签名APK路径", signedApk.absolutePath)
+            
+            unsignedApk.delete()
+            signedApk.delete()
+            
+            onProgress(30, "注入配置...")
+            logger.section("准备嵌入资源")
+            
+            // 获取媒体文件路径
+            val mediaContentPath = if (webApp.appType == com.webtoapp.data.model.AppType.IMAGE || 
+                                       webApp.appType == com.webtoapp.data.model.AppType.VIDEO) {
+                webApp.url
+            } else {
+                null
+            }
+            logger.logKeyValue("mediaContentPath", mediaContentPath)
+            if (mediaContentPath != null) {
+                val mediaFile = File(mediaContentPath)
+                logger.logKeyValue("mediaFile.exists", mediaFile.exists())
+                logger.logKeyValue("mediaFile.size", if (mediaFile.exists()) "${mediaFile.length() / 1024} KB" else "N/A")
+            }
+            
+            // 获取 HTML 文件列表
+            val htmlFiles = if (webApp.appType == com.webtoapp.data.model.AppType.HTML) {
+                webApp.htmlConfig?.files ?: emptyList()
+            } else {
+                emptyList()
+            }
+            logger.logKeyValue("htmlFiles.size", htmlFiles.size)
+            htmlFiles.forEachIndexed { index, file ->
+                val exists = File(file.path).exists()
+                logger.log("  html[$index]: name=${file.name}, path=${file.path}, exists=$exists")
+            }
+            
+            // 获取 BGM 播放列表的原始路径
+            val bgmPlaylistPaths = if (webApp.bgmEnabled) {
+                webApp.bgmConfig?.playlist?.map { it.path } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            logger.logKeyValue("bgmPlaylistPaths.size", bgmPlaylistPaths.size)
+            
+            // 获取 BGM 歌词数据
+            val bgmLrcDataList = if (webApp.bgmEnabled) {
+                webApp.bgmConfig?.playlist?.map { it.lrcData } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            
+            // 生成加密密钥（如果启用加密）
+            // 重要：使用 JarSigner 的证书签名哈希，确保打包时和运行时使用相同的签名
+            val encryptionKey: SecretKey? = if (encryptionConfig.enabled) {
+                logger.section("生成加密密钥")
+                val signatureHash = signer.getCertificateSignatureHash()
+                logger.logKeyValue("签名哈希", signatureHash.toHexString().take(32) + "...")
+                keyManager.generateKeyForPackage(packageName, signatureHash).also {
+                    logger.log("加密密钥已生成（使用目标签名）")
+                }
+            } else null
+            
+            // 修改 APK 内容
+            logger.section("修改 APK 内容")
+            if (encryptionConfig.enabled) {
+                onProgress(30, "加密资源...")
+                logger.log("启用加密模式")
+            }
+            modifyApk(
+                templateApk, unsignedApk, config, webApp.iconPath, 
+                webApp.getSplashMediaPath(), mediaContentPath,
+                bgmPlaylistPaths, bgmLrcDataList, htmlFiles,
+                encryptionConfig, encryptionKey
+            ) { progress ->
+                val msg = if (encryptionConfig.enabled) "加密并处理资源..." else "处理资源..."
+                onProgress(30 + (progress * 0.4).toInt(), msg)
+            }
+            
+            onProgress(70, "签名 APK...")
+            logger.section("签名 APK")
+            
+            // 检查未签名 APK 是否有效
+            if (!unsignedApk.exists() || unsignedApk.length() == 0L) {
+                logger.error("未签名 APK 无效: exists=${unsignedApk.exists()}, size=${unsignedApk.length()}")
+                logger.endLog(false, "生成未签名 APK 失败")
+                return@withContext BuildResult.Error("生成未签名 APK 失败")
+            }
+            logger.logKeyValue("未签名APK大小", "${unsignedApk.length() / 1024} KB")
+            
+            // 签名
+            val signSuccess = try {
+                signer.sign(unsignedApk, signedApk)
+            } catch (e: Exception) {
+                logger.error("签名过程发生异常", e)
+                logger.endLog(false, "签名失败: ${e.message}")
+                return@withContext BuildResult.Error("签名失败: ${e.message ?: "未知错误"}")
+            }
+            
+            if (!signSuccess) {
+                logger.error("APK 签名返回失败")
+                logger.endLog(false, "APK 签名失败")
+                if (signedApk.exists()) {
+                    signedApk.delete()
+                }
+                return@withContext BuildResult.Error("APK 签名失败，请重试")
+            }
+            
+            // 验证签名后的 APK
+            logger.logKeyValue("签名APK大小", "${signedApk.length() / 1024} KB")
+            if (!signedApk.exists() || signedApk.length() == 0L) {
+                logger.error("签名后 APK 无效")
+                logger.endLog(false, "签名后 APK 文件无效")
+                return@withContext BuildResult.Error("签名后 APK 文件无效")
+            }
+
+            onProgress(85, "验证 APK...")
+            logger.section("验证 APK")
+            
+            val parseResult = debugApkStructure(signedApk)
+            logger.logKeyValue("APK预解析结果", parseResult)
+            if (!parseResult) {
+                logger.warn("APK 预解析失败，可能无法安装")
+            }
+            
+            onProgress(90, "清理临时文件...")
+            unsignedApk.delete()
+            
+            onProgress(100, "构建完成")
+            
+            logger.logKeyValue("最终APK路径", signedApk.absolutePath)
+            logger.logKeyValue("最终APK大小", "${signedApk.length() / 1024} KB")
+            logger.endLog(true, "构建成功")
+            
+            // 构建成功后清理临时文件
+            cleanTempFiles()
+            
+            BuildResult.Success(signedApk, logger.getCurrentLogPath())
+            
+        } catch (e: Exception) {
+            logger.error("构建过程发生异常", e)
+            logger.endLog(false, "构建失败: ${e.message}")
+            
+            // 构建失败也要清理临时文件
+            cleanTempFiles()
+            
+            BuildResult.Error("构建失败: ${e.message ?: "未知错误"}")
+        }
+    }
+
+    /**
+     * 获取模板 APK
+     * 使用当前应用作为模板（因为已支持 Shell 模式）
+     */
+    private fun getOrCreateTemplate(): File? {
+        return try {
+            val currentApk = File(context.applicationInfo.sourceDir)
+            val templateFile = File(tempDir, "base_template.apk")
+            currentApk.copyTo(templateFile, overwrite = true)
+            templateFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
+     * 修改 APK 内容
+     * 1. 注入配置文件（可选加密）
+     * 2. 修改包名
+     * 3. 修改应用名
+     * 4. 替换/添加图标
+     * 5. 嵌入启动画面媒体（可选加密）
+     * 6. 嵌入媒体应用内容（可选加密）
+     * 7. 嵌入 HTML 文件（可选加密）
+     */
+    private fun modifyApk(
+        sourceApk: File,
+        outputApk: File,
+        config: ApkConfig,
+        iconPath: String?,
+        splashMediaPath: String?,
+        mediaContentPath: String? = null,
+        bgmPlaylistPaths: List<String> = emptyList(),
+        bgmLrcDataList: List<LrcData?> = emptyList(),
+        htmlFiles: List<com.webtoapp.data.model.HtmlFile> = emptyList(),
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED,
+        encryptionKey: SecretKey? = null,
+        onProgress: (Int) -> Unit
+    ) {
+        logger.log("modifyApk 开始, 加密=${encryptionConfig.enabled}")
+        val iconBitmap = iconPath?.let { template.loadBitmap(it) }
+        var hasConfigFile = false
+        val replacedIconPaths = mutableSetOf<String>() // 记录已替换的图标路径
+        
+        // 创建加密器（如果启用加密）
+        val assetEncryptor = if (encryptionConfig.enabled && encryptionKey != null) {
+            AssetEncryptor(encryptionKey)
+        } else null
+        
+        ZipFile(sourceApk).use { zipIn ->
+            ZipOutputStream(FileOutputStream(outputApk)).use { zipOut ->
+                // 为满足 Android R+ 要求，将 resources.arsc 作为第一个条目写入
+                val entries = zipIn.entries().toList()
+                    .sortedWith(compareBy<ZipEntry> { it.name != "resources.arsc" })
+                val entryNames = entries.map { it.name }.toSet()
+
+                var processedCount = 0
+                
+                entries.forEach { entry ->
+                    processedCount++
+                    onProgress((processedCount * 100) / entries.size)
+                    
+                    when {
+                        // 跳过签名文件（将重新签名）
+                        entry.name.startsWith("META-INF/") && 
+                        (entry.name.endsWith(".SF") || entry.name.endsWith(".RSA") || 
+                         entry.name.endsWith(".DSA") || entry.name == "META-INF/MANIFEST.MF") -> {
+                            // 跳过
+                        }
+                        
+                        // 跳过旧的启动画面媒体文件（将在后面重新添加）
+                        entry.name.startsWith("assets/splash_media.") -> {
+                            Log.d("ApkBuilder", "跳过旧启动画面媒体: ${entry.name}")
+                        }
+                        
+                        // 修改 AndroidManifest.xml（修改包名和版本号）
+                        entry.name == "AndroidManifest.xml" -> {
+                            val originalData = zipIn.getInputStream(entry).readBytes()
+                            // 使用AxmlRebuilder支持任意长度包名和版本号修改
+                            val modifiedData = axmlRebuilder.expandAndModifyWithVersion(
+                                originalData, 
+                                originalPackageName, 
+                                config.packageName,
+                                config.versionCode,
+                                config.versionName
+                            )
+                            writeEntryDeflated(zipOut, entry.name, modifiedData)
+                        }
+                        
+                        // 修改 resources.arsc（修改应用名 + 图标路径）
+                        // Android 11+ 要求 resources.arsc 必须未压缩且 4 字节对齐
+                        entry.name == "resources.arsc" -> {
+                            val originalData = zipIn.getInputStream(entry).readBytes()
+                            var modifiedData = arscEditor.modifyAppName(
+                                originalData,
+                                originalAppName,
+                                config.appName
+                            )
+                            // 让 @mipmap/ic_launcher* 从 .xml 改为 .png，便于使用位图图标
+                            modifiedData = arscEditor.modifyIconPathsToPng(modifiedData)
+                            writeEntryStored(zipOut, entry.name, modifiedData)
+                        }
+                        
+                        // 替换/添加配置文件
+                        entry.name == ApkTemplate.CONFIG_PATH -> {
+                            hasConfigFile = true
+                            writeConfigEntry(zipOut, config, assetEncryptor, encryptionConfig)
+                        }
+                        
+                        // 替换图标（如果 APK 中存在 PNG 图标）
+                        iconBitmap != null && isIconEntry(entry.name) -> {
+                            replaceIconEntry(zipOut, entry.name, iconBitmap)
+                            replacedIconPaths.add(entry.name)
+                        }
+                        
+                        // 复制其他文件
+                        else -> {
+                            copyEntry(zipIn, zipOut, entry)
+                        }
+                    }
+                }
+                
+                // 如果原 APK 没有配置文件，添加一个
+                if (!hasConfigFile) {
+                    writeConfigEntry(zipOut, config, assetEncryptor, encryptionConfig)
+                }
+                
+                // 写入加密元数据（如果启用加密）
+                if (encryptionConfig.enabled) {
+                    // 使用 JarSigner 的证书签名哈希，确保与加密密钥派生使用相同的签名
+                    val signatureHash = signer.getCertificateSignatureHash()
+                    encryptedApkBuilder.writeEncryptionMetadata(zipOut, encryptionConfig, config.packageName, signatureHash)
+                    logger.log("已写入加密元数据")
+                }
+                
+                // 如果有图标但 APK 中没有 PNG 图标文件，主动添加
+                if (iconBitmap != null && replacedIconPaths.isEmpty()) {
+                    addIconsToApk(zipOut, iconBitmap)
+                }
+
+                // 为使用 adaptive icon 的模板添加前景 PNG 图标
+                // 无条件写入，因为 release 版 APK 的前景图可能被编译到不同路径
+                if (iconBitmap != null) {
+                    addAdaptiveIconPngs(zipOut, iconBitmap, entryNames)
+                }
+
+                // 嵌入启动画面媒体文件
+                Log.d("ApkBuilder", "启动画面配置: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath, splashType=${config.splashType}")
+                if (config.splashEnabled && splashMediaPath != null) {
+                    addSplashMediaToAssets(zipOut, splashMediaPath, config.splashType, assetEncryptor, encryptionConfig)
+                } else {
+                    Log.w("ApkBuilder", "跳过嵌入启动画面: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath")
+                }
+                
+                // 嵌入状态栏背景图片（如果配置了图片背景）
+                if (config.statusBarBackgroundType == "IMAGE" && !config.statusBarBackgroundImage.isNullOrEmpty()) {
+                    addStatusBarBackgroundToAssets(zipOut, config.statusBarBackgroundImage)
+                }
+                
+                // 嵌入媒体应用内容（单媒体模式：图片/视频转APP）
+                if (config.appType != "WEB" && mediaContentPath != null) {
+                    logger.log("嵌入单媒体内容: $mediaContentPath")
+                    val isVideo = config.appType == "VIDEO"
+                    addMediaContentToAssets(zipOut, mediaContentPath, isVideo, assetEncryptor, encryptionConfig)
+                }
+                
+                // 嵌入背景音乐文件
+                if (config.bgmEnabled && bgmPlaylistPaths.isNotEmpty()) {
+                    logger.log("嵌入BGM: ${bgmPlaylistPaths.size} 个文件")
+                    addBgmToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList, assetEncryptor, encryptionConfig)
+                }
+                
+                // 嵌入 HTML 文件（HTML应用）
+                if (config.appType == "HTML" && htmlFiles.isNotEmpty()) {
+                    logger.section("嵌入HTML文件")
+                    val embeddedCount = addHtmlFilesToAssets(zipOut, htmlFiles, assetEncryptor, encryptionConfig)
+                    logger.logKeyValue("HTML文件嵌入数量", embeddedCount)
+                    if (embeddedCount == 0) {
+                        logger.warn("HTML应用没有成功嵌入任何文件！")
+                    }
+                } else if (config.appType == "HTML") {
+                    logger.warn("HTML应用但 htmlFiles 为空！htmlConfig=${config.htmlEntryFile}")
+                }
+            }
+        }
+        
+        iconBitmap?.recycle()
+    }
+
+    /**
+     * 将启动画面媒体文件添加到 assets 目录
+     * 
+     * 重要：必须使用 STORED（未压缩）方式存储！
+     * 因为 AssetManager.openFd() 只支持未压缩的 assets 文件。
+     * 如果使用 DEFLATED 压缩，openFd() 会抛出 FileNotFoundException。
+     * 
+     * 注意：如果启用加密，则无法使用 openFd()，需要先解密到临时文件
+     */
+    private fun addSplashMediaToAssets(
+        zipOut: ZipOutputStream,
+        mediaPath: String,
+        splashType: String,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
+    ) {
+        Log.d("ApkBuilder", "准备嵌入启动画面媒体: path=$mediaPath, type=$splashType, encrypt=${encryptionConfig.encryptSplash}")
+        
+        val mediaFile = File(mediaPath)
+        if (!mediaFile.exists()) {
+            Log.e("ApkBuilder", "启动画面媒体文件不存在: $mediaPath")
+            return
+        }
+        
+        if (!mediaFile.canRead()) {
+            Log.e("ApkBuilder", "启动画面媒体文件无法读取: $mediaPath")
+            return
+        }
+        
+        val fileSize = mediaFile.length()
+        if (fileSize == 0L) {
+            Log.e("ApkBuilder", "启动画面媒体文件内容为空: $mediaPath")
+            return
+        }
+
+        // 根据类型确定文件名
+        val extension = if (splashType == "VIDEO") "mp4" else "png"
+        val assetPath = "splash_media.$extension"
+        val isVideo = splashType == "VIDEO"
+
+        try {
+            // 大文件阈值：10MB，超过此大小使用流式写入避免 OOM
+            val largeFileThreshold = 10 * 1024 * 1024L
+            
+            if (encryptionConfig.encryptSplash && encryptor != null) {
+                // 加密启动画面
+                if (isVideo && fileSize > largeFileThreshold) {
+                    Log.d("ApkBuilder", "启动画面大视频加密模式: ${fileSize / 1024 / 1024} MB")
+                    val encryptedData = encryptLargeFile(mediaFile, assetPath, encryptor)
+                    writeEntryDeflated(zipOut, "assets/${assetPath}.enc", encryptedData)
+                    Log.d("ApkBuilder", "启动画面媒体已加密嵌入: assets/${assetPath}.enc (${encryptedData.size} bytes)")
+                } else {
+                    val mediaBytes = mediaFile.readBytes()
+                    val encryptedData = encryptor.encrypt(mediaBytes, assetPath)
+                    writeEntryDeflated(zipOut, "assets/${assetPath}.enc", encryptedData)
+                    Log.d("ApkBuilder", "启动画面媒体已加密嵌入: assets/${assetPath}.enc (${encryptedData.size} bytes)")
+                }
+            } else {
+                // 非加密模式
+                if (isVideo && fileSize > largeFileThreshold) {
+                    // 大视频：使用流式写入避免 OOM
+                    Log.d("ApkBuilder", "启动画面大视频流式写入模式: ${fileSize / 1024 / 1024} MB")
+                    writeEntryStoredStreaming(zipOut, "assets/$assetPath", mediaFile)
+                } else {
+                    // 小文件或图片：正常读取
+                    val mediaBytes = mediaFile.readBytes()
+                    writeEntryStoredSimple(zipOut, "assets/$assetPath", mediaBytes)
+                    Log.d("ApkBuilder", "启动画面媒体已嵌入(STORED): assets/$assetPath (${mediaBytes.size} bytes)")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "嵌入启动画面媒体失败: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * 将状态栏背景图片添加到 assets 目录
+     */
+    private fun addStatusBarBackgroundToAssets(
+        zipOut: ZipOutputStream,
+        imagePath: String
+    ) {
+        Log.d("ApkBuilder", "准备嵌入状态栏背景图片: path=$imagePath")
+        
+        val imageFile = File(imagePath)
+        if (!imageFile.exists()) {
+            Log.e("ApkBuilder", "状态栏背景图片不存在: $imagePath")
+            return
+        }
+        
+        if (!imageFile.canRead()) {
+            Log.e("ApkBuilder", "状态栏背景图片无法读取: $imagePath")
+            return
+        }
+        
+        try {
+            val imageBytes = imageFile.readBytes()
+            if (imageBytes.isEmpty()) {
+                Log.e("ApkBuilder", "状态栏背景图片内容为空: $imagePath")
+                return
+            }
+            
+            // 使用 DEFLATED 压缩方式存储（图片不需要 openFd）
+            writeEntryDeflated(zipOut, "assets/statusbar_background.png", imageBytes)
+            Log.d("ApkBuilder", "状态栏背景图片已嵌入: assets/statusbar_background.png (${imageBytes.size} bytes)")
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "嵌入状态栏背景图片失败: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * 写入条目（使用 STORED 未压缩格式，简化版本）
+     * 用于启动画面媒体等需要被 AssetManager.openFd() 读取的文件
+     */
+    private fun writeEntryStoredSimple(zipOut: ZipOutputStream, name: String, data: ByteArray) {
+        val entry = ZipEntry(name)
+        entry.method = ZipEntry.STORED
+        entry.size = data.size.toLong()
+        entry.compressedSize = data.size.toLong()
+        
+        val crc = CRC32()
+        crc.update(data)
+        entry.crc = crc.value
+
+        zipOut.putNextEntry(entry)
+        zipOut.write(data)
+        zipOut.closeEntry()
+    }
+    
+    /**
+     * 流式写入大文件（使用 STORED 未压缩格式）
+     * 用于大视频文件，避免 OOM
+     * 分两步：先计算 CRC，再写入数据
+     */
+    private fun writeEntryStoredStreaming(zipOut: ZipOutputStream, name: String, file: File) {
+        val fileSize = file.length()
+        
+        // 第一遍：计算 CRC32（流式读取，不加载到内存）
+        val crc = CRC32()
+        val buffer = ByteArray(8192)
+        file.inputStream().buffered().use { input ->
+            var bytesRead: Int
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                crc.update(buffer, 0, bytesRead)
+            }
+        }
+        
+        // 创建 ZIP 条目
+        val entry = ZipEntry(name)
+        entry.method = ZipEntry.STORED
+        entry.size = fileSize
+        entry.compressedSize = fileSize
+        entry.crc = crc.value
+        
+        // 第二遍：写入数据（流式写入）
+        zipOut.putNextEntry(entry)
+        file.inputStream().buffered().use { input ->
+            var bytesRead: Int
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                zipOut.write(buffer, 0, bytesRead)
+            }
+        }
+        zipOut.closeEntry()
+        
+        Log.d("ApkBuilder", "大文件已流式嵌入(STORED): $name (${fileSize / 1024} KB)")
+    }
+    
+    /**
+     * 将媒体应用内容添加到 assets 目录
+     * 使用 STORED（未压缩）方式，以支持 AssetManager.openFd()
+     * 
+     * 注意：如果启用加密，则无法使用 openFd()，需要先解密到临时文件
+     */
+    private fun addMediaContentToAssets(
+        zipOut: ZipOutputStream,
+        mediaPath: String,
+        isVideo: Boolean,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
+    ) {
+        Log.d("ApkBuilder", "准备嵌入媒体应用内容: path=$mediaPath, isVideo=$isVideo, encrypt=${encryptionConfig.encryptMedia}")
+        
+        val mediaFile = File(mediaPath)
+        if (!mediaFile.exists()) {
+            Log.e("ApkBuilder", "媒体文件不存在: $mediaPath")
+            return
+        }
+        
+        if (!mediaFile.canRead()) {
+            Log.e("ApkBuilder", "媒体文件无法读取: $mediaPath")
+            return
+        }
+        
+        val fileSize = mediaFile.length()
+        if (fileSize == 0L) {
+            Log.e("ApkBuilder", "媒体文件内容为空: $mediaPath")
+            return
+        }
+
+        // 根据类型确定文件名
+        val extension = if (isVideo) "mp4" else "png"
+        val assetName = "media_content.$extension"
+
+        try {
+            // 大文件阈值：10MB，超过此大小使用流式写入避免 OOM
+            val largeFileThreshold = 10 * 1024 * 1024L
+            
+            if (encryptionConfig.encryptMedia && encryptor != null) {
+                // 加密媒体内容（大文件分块加密）
+                if (fileSize > largeFileThreshold) {
+                    Log.d("ApkBuilder", "大文件加密模式: ${fileSize / 1024 / 1024} MB")
+                    // 大文件：分块读取和加密
+                    val encryptedData = encryptLargeFile(mediaFile, assetName, encryptor)
+                    writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
+                    Log.d("ApkBuilder", "媒体应用内容已加密嵌入: assets/${assetName}.enc (${encryptedData.size} bytes)")
+                } else {
+                    val mediaBytes = mediaFile.readBytes()
+                    val encryptedData = encryptor.encrypt(mediaBytes, assetName)
+                    writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
+                    Log.d("ApkBuilder", "媒体应用内容已加密嵌入: assets/${assetName}.enc (${encryptedData.size} bytes)")
+                }
+            } else {
+                // 非加密模式
+                if (fileSize > largeFileThreshold) {
+                    // 大文件：使用流式写入避免 OOM
+                    Log.d("ApkBuilder", "大文件流式写入模式: ${fileSize / 1024 / 1024} MB")
+                    writeEntryStoredStreaming(zipOut, "assets/$assetName", mediaFile)
+                } else {
+                    // 小文件：正常读取
+                    val mediaBytes = mediaFile.readBytes()
+                    writeEntryStoredSimple(zipOut, "assets/$assetName", mediaBytes)
+                    Log.d("ApkBuilder", "媒体应用内容已嵌入(STORED): assets/$assetName (${mediaBytes.size} bytes)")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "嵌入媒体应用内容失败", e)
+        }
+    }
+    
+    /**
+     * 加密大文件（分块读取避免 OOM）
+     */
+    private fun encryptLargeFile(file: File, assetName: String, encryptor: AssetEncryptor): ByteArray {
+        // 对于大文件，我们仍需要读取全部内容进行加密
+        // 但使用缓冲流减少内存峰值
+        val outputStream = ByteArrayOutputStream()
+        val buffer = ByteArray(1024 * 1024) // 1MB 缓冲区
+        
+        file.inputStream().buffered().use { input ->
+            var bytesRead: Int
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+            }
+        }
+        
+        val mediaBytes = outputStream.toByteArray()
+        return encryptor.encrypt(mediaBytes, assetName)
+    }
+    
+    /**
+     * 判断是否为文本文件（可以压缩）
+     */
+    private fun isTextFile(fileName: String): Boolean {
+        val textExtensions = setOf("html", "htm", "css", "js", "json", "xml", "txt", "svg", "md")
+        val ext = fileName.substringAfterLast('.', "").lowercase()
+        return ext in textExtensions
+    }
+    
+    /**
+     * 将背景音乐文件添加到 assets/bgm 目录
+     * 使用 STORED（未压缩）方式，以支持 AssetManager.openFd()
+     * 
+     * 注意：如果启用加密，则无法使用 openFd()，需要先解密到临时文件
+     */
+    private fun addBgmToAssets(
+        zipOut: ZipOutputStream,
+        bgmPaths: List<String>,
+        lrcDataList: List<LrcData?>,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
+    ) {
+        Log.d("ApkBuilder", "准备嵌入 ${bgmPaths.size} 个背景音乐文件, encrypt=${encryptionConfig.encryptBgm}")
+        
+        bgmPaths.forEachIndexed { index, bgmPath ->
+            try {
+                val assetName = "bgm/bgm_$index.mp3"
+                var bgmBytes: ByteArray? = null
+                
+                val bgmFile = File(bgmPath)
+                if (!bgmFile.exists()) {
+                    // 尝试处理 asset:/// 路径
+                    if (bgmPath.startsWith("asset:///")) {
+                        val assetPath = bgmPath.removePrefix("asset:///")
+                        bgmBytes = context.assets.open(assetPath).use { it.readBytes() }
+                    } else {
+                        Log.e("ApkBuilder", "BGM 文件不存在: $bgmPath")
+                        return@forEachIndexed
+                    }
+                } else {
+                    if (!bgmFile.canRead()) {
+                        Log.e("ApkBuilder", "BGM 文件无法读取: $bgmPath")
+                        return@forEachIndexed
+                    }
+                    
+                    bgmBytes = bgmFile.readBytes()
+                    if (bgmBytes.isEmpty()) {
+                        Log.e("ApkBuilder", "BGM 文件内容为空: $bgmPath")
+                        return@forEachIndexed
+                    }
+                }
+                
+                if (bgmBytes != null) {
+                    if (encryptionConfig.encryptBgm && encryptor != null) {
+                        // 加密 BGM
+                        val encryptedData = encryptor.encrypt(bgmBytes, assetName)
+                        writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
+                        Log.d("ApkBuilder", "BGM 已加密嵌入: assets/${assetName}.enc (${encryptedData.size} bytes)")
+                    } else {
+                        // 使用 STORED（未压缩）方式存储
+                        writeEntryStoredSimple(zipOut, "assets/$assetName", bgmBytes)
+                        Log.d("ApkBuilder", "BGM 已嵌入(STORED): assets/$assetName (${bgmBytes.size} bytes)")
+                    }
+                }
+                
+                // 嵌入歌词文件（如果有）- 歌词文件较小，可以选择加密
+                val lrcData = lrcDataList.getOrNull(index)
+                if (lrcData != null && lrcData.lines.isNotEmpty()) {
+                    val lrcContent = convertLrcDataToLrcString(lrcData)
+                    val lrcAssetName = "bgm/bgm_$index.lrc"
+                    val lrcBytes = lrcContent.toByteArray(Charsets.UTF_8)
+                    
+                    if (encryptionConfig.encryptBgm && encryptor != null) {
+                        val encryptedLrc = encryptor.encrypt(lrcBytes, lrcAssetName)
+                        writeEntryDeflated(zipOut, "assets/${lrcAssetName}.enc", encryptedLrc)
+                        Log.d("ApkBuilder", "LRC 已加密嵌入: assets/${lrcAssetName}.enc")
+                    } else {
+                        writeEntryDeflated(zipOut, "assets/$lrcAssetName", lrcBytes)
+                        Log.d("ApkBuilder", "LRC 已嵌入: assets/$lrcAssetName")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "嵌入 BGM 失败: $bgmPath", e)
+            }
+        }
+    }
+    
+    /**
+     * 将 HTML 文件添加到 assets/html 目录
+     * 
+     * 重要修复：将 CSS 和 JS 内联到 HTML 文件中，而不是作为独立文件
+     * 这样可以避免 WebView 加载本地文件时的路径引用问题
+     * 
+     * 增强功能：
+     * 1. 自动检测和修复资源路径引用
+     * 2. 正确处理文件编码
+     * 3. 安全包装 JS 代码确保 DOM 加载后执行
+     * 4. 支持加密 HTML/CSS/JS 文件
+     * 
+     * @return 成功嵌入的文件数量
+     */
+    private fun addHtmlFilesToAssets(
+        zipOut: ZipOutputStream,
+        htmlFiles: List<com.webtoapp.data.model.HtmlFile>,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
+    ): Int {
+        Log.d("ApkBuilder", "准备嵌入 ${htmlFiles.size} 个 HTML 项目文件")
+        
+        // 打印所有文件路径用于调试
+        htmlFiles.forEachIndexed { index, file ->
+            Log.d("ApkBuilder", "  [$index] name=${file.name}, path=${file.path}, type=${file.type}")
+        }
+        
+        // 分类文件
+        val htmlFilesList = htmlFiles.filter { 
+            it.type == com.webtoapp.data.model.HtmlFileType.HTML || 
+            it.name.endsWith(".html", ignoreCase = true) || 
+            it.name.endsWith(".htm", ignoreCase = true)
+        }
+        val cssFilesList = htmlFiles.filter { 
+            it.type == com.webtoapp.data.model.HtmlFileType.CSS || 
+            it.name.endsWith(".css", ignoreCase = true)
+        }
+        val jsFilesList = htmlFiles.filter { 
+            it.type == com.webtoapp.data.model.HtmlFileType.JS || 
+            it.name.endsWith(".js", ignoreCase = true)
+        }
+        val otherFiles = htmlFiles.filter { file ->
+            file !in htmlFilesList && file !in cssFilesList && file !in jsFilesList
+        }
+        
+        Log.d("ApkBuilder", "文件分类: HTML=${htmlFilesList.size}, CSS=${cssFilesList.size}, JS=${jsFilesList.size}, Other=${otherFiles.size}")
+        
+        var successCount = 0
+        
+        // 读取 CSS 内容（使用正确编码）
+        val cssContent = cssFilesList.mapNotNull { cssFile ->
+            try {
+                val file = File(cssFile.path)
+                if (file.exists() && file.canRead()) {
+                    val encoding = detectFileEncoding(file)
+                    com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(file, encoding)
+                } else null
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "读取 CSS 文件失败: ${cssFile.path}", e)
+                null
+            }
+        }.joinToString("\n\n")
+        
+        // 读取 JS 内容（使用正确编码）
+        val jsContent = jsFilesList.mapNotNull { jsFile ->
+            try {
+                val file = File(jsFile.path)
+                if (file.exists() && file.canRead()) {
+                    val encoding = detectFileEncoding(file)
+                    com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(file, encoding)
+                } else null
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "读取 JS 文件失败: ${jsFile.path}", e)
+                null
+            }
+        }.joinToString("\n\n")
+        
+        Log.d("ApkBuilder", "CSS 内容长度: ${cssContent.length}, JS 内容长度: ${jsContent.length}")
+        
+        // 处理 HTML 文件，使用 HtmlProjectProcessor 进行处理
+        htmlFilesList.forEach { htmlFile ->
+            try {
+                val sourceFile = File(htmlFile.path)
+                Log.d("ApkBuilder", "处理 HTML 文件: ${htmlFile.path}")
+                
+                if (!sourceFile.exists()) {
+                    Log.e("ApkBuilder", "HTML 文件不存在: ${htmlFile.path}")
+                    return@forEach
+                }
+                
+                if (!sourceFile.canRead()) {
+                    Log.e("ApkBuilder", "HTML 文件无法读取: ${htmlFile.path}")
+                    return@forEach
+                }
+                
+                // 使用正确编码读取 HTML
+                val encoding = detectFileEncoding(sourceFile)
+                var htmlContent = com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(sourceFile, encoding)
+                
+                if (htmlContent.isEmpty()) {
+                    Log.w("ApkBuilder", "HTML 文件内容为空: ${htmlFile.path}")
+                    return@forEach
+                }
+                
+                // 使用 HtmlProjectProcessor 处理 HTML 内容
+                htmlContent = com.webtoapp.util.HtmlProjectProcessor.processHtmlContent(
+                    htmlContent = htmlContent,
+                    cssContent = cssContent.takeIf { it.isNotBlank() },
+                    jsContent = jsContent.takeIf { it.isNotBlank() },
+                    fixPaths = true
+                )
+                
+                // 保存到 assets/html/ 目录
+                val assetPath = "assets/html/${htmlFile.name}"
+                val htmlBytes = htmlContent.toByteArray(Charsets.UTF_8)
+                
+                if (encryptionConfig.encryptHtml && encryptor != null) {
+                    // 加密 HTML 文件
+                    val encryptedData = encryptor.encrypt(htmlBytes, "html/${htmlFile.name}")
+                    writeEntryDeflated(zipOut, "${assetPath}.enc", encryptedData)
+                    Log.d("ApkBuilder", "HTML 文件已加密嵌入: ${assetPath}.enc (${encryptedData.size} bytes)")
+                } else {
+                    writeEntryDeflated(zipOut, assetPath, htmlBytes)
+                    Log.d("ApkBuilder", "HTML 文件已嵌入(内联CSS/JS): $assetPath (${htmlContent.length} bytes)")
+                }
+                successCount++
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "嵌入 HTML 文件失败: ${htmlFile.path}", e)
+            }
+        }
+        
+        // 处理其他文件（图片、字体等）
+        otherFiles.forEach { otherFile ->
+            try {
+                val sourceFile = File(otherFile.path)
+                if (sourceFile.exists() && sourceFile.canRead()) {
+                    val fileBytes = sourceFile.readBytes()
+                    if (fileBytes.isNotEmpty()) {
+                        val assetPath = "assets/html/${otherFile.name}"
+                        val assetName = "html/${otherFile.name}"
+                        
+                        // 其他文件（如图片）根据 encryptMedia 配置决定是否加密
+                        if (encryptionConfig.encryptMedia && encryptor != null) {
+                            val encryptedData = encryptor.encrypt(fileBytes, assetName)
+                            writeEntryDeflated(zipOut, "${assetPath}.enc", encryptedData)
+                            Log.d("ApkBuilder", "其他文件已加密嵌入: ${assetPath}.enc (${encryptedData.size} bytes)")
+                        } else {
+                            writeEntryDeflated(zipOut, assetPath, fileBytes)
+                            Log.d("ApkBuilder", "其他文件已嵌入: $assetPath (${fileBytes.size} bytes)")
+                        }
+                        successCount++
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ApkBuilder", "嵌入其他文件失败: ${otherFile.path}", e)
+            }
+        }
+        
+        Log.d("ApkBuilder", "HTML 文件嵌入完成: $successCount/${htmlFiles.size} 成功")
+        return successCount
+    }
+    
+    /**
+     * 检测文件编码
+     */
+    private fun detectFileEncoding(file: File): String {
+        return try {
+            val bytes = file.readBytes().take(1000).toByteArray()
+            
+            // 检查 BOM
+            when {
+                bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte() -> "UTF-8"
+                bytes.size >= 2 && bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte() -> "UTF-16BE"
+                bytes.size >= 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() -> "UTF-16LE"
+                else -> {
+                    // 尝试检测 charset 声明
+                    val content = String(bytes, Charsets.ISO_8859_1)
+                    val charsetMatch = Regex("""charset=["']?([^"'\s>]+)""", RegexOption.IGNORE_CASE).find(content)
+                    charsetMatch?.groupValues?.get(1)?.uppercase() ?: "UTF-8"
+                }
+            }
+        } catch (e: Exception) {
+            "UTF-8"
+        }
+    }
+    
+    /**
+     * 包装 JS 代码，确保在 DOM 加载完成后执行
+     * 
+     * 修复：使用更安全的包装方式，保持全局作用域的函数可访问
+     */
+    private fun wrapJsForDomReady(jsContent: String): String {
+        val trimmedContent = jsContent.trim()
+        if (trimmedContent.isEmpty()) return ""
+        
+        // 检查 JS 是否已经有 DOMContentLoaded 或 window.onload 包装
+        val hasWrapper = trimmedContent.contains("DOMContentLoaded", ignoreCase = true) ||
+                        trimmedContent.contains("window.onload", ignoreCase = true) ||
+                        trimmedContent.contains("addEventListener('load'", ignoreCase = true) ||
+                        trimmedContent.contains("addEventListener(\"load\"", ignoreCase = true) ||
+                        trimmedContent.contains("\$(document).ready", ignoreCase = true) ||
+                        trimmedContent.contains("\$(function()", ignoreCase = true)
+        
+        return if (hasWrapper) {
+            trimmedContent
+        } else {
+            // 直接使用 DOMContentLoaded 包装，不使用 IIFE
+            // 这样可以保持全局作用域的函数定义可访问
+            """
+// 确保 DOM 加载完成后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+$trimmedContent
+    });
+} else {
+    // DOM 已经加载完成，直接执行
+    (function() {
+$trimmedContent
+    })();
+}
+            """.trimIndent()
+        }
+    }
+    
+    /**
+     * 将 LrcData 转换为标准 LRC 格式字符串
+     */
+    private fun convertLrcDataToLrcString(lrcData: LrcData): String {
+        val sb = StringBuilder()
+        
+        // 添加元数据
+        lrcData.title?.let { sb.appendLine("[ti:$it]") }
+        lrcData.artist?.let { sb.appendLine("[ar:$it]") }
+        lrcData.album?.let { sb.appendLine("[al:$it]") }
+        sb.appendLine()
+        
+        // 添加歌词行
+        lrcData.lines.forEach { line ->
+            val minutes = line.startTime / 60000
+            val seconds = (line.startTime % 60000) / 1000
+            val centiseconds = (line.startTime % 1000) / 10
+            sb.appendLine("[%02d:%02d.%02d]%s".format(minutes, seconds, centiseconds, line.text))
+            
+            // 如果有翻译，添加翻译行（使用相同时间戳）
+            line.translation?.let { translation ->
+                sb.appendLine("[%02d:%02d.%02d]%s".format(minutes, seconds, centiseconds, translation))
+            }
+        }
+        
+        return sb.toString()
+    }
+
+    /**
+     * 调试辅助：使用 PackageManager 预解析已构建 APK，检查系统是否能正常读取包信息
+     * @return 是否解析成功
+     */
+    private fun debugApkStructure(apkFile: File): Boolean {
+        return try {
+            val pm = context.packageManager
+            val flags = PackageManager.GET_ACTIVITIES or
+                    PackageManager.GET_SERVICES or
+                    PackageManager.GET_PROVIDERS
+
+            val info = pm.getPackageArchiveInfo(apkFile.absolutePath, flags)
+
+            if (info == null) {
+                Log.e(
+                    "ApkBuilder",
+                    "getPackageArchiveInfo 返回 null，无法解析 APK: ${apkFile.absolutePath}"
+                )
+                false
+            } else {
+                Log.d(
+                    "ApkBuilder",
+                    "解析 APK 成功: packageName=${info.packageName}, " +
+                            "versionName=${info.versionName}, " +
+                            "activities=${info.activities?.size ?: 0}, " +
+                            "services=${info.services?.size ?: 0}, " +
+                            "providers=${info.providers?.size ?: 0}"
+                )
+                true
+            }
+        } catch (e: Exception) {
+            Log.e("ApkBuilder", "调试解析 APK 时发生异常: ${apkFile.absolutePath}", e)
+            false
+        }
+    }
+    
+    /**
+     * 主动添加 PNG 图标到 APK
+     * 当原 APK 中没有 PNG 图标时使用
+     */
+    private fun addIconsToApk(zipOut: ZipOutputStream, bitmap: Bitmap) {
+        // 添加所有尺寸的普通图标
+        ApkTemplate.ICON_PATHS.forEach { (path, size) ->
+            val iconBytes = template.scaleBitmapToPng(bitmap, size)
+            writeEntryDeflated(zipOut, path, iconBytes)
+        }
+        
+        // 添加所有尺寸的圆形图标
+        ApkTemplate.ROUND_ICON_PATHS.forEach { (path, size) ->
+            val iconBytes = template.createRoundIcon(bitmap, size)
+            writeEntryDeflated(zipOut, path, iconBytes)
+        }
+    }
+
+    /**
+     * 为 adaptive icon 的前景创建 PNG 版本
+     * 在 res/drawable 目录下写入 ic_launcher_foreground.png 和 ic_launcher_foreground_new.png，
+     * 并配合 ArscEditor.modifyIconPathsToPng 将路径从 .xml/.jpg 切换到 .png
+     * 
+     * 注意：遵循 Android Adaptive Icon 规范，图标会被放置在安全区域（中间 72dp），
+     * 周围保留 18dp 边距，避免被形状遮罩裁剪导致图标看起来被放大
+     */
+    private fun addAdaptiveIconPngs(
+        zipOut: ZipOutputStream,
+        bitmap: Bitmap,
+        existingEntryNames: Set<String>
+    ) {
+        // 同时支持 ic_launcher_foreground 和 ic_launcher_foreground_new
+        val bases = listOf(
+            "res/drawable/ic_launcher_foreground",
+            "res/drawable/ic_launcher_foreground_new",
+            "res/drawable-v24/ic_launcher_foreground",
+            "res/drawable-v24/ic_launcher_foreground_new",
+            "res/drawable-anydpi-v24/ic_launcher_foreground",
+            "res/drawable-anydpi-v24/ic_launcher_foreground_new"
+        )
+
+        // 使用 xxxhdpi 尺寸（432px）确保高清晰度，系统会自动缩放到其他 dpi
+        // 108dp * 4 (xxxhdpi) = 432px
+        val iconBytes = template.createAdaptiveForegroundIcon(bitmap, 432)
+
+        bases.forEach { base ->
+            val pngPath = "${base}.png"
+            if (!existingEntryNames.contains(pngPath)) {
+                writeEntryDeflated(zipOut, pngPath, iconBytes)
+                Log.d("ApkBuilder", "添加自适应图标前景: $pngPath")
+            }
+        }
+    }
+    
+    /**
+     * 写入条目（使用 DEFLATED 压缩格式）
+     */
+    private fun writeEntryDeflated(zipOut: ZipOutputStream, name: String, data: ByteArray) {
+        val entry = ZipEntry(name)
+        entry.method = ZipEntry.DEFLATED
+        zipOut.putNextEntry(entry)
+        zipOut.write(data)
+        zipOut.closeEntry()
+    }
+
+    /**
+     * 写入条目（使用 STORED 未压缩格式）
+     * 用于 resources.arsc，满足 Android R+ 对未压缩和 4 字节对齐的要求
+     */
+    private fun writeEntryStored(zipOut: ZipOutputStream, name: String, data: ByteArray) {
+        val entry = ZipEntry(name)
+        entry.method = ZipEntry.STORED
+        entry.size = data.size.toLong()
+        entry.compressedSize = data.size.toLong()
+        
+        // Android 11+ 要求 resources.arsc 的数据在 APK 中按 4 字节对齐
+        // 由于我们保证 resources.arsc 是第一个条目，因此可以通过 extra 字段做对齐填充
+        if (name == "resources.arsc") {
+            val nameBytes = name.toByteArray(Charsets.UTF_8)
+            val baseHeaderSize = 30 // ZIP 本地文件头固定长度
+            val base = baseHeaderSize + nameBytes.size
+            // extra 总长度 = 4(自定义 header) + padLen
+            // 需要 (base + extraLen) % 4 == 0
+            val padLen = (4 - (base + 4) % 4) % 4
+            if (padLen > 0) {
+                // 使用 0xFFFF 作为私有 extra header ID
+                val extra = ByteArray(4 + padLen)
+                extra[0] = 0xFF.toByte()
+                extra[1] = 0xFF.toByte()
+                // data size = padLen (little-endian)
+                extra[2] = (padLen and 0xFF).toByte()
+                extra[3] = ((padLen shr 8) and 0xFF).toByte()
+                // 后面的 pad 字节默认是 0
+                entry.extra = extra
+            }
+        }
+
+        val crc = CRC32()
+        crc.update(data)
+        entry.crc = crc.value
+
+        zipOut.putNextEntry(entry)
+        zipOut.write(data)
+        zipOut.closeEntry()
+    }
+
+    /**
+     * 写入配置文件条目（支持加密）
+     */
+    private fun writeConfigEntry(
+        zipOut: ZipOutputStream, 
+        config: ApkConfig,
+        encryptor: AssetEncryptor? = null,
+        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
+    ) {
+        val configJson = template.createConfigJson(config)
+        Log.d("ApkBuilder", "写入配置文件: splashEnabled=${config.splashEnabled}, splashType=${config.splashType}")
+        Log.d("ApkBuilder", "配置JSON内容: $configJson")
+        
+        if (encryptionConfig.encryptConfig && encryptor != null) {
+            // 加密配置文件
+            val encryptedData = encryptor.encryptJson(configJson, "app_config.json")
+            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH + ".enc", encryptedData)
+            Log.d("ApkBuilder", "配置文件已加密")
+        } else {
+            // 明文写入
+            val data = configJson.toByteArray(Charsets.UTF_8)
+            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
+        }
+    }
+
+    /**
+     * 检查是否是图标条目
+     * 匹配多种可能的图标路径格式
+     */
+    private fun isIconEntry(entryName: String): Boolean {
+        // 精确匹配预定义路径
+        if (ApkTemplate.ICON_PATHS.any { it.first == entryName } ||
+            ApkTemplate.ROUND_ICON_PATHS.any { it.first == entryName }) {
+            return true
+        }
+        
+        // 模糊匹配：检测所有可能的图标 PNG 文件
+        // 支持各种路径格式：mipmap-xxxhdpi-v4, mipmap-xxxhdpi, drawable-xxxhdpi 等
+        val iconPatterns = listOf(
+            "ic_launcher.png",
+            "ic_launcher_round.png",
+            "ic_launcher_foreground.png",
+            "ic_launcher_background.png"
+        )
+        return iconPatterns.any { pattern ->
+            entryName.endsWith(pattern) && 
+            (entryName.contains("mipmap") || entryName.contains("drawable"))
+        }
+    }
+
+    /**
+     * 替换图标条目
+     * 根据路径中的 dpi 信息推断图标尺寸
+     */
+    private fun replaceIconEntry(zipOut: ZipOutputStream, entryName: String, bitmap: Bitmap) {
+        // 优先使用预定义尺寸
+        var size = ApkTemplate.ICON_PATHS.find { it.first == entryName }?.second
+            ?: ApkTemplate.ROUND_ICON_PATHS.find { it.first == entryName }?.second
+        
+        // 如果预定义没有匹配，根据路径推断尺寸
+        if (size == null) {
+            size = when {
+                entryName.contains("xxxhdpi") -> 192
+                entryName.contains("xxhdpi") -> 144
+                entryName.contains("xhdpi") -> 96
+                entryName.contains("hdpi") -> 72
+                entryName.contains("mdpi") -> 48
+                entryName.contains("ldpi") -> 36
+                else -> 96
+            }
+        }
+        
+        val iconBytes = when {
+            // 圆形图标
+            entryName.contains("round") -> {
+                template.createRoundIcon(bitmap, size)
+            }
+            // adaptive icon 前景图需要预留 safe zone 边距
+            entryName.contains("foreground") -> {
+                template.createAdaptiveForegroundIcon(bitmap, size)
+            }
+            // 普通图标
+            else -> {
+                template.scaleBitmapToPng(bitmap, size)
+            }
+        }
+        
+        writeEntryDeflated(zipOut, entryName, iconBytes)
+    }
+
+    /**
+     * 复制 ZIP 条目
+     * 使用 DEFLATED 压缩方式确保兼容性
+     */
+    private fun copyEntry(zipIn: ZipFile, zipOut: ZipOutputStream, entry: ZipEntry) {
+        val data = zipIn.getInputStream(entry).readBytes()
+        writeEntryDeflated(zipOut, entry.name, data)
+    }
+
+    /**
+     * 生成包名
+     * 注意：新包名长度必须 <= 原包名 "com.webtoapp" (12字符)
+     * 使用格式：com.w2a.xxxx (12字符)
+     *
+     * 约束：最后一段必须是合法的 Java 标识符段（首字符为字母或下划线），
+     * 否则 PackageManager 会在解析时直接报包名非法，表现为“安装包已损坏”。
+     */
+    private fun generatePackageName(appName: String): String {
+        // 从应用名生成 4 位 base36 标识，再规范化为合法包名段
+        val raw = appName.hashCode().let { 
+            if (it < 0) (-it).toString(36) else it.toString(36)
+        }.take(4).padStart(4, '0')
+
+        val segment = normalizePackageSegment(raw)
+
+        return "com.w2a.$segment"  // 总长度: 12 字符，与原包名相同
+    }
+
+    /**
+     * 规范化包名中的单段：
+     * - 转小写
+     * - 首字符如果是数字或其它非法字符，则映射/替换为字母，保证满足 [a-zA-Z_][a-zA-Z0-9_]* 规则
+     */
+    private fun normalizePackageSegment(segment: String): String {
+        if (segment.isEmpty()) return "a"
+
+        val chars = segment.lowercase().toCharArray()
+
+        chars[0] = when {
+            chars[0] in 'a'..'z' -> chars[0]
+            chars[0] in '0'..'9' -> ('a' + (chars[0] - '0'))  // 0..9 映射到 a..j
+            else -> 'a'
+        }
+
+        // 其余字符 base36 已经是 [0-9a-z]，符合包名要求，无需再处理
+        return String(chars)
+    }
+
+    /**
+     * 清理文件名
+     */
+    private fun sanitizeFileName(name: String): String {
+        return name.replace(Regex("[^a-zA-Z0-9_\\-\\u4e00-\\u9fa5]"), "_").take(50)
+    }
+
+    /**
+     * 安装 APK
+     */
+    fun installApk(apkFile: File): Boolean {
+        return try {
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    apkFile
+                )
+            } else {
+                Uri.fromFile(apkFile)
+            }
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * 获取已构建的 APK 列表
+     */
+    fun getBuiltApks(): List<File> {
+        return outputDir.listFiles()?.filter { it.extension == "apk" } ?: emptyList()
+    }
+
+    /**
+     * 删除已构建的 APK
+     */
+    fun deleteApk(apkFile: File): Boolean {
+        return apkFile.delete()
+    }
+
+    /**
+     * 清理所有构建文件
+     */
+    fun clearAll() {
+        outputDir.listFiles()?.forEach { it.delete() }
+        tempDir.listFiles()?.forEach { it.delete() }
+    }
+    
+    /**
+     * 获取所有构建日志文件
+     */
+    fun getBuildLogs(): List<File> {
+        return logger.getAllLogFiles()
+    }
+    
+    /**
+     * 获取日志目录路径
+     */
+    fun getLogDirectory(): String {
+        return File(context.getExternalFilesDir(null), "build_logs").absolutePath
+    }
+}
+
+/**
+ * WebApp 扩展函数：转换为 ApkConfig
+ */
+fun WebApp.toApkConfig(packageName: String): ApkConfig {
+    // HTML应用和媒体应用不使用targetUrl，设置占位符避免配置验证失败
+    val effectiveTargetUrl = when (appType) {
+        com.webtoapp.data.model.AppType.HTML -> {
+            val entryFile = htmlConfig?.getValidEntryFile() ?: "index.html"
+            "file:///android_asset/html/$entryFile"
+        }
+        com.webtoapp.data.model.AppType.IMAGE, com.webtoapp.data.model.AppType.VIDEO -> "asset://media_content"
+        else -> url
+    }
+    
+    return ApkConfig(
+        appName = name,
+        packageName = packageName,
+        targetUrl = effectiveTargetUrl,
+        versionCode = apkExportConfig?.customVersionCode ?: 1,
+        versionName = apkExportConfig?.customVersionName?.takeIf { it.isNotBlank() } ?: "1.0.0",
+        iconPath = iconPath,
+        activationEnabled = activationEnabled,
+        activationCodes = activationCodes,
+        activationRequireEveryTime = activationRequireEveryTime,
+        adBlockEnabled = adBlockEnabled,
+        adBlockRules = adBlockRules,
+        announcementEnabled = announcementEnabled,
+        announcementTitle = announcement?.title ?: "",
+        announcementContent = announcement?.content ?: "",
+        announcementLink = announcement?.linkUrl ?: "",
+        announcementLinkText = announcement?.linkText ?: "",
+        announcementTemplate = announcement?.template?.name ?: "XIAOHONGSHU",
+        announcementShowEmoji = announcement?.showEmoji ?: true,
+        announcementAnimationEnabled = announcement?.animationEnabled ?: true,
+        announcementShowOnce = announcement?.showOnce ?: true,
+        javaScriptEnabled = webViewConfig.javaScriptEnabled,
+        domStorageEnabled = webViewConfig.domStorageEnabled,
+        zoomEnabled = webViewConfig.zoomEnabled,
+        desktopMode = webViewConfig.desktopMode,
+        userAgent = webViewConfig.userAgent,
+        // 使用用户配置的 hideToolbar 设置，不再强制 HTML/媒体应用隐藏工具栏
+        // 用户可以在创建应用时选择是否启用全屏模式
+        hideToolbar = webViewConfig.hideToolbar,
+        showStatusBarInFullscreen = webViewConfig.showStatusBarInFullscreen,
+        landscapeMode = webViewConfig.landscapeMode,
+        injectScripts = webViewConfig.injectScripts,
+        // 状态栏配置
+        statusBarColorMode = webViewConfig.statusBarColorMode.name,
+        statusBarColor = webViewConfig.statusBarColor,
+        statusBarDarkIcons = webViewConfig.statusBarDarkIcons,
+        statusBarBackgroundType = webViewConfig.statusBarBackgroundType.name,
+        statusBarBackgroundImage = webViewConfig.statusBarBackgroundImage,
+        statusBarBackgroundAlpha = webViewConfig.statusBarBackgroundAlpha,
+        statusBarHeightDp = webViewConfig.statusBarHeightDp,
+        splashEnabled = splashEnabled,
+        splashType = splashConfig?.type?.name ?: "IMAGE",
+        splashDuration = splashConfig?.duration ?: 3,
+        splashClickToSkip = splashConfig?.clickToSkip ?: true,
+        splashVideoStartMs = splashConfig?.videoStartMs ?: 0L,
+        splashVideoEndMs = splashConfig?.videoEndMs ?: 5000L,
+        splashLandscape = splashConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE,
+        splashFillScreen = splashConfig?.fillScreen ?: true,
+        splashEnableAudio = splashConfig?.enableAudio ?: false,
+        // 媒体应用配置
+        appType = appType.name,
+        mediaEnableAudio = mediaConfig?.enableAudio ?: true,
+        mediaLoop = mediaConfig?.loop ?: true,
+        mediaAutoPlay = mediaConfig?.autoPlay ?: true,
+        mediaFillScreen = mediaConfig?.fillScreen ?: true,
+        mediaLandscape = mediaConfig?.orientation == com.webtoapp.data.model.SplashOrientation.LANDSCAPE,
+        
+        // HTML应用配置
+        htmlEntryFile = htmlConfig?.getValidEntryFile() ?: "index.html",
+        htmlEnableJavaScript = htmlConfig?.enableJavaScript ?: true,
+        htmlEnableLocalStorage = htmlConfig?.enableLocalStorage ?: true,
+        htmlLandscapeMode = htmlConfig?.landscapeMode ?: false,
+        
+        // 背景音乐配置
+        bgmEnabled = bgmEnabled,
+        bgmPlaylist = bgmConfig?.playlist?.mapIndexed { index, item ->
+            BgmShellItem(
+                id = item.id,
+                name = item.name,
+                assetPath = "bgm/bgm_$index.mp3",  // 将在 APK 中存储为 assets/bgm/bgm_0.mp3 等
+                lrcAssetPath = if (item.lrcData != null) "bgm/bgm_$index.lrc" else null,
+                sortOrder = item.sortOrder
+            )
+        } ?: emptyList(),
+        bgmPlayMode = bgmConfig?.playMode?.name ?: "LOOP",
+        bgmVolume = bgmConfig?.volume ?: 0.5f,
+        bgmAutoPlay = bgmConfig?.autoPlay ?: true,
+        bgmShowLyrics = bgmConfig?.showLyrics ?: true,
+        bgmLrcTheme = bgmConfig?.lrcTheme?.let { theme ->
+            LrcShellTheme(
+                id = theme.id,
+                name = theme.name,
+                fontSize = theme.fontSize,
+                textColor = theme.textColor,
+                highlightColor = theme.highlightColor,
+                backgroundColor = theme.backgroundColor,
+                animationType = theme.animationType.name,
+                position = theme.position.name
+            )
+        },
+        // 主题配置
+        themeType = themeType,
+        darkMode = "SYSTEM",
+        // 翻译配置
+        translateEnabled = translateEnabled,
+        translateTargetLanguage = translateConfig?.targetLanguage?.code ?: "zh-CN",
+        translateShowButton = translateConfig?.showFloatingButton ?: true,
+        // 扩展模块配置
+        extensionModuleIds = extensionModuleIds,
+        // 自启动配置
+        bootStartEnabled = autoStartConfig?.bootStartEnabled ?: false,
+        scheduledStartEnabled = autoStartConfig?.scheduledStartEnabled ?: false,
+        scheduledTime = autoStartConfig?.scheduledTime ?: "08:00",
+        scheduledDays = autoStartConfig?.scheduledDays ?: listOf(1, 2, 3, 4, 5, 6, 7),
+        // 强制运行配置
+        forcedRunConfig = forcedRunConfig,
+        // 独立环境/多开配置
+        isolationEnabled = apkExportConfig?.isolationConfig?.enabled ?: false,
+        isolationConfig = apkExportConfig?.isolationConfig,
+        // 后台运行配置
+        backgroundRunEnabled = apkExportConfig?.backgroundRunEnabled ?: false,
+        backgroundRunConfig = apkExportConfig?.backgroundRunConfig?.let {
+            BackgroundRunConfig(
+                notificationTitle = it.notificationTitle,
+                notificationContent = it.notificationContent,
+                showNotification = it.showNotification,
+                keepCpuAwake = it.keepCpuAwake
+            )
+        }
+    )
+}
+
+/**
+ * WebApp 扩展函数：转换为 ApkConfig（带嵌入模块数据）
+ * @param packageName 包名
+ * @param context 上下文，用于获取扩展模块管理器
+ */
+fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.Context): ApkConfig {
+    val baseConfig = toApkConfig(packageName)
+    
+    // 获取并嵌入扩展模块数据
+    val embeddedModules = if (extensionModuleIds.isNotEmpty()) {
+        try {
+            val extensionManager = com.webtoapp.core.extension.ExtensionManager.getInstance(context)
+            extensionManager.getModulesByIds(extensionModuleIds).map { module ->
+                EmbeddedExtensionModule(
+                    id = module.id,
+                    name = module.name,
+                    description = module.description,
+                    icon = module.icon,
+                    category = module.category.name,
+                    code = module.code,
+                    cssCode = module.cssCode,
+                    runAt = module.runAt.name,
+                    urlMatches = module.urlMatches.map { rule ->
+                        EmbeddedUrlMatchRule(
+                            pattern = rule.pattern,
+                            isRegex = rule.isRegex,
+                            exclude = rule.exclude
+                        )
+                    },
+                    configValues = module.configValues,
+                    // 重要修复：用户选择了模块就意味着要启用它
+                    // 内置模块默认 enabled=false，但嵌入到 APK 时应该设为 true
+                    enabled = true
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ApkBuilder", "获取扩展模块数据失败", e)
+            emptyList()
+        }
+    } else {
+        emptyList()
+    }
+    
+    return baseConfig.copy(embeddedExtensionModules = embeddedModules)
+}
+
+/**
+ * 获取启动画面媒体路径
+ */
+fun WebApp.getSplashMediaPath(): String? {
+    return if (splashEnabled) splashConfig?.mediaPath else null
+}
+
+/**
+ * 构建结果
+ */
+sealed class BuildResult {
+    data class Success(val apkFile: File, val logPath: String? = null) : BuildResult()
+    data class Error(val message: String) : BuildResult()
+}

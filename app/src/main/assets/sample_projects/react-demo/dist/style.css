@@ -1,0 +1,142 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#root {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+}
+
+.react-logo {
+    width: 100px;
+    height: 100px;
+    animation: spin 20s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+h1 {
+    color: #61dafb;
+    font-size: 32px;
+    margin: 20px 0 12px;
+}
+
+p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.todo-app {
+    text-align: left;
+}
+
+.todo-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.todo-input input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.todo-input input:focus {
+    outline: none;
+    border-color: #61dafb;
+}
+
+.todo-input button {
+    padding: 12px 20px;
+    background: #61dafb;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.todo-input button:hover {
+    background: #4fc3f7;
+    transform: scale(1.05);
+}
+
+.todo-list {
+    list-style: none;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: transform 0.2s;
+}
+
+.todo-item:hover {
+    transform: translateX(4px);
+}
+
+.todo-item.done {
+    opacity: 0.6;
+}
+
+.todo-item.done span {
+    text-decoration: line-through;
+}
+
+.todo-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.todo-item span {
+    flex: 1;
+    font-size: 15px;
+}
+
+.todo-item button {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 32px;
+    color: #999;
+}
