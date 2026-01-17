@@ -61,7 +61,7 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 
 ### Extension Module System
 - **Tampermonkey-like Scripts**: Inject custom JavaScript/CSS into webpages
-- **9 Built-in Modules**: Video downloader, Bilibili/Douyin/Xiaohongshu video extractor, video enhancer, web analyzer, dark mode, privacy protection, content enhancer
+- **10 Built-in Modules**: Video downloader, Bilibili/Douyin/Xiaohongshu video extractor, video enhancer, web analyzer, dark mode, privacy protection, content enhancer, element blocker
 - **30+ Code Templates**: Quickly create common functionality modules
 - **Module Categories**: 20+ categories (content filter, style modifier, function enhance, media, etc.)
 - **URL Match Rules**: Support wildcards and regex patterns
