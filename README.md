@@ -1,56 +1,184 @@
 <div align="center">
 
-# WebToApp 🚀
+<img src="https://img.icons8.com/3d-fluency/94/android-os.png" width="80" alt="WebToApp Logo"/>
 
-**English | [简体中文](README.md)**
+# WebToApp
 
-**Transform any website or media into a standalone Android app with zero coding!**
+### 🚀 Transform Websites into Android Apps in Seconds
 
-[![GitHub stars](https://img.shields.io/github/stars/shiahonb777/web-to-app?style=social)](https://github.com/shiahonb777/web-to-app)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+**English** | [简体中文](README_CN.md)
+
+<p>
+  <a href="https://github.com/shiahonb777/web-to-app/stargazers"><img src="https://img.shields.io/github/stars/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=f4c542" alt="Stars"></a>
+  <a href="https://github.com/shiahonb777/web-to-app/network/members"><img src="https://img.shields.io/github/forks/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=6cc644" alt="Forks"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Android-6.0+-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 6.0+">
+  <img src="https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Jetpack_Compose-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
+  <img src="https://img.shields.io/badge/Material_3-757575?style=flat-square&logo=materialdesign&logoColor=white" alt="Material 3">
+</p>
+
+<br/>
+
+> 📱 **No coding required** · Build APKs directly on your phone · **No Android Studio needed**
+
+<br/>
 
 </div>
 
 ---
 
-WebToApp is a powerful Android application that enables anyone to convert websites, images, and videos into independent apps. Build APK packages directly on your phone – no Android Studio required.
+<p align="center">
+  <b>🌟 Zero coding • One-click build • Feature-rich • Open source & free 🌟</b>
+</p>
+
+---
+
+## 📚 Table of Contents
+
+<details open>
+<summary><b>Click to expand/collapse</b></summary>
+
+- [✨ Key Features](#-key-features)
+- [📸 Screenshots](#-screenshots)
+- [🎯 Use Cases](#-use-cases)
+- [📦 Quick Start](#-quick-start)
+- [📋 Feature Details](#-feature-details)
+- [🛠️ Tech Stack](#%EF%B8%8F-tech-stack)
+- [📁 Project Structure](#-project-structure)
+- [📖 Usage Guide](#-usage-guide)
+- [🔧 Build from Source](#-build-from-source)
+- [🧩 Extension Module System](#-extension-module-system)
+- [📢 Announcement Templates](#-announcement-templates)
+- [📜 Changelog](#-changelog)
+- [📬 Contact](#-contact)
+
+</details>
+
+---
 
 ## ✨ Key Features
 
-- 🌐 **Website to App** - Wrap any URL into a standalone WebView app
-- 🎬 **Media to App** - Convert images/videos into fullscreen showcase apps
-- 💻 **HTML to App** - Convert HTML/CSS/JS projects, supports React/Vue/Next.js
-- 🧩 **Extension Module System** - Tampermonkey-like scripts, 9 built-in modules, 30+ templates
-- 🤖 **AI Smart Development** - AI Agent for module and HTML code development, multi-provider support
-- 🎨 **AI Icon Generator** - Generate beautiful app icons with built-in icon library
-- 🎵 **Online Music Search** - Search and download music for BGM with lyrics sync
-- 📢 **Announcement Templates** - 10 beautiful templates (Xiaohongshu, neon, glassmorphism, etc.)
-- 🌐 **Auto Web Translation** - Automatic translation, supports CN/EN/JP/Arabic
-- 📦 **One-Click Build** - Generate installable APKs without Android Studio
-- 🛡️ **Privacy Protection** - Ad blocker, isolated browser environment, fingerprint spoofing
-- 🔒 **Forced Run Mode** - Scheduled forced run, exit blocking, black tech features
-- ▶️ **Background Running** - Keep running in background after exit
-- 🔐 **APK Encryption** - Resource encryption, integrity check, anti-debug protection
-- 🚀 **Auto Start** - Support boot auto-start and scheduled start
-- ⚡ **App Modifier** - Change icons and names of installed apps, clone install
-- 🌍 **Multi-Language** - Chinese, English, Arabic interface
+<table>
+<tr>
+<td width="50%">
 
-## 🎯 Use Cases
+### 🌐 Core Conversion
+| Feature | Description |
+|---------|-------------|
+| 🌐 Website to App | Wrap any URL into standalone app |
+| 🎬 Media to App | Images/videos to fullscreen apps |
+| 💻 HTML to App | React/Vue/Next.js support |
+| 📦 One-Click Build | No Android Studio needed |
 
-- 📱 **Quick Website Access** - Wrap frequently used websites as standalone apps
-- 🎞️ **Media Showcase Apps** - Create digital albums, video wallpapers, product showcases
-- 💻 **Frontend Project Packaging** - React/Vue/Next.js projects to Android apps
-- 🏢 **Enterprise Internal Systems** - Quickly app-ify internal systems with activation codes
-- 🎮 **H5 Game Packaging** - Package H5 games/tools with fullscreen landscape support
-- 🔧 **App Customization** - Change icons and names of any installed app
-- 🧩 **Web Enhancement** - Add custom features (ad blocking, dark mode, video download, etc.)
-- 👶 **Kids Learning Apps** - Forced run mode to limit usage time for focused learning
-- 🔐 **Privacy Protection Apps** - Isolated browser environment, multi-instance isolation
-- 📚 **Online Education Apps** - Background running for courses, scheduled auto-start
+</td>
+<td width="50%">
+
+### 🤖 AI Powered
+| Feature | Description |
+|---------|-------------|
+| 🧩 Extension Modules | 10 built-in, 30+ templates |
+| 🤖 AI Development | Natural language coding |
+| 🎨 AI Icon Generator | Generate beautiful icons |
+| 🎵 Music Search | Online BGM with lyrics |
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🛡️ Security & Privacy
+| Feature | Description |
+|---------|-------------|
+| 🔐 APK Encryption | AES-256-GCM protection |
+| 🛡️ Privacy Protection | Fingerprint spoofing |
+| 🔒 Forced Run Mode | Exit blocking features |
+| 🌍 Isolated Environment | Multi-instance isolation |
+
+</td>
+<td width="50%">
+
+### ✨ Extra Features
+| Feature | Description |
+|---------|-------------|
+| 📢 Announcements | 10 beautiful templates |
+| 🌐 Auto Translation | CN/EN/JP/Arabic |
+| ⚡ App Modifier | Change any app's icon |
+| 🚀 Auto Start | Boot & scheduled start |
+
+</td>
+</tr>
+</table>
+
+## 📸 Screenshots
+
+<div align="center">
+
+> � **Screenshots coming soon!** Add your app screenshots here.
+
+<!--
+<p>
+  <img src="screenshots/home.png" width="200" alt="Home">
+  <img src="screenshots/create.png" width="200" alt="Create App">
+  <img src="screenshots/modules.png" width="200" alt="Modules">
+  <img src="screenshots/build.png" width="200" alt="Build APK">
+</p>
+-->
+
+</div>
+
+---
+
+## � Use Cases
+
+<table>
+<tr>
+<td>
+
+| 📱 Personal | 🏢 Business |
+|------------|------------|
+| Quick website access | Enterprise internal systems |
+| Media showcase apps | Product demo apps |
+| Web enhancement tools | Kiosk mode displays |
+| Privacy protection | Training apps |
+
+</td>
+<td>
+
+| 👨‍💻 Developer | 👨‍👩‍👧 Family |
+|-----------|----------|
+| Frontend project packaging | Kids learning apps |
+| H5 game packaging | Screen time control |
+| Web app testing | Educational apps |
+| Rapid prototyping | Safe browsing |
+
+</td>
+</tr>
+</table>
+
+## 📦 Quick Start
+
+```bash
+# 1️⃣ Clone the repository
+git clone https://github.com/shiahonb777/web-to-app.git
+
+# 2️⃣ Open in Android Studio
+# 3️⃣ Build and run on your device
+# 4️⃣ Start converting websites to apps!
+```
+
+> 💡 **Or download the APK directly from [Releases](https://github.com/shiahonb777/web-to-app/releases)**
+
+---
 
 ## 📋 Feature Details
 
-### Core Features
+<details>
+<summary><b>🌐 Core Features</b> (click to expand)</summary>
+
 - **URL to App**: Enter any website URL to generate a standalone app
 - **Media to App**: Convert images/videos into independent apps
 - **HTML to App**: Convert HTML/CSS/JS projects into standalone apps
@@ -59,7 +187,11 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Custom Name**: Customize the app display name
 - **Custom Package Name**: Support custom APK package name and version
 
-### Extension Module System
+</details>
+
+<details>
+<summary><b>🧩 Extension Module System</b></summary>
+
 - **Tampermonkey-like Scripts**: Inject custom JavaScript/CSS into webpages
 - **10 Built-in Modules**: Video downloader, Bilibili/Douyin/Xiaohongshu video extractor, video enhancer, web analyzer, dark mode, privacy protection, content enhancer, element blocker
 - **30+ Code Templates**: Quickly create common functionality modules
@@ -70,7 +202,11 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Share Code**: One-click generate share code for easy module sharing
 - **Import/Export**: Support module file import and export
 
-### AI Module Development Agent
+</details>
+
+<details>
+<summary><b>🤖 AI Module Development Agent</b></summary>
+
 - **Natural Language Development**: Describe requirements in natural language, AI generates module code
 - **Syntax Check**: Automatic JavaScript/CSS syntax error detection
 - **Security Scan**: Detect XSS, eval, and other security issues
@@ -78,7 +214,11 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Code Snippet Library**: Quick insert common code snippets
 - **Debug Test Pages**: Built-in test pages to verify module effects
 
-### AI Features
+</details>
+
+<details>
+<summary><b>🎨 AI Features</b></summary>
+
 - **Multi-Provider Support**: Google Gemini, OpenAI, GLM, Volcano, MiniMax, OpenRouter, etc.
 - **AI HTML Coding**: AI-assisted HTML/CSS/JS code generation
 - **AI Icon Generator**: Generate app icons using AI
@@ -87,7 +227,11 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **Live Preview**: Preview generated code in real-time
 - **AI Settings**: Unified API key and model management
 
-### Integrated Features
+</details>
+
+<details>
+<summary><b>✨ Integrated Features</b></summary>
+
 - **Splash Screen**: Support image/video splash animations with built-in video trimmer
 - **Background Music**: Add BGM playlist with LRC lyrics sync
 - **Online Music Search**: Search and download music online for BGM with lyrics sync
@@ -103,43 +247,69 @@ WebToApp is a powerful Android application that enables anyone to convert websit
 - **APK Encryption**: Config/code/media encryption, integrity check, anti-debug protection
 - **Ad Integration**: Reserved ad SDK interfaces (banner/interstitial/splash)
 
-### Export Options
+</details>
+
+<details>
+<summary><b>📤 Export Options</b></summary>
+
 - **Desktop Shortcut**: Create desktop icons, launch like native apps
 - **Build APK**: Generate standalone APK packages without Android Studio
 - **Project Template**: Export complete Android Studio projects
 
-### Media App Features
+</details>
+
+<details>
+<summary><b>🎥 Media App Features</b></summary>
+
 - **Image to App**: Full-screen image display with fill screen option
 - **Video to App**: Video playback with loop, audio toggle, autoplay (supports large video streaming)
 - **Display Config**: Audio toggle, loop, autoplay, fill screen options
 - **Encryption Support**: Media files support encryption protection
 - **APK Export**: Media apps support standalone APK export
 
-### Theme System
+</details>
+
+<details>
+<summary><b>🎨 Theme System</b></summary>
+
 - **Multiple Themes**: Beautiful built-in theme styles
 - **Dark Mode**: Follow system or manual toggle
 - **Animations**: Customizable animation effects and speed
 - **Particle Effects**: Some themes support particle backgrounds
 
-### App Modifier
+</details>
+
+<details>
+<summary><b>⚡ App Modifier</b></summary>
+
 - **App Scanner**: Automatically scan all installed apps
 - **Icon/Name Modifier**: Freely modify any app's icon and name
 - **Clone Install**: Install modified apps with independent package names
 - **Shortcut Launch**: Create shortcuts with new icons to launch original apps
 
+</details>
+
+---
+
 ## 🛠️ Tech Stack
 
-- **Language**: Kotlin 1.9+
-- **UI Framework**: Jetpack Compose + Material Design 3
-- **Architecture**: MVVM + Repository
-- **Database**: Room
-- **Network**: OkHttp
-- **Image Loading**: Coil
-- **Encryption**: AES-256-GCM + PBKDF2
-- **Signing**: JarSigner + Keystore
-- **Multi-Language**: i18n Dynamic Switching
-- **Min SDK**: Android 6.0 (API 23)
-- **Target SDK**: Android 14 (API 34)
+<div align="center">
+
+| Category | Technology |
+|:--------:|:-----------|
+| 📝 Language | Kotlin 1.9+ |
+| 🎨 UI | Jetpack Compose + Material 3 |
+| 🏗️ Architecture | MVVM + Repository |
+| 🗄️ Database | Room |
+| 🌐 Network | OkHttp |
+| 🖼️ Image | Coil |
+| 🔐 Encryption | AES-256-GCM + PBKDF2 |
+| ✍️ Signing | JarSigner + Keystore |
+| 🌍 i18n | Dynamic Switching |
+| 📱 Min SDK | Android 6.0 (API 23) |
+| 🎯 Target SDK | Android 14 (API 34) |
+
+</div>
 
 ## 📁 Project Structure
 
@@ -166,7 +336,7 @@ app/src/main/java/com/webtoapp/
 │   │   ├── AssetEncryptor.kt # AES-256-GCM encryption
 │   │   └── AssetDecryptor.kt # Runtime decryption
 │   ├── extension/           # Extension module system
-│   │   ├── BuiltInModules.kt # 9 built-in modules
+│   │   ├── BuiltInModules.kt # 10 built-in modules
 │   │   ├── ModuleTemplates.kt # 30+ code templates
 │   │   └── agent/           # AI Agent module development
 │   ├── forcedrun/           # Forced run mode
@@ -230,7 +400,7 @@ app/src/main/java/com/webtoapp/
 
 ### Use Extension Modules
 1. When creating/editing an app, expand the "Extension Modules" card
-2. Click "Select Modules" to browse 9 built-in modules
+2. Click "Select Modules" to browse 10 built-in modules
 3. Select desired modules (video download, dark mode, privacy protection, etc.)
 4. Modules will automatically inject and execute when the app runs
 
@@ -317,6 +487,7 @@ signingConfigs {
 | 🌙 Advanced Dark Mode | Smart color inversion, image brightness control, scheduled toggle |
 | 🛡️ Privacy Protection | Ad blocking, anti-fingerprint tracking, click hijack protection, external link warning |
 | 📝 Content Enhancer | Force copy, selection translate, long screenshot, Markdown conversion |
+| 🚫 Element Blocker | Block ads, popups, and specified elements |
 
 ### Module Categories
 - Content Filter, Content Enhance, Style Modifier, Theme

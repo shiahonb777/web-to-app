@@ -1,56 +1,184 @@
 <div align="center">
 
-# WebToApp 🚀
+<img src="https://img.icons8.com/3d-fluency/94/android-os.png" width="80" alt="WebToApp Logo"/>
 
-**[English](README_EN.md) | 简体中文**
+# WebToApp
 
-**无需编程，一键将任意网站或媒体转换为独立 Android 应用！**
+### 🚀 秒速将网站转换为 Android 应用
 
-[![GitHub stars](https://img.shields.io/github/stars/shiahonb777/web-to-app?style=social)](https://github.com/shiahonb777/web-to-app)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[English](README.md) | **简体中文**
+
+<p>
+  <a href="https://github.com/shiahonb777/web-to-app/stargazers"><img src="https://img.shields.io/github/stars/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=f4c542" alt="Stars"></a>
+  <a href="https://github.com/shiahonb777/web-to-app/network/members"><img src="https://img.shields.io/github/forks/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=6cc644" alt="Forks"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Android-6.0+-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 6.0+">
+  <img src="https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Jetpack_Compose-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
+  <img src="https://img.shields.io/badge/Material_3-757575?style=flat-square&logo=materialdesign&logoColor=white" alt="Material 3">
+</p>
+
+<br/>
+
+> 📱 **无需编程** · 手机上直接构建 APK · **无需 Android Studio**
+
+<br/>
 
 </div>
 
 ---
 
-WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编程知识，即可将网站、图片、视频转换为独立的 App。支持直接构建 APK 安装包，真正做到「零门槛出包」。
+<p align="center">
+  <b>🌟 零编程 • 一键构建 • 功能丰富 • 开源免费 🌟</b>
+</p>
+
+---
+
+## 📚 目录
+
+<details open>
+<summary><b>点击展开/收起</b></summary>
+
+- [✨ 核心亮点](#-核心亮点)
+- [📸 应用截图](#-应用截图)
+- [🎯 适用场景](#-适用场景)
+- [📦 快速开始](#-快速开始)
+- [📋 功能特性](#-功能特性)
+- [🛠️ 技术栈](#%EF%B8%8F-技术栈)
+- [📁 项目结构](#-项目结构)
+- [📖 使用指南](#-使用指南)
+- [🔧 源码构建](#-源码构建)
+- [🧩 扩展模块系统](#-扩展模块系统)
+- [📢 公告模板系统](#-公告模板系统)
+- [📜 更新日志](#-更新日志)
+- [📬 联系我们](#-联系我们)
+
+</details>
+
+---
 
 ## ✨ 核心亮点
 
-- 🌐 **网站转App** - 输入任意网址，生成独立 WebView 应用
-- 🎬 **媒体转App** - 图片/视频一键转换为全屏展示应用
-- 💻 **HTML转App** - HTML/CSS/JS 项目转换为独立应用，支持 React/Vue/Next.js 等前端框架
-- 🧩 **扩展模块系统** - 类油猴脚本，9个功能丰富的内置模块，30+ 代码模板
-- 🤖 **AI 智能开发** - AI Agent 辅助开发扩展模块和 HTML 代码，多供应商支持
-- 🎨 **AI 图标生成** - 使用 AI 生成精美应用图标，内置图标库管理
-- 🎵 **在线音乐搜索** - 在线搜索下载音乐作为 BGM，支持歌词同步显示
-- 📢 **公告模板系统** - 10 种精美公告弹窗模板（小红书、霓虹、毛玻璃等）
-- 🌐 **网页自动翻译** - 网页内容自动翻译，支持中/英/日/阿拉伯语
-- 📦 **一键出包** - 无需 Android Studio，直接生成可安装 APK
-- 🛡️ **隐私保护** - 广告拦截、独立浏览器环境、指纹伪装、多开隔离
-- 🔒 **强制运行模式** - 定时强制运行、屏蔽退出、黑科技功能
-- ▶️ **后台运行** - 退出应用后继续在后台运行，保持任务执行
-- 🔐 **APK加密保护** - 资源加密、完整性校验、反调试保护
-- 🚀 **开机自启动** - 支持开机自动启动和定时启动
-- ⚡ **应用修改器** - 修改已安装应用的图标和名称，克隆安装
-- 🌍 **多语言支持** - 中文、英文、阿拉伯语界面
+<table>
+<tr>
+<td width="50%">
+
+### 🌐 核心转换
+| 功能 | 说明 |
+|------|------|
+| 🌐 网站转App | 任意网址转独立应用 |
+| 🎬 媒体转App | 图片/视频转全屏应用 |
+| 💻 HTML转App | 支持 React/Vue/Next.js |
+| 📦 一键出包 | 无需 Android Studio |
+
+</td>
+<td width="50%">
+
+### 🤖 AI 驱动
+| 功能 | 说明 |
+|------|------|
+| 🧩 扩展模块 | 10个内置 + 30+ 模板 |
+| 🤖 AI 开发 | 自然语言编程 |
+| 🎨 AI 图标 | 智能生成精美图标 |
+| 🎵 音乐搜索 | 在线 BGM + 歌词同步 |
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### �️ 安全隐私
+| 功能 | 说明 |
+|------|------|
+| � APK 加密 | AES-256-GCM 保护 |
+| 🛡️ 隐私保护 | 指纹伪装/多开隔离 |
+| 🔒 强制运行 | 屏蔽退出/黑科技 |
+| 🌍 独立环境 | 多实例隔离 |
+
+</td>
+<td width="50%">
+
+### ✨ 更多功能
+| 功能 | 说明 |
+|------|------|
+| � 公告系统 | 10种精美模板 |
+| 🌐 自动翻译 | 中/英/日/阿拉伯语 |
+| ⚡ 应用修改 | 换图标/改名称 |
+| 🚀 自动启动 | 开机/定时启动 |
+
+</td>
+</tr>
+</table>
+
+## 📸 应用截图
+
+<div align="center">
+
+> 📷 **截图即将上线！** 在此添加应用截图。
+
+<!--
+<p>
+  <img src="screenshots/home.png" width="200" alt="首页">
+  <img src="screenshots/create.png" width="200" alt="创建应用">
+  <img src="screenshots/modules.png" width="200" alt="扩展模块">
+  <img src="screenshots/build.png" width="200" alt="构建 APK">
+</p>
+-->
+
+</div>
+
+---
 
 ## 🎯 适用场景
 
-- 📱 **网站快捷访问** - 将常用网站封装为独立 App，桌面一键直达
-- 🎞️ **媒体展示应用** - 制作电子相册、视频壁纸、产品展示应用
-- 💻 **前端项目打包** - React/Vue/Next.js 等前端项目快速转 Android 应用
-- 🏢 **企业内部系统** - 企业内部系统快速 App 化，支持激活码验证
-- 🎮 **H5游戏封装** - 游戏/工具类 H5 应用独立封装，支持横屏全屏
-- 🔧 **应用美化** - 给已安装应用换个喜欢的图标和名称
-- 🧩 **网页增强** - 为网页添加自定义功能（广告屏蔽、深色模式、视频下载等）
-- 👶 **儿童学习应用** - 强制运行模式限制使用时间，专注学习
-- 🔐 **隐私保护应用** - 独立浏览器环境，多开隔离，防止账号关联
-- 📚 **在线教育应用** - 后台运行播放课程，定时自动启动
+<table>
+<tr>
+<td>
+
+| 📱 个人用户 | 🏢 企业用户 |
+|------------|------------|
+| 网站快捷访问 | 企业内部系统 |
+| 媒体展示应用 | 产品展示应用 |
+| 网页增强工具 | 展会/商场展示终端 |
+| 隐私保护应用 | 培训教育应用 |
+
+</td>
+<td>
+
+| 👨‍💻 开发者 | 👨‍👩‍👧 家庭用户 |
+|-----------|------------|
+| 前端项目打包 | 儿童学习应用 |
+| H5游戏封装 | 屏幕时间控制 |
+| Web应用测试 | 在线教育应用 |
+| 快速原型开发 | 安全浏览环境 |
+
+</td>
+</tr>
+</table>
+
+## 📦 快速开始
+
+```bash
+# 1️⃣ 克隆仓库
+git clone https://github.com/shiahonb777/web-to-app.git
+
+# 2️⃣ 用 Android Studio 打开
+# 3️⃣ 构建并运行到设备
+# 4️⃣ 开始将网站转换为应用！
+```
+
+> � **或者直接从 [Releases](https://github.com/shiahonb777/web-to-app/releases) 下载 APK**
+
+---
 
 ## 📋 功能特性
 
-### 核心功能
+<details>
+<summary><b>🌐 核心功能</b>（点击展开）</summary>
+
 - **URL转App**：输入任意网址，一键生成独立应用
 - **媒体转App**：支持图片/视频转换为独立应用
 - **HTML转App**：支持 HTML/CSS/JS 项目转换为独立应用
@@ -59,7 +187,11 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **自定义名称**：自定义应用显示名称
 - **自定义包名**：支持自定义 APK 包名和版本号
 
-### 扩展模块系统
+</details>
+
+<details>
+<summary><b>🧩 扩展模块系统</b></summary>
+
 - **类油猴脚本**：向网页注入自定义 JavaScript/CSS 代码
 - **10个内置模块**：视频下载、B站/抖音/小红书视频提取、视频增强、网页分析、暗黑模式、隐私保护、内容增强、元素屏蔽
 - **30+ 代码模板**：快速创建常见功能模块
@@ -70,7 +202,11 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **分享码**：一键生成分享码，轻松分享模块
 - **导入导出**：支持模块文件导入导出
 
-### AI 模块开发 Agent
+</details>
+
+<details>
+<summary><b>🤖 AI 模块开发 Agent</b></summary>
+
 - **自然语言开发**：用自然语言描述需求，AI 自动生成模块代码
 - **语法检查**：自动检查 JavaScript/CSS 语法错误
 - **安全扫描**：检测 XSS、eval 等安全问题
@@ -78,7 +214,11 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **代码片段库**：常用代码片段快速插入
 - **调试测试页面**：内置测试页面验证模块效果
 
-### AI 功能
+</details>
+
+<details>
+<summary><b>🎨 AI 功能</b></summary>
+
 - **多供应商支持**：Google Gemini、OpenAI、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
 - **AI HTML 编程**：AI 辅助生成和修改 HTML/CSS/JS 代码
 - **AI 图标生成**：使用 AI 生成应用图标
@@ -87,7 +227,11 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **实时预览**：代码生成后可直接预览效果
 - **AI 设置**：统一管理 API 密钥和模型配置
 
-### 集成功能
+</details>
+
+<details>
+<summary><b>✨ 集成功能</b></summary>
+
 - **启动画面**：支持图片/视频启动动画，内置视频裁剪器
 - **背景音乐**：支持为应用添加 BGM 播放列表，可配合歌词同步显示
 - **在线音乐搜索**：在线搜索下载音乐作为 BGM，支持歌词同步
@@ -103,43 +247,69 @@ WebToApp 是一款功能强大的 Android 原生应用，让你无需任何编�
 - **APK 加密保护**：配置/代码/媒体加密、完整性校验、反调试保护
 - **广告集成**：预留广告SDK接口（横幅/插屏/开屏）
 
-### 导出功能
+</details>
+
+<details>
+<summary><b>📤 导出功能</b></summary>
+
 - **桌面快捷方式**：创建桌面图标，像原生App一样启动
 - **构建APK安装包**：直接生成独立APK并安装，无需Android Studio
 - **项目模板导出**：导出完整Android Studio项目，可自行编译APK
 
-### 媒体应用功能
+</details>
+
+<details>
+<summary><b>🎥 媒体应用功能</b></summary>
+
 - **图片转App**：选择图片生成全屏展示应用
 - **视频转App**：选择视频生成循环播放应用（支持大视频流式打包）
 - **显示配置**：支持音频开关、循环播放、自动播放、铺满屏幕
 - **加密支持**：媒体文件支持加密保护
 - **APK打包**：媒体应用支持导出为独立APK
 
-### 主题系统
+</details>
+
+<details>
+<summary><b>🎨 主题系统</b></summary>
+
 - **多种主题**：内置多款精美主题风格
 - **深色模式**：支持跟随系统、手动切换
 - **动画效果**：可自定义动画开关和速度
 - **粒子特效**：部分主题支持粒子背景效果
 
-### 应用修改器
+</details>
+
+<details>
+<summary><b>⚡ 应用修改器</b></summary>
+
 - **应用列表扫描**：自动获取设备上已安装的应用列表
 - **图标/名称修改**：自由修改任意应用的图标和显示名称
 - **克隆安装**：将修改后的应用作为新应用安装（独立包名）
 - **快捷方式启动**：创建使用新图标的快捷方式，启动原应用
 
+</details>
+
+---
+
 ## 🛠️ 技术栈
 
-- **语言**：Kotlin 1.9+
-- **UI框架**：Jetpack Compose + Material Design 3
-- **架构**：MVVM + Repository
-- **数据库**：Room
-- **网络**：OkHttp
-- **图片加载**：Coil
-- **加密**：AES-256-GCM + PBKDF2
-- **签名**：JarSigner + Keystore
-- **多语言**：i18n 动态切换
-- **最低支持**：Android 6.0 (API 23)
-- **目标版本**：Android 14 (API 34)
+<div align="center">
+
+| 分类 | 技术 |
+|:----:|:-----|
+| 📝 语言 | Kotlin 1.9+ |
+| 🎨 UI | Jetpack Compose + Material 3 |
+| 🏗️ 架构 | MVVM + Repository |
+| 🗄️ 数据库 | Room |
+| 🌐 网络 | OkHttp |
+| 🖼️ 图片 | Coil |
+| 🔐 加密 | AES-256-GCM + PBKDF2 |
+| ✍️ 签名 | JarSigner + Keystore |
+| 🌍 多语言 | i18n 动态切换 |
+| 📱 最低版本 | Android 6.0 (API 23) |
+| 🎯 目标版本 | Android 14 (API 34) |
+
+</div>
 
 ## 📁 项目结构
 
@@ -166,7 +336,7 @@ app/src/main/java/com/webtoapp/
 │   │   ├── AssetEncryptor.kt # AES-256-GCM 加密
 │   │   └── AssetDecryptor.kt # 运行时解密
 │   ├── extension/           # 扩展模块系统
-│   │   ├── BuiltInModules.kt # 9个内置模块
+│   │   ├── BuiltInModules.kt # 10个内置模块
 │   │   ├── ModuleTemplates.kt # 30+ 代码模板
 │   │   └── agent/           # AI Agent 模块开发
 │   ├── forcedrun/           # 强制运行模式
@@ -317,6 +487,7 @@ signingConfigs {
 | 🌙 高级暗黑模式 | 智能色彩反转、图片亮度控制、定时开关 |
 | 🛡️ 隐私保护 | 去广告、反指纹追踪、点击劫持保护、外链警告 |
 | 📝 内容增强 | 强制复制、划词翻译、长截图、Markdown转化 |
+| 🚫 元素屏蔽 | 屏蔽网页广告、弹窗、指定元素 |
 
 ### 模块分类
 - 内容过滤、内容增强、样式修改、主题美化
