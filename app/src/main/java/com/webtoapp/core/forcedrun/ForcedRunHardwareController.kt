@@ -499,21 +499,26 @@ class ForcedRunHardwareController(private val context: Context) {
     
     /**
      * 强制屏幕持续翻转
+     * 四个角度循环：0°(竖屏) -> 90°(横屏) -> 180°(倒置竖屏) -> 270°(倒置横屏)
      */
     fun startScreenRotation() {
         stopScreenRotation()
         
+        // 四个方向循环：竖屏 -> 横屏 -> 倒置竖屏 -> 倒置横屏
+        val orientations = listOf(
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,           // 0° 竖屏
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,          // 90° 横屏
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,   // 180° 倒置竖屏
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE   // 270° 倒置横屏
+        )
+        
         screenRotationJob = CoroutineScope(Dispatchers.Main).launch {
-            var isLandscape = false
+            var index = 0
             while (isActive) {
                 try {
                     activityRef?.get()?.let { activity ->
-                        activity.requestedOrientation = if (isLandscape) {
-                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                        } else {
-                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        }
-                        isLandscape = !isLandscape
+                        activity.requestedOrientation = orientations[index]
+                        index = (index + 1) % orientations.size
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "屏幕翻转失败", e)
@@ -522,7 +527,7 @@ class ForcedRunHardwareController(private val context: Context) {
             }
         }
         
-        Log.d(TAG, "屏幕持续翻转已启动")
+        Log.d(TAG, "屏幕四向循环翻转已启动")
     }
     
     /**
