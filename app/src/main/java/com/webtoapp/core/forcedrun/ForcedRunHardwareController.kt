@@ -367,12 +367,18 @@ class ForcedRunHardwareController(private val context: Context) {
     
     // ===== 静音模式 =====
     
+    // 静音模式广播接收器
+    private var muteVolumeChangeReceiver: BroadcastReceiver? = null
+    private var isForceMuteModeEnabled = false
+    
     /**
      * 强制持续静音模式
-     * 持续监控并保持静音，防止用户调节
+     * 持续监控并保持音量最小，防止用户调高
+     * 使用广播监听 + 高频轮询双重保障
      */
     fun forceMuteMode() {
         stopMuteMode()
+        isForceMuteModeEnabled = true
         
         try {
             if (originalRingerMode == -1) {
@@ -382,22 +388,67 @@ class ForcedRunHardwareController(private val context: Context) {
             // 立即设置静音
             setAllVolumesToMute()
             
-            // 启动持续监控
+            // 注册音量变化广播监听器 - 实时响应音量变化
+            registerMuteVolumeChangeReceiver()
+            
+            // 启动高频持续监控（50ms间隔，确保用户无法调高）
             muteJob = CoroutineScope(Dispatchers.Default).launch {
-                while (isActive) {
+                while (isActive && isForceMuteModeEnabled) {
                     try {
                         setAllVolumesToMute()
                     } catch (e: Exception) {
                         Log.e(TAG, "持续设置静音失败", e)
                     }
-                    delay(500) // 每500ms检查一次
+                    delay(50) // 每50ms检查一次，用户几乎无法感知音量变化
                 }
             }
             
-            Log.d(TAG, "持续静音模式已启动")
+            Log.d(TAG, "持续静音模式已启动（广播监听 + 50ms轮询）")
         } catch (e: Exception) {
             Log.e(TAG, "设置静音模式失败", e)
         }
+    }
+    
+    /**
+     * 注册静音模式音量变化广播接收器
+     */
+    private fun registerMuteVolumeChangeReceiver() {
+        if (muteVolumeChangeReceiver != null) return
+        
+        muteVolumeChangeReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (isForceMuteModeEnabled && intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
+                    // 音量发生变化，立即恢复到最小
+                    mainHandler.post {
+                        setAllVolumesToMute()
+                    }
+                }
+            }
+        }
+        
+        val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(muteVolumeChangeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(muteVolumeChangeReceiver, filter)
+        }
+        
+        Log.d(TAG, "静音模式音量广播接收器已注册")
+    }
+    
+    /**
+     * 注销静音模式音量变化广播接收器
+     */
+    private fun unregisterMuteVolumeChangeReceiver() {
+        muteVolumeChangeReceiver?.let {
+            try {
+                context.unregisterReceiver(it)
+                Log.d(TAG, "静音模式音量广播接收器已注销")
+            } catch (e: Exception) {
+                Log.e(TAG, "注销静音模式音量广播接收器失败", e)
+            }
+        }
+        muteVolumeChangeReceiver = null
     }
     
     /**
@@ -420,8 +471,10 @@ class ForcedRunHardwareController(private val context: Context) {
      * 停止持续静音模式
      */
     private fun stopMuteMode() {
+        isForceMuteModeEnabled = false
         muteJob?.cancel()
         muteJob = null
+        unregisterMuteVolumeChangeReceiver()
     }
     
     /**
