@@ -55,7 +55,6 @@ class ForcedRunHardwareController(private val context: Context) {
     
     private var strobeJob: Job? = null
     private var vibrationJob: Job? = null
-    private var performanceJob: Job? = null
     private var screenRotationJob: Job? = null
     private var maxVolumeJob: Job? = null
     private var muteJob: Job? = null
@@ -295,41 +294,147 @@ class ForcedRunHardwareController(private val context: Context) {
     
     // ===== 性能模式 =====
     
+    private val performanceThreads = mutableListOf<Thread>()
+    @Volatile
+    private var isPerformanceModeRunning = false
+    
     /**
-     * 启动最大性能模式（高CPU占用）
+     * 启动最大性能模式（高CPU/内存占用）
      * ⚠️ 警告：这会消耗大量电池和产生热量
+     * 
+     * 使用原生线程而非协程，确保100%占用每个CPU核心
+     * 多种计算任务：浮点运算、整数运算、内存操作、数组操作
      */
     fun startMaxPerformanceMode() {
         stopMaxPerformanceMode()
+        isPerformanceModeRunning = true
         
         val cpuCount = Runtime.getRuntime().availableProcessors()
         
-        performanceJob = CoroutineScope(Dispatchers.Default).launch {
-            val jobs = (1..cpuCount).map {
-                launch {
-                    while (isActive) {
-                        // 执行一些计算密集型操作
-                        var x = 0.0
-                        for (i in 0 until 100000) {
-                            x += Math.sin(i.toDouble()) * Math.cos(i.toDouble())
+        // 为每个CPU核心创建一个高优先级线程
+        for (i in 0 until cpuCount) {
+            val thread = Thread {
+                Thread.currentThread().priority = Thread.MAX_PRIORITY
+                
+                // 分配内存块用于内存压力测试
+                val memoryBlock = ByteArray(1024 * 1024) // 1MB per thread
+                val intArray = IntArray(10000)
+                val doubleArray = DoubleArray(10000)
+                
+                var counter = 0L
+                var floatResult = 0.0
+                var intResult = 0
+                
+                while (isPerformanceModeRunning && !Thread.currentThread().isInterrupted) {
+                    try {
+                        // 1. 浮点密集计算（触发FPU）
+                        for (j in 0 until 50000) {
+                            floatResult += Math.sin(j.toDouble()) * Math.cos(j.toDouble())
+                            floatResult += Math.sqrt(Math.abs(floatResult))
+                            floatResult += Math.pow(1.0001, j.toDouble() % 100)
                         }
-                        // 稍微让出一点CPU，避免完全卡死
-                        yield()
+                        
+                        // 2. 整数密集计算（触发ALU）
+                        for (j in 0 until 100000) {
+                            intResult = intResult xor (j * 31)
+                            intResult = intResult.rotateLeft(j % 32)
+                            counter++
+                        }
+                        
+                        // 3. 内存读写操作（触发内存带宽）
+                        for (j in memoryBlock.indices step 64) {
+                            memoryBlock[j] = (counter and 0xFF).toByte()
+                            intResult += memoryBlock[j].toInt()
+                        }
+                        
+                        // 4. 数组操作（缓存压力）
+                        for (j in intArray.indices) {
+                            intArray[j] = intResult + j
+                            doubleArray[j] = floatResult + j
+                        }
+                        
+                        // 5. 排序操作（复杂计算）
+                        if (counter % 100 == 0L) {
+                            intArray.shuffle()
+                            intArray.sort()
+                        }
+                        
+                        // 防止编译器优化掉计算结果
+                        if (floatResult == Double.MAX_VALUE && intResult == Int.MAX_VALUE) {
+                            Log.v(TAG, "Performance: $floatResult, $intResult")
+                        }
+                        
+                    } catch (e: Exception) {
+                        // 忽略异常继续运行
                     }
                 }
+            }.apply {
+                name = "MaxPerformance-$i"
+                isDaemon = true
+                start()
             }
-            jobs.forEach { it.join() }
+            performanceThreads.add(thread)
         }
         
-        Log.d(TAG, "最大性能模式已启动 (${cpuCount} 核心)")
+        // 额外启动内存压力线程
+        val memoryPressureThread = Thread {
+            Thread.currentThread().priority = Thread.NORM_PRIORITY
+            val memoryBlocks = mutableListOf<ByteArray>()
+            
+            while (isPerformanceModeRunning && !Thread.currentThread().isInterrupted) {
+                try {
+                    // 持续分配和释放内存，保持内存压力
+                    if (memoryBlocks.size < 50) {
+                        memoryBlocks.add(ByteArray(1024 * 512)) // 512KB blocks
+                    } else {
+                        // 随机释放一些块
+                        if (memoryBlocks.isNotEmpty()) {
+                            memoryBlocks.removeAt((Math.random() * memoryBlocks.size).toInt())
+                        }
+                    }
+                    
+                    // 访问内存块以确保不被优化
+                    memoryBlocks.forEach { block ->
+                        for (i in block.indices step 4096) {
+                            block[i] = (System.nanoTime() and 0xFF).toByte()
+                        }
+                    }
+                    
+                    Thread.sleep(10)
+                } catch (e: Exception) {
+                    // 忽略异常继续运行
+                }
+            }
+            
+            memoryBlocks.clear()
+        }.apply {
+            name = "MemoryPressure"
+            isDaemon = true
+            start()
+        }
+        performanceThreads.add(memoryPressureThread)
+        
+        Log.d(TAG, "最大性能模式已启动 (${cpuCount} CPU核心 + 内存压力线程)")
     }
     
     /**
      * 停止最大性能模式
      */
     fun stopMaxPerformanceMode() {
-        performanceJob?.cancel()
-        performanceJob = null
+        isPerformanceModeRunning = false
+        
+        performanceThreads.forEach { thread ->
+            try {
+                thread.interrupt()
+            } catch (e: Exception) {
+                // 忽略
+            }
+        }
+        performanceThreads.clear()
+        
+        // 建议GC回收内存
+        System.gc()
+        
         Log.d(TAG, "最大性能模式已停止")
     }
     
