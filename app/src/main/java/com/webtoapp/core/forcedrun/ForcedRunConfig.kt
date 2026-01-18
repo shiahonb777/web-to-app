@@ -67,7 +67,11 @@ data class ForcedRunConfig(
     val forceBlockPowerKey: Boolean = false,         // 强制屏蔽电源键
     val forceBlackScreen: Boolean = false,           // 强制全黑屏无法滑动
     val forceScreenRotation: Boolean = false,        // 强制屏幕持续翻转
-    val forceBlockTouch: Boolean = false             // 强制屏蔽触摸
+    val forceBlockTouch: Boolean = false,            // 强制屏蔽触摸
+    
+    // ===== 应用伪装功能 =====
+    val disguiseAsSystemApp: Boolean = false,        // 伪装为系统应用（无法正常卸载）
+    val multiLauncherIcons: Int = 1                  // 多桌面图标数量（1-20）
 ) {
     companion object {
         /** 禁用 */

@@ -67,6 +67,10 @@ fun ForcedRunConfigCard(
     var forceScreenRotation by remember(config) { mutableStateOf(config?.forceScreenRotation ?: false) }
     var forceBlockTouch by remember(config) { mutableStateOf(config?.forceBlockTouch ?: false) }
     
+    // 应用伪装功能
+    var disguiseAsSystemApp by remember(config) { mutableStateOf(config?.disguiseAsSystemApp ?: false) }
+    var multiLauncherIcons by remember(config) { mutableStateOf(config?.multiLauncherIcons ?: 1) }
+    
     // 时间选择对话框
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
@@ -105,7 +109,10 @@ fun ForcedRunConfigCard(
                 forceBlockPowerKey = forceBlockPowerKey,
                 forceBlackScreen = forceBlackScreen,
                 forceScreenRotation = forceScreenRotation,
-                forceBlockTouch = forceBlockTouch
+                forceBlockTouch = forceBlockTouch,
+                // 应用伪装功能
+                disguiseAsSystemApp = disguiseAsSystemApp,
+                multiLauncherIcons = multiLauncherIcons
             ))
         }
     }
@@ -801,6 +808,68 @@ fun ForcedRunConfigCard(
                                         forceBlockTouch = it
                                         updateConfig()
                                     }
+                                )
+                            }
+                            
+                            // ===== 应用伪装功能 =====
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                Strings.appDisguiseSection,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // 伪装系统应用
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(Strings.disguiseAsSystemApp, style = MaterialTheme.typography.bodyMedium)
+                                    Text(Strings.disguiseAsSystemAppDesc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                                }
+                                Switch(
+                                    checked = disguiseAsSystemApp,
+                                    onCheckedChange = {
+                                        disguiseAsSystemApp = it
+                                        updateConfig()
+                                    }
+                                )
+                            }
+                            
+                            // 多桌面图标
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(Strings.multiLauncherIcons, style = MaterialTheme.typography.bodyMedium)
+                                    Text(Strings.multiLauncherIconsDesc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            
+                            // 图标数量滑块
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "${Strings.multiLauncherIconsCount}: $multiLauncherIcons",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.width(80.dp)
+                                )
+                                Slider(
+                                    value = multiLauncherIcons.toFloat(),
+                                    onValueChange = { 
+                                        multiLauncherIcons = it.toInt()
+                                        updateConfig()
+                                    },
+                                    valueRange = 1f..20f,
+                                    steps = 18,
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                             

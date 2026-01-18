@@ -13457,6 +13457,43 @@ object Strings {
         AppLanguage.ARABIC -> "تعطيل جميع عمليات اللمس"
     }
     
+    // 应用伪装功能
+    val disguiseAsSystemApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "🛡️ 伪装系统应用"
+        AppLanguage.ENGLISH -> "🛡️ Disguise as System App"
+        AppLanguage.ARABIC -> "🛡️ التنكر كتطبيق نظام"
+    }
+    
+    val disguiseAsSystemAppDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "伪装为系统应用，无法通过正常方式卸载"
+        AppLanguage.ENGLISH -> "Disguise as system app, cannot be uninstalled normally"
+        AppLanguage.ARABIC -> "التنكر كتطبيق نظام، لا يمكن إلغاء تثبيته بشكل طبيعي"
+    }
+    
+    val multiLauncherIcons: String get() = when (lang) {
+        AppLanguage.CHINESE -> "📱 多桌面图标"
+        AppLanguage.ENGLISH -> "📱 Multi Launcher Icons"
+        AppLanguage.ARABIC -> "📱 أيقونات متعددة"
+    }
+    
+    val multiLauncherIconsDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建多个桌面快捷方式，删除任意一个则全部消失"
+        AppLanguage.ENGLISH -> "Create multiple launcher shortcuts, deleting any one removes all"
+        AppLanguage.ARABIC -> "إنشاء اختصارات متعددة، حذف أي واحد يزيل الكل"
+    }
+    
+    val multiLauncherIconsCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图标数量"
+        AppLanguage.ENGLISH -> "Icon Count"
+        AppLanguage.ARABIC -> "عدد الأيقونات"
+    }
+    
+    val appDisguiseSection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用伪装"
+        AppLanguage.ENGLISH -> "App Disguise"
+        AppLanguage.ARABIC -> "تنكر التطبيق"
+    }
+    
     val blackTechFinalWarning: String get() = when (lang) {
         AppLanguage.CHINESE -> "⚠️ 警告：启用以上功能可能导致设备发热、电量快速消耗等问题。请确保了解风险后再启用。部分功能需要特殊权限才能生效。"
         AppLanguage.ENGLISH -> "⚠️ Warning: Enabling the above features may cause device heating, rapid battery drain, etc. Please understand the risks before enabling. Some features require special permissions to work."
