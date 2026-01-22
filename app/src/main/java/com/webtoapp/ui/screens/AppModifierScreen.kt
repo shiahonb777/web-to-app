@@ -33,6 +33,7 @@ import coil.request.ImageRequest
 import com.webtoapp.core.appmodifier.*
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.BgmConfig
+import com.webtoapp.ui.components.AppNameTextFieldSimple
 import com.webtoapp.ui.components.BgmCard
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.IconPickerWithLibrary
@@ -568,13 +569,10 @@ fun AppModifyFullScreen(
                         }
                     }
                     
-                    // 新名称
-                    OutlinedTextField(
+                    // 新名称（带随机按钮）
+                    AppNameTextFieldSimple(
                         value = newAppName,
-                        onValueChange = { newAppName = it },
-                        label = { Text(Strings.labelAppName) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = { newAppName = it }
                     )
                 }
             }

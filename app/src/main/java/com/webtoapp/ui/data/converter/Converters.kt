@@ -188,4 +188,18 @@ class Converters {
     @TypeConverter
     fun toForcedRunConfig(value: String): com.webtoapp.core.forcedrun.ForcedRunConfig? = fromJson(value)
     
+    // BlackTechConfig 转换（独立模块）
+    @TypeConverter
+    fun fromBlackTechConfig(value: com.webtoapp.core.blacktech.BlackTechConfig?): String = toJson(value)
+
+    @TypeConverter
+    fun toBlackTechConfig(value: String): com.webtoapp.core.blacktech.BlackTechConfig? = fromJson(value)
+    
+    // DisguiseConfig 转换（独立模块）
+    @TypeConverter
+    fun fromDisguiseConfig(value: com.webtoapp.core.disguise.DisguiseConfig?): String = toJson(value)
+
+    @TypeConverter
+    fun toDisguiseConfig(value: String): com.webtoapp.core.disguise.DisguiseConfig? = fromJson(value)
+    
 }

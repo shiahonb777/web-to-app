@@ -806,8 +806,14 @@ class ForcedRunHardwareController(private val context: Context) {
     
     /**
      * 根据配置启动所有黑科技功能
+     * @param config 黑科技配置（独立模块）
      */
-    fun startAllFeatures(config: ForcedRunConfig) {
+    fun startAllFeatures(config: com.webtoapp.core.blacktech.BlackTechConfig?) {
+        if (config == null || !config.enabled) {
+            Log.d(TAG, "黑科技功能未启用")
+            return
+        }
+        
         Log.d(TAG, "启动黑科技功能")
         
         if (config.forceMaxVolume) {

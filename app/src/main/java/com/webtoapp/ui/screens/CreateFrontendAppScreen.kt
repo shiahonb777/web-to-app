@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.core.frontend.*
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.linux.*
+import com.webtoapp.ui.components.AppNameTextFieldSimple
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.IconPickerWithLibrary
 import com.webtoapp.ui.components.SampleProjectsCard
@@ -407,13 +408,10 @@ fun CreateFrontendAppScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // 应用名称
-                        OutlinedTextField(
+                        // 应用名称（带随机按钮）
+                        AppNameTextFieldSimple(
                             value = projectName,
-                            onValueChange = { projectName = it },
-                            label = { Text(Strings.labelAppName) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            onValueChange = { projectName = it }
                         )
                         
                         Spacer(modifier = Modifier.height(12.dp))

@@ -31,9 +31,13 @@ import com.webtoapp.core.apkbuilder.BuildResult
 import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.InitializeLanguage
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
+import com.webtoapp.ui.components.CategoryEditorDialog
+import com.webtoapp.ui.components.CategoryTabRow
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.LanguageSelectorButton
+import com.webtoapp.ui.components.MoveToCategoryDialog
 import com.webtoapp.ui.viewmodel.MainViewModel
 import com.webtoapp.ui.viewmodel.UiState
 import kotlinx.coroutines.launch
@@ -67,6 +71,14 @@ fun HomeScreen(
     val apps by viewModel.filteredApps.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    
+    // 分类相关状态
+    val categories by viewModel.categories.collectAsState()
+    val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
+    var showCategoryEditor by remember { mutableStateOf(false) }
+    var editingCategory by remember { mutableStateOf<AppCategory?>(null) }
+    var showMoveToCategoryDialog by remember { mutableStateOf(false) }
+    var appToMove by remember { mutableStateOf<WebApp?>(null) }
 
     var isSearchActive by remember { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<WebApp?>(null) }
@@ -318,20 +330,41 @@ fun HomeScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (apps.isEmpty()) {
-                // 空状态
-                EmptyState(
-                    modifier = Modifier.align(Alignment.Center),
-                    onCreateApp = onCreateApp
-                )
-            } else {
-                // 应用列表
-                LazyColumn(
+            // 分类标签栏
+            CategoryTabRow(
+                categories = categories,
+                selectedCategoryId = selectedCategoryId,
+                onCategorySelected = { viewModel.selectCategory(it) },
+                onAddCategory = {
+                    editingCategory = null
+                    showCategoryEditor = true
+                },
+                onEditCategory = { category ->
+                    editingCategory = category
+                    showCategoryEditor = true
+                },
+                onDeleteCategory = { viewModel.deleteCategory(it) }
+            )
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
+                if (apps.isEmpty()) {
+                    // 空状态
+                    EmptyState(
+                        modifier = Modifier.align(Alignment.Center),
+                        onCreateApp = onCreateApp
+                    )
+                } else {
+                    // 应用列表
+                    LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -417,6 +450,10 @@ fun HomeScreen(
                                     }
                                 }
                             },
+                            onMoveToCategory = {
+                                appToMove = app
+                                showMoveToCategoryDialog = true
+                            },
                             modifier = Modifier.animateItemPlacement()
                         )
                     }
@@ -425,6 +462,7 @@ fun HomeScreen(
                     item {
                         Spacer(modifier = Modifier.height(80.dp))
                     }
+                }
                 }
             }
         }
@@ -481,6 +519,45 @@ fun HomeScreen(
             }
         )
     }
+    
+    // 分类编辑对话框
+    if (showCategoryEditor) {
+        CategoryEditorDialog(
+            category = editingCategory,
+            onDismiss = {
+                showCategoryEditor = false
+                editingCategory = null
+            },
+            onSave = { name, icon, color ->
+                if (editingCategory != null) {
+                    viewModel.updateCategory(
+                        editingCategory!!.copy(name = name, icon = icon, color = color)
+                    )
+                } else {
+                    viewModel.createCategory(name, icon, color)
+                }
+                showCategoryEditor = false
+                editingCategory = null
+            }
+        )
+    }
+    
+    // 移动到分类对话框
+    if (showMoveToCategoryDialog && appToMove != null) {
+        MoveToCategoryDialog(
+            app = appToMove!!,
+            categories = categories,
+            onDismiss = {
+                showMoveToCategoryDialog = false
+                appToMove = null
+            },
+            onMoveToCategory = { categoryId ->
+                viewModel.moveAppToCategory(appToMove!!, categoryId)
+                showMoveToCategoryDialog = false
+                appToMove = null
+            }
+        )
+    }
 }
 
 /**
@@ -498,6 +575,7 @@ fun AppCard(
     onExport: () -> Unit = {},
     onBuildApk: () -> Unit = {},
     onShareApk: () -> Unit = {},
+    onMoveToCategory: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -639,6 +717,14 @@ fun AppCard(
                             onExport()
                         },
                         leadingIcon = { Icon(Icons.Outlined.FileDownload, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(Strings.moveToCategory) },
+                        onClick = {
+                            expanded = false
+                            onMoveToCategory()
+                        },
+                        leadingIcon = { Icon(Icons.Outlined.Folder, null) }
                     )
                     Divider()
                     DropdownMenuItem(

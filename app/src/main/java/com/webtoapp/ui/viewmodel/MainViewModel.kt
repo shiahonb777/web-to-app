@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.WebToAppApplication
 import com.webtoapp.data.model.*
+import com.webtoapp.data.repository.AppCategoryRepository
 import com.webtoapp.ui.theme.ThemeManager
 import com.webtoapp.util.BgmStorage
 import com.webtoapp.util.HtmlStorage
@@ -26,10 +27,19 @@ import kotlinx.coroutines.flow.first
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: WebAppRepository = WebToAppApplication.repository
+    private val categoryRepository: AppCategoryRepository = WebToAppApplication.categoryRepository
 
     // 所有应用列表
     val webApps: StateFlow<List<WebApp>> = repository.allWebApps
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    
+    // 所有分类列表
+    val categories: StateFlow<List<AppCategory>> = categoryRepository.allCategories
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    
+    // 当前选中的分类ID（null = 全部，-1 = 未分类）
+    private val _selectedCategoryId = MutableStateFlow<Long?>(null)
+    val selectedCategoryId: StateFlow<Long?> = _selectedCategoryId.asStateFlow()
 
     // 当前编辑的应用
     private val _currentApp = MutableStateFlow<WebApp?>(null)
@@ -61,13 +71,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val filteredApps: StateFlow<List<WebApp>> = combine(
         webApps,
-        searchQuery
-    ) { apps, query ->
-        if (query.isBlank()) apps
-        else apps.filter {
-            it.name.contains(query, ignoreCase = true) ||
-            it.url.contains(query, ignoreCase = true)
+        searchQuery,
+        selectedCategoryId
+    ) { apps, query, categoryId ->
+        var filtered = apps
+        
+        // 分类过滤
+        filtered = when (categoryId) {
+            null -> filtered // 全部
+            -1L -> filtered.filter { it.categoryId == null } // 未分类
+            else -> filtered.filter { it.categoryId == categoryId } // 指定分类
         }
+        
+        // 搜索过滤
+        if (query.isNotBlank()) {
+            filtered = filtered.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                it.url.contains(query, ignoreCase = true)
+            }
+        }
+        
+        filtered
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     /**
@@ -118,7 +142,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             extensionModuleEnabled = webApp.extensionModuleIds.isNotEmpty(),
             extensionModuleIds = webApp.extensionModuleIds.toSet(),
             autoStartConfig = webApp.autoStartConfig,
-            forcedRunConfig = webApp.forcedRunConfig
+            forcedRunConfig = webApp.forcedRunConfig,
+            blackTechConfig = webApp.blackTechConfig,
+            disguiseConfig = webApp.disguiseConfig
         )
     }
 
@@ -289,10 +315,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     translateConfig = translateConfig,
                     extensionModuleIds = extensionModuleIds,
                     autoStartConfig = state.autoStartConfig,
-                    forcedRunConfig = state.forcedRunConfig
+                    forcedRunConfig = state.forcedRunConfig,
+                    blackTechConfig = state.blackTechConfig,
+                    disguiseConfig = state.disguiseConfig
                 ) ?: run {
                     // 将新格式激活码转换为字符串列表（用于兼容性）
                     val activationCodeStrings = state.activationCodeList.map { it.toJson() } + state.activationCodes
+                    
+                    // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
+                    val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
                     
                     WebApp(
                         name = state.name,
@@ -320,7 +351,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         translateConfig = translateConfig,
                         extensionModuleIds = extensionModuleIds,
                         autoStartConfig = state.autoStartConfig,
-                        forcedRunConfig = state.forcedRunConfig
+                        forcedRunConfig = state.forcedRunConfig,
+                        blackTechConfig = state.blackTechConfig,
+                        disguiseConfig = state.disguiseConfig,
+                        categoryId = categoryId
                     )
                 }
 
@@ -476,6 +510,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
                 
+                // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
+                val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
+                
                 val webApp = WebApp(
                     name = name.ifBlank { if (isVideo) "视频应用" else "图片应用" },
                     url = savedMediaPath,
@@ -487,7 +524,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     activationCodeList = emptyList(),
                     bgmEnabled = false,
                     bgmConfig = BgmConfig(),
-                    themeType = currentThemeType
+                    themeType = currentThemeType,
+                    categoryId = categoryId
                 )
                 
                 // 保存到数据库
@@ -646,6 +684,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     HtmlStorage.clearTempFiles(context)
                 }
                 
+                // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
+                val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
+                
                 val webApp = WebApp(
                     name = name.ifBlank { "HTML应用" },
                     url = "",
@@ -657,7 +698,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     activationCodeList = emptyList(),
                     bgmEnabled = false,
                     bgmConfig = BgmConfig(),
-                    themeType = currentThemeType
+                    themeType = currentThemeType,
+                    categoryId = categoryId
                 )
                 
                 // 保存到数据库
@@ -751,6 +793,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     enableLocalStorage = true
                 )
                 
+                // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
+                val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
+                
                 val webApp = WebApp(
                     name = name.ifBlank { "$framework 应用" },
                     url = "",
@@ -762,7 +807,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     activationCodeList = emptyList(),
                     bgmEnabled = false,
                     bgmConfig = BgmConfig(),
-                    themeType = currentThemeType
+                    themeType = currentThemeType,
+                    categoryId = categoryId
                 )
                 
                 // 保存到数据库
@@ -774,6 +820,85 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uiState.value = UiState.Error("创建失败: ${e.message}")
+            }
+        }
+    }
+    
+    // ==================== 分类管理 ====================
+    
+    /**
+     * 选择分类
+     * @param categoryId null = 全部，-1 = 未分类，其他 = 指定分类ID
+     */
+    fun selectCategory(categoryId: Long?) {
+        _selectedCategoryId.value = categoryId
+    }
+    
+    /**
+     * 创建分类
+     */
+    fun createCategory(name: String, icon: String = "📁", color: String = "#6200EE") {
+        viewModelScope.launch {
+            try {
+                val category = AppCategory(
+                    name = name,
+                    icon = icon,
+                    color = color,
+                    sortOrder = categories.value.size
+                )
+                categoryRepository.createCategory(category)
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("创建分类失败: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 更新分类
+     */
+    fun updateCategory(category: AppCategory) {
+        viewModelScope.launch {
+            try {
+                categoryRepository.updateCategory(category)
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("更新分类失败: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 删除分类
+     * 删除后，该分类下的应用将变为未分类
+     */
+    fun deleteCategory(category: AppCategory) {
+        viewModelScope.launch {
+            try {
+                // 将该分类下的应用设为未分类
+                val appsInCategory = webApps.value.filter { it.categoryId == category.id }
+                appsInCategory.forEach { app ->
+                    repository.updateWebApp(app.copy(categoryId = null))
+                }
+                // 删除分类
+                categoryRepository.deleteCategory(category)
+                // 如果当前选中的是该分类，切换到全部
+                if (_selectedCategoryId.value == category.id) {
+                    _selectedCategoryId.value = null
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("删除分类失败: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 修改应用的分类
+     */
+    fun moveAppToCategory(webApp: WebApp, categoryId: Long?) {
+        viewModelScope.launch {
+            try {
+                repository.updateWebApp(webApp.copy(categoryId = categoryId))
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("移动失败: ${e.message}")
             }
         }
     }
@@ -847,7 +972,13 @@ data class EditState(
     val autoStartConfig: AutoStartConfig? = null,
     
     // 强制运行配置
-    val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null
+    val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
+    
+    // 黑科技功能配置（独立模块）
+    val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
+    
+    // 应用伪装配置（独立模块）
+    val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null
 )
 
 /**

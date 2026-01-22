@@ -26,6 +26,7 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.AppType
 import com.webtoapp.data.model.MediaConfig
 import com.webtoapp.data.model.SplashOrientation
+import com.webtoapp.ui.components.AppNameTextFieldSimple
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.IconPickerWithLibrary
 
@@ -268,13 +269,11 @@ fun CreateMediaAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    OutlinedTextField(
+                    // 应用名称（带随机按钮）
+                    AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
-                        placeholder = { Text(Strings.createMediaApp) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        placeholder = Strings.createMediaApp
                     )
                     
                     Spacer(modifier = Modifier.height(12.dp))

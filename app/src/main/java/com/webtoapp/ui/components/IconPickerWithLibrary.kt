@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.util.FaviconFetcher
+import kotlinx.coroutines.launch
 import java.io.File
 
 /**
@@ -25,6 +28,7 @@ import java.io.File
  * 
  * @param iconUri 当前选中的图标 Uri（来自相册选择）
  * @param iconPath 当前选中的图标路径（来自图标库）
+ * @param websiteUrl 网站地址（用于获取网站图标，仅 WEB 类型传入）
  * @param onSelectFromGallery 从相册选择图标的回调
  * @param onSelectFromLibrary 从图标库选择图标的回调（返回文件路径）
  */
@@ -32,15 +36,22 @@ import java.io.File
 fun IconPickerWithLibrary(
     iconUri: Uri? = null,
     iconPath: String? = null,
+    websiteUrl: String? = null,
     onSelectFromGallery: () -> Unit,
     onSelectFromLibrary: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showLibraryDialog by remember { mutableStateOf(false) }
     var showAiGeneratorDialog by remember { mutableStateOf(false) }
+    var isFetchingFavicon by remember { mutableStateOf(false) }
     
     // 判断是否有图标
     val hasIcon = iconUri != null || iconPath != null
+    
+    // 判断是否可以获取网站图标
+    val canFetchFavicon = !websiteUrl.isNullOrBlank() && 
+        (websiteUrl.contains(".") || websiteUrl.startsWith("http"))
     
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -118,6 +129,45 @@ fun IconPickerWithLibrary(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // 获取网站图标按钮（仅当有网址时显示）
+                if (canFetchFavicon) {
+                    FilledTonalButton(
+                        onClick = {
+                            if (!isFetchingFavicon && !websiteUrl.isNullOrBlank()) {
+                                isFetchingFavicon = true
+                                scope.launch {
+                                    val iconPath = FaviconFetcher.fetchFavicon(context, websiteUrl)
+                                    isFetchingFavicon = false
+                                    if (iconPath != null) {
+                                        onSelectFromLibrary(iconPath)
+                                        Toast.makeText(context, Strings.faviconFetchSuccess, Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, Strings.faviconFetchFailed, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        },
+                        enabled = !isFetchingFavicon,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        if (isFetchingFavicon) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Outlined.Language,
+                                null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(Strings.fetchWebsiteIcon, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                
                 // 图标库按钮
                 FilledTonalButton(
                     onClick = { showLibraryDialog = true },

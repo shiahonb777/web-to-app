@@ -693,10 +693,27 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // v1.8.5
+                            VersionSection(
+                                version = "v1.8.5",
+                                isLatest = true
+                            ) {
+                                ChangeItem("✨", Strings.appCategoryFeature)
+                                ChangeItem("✨", Strings.faviconFetchFeature)
+                                ChangeItem("✨", Strings.randomAppNameFeature)
+                                ChangeItem("✨", Strings.multiAppIconFeature)
+                                ChangeItem("💪", Strings.optimizeDataBackup)
+                                ChangeItem("💪", Strings.optimizeBlackTech)
+                                ChangeItem("🐛", Strings.fixElementBlocker)
+                                ChangeItem("🐛", Strings.fixBackgroundRunCrash)
+                                ChangeItem("🐛", Strings.fixI18nStringAdaptation)
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             // v1.8.0
                             VersionSection(
-                                version = "v1.8.0",
-                                isLatest = true
+                                version = "v1.8.0"
                             ) {
                                 ChangeItem("🌍", Strings.multiLanguageSupport)
                                 ChangeItem("📤", Strings.shareApkFeature)

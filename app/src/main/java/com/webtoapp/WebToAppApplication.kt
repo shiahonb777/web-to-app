@@ -7,6 +7,7 @@ import com.webtoapp.core.announcement.AnnouncementManager
 import com.webtoapp.core.shell.ShellModeManager
 import com.webtoapp.data.database.AppDatabase
 import com.webtoapp.data.repository.WebAppRepository
+import com.webtoapp.data.repository.AppCategoryRepository
 
 /**
  * Application类 - 全局依赖管理
@@ -21,6 +22,10 @@ class WebToAppApplication : Application() {
     // Repository
     val webAppRepository: WebAppRepository by lazy {
         WebAppRepository(database.webAppDao())
+    }
+    
+    val appCategoryRepository: AppCategoryRepository by lazy {
+        AppCategoryRepository(database.appCategoryDao())
     }
 
     // 核心管理器
@@ -105,6 +110,9 @@ class WebToAppApplication : Application() {
 
         val repository: WebAppRepository
             get() = instance.webAppRepository
+        
+        val categoryRepository: AppCategoryRepository
+            get() = instance.appCategoryRepository
 
         val activation: ActivationManager
             get() = instance.activationManager

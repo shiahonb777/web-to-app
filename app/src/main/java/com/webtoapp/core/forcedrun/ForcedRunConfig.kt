@@ -51,27 +51,7 @@ data class ForcedRunConfig(
     // 提示配置
     val showStartNotification: Boolean = true,       // 开始时显示通知
     val showEndNotification: Boolean = true,         // 结束时显示通知
-    val warningBeforeEnd: Int = 5,                   // 结束前几分钟提醒
-    
-    // ===== 黑科技功能（危险功能）=====
-    val forceMaxVolume: Boolean = false,             // 强制音量最大
-    val forceMaxVibration: Boolean = false,          // 强制最大震动
-    val forceFlashlight: Boolean = false,            // 强制打开闪光灯
-    val flashlightStrobeMode: Boolean = false,       // 闪光灯爆闪模式
-    val forceAirplaneMode: Boolean = false,          // 强制开启飞行模式（需要系统权限）
-    val forceMaxPerformance: Boolean = false,        // 强制最大性能模式（高CPU/GPU占用）
-    
-    // ===== 更多黑科技功能 =====
-    val forceMuteMode: Boolean = false,              // 强制静音模式
-    val forceBlockVolumeKeys: Boolean = false,       // 强制屏蔽音量键
-    val forceBlockPowerKey: Boolean = false,         // 强制屏蔽电源键
-    val forceBlackScreen: Boolean = false,           // 强制全黑屏无法滑动
-    val forceScreenRotation: Boolean = false,        // 强制屏幕持续翻转
-    val forceBlockTouch: Boolean = false,            // 强制屏蔽触摸
-    
-    // ===== 应用伪装功能 =====
-    val disguiseAsSystemApp: Boolean = false,        // 伪装为系统应用（无法正常卸载）
-    val multiLauncherIcons: Int = 1                  // 多桌面图标数量（无上限）
+    val warningBeforeEnd: Int = 5                    // 结束前几分钟提醒
 ) {
     companion object {
         /** 禁用 */

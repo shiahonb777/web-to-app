@@ -27,14 +27,17 @@ class DataBackupManager(private val context: Context) {
     
     companion object {
         private const val TAG = "DataBackupManager"
-        private const val BACKUP_VERSION = 1
+        private const val BACKUP_VERSION = 2  // 版本升级：支持更多资源类型
         private const val APPS_JSON = "apps.json"
         private const val RESOURCES_DIR = "resources/"
         private const val ICONS_DIR = "resources/icons/"
         private const val SPLASH_DIR = "resources/splash/"
         private const val BGM_DIR = "resources/bgm/"
+        private const val BGM_LRC_DIR = "resources/bgm_lrc/"      // BGM 歌词文件
+        private const val BGM_COVER_DIR = "resources/bgm_cover/"  // BGM 封面图片
         private const val HTML_DIR = "resources/html/"
         private const val MEDIA_DIR = "resources/media/"
+        private const val STATUSBAR_DIR = "resources/statusbar/" // 状态栌背景图
         
         // 缓冲区大小
         private const val BUFFER_SIZE = 8192
@@ -287,7 +290,8 @@ class DataBackupManager(private val context: Context) {
     fun cleanupBackupTempFiles() {
         val backupDirs = listOf(
             "backup_icons", "backup_splash", "backup_bgm", 
-            "backup_html", "backup_media", "backup_other"
+            "backup_bgm_lrc", "backup_bgm_cover",
+            "backup_html", "backup_media", "backup_statusbar", "backup_other"
         )
         
         backupDirs.forEach { dirName ->
@@ -307,8 +311,9 @@ class DataBackupManager(private val context: Context) {
      */
     fun getBackupTempSize(): Long {
         val backupDirs = listOf(
-            "backup_icons", "backup_splash", "backup_bgm", 
-            "backup_html", "backup_media", "backup_other"
+            "backup_icons", "backup_splash", "backup_bgm",
+            "backup_bgm_lrc", "backup_bgm_cover",
+            "backup_html", "backup_media", "backup_statusbar", "backup_other"
         )
         
         return backupDirs.sumOf { dirName ->
@@ -343,9 +348,31 @@ class DataBackupManager(private val context: Context) {
         
         // BGM 文件
         app.bgmConfig?.playlist?.forEachIndexed { index, bgmItem ->
+            // BGM 音频文件
             if (!bgmItem.isAsset && File(bgmItem.path).exists()) {
                 val ext = bgmItem.path.substringAfterLast('.', "mp3")
                 resources["${BGM_DIR}${appId}_bgm_$index.$ext"] = bgmItem.path
+            }
+            // BGM 歌词文件
+            bgmItem.lrcPath?.let { lrcPath ->
+                if (File(lrcPath).exists()) {
+                    resources["${BGM_LRC_DIR}${appId}_bgm_$index.lrc"] = lrcPath
+                }
+            }
+            // BGM 封面图片
+            bgmItem.coverPath?.let { coverPath ->
+                if (File(coverPath).exists()) {
+                    val ext = coverPath.substringAfterLast('.', "jpg")
+                    resources["${BGM_COVER_DIR}${appId}_bgm_cover_$index.$ext"] = coverPath
+                }
+            }
+        }
+        
+        // 状态栌背景图片
+        app.webViewConfig.statusBarBackgroundImage?.let { path ->
+            if (File(path).exists()) {
+                val ext = path.substringAfterLast('.', "png")
+                resources["${STATUSBAR_DIR}${appId}_statusbar.$ext"] = path
             }
         }
         
@@ -390,7 +417,11 @@ class DataBackupManager(private val context: Context) {
             bgmConfig = app.bgmConfig?.copy(
                 playlist = app.bgmConfig?.playlist?.mapIndexed { index, item ->
                     if (!item.isAsset) {
-                        item.copy(path = findZipPath(item.path) ?: item.path)
+                        item.copy(
+                            path = findZipPath(item.path) ?: item.path,
+                            lrcPath = findZipPath(item.lrcPath),
+                            coverPath = findZipPath(item.coverPath)
+                        )
                     } else item
                 } ?: emptyList()
             ),
@@ -398,6 +429,9 @@ class DataBackupManager(private val context: Context) {
                 files = app.htmlConfig?.files?.map { file ->
                     file.copy(path = "${HTML_DIR}${appId}/${file.name}")
                 } ?: emptyList()
+            ),
+            webViewConfig = app.webViewConfig.copy(
+                statusBarBackgroundImage = findZipPath(app.webViewConfig.statusBarBackgroundImage)
             ),
             url = if (app.appType == com.webtoapp.data.model.AppType.IMAGE ||
                       app.appType == com.webtoapp.data.model.AppType.VIDEO) {
@@ -421,7 +455,11 @@ class DataBackupManager(private val context: Context) {
             bgmConfig = app.bgmConfig?.copy(
                 playlist = app.bgmConfig?.playlist?.map { item ->
                     if (!item.isAsset) {
-                        item.copy(path = extractedResources[item.path] ?: item.path)
+                        item.copy(
+                            path = extractedResources[item.path] ?: item.path,
+                            lrcPath = item.lrcPath?.let { extractedResources[it] ?: it },
+                            coverPath = item.coverPath?.let { extractedResources[it] ?: it }
+                        )
                     } else item
                 } ?: emptyList()
             ),
@@ -429,6 +467,11 @@ class DataBackupManager(private val context: Context) {
                 files = app.htmlConfig?.files?.map { file ->
                     file.copy(path = extractedResources[file.path] ?: file.path)
                 } ?: emptyList()
+            ),
+            webViewConfig = app.webViewConfig.copy(
+                statusBarBackgroundImage = app.webViewConfig.statusBarBackgroundImage?.let {
+                    extractedResources[it] ?: it
+                }
             ),
             url = if (app.appType == com.webtoapp.data.model.AppType.IMAGE ||
                       app.appType == com.webtoapp.data.model.AppType.VIDEO) {
@@ -445,9 +488,12 @@ class DataBackupManager(private val context: Context) {
             val targetDir = when {
                 zipPath.startsWith(ICONS_DIR) -> File(context.filesDir, "backup_icons")
                 zipPath.startsWith(SPLASH_DIR) -> File(context.filesDir, "backup_splash")
+                zipPath.startsWith(BGM_LRC_DIR) -> File(context.filesDir, "backup_bgm_lrc")
+                zipPath.startsWith(BGM_COVER_DIR) -> File(context.filesDir, "backup_bgm_cover")
                 zipPath.startsWith(BGM_DIR) -> File(context.filesDir, "backup_bgm")
                 zipPath.startsWith(HTML_DIR) -> File(context.filesDir, "backup_html")
                 zipPath.startsWith(MEDIA_DIR) -> File(context.filesDir, "backup_media")
+                zipPath.startsWith(STATUSBAR_DIR) -> File(context.filesDir, "backup_statusbar")
                 else -> File(context.filesDir, "backup_other")
             }
             

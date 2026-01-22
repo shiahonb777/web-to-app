@@ -454,18 +454,25 @@ class ApkBuilder(private val context: Context) {
                             Log.d("ApkBuilder", "跳过旧启动画面媒体: ${entry.name}")
                         }
                         
-                        // 修改 AndroidManifest.xml（修改包名和版本号）
+                        // 修改 AndroidManifest.xml（修改包名、版本号、添加多图标）
                         entry.name == "AndroidManifest.xml" -> {
                             val originalData = zipIn.getInputStream(entry).readBytes()
-                            // 使用AxmlRebuilder支持任意长度包名和版本号修改
-                            val modifiedData = axmlRebuilder.expandAndModifyWithVersion(
+                            // 计算 activity-alias 数量（多桌面图标）
+                            val aliasCount = config.disguiseConfig?.getAliasCount() ?: 0
+                            // 使用完整的 AXML 修改方法
+                            val modifiedData = axmlRebuilder.expandAndModifyFull(
                                 originalData, 
                                 originalPackageName, 
                                 config.packageName,
                                 config.versionCode,
-                                config.versionName
+                                config.versionName,
+                                aliasCount,
+                                config.appName
                             )
                             writeEntryDeflated(zipOut, entry.name, modifiedData)
+                            if (aliasCount > 0) {
+                                logger.log("已添加 $aliasCount 个 activity-alias（多桌面图标）")
+                            }
                         }
                         
                         // 修改 resources.arsc（修改应用名 + 图标路径）
@@ -1651,7 +1658,11 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
                 showNotification = it.showNotification,
                 keepCpuAwake = it.keepCpuAwake
             )
-        }
+        },
+        // 黑科技功能配置（独立模块）
+        blackTechConfig = blackTechConfig,
+        // 应用伪装配置（独立模块）
+        disguiseConfig = disguiseConfig
     )
 }
 

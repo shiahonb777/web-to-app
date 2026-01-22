@@ -85,6 +85,15 @@ data class WebApp(
     
     // 强制运行配置
     val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
+    
+    // 黑科技功能配置（独立模块）
+    val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
+    
+    // 应用伪装配置（独立模块）
+    val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
+    
+    // 分类ID（关联 AppCategory）
+    val categoryId: Long? = null,
 
     // 元数据
     val createdAt: Long = System.currentTimeMillis(),

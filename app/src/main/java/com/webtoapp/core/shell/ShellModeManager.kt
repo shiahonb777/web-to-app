@@ -62,8 +62,18 @@ class ShellModeManager(private val context: Context) {
             }
             
             android.util.Log.d("ShellModeManager", "配置文件内容长度: ${jsonStr.length}")
+            // 打印 JSON 中 disguiseConfig 的部分（用于调试）
+            val disguiseIndex = jsonStr.indexOf("\"disguiseConfig\"")
+            if (disguiseIndex >= 0) {
+                val endIndex = minOf(disguiseIndex + 150, jsonStr.length)
+                android.util.Log.d("ShellModeManager", "JSON中disguiseConfig片段: ${jsonStr.substring(disguiseIndex, endIndex)}")
+            } else {
+                android.util.Log.w("ShellModeManager", "JSON中未找到disguiseConfig字段!")
+            }
             val config = Gson().fromJson(jsonStr, ShellConfig::class.java)
             android.util.Log.d("ShellModeManager", "解析结果: targetUrl=${config?.targetUrl}, splashEnabled=${config?.splashEnabled}")
+            android.util.Log.d("ShellModeManager", "伪装配置: disguiseConfig=${config?.disguiseConfig}")
+            android.util.Log.d("ShellModeManager", "黑科技配置: blackTechConfig=${config?.blackTechConfig}")
             android.util.Log.d("ShellModeManager", "扩展模块: extensionModuleIds=${config?.extensionModuleIds?.size ?: 0}, embeddedExtensionModules=${config?.embeddedExtensionModules?.size ?: 0}")
             config?.embeddedExtensionModules?.forEach { module ->
                 android.util.Log.d("ShellModeManager", "  嵌入模块: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}, codeLength=${module.code.length}")
@@ -284,7 +294,15 @@ data class ShellConfig(
     val backgroundRunEnabled: Boolean = false,
     
     @SerializedName("backgroundRunConfig")
-    val backgroundRunConfig: BackgroundRunShellConfig? = null
+    val backgroundRunConfig: BackgroundRunShellConfig? = null,
+    
+    // 黑科技功能配置（独立模块）
+    @SerializedName("blackTechConfig")
+    val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
+    
+    // 应用伪装配置（独立模块）
+    @SerializedName("disguiseConfig")
+    val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null
 )
 
 /**

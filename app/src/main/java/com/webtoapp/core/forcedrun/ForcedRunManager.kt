@@ -338,16 +338,17 @@ class ForcedRunManager(private val context: Context) {
             }
         }
         
-        // 3. 启动黑科技功能（如果配置了）
-        startHardwareFeatures(config)
+        // 3. 黑科技功能现已独立为单独模块，由调用方单独控制
+        // 如需启用黑科技，请调用 startHardwareFeatures(blackTechConfig)
     }
     
     /**
      * 启动黑科技硬件功能
+     * @param blackTechConfig 黑科技配置（独立模块，可为null）
      */
-    private fun startHardwareFeatures(config: ForcedRunConfig) {
+    fun startHardwareFeatures(blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig?) {
         val hardwareController = ForcedRunHardwareController.getInstance(context)
-        hardwareController.startAllFeatures(config)
+        hardwareController.startAllFeatures(blackTechConfig)
     }
     
     /**

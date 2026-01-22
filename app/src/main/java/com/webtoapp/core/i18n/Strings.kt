@@ -6421,6 +6421,61 @@ object Strings {
     }
     
     // ==================== 更新日志 ====================
+    // v1.8.5
+    val appCategoryFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增应用分类功能"
+        AppLanguage.ENGLISH -> "App category feature"
+        AppLanguage.ARABIC -> "ميزة تصنيف التطبيقات"
+    }
+    
+    val faviconFetchFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增网页应用图标获取功能"
+        AppLanguage.ENGLISH -> "Website favicon fetch feature"
+        AppLanguage.ARABIC -> "ميزة جلب أيقونة موقع الويب"
+    }
+    
+    val randomAppNameFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增随机应用名称功能"
+        AppLanguage.ENGLISH -> "Random app name feature"
+        AppLanguage.ARABIC -> "ميزة اسم التطبيق العشوائي"
+    }
+    
+    val multiAppIconFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增多应用图标功能"
+        AppLanguage.ENGLISH -> "Multi app icon feature"
+        AppLanguage.ARABIC -> "ميزة أيقونات التطبيقات المتعددة"
+    }
+    
+    val optimizeDataBackup: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化数据备份功能"
+        AppLanguage.ENGLISH -> "Optimized data backup feature"
+        AppLanguage.ARABIC -> "تحسين ميزة النسخ الاحتياطي للبيانات"
+    }
+    
+    val optimizeBlackTech: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化黑科技功能"
+        AppLanguage.ENGLISH -> "Optimized BlackTech feature"
+        AppLanguage.ARABIC -> "تحسين ميزة التقنية السوداء"
+    }
+    
+    val fixElementBlocker: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复元素屏蔽器问题"
+        AppLanguage.ENGLISH -> "Fixed element blocker issues"
+        AppLanguage.ARABIC -> "إصلاح مشاكل حاجب العناصر"
+    }
+    
+    val fixBackgroundRunCrash: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复后台运行功能闪退问题"
+        AppLanguage.ENGLISH -> "Fixed background run feature crash"
+        AppLanguage.ARABIC -> "إصلاح تعطل ميزة التشغيل في الخلفية"
+    }
+    
+    val fixI18nStringAdaptation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复多语言字符串适配问题"
+        AppLanguage.ENGLISH -> "Fixed multi-language string adaptation issues"
+        AppLanguage.ARABIC -> "إصلاح مشاكل تكييف السلاسل متعددة اللغات"
+    }
+    
     // v1.8.0
     val multiLanguageSupport: String get() = when (lang) {
         AppLanguage.CHINESE -> "多语言支持：中文、英文、阿拉伯语"
@@ -13314,9 +13369,9 @@ object Strings {
     
     // ==================== 黑科技功能 ====================
     val blackTechFeatures: String get() = when (lang) {
-        AppLanguage.CHINESE -> "⚡ 黑科技功能"
-        AppLanguage.ENGLISH -> "⚡ Advanced Features"
-        AppLanguage.ARABIC -> "⚡ ميزات متقدمة"
+        AppLanguage.CHINESE -> "黑科技功能"
+        AppLanguage.ENGLISH -> "Advanced Features"
+        AppLanguage.ARABIC -> "ميزات متقدمة"
     }
     
     val blackTechWarning: String get() = when (lang) {
@@ -13326,9 +13381,9 @@ object Strings {
     }
     
     val forceMaxVolume: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🔊 强制最大音量"
-        AppLanguage.ENGLISH -> "🔊 Force Max Volume"
-        AppLanguage.ARABIC -> "🔊 فرض أقصى صوت"
+        AppLanguage.CHINESE -> "强制最大音量"
+        AppLanguage.ENGLISH -> "Force Max Volume"
+        AppLanguage.ARABIC -> "فرض أقصى صوت"
     }
     
     val forceMaxVolumeDesc: String get() = when (lang) {
@@ -13338,9 +13393,9 @@ object Strings {
     }
     
     val forceMaxVibration: String get() = when (lang) {
-        AppLanguage.CHINESE -> "📳 强制持续震动"
-        AppLanguage.ENGLISH -> "📳 Force Continuous Vibration"
-        AppLanguage.ARABIC -> "📳 فرض الاهتزاز المستمر"
+        AppLanguage.CHINESE -> "强制持续震动"
+        AppLanguage.ENGLISH -> "Force Continuous Vibration"
+        AppLanguage.ARABIC -> "فرض الاهتزاز المستمر"
     }
     
     val forceMaxVibrationDesc: String get() = when (lang) {
@@ -13350,9 +13405,9 @@ object Strings {
     }
     
     val forceFlashlight: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🔦 强制闪光灯"
-        AppLanguage.ENGLISH -> "🔦 Force Flashlight"
-        AppLanguage.ARABIC -> "🔦 فرض الفلاش"
+        AppLanguage.CHINESE -> "强制闪光灯"
+        AppLanguage.ENGLISH -> "Force Flashlight"
+        AppLanguage.ARABIC -> "فرض الفلاش"
     }
     
     val forceFlashlightDesc: String get() = when (lang) {
@@ -13362,9 +13417,9 @@ object Strings {
     }
     
     val strobeMode: String get() = when (lang) {
-        AppLanguage.CHINESE -> "⚡ 爆闪模式"
-        AppLanguage.ENGLISH -> "⚡ Strobe Mode"
-        AppLanguage.ARABIC -> "⚡ وضع الوميض"
+        AppLanguage.CHINESE -> "爆闪模式"
+        AppLanguage.ENGLISH -> "Strobe Mode"
+        AppLanguage.ARABIC -> "وضع الوميض"
     }
     
     val strobeModeDesc: String get() = when (lang) {
@@ -13374,9 +13429,9 @@ object Strings {
     }
     
     val forceMaxPerformance: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🔥 强制最大性能"
-        AppLanguage.ENGLISH -> "🔥 Force Max Performance"
-        AppLanguage.ARABIC -> "🔥 فرض أقصى أداء"
+        AppLanguage.CHINESE -> "强制最大性能"
+        AppLanguage.ENGLISH -> "Force Max Performance"
+        AppLanguage.ARABIC -> "فرض أقصى أداء"
     }
     
     val forceMaxPerformanceDesc: String get() = when (lang) {
@@ -13386,9 +13441,9 @@ object Strings {
     }
     
     val forceMuteMode: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🔇 强制静音模式"
-        AppLanguage.ENGLISH -> "🔇 Force Mute Mode"
-        AppLanguage.ARABIC -> "🔇 فرض وضع الصامت"
+        AppLanguage.CHINESE -> "强制静音模式"
+        AppLanguage.ENGLISH -> "Force Mute Mode"
+        AppLanguage.ARABIC -> "فرض وضع الصامت"
     }
     
     val forceMuteModeDesc: String get() = when (lang) {
@@ -13398,9 +13453,9 @@ object Strings {
     }
     
     val forceBlockVolumeKeys: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🔊 屏蔽音量键"
-        AppLanguage.ENGLISH -> "🔊 Block Volume Keys"
-        AppLanguage.ARABIC -> "🔊 حظر أزرار الصوت"
+        AppLanguage.CHINESE -> "屏蔽音量键"
+        AppLanguage.ENGLISH -> "Block Volume Keys"
+        AppLanguage.ARABIC -> "حظر أزرار الصوت"
     }
     
     val forceBlockVolumeKeysDesc: String get() = when (lang) {
@@ -13410,9 +13465,9 @@ object Strings {
     }
     
     val forceBlockPowerKey: String get() = when (lang) {
-        AppLanguage.CHINESE -> "⚡ 屏蔽电源键"
-        AppLanguage.ENGLISH -> "⚡ Block Power Key"
-        AppLanguage.ARABIC -> "⚡ حظر زر الطاقة"
+        AppLanguage.CHINESE -> "屏蔽电源键"
+        AppLanguage.ENGLISH -> "Block Power Key"
+        AppLanguage.ARABIC -> "حظر زر الطاقة"
     }
     
     val forceBlockPowerKeyDesc: String get() = when (lang) {
@@ -13422,9 +13477,9 @@ object Strings {
     }
     
     val forceBlackScreen: String get() = when (lang) {
-        AppLanguage.CHINESE -> "⬛ 强制全黑屏"
-        AppLanguage.ENGLISH -> "⬛ Force Black Screen"
-        AppLanguage.ARABIC -> "⬛ فرض الشاشة السوداء"
+        AppLanguage.CHINESE -> "强制全黑屏"
+        AppLanguage.ENGLISH -> "Force Black Screen"
+        AppLanguage.ARABIC -> "فرض الشاشة السوداء"
     }
     
     val forceBlackScreenDesc: String get() = when (lang) {
@@ -13434,9 +13489,9 @@ object Strings {
     }
     
     val forceScreenRotation: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🔄 强制屏幕翻转"
-        AppLanguage.ENGLISH -> "🔄 Force Screen Rotation"
-        AppLanguage.ARABIC -> "🔄 فرض تدوير الشاشة"
+        AppLanguage.CHINESE -> "强制屏幕翻转"
+        AppLanguage.ENGLISH -> "Force Screen Rotation"
+        AppLanguage.ARABIC -> "فرض تدوير الشاشة"
     }
     
     val forceScreenRotationDesc: String get() = when (lang) {
@@ -13446,9 +13501,9 @@ object Strings {
     }
     
     val forceBlockTouch: String get() = when (lang) {
-        AppLanguage.CHINESE -> "👆 屏蔽触摸"
-        AppLanguage.ENGLISH -> "👆 Block Touch"
-        AppLanguage.ARABIC -> "👆 حظر اللمس"
+        AppLanguage.CHINESE -> "屏蔽触摸"
+        AppLanguage.ENGLISH -> "Block Touch"
+        AppLanguage.ARABIC -> "حظر اللمس"
     }
     
     val forceBlockTouchDesc: String get() = when (lang) {
@@ -13459,9 +13514,9 @@ object Strings {
     
     // 应用伪装功能
     val disguiseAsSystemApp: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🛡️ 伪装系统应用"
-        AppLanguage.ENGLISH -> "🛡️ Disguise as System App"
-        AppLanguage.ARABIC -> "🛡️ التنكر كتطبيق نظام"
+        AppLanguage.CHINESE -> "伪装系统应用"
+        AppLanguage.ENGLISH -> "Disguise as System App"
+        AppLanguage.ARABIC -> "التنكر كتطبيق نظام"
     }
     
     val disguiseAsSystemAppDesc: String get() = when (lang) {
@@ -13471,9 +13526,9 @@ object Strings {
     }
     
     val multiLauncherIcons: String get() = when (lang) {
-        AppLanguage.CHINESE -> "📱 多桌面图标"
-        AppLanguage.ENGLISH -> "📱 Multi Launcher Icons"
-        AppLanguage.ARABIC -> "📱 أيقونات متعددة"
+        AppLanguage.CHINESE -> "多桌面图标"
+        AppLanguage.ENGLISH -> "Multi Launcher Icons"
+        AppLanguage.ARABIC -> "أيقونات متعددة"
     }
     
     val multiLauncherIconsDesc: String get() = when (lang) {
@@ -13498,6 +13553,68 @@ object Strings {
         AppLanguage.CHINESE -> "⚠️ 警告：启用以上功能可能导致设备发热、电量快速消耗等问题。请确保了解风险后再启用。部分功能需要特殊权限才能生效。"
         AppLanguage.ENGLISH -> "⚠️ Warning: Enabling the above features may cause device heating, rapid battery drain, etc. Please understand the risks before enabling. Some features require special permissions to work."
         AppLanguage.ARABIC -> "⚠️ تحذير: قد يؤدي تمكين الميزات أعلاه إلى تسخين الجهاز واستنزاف البطارية بسرعة وما إلى ذلك. يرجى فهم المخاطر قبل التمكين. تتطلب بعض الميزات أذونات خاصة للعمل."
+    }
+    
+    // ==================== 独立黑科技模块 ====================
+    val enableBlackTech: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用黑科技功能"
+        AppLanguage.ENGLISH -> "Enable Advanced Features"
+        AppLanguage.ARABIC -> "تمكين الميزات المتقدمة"
+    }
+    
+    val volumeControl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "音量控制"
+        AppLanguage.ENGLISH -> "Volume Control"
+        AppLanguage.ARABIC -> "التحكم في الصوت"
+    }
+    
+    val vibrationAndFlash: String get() = when (lang) {
+        AppLanguage.CHINESE -> "震动与闪光"
+        AppLanguage.ENGLISH -> "Vibration & Flash"
+        AppLanguage.ARABIC -> "الاهتزاز والفلاش"
+    }
+    
+    val systemControl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "系统控制"
+        AppLanguage.ENGLISH -> "System Control"
+        AppLanguage.ARABIC -> "التحكم في النظام"
+    }
+    
+    val screenControl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "屏幕控制"
+        AppLanguage.ENGLISH -> "Screen Control"
+        AppLanguage.ARABIC -> "التحكم في الشاشة"
+    }
+    
+    // ==================== 独立伪装模块 ====================
+    val enableDisguise: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用应用伪装"
+        AppLanguage.ENGLISH -> "Enable App Disguise"
+        AppLanguage.ARABIC -> "تمكين تنكر التطبيق"
+    }
+    
+    val disguiseHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏应用真实身份，防止被识别或卸载"
+        AppLanguage.ENGLISH -> "Hide app identity, prevent detection or uninstallation"
+        AppLanguage.ARABIC -> "إخفاء هوية التطبيق ومنع الكشف أو إلغاء التثبيت"
+    }
+    
+    val hideOriginalIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏原始图标"
+        AppLanguage.ENGLISH -> "Hide Original Icon"
+        AppLanguage.ARABIC -> "إخفاء الأيقونة الأصلية"
+    }
+    
+    val hideOriginalIconDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "从启动器隐藏原始应用图标"
+        AppLanguage.ENGLISH -> "Hide original app icon from launcher"
+        AppLanguage.ARABIC -> "إخفاء أيقونة التطبيق الأصلية من المشغل"
+    }
+    
+    val disguiseWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ℹ️ 提示：伪装功能需要设备管理器权限才能完全生效。多图标功能在部分设备上可能受限。"
+        AppLanguage.ENGLISH -> "ℹ️ Note: Disguise features require device admin permission to work fully. Multi-icon feature may be limited on some devices."
+        AppLanguage.ARABIC -> "ℹ️ ملاحظة: تتطلب ميزات التنكر إذن مسؤول الجهاز للعمل بالكامل. قد تكون ميزة الأيقونات المتعددة محدودة على بعض الأجهزة."
     }
     
     // ==================== 后台运行 ====================
@@ -13584,6 +13701,306 @@ object Strings {
         AppLanguage.CHINESE -> "后台运行：退出应用后继续在后台运行"
         AppLanguage.ENGLISH -> "Background running: keep running after exit"
         AppLanguage.ARABIC -> "التشغيل في الخلفية: الاستمرار في العمل بعد الخروج"
+    }
+    
+    // ==================== 图标与应用/伪装功能 ====================
+    val disguiseMultiIconTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图标与应用"
+        AppLanguage.ENGLISH -> "Icons & App"
+        AppLanguage.ARABIC -> "الأيقونات والتطبيق"
+    }
+    
+    val disguiseIconCountFormat: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%d 个图标"
+        AppLanguage.ENGLISH -> "%d icons"
+        AppLanguage.ARABIC -> "%d أيقونات"
+    }
+    
+    val disguiseNotEnabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未启用"
+        AppLanguage.ENGLISH -> "Not enabled"
+        AppLanguage.ARABIC -> "غير مفعل"
+    }
+    
+    val disguiseEnableMultiIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用多图标"
+        AppLanguage.ENGLISH -> "Enable Multi Icons"
+        AppLanguage.ARABIC -> "تفعيل الأيقونات المتعددة"
+    }
+    
+    val disguiseEnableMultiIconDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装后在桌面显示多个应用图标"
+        AppLanguage.ENGLISH -> "Show multiple app icons on desktop after installation"
+        AppLanguage.ARABIC -> "عرض أيقونات تطبيق متعددة على سطح المكتب بعد التثبيت"
+    }
+    
+    val disguiseIconCountTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "桌面图标数量"
+        AppLanguage.ENGLISH -> "Desktop Icon Count"
+        AppLanguage.ARABIC -> "عدد أيقونات سطح المكتب"
+    }
+    
+    val disguiseIconCountDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设置安装后在桌面显示的图标数量（每个图标都可启动应用）"
+        AppLanguage.ENGLISH -> "Set the number of icons to display on desktop (each icon can launch the app)"
+        AppLanguage.ARABIC -> "تعيين عدد الأيقونات المعروضة على سطح المكتب (كل أيقونة يمكنها تشغيل التطبيق)"
+    }
+    
+    val disguiseCountLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数量"
+        AppLanguage.ENGLISH -> "Count"
+        AppLanguage.ARABIC -> "العدد"
+    }
+    
+    val disguiseCountHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议 2-10 个"
+        AppLanguage.ENGLISH -> "Recommended 2-10"
+        AppLanguage.ARABIC -> "يُنصح بـ 2-10"
+    }
+    
+    val disguiseMultiIconTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多图标功能通过 Android 原生的 activity-alias 机制实现，安装后自动显示多个桌面图标，无需任何额外权限。"
+        AppLanguage.ENGLISH -> "Multi-icon feature uses Android native activity-alias mechanism, automatically showing multiple desktop icons after installation, no extra permissions required."
+        AppLanguage.ARABIC -> "تستخدم ميزة الأيقونات المتعددة آلية activity-alias الأصلية في Android، مع عرض أيقونات سطح المكتب المتعددة تلقائيًا بعد التثبيت، دون الحاجة إلى أذونات إضافية."
+    }
+    
+    // ==================== 用户脚本 ====================
+    val userScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用户脚本"
+        AppLanguage.ENGLISH -> "User Scripts"
+        AppLanguage.ARABIC -> "سكريبتات المستخدم"
+    }
+    
+    val userScriptsDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "类似油猴脚本，注入自定义 JavaScript 代码"
+        AppLanguage.ENGLISH -> "Tampermonkey-like custom JavaScript injection"
+        AppLanguage.ARABIC -> "حقن كود JavaScript مخصص مثل Tampermonkey"
+    }
+    
+    val addScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "添加脚本"
+        AppLanguage.ENGLISH -> "Add Script"
+        AppLanguage.ARABIC -> "إضافة سكريبت"
+    }
+    
+    val editScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "编辑脚本"
+        AppLanguage.ENGLISH -> "Edit Script"
+        AppLanguage.ARABIC -> "تعديل السكريبت"
+    }
+    
+    val scriptName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "脚本名称"
+        AppLanguage.ENGLISH -> "Script Name"
+        AppLanguage.ARABIC -> "اسم السكريبت"
+    }
+    
+    val scriptNamePlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入脚本名称"
+        AppLanguage.ENGLISH -> "Enter script name"
+        AppLanguage.ARABIC -> "أدخل اسم السكريبت"
+    }
+    
+    val scriptCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "脚本代码"
+        AppLanguage.ENGLISH -> "Script Code"
+        AppLanguage.ARABIC -> "كود السكريبت"
+    }
+    
+    val scriptCodePlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入 JavaScript 代码"
+        AppLanguage.ENGLISH -> "Enter JavaScript code"
+        AppLanguage.ARABIC -> "أدخل كود JavaScript"
+    }
+    
+    val scriptRunAt: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时机"
+        AppLanguage.ENGLISH -> "Run At"
+        AppLanguage.ARABIC -> "وقت التشغيل"
+    }
+    
+    val scriptEnabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用脚本"
+        AppLanguage.ENGLISH -> "Enable Script"
+        AppLanguage.ARABIC -> "تفعيل السكريبت"
+    }
+    
+    val noScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无脚本，点击添加"
+        AppLanguage.ENGLISH -> "No scripts, click to add"
+        AppLanguage.ARABIC -> "لا توجد سكريبتات، انقر للإضافة"
+    }
+    
+    val scriptNameRequired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入脚本名称"
+        AppLanguage.ENGLISH -> "Please enter script name"
+        AppLanguage.ARABIC -> "الرجاء إدخال اسم السكريبت"
+    }
+    
+    val scriptCodeRequired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入脚本代码"
+        AppLanguage.ENGLISH -> "Please enter script code"
+        AppLanguage.ARABIC -> "الرجاء إدخال كود السكريبت"
+    }
+    
+    val scriptCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%d 个脚本"
+        AppLanguage.ENGLISH -> "%d scripts"
+        AppLanguage.ARABIC -> "%d سكريبتات"
+    }
+    
+    // ==================== 应用分类 ====================
+    val allApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全部"
+        AppLanguage.ENGLISH -> "All"
+        AppLanguage.ARABIC -> "الكل"
+    }
+    
+    val uncategorized: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未分类"
+        AppLanguage.ENGLISH -> "Uncategorized"
+        AppLanguage.ARABIC -> "غير مصنف"
+    }
+    
+    val addCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "添加分类"
+        AppLanguage.ENGLISH -> "Add Category"
+        AppLanguage.ARABIC -> "إضافة تصنيف"
+    }
+    
+    val editCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "编辑分类"
+        AppLanguage.ENGLISH -> "Edit Category"
+        AppLanguage.ARABIC -> "تعديل التصنيف"
+    }
+    
+    val deleteCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除分类"
+        AppLanguage.ENGLISH -> "Delete Category"
+        AppLanguage.ARABIC -> "حذف التصنيف"
+    }
+    
+    val categoryName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分类名称"
+        AppLanguage.ENGLISH -> "Category Name"
+        AppLanguage.ARABIC -> "اسم التصنيف"
+    }
+    
+    val categoryNamePlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入分类名称"
+        AppLanguage.ENGLISH -> "Enter category name"
+        AppLanguage.ARABIC -> "أدخل اسم التصنيف"
+    }
+    
+    val categoryIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分类图标"
+        AppLanguage.ENGLISH -> "Category Icon"
+        AppLanguage.ARABIC -> "أيقونة التصنيف"
+    }
+    
+    val categoryColor: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分类颜色"
+        AppLanguage.ENGLISH -> "Category Color"
+        AppLanguage.ARABIC -> "لون التصنيف"
+    }
+    
+    val categoryNameRequired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入分类名称"
+        AppLanguage.ENGLISH -> "Please enter category name"
+        AppLanguage.ARABIC -> "الرجاء إدخال اسم التصنيف"
+    }
+    
+    val moveToCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "移动到分类"
+        AppLanguage.ENGLISH -> "Move to Category"
+        AppLanguage.ARABIC -> "نقل إلى تصنيف"
+    }
+    
+    val deleteCategoryConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定删除此分类吗？该分类下的应用将变为未分类。"
+        AppLanguage.ENGLISH -> "Delete this category? Apps in this category will become uncategorized."
+        AppLanguage.ARABIC -> "حذف هذا التصنيف؟ ستصبح التطبيقات في هذا التصنيف غير مصنفة."
+    }
+    
+    val longPressToEdit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "长按编辑或删除"
+        AppLanguage.ENGLISH -> "Long press to edit or delete"
+        AppLanguage.ARABIC -> "اضغط مطولاً للتعديل أو الحذف"
+    }
+    
+    // ==================== 随机名称 ====================
+    val randomName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "随机"
+        AppLanguage.ENGLISH -> "Random"
+        AppLanguage.ARABIC -> "عشوائي"
+    }
+    
+    val randomNameTooltip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击生成随机应用名称"
+        AppLanguage.ENGLISH -> "Click to generate a random app name"
+        AppLanguage.ARABIC -> "انقر لإنشاء اسم تطبيق عشوائي"
+    }
+    
+    // ==================== 示例项目 ====================
+    val sampleVueCounterName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Vue 计数器"
+        AppLanguage.ENGLISH -> "Vue Counter"
+        AppLanguage.ARABIC -> "عداد Vue"
+    }
+    
+    val sampleVueCounterDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Vue 3 响应式计数器示例，展示 Composition API"
+        AppLanguage.ENGLISH -> "Vue 3 reactive counter demo, showcasing Composition API"
+        AppLanguage.ARABIC -> "عرض عداد Vue 3 التفاعلي، يعرض Composition API"
+    }
+    
+    val sampleVueCounterTagReactive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应式"
+        AppLanguage.ENGLISH -> "Reactive"
+        AppLanguage.ARABIC -> "تفاعلي"
+    }
+    
+    val sampleReactTodoName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "React 待办"
+        AppLanguage.ENGLISH -> "React Todo"
+        AppLanguage.ARABIC -> "React Todo"
+    }
+    
+    val sampleReactTodoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "React 18 待办事项应用，展示 Hooks 用法"
+        AppLanguage.ENGLISH -> "React 18 todo app, showcasing Hooks usage"
+        AppLanguage.ARABIC -> "تطبيق مهام React 18، يعرض استخدام Hooks"
+    }
+    
+    val sampleWeatherAppName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "天气应用"
+        AppLanguage.ENGLISH -> "Weather App"
+        AppLanguage.ARABIC -> "تطبيق الطقس"
+    }
+    
+    val sampleWeatherAppDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Vite + 原生 JS 天气查询应用，无框架依赖"
+        AppLanguage.ENGLISH -> "Vite + Vanilla JS weather app, no framework dependency"
+        AppLanguage.ARABIC -> "تطبيق طقس Vite + JS أصلي، بدون إطار عمل"
+    }
+    
+    // ==================== 网站图标获取 ====================
+    val fetchWebsiteIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "获取图标"
+        AppLanguage.ENGLISH -> "Fetch Icon"
+        AppLanguage.ARABIC -> "جلب الأيقونة"
+    }
+    
+    val faviconFetchSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已获取网站图标"
+        AppLanguage.ENGLISH -> "Website icon fetched"
+        AppLanguage.ARABIC -> "تم جلب أيقونة الموقع"
+    }
+    
+    val faviconFetchFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无法获取网站图标"
+        AppLanguage.ENGLISH -> "Failed to fetch website icon"
+        AppLanguage.ARABIC -> "فشل في جلب أيقونة الموقع"
     }
 }
 

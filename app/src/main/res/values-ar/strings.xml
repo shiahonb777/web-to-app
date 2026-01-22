@@ -615,4 +615,18 @@
     <string name="theme_features">ميزات السمة</string>
     <string name="url_to_shortcut_basic">وظيفة URL إلى اختصار الأساسية</string>
     <string name="activation_code_announcement_ad_block">رمز التفعيل، الإعلان، حظر الإعلانات</string>
+
+    <!-- أيقونات سطح المكتب المتعددة / التمويه -->
+    <string name="disguise_multi_icon_title">أيقونات سطح المكتب المتعددة</string>
+    <string name="disguise_icon_count_format">%d أيقونات</string>
+    <string name="disguise_not_enabled">غير مفعل</string>
+    <string name="disguise_enable_multi_icon">تفعيل الأيقونات المتعددة</string>
+    <string name="disguise_enable_multi_icon_desc">عرض أيقونات تطبيق متعددة على سطح المكتب بعد التثبيت</string>
+    <string name="disguise_icon_count_title">عدد أيقونات سطح المكتب</string>
+    <string name="disguise_icon_count_desc">تعيين عدد الأيقونات المعروضة على سطح المكتب (كل أيقونة يمكنها تشغيل التطبيق)</string>
+    <string name="disguise_count_label">العدد</string>
+    <string name="disguise_count_hint">يُنصح بـ 2-10</string>
+    <string name="disguise_hide_main_icon">إخفاء الأيقونة الرئيسية</string>
+    <string name="disguise_hide_main_icon_desc">الاحتفاظ بأيقونات الاسم المستعار فقط، إخفاء أيقونة Activity الرئيسية</string>
+    <string name="disguise_multi_icon_tip">تستخدم ميزة الأيقونات المتعددة آلية activity-alias الأصلية في Android، مع عرض أيقونات سطح المكتب المتعددة تلقائيًا بعد التثبيت، دون الحاجة إلى أذونات إضافية.</string>
 </resources>

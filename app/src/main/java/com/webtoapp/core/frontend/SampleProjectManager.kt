@@ -2,6 +2,7 @@ package com.webtoapp.core.frontend
 
 import android.content.Context
 import android.util.Log
+import com.webtoapp.core.i18n.Strings
 import java.io.File
 
 /**
@@ -20,27 +21,27 @@ object SampleProjectManager {
     fun getSampleProjects(): List<SampleProject> = listOf(
         SampleProject(
             id = "vue-demo",
-            name = "Vue 计数器",
-            description = "Vue 3 响应式计数器示例，展示 Composition API",
+            name = Strings.sampleVueCounterName,
+            description = Strings.sampleVueCounterDesc,
             framework = FrontendFramework.VUE,
             icon = "🟢",
-            tags = listOf("Vue 3", "响应式", "入门级")
+            tags = listOf("Vue 3", Strings.sampleVueCounterTagReactive)
         ),
         SampleProject(
             id = "react-demo",
-            name = "React Todo",
-            description = "React 18 待办事项应用，展示 Hooks 用法",
+            name = Strings.sampleReactTodoName,
+            description = Strings.sampleReactTodoDesc,
             framework = FrontendFramework.REACT,
             icon = "⚛️",
-            tags = listOf("React 18", "Hooks", "CRUD")
+            tags = listOf("React 18", "Hooks")
         ),
         SampleProject(
             id = "vite-vanilla",
-            name = "天气应用",
-            description = "Vite + 原生 JS 天气查询应用，无框架依赖",
+            name = Strings.sampleWeatherAppName,
+            description = Strings.sampleWeatherAppDesc,
             framework = FrontendFramework.VITE,
             icon = "🌤️",
-            tags = listOf("Vite", "Vanilla JS", "API")
+            tags = listOf("Vite", "Vanilla JS")
         )
     )
     

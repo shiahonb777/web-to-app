@@ -539,6 +539,22 @@ MIT License
 
 ## 📜 Changelog
 
+### v1.8.5
+**New Features**
+- App Category: Organize apps into custom categories
+- Website Favicon Fetch: Automatically fetch website icons as app icons
+- Random App Name: Generate random app names with one click
+- Multi App Icons: Support multiple icon options per app
+
+**Improvements**
+- Optimized data backup functionality
+- Optimized BlackTech feature
+
+**Bug Fixes**
+- Fixed element blocker issues
+- Fixed background run feature crash
+- Fixed multi-language string adaptation issues
+
 ### v1.8.0
 **New Features**
 - Multi-language Support: Chinese, English, and Arabic languages

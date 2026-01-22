@@ -34,6 +34,7 @@ import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.ActivationCodeCard
+import com.webtoapp.ui.components.AppNameTextField
 import com.webtoapp.ui.components.AutoStartCard
 import com.webtoapp.ui.components.BgmCard
 import com.webtoapp.ui.components.EnhancedElevatedCard
@@ -290,6 +291,18 @@ fun CreateAppScreen(
                 config = editState.forcedRunConfig,
                 onConfigChange = { viewModel.updateEditState { copy(forcedRunConfig = it) } }
             )
+            
+            // 黑科技功能设置（独立模块）
+            com.webtoapp.ui.components.BlackTechConfigCard(
+                config = editState.blackTechConfig,
+                onConfigChange = { viewModel.updateEditState { copy(blackTechConfig = it) } }
+            )
+            
+            // 应用伪装设置（独立模块）
+            com.webtoapp.ui.components.DisguiseConfigCard(
+                config = editState.disguiseConfig,
+                onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
+            )
 
             // WebView高级设置
             WebViewConfigCard(
@@ -356,20 +369,15 @@ fun BasicInfoCard(
             IconPickerWithLibrary(
                 iconUri = editState.iconUri,
                 iconPath = editState.savedIconPath,
+                websiteUrl = if (editState.appType == AppType.WEB) editState.url else null,
                 onSelectFromGallery = onSelectIcon,
                 onSelectFromLibrary = onSelectIconFromLibrary
             )
 
-            // 应用名称
-            OutlinedTextField(
+            // 应用名称（带随机按钮）
+            AppNameTextField(
                 value = editState.name,
-                onValueChange = onNameChange,
-                label = { Text(Strings.labelAppName) },
-                placeholder = { Text(Strings.inputAppName) },
-                leadingIcon = { Icon(Icons.Outlined.Badge, null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                onValueChange = onNameChange
             )
 
             // 根据应用类型显示不同内容
@@ -956,6 +964,14 @@ fun WebViewConfigCard(
                     subtitle = Strings.externalLinksSettingHint,
                     checked = config.openExternalLinks,
                     onCheckedChange = { onConfigChange(config.copy(openExternalLinks = it)) }
+                )
+                
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                // 用户脚本配置
+                UserScriptsSection(
+                    scripts = config.injectScripts,
+                    onScriptsChange = { onConfigChange(config.copy(injectScripts = it)) }
                 )
                 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -1866,4 +1882,346 @@ fun TranslateCard(
             }
         }
     }
+}
+
+/**
+ * 用户脚本配置区域
+ */
+@Composable
+fun UserScriptsSection(
+    scripts: List<UserScript>,
+    onScriptsChange: (List<UserScript>) -> Unit
+) {
+    var showEditorDialog by remember { mutableStateOf(false) }
+    var editingScript by remember { mutableStateOf<UserScript?>(null) }
+    var editingIndex by remember { mutableStateOf(-1) }
+    
+    Column {
+        // 标题行
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Code,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = Strings.userScripts,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = Strings.userScriptsDesc,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            IconButton(
+                onClick = {
+                    editingScript = null
+                    editingIndex = -1
+                    showEditorDialog = true
+                }
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    Strings.addScript,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // 脚本列表
+        if (scripts.isEmpty()) {
+            Text(
+                text = Strings.noScripts,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        } else {
+            scripts.forEachIndexed { index, script ->
+                UserScriptItem(
+                    script = script,
+                    onEdit = {
+                        editingScript = script
+                        editingIndex = index
+                        showEditorDialog = true
+                    },
+                    onDelete = {
+                        onScriptsChange(scripts.filterIndexed { i, _ -> i != index })
+                    },
+                    onToggle = { enabled ->
+                        onScriptsChange(scripts.mapIndexed { i, s ->
+                            if (i == index) s.copy(enabled = enabled) else s
+                        })
+                    }
+                )
+                if (index < scripts.lastIndex) {
+                    Divider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                }
+            }
+        }
+    }
+    
+    // 脚本编辑对话框
+    if (showEditorDialog) {
+        UserScriptEditorDialog(
+            script = editingScript,
+            onDismiss = { showEditorDialog = false },
+            onSave = { script ->
+                if (editingIndex >= 0) {
+                    // 编辑现有脚本
+                    onScriptsChange(scripts.mapIndexed { i, s ->
+                        if (i == editingIndex) script else s
+                    })
+                } else {
+                    // 添加新脚本
+                    onScriptsChange(scripts + script)
+                }
+                showEditorDialog = false
+            }
+        )
+    }
+}
+
+/**
+ * 单个脚本项
+ */
+@Composable
+fun UserScriptItem(
+    script: UserScript,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onToggle: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEdit() }
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = script.name.ifBlank { Strings.userScripts },
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = when (script.runAt) {
+                    ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
+                    ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
+                    ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Switch(
+                checked = script.enabled,
+                onCheckedChange = onToggle,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+            IconButton(onClick = onEdit) {
+                Icon(
+                    Icons.Outlined.Edit,
+                    Strings.btnEdit,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    Strings.btnDelete,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 脚本编辑对话框
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserScriptEditorDialog(
+    script: UserScript?,
+    onDismiss: () -> Unit,
+    onSave: (UserScript) -> Unit
+) {
+    var name by remember { mutableStateOf(script?.name ?: "") }
+    var code by remember { mutableStateOf(script?.code ?: "") }
+    var runAt by remember { mutableStateOf(script?.runAt ?: ScriptRunTime.DOCUMENT_END) }
+    var enabled by remember { mutableStateOf(script?.enabled ?: true) }
+    var runAtExpanded by remember { mutableStateOf(false) }
+    
+    var nameError by remember { mutableStateOf(false) }
+    var codeError by remember { mutableStateOf(false) }
+    
+    val isEdit = script != null
+    val scrollState = rememberScrollState()
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (isEdit) Strings.editScript else Strings.addScript) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(scrollState)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 脚本名称
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { 
+                        name = it
+                        nameError = false
+                    },
+                    label = { Text(Strings.scriptName) },
+                    placeholder = { Text(Strings.scriptNamePlaceholder) },
+                    singleLine = true,
+                    isError = nameError,
+                    supportingText = if (nameError) {
+                        { Text(Strings.scriptNameRequired, color = MaterialTheme.colorScheme.error) }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // 运行时机选择
+                ExposedDropdownMenuBox(
+                    expanded = runAtExpanded,
+                    onExpandedChange = { runAtExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = when (runAt) {
+                            ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
+                            ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
+                            ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(Strings.scriptRunAt) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = runAtExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    
+                    ExposedDropdownMenu(
+                        expanded = runAtExpanded,
+                        onDismissRequest = { runAtExpanded = false }
+                    ) {
+                        ScriptRunTime.values().forEach { time ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(when (time) {
+                                            ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
+                                            ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
+                                            ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+                                        })
+                                        Text(
+                                            text = when (time) {
+                                                ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStartDesc
+                                                ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEndDesc
+                                                ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdleDesc
+                                            },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    runAt = time
+                                    runAtExpanded = false
+                                },
+                                leadingIcon = {
+                                    if (time == runAt) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                // 启用开关
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(Strings.scriptEnabled, style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = enabled,
+                        onCheckedChange = { enabled = it }
+                    )
+                }
+                
+                // 脚本代码
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { 
+                        code = it
+                        codeError = false
+                    },
+                    label = { Text(Strings.scriptCode) },
+                    placeholder = { Text(Strings.scriptCodePlaceholder) },
+                    minLines = 6,
+                    maxLines = 12,
+                    isError = codeError,
+                    supportingText = if (codeError) {
+                        { Text(Strings.scriptCodeRequired, color = MaterialTheme.colorScheme.error) }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    nameError = name.isBlank()
+                    codeError = code.isBlank()
+                    
+                    if (!nameError && !codeError) {
+                        onSave(UserScript(
+                            name = name,
+                            code = code,
+                            enabled = enabled,
+                            runAt = runAt
+                        ))
+                    }
+                }
+            ) {
+                Text(Strings.btnSave)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.btnCancel)
+            }
+        }
+    )
 }

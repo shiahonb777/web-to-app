@@ -198,7 +198,9 @@ class ApkTemplate(private val context: Context) {
             "backgroundRunConfig": ${if (config.backgroundRunEnabled && config.backgroundRunConfig != null) {
                 val bc = config.backgroundRunConfig
                 """{"notificationTitle":"${escapeJson(bc.notificationTitle)}","notificationContent":"${escapeJson(bc.notificationContent)}","showNotification":${bc.showNotification},"keepCpuAwake":${bc.keepCpuAwake}}"""
-            } else "null"}
+            } else "null"},
+            "blackTechConfig": ${gson.toJson(config.blackTechConfig)},
+            "disguiseConfig": ${gson.toJson(config.disguiseConfig)}
         }
         """.trimIndent()
     }
@@ -451,7 +453,13 @@ data class ApkConfig(
     
     // 后台运行配置
     val backgroundRunEnabled: Boolean = false,
-    val backgroundRunConfig: BackgroundRunConfig? = null
+    val backgroundRunConfig: BackgroundRunConfig? = null,
+    
+    // 黑科技功能配置（独立模块）
+    val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
+    
+    // 应用伪装配置（独立模块）
+    val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null
 )
 
 /**

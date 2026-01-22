@@ -32,6 +32,7 @@ import com.webtoapp.data.model.AppType
 import com.webtoapp.data.model.HtmlConfig
 import com.webtoapp.data.model.HtmlFile
 import com.webtoapp.data.model.HtmlFileType
+import com.webtoapp.ui.components.AppNameTextFieldSimple
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.IconPickerWithLibrary
 import com.webtoapp.util.HtmlProjectProcessor
@@ -310,14 +311,10 @@ fun CreateHtmlAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 应用名称
-                    OutlinedTextField(
+                    // 应用名称（带随机按钮）
+                    AppNameTextFieldSimple(
                         value = appName,
-                        onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
-                        placeholder = { Text(Strings.inputAppName) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = { appName = it }
                     )
                     
                     Spacer(modifier = Modifier.height(12.dp))

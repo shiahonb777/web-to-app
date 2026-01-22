@@ -615,4 +615,18 @@
     <string name="theme_features">Theme Features</string>
     <string name="url_to_shortcut_basic">URL to shortcut basic functionality</string>
     <string name="activation_code_announcement_ad_block">Activation code, announcement, ad blocking</string>
+
+    <!-- Multi Desktop Icons / Disguise -->
+    <string name="disguise_multi_icon_title">Multi Desktop Icons</string>
+    <string name="disguise_icon_count_format">%d icons</string>
+    <string name="disguise_not_enabled">Not enabled</string>
+    <string name="disguise_enable_multi_icon">Enable Multi Icons</string>
+    <string name="disguise_enable_multi_icon_desc">Show multiple app icons on desktop after installation</string>
+    <string name="disguise_icon_count_title">Desktop Icon Count</string>
+    <string name="disguise_icon_count_desc">Set the number of icons to display on desktop (each icon can launch the app)</string>
+    <string name="disguise_count_label">Count</string>
+    <string name="disguise_count_hint">Recommended 2-10</string>
+    <string name="disguise_hide_main_icon">Hide Main Icon</string>
+    <string name="disguise_hide_main_icon_desc">Keep only alias icons, hide main Activity icon</string>
+    <string name="disguise_multi_icon_tip">Multi-icon feature uses Android native activity-alias mechanism, automatically showing multiple desktop icons after installation, no extra permissions required.</string>
 </resources>

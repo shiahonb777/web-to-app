@@ -692,7 +692,12 @@ class ShellActivity : AppCompatActivity() {
             }
         }
         
-        // 设置任务列表中显示的应用名称（修复双重名称显示问题）
+        // 多桌面图标功能说明：
+        // 多桌面图标现在通过 AndroidManifest 的 activity-alias 实现，
+        // 在 APK 构建时由 AxmlRebuilder 动态添加，无需运行时处理。
+        // 安装后会自动显示多个桌面图标。
+        
+        // 设置任务列表中显示的应用名称
         // 使用 setTaskDescription 明确设置任务描述，避免系统自动拼接 Application label 和 Activity label
         try {
             @Suppress("DEPRECATION")

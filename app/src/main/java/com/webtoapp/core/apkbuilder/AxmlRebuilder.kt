@@ -27,13 +27,547 @@ class AxmlRebuilder {
         private const val CHUNK_END_ELEMENT = 0x0103
         private const val CHUNK_TEXT = 0x0104
         
-        // Attribute resource IDs for android:name
+        // Attribute resource IDs
         private const val ATTR_NAME = 0x01010003
-        // Attribute resource IDs for android:versionCode and android:versionName
         private const val ATTR_VERSION_CODE = 0x0101021b
         private const val ATTR_VERSION_NAME = 0x0101021c
-        // Attribute resource ID for android:testOnly
         private const val ATTR_TEST_ONLY = 0x01010272
+        private const val ATTR_LABEL = 0x01010001
+        private const val ATTR_ICON = 0x01010002
+        private const val ATTR_TARGET_ACTIVITY = 0x01010202
+        private const val ATTR_EXPORTED = 0x01010010
+        private const val ATTR_ENABLED = 0x0101000e
+    }
+
+    /**
+     * 展开相对路径类名、修改包名，并添加 activity-alias（多桌面图标）
+     * 
+     * @param axmlData 原始 AXML 数据
+     * @param originalPackage 原始包名
+     * @param newPackage 新包名
+     * @param aliasCount 要添加的 activity-alias 数量（0 表示不添加）
+     * @param appName 应用名称（用于 alias 的 label）
+     * @return 修改后的 AXML 数据
+     */
+    fun expandAndModifyWithAliases(
+        axmlData: ByteArray,
+        originalPackage: String,
+        newPackage: String,
+        aliasCount: Int = 0,
+        appName: String = ""
+    ): ByteArray {
+        return try {
+            val parsed = parseAxml(axmlData)
+            if (parsed == null) {
+                Log.e(TAG, "Failed to parse AXML for aliases")
+                return axmlData
+            }
+            
+            // 步骤1：找到需要展开的相对路径类名
+            val expansions = findRelativeClassNames(parsed, originalPackage)
+            Log.d(TAG, "Found ${expansions.size} relative class names to expand")
+            
+            // 步骤2：添加新字符串并更新引用
+            if (expansions.isNotEmpty()) {
+                expandClassNames(parsed, expansions)
+            }
+            
+            // 步骤3：修改包名和所有包名前缀的字符串
+            replacePackageString(parsed, originalPackage, newPackage)
+            
+            // 步骤4：添加 activity-alias（多桌面图标）
+            if (aliasCount > 0) {
+                addActivityAliases(parsed, newPackage, aliasCount, appName)
+                Log.d(TAG, "Added $aliasCount activity-alias entries")
+            }
+            
+            // 步骤5：重建 AXML
+            val result = rebuildAxml(parsed)
+            
+            Log.d(TAG, "AXML rebuild with aliases complete: original=${axmlData.size}, new=${result.size}")
+            result
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "AXML rebuild with aliases failed", e)
+            axmlData
+        }
+    }
+    
+    /**
+     * 添加 activity-alias 到 manifest
+     * 每个 alias 都指向 ShellActivity，并带有 MAIN/LAUNCHER intent-filter
+     * 
+     * 关键：属性名必须使用 Resource Map 中已有的索引，或者同时更新 Resource Map
+     */
+    private fun addActivityAliases(
+        parsed: ParsedAxml,
+        packageName: String,
+        aliasCount: Int,
+        appName: String
+    ) {
+        // 找到 </application> 的位置（END_ELEMENT with name="application"）
+        val applicationEndIndex = findApplicationEndIndex(parsed)
+        if (applicationEndIndex < 0) {
+            Log.e(TAG, "Cannot find </application> element")
+            return
+        }
+        
+        val resourceMap = parsed.resourceMap
+        if (resourceMap == null) {
+            Log.e(TAG, "No resource map found, cannot add activity-alias")
+            return
+        }
+        
+        // 从 Resource Map 中查找属性名索引（这些属性在原始 manifest 中应该已存在）
+        val nameAttrIndex = resourceMap.indexOf(ATTR_NAME)
+        val labelAttrIndex = resourceMap.indexOf(ATTR_LABEL)
+        val iconAttrIndex = resourceMap.indexOf(ATTR_ICON)
+        val exportedAttrIndex = resourceMap.indexOf(ATTR_EXPORTED)
+        
+        // targetActivity 可能不在原始 manifest 中，需要添加到 Resource Map
+        var targetActivityAttrIndex = resourceMap.indexOf(ATTR_TARGET_ACTIVITY)
+        if (targetActivityAttrIndex < 0) {
+            // 关键：Resource Map 中的索引必须与字符串池索引对应
+            // 新的 targetActivity 索引 = 当前 Resource Map 大小
+            targetActivityAttrIndex = resourceMap.size
+            
+            // 在字符串池的 targetActivityAttrIndex 位置插入（而不是 add 到末尾）
+            parsed.stringPool.strings.add(targetActivityAttrIndex, "targetActivity")
+            
+            // 更新所有现有 chunk 中 >= targetActivityAttrIndex 的字符串索引
+            updateStringIndicesAfterInsert(parsed, targetActivityAttrIndex)
+            
+            // 扩展 Resource Map
+            val newResourceMap = resourceMap.copyOf(resourceMap.size + 1)
+            newResourceMap[targetActivityAttrIndex] = ATTR_TARGET_ACTIVITY
+            parsed.resourceMap = newResourceMap
+            Log.d(TAG, "Added targetActivity to string pool and resource map at index $targetActivityAttrIndex")
+        }
+        
+        if (nameAttrIndex < 0 || labelAttrIndex < 0 || iconAttrIndex < 0 || exportedAttrIndex < 0) {
+            Log.e(TAG, "Missing required attribute indices: name=$nameAttrIndex, label=$labelAttrIndex, icon=$iconAttrIndex, exported=$exportedAttrIndex")
+            return
+        }
+        
+        Log.d(TAG, "Attribute indices: name=$nameAttrIndex, targetActivity=$targetActivityAttrIndex, label=$labelAttrIndex, icon=$iconAttrIndex, exported=$exportedAttrIndex")
+        
+        // 找到 android namespace 字符串索引
+        val androidNsIndex = getOrAddString(parsed.stringPool, "http://schemas.android.com/apk/res/android")
+        
+        // 添加元素名字符串（元素名不需要 Resource Map 映射）
+        val activityAliasNameIndex = getOrAddString(parsed.stringPool, "activity-alias")
+        val intentFilterNameIndex = getOrAddString(parsed.stringPool, "intent-filter")
+        val actionNameIndex = getOrAddString(parsed.stringPool, "action")
+        val categoryNameIndex = getOrAddString(parsed.stringPool, "category")
+        
+        // 添加值字符串（值字符串也不需要 Resource Map 映射）
+        val mainActionIndex = getOrAddString(parsed.stringPool, "android.intent.action.MAIN")
+        val launcherCategoryIndex = getOrAddString(parsed.stringPool, "android.intent.category.LAUNCHER")
+        
+        // ShellActivity 的完整类名
+        // 重要：必须使用原始类名，因为 DEX 文件中的类名没有被替换
+        // manifest 中的组件类名也没有被替换（参见 Skipped component class 日志）
+        val targetActivityValue = "com.webtoapp.ui.shell.ShellActivity"
+        val targetActivityValueIndex = getOrAddString(parsed.stringPool, targetActivityValue)
+        Log.d(TAG, "targetActivity value: $targetActivityValue (using original class name)")
+        
+        // 为每个 alias 创建 chunks
+        val newChunks = mutableListOf<Chunk>()
+        
+        for (i in 1..aliasCount) {
+            // 生成 alias 名称，如 ".LauncherAlias1"
+            val aliasName = ".LauncherAlias$i"
+            val aliasNameValueIndex = getOrAddString(parsed.stringPool, aliasName)
+            
+            // 生成 label
+            val aliasLabel = appName
+            val aliasLabelIndex = getOrAddString(parsed.stringPool, aliasLabel)
+            
+            // 构建 <activity-alias> START_ELEMENT
+            val aliasStartChunk = buildActivityAliasStartElement(
+                androidNsIndex = androidNsIndex,
+                elementNameIndex = activityAliasNameIndex,
+                nameAttrIndex = nameAttrIndex,
+                nameValueIndex = aliasNameValueIndex,
+                targetActivityAttrIndex = targetActivityAttrIndex,
+                targetActivityValueIndex = targetActivityValueIndex,
+                labelAttrIndex = labelAttrIndex,
+                labelValueIndex = aliasLabelIndex,
+                iconAttrIndex = iconAttrIndex,
+                exportedAttrIndex = exportedAttrIndex
+            )
+            newChunks.add(aliasStartChunk)
+            
+            // 构建 <intent-filter> START_ELEMENT
+            val intentFilterStart = buildSimpleStartElement(androidNsIndex, intentFilterNameIndex, 0)
+            newChunks.add(intentFilterStart)
+            
+            // 构建 <action android:name="android.intent.action.MAIN" />
+            val actionStart = buildActionOrCategoryElement(
+                androidNsIndex = androidNsIndex,
+                elementNameIndex = actionNameIndex,
+                nameAttrIndex = nameAttrIndex,
+                nameValueIndex = mainActionIndex
+            )
+            newChunks.add(actionStart)
+            val actionEnd = buildEndElement(androidNsIndex, actionNameIndex)
+            newChunks.add(actionEnd)
+            
+            // 构建 <category android:name="android.intent.category.LAUNCHER" />
+            val categoryStart = buildActionOrCategoryElement(
+                androidNsIndex = androidNsIndex,
+                elementNameIndex = categoryNameIndex,
+                nameAttrIndex = nameAttrIndex,
+                nameValueIndex = launcherCategoryIndex
+            )
+            newChunks.add(categoryStart)
+            val categoryEnd = buildEndElement(androidNsIndex, categoryNameIndex)
+            newChunks.add(categoryEnd)
+            
+            // 构建 </intent-filter> END_ELEMENT
+            val intentFilterEnd = buildEndElement(androidNsIndex, intentFilterNameIndex)
+            newChunks.add(intentFilterEnd)
+            
+            // 构建 </activity-alias> END_ELEMENT
+            val aliasEndChunk = buildEndElement(androidNsIndex, activityAliasNameIndex)
+            newChunks.add(aliasEndChunk)
+        }
+        
+        // 在 </application> 之前插入新的 chunks
+        parsed.chunks.addAll(applicationEndIndex, newChunks)
+        Log.d(TAG, "Inserted ${newChunks.size} chunks for $aliasCount activity-alias entries")
+    }
+    
+    /**
+     * 找到 </application> END_ELEMENT 的索引
+     */
+    private fun findApplicationEndIndex(parsed: ParsedAxml): Int {
+        val applicationStrIndex = parsed.stringPool.strings.indexOf("application")
+        if (applicationStrIndex < 0) return -1
+        
+        for (i in parsed.chunks.indices) {
+            val chunk = parsed.chunks[i]
+            if (chunk.type == CHUNK_END_ELEMENT) {
+                val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+                buffer.position(16) // 跳过 header (8) + lineNumber (4) + comment (4)
+                val namespaceUri = buffer.int
+                val name = buffer.int
+                if (name == applicationStrIndex) {
+                    return i
+                }
+            }
+        }
+        return -1
+    }
+    
+    /**
+     * 获取或添加字符串到字符串池
+     */
+    private fun getOrAddString(pool: StringPool, str: String): Int {
+        val index = pool.strings.indexOf(str)
+        if (index >= 0) return index
+        pool.strings.add(str)
+        return pool.strings.size - 1
+    }
+    
+    /**
+     * 构建 activity-alias 的 START_ELEMENT chunk
+     * 属性: android:label, android:icon, android:name, android:exported, android:targetActivity
+     * 
+     * 重要：属性必须按资源 ID 升序排列，否则 Android 框架解析时可能找不到某些属性
+     * 资源 ID 顺序：label(0x01010001) < icon(0x01010002) < name(0x01010003) < exported(0x01010010) < targetActivity(0x01010202)
+     */
+    private fun buildActivityAliasStartElement(
+        androidNsIndex: Int,
+        elementNameIndex: Int,
+        nameAttrIndex: Int,
+        nameValueIndex: Int,
+        targetActivityAttrIndex: Int,
+        targetActivityValueIndex: Int,
+        labelAttrIndex: Int,
+        labelValueIndex: Int,
+        iconAttrIndex: Int,
+        exportedAttrIndex: Int
+    ): Chunk {
+        // 5 个属性，每个 20 字节
+        val attrCount = 5
+        val attrSize = 20
+        val headerSize = 16
+        val attrStart = 20 // 从 chunk 开始的偏移
+        val chunkSize = 36 + attrCount * attrSize  // 36 = header(16) + element info(20)
+        
+        val buffer = ByteBuffer.allocate(chunkSize).order(ByteOrder.LITTLE_ENDIAN)
+        
+        // Chunk header
+        buffer.putShort(CHUNK_START_ELEMENT.toShort())
+        buffer.putShort(headerSize.toShort())
+        buffer.putInt(chunkSize)
+        
+        // Line number, comment
+        buffer.putInt(0)  // lineNumber
+        buffer.putInt(-1) // comment (0xFFFFFFFF)
+        
+        // Element info
+        buffer.putInt(-1) // namespaceUri = -1（元素本身无命名空间）
+        buffer.putInt(elementNameIndex) // name
+        buffer.putShort(attrStart.toShort()) // attributeStart
+        buffer.putShort(attrSize.toShort()) // attributeSize
+        buffer.putShort(attrCount.toShort()) // attributeCount
+        buffer.putShort(0) // idIndex
+        buffer.putShort(0) // classIndex
+        buffer.putShort(0) // styleIndex
+        
+        // 属性必须按资源 ID 升序排列！
+        // Android 框架使用二分搜索查找属性，不排序会导致找不到某些属性
+        
+        // Attribute 1: android:label (0x01010001) - 字符串
+        buffer.putInt(androidNsIndex)
+        buffer.putInt(labelAttrIndex)
+        buffer.putInt(labelValueIndex)
+        buffer.putShort(8)
+        buffer.put(0)
+        buffer.put(0x03) // TYPE_STRING
+        buffer.putInt(labelValueIndex)
+        
+        // Attribute 2: android:icon (0x01010002) - 引用
+        buffer.putInt(androidNsIndex)
+        buffer.putInt(iconAttrIndex)
+        buffer.putInt(-1) // rawValue = -1 for reference
+        buffer.putShort(8)
+        buffer.put(0)
+        buffer.put(0x01) // TYPE_REFERENCE
+        buffer.putInt(0x7f0d0000) // ic_launcher 资源 ID
+        
+        // Attribute 3: android:name (0x01010003) - 字符串
+        buffer.putInt(androidNsIndex) // namespace
+        buffer.putInt(nameAttrIndex) // name (Resource Map 索引)
+        buffer.putInt(nameValueIndex) // rawValue
+        buffer.putShort(8) // valueSize
+        buffer.put(0) // res0
+        buffer.put(0x03) // valueType = TYPE_STRING
+        buffer.putInt(nameValueIndex) // valueData
+        
+        // Attribute 4: android:exported (0x01010010) - 布尔值 true
+        buffer.putInt(androidNsIndex)
+        buffer.putInt(exportedAttrIndex)
+        buffer.putInt(-1) // rawValue
+        buffer.putShort(8)
+        buffer.put(0)
+        buffer.put(0x12) // TYPE_INT_BOOLEAN
+        buffer.putInt(-1) // true = 0xFFFFFFFF
+        
+        // Attribute 5: android:targetActivity (0x01010202) - 字符串
+        buffer.putInt(androidNsIndex)
+        buffer.putInt(targetActivityAttrIndex)
+        buffer.putInt(targetActivityValueIndex)
+        buffer.putShort(8)
+        buffer.put(0)
+        buffer.put(0x03) // TYPE_STRING
+        buffer.putInt(targetActivityValueIndex)
+        
+        return Chunk(CHUNK_START_ELEMENT, 0, chunkSize, buffer.array())
+    }
+    
+    /**
+     * 构建简单的 START_ELEMENT (无属性或少量属性)
+     */
+    private fun buildSimpleStartElement(androidNsIndex: Int, elementNameIndex: Int, attrCount: Int): Chunk {
+        val attrSize = 20
+        val headerSize = 16
+        val chunkSize = 36 + attrCount * attrSize
+        
+        val buffer = ByteBuffer.allocate(chunkSize).order(ByteOrder.LITTLE_ENDIAN)
+        
+        buffer.putShort(CHUNK_START_ELEMENT.toShort())
+        buffer.putShort(headerSize.toShort())
+        buffer.putInt(chunkSize)
+        buffer.putInt(0)  // lineNumber
+        buffer.putInt(-1) // comment
+        buffer.putInt(-1) // namespaceUri = -1 表示无命名空间
+        buffer.putInt(elementNameIndex)
+        buffer.putShort(20) // attributeStart
+        buffer.putShort(attrSize.toShort())
+        buffer.putShort(attrCount.toShort())
+        buffer.putShort(0) // idIndex
+        buffer.putShort(0) // classIndex
+        buffer.putShort(0) // styleIndex
+        
+        return Chunk(CHUNK_START_ELEMENT, 0, chunkSize, buffer.array())
+    }
+    
+    /**
+     * 构建 action 或 category 元素 (带 android:name 属性)
+     */
+    private fun buildActionOrCategoryElement(
+        androidNsIndex: Int,
+        elementNameIndex: Int,
+        nameAttrIndex: Int,
+        nameValueIndex: Int
+    ): Chunk {
+        val attrCount = 1
+        val attrSize = 20
+        val headerSize = 16
+        val chunkSize = 36 + attrCount * attrSize
+        
+        val buffer = ByteBuffer.allocate(chunkSize).order(ByteOrder.LITTLE_ENDIAN)
+        
+        buffer.putShort(CHUNK_START_ELEMENT.toShort())
+        buffer.putShort(headerSize.toShort())
+        buffer.putInt(chunkSize)
+        buffer.putInt(0)
+        buffer.putInt(-1)
+        buffer.putInt(-1) // namespaceUri
+        buffer.putInt(elementNameIndex)
+        buffer.putShort(20)
+        buffer.putShort(attrSize.toShort())
+        buffer.putShort(attrCount.toShort())
+        buffer.putShort(0)
+        buffer.putShort(0)
+        buffer.putShort(0)
+        
+        // android:name 属性
+        buffer.putInt(androidNsIndex)
+        buffer.putInt(nameAttrIndex)
+        buffer.putInt(nameValueIndex)
+        buffer.putShort(8)
+        buffer.put(0)
+        buffer.put(0x03) // TYPE_STRING
+        buffer.putInt(nameValueIndex)
+        
+        return Chunk(CHUNK_START_ELEMENT, 0, chunkSize, buffer.array())
+    }
+    
+    /**
+     * 构建 END_ELEMENT chunk
+     */
+    private fun buildEndElement(androidNsIndex: Int, elementNameIndex: Int): Chunk {
+        val headerSize = 16
+        val chunkSize = 24 // header(16) + namespaceUri(4) + name(4)
+        
+        val buffer = ByteBuffer.allocate(chunkSize).order(ByteOrder.LITTLE_ENDIAN)
+        
+        buffer.putShort(CHUNK_END_ELEMENT.toShort())
+        buffer.putShort(headerSize.toShort())
+        buffer.putInt(chunkSize)
+        buffer.putInt(0)  // lineNumber
+        buffer.putInt(-1) // comment
+        buffer.putInt(-1) // namespaceUri (使用 -1，与原始 manifest 保持一致)
+        buffer.putInt(elementNameIndex)
+        
+        return Chunk(CHUNK_END_ELEMENT, 0, chunkSize, buffer.array())
+    }
+    
+    /**
+     * 在字符串池中插入字符串后，更新所有现有 chunk 中 >= insertIndex 的字符串索引
+     * 这是因为插入会导致后续字符串索引全部 +1
+     */
+    private fun updateStringIndicesAfterInsert(parsed: ParsedAxml, insertIndex: Int) {
+        for (chunk in parsed.chunks) {
+            when (chunk.type) {
+                CHUNK_START_ELEMENT -> updateStartElementIndices(chunk, insertIndex)
+                CHUNK_END_ELEMENT -> updateEndElementIndices(chunk, insertIndex)
+                CHUNK_START_NAMESPACE, CHUNK_END_NAMESPACE -> updateNamespaceIndices(chunk, insertIndex)
+            }
+        }
+    }
+    
+    /**
+     * 更新 START_ELEMENT chunk 中的字符串索引
+     */
+    private fun updateStartElementIndices(chunk: Chunk, insertIndex: Int) {
+        val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+        
+        // namespaceUri at offset 16
+        val nsOffset = 16
+        val ns = buffer.getInt(nsOffset)
+        if (ns >= insertIndex) {
+            buffer.putInt(nsOffset, ns + 1)
+        }
+        
+        // name at offset 20
+        val nameOffset = 20
+        val name = buffer.getInt(nameOffset)
+        if (name >= insertIndex) {
+            buffer.putInt(nameOffset, name + 1)
+        }
+        
+        // 读取属性数量和起始位置
+        val attrStart = buffer.getShort(24).toInt() and 0xFFFF
+        val attrSize = buffer.getShort(26).toInt() and 0xFFFF
+        val attrCount = buffer.getShort(28).toInt() and 0xFFFF
+        
+        // 更新每个属性中的字符串索引
+        for (i in 0 until attrCount) {
+            val attrOffset = 16 + attrStart + i * attrSize
+            
+            // namespace at attrOffset + 0
+            val attrNs = buffer.getInt(attrOffset)
+            if (attrNs >= insertIndex) {
+                buffer.putInt(attrOffset, attrNs + 1)
+            }
+            
+            // name at attrOffset + 4 (这是属性名，通常在 Resource Map 范围内，不需要更新)
+            // 但如果 insertIndex 小于这个索引，也需要更新
+            val attrName = buffer.getInt(attrOffset + 4)
+            if (attrName >= insertIndex) {
+                buffer.putInt(attrOffset + 4, attrName + 1)
+            }
+            
+            // rawValue at attrOffset + 8
+            val rawValue = buffer.getInt(attrOffset + 8)
+            if (rawValue >= 0 && rawValue >= insertIndex) {
+                buffer.putInt(attrOffset + 8, rawValue + 1)
+            }
+            
+            // valueType at attrOffset + 15
+            val valueType = buffer.get(attrOffset + 15).toInt() and 0xFF
+            
+            // valueData at attrOffset + 16 (如果是字符串类型)
+            if (valueType == 0x03) { // TYPE_STRING
+                val valueData = buffer.getInt(attrOffset + 16)
+                if (valueData >= insertIndex) {
+                    buffer.putInt(attrOffset + 16, valueData + 1)
+                }
+            }
+        }
+    }
+    
+    /**
+     * 更新 END_ELEMENT chunk 中的字符串索引
+     */
+    private fun updateEndElementIndices(chunk: Chunk, insertIndex: Int) {
+        val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+        
+        // namespaceUri at offset 16
+        val ns = buffer.getInt(16)
+        if (ns >= insertIndex) {
+            buffer.putInt(16, ns + 1)
+        }
+        
+        // name at offset 20
+        val name = buffer.getInt(20)
+        if (name >= insertIndex) {
+            buffer.putInt(20, name + 1)
+        }
+    }
+    
+    /**
+     * 更新 NAMESPACE chunk 中的字符串索引
+     */
+    private fun updateNamespaceIndices(chunk: Chunk, insertIndex: Int) {
+        val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+        
+        // prefix at offset 16
+        val prefix = buffer.getInt(16)
+        if (prefix >= insertIndex) {
+            buffer.putInt(16, prefix + 1)
+        }
+        
+        // uri at offset 20
+        val uri = buffer.getInt(20)
+        if (uri >= insertIndex) {
+            buffer.putInt(20, uri + 1)
+        }
     }
 
     /**
@@ -77,6 +611,70 @@ class AxmlRebuilder {
         }
     }
 
+    /**
+     * 完整的 AXML 修改方法：展开类名、修改包名、修改版本号、添加 activity-alias
+     * 
+     * @param axmlData 原始 AXML 数据
+     * @param originalPackage 原始包名
+     * @param newPackage 新包名
+     * @param versionCode 新版本号
+     * @param versionName 新版本名称
+     * @param aliasCount 要添加的 activity-alias 数量（0 表示不添加）
+     * @param appName 应用名称（用于 alias 的 label）
+     * @return 修改后的 AXML 数据
+     */
+    fun expandAndModifyFull(
+        axmlData: ByteArray, 
+        originalPackage: String, 
+        newPackage: String,
+        versionCode: Int,
+        versionName: String,
+        aliasCount: Int = 0,
+        appName: String = ""
+    ): ByteArray {
+        return try {
+            val parsed = parseAxml(axmlData)
+            if (parsed == null) {
+                Log.e(TAG, "Failed to parse AXML for full modification")
+                return axmlData
+            }
+            
+            // 步骤1：找到需要展开的相对路径类名
+            val expansions = findRelativeClassNames(parsed, originalPackage)
+            Log.d(TAG, "Found ${expansions.size} relative class names to expand")
+            
+            // 步骤2：添加新字符串并更新引用
+            if (expansions.isNotEmpty()) {
+                expandClassNames(parsed, expansions)
+            }
+            
+            // 步骤3：修改包名和所有包名前缀的字符串
+            replacePackageString(parsed, originalPackage, newPackage)
+            
+            // 步骤4：修改版本号
+            modifyVersionInfo(parsed, versionCode, versionName)
+            
+            // 步骤5：移除 testOnly 标记
+            stripTestOnlyFlag(parsed)
+            
+            // 步骤6：添加 activity-alias（多桌面图标）
+            if (aliasCount > 0 && appName.isNotEmpty()) {
+                addActivityAliases(parsed, newPackage, aliasCount, appName)
+                Log.d(TAG, "Added $aliasCount activity-alias entries for multi-launcher-icons")
+            }
+            
+            // 步骤7：重建 AXML
+            val result = rebuildAxml(parsed)
+            
+            Log.d(TAG, "AXML full rebuild complete: original=${axmlData.size}, new=${result.size}, aliases=$aliasCount")
+            result
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "AXML full rebuild failed", e)
+            axmlData
+        }
+    }
+    
     /**
      * 展开相对路径类名、修改包名，并修改版本号
      * 
@@ -606,8 +1204,9 @@ class AxmlRebuilder {
         val stringPoolData = rebuildStringPool(parsed.stringPool)
         
         // 2. 重建资源映射
-        val resourceMapData = if (parsed.resourceMap != null) {
-            rebuildResourceMap(parsed.resourceMap)
+        val resourceMap = parsed.resourceMap
+        val resourceMapData = if (resourceMap != null) {
+            rebuildResourceMap(resourceMap)
         } else {
             ByteArray(0)
         }
@@ -905,8 +1504,8 @@ class AxmlRebuilder {
     private data class ParsedAxml(
         val fileHeaderSize: Int,
         val stringPool: StringPool,
-        val resourceMap: IntArray?,
-        val chunks: List<Chunk>
+        var resourceMap: IntArray?,  // var 以便在添加 activity-alias 时扩展
+        val chunks: MutableList<Chunk>
     )
 
     private data class StringPool(
