@@ -210,7 +210,7 @@
     <string name="selected_duration">Seçilen: %.1f sn</string>
     <string name="total_duration_label">Toplam Süre: %.1f sn</string>
     <string name="trim_range_hint">Kırpma Aralığı (Sürükleyerek bir klip seçin)</string>
-    <string name="bgm_title">Arka Plan Müzi��i</string>
+    <string name="bgm_title">Arka Plan Müziği</string>
     <string name="bgm_description">Uygulamaya arka plan müziği ekleyin, döngüsel veya sıralı oynatma desteklenir</string>
     <string name="selected_music_count">%d müzik seçildi</string>
     <string name="loop_playback">Döngüsel Oynat</string>
