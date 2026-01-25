@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 
+    Uzun özel adları desteklemek için sabit uzunlukta yer tutucu kullanın.
+    Önemli: AAPT2 trim işlemini önlemek için normal boşluk yerine Unicode kesintisiz boşluk (\u00A0) kullanın.
+    Toplam uzunluk: 8(WebToApp) + 88(dolgu) = 96 bayt, yaklaşık 30 Çince karakteri destekler.
+    -->
+    <string name="app_name" translatable="false">WebToApp&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</string>
+    <string name="app_description">Herhangi bir web sitesini bağımsız bir uygulamaya dönüştürün</string>
+
+    <!-- Ana Arayüz -->
+    <string name="title_my_apps">Uygulamalarım</string>
+    <string name="title_create_app">Uygulama Oluştur</string>
+    <string name="title_settings">Ayarlar</string>
+
+    <!-- Uygulama Oluşturma Formu -->
+    <string name="label_app_name">Uygulama Adı</string>
+    <string name="label_url">Web Sitesi Adresi</string>
+    <string name="label_icon">Uygulama Simgesi</string>
+    <string name="label_activation">Aktivasyon Kodu Ayarları</string>
+    <string name="label_ads">Reklam Ayarları</string>
+    <string name="label_announcement">Duyuru Ayarları</string>
+    <string name="label_ad_block">Reklam Engelleme</string>
+
+    <!-- Aktivasyon Kodu -->
+    <string name="enable_activation">Aktivasyon Kodunu Etkinleştir</string>
+    <string name="activation_codes">Aktivasyon Kodları</string>
+    <string name="add_activation_code">Aktivasyon Kodu Ekle</string>
+    <string name="activation_required">Kullanmak için aktivasyon kodu gereklidir</string>
+    <string name="enter_activation_code">Lütfen aktivasyon kodunu girin</string>
+    <string name="invalid_activation_code">Geçersiz aktivasyon kodu</string>
+    <string name="activation_success">Aktivasyon başarılı</string>
+
+    <!-- Reklamlar -->
+    <string name="enable_ads">Reklamları Etkinleştir</string>
+    <string name="ad_type">Reklam Türü</string>
+    <string name="ad_banner">Banner Reklam</string>
+    <string name="ad_interstitial">Geçiş Reklamı (Interstitial)</string>
+    <string name="ad_splash">Açılış Reklamı (Splash)</string>
+    <string name="ad_unit_id">Reklam Birimi Kimliği (Unit ID)</string>
+
+    <!-- Duyuru -->
+    <string name="enable_announcement">Duyuruyu Etkinleştir</string>
+    <string name="announcement_title">Duyuru Başlığı</string>
+    <string name="announcement_content">Duyuru İçeriği</string>
+    <string name="announcement_url">Duyuru Bağlantısı</string>
+    <string name="show_once">Yalnızca bir kez göster</string>
+
+    <!-- Reklam Engelleme -->
+    <string name="enable_ad_block">Reklam Engellemeyi Etkinleştir</string>
+    <string name="ad_block_rules">Engelleme Kuralları</string>
+    <string name="custom_rules">Özel Kurallar</string>
+
+    <!-- İşlem Butonları -->
+    <string name="btn_create">Uygulama Oluştur</string>
+    <string name="btn_preview">Önizleme</string>
+    <string name="btn_export">APK Olarak Dışa Aktar</string>
+    <string name="btn_save">Kaydet</string>
+    <string name="btn_cancel">İptal</string>
+    <string name="btn_delete">Sil</string>
+    <string name="btn_edit">Düzenle</string>
+    <string name="btn_launch">Başlat</string>
+    <string name="btn_shortcut">Kısayol Oluştur</string>
+    <string name="btn_select_icon">Simge Seç</string>
+
+    <!-- Bilgi Mesajları -->
+    <string name="msg_app_created">Uygulama başarıyla oluşturuldu</string>
+    <string name="msg_app_deleted">Uygulama silindi</string>
+    <string name="msg_shortcut_created">Kısayol oluşturuldu</string>
+    <string name="msg_url_invalid">Lütfen geçerli bir URL girin</string>
+    <string name="msg_name_required">Lütfen bir uygulama adı girin</string>
+    <string name="msg_export_success">APK başarıyla dışa aktarıldı</string>
+    <string name="msg_export_failed">APK dışa aktarma başarısız</string>
+    <string name="msg_loading">Yükleniyor...</string>
+    <string name="msg_no_apps">Uygulama yok, oluşturmak için + simgesine dokunun</string>
+
+    <!-- WebView -->
+    <string name="webview_error">Sayfa yüklenemedi</string>
+    <string name="webview_retry">Yeniden Dene</string>
+    <string name="webview_back">Geri</string>
+    <string name="webview_forward">İleri</string>
+    <string name="webview_refresh">Yenile</string>
+    <string name="webview_share">Paylaş</string>
+    <string name="webview_open_browser">Tarayıcıda Aç</string>
+
+    <!-- Dil -->
+    <string name="language_settings">Dil</string>
+    <string name="language_chinese">Çince</string>
+    <string name="language_english">İngilizce</string>
+    <string name="language_arabic">Arapça</string>
+    <string name="language_changed">Dil değiştirildi, lütfen uygulamayı yeniden başlatın</string>
+
+    <!-- Menü Öğeleri -->
+    <string name="menu_ai_html_coding">AI HTML Kodlama</string>
+    <string name="menu_theme_settings">Tema Ayarları</string>
+    <string name="menu_ai_settings">AI Ayarları</string>
+    <string name="menu_app_modifier">Uygulama Düzenleyici</string>
+    <string name="menu_extension_modules">Eklenti Modülleri</string>
+    <string name="menu_about">Hakkında</string>
+    <string name="menu_search">Ara</string>
+    <string name="menu_more">Daha Fazla</string>
+    <string name="menu_linux_environment">Linux Ortamı</string>
+
+    <!-- Eklenti Modülleri -->
+    <string name="extension_module">Eklenti Modülü</string>
+    <string name="create_module">Modül Oluştur</string>
+    <string name="edit_module">Modülü Düzenle</string>
+    <string name="delete_module">Modülü Sil</string>
+    <string name="module_name">Modül Adı</string>
+    <string name="module_description">Modül Açıklaması</string>
+    <string name="module_enabled">Etkin</string>
+    <string name="module_disabled">Devre Dışı</string>
+    <string name="ai_module_developer">AI Modül Geliştirme</string>
+
+    <!-- AI Fonksiyonları -->
+    <string name="ai_generating">AI oluşturuluyor...</string>
+    <string name="ai_analyzing">Gereksinimler analiz ediliyor...</string>
+    <string name="ai_planning">Geliştirme planı hazırlanıyor...</string>
+    <string name="ai_coding">Kod üretiliyor...</string>
+    <string name="ai_checking">Sözdizimi kontrol ediliyor...</string>
+    <string name="ai_fixing">Hatalar otomatik düzeltiliyor...</string>
+    <string name="ai_scanning">Güvenlik taraması yapılıyor...</string>
+    <string name="ai_completed">Oluşturma tamamlandı</string>
+    <string name="ai_error">AI Hatası</string>
+
+    <!-- Uygulama Türleri -->
+    <string name="create_web_app">Web Uygulaması</string>
+    <string name="create_media_app">Medya Uygulaması</string>
+    <string name="create_html_app">HTML Uygulaması</string>
+
+    <!-- Çeviri -->
+    <string name="auto_translate">Otomatik Çeviri</string>
+    <string name="translate_to">Hedef Dil</string>
+    <string name="translate_enabled">Çeviri etkin</string>
+
+    <!-- Genel -->
+    <string name="confirm">Onayla</string>
+    <string name="cancel">İptal</string>
+    <string name="ok">Tamam</string>
+    <string name="yes">Evet</string>
+    <string name="no">Hayır</string>
+    <string name="error">Hata</string>
+    <string name="success">Başarılı</string>
+    <string name="warning">Uyarı</string>
+    <string name="info">Bilgi</string>
+    <string name="close">Kapat</string>
+    <string name="open">Aç</string>
+    <string name="copy">Kopyala</string>
+    <string name="paste">Yapıştır</string>
+    <string name="share">Paylaş</string>
+    <string name="download">İndir</string>
+    <string name="upload">Yükle</string>
+    <string name="import_text">İçe Aktar</string>
+    <string name="export_text">Dışa Aktar</string>
+    
+    <!-- Yardım -->
+    <string name="help">Yardım</string>
+    <string name="usage_help">Kullanım Kılavuzu</string>
+    <string name="i_understand">Anladım</string>
+    <string name="select_module_category">Modül Kategorisi Seçin</string>
+    <string name="auto_detect">Otomatik Algıla</string>
+    <string name="auto_detect_category_hint">AI\'nın ihtiyaca göre otomatik kategori seçmesine izin verin</string>
+    
+    <!-- AI Modül Geliştirme Yardımı -->
+    <string name="help_how_to_use">Nasıl Kullanılır?</string>
+    <string name="help_how_to_use_content">İstediğiniz özelliği doğal dilde tanımlayın. AI, gereksinimleri analiz edecek ve ilgili eklenti modül kodunu otomatik olarak oluşturacaktır.</string>
+    <string name="help_requirement_tips">İpucu Yazma Teknikleri</string>
+    <string name="help_requirement_tips_content">• Belirli fonksiyonel efektleri açıklayın\n• Hedef web sitesini veya sayfa türünü belirtin\n• Örnek gereksinim formatlarına başvurun</string>
+    <string name="help_model_selection">Model Seçimi</string>
+    <string name="help_model_selection_content">Kod oluşturmak için farklı AI modelleri seçebilirsiniz. Farklı modellerin hız ve doğruluk oranları değişebilir.</string>
+    <string name="help_category_selection">Kategori Seçimi</string>
+    <string name="help_category_selection_content">Modül kategorisini manuel seçebilir veya AI\'ya bırakabilirsiniz. Manuel seçim daha hassas kod üretilmesini sağlar.</string>
+    <string name="help_auto_check">Otomatik Kontrol</string>
+    <string name="help_auto_check_content">AI, kodun düzgün çalışması ve güvenlik riskleri içermemesi için otomatik sözdizimi ve güvenlik taraması yapar.</string>
+    <string name="help_code_edit">Kod Düzenleme</string>
+    <string name="help_code_edit_content">Oluşturulan kod doğrudan düzenlenebilir; kaydedildiğinde düzenlenmiş sürüm kullanılır.</string>
+    <string name="help_save_module">Modülü Kaydetme</string>
+    <string name="help_save_module_content">Oluşturma bittiğinde, modül kütüphanenize eklemek için \"Kaydet\"e tıklayın. Daha sonra uygulama oluştururken kullanabilirsiniz.</string>
+    
+    <!-- Ek Kullanıcı Arayüzü -->
+    <string name="project_template_export">Proje Şablonunu Dışa Aktar</string>
+    <string name="encoding_and_size">Kodlama: %1$s | Boyut: %2$s</string>
+    <string name="file_label">Dosya: %s</string>
+    <string name="click_to_select_file">Dosya seçmek için tıklayın</string>
+    <string name="clear_file">Temizle</string>
+    <string name="share_module">Modülü Paylaş</string>
+    <string name="selected_image">Seçilen Resim</string>
+    <string name="select_ui_style_hint">Arayüz görsel stilini seçin</string>
+    <string name="auto_switch_by_system">Sistem ayarlarına göre otomatik geçiş yap</string>
+    <string name="always_use_light_theme">Daima açık temayı kullan</string>
+    <string name="always_use_dark_theme">Daima koyu temayı kullan</string>
+    <string name="interaction_style_label">Etkileşim Stili: %s</string>
+    <string name="click_button_to_experience">Efekti denemek için aşağıdaki butona tıklayın</string>
+    <string name="animation_disabled">Animasyon devre dışı</string>
+    <string name="hold_to_experience">Deneyimlemek için basılı tutun</string>
+    <string name="primary_color">Ana Renk</string>
+    <string name="secondary_color">İkincil Renk</string>
+    <string name="accent_color">Vurgu Rengi</string>
+    <string name="animation_style">Animasyon Stili</string>
+    <string name="interaction_method">Etkileşim Yöntemi</string>
+    <string name="corner_radius">Köşe Yuvarlaklığı</string>
+    <string name="glow_effect">Parlama Efekti</string>
+    <string name="particle_effect">Parçacık Efekti</string>
+    <string name="glassmorphism">Glassmorphism (Cam Etkisi)</string>
+    <string name="version_name_label">Sürüm Adı</string>
+    <string name="version_code_label">Sürüm Kodu</string>
+    <string name="static_website">Statik Web Sitesi</string>
+    <string name="video_file_not_exist">Video dosyası mevcut değil</string>
+    <string name="video_preview">Video Önizleme</string>
+    <string name="selected_duration">Seçilen: %.1f sn</string>
+    <string name="total_duration_label">Toplam Süre: %.1f sn</string>
+    <string name="trim_range_hint">Kırpma Aralığı (Sürükleyerek bir klip seçin)</string>
+    <string name="bgm_title">Arka Plan Müziği</string>
+    <string name="bgm_description">Uygulamaya arka plan müziği ekleyin, döngüsel veya sıralı oynatma desteklenir</string>
+    <string name="selected_music_count">%d müzik seçildi</string>
+    <string name="loop_playback">Döngüsel Oynat</string>
+    <string name="sequential_playback">Sıralı Oynat</string>
+    <string name="shuffle_playback">Karışık Oynat</string>
+    <string name="volume_percent">Ses: %d%%</string>
+    <string name="select_music">Müzik Seç</string>
+    <string name="modify_config">Yapılandırmayı Düzenle</string>
+    <string name="day_mon">Pzt</string>
+    <string name="day_tue">Sal</string>
+    <string name="day_wed">Çar</string>
+    <string name="day_thu">Per</string>
+    <string name="day_fri">Cum</string>
+    <string name="day_sat">Cmt</string>
+    <string name="day_sun">Paz</string>
+    <string name="sample_projects">Örnek Projeler</string>
+    <string name="quick_experience_frontend">Frontend projesi içe aktarmayı deneyin</string>
+    <string name="quick_experience">Hızlı Deneyim</string>
+    <string name="run">Çalıştır</string>
+    <string name="cannot_parse_image">Resim ayrıştırılamadı</string>
+    <string name="cannot_open_image">Resim açılamadı</string>
+    <string name="load_image_failed">Resim yüklenemedi: %s</string>
+    <string name="original_image">Orijinal Resim</string>
+    <string name="extension_module_title">Eklenti Modülleri</string>
+    <string name="no_module_selected">Modül seçilmedi</string>
+    <string name="modules_selected">%d modül seçildi</string>
+    <string name="add_module">Modül Ekle</string>
+    <string name="collapse">Daralt</string>
+    <string name="expand">Genişlet</string>
+    <string name="status_bar_background">Durum Çubuğu Arka Planı</string>
+    <string name="theme_features">Tema Özellikleri</string>
+    <string name="url_to_shortcut_basic">URL\'den Kısayola Temel Özellik</string>
+    <string name="activation_code_announcement_ad_block">Aktivasyon, Duyuru ve Reklam Engelleme</string>
+
+    <!-- Simge Kütüphanesi -->
+    <string name="icon_library">Simge Kütüphanesi</string>
+
+    <!-- Modül Kartı -->
+    <string name="save_as_scheme">Plan Olarak Kaydet</string>
+    <string name="clear_all">Tümünü Temizle</string>
+    <string name="select_modules">Modülleri Seç</string>
+    <string name="select_extension_modules">Eklenti Modüllerini Seç</string>
+    <string name="done_with_count">Tamamla (%d)</string>
+    <string name="search_modules_hint">Modül adı, açıklama veya etiket ara...</string>
+    <string name="test_module">Modülü Test Et</string>
+    <string name="start_test">Testi Başlat</string>
+    <string name="add_this_module">Bu Modülü Ekle</string>
+    <string name="all_schemes">Tüm Planlar</string>
+    <string name="module_schemes">Modül Planları</string>
+    <string name="scheme_name">Plan Adı</string>
+    <string name="input_scheme_name">Plan adı girin</string>
+    <string name="description_optional">Açıklama (İsteğe bağlı)</string>
+    <string name="brief_description_hint">Planın amacını kısaca açıklayın</string>
+    <string name="select_icon">Simge Seç</string>
+
+    <!-- Duyuru Şablonu -->
+    <string name="preview_announcement_effect">Duyuru Efektini Önizle</string>
+
+    <!-- Şarkı Sözü Hizalama -->
+    <string name="next_step_time_align">Sonraki Adım: Zaman Hizalama</string>
+    <string name="tap_to_mark">İşaretle</string>
+    <string name="previous_step">Önceki Adım</string>
+    <string name="next_step">Sonraki Adım</string>
+    <string name="go_back_to_modify">Düzenlemek için geri dön</string>
+    <string name="save_lrc">LRC Olarak Kaydet</string>
+
+    <!-- Veri Yedekleme -->
+    <string name="export_data">Veriyi Dışa Aktar</string>
+    <string name="import_data">Veriyi İçe Aktar</string>
+
+    <!-- Otomatik Başlatma -->
+    <string name="launch_time">Başlatma Zamanı</string>
+    <string name="select_launch_time">Başlatma zamanı seçin</string>
+
+    <!-- HTML Programlama -->
+    <string name="download_file">İndir</string>
+    <string name="export_all">Tümünü Dışa Aktar</string>
+    <string name="thinking">Düşünüyor</string>
+    <string name="thinking_dots">Düşünüyor...</string>
+    <string name="describe_html_page">İstediğiniz HTML sayfasını tarif edin...</string>
+    <string name="add_new_rule">Yeni kural ekle...</string>
+
+    <!-- İzolasyon Yapılandırması -->
+    <string name="country_region">Ülke/Bölge</string>
+    <string name="country_region_hint">Örn: Türkiye, Japonya, İngiltere...</string>
+
+    <!-- Kod Parçacıkları -->
+    <string name="search_code_snippets">Kod parçacıklarını ara...</string>
+
+    <!-- Modül Editörü -->
+    <string name="module_name_required">Modül Adı *</string>
+    <string name="input_module_name">Modül adını girin</string>
+    <string name="description">Açıklama</string>
+    <string name="brief_module_description">Modülün işlevini kısaca açıklayın</string>
+    <string name="tags">Etiketler</string>
+    <string name="tags_hint">Virgülle ayırın, örn: reklam, engelleme, araç</string>
+    <string name="author">Yazar</string>
+    <string name="your_name">Adınız</string>
+    <string name="key_name_required">Anahtar Adı (Key) *</string>
+    <string name="key_name_hint">Örn: fontSize</string>
+    <string name="display_name_required">Görünen Ad *</string>
+    <string name="display_name_hint">Örn: Yazı Tipi Boyutu</string>
+    <string name="config_description">Açıklama</string>
+    <string name="config_description_hint">Yapılandırma öğesinin açıklaması</string>
+    <string name="config_type">Tür</string>
+    <string name="default_value">Varsayılan Değer</string>
+
+    <!-- AI Ayarları -->
+    <string name="provider">Sağlayıcı</string>
+    <string name="model_id">Model ID</string>
+    <string name="model_id_hint">Örn: gpt-4o-mini</string>
+    <string name="alias_optional">Takma Ad (İsteğe bağlı)</string>
+    <string name="alias">Takma Ad</string>
+
+    <!-- Uygulama Oluşturma (Ekran İçi) -->
+    <string name="activation_code">Aktivasyon Kodu</string>
+    <string name="input_activation_code_hint">Aktivasyon kodunu girin</string>
+    <string name="show_once_only">Yalnızca bir kez göster</string>
+    <string name="custom_package_name">Özel Paket Adı (Package Name)</string>
+    <string name="version_name">Sürüm Adı</string>
+    <string name="version_code">Sürüm Kodu</string>
+    <string name="select_theme">Tema Seç</string>
+    <string name="translate_target_language">Çeviri Hedef Dili</string>
+    <string name="ad_block_rule_hint">Örn: ads.example.com</string>
+
+    <!-- Genel (Tekrarlayanlar Dahil) -->
+    <string name="done">Tamam</string>
+    <string name="save">Kaydet</string>
+    <string name="add">Ekle</string>
+    <string name="delete">Sil</string>
+    <string name="edit">Düzenle</string>
+    <string name="please_select_text_model">Lütfen önce bir metin modeli seçin</string>
+    <string name="new_update">Yeni sürüm mevcut</string>
+    <string name="update_now">Şimdi Güncelle</string>
+    <string name="latest_version">Zaten güncel sürümdesiniz</string>
+    <string name="network_error">Ağ hatası</string>
+    <string name="retry">Yeniden Dene</string>
+    <string name="loading">Yükleniyor...</string>
+    <string name="no_data">Veri yok</string>
+    <string name="copied">Kopyalandı</string>
+    <string name="saved">Kaydedildi</string>
+    <string name="operation_success">İşlem başarılı</string>
+    <string name="operation_failed">İşlem başarısız</string>
+    <string name="unknown_error">Bilinmeyen hata</string>
+    <string name="please_wait">Lütfen bekleyin...</string>
+    <string name="processing">İşleniyor...</string>
+    <string name="enabled">Etkin</string>
+    <string name="disabled">Devre Dışı</string>
+    <string name="on">Açık</string>
+    <string name="off">Kapalı</string>
+    <string name="select_file">Dosya Seç</string>
+    <string name="select_folder">Klasör Seç</string>
+    <string name="file_not_found">Dosya bulunamadı</string>
+    <string name="invalid_format">Geçersiz format</string>
+    <string name="permission_denied">İzin reddedildi</string>
+    <string name="storage_permission_required">Depolama izni gereklidir</string>
+    <string name="grant_permission">İzin Ver</string>
+
+    <!-- Derleme Ortamı -->
+    <string name="build_environment">Derleme Ortamı</string>
+    <string name="env_ready">Ortam Hazır</string>
+    <string name="env_not_installed">Kullanılabilir</string>
+    <string name="env_downloading">İndiriliyor</string>
+    <string name="env_installing">Kuruluyor</string>
+    <string name="can_build_frontend">Frontend projeleri derlenebilir</string>
+    <string name="built_in_packager_ready">Dahili paketleyici hazır</string>
+    <string name="install_advanced_build_tool">Gelişmiş derleme aracını kur (esbuild)</string>
+    <string name="optional_esbuild_hint">İsteğe bağlı: Daha iyi performans için esbuild kurun</string>
+    <string name="build_tools">Derleme Araçları</string>
+    <string name="built_in_packager">Dahili Paketleyici</string>
+    <string name="pure_kotlin_impl">Saf Kotlin uygulaması, harici bağımlılık gerektirmez</string>
+    <string name="high_perf_build_tool">Yüksek performanslı derleme aracı</string>
+    <string name="installed">Kuruldu</string>
+    <string name="not_installed">Kurulmadı</string>
+    <string name="ready">Hazır</string>
+    <string name="storage_usage">Depolama Kullanımı</string>
+    <string name="cache">Önbellek</string>
+    <string name="supported_features">Desteklenen Özellikler</string>
+    <string name="tech_description">Teknik Açıklama</string>
+    <string name="reset_environment">Ortamı Sıfırla</string>
+    <string name="reset_env_confirm">İndirilen derleme araçları silinecek. Devam etmek istiyor musunuz?</string>
+    <string name="clear_cache_title">Önbelleği Temizle</string>
+    <string name="clear_cache_confirm">Derleme önbelleği ve geçici dosyalar temizlenecek.</string>
+    <string name="clean">Temizle</string>
+
+    <!-- Frontend Projesi -->
+    <string name="select_project">Proje Seç</string>
+    <string name="select_project_folder">Proje Klasörü Seç</string>
+    <string name="select_project_hint">Proje kök dizinini veya çıktı dizinini (dist/build) seçin</string>
+    <string name="project_analysis">Proje Analizi</string>
+    <string name="framework">Framework</string>
+    <string name="version">Sürüm</string>
+    <string name="package_manager">Paket Yöneticisi</string>
+    <string name="dependency_count">Bağımlılık Sayısı</string>
+    <string name="output_dir">Çıktı Dizini</string>
+    <string name="app_config">Uygulama Yapılandırması</string>
+    <string name="import_project">Projeyi İçe Aktar</string>
+    <string name="build_project">Projeyi Derle</string>
+    <string name="scanning_project">Proje taranıyor...</string>
+    <string name="importing">İçe aktarılıyor</string>
+    <string name="checking_env">Ortam kontrol ediliyor...</string>
+    <string name="copying_project_files">Proje dosyaları kopyalanıyor</string>
+    <string name="installing_deps">Bağımlılıklar kuruluyor</string>
+    <string name="building">Derleniyor</string>
+    <string name="processing_output">Derleme çıktıları işleniyor...</string>
+    <string name="completed">Tamamlandı</string>
+    <string name="failed">Başarısız</string>
+    <string name="total_files">Toplam %d dosya</string>
+    <string name="logs">Günlükler (Logs)</string>
+    <string name="import_logs">İçe Aktarma Günlükleri</string>
+    <string name="import_frontend_project">Frontend Projesi İçe Aktar</string>
+    <string name="support_vue_react_vite">Vue, React, Vite vb. hazır derlenmiş projeleri destekler</string>
+    <string name="usage_steps">📋 Kullanım Adımları</string>
+    <string name="usage_steps_content">1. Bilgisayarda projeyi derleyin: npm run build\n2. Çıktı klasörünü (dist/build) telefona kopyalayın\n3. Klasörü seçerek içe aktarın</string>
+    <string name="built_in_engine_ready">Dahili derleme motoru hazır. Derlenmiş projeleri içe aktarabilir veya esbuild ile basit derleme yapabilirsiniz. Karmaşık projeler için bilgisayarda derleme yapılması önerilir.</string>
+
+    <!-- Medya Uygulaması -->
+    <string name="create_media_app_title">Medya Uygulaması Oluştur</string>
+    <string name="select_media_type">Medya Türü Seçin</string>
+    <string name="image">Resim</string>
+    <string name="video">Video</string>
+    <string name="select_image">Resim Seç</string>
+    <string name="select_video">Video Seç</string>
+    <string name="click_to_select_image">Resim seçmek için tıklayın</string>
+    <string name="click_to_select_video">Video seçmek için tıklayın</string>
+    <string name="video_selected">Video seçildi</string>
+    <string name="fill_screen">Ekranı Kapla</string>
+    <string name="fill_screen_hint">Ekranı tamamen doldurmak için otomatik kırp</string>
+    <string name="landscape_mode">Yatay Mod</string>
+    <string name="landscape_mode_hint">İçeriği yatay modda göster</string>
+    <string name="enable_audio">Sesi Etkinleştir</string>
+    <string name="enable_audio_hint">Video oynatırken sesleri dahil et</string>
+    <string name="loop_play">Döngüsel Oynat</string>
+    <string name="loop_play_hint">Video bittiğinde otomatik olarak yeniden başlat</string>
+    <string name="auto_play">Otomatik Oynat</string>
+    <string name="auto_play_hint">Uygulama açıldığında otomatik başlat</string>
+    <string name="media_app_hint">Oluşturulan uygulama %s olacaktır. Dijital fotoğraf çerçeveleri, reklam ekranları veya video duvar kağıtları için uygundur.</string>
+    <string name="fullscreen_display_image">Seçilen resmi tam ekran gösterir</string>
+    <string name="fullscreen_play_video">Seçilen videoyu tam ekran oynatır</string>
+
+    <!-- HTML Uygulaması -->
+    <string name="create_html_app_title">HTML Uygulaması Oluştur</string>
+    <string name="select_files">Dosyaları Seç</string>
+    <string name="select_files_hint">HTML, CSS ve JS dosyalarını ayrı ayrı seçin (CSS/JS isteğe bağlı)</string>
+    <string name="html_file">HTML Dosyası</string>
+    <string name="css_file">CSS Stil Dosyası</string>
+    <string name="js_file">JavaScript Dosyası</string>
+    <string name="enable_javascript">JavaScript\'i Etkinleştir</string>
+    <string name="enable_js_hint">HTML içindeki JS kodlarının yürütülmesine izin ver</string>
+    <string name="enable_local_storage">Local Storage\'ı Etkinleştir</string>
+    <string name="enable_local_storage_hint">Veri saklamak için localStorage kullanımına izin ver</string>
+    <string name="landscape_mode_label">Yatay Mod</string>
+    <string name="landscape_mode_hint_html">İçeriği yatay yönde göster</string>
+    <string name="project_issues_detected">Proje Sorunları Tespit Edildi</string>
+    <string name="errors_count">%d Hata</string>
+    <string name="warnings_count">%d Uyarı</string>
+    <string name="auto_fix_hint">Uygulama yolları otomatik düzeltip CSS/JS\'yi satır içine (inline) alacaktır, ancak kontrol etmeniz önerilir</string>
+    <string name="view_analysis_result">Analiz Sonuçlarını Görüntüle</string>
+    <string name="html_app_tip">İpucu: HTML dosyası zorunludur. HTML dosyanız harici CSS veya JS kullanıyorsa ilgili dosyaları da seçin.</string>
+    <string name="feature_tip">💡 Aktivasyon kodu, arka plan müziği gibi özellikler; proje oluşturulduktan sonra \"Düzenle\" seçeneğiyle eklenebilir.</string>
+    <string name="about_file_reference">Dosya Referansları Hakkında</string>
+    <string name="file_reference_hint">• Uygulama CSS ve JS dosyalarını otomatik olarak HTML içine gömer\n• Mutlak yollar (/css/stil.css) otomatik dönüştürülür\n• Göreceli yollar (./stil.css) kullanılması önerilir</string>
+    <string name="project_analysis_result">Proje Analiz Sonucu</string>
+    <string name="file_info">Dosya Bilgisi</string>
+    <string name="detected_issues">Tespit Edilen Sorunlar</string>
+    <string name="suggestions">Öneriler</string>
+    <string name="auto_process_hint">Uygulama otomatik olarak şunları yapacaktır: Yol düzeltme, CSS/JS satır içine alma, kodlama dönüştürme ve viewport uyumu</string>
+    <string name="got_it">Anladım</string>
+
+    <!-- Uygulama Düzenleme Sayfası -->
+    <string name="edit_app">Uygulamayı Düzenle</string>
+    <string name="input_app_name">Görüntülenecek uygulama adını girin</string>
+    <string name="activation_code_verify">Aktivasyon Kodu Doğrulaması</string>
+    <string name="activation_code_hint">Etkinleştirildiğinde, kullanıcıların uygulamayı kullanmak için kod girmesi gerekir</string>
+    <string name="popup_announcement">Pop-up Duyurusu</string>
+    <string name="announcement_title_label">Duyuru Başlığı</string>
+    <string name="announcement_content_label">Duyuru İçeriği</string>
+    <string name="link_url">Bağlantı URL\'si (İsteğe bağlı)</string>
+    <string name="link_button_text">Buton Metni</string>
+    <string name="view_details">Detayları Görüntüle</string>
+    <string name="display_frequency">Görüntüleme Sıklığı</string>
+    <string name="every_launch">Her başlatmada</string>
+    <string name="show_emoji">Emojileri Göster</string>
+    <string name="enable_animation">Animasyonu Etkinleştir</string>
+    <string name="ad_blocking">Reklam Engelleme</string>
+    <string name="enable_ad_block_label">Reklam Engellemeyi Etkinleştir</string>
+    <string name="desktop_mode">Masaüstü Modu</string>
+    <string name="fullscreen_mode">Tam Ekran Modu</string>
+    <string name="splash_screen">Açılış Ekranı (Splash)</string>
+    <string name="background_music">Arka Plan Müziği</string>
+    <string name="auto_translate_label">Web Otomatik Çeviri</string>
+    <string name="webview_advanced_settings">WebView Gelişmiş Ayarlar</string>
+    <string name="html_app">HTML Uygulaması</string>
+    <string name="entry_file">Giriş Dosyası</string>
+    <string name="total_files_count">Toplam %d dosya</string>
+    <string name="image_app">Resim Uygulaması</string>
+    <string name="video_app">Video Uygulaması</string>
+    <string name="unknown_file">Bilinmeyen Dosya</string>
+
+    <!-- Eklenti Modülleri Sayfası -->
+    <string name="search_modules">Modülleri ara...</string>
+    <string name="all">Tümü</string>
+    <string name="total_modules">Toplam %d modül</string>
+    <string name="enabled_modules">%d etkin</string>
+    <string name="built_in">Dahili</string>
+    <string name="duplicate">Çoğalt</string>
+    <string name="copy_share_code">Paylaşım Kodunu Kopyala</string>
+    <string name="share_code_copied">Paylaşım kodu kopyalandı</string>
+    <string name="no_modules_found">Eşleşen modül bulunamadı</string>
+    <string name="no_modules_yet">Henüz modül yok</string>
+    <string name="create_first_module">İlk modülünüzü oluşturun</string>
+    <string name="import_module">Modül İçe Aktar</string>
+    <string name="import_from_file">Dosyadan İçe Aktar</string>
+    <string name="select_wtamod_file">.wtamod veya .wtapkg dosyası seçin</string>
+    <string name="import_from_share_code">Paylaşım Kodundan İçe Aktar</string>
+    <string name="paste_share_code">Paylaşılan modül kodunu yapıştırın</string>
+    <string name="share_code">Paylaşım Kodu</string>
+    <string name="paste_share_code_hint">Kodu buraya yapıştırın...</string>
+    <string name="paste_from_clipboard">Panodan Yapıştır</string>
+    <string name="only_on_matching_urls">Sadece %d eşleşen URL kuralında geçerli</string>
+    <string name="requires_sensitive_permissions">Hassas izinler gerektirir</string>
+    <string name="ai_develop">AI Geliştirme</string>
+    <string name="manual_create">Manuel Oluştur</string>
+    <string name="create_module_label">Modül Oluştur</string>
+    <string name="ai_module_developer_label">AI Modül Geliştirme</string>
+
+    <!-- Tema Ayarları Sayfası -->
+    <string name="theme_settings_title">Tema Ayarları</string>
+    <string name="enhanced_mode">Gelişmiş Mod</string>
+    <string name="theme">Tema</string>
+    <string name="appearance">Görünüm</string>
+    <string name="effects">Efektler</string>
+    <string name="ui_mode">UI Modu</string>
+    <string name="select_ui_style">Arayüz stilini seçin</string>
+    <string name="dark_mode">Koyu Mod</string>
+    <string name="follow_system">Sistemi Takip Et</string>
+    <string name="follow_system_hint">Sistem ayarlarına göre otomatik geçiş</string>
+    <string name="light_mode">Açık Mod</string>
+    <string name="light_mode_hint">Daima açık temayı kullan</string>
+    <string name="dark_mode_hint">Daima koyu temayı kullan</string>
+    <string name="preview_effect">Efekti Önizle</string>
+    <string name="button">Buton</string>
+    <string name="enhanced_mode_enabled">Gelişmiş mod etkinleştirildi</string>
+    <string name="enjoy_immersive_experience">%s ile sürükleyici görsel deneyimin tadını çıkarın</string>
+    <string name="enable_animations">Animasyonları Etkinleştir</string>
+    <string name="enable_animations_hint">Geçiş animasyonlarını ve etkileşim geri bildirimlerini aç</string>
+    <string name="particle_effects">Parçacık Efektleri</string>
+    <string name="particle_effects_hint">Temaya özel arka plan parçacık animasyonlarını göster</string>
+    <string name="particle_effects_enhanced_hint">Gelişmiş modda sürükleyici arka plan efektleri</string>
+    <string name="haptic_feedback">Dokunsal Geri Bildirim</string>
+    <string name="haptic_feedback_hint">Etkileşimlerde titreşim geri bildirimi sağla</string>
+    <string name="sound_feedback">Sesli Geri Bildirim</string>
+    <string name="sound_feedback_hint">Etkileşimlerde ses efektleri çal (Gelişmiş Mod)</string>
+    <string name="animation_speed">Animasyon Hızı</string>
+    <string name="current_theme_anim_style">Mevcut Tema Animasyon Stili</string>
+    <string name="interaction_style">Etkileşim Stili</string>
+    <string name="glow">Parlama</string>
+    <string name="particles">Parçacıklar</string>
+
+    <!-- Hakkında Sayfası -->
+    <string name="about">Hakkında</string>
+    <string name="independent_developer">Bağımsız Geliştirici · AI Meraklısı</string>
+    <string name="check_update">Güncellemeleri Denetle</string>
+    <string name="checking">Denetleniyor...</string>
+    <string name="downloading">İndiriliyor...</string>
+    <string name="current_version">Mevcut Sürüm</string>
+    <string name="about_this_app">Uygulama Hakkında</string>
+    <string name="about_app_description">WebToApp, web sitelerini, resimleri ve videoları bağımsız Android uygulamalarına dönüştürmek için geliştirdiğim bir araçtır.\n\nSorularınız veya önerileriniz varsa iletişime geçebilirsiniz.</string>
+    <string name="social_media">Sosyal Medya</string>
+    <string name="exchange_group">Topluluk Grubu</string>
+    <string name="video_tutorial">Video Eğitimleri</string>
+    <string name="open_source_repo">Açık Kaynak Deposu</string>
+    <string name="join_exchange_group">Topluluğa Katıl</string>
+    <string name="learn_progress_together">Birlikte öğrenelim ve gelişelim 🚀</string>
+    <string name="exchange_learning">Fikir alışverişi ve güncellemeler</string>
+    <string name="international_group">Uluslararası Kullanıcı Grubu</string>
+    <string name="contact_author">Yazarla İletişime Geç</string>
+    <string name="feedback_cooperation">Geri bildirim, iş birliği ve öneriler 💬</string>
+    <string name="feedback_cooperation_short">Geri bildirim ve iş birliği</string>
+    <string name="email_contact">E-posta</string>
+    <string name="international_email">Uluslararası E-posta</string>
+    <string name="update_later">Daha Sonra</string>
+    <string name="download_complete">İndirme tamamlandı, kuruluyor...</string>
+    <string name="check_update_failed">Güncelleme denetimi başarısız</string>
+
+    <!-- AI Durumu -->
+    <string name="ai_generating_status">AI oluşturuluyor...</string>
+    <string name="ai_analyzing_status">Gereksinimler analiz ediliyor...</string>
+    <string name="ai_completed_status">Oluşturma tamamlandı</string>
+    <string name="ai_planning_status">Plan hazırlanıyor...</string>
+    <string name="ai_coding_status">Kod üretiliyor...</string>
+
+    <!-- Şifreleme -->
+    <string name="encryption_settings">Şifreleme Ayarları</string>
+    <string name="enable_encryption">Şifrelemeyi Etkinleştir</string>
+    <string name="encryption_hint">Varlıkları korumak için uygulama kaynaklarını şifreleyin</string>
+
+    <!-- Odak Modu / Erişilebilirlik -->
+    <string name="accessibility_service_description">Odak Modu koruma servisi. Etkinleştirildiğinde, uygulamanın diğer uygulamalara geçmesini engeller ve odaklanmayı sağlar.</string>
+    <string name="forced_run_service_name">Odak Modu Koruyucusu</string>
+    <string name="forced_run_active">Odak Modu Aktif</string>
+    <string name="forced_run_remaining">Kalan Süre: %s</string>
+    <string name="cannot_exit_forced_run">Odak modundayken çıkış yapılamaz</string>
+    <string name="emergency_exit">Acil Çıkış</string>
+    <string name="enter_emergency_password">Lütfen acil çıkış şifresini girin</string>
+    <string name="password_incorrect">Hatalı şifre</string>
+    <string name="accessibility_not_enabled">Lütfen önce Erişilebilirlik servisini etkinleştirin</string>
+    <string name="usage_access_not_enabled">Lütfen kullanım verilerine erişim izni verin</string>
+    <string name="open_settings">Ayarları Aç</string>
+    <string name="forced_run_protection_level">Koruma Seviyesi</string>
+    <string name="protection_level_basic">Temel (Sadece geri tuşu engellenir)</string>
+    <string name="protection_level_standard">Standart (Erişilebilirlik gerekir)</string>
+    <string name="protection_level_maximum">Maksimum (Erişilebilirlik + Kullanım erişimi)</string>
+    <string name="encryption_level">Şifreleme Seviyesi</string>
+    <string name="basic_encryption">Temel</string>
+    <string name="standard_encryption">Standart</string>
+    <string name="advanced_encryption">Gelişmiş</string>
+
+    <!-- İzolasyon -->
+    <string name="isolation_settings">İzolasyon Ayarları</string>
+    <string name="enable_isolation">İzolasyonu Etkinleştir</string>
+    <string name="isolation_hint">İzole bir tarayıcı ortamı oluşturun</string>
+    <string name="fingerprint_spoofing">Parmak İzi (Fingerprint) Yanıltma</string>
+    <string name="user_agent_spoofing">User Agent Yanıltma</string>
+    <string name="ip_spoofing">IP Yanıltma</string>
+    <string name="storage_isolation">Depolama İzolasyonu</string>
+    <string name="regenerate_on_launch">Her başlatmada yeniden oluştur</string>
+
+    <!-- Çoklu Simge / Gizleme -->
+    <string name="disguise_multi_icon_title">Çoklu Masaüstü Simgesi</string>
+    <string name="disguise_icon_count_format">%d Simge</string>
+    <string name="disguise_not_enabled">Etkin değil</string>
+    <string name="disguise_enable_multi_icon">Çoklu Simgeyi Etkinleştir</string>
+    <string name="disguise_enable_multi_icon_desc">Kurulumdan sonra masaüstünde birden fazla simge göster</string>
+    <string name="disguise_icon_count_title">Simge Sayısı</string>
+    <string name="disguise_icon_count_desc">Masaüstünde görüntülenecek simge sayısını ayarlayın (her simge uygulamayı başlatır)</string>
+    <string name="disguise_count_label">Miktar</string>
+    <string name="disguise_count_hint">Önerilen: 2-10 arası</string>
+    <string name="disguise_hide_main_icon">Ana Simgeyi Gizle</string>
+    <string name="disguise_hide_main_icon_desc">Sadece takma ad (alias) simgelerini tut, ana aktivite simgesini gizle</string>
+    <string name="disguise_multi_icon_tip">Bu özellik Android\'in yerel activity-alias mekanizmasını kullanır. Kurulumdan sonra ek izin gerekmeden otomatik olarak çalışır.</string>
+</resources>
