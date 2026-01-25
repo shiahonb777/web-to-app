@@ -216,7 +216,7 @@
     <string name="loop_playback">Döngüsel Oynat</string>
     <string name="sequential_playback">Sıralı Oynat</string>
     <string name="shuffle_playback">Karışık Oynat</string>
-    <string name="volume_percent">Ses: %% %d</string>
+    <string name="volume_percent">Ses: %d%%</string>
     <string name="select_music">Müzik Seç</string>
     <string name="modify_config">Yapılandırmayı Düzenle</string>
     <string name="day_mon">Pzt</string>
