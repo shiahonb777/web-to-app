@@ -30,36 +30,47 @@
     </style>
 
     <!-- 全屏沉浸式主题 - 用于导出的独立App（Shell/Media） -->
+    <!-- Fullscreen immersive theme - for exported standalone apps (Shell/Media) -->
     <!-- 注意：此主题仅用于需要强制全屏的场景（如媒体应用） -->
+    <!-- Note: only use this theme when forced fullscreen is required (e.g., media apps) -->
     <style name="Theme.WebToApp.Fullscreen" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <!-- 状态栏和导航栏完全透明 -->
+        <!-- Status bar and navigation bar fully transparent -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- 支持刘海屏/挖孔屏，内容延伸到刘海区域 -->
+        <!-- Support display cutouts; content extends into the cutout area -->
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
         <!-- 禁用半透明效果，使用完全透明 -->
+        <!-- Disable translucency; use full transparency -->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
         <!-- 内容绘制到系统栏下方 -->
+        <!-- Draw content behind system bars -->
         <item name="android:fitsSystemWindows">false</item>
     </style>
-    
+
     <!-- Shell模式主题 - 用于导出的独立App，支持动态控制全屏 -->
+    <!-- Shell theme - for exported standalone apps, supports dynamic fullscreen -->
     <!-- 不强制全屏，由代码根据配置动态控制 -->
+    <!-- Not forced fullscreen; controlled by code based on config -->
     <style name="Theme.WebToApp.Shell" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <!-- 状态栏和导航栏透明，但不隐藏 -->
+        <!-- Status bar and navigation bar transparent, but not hidden -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- 支持刘海屏/挖孔屏 -->
+        <!-- Support display cutouts -->
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
         <!-- 禁用半透明效果 -->
+        <!-- Disable translucency -->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
     </style>
@@ -69,6 +80,7 @@
     </style>
 
     <!-- 透明主题 - 用于快捷方式启动器 -->
+    <!-- Transparent theme - for shortcut launcher -->
     <style name="Theme.WebToApp.Transparent" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

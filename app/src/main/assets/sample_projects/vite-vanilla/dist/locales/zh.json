@@ -1,0 +1,16 @@
+{
+  "pageTitle": "Vite 天气应用",
+  "appHeading": "🌤️ 天气预报",
+  "appSubtitle": "Vite + 原生 JS 示例",
+  "searchPlaceholder": "输入城市名称...",
+  "searchButton": "搜索",
+  "humidityLabel": "湿度",
+  "windLabel": "风速",
+  "feelsLikeLabel": "体感温度",
+  "dayMon": "周一",
+  "dayTue": "周二",
+  "dayWed": "周三",
+  "dayThu": "周四",
+  "dayFri": "周五",
+  "loadingHint": "正在加载天气数据..."
+}

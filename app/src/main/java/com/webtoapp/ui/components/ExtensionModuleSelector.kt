@@ -21,7 +21,7 @@ import com.webtoapp.core.i18n.Strings
 
 /**
  * 扩展模块选择器卡片
- * 
+ *
  * 用于在创建应用页面中选择要启用的扩展模块
  */
 @Composable
@@ -34,13 +34,13 @@ fun ExtensionModuleSelectorCard(
     val extensionManager = remember { ExtensionManager.getInstance(context) }
     val modules by extensionManager.modules.collectAsState()
     val builtInModules by extensionManager.builtInModules.collectAsState()
-    
+
     var expanded by remember { mutableStateOf(false) }
     var showModuleDialog by remember { mutableStateOf(false) }
-    
+
     val allModules = builtInModules + modules
     val enabledModules = allModules.filter { it.id in selectedModuleIds }
-    
+
     OutlinedCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp)
@@ -73,7 +73,7 @@ fun ExtensionModuleSelectorCard(
                         )
                     }
                 }
-                
+
                 Row {
                     IconButton(onClick = { showModuleDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = Strings.addModule)
@@ -86,13 +86,13 @@ fun ExtensionModuleSelectorCard(
                     }
                 }
             }
-            
+
             // 已选模块列表
             if (expanded && enabledModules.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Divider()
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 enabledModules.forEach { module ->
                     Row(
                         modifier = Modifier
@@ -121,7 +121,7 @@ fun ExtensionModuleSelectorCard(
                                 )
                             }
                         }
-                        
+
                         IconButton(
                             onClick = {
                                 onSelectionChange(selectedModuleIds - module.id)
@@ -129,14 +129,14 @@ fun ExtensionModuleSelectorCard(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "移除",
+                                contentDescription = Strings.remove,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
             }
-            
+
             // 快速提示
             if (enabledModules.isEmpty() && expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -165,7 +165,7 @@ fun ExtensionModuleSelectorCard(
             }
         }
     }
-    
+
     // 模块选择对话框
     if (showModuleDialog) {
         ModuleSelectionDialog(
@@ -190,7 +190,7 @@ fun ModuleSelectionDialog(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
-    
+
     // 直接计算过滤后的模块列表，确保列表更新时 UI 正确响应
     val filteredModules = allModules.filter { module ->
         val matchesSearch = searchQuery.isBlank() ||
@@ -199,7 +199,7 @@ fun ModuleSelectionDialog(
         val matchesCategory = selectedCategory == null || module.category == selectedCategory
         matchesSearch && matchesCategory
     }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.selectExtensionModules) },
@@ -215,9 +215,9 @@ fun ModuleSelectionDialog(
                     singleLine = true,
                     shape = RoundedCornerShape(8.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // 分类筛选
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -231,35 +231,35 @@ fun ModuleSelectionDialog(
                     )
                     FilterChip(
                         selected = selectedCategory == ModuleCategory.CONTENT_FILTER,
-                        onClick = { 
-                            selectedCategory = if (selectedCategory == ModuleCategory.CONTENT_FILTER) null 
-                                              else ModuleCategory.CONTENT_FILTER 
+                        onClick = {
+                            selectedCategory = if (selectedCategory == ModuleCategory.CONTENT_FILTER) null
+                                              else ModuleCategory.CONTENT_FILTER
                         },
                         label = { Text(Strings.filterContent, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                     FilterChip(
                         selected = selectedCategory == ModuleCategory.STYLE_MODIFIER,
-                        onClick = { 
-                            selectedCategory = if (selectedCategory == ModuleCategory.STYLE_MODIFIER) null 
-                                              else ModuleCategory.STYLE_MODIFIER 
+                        onClick = {
+                            selectedCategory = if (selectedCategory == ModuleCategory.STYLE_MODIFIER) null
+                                              else ModuleCategory.STYLE_MODIFIER
                         },
                         label = { Text(Strings.filterStyle, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                     FilterChip(
                         selected = selectedCategory == ModuleCategory.FUNCTION_ENHANCE,
-                        onClick = { 
-                            selectedCategory = if (selectedCategory == ModuleCategory.FUNCTION_ENHANCE) null 
-                                              else ModuleCategory.FUNCTION_ENHANCE 
+                        onClick = {
+                            selectedCategory = if (selectedCategory == ModuleCategory.FUNCTION_ENHANCE) null
+                                              else ModuleCategory.FUNCTION_ENHANCE
                         },
                         label = { Text(Strings.filterFunction, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // 模块列表
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 400.dp),
@@ -267,7 +267,7 @@ fun ModuleSelectionDialog(
                 ) {
                     items(filteredModules) { module ->
                         val isSelected = module.id in selectedIds
-                        
+
                         Surface(
                             onClick = {
                                 onSelectionChange(
@@ -276,9 +276,9 @@ fun ModuleSelectionDialog(
                                 )
                             },
                             shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) 
+                            color = if (isSelected)
                                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                            else 
+                            else
                                 MaterialTheme.colorScheme.surface
                         ) {
                             Row(
@@ -288,9 +288,9 @@ fun ModuleSelectionDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(module.icon, fontSize = 24.sp)
-                                
+
                                 Spacer(modifier = Modifier.width(12.dp))
-                                
+
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
@@ -322,7 +322,7 @@ fun ModuleSelectionDialog(
                                         )
                                     }
                                 }
-                                
+
                                 Checkbox(
                                     checked = isSelected,
                                     onCheckedChange = {
@@ -335,7 +335,7 @@ fun ModuleSelectionDialog(
                             }
                         }
                     }
-                    
+
                     if (filteredModules.isEmpty()) {
                         item {
                             Box(
@@ -381,10 +381,10 @@ fun QuickModuleSelector(
     val context = LocalContext.current
     val extensionManager = remember { ExtensionManager.getInstance(context) }
     val builtInModules by extensionManager.builtInModules.collectAsState()
-    
+
     // 只显示常用的内置模块
     val quickModules = builtInModules.take(5)
-    
+
     Column(modifier = modifier) {
         Text(
             Strings.quickEnable,
@@ -392,7 +392,7 @@ fun QuickModuleSelector(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)

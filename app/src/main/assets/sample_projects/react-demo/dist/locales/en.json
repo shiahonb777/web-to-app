@@ -1,0 +1,16 @@
+{
+  "pageTitle": "React Todo App",
+  "appHeading": "React Todo",
+  "appDescription": "A todo app built with React 18",
+  "loadingHint": "Loading React...",
+  "inputPlaceholder": "Add a new task...",
+  "addButton": "Add",
+  "noTodos": "🎉 No todos",
+  "deleteButton": "Delete",
+  "errorTitle": "Load Failed",
+  "errorHint": "Please check your network connection and try again",
+  "reloadButton": "Reload",
+  "reactLoadError": "React failed to load, please check your network connection",
+  "reactDOMLoadError": "ReactDOM failed to load, please check your network connection",
+  "appScriptLoadError": "App script failed to load"
+}

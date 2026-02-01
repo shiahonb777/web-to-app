@@ -1,0 +1,16 @@
+{
+  "pageTitle": "Vite Weather App",
+  "appHeading": "🌤️ Weather Forecast",
+  "appSubtitle": "Vite + Vanilla JS Sample",
+  "searchPlaceholder": "Enter city name...",
+  "searchButton": "Search",
+  "humidityLabel": "Humidity",
+  "windLabel": "Wind",
+  "feelsLikeLabel": "Feels Like",
+  "dayMon": "Mon",
+  "dayTue": "Tue",
+  "dayWed": "Wed",
+  "dayThu": "Thu",
+  "dayFri": "Fri",
+  "loadingHint": "Loading weather data..."
+}

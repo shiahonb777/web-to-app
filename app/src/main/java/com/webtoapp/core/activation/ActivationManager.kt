@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -51,7 +52,7 @@ class ActivationManager(private val context: Context) {
             if (code != null) {
                 // 新格式激活码
                 val normalizedCode = normalizeCode(code.code)
-                if (normalizedInput == normalizedCode || 
+                if (normalizedInput == normalizedCode ||
                     hashCode(normalizedInput) == normalizedCode ||
                     normalizedInput == hashCode(normalizedCode)) {
                     matchedCode = code
@@ -60,7 +61,7 @@ class ActivationManager(private val context: Context) {
             } else {
                 // 旧格式字符串激活码（兼容性）
                 val normalizedValid = normalizeCode(codeStr)
-                if (normalizedInput == normalizedValid || 
+                if (normalizedInput == normalizedValid ||
                     hashCode(normalizedInput) == normalizedValid ||
                     normalizedInput == hashCode(normalizedValid)) {
                     // 使用旧格式创建永久激活码
@@ -83,7 +84,7 @@ class ActivationManager(private val context: Context) {
         // 验证激活码类型限制
         val deviceId = DeviceIdGenerator.getDeviceId(context)
         val validationResult = validateActivationCode(matchedCode, appId, deviceId)
-        
+
         if (validationResult is ActivationResult.Success) {
             // 保存激活状态
             saveActivationStatus(appId, matchedCode, deviceId)
@@ -109,7 +110,7 @@ class ActivationManager(private val context: Context) {
         // 查找匹配的激活码
         val matchedCode = validActivationCodes.firstOrNull { code ->
             val normalizedCode = normalizeCode(code.code)
-            normalizedInput == normalizedCode || 
+            normalizedInput == normalizedCode ||
             hashCode(normalizedInput) == normalizedCode ||
             normalizedInput == hashCode(normalizedCode)
         }
@@ -127,7 +128,7 @@ class ActivationManager(private val context: Context) {
         // 验证激活码类型限制
         val deviceId = DeviceIdGenerator.getDeviceId(context)
         val validationResult = validateActivationCode(matchedCode, appId, deviceId)
-        
+
         if (validationResult is ActivationResult.Success) {
             // 保存激活状态
             saveActivationStatus(appId, matchedCode, deviceId)
@@ -154,8 +155,8 @@ class ActivationManager(private val context: Context) {
             if (currentStatus.isUsageExceeded) {
                 return ActivationResult.UsageExceeded
             }
-            if (code.type == ActivationCodeType.DEVICE_BOUND && 
-                currentStatus.deviceId != null && 
+            if (code.type == ActivationCodeType.DEVICE_BOUND &&
+                currentStatus.deviceId != null &&
                 currentStatus.deviceId != deviceId) {
                 return ActivationResult.DeviceMismatch
             }
@@ -169,18 +170,18 @@ class ActivationManager(private val context: Context) {
         }
 
         // 检查时间限制配置
-        if (code.type == ActivationCodeType.TIME_LIMITED || 
+        if (code.type == ActivationCodeType.TIME_LIMITED ||
             code.type == ActivationCodeType.COMBINED) {
             if (code.timeLimitMs == null || code.timeLimitMs <= 0) {
-                return ActivationResult.Invalid("时间限制配置无效")
+                return ActivationResult.Invalid(Strings.invalidTimeLimitConfig)
             }
         }
 
         // 检查使用次数限制配置
-        if (code.type == ActivationCodeType.USAGE_LIMITED || 
+        if (code.type == ActivationCodeType.USAGE_LIMITED ||
             code.type == ActivationCodeType.COMBINED) {
             if (code.usageLimit == null || code.usageLimit <= 0) {
-                return ActivationResult.Invalid("使用次数限制配置无效")
+                return ActivationResult.Invalid(Strings.invalidUsageLimitConfig)
             }
         }
 
@@ -223,7 +224,7 @@ class ActivationManager(private val context: Context) {
         val usageLimit = preferences[intPreferencesKey("usage_limit_$appId")]
         val deviceId = preferences[stringPreferencesKey("device_id_$appId")]
         val codeTypeStr = preferences[stringPreferencesKey("code_type_$appId")]
-        val codeType = codeTypeStr?.let { 
+        val codeType = codeTypeStr?.let {
             try {
                 ActivationCodeType.valueOf(it)
             } catch (e: Exception) {
@@ -278,7 +279,7 @@ class ActivationManager(private val context: Context) {
         context.activationDataStore.edit { preferences ->
             preferences[booleanPreferencesKey("activated_$appId")] = activated
             if (activated) {
-                preferences[longPreferencesKey("activated_time_$appId")] = 
+                preferences[longPreferencesKey("activated_time_$appId")] =
                     System.currentTimeMillis()
             }
         }
@@ -361,7 +362,7 @@ class ActivationManager(private val context: Context) {
                 type = type,
                 timeLimitMs = timeLimitMs,
                 usageLimit = usageLimit,
-                note = "批量生成 #$index"
+                note = Strings.batchGeneratedNote.format(index)
             )
         }
     }

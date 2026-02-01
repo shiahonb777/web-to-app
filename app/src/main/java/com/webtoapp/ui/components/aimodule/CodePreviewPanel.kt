@@ -28,12 +28,13 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.webtoapp.core.i18n.Strings
 
 /**
  * 代码预览面板组件
- * 
+ *
  * 用于显示和编辑生成的代码，支持语法高亮、行号显示、Tab 切换
- * 
+ *
  * @param jsCode JavaScript 代码
  * @param cssCode CSS 代码
  * @param onJsCodeChange JavaScript 代码变更回调
@@ -43,7 +44,7 @@ import androidx.compose.ui.unit.sp
  * @param onSave 保存代码回调
  * @param isEditable 是否可编辑
  * @param modifier Modifier
- * 
+ *
  * Requirements: 4.3, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7
  */
 @Composable
@@ -61,7 +62,7 @@ fun CodePreviewPanel(
     var selectedTab by remember { mutableStateOf(CodeTab.JAVASCRIPT) }
     val colors = rememberCodeBlockColors()
     val clipboardManager = LocalClipboardManager.current
-    
+
     val currentCode = when (selectedTab) {
         CodeTab.JAVASCRIPT -> jsCode
         CodeTab.CSS -> cssCode
@@ -87,7 +88,7 @@ fun CodePreviewPanel(
                 isEditable = isEditable,
                 colors = colors
             )
-            
+
             // 代码内容区域
             CodeContentArea(
                 code = currentCode,
@@ -104,7 +105,7 @@ fun CodePreviewPanel(
                 isEditable = isEditable,
                 colors = colors
             )
-            
+
             // 底部状态栏
             CodePreviewFooter(
                 lineCount = currentCode.lines().size,
@@ -225,7 +226,7 @@ private fun CodePreviewHeader(
                     )
                 }
             }
-            
+
             // 操作按钮
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -237,12 +238,12 @@ private fun CodePreviewHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = "复制",
+                        contentDescription = Strings.copy,
                         tint = colors.text.copy(alpha = 0.7f),
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                
+
                 // 验证按钮（仅在可编辑时显示）
                 if (isEditable) {
                     IconButton(
@@ -251,13 +252,13 @@ private fun CodePreviewHeader(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CheckCircle,
-                            contentDescription = "验证",
+                            contentDescription = Strings.validate,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                 }
-                
+
                 // 保存按钮
                 FilledTonalButton(
                     onClick = onSave,
@@ -271,7 +272,7 @@ private fun CodePreviewHeader(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "保存",
+                        Strings.btnSave,
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
@@ -296,13 +297,13 @@ private fun CodeTabButton(
     } else {
         Color.Transparent
     }
-    
+
     val textColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
     } else {
         colors.text.copy(alpha = 0.7f)
     }
-    
+
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
@@ -327,7 +328,7 @@ private fun CodeTabButton(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Text(
                 text = tab.displayName,
                 style = MaterialTheme.typography.labelMedium,
@@ -361,24 +362,24 @@ private fun CodeContentArea(
 ) {
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
-    
-    var textFieldValue by remember(code) { 
-        mutableStateOf(TextFieldValue(code)) 
+
+    var textFieldValue by remember(code) {
+        mutableStateOf(TextFieldValue(code))
     }
-    
+
     // 同步外部代码变化
     LaunchedEffect(code) {
         if (textFieldValue.text != code) {
             textFieldValue = TextFieldValue(code)
         }
     }
-    
+
     // 根据模式选择显示的内容源
     // 可编辑模式：使用 textFieldValue.text（实时编辑内容）
     // 只读模式：使用 code 参数
     val displayText = if (isEditable) textFieldValue.text else code
     val displayLines = displayText.lines()
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -390,7 +391,7 @@ private fun CodeContentArea(
             lineCount = displayLines.size,
             colors = colors
         )
-        
+
         // 代码内容
         Box(
             modifier = Modifier
@@ -509,9 +510,9 @@ private fun CodePreviewFooter(
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.text.copy(alpha = 0.5f)
             )
-            
+
             Text(
-                text = "$lineCount 行",
+                text = Strings.lineCountFormat.format(lineCount),
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.text.copy(alpha = 0.5f)
             )
@@ -545,7 +546,7 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
         "continue", "default", "true", "false", "null", "undefined", "typeof",
         "instanceof", "in", "of", "delete", "void", "yield", "static", "get", "set"
     )
-    
+
     var i = 0
     while (i < line.length) {
         when {
@@ -712,7 +713,7 @@ fun SimpleCodePreview(
     val colors = rememberCodeBlockColors()
     val clipboardManager = LocalClipboardManager.current
     val lines = code.lines()
-    
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -749,14 +750,14 @@ fun SimpleCodePreview(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    
+
                     Text(
-                        text = "${lines.size} 行",
+                        text = Strings.lineCountFormat.format(lines.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.text.copy(alpha = 0.6f)
                     )
                 }
-                
+
                 IconButton(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(code))
@@ -766,17 +767,17 @@ fun SimpleCodePreview(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = "复制",
+                        contentDescription = Strings.copy,
                         tint = colors.text.copy(alpha = 0.7f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
             }
-            
+
             // 代码内容
             val horizontalScrollState = rememberScrollState()
             val verticalScrollState = rememberScrollState()
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -801,7 +802,7 @@ fun SimpleCodePreview(
                         )
                     }
                 }
-                
+
                 // 代码
                 Box(
                     modifier = Modifier

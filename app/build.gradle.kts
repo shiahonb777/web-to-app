@@ -27,12 +27,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        
+
         // NDK 配置
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
-        
+
         // CMake 配置
         externalNativeBuild {
             cmake {
@@ -41,7 +41,7 @@ android {
             }
         }
     }
-    
+
     // 外部 Native 构建配置
     externalNativeBuild {
         cmake {
@@ -96,7 +96,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-splashscreen:1.0.1")
-    
+
     // Material Design 3
     implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.activity:activity-compose:1.8.1")
@@ -108,7 +108,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -135,19 +135,19 @@ dependencies {
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    
+
     // Apache Commons Compress for tar.gz/xz extraction (Linux environment)
     implementation("org.apache.commons:commons-compress:1.26.0")
     implementation("org.tukaani:xz:1.9")
-    
+
     // APK 签名库（支持 v1/v2/v3 签名）
     implementation("com.android.tools.build:apksig:8.3.0")
-    
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("com.google.truth:truth:1.1.5")
-    
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

@@ -28,55 +28,50 @@ import com.webtoapp.ui.screens.aimodule.ErrorInfo
 
 /**
  * 错误恢复操作类型
- * 
+ *
  * Requirements: 8.4
  */
 sealed class RecoveryAction(
-    val title: String,
-    val icon: ImageVector,
-    val description: String
+    val icon: ImageVector
 ) {
-    object Retry : RecoveryAction(
-        title = "重试",
-        icon = Icons.Default.Refresh,
-        description = "重新尝试上一次操作"
-    )
-    
-    object RetryWithDifferentModel : RecoveryAction(
-        title = "换个模型重试",
-        icon = Icons.Default.SwapHoriz,
-        description = "使用其他 AI 模型重试"
-    )
-    
-    object ShowRawResponse : RecoveryAction(
-        title = "查看原始响应",
-        icon = Icons.Default.Code,
-        description = "显示 AI 返回的原始内容"
-    )
-    
-    object GoToSettings : RecoveryAction(
-        title = "前往设置",
-        icon = Icons.Default.Settings,
-        description = "检查 API Key 配置"
-    )
-    
-    object ManualEdit : RecoveryAction(
-        title = "手动编辑",
-        icon = Icons.Default.Edit,
-        description = "手动修改代码"
-    )
-    
-    object Dismiss : RecoveryAction(
-        title = "关闭",
-        icon = Icons.Default.Close,
-        description = "关闭错误提示"
-    )
+    abstract val title: String
+    abstract val description: String
+
+    object Retry : RecoveryAction(Icons.Default.Refresh) {
+        override val title: String get() = Strings.retryAction
+        override val description: String get() = Strings.retryActionHint
+    }
+
+    object RetryWithDifferentModel : RecoveryAction(Icons.Default.SwapHoriz) {
+        override val title: String get() = Strings.retryWithDifferentModel
+        override val description: String get() = Strings.retryWithDifferentModelHint
+    }
+
+    object ShowRawResponse : RecoveryAction(Icons.Default.Code) {
+        override val title: String get() = Strings.showRawResponse
+        override val description: String get() = Strings.showRawResponseHint
+    }
+
+    object GoToSettings : RecoveryAction(Icons.Default.Settings) {
+        override val title: String get() = Strings.goToSettings
+        override val description: String get() = Strings.goToSettingsHint
+    }
+
+    object ManualEdit : RecoveryAction(Icons.Default.Edit) {
+        override val title: String get() = Strings.manualEdit
+        override val description: String get() = Strings.manualEditHint
+    }
+
+    object Dismiss : RecoveryAction(Icons.Default.Close) {
+        override val title: String get() = Strings.dismissAction
+        override val description: String get() = Strings.dismissActionHint
+    }
 }
 
 
 /**
  * 根据错误信息获取可用的恢复操作
- * 
+ *
  * Requirements: 8.1, 8.2, 8.3, 8.4
  */
 fun getRecoveryActions(error: ErrorInfo): List<RecoveryAction> {
@@ -86,31 +81,31 @@ fun getRecoveryActions(error: ErrorInfo): List<RecoveryAction> {
             RecoveryAction.GoToSettings,
             RecoveryAction.RetryWithDifferentModel
         )
-        
+
         // 限流错误 - 可以重试
         error.code == "429" -> listOf(
             RecoveryAction.Retry,
             RecoveryAction.RetryWithDifferentModel
         )
-        
+
         // 网络错误 - 可以重试
         error.code == "NETWORK_ERROR" || error.message.contains("网络", ignoreCase = true) -> listOf(
             RecoveryAction.Retry
         )
-        
+
         // 解析错误 - 显示原始响应
         error.rawResponse != null -> listOf(
             RecoveryAction.ShowRawResponse,
             RecoveryAction.Retry,
             RecoveryAction.ManualEdit
         )
-        
+
         // 可恢复错误 - 提供重试选项
         error.recoverable -> listOf(
             RecoveryAction.Retry,
             RecoveryAction.RetryWithDifferentModel
         )
-        
+
         // 不可恢复错误 - 只能手动处理
         else -> listOf(
             RecoveryAction.ManualEdit,
@@ -121,9 +116,9 @@ fun getRecoveryActions(error: ErrorInfo): List<RecoveryAction> {
 
 /**
  * 格式化错误消息
- * 
+ *
  * 将错误信息格式化为用户友好的消息，包含错误码（如果有）
- * 
+ *
  * Requirements: 8.1
  */
 fun formatErrorMessage(error: ErrorInfo): String {
@@ -136,15 +131,15 @@ fun formatErrorMessage(error: ErrorInfo): String {
  */
 private fun getErrorTypeDescription(error: ErrorInfo): String {
     return when {
-        error.code == "401" || error.code == "403" -> "认证错误"
-        error.code == "429" -> "请求限流"
-        error.code == "500" || error.code == "502" || error.code == "503" -> "服务器错误"
-        error.code == "NETWORK_ERROR" -> "网络错误"
-        error.code == "PARSE_ERROR" -> "解析错误"
-        error.code == "TIMEOUT" -> "请求超时"
-        error.rawResponse != null -> "响应解析失败"
-        !error.recoverable -> "严重错误"
-        else -> "操作失败"
+        error.code == "401" || error.code == "403" -> Strings.errorTypeAuth
+        error.code == "429" -> Strings.errorTypeRateLimit
+        error.code == "500" || error.code == "502" || error.code == "503" -> Strings.errorTypeServer
+        error.code == "NETWORK_ERROR" -> Strings.errorTypeNetwork
+        error.code == "PARSE_ERROR" -> Strings.errorTypeParse
+        error.code == "TIMEOUT" -> Strings.errorTypeTimeout
+        error.rawResponse != null -> Strings.errorTypeResponseParse
+        !error.recoverable -> Strings.errorTypeFatal
+        else -> Strings.errorTypeOperationFailed
     }
 }
 
@@ -163,9 +158,9 @@ private fun getErrorIcon(error: ErrorInfo): ImageVector {
 
 /**
  * 错误卡片组件
- * 
+ *
  * 显示错误信息、错误码和恢复选项
- * 
+ *
  * @param error 错误信息
  * @param onRetry 重试回调
  * @param onRetryWithDifferentModel 换模型重试回调
@@ -174,7 +169,7 @@ private fun getErrorIcon(error: ErrorInfo): ImageVector {
  * @param onManualEdit 手动编辑回调
  * @param onDismiss 关闭回调
  * @param modifier Modifier
- * 
+ *
  * Requirements: 8.1, 8.2, 8.3, 8.4
  */
 @Composable
@@ -190,7 +185,7 @@ fun ErrorCard(
 ) {
     var showRawResponse by remember { mutableStateOf(false) }
     val recoveryActions = remember(error) { getRecoveryActions(error) }
-    
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -209,10 +204,10 @@ fun ErrorCard(
         ) {
             // 错误头部
             ErrorHeader(error = error)
-            
+
             // 错误消息
             ErrorMessage(error = error)
-            
+
             // 原始响应（可展开）
             if (error.rawResponse != null) {
                 RawResponseSection(
@@ -221,14 +216,14 @@ fun ErrorCard(
                     onToggle = { showRawResponse = !showRawResponse }
                 )
             }
-            
+
             // 恢复操作按钮
             if (recoveryActions.isNotEmpty()) {
                 Divider(
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
                     thickness = 0.5.dp
                 )
-                
+
                 RecoveryActionsRow(
                     actions = recoveryActions,
                     onActionClick = { action ->
@@ -273,7 +268,7 @@ private fun ErrorHeader(error: ErrorInfo) {
                 tint = MaterialTheme.colorScheme.error
             )
         }
-        
+
         Column(modifier = Modifier.weight(1f)) {
             // 错误类型
             Text(
@@ -282,17 +277,17 @@ private fun ErrorHeader(error: ErrorInfo) {
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.error
             )
-            
+
             // 错误码（如果有）
             if (error.code != null) {
                 Text(
-                    text = "错误码: ${error.code}",
+                    text = Strings.errorCodeFormat.format(error.code),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
                 )
             }
         }
-        
+
         // 可恢复标识
         if (error.recoverable) {
             Surface(
@@ -300,7 +295,7 @@ private fun ErrorHeader(error: ErrorInfo) {
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
                 Text(
-                    text = "可恢复",
+                    text = Strings.recoverable,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -351,17 +346,17 @@ private fun RawResponseSection(
         ) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (isExpanded) "折叠" else "展开",
+                contentDescription = if (isExpanded) Strings.collapse else Strings.expand,
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
             Text(
-                text = if (isExpanded) "隐藏原始响应" else "查看原始响应",
+                text = if (isExpanded) Strings.hideRawResponse else Strings.showRawResponse,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
-        
+
         // 原始响应内容
         AnimatedVisibility(
             visible = isExpanded,
@@ -417,7 +412,7 @@ private fun RecoveryActionButton(
     modifier: Modifier = Modifier
 ) {
     val isPrimary = action == RecoveryAction.Retry
-    
+
     if (isPrimary) {
         Button(
             onClick = onClick,
@@ -469,7 +464,7 @@ private fun RecoveryActionButton(
 /**
  * 简化版错误卡片
  * 用于在消息列表中显示错误的简洁版本
- * 
+ *
  * @param error 错误信息
  * @param onRetry 重试回调
  * @param modifier Modifier
@@ -497,7 +492,7 @@ fun CompactErrorCard(
             modifier = Modifier.size(18.dp),
             tint = MaterialTheme.colorScheme.error
         )
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = formatErrorMessage(error),
@@ -507,7 +502,7 @@ fun CompactErrorCard(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        
+
         if (error.recoverable) {
             IconButton(
                 onClick = onRetry,
@@ -515,7 +510,7 @@ fun CompactErrorCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = "重试",
+                    contentDescription = Strings.btnRetry,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -526,7 +521,7 @@ fun CompactErrorCard(
 
 /**
  * 网络离线指示器
- * 
+ *
  * Requirements: 8.2
  */
 @Composable
@@ -550,21 +545,21 @@ fun OfflineIndicator(
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "网络连接不可用",
+                    text = Strings.offlineTitle,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "请检查网络后重试",
+                    text = Strings.offlineHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
-            
+
             TextButton(onClick = onRetry) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
@@ -580,7 +575,7 @@ fun OfflineIndicator(
 
 /**
  * API 限流提示
- * 
+ *
  * Requirements: 8.2
  */
 @Composable
@@ -590,7 +585,7 @@ fun RateLimitIndicator(
     modifier: Modifier = Modifier
 ) {
     var remainingSeconds by remember(retryAfterSeconds) { mutableStateOf(retryAfterSeconds) }
-    
+
     // 倒计时
     LaunchedEffect(retryAfterSeconds) {
         while (remainingSeconds > 0) {
@@ -602,7 +597,7 @@ fun RateLimitIndicator(
             onRetry()
         }
     }
-    
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -619,21 +614,25 @@ fun RateLimitIndicator(
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.tertiary
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "请求过于频繁",
+                    text = Strings.rateLimitTitle,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 Text(
-                    text = if (remainingSeconds > 0) "${remainingSeconds}秒后自动重试" else "正在重试...",
+                    text = if (remainingSeconds > 0) {
+                        Strings.retryAfterSeconds.format(remainingSeconds)
+                    } else {
+                        Strings.retrying
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                 )
             }
-            
+
             if (remainingSeconds > 0) {
                 // 进度指示器
                 CircularProgressIndicator(

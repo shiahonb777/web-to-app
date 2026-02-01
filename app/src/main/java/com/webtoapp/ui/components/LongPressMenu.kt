@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.webview.LongPressHandler
 
 /**
@@ -32,7 +33,7 @@ fun LongPressMenuSheet(
     onOpenInBrowser: (String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -52,7 +53,7 @@ fun LongPressMenuSheet(
                         onDismiss = onDismiss
                     )
                 }
-                
+
                 is LongPressHandler.LongPressResult.Video -> {
                     VideoMenuContent(
                         videoUrl = result.url,
@@ -61,7 +62,7 @@ fun LongPressMenuSheet(
                         onDismiss = onDismiss
                     )
                 }
-                
+
                 is LongPressHandler.LongPressResult.Link -> {
                     LinkMenuContent(
                         linkUrl = result.url,
@@ -71,7 +72,7 @@ fun LongPressMenuSheet(
                         onDismiss = onDismiss
                     )
                 }
-                
+
                 is LongPressHandler.LongPressResult.ImageLink -> {
                     ImageLinkMenuContent(
                         imageUrl = result.imageUrl,
@@ -83,7 +84,7 @@ fun LongPressMenuSheet(
                         onDismiss = onDismiss
                     )
                 }
-                
+
                 else -> {
                     // 不应该到这里
                     onDismiss()
@@ -101,7 +102,7 @@ private fun ImageMenuContent(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    
+
     Column(modifier = Modifier.fillMaxWidth()) {
         // 图片预览
         if (!imageUrl.startsWith("blob:")) {
@@ -117,7 +118,7 @@ private fun ImageMenuContent(
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = "图片预览",
+                    contentDescription = Strings.imagePreview,
                     modifier = Modifier
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp)),
@@ -126,7 +127,7 @@ private fun ImageMenuContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
-        
+
         // URL 显示
         Text(
             text = imageUrl.take(100) + if (imageUrl.length > 100) "..." else "",
@@ -136,23 +137,23 @@ private fun ImageMenuContent(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
         Divider()
-        
+
         // 操作按钮
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = "保存图片",
+            text = Strings.saveImage,
             onClick = {
                 onSaveImage()
                 onDismiss()
             }
         )
-        
+
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = "复制图片链接",
+            text = Strings.copyImageLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -184,11 +185,11 @@ private fun VideoMenuContent(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "视频",
+                text = Strings.videoLabel,
                 style = MaterialTheme.typography.titleMedium
             )
         }
-        
+
         // URL 显示
         Text(
             text = videoUrl.take(100) + if (videoUrl.length > 100) "..." else "",
@@ -198,23 +199,23 @@ private fun VideoMenuContent(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
         Divider()
-        
+
         // 操作按钮
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = "下载视频",
+            text = Strings.downloadVideo,
             onClick = {
                 onDownload()
                 onDismiss()
             }
         )
-        
+
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = "复制视频链接",
+            text = Strings.copyVideoLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -264,22 +265,22 @@ private fun LinkMenuContent(
                 )
             }
         }
-        
+
         Divider()
-        
+
         // 操作按钮
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = "复制链接",
+            text = Strings.copyLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
             }
         )
-        
+
         MenuItemButton(
             icon = Icons.Default.OpenInBrowser,
-            text = "在浏览器中打开",
+            text = Strings.openInBrowser,
             onClick = {
                 onOpenInBrowser()
                 onDismiss()
@@ -299,7 +300,7 @@ private fun ImageLinkMenuContent(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    
+
     Column(modifier = Modifier.fillMaxWidth()) {
         // 图片预览
         if (!imageUrl.startsWith("blob:")) {
@@ -315,7 +316,7 @@ private fun ImageLinkMenuContent(
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = "图片预览",
+                    contentDescription = Strings.imagePreview,
                     modifier = Modifier
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp)),
@@ -324,58 +325,58 @@ private fun ImageLinkMenuContent(
             }
             Spacer(modifier = Modifier.height(8.dp))
         }
-        
+
         Divider()
-        
+
         // 图片操作
         Text(
-            text = "图片",
+            text = Strings.imageLabel,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
         )
-        
+
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = "保存图片",
+            text = Strings.saveImage,
             onClick = {
                 onSaveImage()
                 onDismiss()
             }
         )
-        
+
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = "复制图片链接",
+            text = Strings.copyImageLink,
             onClick = {
                 onCopyImageLink()
                 onDismiss()
             }
         )
-        
+
         // 链接操作（如果有�?
         if (linkUrl.isNotBlank()) {
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            
+
             Text(
-                text = "链接",
+                text = Strings.linkLabel,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
             )
-            
+
             MenuItemButton(
                 icon = Icons.Default.ContentCopy,
-                text = "复制链接地址",
+                text = Strings.copyLink,
                 onClick = {
                     onCopyLink()
                     onDismiss()
                 }
             )
-            
+
             MenuItemButton(
                 icon = Icons.Default.OpenInBrowser,
-                text = "在浏览器中打开",
+                text = Strings.openInBrowser,
                 onClick = {
                     onOpenInBrowser()
                     onDismiss()

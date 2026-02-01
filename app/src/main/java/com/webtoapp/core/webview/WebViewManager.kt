@@ -10,6 +10,8 @@ import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.crypto.SecureAssetLoader
 import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.extension.ExtensionPanelScript
+import com.webtoapp.core.i18n.LanguageManager
+import kotlinx.coroutines.runBlocking
 import com.webtoapp.core.extension.ModuleRunTime
 import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.UserScript
@@ -17,34 +19,34 @@ import com.webtoapp.data.model.WebViewConfig
 import java.io.ByteArrayInputStream
 
 /**
- * WebView管理器 - 配置和管理WebView
+ * WebView管理器 - 配置和管理WebView / WebView manager - configure and manage WebView
  */
 class WebViewManager(
     private val context: Context,
     private val adBlocker: AdBlocker
 ) {
-    
+
     companion object {
-        // 桌面版 Chrome User-Agent
+        // 桌面版 Chrome User-Agent / Desktop Chrome User-Agent
         private const val DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
-    
-    // 应用配置的扩展模块ID列表
+
+    // 应用配置的扩展模块ID列表 / Extension module IDs from app config
     private var appExtensionModuleIds: List<String> = emptyList()
-    
-    // 嵌入的扩展模块数据（Shell 模式使用）
+
+    // 嵌入的扩展模块数据（Shell 模式使用） / Embedded modules (Shell mode)
     private var embeddedModules: List<com.webtoapp.core.shell.EmbeddedShellModule> = emptyList()
-    
-    // 跟踪已配置的 WebView，用于资源清理
+
+    // 跟踪已配置的 WebView，用于资源清理 / Track WebViews for cleanup
     private val managedWebViews = java.util.WeakHashMap<WebView, Boolean>()
 
     /**
-     * 配置WebView
-     * @param webView WebView实例
-     * @param config WebView配置
-     * @param callbacks 回调接口
-     * @param extensionModuleIds 应用配置的扩展模块ID列表（可选）
-     * @param embeddedExtensionModules 嵌入的扩展模块数据（Shell模式使用，可选）
+     * 配置WebView / Configure WebView
+     * @param webView WebView实例 / WebView instance
+     * @param config WebView配置 / WebView config
+     * @param callbacks 回调接口 / Callback interface
+     * @param extensionModuleIds 应用配置的扩展模块ID列表（可选） / Module IDs (optional)
+     * @param embeddedExtensionModules 嵌入的扩展模块数据（Shell模式使用，可选） / Embedded modules (optional)
      */
     @SuppressLint("SetJavaScriptEnabled")
     fun configureWebView(
@@ -54,47 +56,47 @@ class WebViewManager(
         extensionModuleIds: List<String> = emptyList(),
         embeddedExtensionModules: List<com.webtoapp.core.shell.EmbeddedShellModule> = emptyList()
     ) {
-        // 保存扩展模块ID列表
+        // 保存扩展模块ID列表 / Save extension module IDs
         this.appExtensionModuleIds = extensionModuleIds
-        // 保存嵌入的模块数据
+        // 保存嵌入的模块数据 / Save embedded modules
         this.embeddedModules = embeddedExtensionModules
-        
-        // 调试日志：确认扩展模块配置
+
+        // 调试日志：确认扩展模块配置 / Debug log: verify module config
         android.util.Log.d("WebViewManager", "configureWebView: extensionModuleIds=${extensionModuleIds.size}, embeddedModules=${embeddedExtensionModules.size}")
         embeddedExtensionModules.forEach { module ->
             android.util.Log.d("WebViewManager", "  嵌入模块: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}")
         }
-        
-        // 跟踪此 WebView
+
+        // 跟踪此 WebView / Track this WebView
         managedWebViews[webView] = true
-        
+
         webView.apply {
             settings.apply {
                 // JavaScript
                 javaScriptEnabled = config.javaScriptEnabled
                 javaScriptCanOpenWindowsAutomatically = true
 
-                // DOM存储
+                // DOM存储 / DOM storage
                 domStorageEnabled = config.domStorageEnabled
                 databaseEnabled = true
 
-                // 文件访问
+                // 文件访问 / File access
                 allowFileAccess = config.allowFileAccess
                 allowContentAccess = config.allowContentAccess
 
-                // 缓存
+                // 缓存 / Cache
                 cacheMode = if (config.cacheEnabled) {
                     WebSettings.LOAD_DEFAULT
                 } else {
                     WebSettings.LOAD_NO_CACHE
                 }
 
-                // 缩放
+                // 缩放 / Zoom
                 setSupportZoom(config.zoomEnabled)
                 builtInZoomControls = config.zoomEnabled
                 displayZoomControls = false
 
-                // 视口
+                // 视口 / Viewport
                 useWideViewPort = true
                 loadWithOverviewMode = true
 
@@ -103,21 +105,21 @@ class WebViewManager(
                     userAgentString = ua
                 }
 
-                // 桌面模式 - 使用完整的桌面版 User-Agent
+                // 桌面模式 - 使用完整的桌面版 User-Agent / Desktop mode - full UA
                 if (config.desktopMode) {
                     userAgentString = DESKTOP_USER_AGENT
                     useWideViewPort = true
                     loadWithOverviewMode = true
-                    // 设置默认缩放级别以适应桌面版页面
+                    // 设置默认缩放级别以适应桌面版页面 / Default zoom for desktop pages
                     textZoom = 100
                 }
 
-                // 混合内容 - 允许 HTTPS 页面加载 HTTP 资源和请求 HTTP 接口
+                // 混合内容 - 允许 HTTPS 页面加载 HTTP 资源和请求 HTTP 接口 / Mixed content
                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
                 // 其他设置
                 mediaPlaybackRequiresUserGesture = false
-                
+
                 // 允许 file:// 协议的页面加载外部资源（CDN 等）
                 // 这对于本地前端项目加载框架 CDN 是必需的
                 allowFileAccessFromFileURLs = true
@@ -140,7 +142,7 @@ class WebViewManager(
 
             // WebChromeClient
             webChromeClient = createWebChromeClient(callbacks)
-            
+
             // 下载监听器
             if (config.downloadEnabled) {
                 setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
@@ -165,16 +167,16 @@ class WebViewManager(
             ): WebResourceResponse? {
                 request?.let {
                     val url = it.url?.toString() ?: ""
-                    
+
                     // 调试日志：记录所有请求
                     android.util.Log.d("WebViewManager", "shouldInterceptRequest: $url")
-                    
+
                     // 处理本地资源请求（通过虚拟 baseURL）
                     // 这是为了支持 CDN 加载而使用 loadDataWithBaseURL 的方案
                     if (url.startsWith("https://localhost/__local__/")) {
                         val localPath = url.removePrefix("https://localhost/__local__/")
                         android.util.Log.d("WebViewManager", "Loading local resource: $localPath")
-                        
+
                         return try {
                             val file = java.io.File(localPath)
                             if (file.exists() && file.isFile) {
@@ -190,13 +192,13 @@ class WebViewManager(
                             null
                         }
                     }
-                    
+
                     // 只处理本地 asset 请求，外部网络请求直接放行
                     if (url.startsWith("file:///android_asset/")) {
                         val assetPath = url.removePrefix("file:///android_asset/")
                         return loadEncryptedAsset(assetPath)
                     }
-                    
+
                     // 外部请求：只对非本地请求进行广告拦截
                     if ((url.startsWith("http://") || url.startsWith("https://")) &&
                         !url.startsWith("https://localhost/__local__/") &&
@@ -272,31 +274,31 @@ class WebViewManager(
             }
         }
     }
-    
+
     /**
      * 加载加密的 asset 资源
      * 如果资源被加密，则解密后返回；否则返回原始资源
-     * 
+     *
      * @param assetPath asset 路径（不含 file:///android_asset/ 前缀）
      * @return WebResourceResponse 或 null（让系统处理）
      */
     private fun loadEncryptedAsset(assetPath: String): WebResourceResponse? {
         return try {
             val secureLoader = SecureAssetLoader.getInstance(context)
-            
+
             // 检查资源是否存在（加密或未加密）
             if (!secureLoader.assetExists(assetPath)) {
                 android.util.Log.d("WebViewManager", "资源不存在: $assetPath")
                 return null
             }
-            
+
             // 加载资源（自动处理加密/未加密）
             val data = secureLoader.loadAsset(assetPath)
             val mimeType = getMimeType(assetPath)
             val encoding = if (isTextMimeType(mimeType)) "UTF-8" else null
-            
+
             android.util.Log.d("WebViewManager", "加载资源: $assetPath (${data.size} bytes, $mimeType)")
-            
+
             WebResourceResponse(
                 mimeType,
                 encoding,
@@ -307,7 +309,7 @@ class WebViewManager(
             null
         }
     }
-    
+
     /**
      * 根据文件扩展名获取 MIME 类型
      */
@@ -339,7 +341,7 @@ class WebViewManager(
             else -> "application/octet-stream"
         }
     }
-    
+
     /**
      * 判断是否为文本类型的 MIME
      */
@@ -428,12 +430,12 @@ class WebViewManager(
     private fun handleSpecialUrl(url: String): Boolean {
         val uri = Uri.parse(url)
         val scheme = uri.scheme?.lowercase() ?: return false
-        
+
         // http/https 由 WebView 处理
         if (scheme == "http" || scheme == "https") {
             return false
         }
-        
+
         // 所有非 http/https 协议都尝试用外部应用打开
         return try {
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
@@ -456,7 +458,7 @@ class WebViewManager(
         val currentHost = Uri.parse(currentUrl).host ?: return false
         return !targetHost.endsWith(currentHost) && !currentHost.endsWith(targetHost)
     }
-    
+
     /**
      * 清理 WebView 资源，防止内存泄漏
      * 应在 Activity/Fragment 销毁时调用
@@ -464,38 +466,38 @@ class WebViewManager(
     fun destroyWebView(webView: WebView) {
         try {
             managedWebViews.remove(webView)
-            
+
             webView.apply {
                 // 停止加载
                 stopLoading()
-                
+
                 // 清除历史和缓存
                 clearHistory()
-                
+
                 // 移除所有回调
                 webChromeClient = null
                 webViewClient = object : WebViewClient() {}
-                
+
                 // 清除 JavaScript 接口
                 removeJavascriptInterface("NativeBridge")
                 removeJavascriptInterface("DownloadBridge")
-                
+
                 // 加载空白页面释放资源
                 loadUrl("about:blank")
-                
+
                 // 从父视图移除
                 (parent as? android.view.ViewGroup)?.removeView(this)
-                
+
                 // 销毁 WebView
                 destroy()
             }
-            
+
             android.util.Log.d("WebViewManager", "WebView 资源已清理")
         } catch (e: Exception) {
             android.util.Log.e("WebViewManager", "清理 WebView 失败", e)
         }
     }
-    
+
     /**
      * 清理所有管理的 WebView
      */
@@ -505,7 +507,7 @@ class WebViewManager(
         }
         managedWebViews.clear()
     }
-    
+
     /**
      * 注入用户脚本
      * @param webView WebView实例
@@ -522,7 +524,7 @@ class WebViewManager(
             // 注入隔离环境脚本（最早注入以确保指纹伪造生效）
             injectIsolationScript(webView)
         }
-        
+
         // 注入用户自定义脚本
         scripts.filter { it.enabled && it.runAt == runAt && it.code.isNotBlank() }
             .forEach { script ->
@@ -543,14 +545,14 @@ class WebViewManager(
                     android.util.Log.e("WebViewManager", "脚本注入失败: ${script.name}", e)
                 }
             }
-        
+
         // 注入扩展模块代码
         // 优先使用传入的 pageUrl，因为在 onPageStarted 时 webView.url 可能还是旧值
         val url = pageUrl ?: webView.url ?: ""
-        
+
         // 调试日志
         android.util.Log.d("WebViewManager", "injectScripts: runAt=${runAt.name}, url=$url, embeddedModules=${embeddedModules.size}, appExtensionModuleIds=${appExtensionModuleIds.size}")
-        
+
         // 优先使用嵌入的模块数据（Shell 模式）
         if (embeddedModules.isNotEmpty()) {
             injectEmbeddedModules(webView, url, runAt)
@@ -562,7 +564,7 @@ class WebViewManager(
             injectExtensionModules(webView, url, runAt)
         }
     }
-    
+
     /**
      * 注入嵌入的扩展模块代码（Shell 模式专用）
      * 每个模块独立执行，一个模块出错不影响其他模块
@@ -570,26 +572,26 @@ class WebViewManager(
     private fun injectEmbeddedModules(webView: WebView, url: String, runAt: ScriptRunTime) {
         try {
             val targetRunAt = runAt.name
-            
+
             // 调试日志：显示过滤前的状态
             android.util.Log.d("WebViewManager", "injectEmbeddedModules: url=$url, runAt=$targetRunAt, totalModules=${embeddedModules.size}")
-            
+
             val matchingModules = embeddedModules.filter { module ->
                 val enabledMatch = module.enabled
                 val runAtMatch = module.runAt == targetRunAt
                 val urlMatch = module.matchesUrl(url)
-                
+
                 // 调试日志：显示每个模块的匹配情况
                 android.util.Log.d("WebViewManager", "  模块[${module.name}]: enabled=$enabledMatch, runAt=${module.runAt}==$targetRunAt?$runAtMatch, urlMatch=$urlMatch")
-                
+
                 enabledMatch && runAtMatch && urlMatch
             }
-            
+
             if (matchingModules.isEmpty()) {
                 android.util.Log.d("WebViewManager", "injectEmbeddedModules: 没有匹配的模块")
                 return
             }
-            
+
             // 每个模块独立包装，错误隔离
             val injectionCode = matchingModules.joinToString("\n\n") { module ->
                 """
@@ -603,17 +605,17 @@ class WebViewManager(
                 })();
                 """.trimIndent()
             }
-            
+
             webView.evaluateJavascript(injectionCode, null)
             android.util.Log.d("WebViewManager", "注入嵌入扩展模块代码 (${runAt.name}), 模块数: ${matchingModules.size}")
         } catch (e: Exception) {
             android.util.Log.e("WebViewManager", "嵌入扩展模块注入失败", e)
         }
     }
-    
+
     /**
-     * 注入下载桥接脚本
-     * 用于拦截 Blob/Data URL 下载并转发给原生代码处理
+     * 注入下载桥接脚本 / Inject download bridge script
+     * 用于拦截 Blob/Data URL 下载并转发给原生代码处理 / Intercepts Blob/Data URL downloads and forwards to native
      */
     private fun injectDownloadBridgeScript(webView: WebView) {
         try {
@@ -624,14 +626,14 @@ class WebViewManager(
             android.util.Log.e("WebViewManager", "下载桥接脚本注入失败", e)
         }
     }
-    
+
     /**
-     * 注入统一扩展面板脚本
-     * 提供美观的统一 UI 面板，所有扩展模块的 UI 都在此面板中显示
-     * 只在有扩展模块启用时才注入
+     * 注入统一扩展面板脚本 / Inject unified extension panel script
+     * 提供美观的统一 UI 面板，所有扩展模块的 UI 都在此面板中显示 / Show all module UI in one panel
+     * 只在有扩展模块启用时才注入 / Inject only if modules are enabled
      */
     private fun injectExtensionPanelScript(webView: WebView) {
-        // 检查是否有扩展模块需要显示
+        // 检查是否有扩展模块需要显示 / Check if any modules should be shown
         val hasEmbeddedModules = embeddedModules.any { it.enabled }
         val hasAppModules = appExtensionModuleIds.isNotEmpty()
         val hasGlobalModules = try {
@@ -639,37 +641,42 @@ class WebViewManager(
         } catch (e: Exception) {
             false
         }
-        
-        // 如果没有任何扩展模块，不注入面板脚本
+
+        // 如果没有任何扩展模块，不注入面板脚本 / Skip if no modules enabled
         if (!hasEmbeddedModules && !hasAppModules && !hasGlobalModules) {
             android.util.Log.d("WebViewManager", "没有启用的扩展模块，跳过面板脚本注入")
             return
         }
-        
+
         try {
-            // 注入面板初始化脚本
-            val panelScript = ExtensionPanelScript.getPanelInitScript()
+            // 注入面板初始化脚本 / Inject panel init script
+            val languageCode = try {
+                runBlocking { LanguageManager.getInstance(context).getCurrentLanguage().code }
+            } catch (_: Exception) {
+                "en"
+            }
+            val panelScript = ExtensionPanelScript.getPanelInitScript(languageCode)
             webView.evaluateJavascript(panelScript, null)
-            
-            // 注入模块辅助脚本
+
+            // 注入模块辅助脚本 / Inject module helper script
             val helperScript = ExtensionPanelScript.getModuleHelperScript()
             webView.evaluateJavascript(helperScript, null)
-            
+
             android.util.Log.d("WebViewManager", "统一扩展面板脚本已注入")
         } catch (e: Exception) {
             android.util.Log.e("WebViewManager", "扩展面板脚本注入失败", e)
         }
     }
-    
+
     /**
-     * 注入隔离环境脚本
-     * 用于防检测、指纹伪造等功能
+     * 注入隔离环境脚本 / Inject isolation script
+     * 用于防检测、指纹伪造等功能 / Anti-detection and fingerprint spoofing
      */
     private fun injectIsolationScript(webView: WebView) {
         try {
             val isolationManager = com.webtoapp.core.isolation.IsolationManager.getInstance(context)
             val script = isolationManager.generateIsolationScript()
-            
+
             if (script.isNotEmpty()) {
                 webView.evaluateJavascript(script, null)
                 android.util.Log.d("WebViewManager", "隔离环境脚本已注入")
@@ -678,9 +685,9 @@ class WebViewManager(
             android.util.Log.e("WebViewManager", "隔离环境脚本注入失败", e)
         }
     }
-    
+
     /**
-     * 注入扩展模块代码
+     * 注入扩展模块代码 / Inject extension module code
      */
     private fun injectExtensionModules(webView: WebView, url: String, runAt: ScriptRunTime) {
         try {
@@ -690,7 +697,7 @@ class WebViewManager(
                 ScriptRunTime.DOCUMENT_END -> ModuleRunTime.DOCUMENT_END
                 ScriptRunTime.DOCUMENT_IDLE -> ModuleRunTime.DOCUMENT_IDLE
             }
-            
+
             val injectionCode = extensionManager.generateInjectionCode(url, moduleRunAt)
             if (injectionCode.isNotBlank()) {
                 webView.evaluateJavascript(injectionCode, null)
@@ -700,7 +707,7 @@ class WebViewManager(
             android.util.Log.e("WebViewManager", "扩展模块注入失败", e)
         }
     }
-    
+
     /**
      * 注入指定的扩展模块代码（用于应用配置的模块）
      * @param webView WebView实例
@@ -710,7 +717,7 @@ class WebViewManager(
      */
     fun injectSpecificModules(webView: WebView, url: String, runAt: ScriptRunTime, moduleIds: List<String>) {
         if (moduleIds.isEmpty()) return
-        
+
         try {
             val extensionManager = ExtensionManager.getInstance(context)
             val moduleRunAt = when (runAt) {
@@ -718,7 +725,7 @@ class WebViewManager(
                 ScriptRunTime.DOCUMENT_END -> ModuleRunTime.DOCUMENT_END
                 ScriptRunTime.DOCUMENT_IDLE -> ModuleRunTime.DOCUMENT_IDLE
             }
-            
+
             val injectionCode = extensionManager.generateInjectionCodeForModules(url, moduleRunAt, moduleIds)
             if (injectionCode.isNotBlank()) {
                 webView.evaluateJavascript(injectionCode, null)
@@ -750,7 +757,7 @@ interface WebViewCallbacks {
         filePathCallback: ValueCallback<Array<Uri>>?,
         fileChooserParams: WebChromeClient.FileChooserParams?
     ): Boolean
-    
+
     /**
      * 下载请求回调
      * @param url 下载链接
@@ -766,7 +773,7 @@ interface WebViewCallbacks {
         mimeType: String,
         contentLength: Long
     )
-    
+
     /**
      * 长按事件回调
      * @param webView WebView实例
@@ -775,7 +782,7 @@ interface WebViewCallbacks {
      * @return 是否消费此事件
      */
     fun onLongPress(webView: WebView, x: Float, y: Float): Boolean = false
-    
+
     /**
      * 控制台消息回调
      * @param level 日志级别

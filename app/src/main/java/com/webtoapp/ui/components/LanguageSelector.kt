@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.R
 import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.LanguageManager
+import com.webtoapp.core.i18n.Strings as AppStrings
 import kotlinx.coroutines.launch
 
 /**
@@ -28,10 +29,10 @@ fun LanguageSelectorButton(
     val context = LocalContext.current
     val languageManager = remember { LanguageManager.getInstance(context) }
     val scope = rememberCoroutineScope()
-    
+
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
     var showDialog by remember { mutableStateOf(false) }
-    
+
     // 语言选择按钮
     IconButton(
         onClick = { showDialog = true },
@@ -43,7 +44,7 @@ fun LanguageSelectorButton(
             modifier = Modifier.size(20.dp)
         )
     }
-    
+
     // 语言选择对话框
     if (showDialog) {
         LanguageSelectionDialog(
@@ -154,7 +155,7 @@ private fun LanguageOption(
                     }
                 )
             }
-            
+
             if (isSelected) {
                 RadioButton(
                     selected = true,
@@ -178,9 +179,9 @@ fun FirstLaunchLanguageScreen(
     val context = LocalContext.current
     val languageManager = remember { LanguageManager.getInstance(context) }
     val scope = rememberCoroutineScope()
-    
+
     var selectedLanguage by remember { mutableStateOf<AppLanguage?>(null) }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -200,28 +201,30 @@ fun FirstLaunchLanguageScreen(
                 modifier = Modifier.size(72.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // 多语言欢迎文字
             Text(
-                text = "Welcome / 欢迎 / مرحبا",
+                text = selectedLanguage?.let { AppStrings.languageSelectorWelcome(it) }
+                    ?: AppStrings.languageSelectorWelcomeMulti,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = "Select Language / 选择语言 / اختر اللغة",
+                text = selectedLanguage?.let { AppStrings.languageSelectorSelectLanguage(it) }
+                    ?: AppStrings.languageSelectorSelectLanguageMulti,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // 语言选项
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -235,9 +238,9 @@ fun FirstLaunchLanguageScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // 确认按钮
             Button(
                 onClick = {
@@ -254,12 +257,8 @@ fun FirstLaunchLanguageScreen(
                     .height(56.dp)
             ) {
                 Text(
-                    text = when (selectedLanguage) {
-                        AppLanguage.CHINESE -> "确认"
-                        AppLanguage.ENGLISH -> "Confirm"
-                        AppLanguage.ARABIC -> "تأكيد"
-                        null -> "Confirm / 确认 / تأكيد"
-                    },
+                    text = selectedLanguage?.let { AppStrings.languageSelectorConfirm(it) }
+                        ?: AppStrings.languageSelectorConfirmMulti,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -321,7 +320,7 @@ private fun FirstLaunchLanguageOption(
                     }
                 )
             }
-            
+
             RadioButton(
                 selected = isSelected,
                 onClick = null,
@@ -342,10 +341,10 @@ fun LanguageSettingsCard(
     val context = LocalContext.current
     val languageManager = remember { LanguageManager.getInstance(context) }
     val scope = rememberCoroutineScope()
-    
+
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
     var expanded by remember { mutableStateOf(false) }
-    
+
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -373,7 +372,7 @@ fun LanguageSettingsCard(
                     )
                 }
             }
-            
+
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = it }
@@ -387,7 +386,7 @@ fun LanguageSettingsCard(
                         .fillMaxWidth()
                         .menuAnchor()
                 )
-                
+
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }

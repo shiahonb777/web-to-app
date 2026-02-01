@@ -47,17 +47,17 @@ fun AiSettingsScreen(
     val scope = rememberCoroutineScope()
     val configManager = remember { AiConfigManager(context) }
     val apiClient = remember { AiApiClient(context) }
-    
+
     // 状态
     val apiKeys by configManager.apiKeysFlow.collectAsState(initial = emptyList())
     val savedModels by configManager.savedModelsFlow.collectAsState(initial = emptyList())
-    
+
     var showAddApiKeyDialog by remember { mutableStateOf(false) }
     var showAddModelDialog by remember { mutableStateOf(false) }
     var selectedApiKey by remember { mutableStateOf<ApiKeyConfig?>(null) }
     var editingApiKey by remember { mutableStateOf<ApiKeyConfig?>(null) }
     var editingModel by remember { mutableStateOf<SavedModel?>(null) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,13 +94,13 @@ fun AiSettingsScreen(
                     }
                 )
             }
-            
+
             // 已保存的模型区域
             item {
                 SavedModelsSection(
                     models = savedModels,
                     apiKeys = apiKeys,
-                    onAddClick = { 
+                    onAddClick = {
                         if (apiKeys.isNotEmpty()) {
                             selectedApiKey = apiKeys.first()
                             showAddModelDialog = true
@@ -115,11 +115,11 @@ fun AiSettingsScreen(
                     }
                 )
             }
-            
+
             item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
-    
+
     // 添加 API Key 对话框
     if (showAddApiKeyDialog) {
         AddApiKeyDialog(
@@ -135,7 +135,7 @@ fun AiSettingsScreen(
             }
         )
     }
-    
+
     // 编辑 API Key 对话框
     editingApiKey?.let { key ->
         AddApiKeyDialog(
@@ -152,7 +152,7 @@ fun AiSettingsScreen(
             }
         )
     }
-    
+
     // 添加模型对话框
     if (showAddModelDialog && selectedApiKey != null) {
         AddModelDialog(
@@ -167,7 +167,7 @@ fun AiSettingsScreen(
             }
         )
     }
-    
+
     // 编辑模型对话框
     editingModel?.let { model ->
         EditModelDialog(
@@ -206,7 +206,7 @@ private fun ApiKeysSection(
                     Icon(Icons.Default.Add, Strings.add)
                 }
             }
-            
+
             if (apiKeys.isEmpty()) {
                 Text(
                     Strings.noApiKeysHint,
@@ -242,7 +242,7 @@ private fun ApiKeyItem(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val apiClient = remember { AiApiClient(context) }
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,7 +256,7 @@ private fun ApiKeyItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    config.provider.displayName,
+                    config.provider.getLocalizedDisplayName(),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -268,12 +268,12 @@ private fun ApiKeyItem(
                     Text(
                         it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (it.startsWith("✓")) MaterialTheme.colorScheme.primary 
+                        color = if (it.startsWith("✓")) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.error
                     )
                 }
             }
-            
+
             // 测试按钮
             TextButton(onClick = {
                 scope.launch {
@@ -284,7 +284,7 @@ private fun ApiKeyItem(
             }) {
                 Text(Strings.test)
             }
-            
+
             Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(Icons.Default.MoreVert, Strings.more)
@@ -336,15 +336,15 @@ private fun SavedModelsSection(
                     Icon(Icons.Default.Add, Strings.add)
                 }
             }
-            
+
             Text(
                 Strings.configModelCapabilities,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             if (models.isEmpty()) {
                 if (apiKeys.isEmpty()) {
                     Text(
@@ -384,7 +384,7 @@ private fun SavedModelItem(
     onSetDefault: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -421,12 +421,12 @@ private fun SavedModelItem(
                         }
                     }
                     Text(
-                        "${model.model.provider.displayName} / ${model.model.id}",
+                        "${model.model.provider.getLocalizedDisplayName()} / ${model.model.id}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, Strings.more)
@@ -455,7 +455,7 @@ private fun SavedModelItem(
                     }
                 }
             }
-            
+
             // 能力标签
             if (model.capabilities.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -475,13 +475,13 @@ private fun SavedModelItem(
                     }
                 }
             }
-            
+
             // 显示支持的功能场景
             val supportedFeatures = model.getSupportedFeatures()
             if (supportedFeatures.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "${Strings.availableFor}: ${supportedFeatures.joinToString("、") { it.displayName }}",
+                    "${Strings.availableFor}: ${supportedFeatures.joinToString(Strings.listSeparator) { it.displayName }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -513,7 +513,7 @@ private fun AddApiKeyDialog(
     val context = LocalContext.current
     val apiClient = remember { AiApiClient(context) }
     val uriHandler = LocalUriHandler.current
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initialConfig != null) Strings.editApiKey else Strings.addApiKey) },
@@ -529,7 +529,7 @@ private fun AddApiKeyDialog(
                     onExpandedChange = { expanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedProvider.displayName,
+                        value = selectedProvider.getLocalizedDisplayName(),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(Strings.provider) },
@@ -544,7 +544,7 @@ private fun AddApiKeyDialog(
                     ) {
                         AiProvider.entries.forEach { provider ->
                             DropdownMenuItem(
-                                text = { Text(provider.displayName) },
+                                text = { Text(provider.getLocalizedDisplayName()) },
                                 onClick = {
                                     selectedProvider = provider
                                     expanded = false
@@ -553,7 +553,7 @@ private fun AddApiKeyDialog(
                         }
                     }
                 }
-                
+
                 // 供应商详情卡片
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -566,11 +566,11 @@ private fun AddApiKeyDialog(
                     ) {
                         // 描述
                         Text(
-                            selectedProvider.description,
+                            selectedProvider.getLocalizedDescription(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         // 价格信息
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -581,12 +581,12 @@ private fun AddApiKeyDialog(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                selectedProvider.pricing,
+                                selectedProvider.getLocalizedPricing(),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        
+
                         // 获取 API Key 链接
                         if (selectedProvider.apiKeyUrl.isNotBlank()) {
                             TextButton(
@@ -605,19 +605,19 @@ private fun AddApiKeyDialog(
                         }
                     }
                 }
-                
+
                 // API Key 输入
                 OutlinedTextField(
                     value = apiKey,
                     onValueChange = { apiKey = it },
                     label = { Text("API Key") },
                     singleLine = true,
-                    visualTransformation = if (showApiKey) VisualTransformation.None 
+                    visualTransformation = if (showApiKey) VisualTransformation.None
                                           else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { showApiKey = !showApiKey }) {
                             Icon(
-                                if (showApiKey) Icons.Outlined.VisibilityOff 
+                                if (showApiKey) Icons.Outlined.VisibilityOff
                                 else Icons.Outlined.Visibility,
                                 null
                             )
@@ -625,7 +625,7 @@ private fun AddApiKeyDialog(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 // 自定义 Base URL（仅 CUSTOM 供应商显示）
                 if (selectedProvider == AiProvider.CUSTOM) {
                     OutlinedTextField(
@@ -638,13 +638,13 @@ private fun AddApiKeyDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                
+
                 // 测试结果
                 testResult?.let {
                     Text(
                         it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (it.startsWith("✓")) MaterialTheme.colorScheme.primary 
+                        color = if (it.startsWith("✓")) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.error
                     )
                 }
@@ -677,9 +677,9 @@ private fun AddApiKeyDialog(
                         Text(Strings.test)
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 Button(
                     onClick = {
                         val config = ApiKeyConfig(
@@ -734,7 +734,7 @@ private fun AddModelDialog(
     var selectedCapabilities by remember { mutableStateOf<Set<ModelCapability>>(setOf(ModelCapability.TEXT)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var sortType by remember { mutableStateOf(ModelSortType.NAME) }
-    
+
     // 排序后的模型列表
     val sortedModels = remember(models, sortType) {
         when (sortType) {
@@ -744,7 +744,7 @@ private fun AddModelDialog(
             ModelSortType.PRICE_HIGH -> models.sortedByDescending { it.inputPrice }
         }
     }
-    
+
     // 加载模型列表
     LaunchedEffect(apiKey) {
         isLoading = true
@@ -756,7 +756,7 @@ private fun AddModelDialog(
         }
         isLoading = false
     }
-    
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
@@ -770,13 +770,13 @@ private fun AddModelDialog(
             ) {
                 Text(Strings.addModel, style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    "${Strings.addModelFrom} ${apiKey.provider.displayName}",
+                    "${Strings.addModelFrom} ${apiKey.provider.getLocalizedDisplayName()}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 if (isLoading) {
                     Box(
                         modifier = Modifier
@@ -814,15 +814,15 @@ private fun AddModelDialog(
                                     }
                                 }
                             }
-                            
+
                             sortedModels.forEach { model ->
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { selectedModel = model },
                                     shape = MaterialTheme.shapes.small,
-                                    color = if (selectedModel == model) 
-                                        MaterialTheme.colorScheme.primaryContainer 
+                                    color = if (selectedModel == model)
+                                        MaterialTheme.colorScheme.primaryContainer
                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 ) {
                                     Column(modifier = Modifier.padding(12.dp)) {
@@ -889,13 +889,13 @@ private fun AddModelDialog(
                                 }
                             }
                         }
-                        
+
                         // 手动输入模型 ID
                         Divider()
                         Text(Strings.orManualInputModelId, style = MaterialTheme.typography.labelMedium)
                         OutlinedTextField(
                             value = customModelId,
-                            onValueChange = { 
+                            onValueChange = {
                                 customModelId = it
                                 if (it.isNotBlank()) selectedModel = null
                             },
@@ -904,7 +904,7 @@ private fun AddModelDialog(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        
+
                         // 别名
                         OutlinedTextField(
                             value = alias,
@@ -913,7 +913,7 @@ private fun AddModelDialog(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        
+
                         // 能力标签选择
                         Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
                         Text(
@@ -921,7 +921,7 @@ private fun AddModelDialog(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -943,9 +943,9 @@ private fun AddModelDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -962,14 +962,14 @@ private fun AddModelDialog(
                                 provider = apiKey.provider,
                                 isCustom = true
                             )
-                            
+
                             // 为每个能力生成默认的功能映射
                             val defaultMappings = selectedCapabilities.associateWith { capability ->
                                 AiFeature.entries.filter { feature ->
                                     feature.defaultCapabilities.contains(capability)
                                 }.toSet()
                             }
-                            
+
                             val savedModel = SavedModel(
                                 model = model,
                                 apiKeyId = apiKey.id,
@@ -977,7 +977,7 @@ private fun AddModelDialog(
                                 capabilities = selectedCapabilities.toList(),
                                 featureMappings = defaultMappings
                             )
-                            
+
                             onConfirm(savedModel)
                         },
                         enabled = selectedModel != null || customModelId.isNotBlank()
@@ -1002,11 +1002,11 @@ private fun EditModelDialog(
 ) {
     var alias by remember { mutableStateOf(model.alias ?: "") }
     var selectedCapabilities by remember { mutableStateOf(model.capabilities.toSet()) }
-    var featureMappings by remember { 
+    var featureMappings by remember {
         mutableStateOf(model.featureMappings.mapValues { it.value.toMutableSet() }.toMutableMap())
     }
     var expandedCapability by remember { mutableStateOf<ModelCapability?>(null) }
-    
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
@@ -1019,17 +1019,17 @@ private fun EditModelDialog(
                     .padding(24.dp)
             ) {
                 Text(Strings.editModel, style = MaterialTheme.typography.headlineSmall)
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
-                    "${model.model.provider.displayName} / ${model.model.id}",
+                    "${model.model.provider.getLocalizedDisplayName()} / ${model.model.id}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1044,10 +1044,10 @@ private fun EditModelDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
+
                     // 能力标签选择
                     Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
-                    
+
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1067,11 +1067,11 @@ private fun EditModelDialog(
                             )
                         }
                     }
-                    
+
                     // 功能场景映射配置
                     if (selectedCapabilities.isNotEmpty()) {
                         Divider()
-                        
+
                         Text(
                             Strings.featureSceneConfig,
                             style = MaterialTheme.typography.labelMedium
@@ -1081,11 +1081,11 @@ private fun EditModelDialog(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         selectedCapabilities.forEach { capability ->
                             CapabilityFeatureCard(
                                 capability = capability,
-                                selectedFeatures = featureMappings[capability] 
+                                selectedFeatures = featureMappings[capability]
                                     ?: AiFeature.entries.filter { it.defaultCapabilities.contains(capability) }.toSet(),
                                 isExpanded = expandedCapability == capability,
                                 onExpandToggle = {
@@ -1100,9 +1100,9 @@ private fun EditModelDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -1169,7 +1169,7 @@ private fun CapabilityFeatureCard(
                     contentDescription = if (isExpanded) Strings.collapse else Strings.expand
                 )
             }
-            
+
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     Text(
@@ -1177,9 +1177,9 @@ private fun CapabilityFeatureCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1197,7 +1197,7 @@ private fun CapabilityFeatureCard(
                                     }
                                     onFeaturesChanged(newFeatures)
                                 },
-                                label = { 
+                                label = {
                                     Text(
                                         feature.displayName + if (isDefault) " ★" else "",
                                         style = MaterialTheme.typography.labelSmall
@@ -1209,7 +1209,7 @@ private fun CapabilityFeatureCard(
                             )
                         }
                     }
-                    
+
                     // 快捷操作
                     Row(
                         modifier = Modifier
@@ -1220,8 +1220,8 @@ private fun CapabilityFeatureCard(
                         TextButton(
                             onClick = {
                                 // 恢复默认
-                                val defaults = AiFeature.entries.filter { 
-                                    it.defaultCapabilities.contains(capability) 
+                                val defaults = AiFeature.entries.filter {
+                                    it.defaultCapabilities.contains(capability)
                                 }.toSet()
                                 onFeaturesChanged(defaults)
                             },

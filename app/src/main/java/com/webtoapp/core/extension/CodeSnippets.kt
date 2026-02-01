@@ -4,61 +4,245 @@ import com.webtoapp.core.i18n.Strings
 
 /**
  * 代码块库
- * 
+ *
  * 提供可复用的代码片段，用户可以在模块编辑器中选择插入
  * 包含 20+ 分类，200+ 代码片段
  */
 object CodeSnippets {
-    
+
+    private fun tag(chinese: String, english: String, arabic: String = english): String {
+        return Strings.localized(chinese, english, arabic)
+    }
+
+    private fun translateTag(tag: String): String = when (tag) {
+        "\u63d0\u793a" -> tag("\u63d0\u793a", "Hint")
+        "\u6d88\u606f" -> tag("\u6d88\u606f", "Message")
+        "\u9707\u52a8" -> tag("\u9707\u52a8", "Vibration")
+        "\u53cd\u9988" -> tag("\u53cd\u9988", "Feedback")
+        "\u89e6\u611f" -> tag("\u89e6\u611f", "Haptic")
+        "\u590d\u5236" -> tag("\u590d\u5236", "Copy")
+        "\u526a\u8d34\u677f" -> tag("\u526a\u8d34\u677f", "Clipboard")
+        "\u5206\u4eab" -> tag("\u5206\u4eab", "Share")
+        "\u793e\u4ea4" -> tag("\u793e\u4ea4", "Social")
+        "\u4fdd\u5b58" -> tag("\u4fdd\u5b58", "Save")
+        "\u56fe\u7247" -> tag("\u56fe\u7247", "Image")
+        "\u76f8\u518c" -> tag("\u76f8\u518c", "Album")
+        "\u4e0b\u8f7d" -> tag("\u4e0b\u8f7d", "Download")
+        "\u89c6\u9891" -> tag("\u89c6\u9891", "Video")
+        "\u6d4f\u89c8\u5668" -> tag("\u6d4f\u89c8\u5668", "Browser")
+        "\u94fe\u63a5" -> tag("\u94fe\u63a5", "Link")
+        "\u5916\u90e8" -> tag("\u5916\u90e8", "External")
+        "\u8bbe\u5907" -> tag("\u8bbe\u5907", "Device")
+        "\u4fe1\u606f" -> tag("\u4fe1\u606f", "Info")
+        "\u5c4f\u5e55" -> tag("\u5c4f\u5e55", "Screen")
+        "\u7f51\u7edc" -> tag("\u7f51\u7edc", "Network")
+        "\u6d41\u91cf" -> tag("\u6d41\u91cf", "Traffic")
+        "\u6587\u4ef6" -> tag("\u6587\u4ef6", "File")
+        "\u5bfc\u51fa" -> tag("\u5bfc\u51fa", "Export")
+        "\u6309\u94ae" -> tag("\u6309\u94ae", "Button")
+        "\u60ac\u6d6e" -> tag("\u60ac\u6d6e", "Floating")
+        "\u67e5\u8be2" -> tag("\u67e5\u8be2", "Query")
+        "\u9009\u62e9\u5668" -> tag("\u9009\u62e9\u5668", "Selector")
+        "\u904d\u5386" -> tag("\u904d\u5386", "Traverse")
+        "\u9690\u85cf" -> tag("\u9690\u85cf", "Hide")
+        "\u6837\u5f0f" -> tag("\u6837\u5f0f", "Style")
+        "\u5220\u9664" -> tag("\u5220\u9664", "Delete")
+        "\u79fb\u9664" -> tag("\u79fb\u9664", "Remove")
+        "\u521b\u5efa" -> tag("\u521b\u5efa", "Create")
+        "\u6dfb\u52a0" -> tag("\u6dfb\u52a0", "Add")
+        "\u6587\u672c" -> tag("\u6587\u672c", "Text")
+        "\u4fee\u6539" -> tag("\u4fee\u6539", "Edit")
+        "\u5c5e\u6027" -> tag("\u5c5e\u6027", "Attribute")
+        "\u63d2\u5165" -> tag("\u63d2\u5165", "Insert")
+        "\u4f4d\u7f6e" -> tag("\u4f4d\u7f6e", "Position")
+        "\u514b\u9686" -> tag("\u514b\u9686", "Clone")
+        "\u5305\u88f9" -> tag("\u5305\u88f9", "Wrap")
+        "\u7ed3\u6784" -> tag("\u7ed3\u6784", "Structure")
+        "\u66ff\u6362" -> tag("\u66ff\u6362", "Replace")
+        "\u6ce8\u5165" -> tag("\u6ce8\u5165", "Inject")
+        "\u5185\u8054" -> tag("\u5185\u8054", "Inline")
+        "\u7c7b\u540d" -> tag("\u7c7b\u540d", "Class name")
+        "\u6df1\u8272" -> tag("\u6df1\u8272", "Dark")
+        "\u4e3b\u9898" -> tag("\u4e3b\u9898", "Theme")
+        "\u62a4\u773c" -> tag("\u62a4\u773c", "Eye comfort")
+        "\u6696\u8272" -> tag("\u6696\u8272", "Warm")
+        "\u7070\u5ea6" -> tag("\u7070\u5ea6", "Grayscale")
+        "\u6ee4\u955c" -> tag("\u6ee4\u955c", "Filter")
+        "\u5b57\u4f53" -> tag("\u5b57\u4f53", "Font")
+        "\u5927\u5c0f" -> tag("\u5927\u5c0f", "Size")
+        "\u6eda\u52a8\u6761" -> tag("\u6eda\u52a8\u6761", "Scrollbar")
+        "\u9ad8\u4eae" -> tag("\u9ad8\u4eae", "Highlight")
+        "\u5bbd\u5ea6" -> tag("\u5bbd\u5ea6", "Width")
+        "\u9605\u8bfb" -> tag("\u9605\u8bfb", "Reading")
+        "\u884c\u9ad8" -> tag("\u884c\u9ad8", "Line height")
+        "\u70b9\u51fb" -> tag("\u70b9\u51fb", "Click")
+        "\u4e8b\u4ef6" -> tag("\u4e8b\u4ef6", "Event")
+        "\u952e\u76d8" -> tag("\u952e\u76d8", "Keyboard")
+        "\u5feb\u6377\u952e" -> tag("\u5feb\u6377\u952e", "Shortcut")
+        "\u6eda\u52a8" -> tag("\u6eda\u52a8", "Scroll")
+        "\u76d1\u542c" -> tag("\u76d1\u542c", "Listener")
+        "DOM\u53d8\u5316" -> tag("DOM\u53d8\u5316", "DOM change")
+        "\u52a8\u6001" -> tag("\u52a8\u6001", "Dynamic")
+        "\u7a97\u53e3" -> tag("\u7a97\u53e3", "Window")
+        "\u53f3\u952e" -> tag("\u53f3\u952e", "Right click")
+        "\u83dc\u5355" -> tag("\u83dc\u5355", "Menu")
+        "\u53ef\u89c1\u6027" -> tag("\u53ef\u89c1\u6027", "Visibility")
+        "\u540e\u53f0" -> tag("\u540e\u53f0", "Background")
+        "\u5173\u95ed" -> tag("\u5173\u95ed", "Close")
+        "\u89e6\u6478" -> tag("\u89e6\u6478", "Touch")
+        "\u624b\u52bf" -> tag("\u624b\u52bf", "Gesture")
+        "\u957f\u6309" -> tag("\u957f\u6309", "Long press")
+        "\u5b58\u50a8" -> tag("\u5b58\u50a8", "Storage")
+        "\u8bfb\u53d6" -> tag("\u8bfb\u53d6", "Read")
+        "\u4f1a\u8bdd" -> tag("\u4f1a\u8bdd", "Session")
+        "\u4e34\u65f6" -> tag("\u4e34\u65f6", "Temporary")
+        "\u8bbe\u7f6e" -> tag("\u8bbe\u7f6e", "Settings")
+        "\u5927\u6570\u636e" -> tag("\u5927\u6570\u636e", "Big data")
+        "\u8bf7\u6c42" -> tag("\u8bf7\u6c42", "Request")
+        "\u63d0\u4ea4" -> tag("\u63d0\u4ea4", "Submit")
+        "\u8d85\u65f6" -> tag("\u8d85\u65f6", "Timeout")
+        "\u91cd\u8bd5" -> tag("\u91cd\u8bd5", "Retry")
+        "\u8de8\u57df" -> tag("\u8de8\u57df", "Cross-origin")
+        "\u8868\u683c" -> tag("\u8868\u683c", "Table")
+        "\u63d0\u53d6" -> tag("\u63d0\u53d6", "Extract")
+        "\u89e3\u6790" -> tag("\u89e3\u6790", "Parse")
+        "\u6784\u5efa" -> tag("\u6784\u5efa", "Build")
+        "\u5f39\u7a97" -> tag("\u5f39\u7a97", "Popup")
+        "\u5bf9\u8bdd\u6846" -> tag("\u5bf9\u8bdd\u6846", "Dialog")
+        "\u8fdb\u5ea6" -> tag("\u8fdb\u5ea6", "Progress")
+        "\u52a0\u8f7d" -> tag("\u52a0\u8f7d", "Load")
+        "\u52a8\u753b" -> tag("\u52a8\u753b", "Animation")
+        "\u901a\u77e5" -> tag("\u901a\u77e5", "Notification")
+        "\u5de5\u5177\u680f" -> tag("\u5de5\u5177\u680f", "Toolbar")
+        "\u4fa7\u8fb9\u680f" -> tag("\u4fa7\u8fb9\u680f", "Sidebar")
+        "\u9762\u677f" -> tag("\u9762\u677f", "Panel")
+        "\u62d6\u52a8" -> tag("\u62d6\u52a8", "Drag")
+        "\u4ea4\u4e92" -> tag("\u4ea4\u4e92", "Interaction")
+        "\u64ad\u653e\u5668" -> tag("\u64ad\u653e\u5668", "Player")
+        "\u97f3\u4e50" -> tag("\u97f3\u4e50", "Music")
+        "\u89d2\u6807" -> tag("\u89d2\u6807", "Badge")
+        "\u6570\u5b57" -> tag("\u6570\u5b57", "Number")
+        "\u6a2a\u5e45" -> tag("\u6a2a\u5e45", "Banner")
+        "\u63d0\u9192" -> tag("\u63d0\u9192", "Reminder")
+        "\u9876\u90e8" -> tag("\u9876\u90e8", "Top")
+        "\u5e95\u90e8" -> tag("\u5e95\u90e8", "Bottom")
+        "\u5143\u7d20" -> tag("\u5143\u7d20", "Element")
+        "\u81ea\u52a8" -> tag("\u81ea\u52a8", "Auto")
+        "\u8fd4\u56de\u9876\u90e8" -> tag("\u8fd4\u56de\u9876\u90e8", "Back to top")
+        "\u5bfc\u822a" -> tag("\u5bfc\u822a", "Navigation")
+        "\u8868\u5355" -> tag("\u8868\u5355", "Form")
+        "\u586b\u5145" -> tag("\u586b\u5145", "Fill")
+        "\u83b7\u53d6" -> tag("\u83b7\u53d6", "Fetch")
+        "\u9a8c\u8bc1" -> tag("\u9a8c\u8bc1", "Validation")
+        "\u62e6\u622a" -> tag("\u62e6\u622a", "Intercept")
+        "\u6e05\u7a7a" -> tag("\u6e05\u7a7a", "Clear")
+        "\u5bc6\u7801" -> tag("\u5bc6\u7801", "Password")
+        "\u5207\u6362" -> tag("\u5207\u6362", "Switch")
+        "\u500d\u901f" -> tag("\u500d\u901f", "Speed")
+        "\u753b\u4e2d\u753b" -> tag("\u753b\u4e2d\u753b", "Picture-in-picture")
+        "\u622a\u56fe" -> tag("\u622a\u56fe", "Screenshot")
+        "\u653e\u5927" -> tag("\u653e\u5927", "Zoom")
+        "\u97f3\u9891" -> tag("\u97f3\u9891", "Audio")
+        "\u63a7\u5236" -> tag("\u63a7\u5236", "Control")
+        "\u61d2\u52a0\u8f7d" -> tag("\u61d2\u52a0\u8f7d", "Lazy load")
+        "\u5168\u5c4f" -> tag("\u5168\u5c4f", "Fullscreen")
+        "\u7b80\u5316" -> tag("\u7b80\u5316", "Simplify")
+        "\u89e3\u9501" -> tag("\u89e3\u9501", "Unlock")
+        "\u6253\u5370" -> tag("\u6253\u5370", "Print")
+        "\u4f18\u5316" -> tag("\u4f18\u5316", "Optimization")
+        "\u8bed\u97f3" -> tag("\u8bed\u97f3", "Voice")
+        "\u6717\u8bfb" -> tag("\u6717\u8bfb", "Read aloud")
+        "\u7edf\u8ba1" -> tag("\u7edf\u8ba1", "Stats")
+        "\u5b57\u6570" -> tag("\u5b57\u6570", "Word count")
+        "\u641c\u7d22" -> tag("\u641c\u7d22", "Search")
+        "\u5173\u952e\u8bcd" -> tag("\u5173\u952e\u8bcd", "Keyword")
+        "\u8fc7\u6ee4" -> tag("\u8fc7\u6ee4", "Filter")
+        "\u7a7a\u5143\u7d20" -> tag("\u7a7a\u5143\u7d20", "Empty element")
+        "\u6e05\u7406" -> tag("\u6e05\u7406", "Cleanup")
+        "\u8bc4\u8bba" -> tag("\u8bc4\u8bba", "Comment")
+        "\u5e7f\u544a" -> tag("\u5e7f\u544a", "Ads")
+        "\u963b\u6b62" -> tag("\u963b\u6b62", "Block")
+        "\u906e\u7f69" -> tag("\u906e\u7f69", "Mask")
+        "\u53cd\u68c0\u6d4b" -> tag("\u53cd\u68c0\u6d4b", "Anti-detection")
+        "\u9632\u6296" -> tag("\u9632\u6296", "Debounce")
+        "\u6027\u80fd" -> tag("\u6027\u80fd", "Performance")
+        "\u8282\u6d41" -> tag("\u8282\u6d41", "Throttle")
+        "\u7b49\u5f85" -> tag("\u7b49\u5f85", "Wait")
+        "\u5f02\u6b65" -> tag("\u5f02\u6b65", "Async")
+        "\u65e5\u671f" -> tag("\u65e5\u671f", "Date")
+        "\u683c\u5f0f\u5316" -> tag("\u683c\u5f0f\u5316", "Format")
+        "\u968f\u673a" -> tag("\u968f\u673a", "Random")
+        "\u5b57\u7b26\u4e32" -> tag("\u5b57\u7b26\u4e32", "String")
+        "\u5ef6\u8fdf" -> tag("\u5ef6\u8fdf", "Delay")
+        "\u9519\u8bef\u5904\u7406" -> tag("\u9519\u8bef\u5904\u7406", "Error handling")
+        "\u6587\u7ae0" -> tag("\u6587\u7ae0", "Article")
+        "\u7ffb\u8bd1" -> tag("\u7ffb\u8bd1", "Translate")
+        "\u9009\u4e2d" -> tag("\u9009\u4e2d", "Selection")
+        "\u8f6c\u6362" -> tag("\u8f6c\u6362", "Convert")
+        "\u5b9a\u65f6" -> tag("\u5b9a\u65f6", "Timer")
+        "\u5237\u65b0" -> tag("\u5237\u65b0", "Refresh")
+        "\u767b\u5f55" -> tag("\u767b\u5f55", "Login")
+        "\u68c0\u6d4b" -> tag("\u68c0\u6d4b", "Detect")
+        "\u63a7\u5236\u53f0" -> tag("\u63a7\u5236\u53f0", "Console")
+        "\u65e5\u5fd7" -> tag("\u65e5\u5fd7", "Log")
+        "\u68c0\u67e5" -> tag("\u68c0\u67e5", "Check")
+        "\u76d1\u63a7" -> tag("\u76d1\u63a7", "Monitor")
+        else -> tag
+    }
+
+    private fun tags(vararg items: String): List<String> = items.map(::translateTag)
+
+
+
     /**
      * 获取所有代码块（按分类）
      */
     fun getAll(): List<CodeSnippetCategory> = listOf(
         // 原生能力（新增）
         nativeBridgeOperations(),
-        
+
         // 基础操作
         domOperations(),
         styleOperations(),
         eventListeners(),
-        
+
         // 数据处理
         storageOperations(),
         networkOperations(),
         dataProcessing(),
-        
+
         // UI 组件
         uiComponents(),
         floatingWidgets(),
         notifications(),
-        
+
         // 功能增强
         scrollOperations(),
         formOperations(),
         mediaOperations(),
-        
+
         // 页面处理
         pageEnhance(),
         contentFilter(),
         adBlocker(),
-        
+
         // 工具函数
         utilityFunctions(),
         textProcessing(),
-        
+
         // 高级功能
         interceptors(),
         automation(),
         debugging()
     )
-    
+
     /**
      * 根据分类获取代码块
      */
     fun getByCategory(categoryId: String): CodeSnippetCategory? {
         return getAll().find { it.id == categoryId }
     }
-    
+
     /**
      * 搜索代码块
      */
@@ -70,7 +254,7 @@ object CodeSnippets {
             snippet.tags.any { it.lowercase().contains(lowerQuery) }
         }
     }
-    
+
     /**
      * 获取热门代码块
      */
@@ -84,7 +268,7 @@ object CodeSnippets {
         getByCategory("adblocker")?.snippets?.find { it.id == "ad-hide-common" },
         getByCategory("events")?.snippets?.find { it.id == "event-mutation" }
     ).filterNotNull()
-    
+
     // ==================== 原生能力 (NativeBridge) ====================
     private fun nativeBridgeOperations() = CodeSnippetCategory(
         id = "native",
@@ -96,18 +280,26 @@ object CodeSnippets {
                 id = "native-toast",
                 name = Strings.snippetShowToast,
                 description = Strings.snippetShowToastDesc,
-                code = """// 短提示
+                code = Strings.localized(
+                    chinese = """// 短提示
 NativeBridge.showToast('操作成功');
 
 // 长提示
 NativeBridge.showToast('请稍候，正在处理...', 'long');""",
-                tags = listOf("提示", "Toast", "消息")
+                    english = """// Short toast
+NativeBridge.showToast('Operation successful');
+
+// Long toast
+NativeBridge.showToast('Please wait, processing...', 'long');"""
+                ),
+                tags = tags("提示", "Toast", "消息")
             ),
             CodeSnippet(
                 id = "native-vibrate",
                 name = Strings.snippetVibrate,
                 description = Strings.snippetVibrateDesc,
-                code = """// 短震动（100ms）
+                code = Strings.localized(
+                    chinese = """// 短震动（100ms）
 NativeBridge.vibrate();
 
 // 自定义时长震动
@@ -115,13 +307,23 @@ NativeBridge.vibrate(500);
 
 // 模式震动（震动-暂停-震动）
 NativeBridge.vibratePattern('100,200,100,200');""",
-                tags = listOf("震动", "反馈", "触感")
+                    english = """// Short vibration (100ms)
+NativeBridge.vibrate();
+
+// Custom duration vibration
+NativeBridge.vibrate(500);
+
+// Vibration pattern (vibrate-pause-vibrate)
+NativeBridge.vibratePattern('100,200,100,200');"""
+                ),
+                tags = tags("震动", "反馈", "触感")
             ),
             CodeSnippet(
                 id = "native-copy",
                 name = Strings.snippetCopyToClipboard,
                 description = Strings.snippetCopyToClipboardDesc,
-                code = """function copyText(text) {
+                code = Strings.localized(
+                    chinese = """function copyText(text) {
     const success = NativeBridge.copyToClipboard(text);
     if (success) {
         NativeBridge.showToast('已复制到剪贴板');
@@ -138,13 +340,32 @@ document.addEventListener('click', (e) => {
         copyText(text);
     }
 });""",
-                tags = listOf("复制", "剪贴板", "clipboard")
+                    english = """function copyText(text) {
+    const success = NativeBridge.copyToClipboard(text);
+    if (success) {
+        NativeBridge.showToast('Copied to clipboard');
+        NativeBridge.vibrate(50);
+    } else {
+        NativeBridge.showToast('Copy failed');
+    }
+}
+
+// Example: Copy selected text
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('copy-btn')) {
+        const text = e.target.dataset.text;
+        copyText(text);
+    }
+});"""
+                ),
+                tags = tags("复制", "剪贴板", "clipboard")
             ),
             CodeSnippet(
                 id = "native-share",
                 name = Strings.snippetShareContent,
                 description = Strings.snippetShareContentDesc,
-                code = """// 分享文本和链接
+                code = Strings.localized(
+                    chinese = """// 分享文本和链接
 function shareContent(title, text, url) {
     NativeBridge.share(title, text, url);
 }
@@ -162,13 +383,33 @@ function shareCurrentPage() {
 const shareBtn = document.createElement('button');
 shareBtn.textContent = '分享';
 shareBtn.onclick = shareCurrentPage;""",
-                tags = listOf("分享", "share", "社交")
+                    english = """// Share text and link
+function shareContent(title, text, url) {
+    NativeBridge.share(title, text, url);
+}
+
+// Share current page
+function shareCurrentPage() {
+    NativeBridge.share(
+        document.title,
+        'Found an interesting page',
+        location.href
+    );
+}
+
+// Add share button
+const shareBtn = document.createElement('button');
+shareBtn.textContent = 'Share';
+shareBtn.onclick = shareCurrentPage;"""
+                ),
+                tags = tags("分享", "share", "社交")
             ),
             CodeSnippet(
                 id = "native-save-image",
                 name = Strings.snippetSaveImageToGallery,
                 description = Strings.snippetSaveImageToGalleryDesc,
-                code = """// 保存图片到相册
+                code = Strings.localized(
+                    chinese = """// 保存图片到相册
 function saveImage(imageUrl, filename) {
     NativeBridge.saveImageToGallery(imageUrl, filename || '');
 }
@@ -182,13 +423,29 @@ document.querySelectorAll('img').forEach(img => {
         }
     });
 });""",
-                tags = listOf("保存", "图片", "相册", "下载")
+                    english = """// Save image to gallery
+function saveImage(imageUrl, filename) {
+    NativeBridge.saveImageToGallery(imageUrl, filename || '');
+}
+
+// Add long-press save for all images
+document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (confirm('Save image to gallery?')) {
+            saveImage(img.src);
+        }
+    });
+});"""
+                ),
+                tags = tags("保存", "图片", "相册", "下载")
             ),
             CodeSnippet(
                 id = "native-save-video",
                 name = Strings.snippetSaveVideoToGallery,
                 description = Strings.snippetSaveVideoToGalleryDesc,
-                code = """// 保存视频到相册
+                code = Strings.localized(
+                    chinese = """// 保存视频到相册
 function saveVideo(videoUrl, filename) {
     NativeBridge.saveVideoToGallery(videoUrl, filename || '');
 }
@@ -202,13 +459,29 @@ document.querySelectorAll('video').forEach(video => {
     video.parentElement.style.position = 'relative';
     video.parentElement.appendChild(btn);
 });""",
-                tags = listOf("保存", "视频", "相册", "下载")
+                    english = """// Save video to gallery
+function saveVideo(videoUrl, filename) {
+    NativeBridge.saveVideoToGallery(videoUrl, filename || '');
+}
+
+// Add download button for videos
+document.querySelectorAll('video').forEach(video => {
+    const btn = document.createElement('button');
+    btn.textContent = 'Save Video';
+    btn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:999;';
+    btn.onclick = () => saveVideo(video.src);
+    video.parentElement.style.position = 'relative';
+    video.parentElement.appendChild(btn);
+});"""
+                ),
+                tags = tags("保存", "视频", "相册", "下载")
             ),
             CodeSnippet(
                 id = "native-open-url",
                 name = Strings.snippetOpenInBrowser,
                 description = Strings.snippetOpenInBrowserDesc,
-                code = """// 用系统浏览器打开链接
+                code = Strings.localized(
+                    chinese = """// 用系统浏览器打开链接
 function openInBrowser(url) {
     NativeBridge.openUrl(url);
 }
@@ -221,13 +494,28 @@ document.addEventListener('click', (e) => {
         openInBrowser(link.href);
     }
 });""",
-                tags = listOf("浏览器", "链接", "外部")
+                    english = """// Open link in system browser
+function openInBrowser(url) {
+    NativeBridge.openUrl(url);
+}
+
+// Intercept external links and open in browser
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.href && !link.href.startsWith(location.origin)) {
+        e.preventDefault();
+        openInBrowser(link.href);
+    }
+});"""
+                ),
+                tags = tags("浏览器", "链接", "外部")
             ),
             CodeSnippet(
                 id = "native-device-info",
                 name = Strings.snippetDeviceInfo,
                 description = Strings.snippetDeviceInfoDesc,
-                code = """// 获取设备信息
+                code = Strings.localized(
+                    chinese = """// 获取设备信息
 const deviceInfo = JSON.parse(NativeBridge.getDeviceInfo());
 console.log('设备型号:', deviceInfo.model);
 console.log('Android 版本:', deviceInfo.androidVersion);
@@ -241,13 +529,29 @@ console.log('应用版本:', appInfo.versionName);
 if (deviceInfo.screenWidth < 400) {
     document.body.classList.add('small-screen');
 }""",
-                tags = listOf("设备", "信息", "屏幕")
+                    english = """// Get device info
+const deviceInfo = JSON.parse(NativeBridge.getDeviceInfo());
+console.log('Model:', deviceInfo.model);
+console.log('Android Version:', deviceInfo.androidVersion);
+console.log('Screen Size:', deviceInfo.screenWidth, 'x', deviceInfo.screenHeight);
+
+// Get app info
+const appInfo = JSON.parse(NativeBridge.getAppInfo());
+console.log('App Version:', appInfo.versionName);
+
+// Adjust layout based on device
+if (deviceInfo.screenWidth < 400) {
+    document.body.classList.add('small-screen');
+}"""
+                ),
+                tags = tags("设备", "信息", "屏幕")
             ),
             CodeSnippet(
                 id = "native-network",
                 name = Strings.snippetNetworkStatus,
                 description = Strings.snippetNetworkStatusDesc,
-                code = """// 检查网络是否可用
+                code = Strings.localized(
+                    chinese = """// 检查网络是否可用
 if (NativeBridge.isNetworkAvailable()) {
     console.log('网络可用');
 } else {
@@ -263,13 +567,31 @@ if (networkType === 'mobile') {
     // 移动网络下减少数据使用
     document.querySelectorAll('video').forEach(v => v.preload = 'none');
 }""",
-                tags = listOf("网络", "WiFi", "流量")
+                    english = """// Check network availability
+if (NativeBridge.isNetworkAvailable()) {
+    console.log('Network available');
+} else {
+    NativeBridge.showToast('No network connection');
+}
+
+// Get network type
+const networkType = NativeBridge.getNetworkType();
+console.log('Network Type:', networkType); // wifi, mobile, none
+
+// Adjust behavior based on network type
+if (networkType === 'mobile') {
+    // Reduce data usage on mobile data
+    document.querySelectorAll('video').forEach(v => v.preload = 'none');
+}"""
+                ),
+                tags = tags("网络", "WiFi", "流量")
             ),
             CodeSnippet(
                 id = "native-save-file",
                 name = Strings.snippetSaveFile,
                 description = Strings.snippetSaveFileDesc,
-                code = """// 保存文本文件
+                code = Strings.localized(
+                    chinese = """// 保存文本文件
 function saveTextFile(content, filename) {
     NativeBridge.saveToFile(content, filename, 'text/plain');
 }
@@ -287,21 +609,41 @@ const pageData = {
     content: document.body.innerText.substring(0, 1000)
 };
 saveJsonFile(pageData, 'page_data.json');""",
-                tags = listOf("保存", "文件", "导出")
+                    english = """// Save text file
+function saveTextFile(content, filename) {
+    NativeBridge.saveToFile(content, filename, 'text/plain');
+}
+
+// Save JSON file
+function saveJsonFile(data, filename) {
+    const json = JSON.stringify(data, null, 2);
+    NativeBridge.saveToFile(json, filename, 'application/json');
+}
+
+// Export page data
+const pageData = {
+    title: document.title,
+    url: location.href,
+    content: document.body.innerText.substring(0, 1000)
+};
+saveJsonFile(pageData, 'page_data.json');"""
+                ),
+                tags = tags("保存", "文件", "导出")
             ),
             CodeSnippet(
                 id = "native-image-download-btn",
                 name = Strings.snippetImageDownloadBtn,
                 description = Strings.snippetImageDownloadBtnDesc,
-                code = """// 为所有图片添加下载按钮
+                code = Strings.localized(
+                    chinese = """// 为所有图片添加下载按钮
 function addImageDownloadButtons() {
     document.querySelectorAll('img').forEach(img => {
         if (img.dataset.downloadBtn) return;
         img.dataset.downloadBtn = 'true';
-        
+
         const wrapper = document.createElement('div');
         wrapper.style.cssText = 'position:relative;display:inline-block;';
-        
+
         const btn = document.createElement('button');
         btn.textContent = '💾';
         btn.style.cssText = `
@@ -318,7 +660,7 @@ function addImageDownloadButtons() {
             transition: opacity 0.3s;
             z-index: 100;
         `;
-        
+
         wrapper.onmouseenter = () => btn.style.opacity = '1';
         wrapper.onmouseleave = () => btn.style.opacity = '0';
         btn.onclick = (e) => {
@@ -326,7 +668,7 @@ function addImageDownloadButtons() {
             NativeBridge.saveImageToGallery(img.src);
             NativeBridge.vibrate(50);
         };
-        
+
         img.parentNode.insertBefore(wrapper, img);
         wrapper.appendChild(img);
         wrapper.appendChild(btn);
@@ -336,7 +678,51 @@ function addImageDownloadButtons() {
 addImageDownloadButtons();
 new MutationObserver(addImageDownloadButtons)
     .observe(document.body, { childList: true, subtree: true });""",
-                tags = listOf("图片", "下载", "按钮", "悬浮")
+                    english = """// Add download button to all images
+function addImageDownloadButtons() {
+    document.querySelectorAll('img').forEach(img => {
+        if (img.dataset.downloadBtn) return;
+        img.dataset.downloadBtn = 'true';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:relative;display:inline-block;';
+
+        const btn = document.createElement('button');
+        btn.textContent = '💾';
+        btn.style.cssText = `
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        `;
+
+        wrapper.onmouseenter = () => btn.style.opacity = '1';
+        wrapper.onmouseleave = () => btn.style.opacity = '0';
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            NativeBridge.saveImageToGallery(img.src);
+            NativeBridge.vibrate(50);
+        };
+
+        img.parentNode.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+        wrapper.appendChild(btn);
+    });
+}
+
+addImageDownloadButtons();
+new MutationObserver(addImageDownloadButtons)
+    .observe(document.body, { childList: true, subtree: true });"""
+                ),
+                tags = tags("图片", "下载", "按钮", "悬浮")
             )
         )
     )
@@ -352,114 +738,182 @@ new MutationObserver(addImageDownloadButtons)
                 id = "dom-query-single",
                 name = Strings.snippetQuerySingle,
                 description = Strings.snippetQuerySingleDesc,
-                code = """const element = document.querySelector('选择器');
+                code = Strings.localized(
+                    chinese = """const element = document.querySelector('选择器');
 if (element) {
     // 对元素进行操作
 }""",
-                tags = listOf("查询", "选择器")
+                    english = """const element = document.querySelector('selector');
+if (element) {
+    // Operate on the element
+}"""
+                ),
+                tags = tags("查询", "选择器")
             ),
             CodeSnippet(
                 id = "dom-query-all",
                 name = Strings.snippetQueryAll,
                 description = Strings.snippetQueryAllDesc,
-                code = """document.querySelectorAll('选择器').forEach(el => {
+                code = Strings.localized(
+                    chinese = """document.querySelectorAll('选择器').forEach(el => {
     // 对每个元素进行操作
 });""",
-                tags = listOf("查询", "遍历")
+                    english = """document.querySelectorAll('selector').forEach(el => {
+    // Operate on each element
+});"""
+                ),
+                tags = tags("查询", "遍历")
             ),
             CodeSnippet(
                 id = "dom-hide-element",
                 name = Strings.snippetHideElement,
                 description = Strings.snippetHideElementDesc,
-                code = """function hideElement(selector) {
+                code = Strings.localized(
+                    chinese = """function hideElement(selector) {
     document.querySelectorAll(selector).forEach(el => {
         el.style.setProperty('display', 'none', 'important');
     });
 }
 hideElement('选择器');""",
-                tags = listOf("隐藏", "样式")
+                    english = """function hideElement(selector) {
+    document.querySelectorAll(selector).forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+    });
+}
+hideElement('selector');"""
+                ),
+                tags = tags("隐藏", "样式")
             ),
             CodeSnippet(
                 id = "dom-remove-element",
                 name = Strings.snippetRemoveElement,
                 description = Strings.snippetRemoveElementDesc,
-                code = """function removeElement(selector) {
+                code = Strings.localized(
+                    chinese = """function removeElement(selector) {
     document.querySelectorAll(selector).forEach(el => el.remove());
 }
 removeElement('选择器');""",
-                tags = listOf("删除", "移除")
+                    english = """function removeElement(selector) {
+    document.querySelectorAll(selector).forEach(el => el.remove());
+}
+removeElement('selector');"""
+                ),
+                tags = tags("删除", "移除")
             ),
             CodeSnippet(
                 id = "dom-create-element",
                 name = Strings.snippetCreateElement,
                 description = Strings.snippetCreateElementDesc,
-                code = """const newElement = document.createElement('div');
+                code = Strings.localized(
+                    chinese = """const newElement = document.createElement('div');
 newElement.id = 'my-element';
 newElement.className = 'my-class';
 newElement.textContent = '内容';
 newElement.style.cssText = 'color: red; font-size: 14px;';
 document.body.appendChild(newElement);""",
-                tags = listOf("创建", "添加")
+                    english = """const newElement = document.createElement('div');
+newElement.id = 'my-element';
+newElement.className = 'my-class';
+newElement.textContent = 'Content';
+newElement.style.cssText = 'color: red; font-size: 14px;';
+document.body.appendChild(newElement);"""
+                ),
+                tags = tags("创建", "添加")
             ),
             CodeSnippet(
                 id = "dom-modify-text",
                 name = Strings.snippetModifyText,
                 description = Strings.snippetModifyTextDesc,
-                code = """const element = document.querySelector('选择器');
+                code = Strings.localized(
+                    chinese = """const element = document.querySelector('选择器');
 if (element) {
     element.textContent = '新的文本内容';
     // 或者使用 innerHTML 支持 HTML
     // element.innerHTML = '<strong>加粗文本</strong>';
 }""",
-                tags = listOf("文本", "修改")
+                    english = """const element = document.querySelector('selector');
+if (element) {
+    element.textContent = 'New text content';
+    // Or use innerHTML to support HTML
+    // element.innerHTML = '<strong>Bold text</strong>';
+}"""
+                ),
+                tags = tags("文本", "修改")
             ),
             CodeSnippet(
                 id = "dom-modify-attribute",
                 name = Strings.snippetModifyAttr,
                 description = Strings.snippetModifyAttrDesc,
-                code = """const element = document.querySelector('选择器');
+                code = Strings.localized(
+                    chinese = """const element = document.querySelector('选择器');
 if (element) {
     element.setAttribute('属性名', '属性值');
     const value = element.getAttribute('属性名');
     element.removeAttribute('属性名');
 }""",
-                tags = listOf("属性", "修改")
+                    english = """const element = document.querySelector('selector');
+if (element) {
+    element.setAttribute('attribute', 'value');
+    const value = element.getAttribute('attribute');
+    element.removeAttribute('attribute');
+}"""
+                ),
+                tags = tags("属性", "修改")
             ),
             CodeSnippet(
                 id = "dom-insert-before",
                 name = Strings.snippetInsertBefore,
                 description = Strings.snippetInsertBeforeDesc,
-                code = """const target = document.querySelector('目标选择器');
+                code = Strings.localized(
+                    chinese = """const target = document.querySelector('目标选择器');
 const newEl = document.createElement('div');
 newEl.textContent = '新内容';
 target.parentNode.insertBefore(newEl, target);""",
-                tags = listOf("插入", "位置")
+                    english = """const target = document.querySelector('target-selector');
+const newEl = document.createElement('div');
+newEl.textContent = 'New content';
+target.parentNode.insertBefore(newEl, target);"""
+                ),
+                tags = tags("插入", "位置")
             ),
             CodeSnippet(
                 id = "dom-insert-after",
                 name = Strings.snippetInsertAfter,
                 description = Strings.snippetInsertAfterDesc,
-                code = """const target = document.querySelector('目标选择器');
+                code = Strings.localized(
+                    chinese = """const target = document.querySelector('目标选择器');
 const newEl = document.createElement('div');
 newEl.textContent = '新内容';
 target.parentNode.insertBefore(newEl, target.nextSibling);""",
-                tags = listOf("插入", "位置")
+                    english = """const target = document.querySelector('target-selector');
+const newEl = document.createElement('div');
+newEl.textContent = 'New content';
+target.parentNode.insertBefore(newEl, target.nextSibling);"""
+                ),
+                tags = tags("插入", "位置")
             ),
             CodeSnippet(
                 id = "dom-clone-element",
                 name = Strings.snippetCloneElement,
                 description = Strings.snippetCloneElementDesc,
-                code = """const original = document.querySelector('选择器');
+                code = Strings.localized(
+                    chinese = """const original = document.querySelector('选择器');
 const clone = original.cloneNode(true);
 clone.id = 'cloned-element';
 document.body.appendChild(clone);""",
-                tags = listOf("克隆", "复制")
+                    english = """const original = document.querySelector('selector');
+const clone = original.cloneNode(true);
+clone.id = 'cloned-element';
+document.body.appendChild(clone);"""
+                ),
+                tags = tags("克隆", "复制")
             ),
             CodeSnippet(
                 id = "dom-wrap-element",
                 name = Strings.snippetWrapElement,
                 description = Strings.snippetWrapElementDesc,
-                code = """function wrapElement(selector, wrapperTag = 'div') {
+                code = Strings.localized(
+                    chinese = """function wrapElement(selector, wrapperTag = 'div') {
     document.querySelectorAll(selector).forEach(el => {
         const wrapper = document.createElement(wrapperTag);
         el.parentNode.insertBefore(wrapper, el);
@@ -467,13 +921,23 @@ document.body.appendChild(clone);""",
     });
 }
 wrapElement('img', 'figure');""",
-                tags = listOf("包裹", "结构")
+                    english = """function wrapElement(selector, wrapperTag = 'div') {
+    document.querySelectorAll(selector).forEach(el => {
+        const wrapper = document.createElement(wrapperTag);
+        el.parentNode.insertBefore(wrapper, el);
+        wrapper.appendChild(el);
+    });
+}
+wrapElement('img', 'figure');"""
+                ),
+                tags = tags("包裹", "结构")
             ),
             CodeSnippet(
                 id = "dom-replace-element",
                 name = Strings.snippetReplaceElement,
                 description = Strings.snippetReplaceElementDesc,
-                code = """function replaceElement(selector, newHtml) {
+                code = Strings.localized(
+                    chinese = """function replaceElement(selector, newHtml) {
     document.querySelectorAll(selector).forEach(el => {
         const temp = document.createElement('div');
         temp.innerHTML = newHtml;
@@ -481,11 +945,20 @@ wrapElement('img', 'figure');""",
     });
 }
 replaceElement('.old-class', '<div class="new-class">新内容</div>');""",
-                tags = listOf("替换", "修改")
+                    english = """function replaceElement(selector, newHtml) {
+    document.querySelectorAll(selector).forEach(el => {
+        const temp = document.createElement('div');
+        temp.innerHTML = newHtml;
+        el.replaceWith(temp.firstChild);
+    });
+}
+replaceElement('.old-class', '<div class="new-class">New content</div>');"""
+                ),
+                tags = tags("替换", "修改")
             )
         )
     )
-    
+
     // ==================== 样式操作 ====================
     private fun styleOperations() = CodeSnippetCategory(
         id = "style",
@@ -506,7 +979,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("CSS", "注入")
+                tags = tags("CSS", "注入")
             ),
             CodeSnippet(
                 id = "style-modify-inline",
@@ -518,7 +991,7 @@ if (element) {
     element.style.fontSize = '16px';
     element.style.setProperty('display', 'block', 'important');
 }""",
-                tags = listOf("样式", "内联")
+                tags = tags("样式", "内联")
             ),
             CodeSnippet(
                 id = "style-add-class",
@@ -531,7 +1004,7 @@ if (element) {
     element.classList.toggle('toggle-class');
     const hasClass = element.classList.contains('some-class');
 }""",
-                tags = listOf("类名", "class")
+                tags = tags("类名", "class")
             ),
             CodeSnippet(
                 id = "style-dark-mode",
@@ -548,7 +1021,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("深色", "主题")
+                tags = tags("深色", "主题")
             ),
             CodeSnippet(
                 id = "style-sepia-mode",
@@ -561,7 +1034,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("护眼", "暖色")
+                tags = tags("护眼", "暖色")
             ),
             CodeSnippet(
                 id = "style-grayscale",
@@ -574,7 +1047,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("灰度", "滤镜")
+                tags = tags("灰度", "滤镜")
             ),
             CodeSnippet(
                 id = "style-custom-font",
@@ -587,7 +1060,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("字体", "样式")
+                tags = tags("字体", "样式")
             ),
             CodeSnippet(
                 id = "style-font-size",
@@ -603,7 +1076,7 @@ document.head.appendChild(style);""",
     document.head.appendChild(style);
 }
 setFontSize(16);""",
-                tags = listOf("字体", "大小")
+                tags = tags("字体", "大小")
             ),
             CodeSnippet(
                 id = "style-hide-scrollbar",
@@ -615,7 +1088,7 @@ style.textContent = `
     * { scrollbar-width: none !important; }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("滚动条", "隐藏")
+                tags = tags("滚动条", "隐藏")
             ),
             CodeSnippet(
                 id = "style-highlight-links",
@@ -630,7 +1103,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("链接", "高亮")
+                tags = tags("链接", "高亮")
             ),
             CodeSnippet(
                 id = "style-max-width",
@@ -645,7 +1118,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("宽度", "阅读")
+                tags = tags("宽度", "阅读")
             ),
             CodeSnippet(
                 id = "style-line-height",
@@ -658,12 +1131,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("行高", "阅读")
+                tags = tags("行高", "阅读")
             )
         )
     )
 
-    
+
     // ==================== 事件监听 ====================
     private fun eventListeners() = CodeSnippetCategory(
         id = "events",
@@ -682,7 +1155,7 @@ document.head.appendChild(style);""",
         // 处理点击
     }
 });""",
-                tags = listOf("点击", "事件")
+                tags = tags("点击", "事件")
             ),
             CodeSnippet(
                 id = "event-keyboard",
@@ -697,7 +1170,7 @@ document.head.appendChild(style);""",
         // 处理 Ctrl+S
     }
 });""",
-                tags = listOf("键盘", "快捷键")
+                tags = tags("键盘", "快捷键")
             ),
             CodeSnippet(
                 id = "event-scroll",
@@ -708,12 +1181,12 @@ window.addEventListener('scroll', () => {
     const scrollTop = window.scrollY;
     const direction = scrollTop > lastScrollTop ? 'down' : 'up';
     lastScrollTop = scrollTop;
-    
+
     if (scrollTop > 300) {
         // 显示返回顶部按钮
     }
 });""",
-                tags = listOf("滚动", "位置")
+                tags = tags("滚动", "位置")
             ),
             CodeSnippet(
                 id = "event-mutation",
@@ -736,7 +1209,7 @@ observer.observe(document.body, {
     childList: true,
     subtree: true
 });""",
-                tags = listOf("监听", "DOM变化", "动态")
+                tags = tags("监听", "DOM变化", "动态")
             ),
             CodeSnippet(
                 id = "event-resize",
@@ -751,7 +1224,7 @@ window.addEventListener('resize', () => {
         // 处理窗口大小变化
     }, 100);
 });""",
-                tags = listOf("窗口", "大小")
+                tags = tags("窗口", "大小")
             ),
             CodeSnippet(
                 id = "event-copy",
@@ -762,7 +1235,7 @@ window.addEventListener('resize', () => {
     e.clipboardData.setData('text/plain', selection + '\\n来源: ' + location.href);
     e.preventDefault();
 });""",
-                tags = listOf("复制", "剪贴板")
+                tags = tags("复制", "剪贴板")
             ),
             CodeSnippet(
                 id = "event-contextmenu",
@@ -772,7 +1245,7 @@ window.addEventListener('resize', () => {
     e.preventDefault();
     // 显示自定义菜单或阻止默认菜单
 });""",
-                tags = listOf("右键", "菜单")
+                tags = tags("右键", "菜单")
             ),
             CodeSnippet(
                 id = "event-visibility",
@@ -787,7 +1260,7 @@ window.addEventListener('resize', () => {
         console.log('页面显示');
     }
 });""",
-                tags = listOf("可见性", "后台")
+                tags = tags("可见性", "后台")
             ),
             CodeSnippet(
                 id = "event-beforeunload",
@@ -796,12 +1269,12 @@ window.addEventListener('resize', () => {
                 code = """window.addEventListener('beforeunload', (e) => {
     // 保存数据
     localStorage.setItem('lastVisit', Date.now());
-    
+
     // 如需提示用户，取消注释以下代码
     // e.preventDefault();
     // e.returnValue = '';
 });""",
-                tags = listOf("关闭", "保存")
+                tags = tags("关闭", "保存")
             ),
             CodeSnippet(
                 id = "event-touch",
@@ -818,7 +1291,7 @@ document.addEventListener('touchend', (e) => {
     const endY = e.changedTouches[0].clientY;
     const diffX = endX - startX;
     const diffY = endY - startY;
-    
+
     if (Math.abs(diffX) > Math.abs(diffY)) {
         if (diffX > 50) console.log('右滑');
         else if (diffX < -50) console.log('左滑');
@@ -827,7 +1300,7 @@ document.addEventListener('touchend', (e) => {
         else if (diffY < -50) console.log('上滑');
     }
 });""",
-                tags = listOf("触摸", "手势")
+                tags = tags("触摸", "手势")
             ),
             CodeSnippet(
                 id = "event-long-press",
@@ -848,11 +1321,11 @@ document.addEventListener('touchend', () => {
 document.addEventListener('touchmove', () => {
     clearTimeout(pressTimer);
 });""",
-                tags = listOf("长按", "触摸")
+                tags = tags("长按", "触摸")
             )
         )
     )
-    
+
     // ==================== 存储操作 ====================
     private fun storageOperations() = CodeSnippetCategory(
         id = "storage",
@@ -874,7 +1347,7 @@ document.addEventListener('touchmove', () => {
     }
 }
 saveData('myKey', { name: 'value' });""",
-                tags = listOf("存储", "保存")
+                tags = tags("存储", "保存")
             ),
             CodeSnippet(
                 id = "storage-local-get",
@@ -890,7 +1363,7 @@ saveData('myKey', { name: 'value' });""",
     }
 }
 const data = loadData('myKey', {});""",
-                tags = listOf("存储", "读取")
+                tags = tags("存储", "读取")
             ),
             CodeSnippet(
                 id = "storage-session",
@@ -904,7 +1377,7 @@ const value = sessionStorage.getItem('key');
 sessionStorage.removeItem('key');
 // 清空所有
 sessionStorage.clear();""",
-                tags = listOf("会话", "临时")
+                tags = tags("会话", "临时")
             ),
             CodeSnippet(
                 id = "storage-cookie-set",
@@ -912,11 +1385,11 @@ sessionStorage.clear();""",
                 description = Strings.snippetSetCookieDesc,
                 code = """function setCookie(name, value, days = 7) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = name + '=' + encodeURIComponent(value) + 
+    document.cookie = name + '=' + encodeURIComponent(value) +
         '; expires=' + expires + '; path=/';
 }
 setCookie('myCookie', 'value', 30);""",
-                tags = listOf("Cookie", "设置")
+                tags = tags("Cookie", "设置")
             ),
             CodeSnippet(
                 id = "storage-cookie-get",
@@ -933,7 +1406,7 @@ setCookie('myCookie', 'value', 30);""",
     return null;
 }
 const value = getCookie('myCookie');""",
-                tags = listOf("Cookie", "读取")
+                tags = tags("Cookie", "读取")
             ),
             CodeSnippet(
                 id = "storage-cookie-delete",
@@ -943,7 +1416,7 @@ const value = getCookie('myCookie');""",
     document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 }
 deleteCookie('myCookie');""",
-                tags = listOf("Cookie", "删除")
+                tags = tags("Cookie", "删除")
             ),
             CodeSnippet(
                 id = "storage-indexeddb",
@@ -971,11 +1444,11 @@ async function saveToIDB(data) {
     const tx = db.transaction(storeName, 'readwrite');
     tx.objectStore(storeName).put(data);
 }""",
-                tags = listOf("IndexedDB", "大数据")
+                tags = tags("IndexedDB", "大数据")
             )
         )
     )
-    
+
     // ==================== 网络请求 ====================
     private fun networkOperations() = CodeSnippetCategory(
         id = "network",
@@ -998,7 +1471,7 @@ async function saveToIDB(data) {
     }
 }
 fetchData('https://api.example.com/data').then(console.log);""",
-                tags = listOf("GET", "请求")
+                tags = tags("GET", "请求")
             ),
             CodeSnippet(
                 id = "network-fetch-post",
@@ -1018,7 +1491,7 @@ fetchData('https://api.example.com/data').then(console.log);""",
     }
 }
 postData('https://api.example.com/submit', { name: 'value' });""",
-                tags = listOf("POST", "提交")
+                tags = tags("POST", "提交")
             ),
             CodeSnippet(
                 id = "network-fetch-timeout",
@@ -1027,7 +1500,7 @@ postData('https://api.example.com/submit', { name: 'value' });""",
                 code = """async function fetchWithTimeout(url, timeout = 5000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -1039,7 +1512,7 @@ postData('https://api.example.com/submit', { name: 'value' });""",
         return null;
     }
 }""",
-                tags = listOf("超时", "请求")
+                tags = tags("超时", "请求")
             ),
             CodeSnippet(
                 id = "network-retry",
@@ -1059,7 +1532,7 @@ postData('https://api.example.com/submit', { name: 'value' });""",
     }
     return null;
 }""",
-                tags = listOf("重试", "请求")
+                tags = tags("重试", "请求")
             ),
             CodeSnippet(
                 id = "network-download",
@@ -1078,7 +1551,7 @@ function downloadBlob(blob, filename) {
     downloadFile(url, filename);
     URL.revokeObjectURL(url);
 }""",
-                tags = listOf("下载", "文件")
+                tags = tags("下载", "文件")
             ),
             CodeSnippet(
                 id = "network-jsonp",
@@ -1088,24 +1561,24 @@ function downloadBlob(blob, filename) {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         const fnName = 'jsonp_' + Date.now();
-        
+
         window[fnName] = (data) => {
             resolve(data);
             delete window[fnName];
             script.remove();
         };
-        
+
         script.src = url + (url.includes('?') ? '&' : '?') + callbackName + '=' + fnName;
         script.onerror = reject;
         document.head.appendChild(script);
     });
 }""",
-                tags = listOf("JSONP", "跨域")
+                tags = tags("JSONP", "跨域")
             )
         )
     )
 
-    
+
     // ==================== 数据处理 ====================
     private fun dataProcessing() = CodeSnippetCategory(
         id = "data",
@@ -1120,10 +1593,10 @@ function downloadBlob(blob, filename) {
                 code = """function extractTableData(tableSelector) {
     const table = document.querySelector(tableSelector);
     if (!table) return [];
-    
+
     const headers = Array.from(table.querySelectorAll('th'))
         .map(th => th.textContent.trim());
-    
+
     return Array.from(table.querySelectorAll('tbody tr')).map(row => {
         const cells = row.querySelectorAll('td');
         const obj = {};
@@ -1135,7 +1608,7 @@ function downloadBlob(blob, filename) {
 }
 const data = extractTableData('table');
 console.log(JSON.stringify(data, null, 2));""",
-                tags = listOf("表格", "提取")
+                tags = tags("表格", "提取")
             ),
             CodeSnippet(
                 id = "data-extract-links",
@@ -1151,7 +1624,7 @@ console.log(JSON.stringify(data, null, 2));""",
 }
 const links = extractLinks();
 console.log(links);""",
-                tags = listOf("链接", "提取")
+                tags = tags("链接", "提取")
             ),
             CodeSnippet(
                 id = "data-extract-images",
@@ -1169,7 +1642,7 @@ console.log(links);""",
 }
 const images = extractImages();
 console.log(images);""",
-                tags = listOf("图片", "提取")
+                tags = tags("图片", "提取")
             ),
             CodeSnippet(
                 id = "data-export-json",
@@ -1186,7 +1659,7 @@ console.log(images);""",
     URL.revokeObjectURL(url);
 }
 exportJSON({ name: 'test', value: 123 });""",
-                tags = listOf("导出", "JSON")
+                tags = tags("导出", "JSON")
             ),
             CodeSnippet(
                 id = "data-export-csv",
@@ -1194,13 +1667,13 @@ exportJSON({ name: 'test', value: 123 });""",
                 description = Strings.snippetExportCsvDesc,
                 code = """function exportCSV(data, filename = 'data.csv') {
     if (!data.length) return;
-    
+
     const headers = Object.keys(data[0]);
     const csv = [
         headers.join(','),
         ...data.map(row => headers.map(h => '"' + (row[h] || '') + '"').join(','))
     ].join('\\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1209,7 +1682,7 @@ exportJSON({ name: 'test', value: 123 });""",
     a.click();
     URL.revokeObjectURL(url);
 }""",
-                tags = listOf("导出", "CSV")
+                tags = tags("导出", "CSV")
             ),
             CodeSnippet(
                 id = "data-parse-url",
@@ -1225,7 +1698,7 @@ exportJSON({ name: 'test', value: 123 });""",
 }
 const params = parseUrlParams();
 console.log(params);""",
-                tags = listOf("URL", "解析")
+                tags = tags("URL", "解析")
             ),
             CodeSnippet(
                 id = "data-build-url",
@@ -1239,11 +1712,11 @@ console.log(params);""",
     return url.toString();
 }
 const url = buildUrl('https://example.com/search', { q: 'test', page: 1 });""",
-                tags = listOf("URL", "构建")
+                tags = tags("URL", "构建")
             )
         )
     )
-    
+
     // ==================== UI 组件 ====================
     private fun uiComponents() = CodeSnippetCategory(
         id = "ui",
@@ -1277,7 +1750,7 @@ const url = buildUrl('https://example.com/search', { q: 'test', page: 1 });""",
     return btn;
 }
 createFloatingButton('⬆️', () => window.scrollTo({top: 0, behavior: 'smooth'}));""",
-                tags = listOf("按钮", "悬浮")
+                tags = tags("按钮", "悬浮")
             ),
             CodeSnippet(
                 id = "ui-toast",
@@ -1300,7 +1773,7 @@ createFloatingButton('⬆️', () => window.scrollTo({top: 0, behavior: 'smooth'
     }, duration);
 }
 showToast('操作成功！');""",
-                tags = listOf("提示", "消息")
+                tags = tags("提示", "消息")
             ),
             CodeSnippet(
                 id = "ui-modal",
@@ -1313,7 +1786,7 @@ showToast('操作成功！');""",
         background: rgba(0,0,0,0.5); z-index: 999998;
         display: flex; align-items: center; justify-content: center;
     `;
-    
+
     overlay.innerHTML = `
         <div style="background: white; border-radius: 12px; padding: 20px;
             min-width: 300px; max-width: 80%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
@@ -1325,14 +1798,14 @@ showToast('操作成功！');""",
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(overlay);
     overlay.querySelector('#modal-cancel').onclick = () => overlay.remove();
     overlay.querySelector('#modal-confirm').onclick = () => { onConfirm?.(); overlay.remove(); };
     overlay.onclick = (e) => e.target === overlay && overlay.remove();
 }
 showModal('提示', '确定要执行此操作吗？', () => console.log('确认'));""",
-                tags = listOf("弹窗", "对话框")
+                tags = tags("弹窗", "对话框")
             ),
             CodeSnippet(
                 id = "ui-progress-bar",
@@ -1352,7 +1825,7 @@ window.addEventListener('scroll', () => {
     const progress = (scrollTop / docHeight) * 100;
     progressBar.style.width = progress + '%';
 });""",
-                tags = listOf("进度", "阅读")
+                tags = tags("进度", "阅读")
             ),
             CodeSnippet(
                 id = "ui-loading",
@@ -1377,7 +1850,7 @@ window.addEventListener('scroll', () => {
 function hideLoading() {
     document.getElementById('custom-loading')?.remove();
 }""",
-                tags = listOf("加载", "动画")
+                tags = tags("加载", "动画")
             ),
             CodeSnippet(
                 id = "ui-snackbar",
@@ -1396,24 +1869,24 @@ function hideLoading() {
         ${"$"}{action ? '<button style="background: none; border: none; color: #bb86fc; cursor: pointer; font-weight: bold;">' + action + '</button>' : ''}
     `;
     document.body.appendChild(snackbar);
-    
+
     setTimeout(() => snackbar.style.transform = 'translateX(-50%) translateY(0)', 10);
-    
+
     if (action) {
         snackbar.querySelector('button').onclick = () => { onAction?.(); snackbar.remove(); };
     }
-    
+
     setTimeout(() => {
         snackbar.style.transform = 'translateX(-50%) translateY(100px)';
         setTimeout(() => snackbar.remove(), 300);
     }, 4000);
 }
 showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
-                tags = listOf("通知", "Snackbar")
+                tags = tags("通知", "Snackbar")
             )
         )
     )
-    
+
     // ==================== 悬浮组件 ====================
     private fun floatingWidgets() = CodeSnippetCategory(
         id = "widgets",
@@ -1433,7 +1906,7 @@ showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         display: flex; flex-direction: column; gap: 8px;
     `;
-    
+
     buttons.forEach(({ icon, title, onClick }) => {
         const btn = document.createElement('button');
         btn.innerHTML = icon;
@@ -1448,7 +1921,7 @@ showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
         btn.onclick = onClick;
         toolbar.appendChild(btn);
     });
-    
+
     document.body.appendChild(toolbar);
     return toolbar;
 }
@@ -1458,7 +1931,7 @@ createToolbar([
     { icon: '🌙', title: '深色模式', onClick: () => document.body.classList.toggle('dark') },
     { icon: '📖', title: '阅读模式', onClick: () => console.log('阅读模式') }
 ]);""",
-                tags = listOf("工具栏", "悬浮")
+                tags = tags("工具栏", "悬浮")
             ),
             CodeSnippet(
                 id = "widget-sidebar",
@@ -1478,7 +1951,7 @@ createToolbar([
             ${"$"}{content}
         </div>
     `;
-    
+
     const toggle = document.createElement('button');
     toggle.innerHTML = '☰';
     toggle.style.cssText = `
@@ -1486,7 +1959,7 @@ createToolbar([
         z-index: 999998; padding: 10px; background: #007bff; color: white;
         border: none; border-radius: 5px 0 0 5px; cursor: pointer;
     `;
-    
+
     let isOpen = false;
     toggle.onclick = () => {
         isOpen = !isOpen;
@@ -1496,12 +1969,12 @@ createToolbar([
         isOpen = false;
         sidebar.style.right = '-300px';
     };
-    
+
     document.body.appendChild(sidebar);
     document.body.appendChild(toggle);
 }
 createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
-                tags = listOf("侧边栏", "面板")
+                tags = tags("侧边栏", "面板")
             ),
             CodeSnippet(
                 id = "widget-draggable",
@@ -1510,16 +1983,16 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
                 code = """function makeDraggable(element) {
     let isDragging = false;
     let offsetX, offsetY;
-    
+
     element.style.cursor = 'move';
     element.style.userSelect = 'none';
-    
+
     element.addEventListener('mousedown', (e) => {
         isDragging = true;
         offsetX = e.clientX - element.offsetLeft;
         offsetY = e.clientY - element.offsetTop;
     });
-    
+
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         element.style.left = (e.clientX - offsetX) + 'px';
@@ -1527,13 +2000,13 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
         element.style.right = 'auto';
         element.style.bottom = 'auto';
     });
-    
+
     document.addEventListener('mouseup', () => {
         isDragging = false;
     });
 }
 // makeDraggable(document.querySelector('.my-widget'));""",
-                tags = listOf("拖动", "交互")
+                tags = tags("拖动", "交互")
             ),
             CodeSnippet(
                 id = "widget-mini-player",
@@ -1563,12 +2036,12 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
     document.body.appendChild(player);
     return player;
 }""",
-                tags = listOf("播放器", "音乐")
+                tags = tags("播放器", "音乐")
             )
         )
     )
 
-    
+
     // ==================== 通知系统 ====================
     private fun notifications() = CodeSnippetCategory(
         id = "notifications",
@@ -1584,13 +2057,13 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
     if (Notification.permission !== 'granted') {
         await Notification.requestPermission();
     }
-    
+
     if (Notification.permission === 'granted') {
         new Notification(title, { body, icon });
     }
 }
 sendNotification('提醒', '这是一条通知消息');""",
-                tags = listOf("通知", "浏览器")
+                tags = tags("通知", "浏览器")
             ),
             CodeSnippet(
                 id = "notif-badge",
@@ -1613,7 +2086,7 @@ sendNotification('提醒', '这是一条通知消息');""",
     badge.textContent = count > 99 ? '99+' : count;
     badge.style.display = count > 0 ? 'flex' : 'none';
 }""",
-                tags = listOf("角标", "数字")
+                tags = tags("角标", "数字")
             ),
             CodeSnippet(
                 id = "notif-alert-banner",
@@ -1626,7 +2099,7 @@ sendNotification('提醒', '这是一条通知消息');""",
         warning: '#FF9800',
         error: '#f44336'
     };
-    
+
     const banner = document.createElement('div');
     banner.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; z-index: 999999;
@@ -1641,7 +2114,7 @@ sendNotification('提醒', '这是一条通知消息');""",
             background: none; border: none; color: white; font-size: 20px; cursor: pointer;
         ">×</button>
     `;
-    
+
     document.body.appendChild(banner);
     setTimeout(() => banner.style.transform = 'translateY(0)', 10);
     setTimeout(() => {
@@ -1650,11 +2123,11 @@ sendNotification('提醒', '这是一条通知消息');""",
     }, 5000);
 }
 showBanner('这是一条提示信息', 'success');""",
-                tags = listOf("横幅", "提醒")
+                tags = tags("横幅", "提醒")
             )
         )
     )
-    
+
     // ==================== 滚动操作 ====================
     private fun scrollOperations() = CodeSnippetCategory(
         id = "scroll",
@@ -1673,7 +2146,7 @@ showBanner('这是一条提示信息', 'success');""",
     });
 }
 scrollToTop();""",
-                tags = listOf("滚动", "顶部")
+                tags = tags("滚动", "顶部")
             ),
             CodeSnippet(
                 id = "scroll-to-bottom",
@@ -1686,7 +2159,7 @@ scrollToTop();""",
     });
 }
 scrollToBottom();""",
-                tags = listOf("滚动", "底部")
+                tags = tags("滚动", "底部")
             ),
             CodeSnippet(
                 id = "scroll-to-element",
@@ -1700,7 +2173,7 @@ scrollToBottom();""",
     }
 }
 scrollToElement('#target-section', 100);""",
-                tags = listOf("滚动", "元素")
+                tags = tags("滚动", "元素")
             ),
             CodeSnippet(
                 id = "scroll-auto",
@@ -1736,7 +2209,7 @@ document.addEventListener('keydown', (e) => {
         toggleAutoScroll();
     }
 });""",
-                tags = listOf("滚动", "自动")
+                tags = tags("滚动", "自动")
             ),
             CodeSnippet(
                 id = "scroll-back-to-top-btn",
@@ -1761,7 +2234,7 @@ document.body.appendChild(backToTopBtn);
 window.addEventListener('scroll', () => {
     backToTopBtn.style.display = window.scrollY > 300 ? 'flex' : 'none';
 });""",
-                tags = listOf("按钮", "返回顶部")
+                tags = tags("按钮", "返回顶部")
             ),
             CodeSnippet(
                 id = "scroll-infinite",
@@ -1769,12 +2242,12 @@ window.addEventListener('scroll', () => {
                 description = Strings.snippetInfiniteScrollDesc,
                 code = """function setupInfiniteScroll(loadMore, threshold = 200) {
     let loading = false;
-    
+
     window.addEventListener('scroll', async () => {
         if (loading) return;
-        
+
         const scrollBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-        
+
         if (scrollBottom < threshold) {
             loading = true;
             await loadMore();
@@ -1787,7 +2260,7 @@ setupInfiniteScroll(async () => {
     console.log('加载更多内容...');
     // 在这里加载更多内容
 });""",
-                tags = listOf("滚动", "加载")
+                tags = tags("滚动", "加载")
             ),
             CodeSnippet(
                 id = "scroll-reveal",
@@ -1800,10 +2273,10 @@ setupInfiniteScroll(async () => {
         .fade-in { opacity: 1 !important; transform: translateY(0) !important; }
     `;
     document.head.appendChild(style);
-    
+
     const elements = document.querySelectorAll(selector);
     elements.forEach(el => el.classList.add('scroll-hidden'));
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -1811,11 +2284,11 @@ setupInfiniteScroll(async () => {
             }
         });
     }, { threshold: 0.1 });
-    
+
     elements.forEach(el => observer.observe(el));
 }
 setupScrollReveal('.card');""",
-                tags = listOf("动画", "滚动")
+                tags = tags("动画", "滚动")
             ),
             CodeSnippet(
                 id = "scroll-spy",
@@ -1824,7 +2297,7 @@ setupScrollReveal('.card');""",
                 code = """function setupScrollSpy(navSelector, sectionSelector) {
     const navItems = document.querySelectorAll(navSelector);
     const sections = document.querySelectorAll(sectionSelector);
-    
+
     window.addEventListener('scroll', () => {
         let current = '';
         sections.forEach(section => {
@@ -1833,7 +2306,7 @@ setupScrollReveal('.card');""",
                 current = section.getAttribute('id');
             }
         });
-        
+
         navItems.forEach(item => {
             item.classList.remove('active');
             if (item.getAttribute('href') === '#' + current) {
@@ -1843,11 +2316,11 @@ setupScrollReveal('.card');""",
     });
 }
 setupScrollSpy('nav a', 'section[id]');""",
-                tags = listOf("导航", "监听")
+                tags = tags("导航", "监听")
             )
         )
     )
-    
+
     // ==================== 表单操作 ====================
     private fun formOperations() = CodeSnippetCategory(
         id = "form",
@@ -1874,7 +2347,7 @@ autoFillForm({
     email: 'email@example.com',
     phone: '13800138000'
 });""",
-                tags = listOf("表单", "填充")
+                tags = tags("表单", "填充")
             ),
             CodeSnippet(
                 id = "form-get-values",
@@ -1883,7 +2356,7 @@ autoFillForm({
                 code = """function getFormData(formSelector) {
     const form = document.querySelector(formSelector);
     if (!form) return null;
-    
+
     const formData = new FormData(form);
     const data = {};
     formData.forEach((value, key) => {
@@ -1893,7 +2366,7 @@ autoFillForm({
 }
 const data = getFormData('form');
 console.log(data);""",
-                tags = listOf("表单", "获取")
+                tags = tags("表单", "获取")
             ),
             CodeSnippet(
                 id = "form-validate",
@@ -1904,7 +2377,7 @@ console.log(data);""",
     Object.entries(rules).forEach(([selector, rule]) => {
         const input = document.querySelector(selector);
         if (!input) return;
-        
+
         const value = input.value.trim();
         if (rule.required && !value) {
             errors.push({ field: selector, message: rule.message || '此字段必填' });
@@ -1922,7 +2395,7 @@ const errors = validateForm({
     '#email': { required: true, pattern: /^[^@]+@[^@]+$/, message: '请输入有效邮箱' },
     '#password': { required: true, minLength: 6, message: '密码至少6位' }
 });""",
-                tags = listOf("表单", "验证")
+                tags = tags("表单", "验证")
             ),
             CodeSnippet(
                 id = "form-submit-intercept",
@@ -1931,18 +2404,18 @@ const errors = validateForm({
                 code = """document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
-        
+
         console.log('表单数据:', data);
-        
+
         // 可以在这里进行自定义处理
         // 然后决定是否继续提交
         // form.submit();
     });
 });""",
-                tags = listOf("表单", "拦截")
+                tags = tags("表单", "拦截")
             ),
             CodeSnippet(
                 id = "form-clear",
@@ -1959,7 +2432,7 @@ const errors = validateForm({
     }
 }
 clearForm('#myForm');""",
-                tags = listOf("表单", "清空")
+                tags = tags("表单", "清空")
             ),
             CodeSnippet(
                 id = "form-password-toggle",
@@ -1968,7 +2441,7 @@ clearForm('#myForm');""",
                 code = """function addPasswordToggle(inputSelector) {
     const input = document.querySelector(inputSelector);
     if (!input) return;
-    
+
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.innerHTML = '👁️';
@@ -1976,22 +2449,22 @@ clearForm('#myForm');""",
         position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
         background: none; border: none; cursor: pointer; font-size: 16px;
     `;
-    
+
     input.parentElement.style.position = 'relative';
     input.parentElement.appendChild(toggle);
-    
+
     toggle.onclick = () => {
         input.type = input.type === 'password' ? 'text' : 'password';
         toggle.innerHTML = input.type === 'password' ? '👁️' : '🙈';
     };
 }
 addPasswordToggle('#password');""",
-                tags = listOf("密码", "切换")
+                tags = tags("密码", "切换")
             )
         )
     )
 
-    
+
     // ==================== 媒体操作 ====================
     private fun mediaOperations() = CodeSnippetCategory(
         id = "media",
@@ -2021,7 +2494,7 @@ document.addEventListener('keydown', (e) => {
         video.playbackRate = Math.max(0.25, video.playbackRate - 0.25);
     }
 });""",
-                tags = listOf("视频", "倍速")
+                tags = tags("视频", "倍速")
             ),
             CodeSnippet(
                 id = "media-video-pip",
@@ -2042,7 +2515,7 @@ document.addEventListener('keydown', (e) => {
     }
 }
 enablePiP();""",
-                tags = listOf("视频", "画中画")
+                tags = tags("视频", "画中画")
             ),
             CodeSnippet(
                 id = "media-video-screenshot",
@@ -2051,22 +2524,22 @@ enablePiP();""",
                 code = """function captureVideoFrame(videoSelector) {
     const video = document.querySelector(videoSelector || 'video');
     if (!video) return null;
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
-    
+
     // 下载截图
     const link = document.createElement('a');
     link.download = 'screenshot_' + Date.now() + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    
+
     return canvas.toDataURL('image/png');
 }
 captureVideoFrame();""",
-                tags = listOf("视频", "截图")
+                tags = tags("视频", "截图")
             ),
             CodeSnippet(
                 id = "media-image-zoom",
@@ -2081,17 +2554,17 @@ captureVideoFrame();""",
             display: flex; align-items: center; justify-content: center;
             cursor: zoom-out;
         `;
-        
+
         const img = document.createElement('img');
         img.src = e.target.src;
         img.style.cssText = 'max-width: 95%; max-height: 95%; object-fit: contain;';
-        
+
         overlay.appendChild(img);
         overlay.onclick = () => overlay.remove();
         document.body.appendChild(overlay);
     }
 });""",
-                tags = listOf("图片", "放大")
+                tags = tags("图片", "放大")
             ),
             CodeSnippet(
                 id = "media-download-images",
@@ -2100,7 +2573,7 @@ captureVideoFrame();""",
                 code = """function downloadAllImages(minSize = 100) {
     const images = Array.from(document.querySelectorAll('img'))
         .filter(img => img.naturalWidth >= minSize && img.naturalHeight >= minSize);
-    
+
     images.forEach((img, index) => {
         setTimeout(() => {
             const link = document.createElement('a');
@@ -2109,11 +2582,11 @@ captureVideoFrame();""",
             link.click();
         }, index * 500); // 间隔500ms避免浏览器阻止
     });
-    
+
     console.log('开始下载 ' + images.length + ' 张图片');
 }
 downloadAllImages();""",
-                tags = listOf("图片", "下载")
+                tags = tags("图片", "下载")
             ),
             CodeSnippet(
                 id = "media-audio-control",
@@ -2141,7 +2614,7 @@ function setVolume(volume) {
 }
 
 muteAll(); // 静音所有""",
-                tags = listOf("音频", "控制")
+                tags = tags("音频", "控制")
             ),
             CodeSnippet(
                 id = "media-lazy-load",
@@ -2149,7 +2622,7 @@ muteAll(); // 静音所有""",
                 description = Strings.snippetLazyLoadDesc,
                 code = """function setupLazyLoad() {
     const images = document.querySelectorAll('img[data-src]');
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -2160,11 +2633,11 @@ muteAll(); // 静音所有""",
             }
         });
     }, { rootMargin: '100px' });
-    
+
     images.forEach(img => observer.observe(img));
 }
 setupLazyLoad();""",
-                tags = listOf("图片", "懒加载")
+                tags = tags("图片", "懒加载")
             ),
             CodeSnippet(
                 id = "media-fullscreen",
@@ -2187,11 +2660,11 @@ function videoFullscreen() {
     const video = document.querySelector('video');
     if (video) toggleFullscreen(video);
 }""",
-                tags = listOf("全屏", "视频")
+                tags = tags("全屏", "视频")
             )
         )
     )
-    
+
     // ==================== 页面增强 ====================
     private fun pageEnhance() = CodeSnippetCategory(
         id = "enhance",
@@ -2204,14 +2677,14 @@ function videoFullscreen() {
                 name = Strings.snippetReadingMode,
                 description = Strings.snippetReadingModeDesc,
                 code = """function enableReadingMode() {
-    const article = document.querySelector('article') || 
+    const article = document.querySelector('article') ||
                    document.querySelector('[class*="content"]') ||
                    document.querySelector('main') ||
                    document.body;
-    
+
     const title = document.querySelector('h1')?.textContent || document.title;
     const content = article.innerHTML;
-    
+
     document.body.innerHTML = `
         <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;
             font-size: 18px; line-height: 1.8; font-family: Georgia, serif;">
@@ -2226,7 +2699,7 @@ function videoFullscreen() {
     `;
 }
 enableReadingMode();""",
-                tags = listOf("阅读", "简化")
+                tags = tags("阅读", "简化")
             ),
             CodeSnippet(
                 id = "enhance-copy-unlock",
@@ -2256,7 +2729,7 @@ document.querySelectorAll('*').forEach(el => {
 });
 
 console.log('复制限制已解除');""",
-                tags = listOf("复制", "解锁")
+                tags = tags("复制", "解锁")
             ),
             CodeSnippet(
                 id = "enhance-print-friendly",
@@ -2283,7 +2756,7 @@ console.log('复制限制已解除');""",
     window.print();
 }
 preparePrint();""",
-                tags = listOf("打印", "优化")
+                tags = tags("打印", "优化")
             ),
             CodeSnippet(
                 id = "enhance-text-to-speech",
@@ -2312,15 +2785,15 @@ document.addEventListener('mouseup', () => {
         `;
         btn.onclick = () => { speakText(selection); btn.remove(); };
         document.body.appendChild(btn);
-        
+
         const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
         btn.style.left = rect.left + 'px';
         btn.style.top = (rect.bottom + 10) + 'px';
-        
+
         setTimeout(() => btn.remove(), 5000);
     }
 });""",
-                tags = listOf("语音", "朗读")
+                tags = tags("语音", "朗读")
             ),
             CodeSnippet(
                 id = "enhance-word-count",
@@ -2332,7 +2805,7 @@ document.addEventListener('mouseup', () => {
     const english = (text.match(/[a-zA-Z]+/g) || []).length;
     const numbers = (text.match(/\d+/g) || []).length;
     const total = chinese + english + numbers;
-    
+
     const result = `
         📊 字数统计
         ─────────
@@ -2342,12 +2815,12 @@ document.addEventListener('mouseup', () => {
         总计: ${"$"}{total}
         阅读时间: 约 ${"$"}{Math.ceil(total / 300)} 分钟
     `;
-    
+
     alert(result);
     return { chinese, english, numbers, total };
 }
 countWords();""",
-                tags = listOf("统计", "字数")
+                tags = tags("统计", "字数")
             ),
             CodeSnippet(
                 id = "enhance-highlight-search",
@@ -2358,31 +2831,31 @@ countWords();""",
     document.querySelectorAll('.search-highlight').forEach(el => {
         el.outerHTML = el.textContent;
     });
-    
+
     if (!keyword) return;
-    
+
     const regex = new RegExp('(' + keyword.replace(/[.*+?^${"$"}{}()|[\]\\]/g, '\\${"$"}&') + ')', 'gi');
-    
+
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
-    
+
     textNodes.forEach(node => {
         if (regex.test(node.textContent)) {
             const span = document.createElement('span');
-            span.innerHTML = node.textContent.replace(regex, 
+            span.innerHTML = node.textContent.replace(regex,
                 '<mark class="search-highlight" style="background: yellow;">${"$"}1</mark>');
             node.parentNode.replaceChild(span, node);
         }
     });
 }
 highlightText('搜索关键词');""",
-                tags = listOf("搜索", "高亮")
+                tags = tags("搜索", "高亮")
             )
         )
     )
 
-    
+
     // ==================== 内容过滤 ====================
     private fun contentFilter() = CodeSnippetCategory(
         id = "filter",
@@ -2396,7 +2869,7 @@ highlightText('搜索关键词');""",
                 description = Strings.snippetKeywordFilterDesc,
                 code = """function filterByKeywords(keywords, selector = '*') {
     const keywordList = keywords.map(k => k.toLowerCase());
-    
+
     document.querySelectorAll(selector).forEach(el => {
         const text = el.textContent.toLowerCase();
         if (keywordList.some(keyword => text.includes(keyword))) {
@@ -2405,7 +2878,7 @@ highlightText('搜索关键词');""",
     });
 }
 filterByKeywords(['广告', '推广', '赞助'], 'div, article, section');""",
-                tags = listOf("关键词", "过滤")
+                tags = tags("关键词", "过滤")
             ),
             CodeSnippet(
                 id = "filter-empty",
@@ -2419,7 +2892,7 @@ filterByKeywords(['广告', '推广', '赞助'], 'div, article, section');""",
     });
 }
 removeEmptyElements();""",
-                tags = listOf("空元素", "清理")
+                tags = tags("空元素", "清理")
             ),
             CodeSnippet(
                 id = "filter-comments",
@@ -2427,15 +2900,15 @@ removeEmptyElements();""",
                 description = Strings.snippetFilterCommentsDesc,
                 code = """function filterComments(options = {}) {
     const { minLength = 0, keywords = [], selector = '[class*="comment"]' } = options;
-    
+
     document.querySelectorAll(selector).forEach(comment => {
         const text = comment.textContent;
-        
+
         // 过滤短评论
         if (text.length < minLength) {
             comment.style.opacity = '0.3';
         }
-        
+
         // 过滤包含关键词的评论
         if (keywords.some(k => text.toLowerCase().includes(k.toLowerCase()))) {
             comment.style.display = 'none';
@@ -2443,7 +2916,7 @@ removeEmptyElements();""",
     });
 }
 filterComments({ minLength: 10, keywords: ['广告', '推广'] });""",
-                tags = listOf("评论", "过滤")
+                tags = tags("评论", "过滤")
             ),
             CodeSnippet(
                 id = "filter-images-size",
@@ -2465,11 +2938,11 @@ filterComments({ minLength: 10, keywords: ['广告', '推广'] });""",
     });
 }
 filterSmallImages(100, 100);""",
-                tags = listOf("图片", "过滤")
+                tags = tags("图片", "过滤")
             )
         )
     )
-    
+
     // ==================== 广告拦截 ====================
     private fun adBlocker() = CodeSnippetCategory(
         id = "adblocker",
@@ -2503,7 +2976,7 @@ function hideAds() {
 hideAds();
 const observer = new MutationObserver(hideAds);
 observer.observe(document.body, { childList: true, subtree: true });""",
-                tags = listOf("广告", "隐藏")
+                tags = tags("广告", "隐藏")
             ),
             CodeSnippet(
                 id = "ad-block-popup",
@@ -2530,7 +3003,7 @@ function removePopups() {
     });
 }
 setInterval(removePopups, 1000);""",
-                tags = listOf("弹窗", "阻止")
+                tags = tags("弹窗", "阻止")
             ),
             CodeSnippet(
                 id = "ad-remove-overlay",
@@ -2540,23 +3013,23 @@ setInterval(removePopups, 1000);""",
     // 移除固定定位的遮罩
     document.querySelectorAll('*').forEach(el => {
         const style = getComputedStyle(el);
-        if (style.position === 'fixed' && 
+        if (style.position === 'fixed' &&
             (style.zIndex > 1000 || el.style.zIndex > 1000)) {
             const rect = el.getBoundingClientRect();
             // 如果覆盖大部分屏幕
-            if (rect.width > window.innerWidth * 0.5 && 
+            if (rect.width > window.innerWidth * 0.5 &&
                 rect.height > window.innerHeight * 0.5) {
                 el.remove();
             }
         }
     });
-    
+
     // 恢复滚动
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
 }
 removeOverlays();""",
-                tags = listOf("遮罩", "移除")
+                tags = tags("遮罩", "移除")
             ),
             CodeSnippet(
                 id = "ad-css-blocker",
@@ -2580,7 +3053,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf("CSS", "广告")
+                tags = tags("CSS", "广告")
             ),
             CodeSnippet(
                 id = "ad-anti-adblock",
@@ -2602,11 +3075,11 @@ const observer = new MutationObserver(() => {
     });
 });
 observer.observe(document.body, { childList: true, subtree: true });""",
-                tags = listOf("反检测", "广告")
+                tags = tags("反检测", "广告")
             )
         )
     )
-    
+
     // ==================== 工具函数 ====================
     private fun utilityFunctions() = CodeSnippetCategory(
         id = "utility",
@@ -2629,7 +3102,7 @@ observer.observe(document.body, { childList: true, subtree: true });""",
 const debouncedSearch = debounce((query) => {
     console.log('搜索:', query);
 }, 500);""",
-                tags = listOf("防抖", "性能")
+                tags = tags("防抖", "性能")
             ),
             CodeSnippet(
                 id = "util-throttle",
@@ -2649,7 +3122,7 @@ const debouncedSearch = debounce((query) => {
 const throttledScroll = throttle(() => {
     console.log('滚动位置:', window.scrollY);
 }, 100);""",
-                tags = listOf("节流", "性能")
+                tags = tags("节流", "性能")
             ),
             CodeSnippet(
                 id = "util-wait-element",
@@ -2662,7 +3135,7 @@ const throttledScroll = throttle(() => {
             resolve(element);
             return;
         }
-        
+
         const observer = new MutationObserver(() => {
             const el = document.querySelector(selector);
             if (el) {
@@ -2670,9 +3143,9 @@ const throttledScroll = throttle(() => {
                 resolve(el);
             }
         });
-        
+
         observer.observe(document.body, { childList: true, subtree: true });
-        
+
         setTimeout(() => {
             observer.disconnect();
             reject(new Error('元素未找到: ' + selector));
@@ -2680,7 +3153,7 @@ const throttledScroll = throttle(() => {
     });
 }
 waitForElement('.target-class').then(el => console.log('找到元素:', el));""",
-                tags = listOf("等待", "异步")
+                tags = tags("等待", "异步")
             ),
             CodeSnippet(
                 id = "util-copy-text",
@@ -2704,7 +3177,7 @@ waitForElement('.target-class').then(el => console.log('找到元素:', el));"""
     }
 }
 copyToClipboard('要复制的文本');""",
-                tags = listOf("复制", "剪贴板")
+                tags = tags("复制", "剪贴板")
             ),
             CodeSnippet(
                 id = "util-format-date",
@@ -2723,7 +3196,7 @@ copyToClipboard('要复制的文本');""",
     return format.replace(/YYYY|MM|DD|HH|mm|ss/g, match => map[match]);
 }
 console.log(formatDate(new Date())); // 2024-01-01 12:00:00""",
-                tags = listOf("日期", "格式化")
+                tags = tags("日期", "格式化")
             ),
             CodeSnippet(
                 id = "util-random-string",
@@ -2738,7 +3211,7 @@ console.log(formatDate(new Date())); // 2024-01-01 12:00:00""",
     return result;
 }
 console.log(randomString(16));""",
-                tags = listOf("随机", "字符串")
+                tags = tags("随机", "字符串")
             ),
             CodeSnippet(
                 id = "util-sleep",
@@ -2754,7 +3227,7 @@ async function example() {
     await sleep(2000);
     console.log('2秒后');
 }""",
-                tags = listOf("延迟", "异步")
+                tags = tags("延迟", "异步")
             ),
             CodeSnippet(
                 id = "util-retry",
@@ -2774,12 +3247,12 @@ async function example() {
 
 // 使用示例
 retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
-                tags = listOf("重试", "错误处理")
+                tags = tags("重试", "错误处理")
             )
         )
     )
 
-    
+
     // ==================== 文本处理 ====================
     private fun textProcessing() = CodeSnippetCategory(
         id = "text",
@@ -2797,7 +3270,7 @@ retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
         'article', '[class*="article"]', '[class*="content"]',
         '[class*="post"]', '[class*="entry"]', 'main', '.main'
     ];
-    
+
     for (const selector of selectors) {
         const el = document.querySelector(selector);
         if (el && el.textContent.length > 500) {
@@ -2808,12 +3281,12 @@ retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
             };
         }
     }
-    
+
     return { title: document.title, content: document.body.innerText };
 }
 const article = extractArticle();
 console.log(article);""",
-                tags = listOf("提取", "文章")
+                tags = tags("提取", "文章")
             ),
             CodeSnippet(
                 id = "text-replace-all",
@@ -2823,7 +3296,7 @@ console.log(article);""",
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
-    
+
     textNodes.forEach(node => {
         let text = node.textContent;
         Object.entries(replacements).forEach(([from, to]) => {
@@ -2836,7 +3309,7 @@ replaceText({
     '旧文本': '新文本',
     '广告': '[已屏蔽]'
 });""",
-                tags = listOf("替换", "文本")
+                tags = tags("替换", "文本")
             ),
             CodeSnippet(
                 id = "text-translate-selection",
@@ -2845,10 +3318,10 @@ replaceText({
                 code = """document.addEventListener('mouseup', (e) => {
     const selection = window.getSelection().toString().trim();
     if (!selection || selection.length > 200) return;
-    
+
     // 移除旧的翻译按钮
     document.querySelector('#translate-btn')?.remove();
-    
+
     const btn = document.createElement('button');
     btn.id = 'translate-btn';
     btn.innerHTML = '🌐 翻译';
@@ -2863,11 +3336,11 @@ replaceText({
         window.open(url, '_blank');
         btn.remove();
     };
-    
+
     document.body.appendChild(btn);
     setTimeout(() => btn.remove(), 5000);
 });""",
-                tags = listOf("翻译", "选中")
+                tags = tags("翻译", "选中")
             ),
             CodeSnippet(
                 id = "text-markdown-convert",
@@ -2875,41 +3348,41 @@ replaceText({
                 description = Strings.snippetHtmlToMarkdownDesc,
                 code = """function htmlToMarkdown(html) {
     let md = html;
-    
+
     // 标题
     md = md.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\\n');
     md = md.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\\n');
     md = md.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\\n');
-    
+
     // 格式
     md = md.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
     md = md.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**');
     md = md.replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*');
     md = md.replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*');
-    
+
     // 链接和图片
     md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
     md = md.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, '![$2]($1)');
-    
+
     // 列表
     md = md.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\\n');
-    
+
     // 段落和换行
     md = md.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\\n\\n');
     md = md.replace(/<br[^>]*>/gi, '\\n');
-    
+
     // 移除其他标签
     md = md.replace(/<[^>]+>/g, '');
-    
+
     return md.trim();
 }
 const md = htmlToMarkdown(document.body.innerHTML);
 console.log(md);""",
-                tags = listOf("Markdown", "转换")
+                tags = tags("Markdown", "转换")
             )
         )
     )
-    
+
     // ==================== 请求拦截 ====================
     private fun interceptors() = CodeSnippetCategory(
         id = "intercept",
@@ -2924,18 +3397,18 @@ console.log(md);""",
                 code = """const originalFetch = window.fetch;
 window.fetch = async function(url, options = {}) {
     console.log('[Fetch]', url);
-    
+
     // 可以修改请求
     // if (url.includes('ad')) return new Response('{}');
-    
+
     const response = await originalFetch.call(this, url, options);
-    
+
     // 可以处理响应
     console.log('[Fetch Response]', response.status);
-    
+
     return response;
 };""",
-                tags = listOf("拦截", "fetch")
+                tags = tags("拦截", "fetch")
             ),
             CodeSnippet(
                 id = "intercept-xhr",
@@ -2957,7 +3430,7 @@ XMLHttpRequest.prototype.send = function(body) {
     });
     return originalSend.call(this, body);
 };""",
-                tags = listOf("拦截", "XHR")
+                tags = tags("拦截", "XHR")
             ),
             CodeSnippet(
                 id = "intercept-websocket",
@@ -2966,22 +3439,22 @@ XMLHttpRequest.prototype.send = function(body) {
                 code = """const OriginalWebSocket = window.WebSocket;
 window.WebSocket = function(url, protocols) {
     console.log('[WebSocket]', url);
-    
+
     const ws = new OriginalWebSocket(url, protocols);
-    
+
     const originalSend = ws.send.bind(ws);
     ws.send = function(data) {
         console.log('[WS Send]', data);
         return originalSend(data);
     };
-    
+
     ws.addEventListener('message', (e) => {
         console.log('[WS Receive]', e.data);
     });
-    
+
     return ws;
 };""",
-                tags = listOf("拦截", "WebSocket")
+                tags = tags("拦截", "WebSocket")
             ),
             CodeSnippet(
                 id = "intercept-block-requests",
@@ -3012,11 +3485,11 @@ XMLHttpRequest.prototype.send = function(body) {
     if (this._blocked) return;
     return originalSend.call(this, body);
 };""",
-                tags = listOf("阻止", "请求")
+                tags = tags("阻止", "请求")
             )
         )
     )
-    
+
     // ==================== 自动化 ====================
     private fun automation() = CodeSnippetCategory(
         id = "automation",
@@ -3038,7 +3511,7 @@ XMLHttpRequest.prototype.send = function(body) {
     }, delay);
 }
 autoClick('.close-btn', 2000);""",
-                tags = listOf("自动", "点击")
+                tags = tags("自动", "点击")
             ),
             CodeSnippet(
                 id = "auto-click-interval",
@@ -3052,7 +3525,7 @@ autoClick('.close-btn', 2000);""",
             console.log('[AutoClick]', new Date().toLocaleTimeString());
         }
     };
-    
+
     click(); // 立即执行一次
     return setInterval(click, interval);
 }
@@ -3060,7 +3533,7 @@ autoClick('.close-btn', 2000);""",
 // 每5秒点击一次
 const timer = autoClickInterval('.refresh-btn', 5000);
 // 停止: clearInterval(timer);""",
-                tags = listOf("定时", "点击")
+                tags = tags("定时", "点击")
             ),
             CodeSnippet(
                 id = "auto-fill-form",
@@ -3077,7 +3550,7 @@ const timer = autoClickInterval('.refresh-btn', 5000);
             await new Promise(r => setTimeout(r, 100));
         }
     }
-    
+
     // 点击提交
     if (submitSelector) {
         await new Promise(r => setTimeout(r, 500));
@@ -3089,7 +3562,7 @@ autoFillAndSubmit({
     username: 'user',
     password: 'pass'
 }, 'button[type="submit"]');""",
-                tags = listOf("表单", "自动")
+                tags = tags("表单", "自动")
             ),
             CodeSnippet(
                 id = "auto-refresh",
@@ -3097,7 +3570,7 @@ autoFillAndSubmit({
                 description = Strings.snippetAutoRefreshDesc,
                 code = """function autoRefresh(seconds = 60) {
     let countdown = seconds;
-    
+
     const display = document.createElement('div');
     display.style.cssText = `
         position: fixed; top: 10px; right: 10px; z-index: 999999;
@@ -3105,7 +3578,7 @@ autoFillAndSubmit({
         padding: 8px 12px; border-radius: 20px; font-size: 12px;
     `;
     document.body.appendChild(display);
-    
+
     const timer = setInterval(() => {
         countdown--;
         display.textContent = '🔄 ' + countdown + 's';
@@ -3113,17 +3586,17 @@ autoFillAndSubmit({
             location.reload();
         }
     }, 1000);
-    
+
     display.onclick = () => {
         clearInterval(timer);
         display.remove();
     };
     display.title = '点击取消';
-    
+
     return timer;
 }
 autoRefresh(60);""",
-                tags = listOf("刷新", "定时")
+                tags = tags("刷新", "定时")
             ),
             CodeSnippet(
                 id = "auto-scroll-load",
@@ -3131,28 +3604,28 @@ autoRefresh(60);""",
                 description = Strings.snippetAutoScrollLoadDesc,
                 code = """async function autoScrollLoad(maxScrolls = 10, delay = 2000) {
     let scrollCount = 0;
-    
+
     while (scrollCount < maxScrolls) {
         const prevHeight = document.documentElement.scrollHeight;
-        
+
         window.scrollTo(0, document.documentElement.scrollHeight);
         await new Promise(r => setTimeout(r, delay));
-        
+
         const newHeight = document.documentElement.scrollHeight;
         if (newHeight === prevHeight) {
             console.log('已到达底部');
             break;
         }
-        
+
         scrollCount++;
         console.log('已滚动 ' + scrollCount + ' 次');
     }
-    
+
     window.scrollTo(0, 0);
     console.log('加载完成');
 }
 autoScrollLoad(10, 2000);""",
-                tags = listOf("滚动", "加载")
+                tags = tags("滚动", "加载")
             ),
             CodeSnippet(
                 id = "auto-login-check",
@@ -3160,22 +3633,22 @@ autoScrollLoad(10, 2000);""",
                 description = Strings.snippetAutoLoginCheckDesc,
                 code = """function checkLoginStatus(loggedInSelector, loginUrl) {
     const isLoggedIn = !!document.querySelector(loggedInSelector);
-    
+
     if (!isLoggedIn) {
         const shouldLogin = confirm('检测到未登录，是否跳转到登录页面？');
         if (shouldLogin) {
             location.href = loginUrl;
         }
     }
-    
+
     return isLoggedIn;
 }
 checkLoginStatus('.user-avatar', '/login');""",
-                tags = listOf("登录", "检测")
+                tags = tags("登录", "检测")
             )
         )
     )
-    
+
     // ==================== 调试工具 ====================
     private fun debugging() = CodeSnippetCategory(
         id = "debug",
@@ -3205,7 +3678,7 @@ console.log = function(...args) {
     panel.appendChild(line);
     panel.scrollTop = panel.scrollHeight;
 };""",
-                tags = listOf("控制台", "日志")
+                tags = tags("控制台", "日志")
             ),
             CodeSnippet(
                 id = "debug-element-info",
@@ -3257,7 +3730,7 @@ document.addEventListener('keydown', (e) => {
         console.log('Inspector:', inspecting ? 'ON' : 'OFF');
     }
 });""",
-                tags = listOf("检查", "元素")
+                tags = tags("检查", "元素")
             ),
             CodeSnippet(
                 id = "debug-performance",
@@ -3268,7 +3741,7 @@ document.addEventListener('keydown', (e) => {
     const loadTime = perf.loadEventEnd - perf.navigationStart;
     const domReady = perf.domContentLoadedEventEnd - perf.navigationStart;
     const firstPaint = performance.getEntriesByType('paint')[0]?.startTime || 0;
-    
+
     const info = `
         📊 性能信息
         ─────────────
@@ -3278,12 +3751,12 @@ document.addEventListener('keydown', (e) => {
         资源数量: ${"$"}{performance.getEntriesByType('resource').length}
         内存使用: ${"$"}{Math.round((performance.memory?.usedJSHeapSize || 0) / 1024 / 1024)}MB
     `;
-    
+
     console.log(info);
     alert(info);
 }
 showPerformance();""",
-                tags = listOf("性能", "监控")
+                tags = tags("性能", "监控")
             ),
             CodeSnippet(
                 id = "debug-network-log",
@@ -3325,7 +3798,7 @@ XMLHttpRequest.prototype.send = function() {
 
 // 查看日志
 window.showNetworkLog = () => console.table(networkLog);""",
-                tags = listOf("网络", "日志")
+                tags = tags("网络", "日志")
             )
         )
     )

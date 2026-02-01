@@ -39,16 +39,16 @@ enum class AnnouncementTemplate(
     val description: String,
     val icon: ImageVector
 ) {
-    MINIMAL("极简", "简约清爽的设计风格", Icons.Outlined.Minimize),
-    XIAOHONGSHU("小红书", "精美卡片风格", Icons.Outlined.AutoAwesome),
-    GRADIENT("渐变", "炫彩渐变背景", Icons.Outlined.Gradient),
-    GLASSMORPHISM("毛玻璃", "现代毛玻璃效果", Icons.Outlined.BlurOn),
-    NEON("霓虹", "赛博朋克风格", Icons.Outlined.Lightbulb),
-    CUTE("可爱", "萌系卡通风格", Icons.Outlined.Favorite),
-    ELEGANT("优雅", "高端商务风格", Icons.Outlined.Diamond),
-    FESTIVE("节日", "喜庆节日风格", Icons.Outlined.Celebration),
-    DARK("暗黑", "深色主题风格", Icons.Outlined.DarkMode),
-    NATURE("自然", "清新自然风格", Icons.Outlined.Park)
+    MINIMAL("Minimal", "Clean and simple style", Icons.Outlined.Minimize),
+    XIAOHONGSHU("Xiaohongshu", "Elegant card style", Icons.Outlined.AutoAwesome),
+    GRADIENT("Gradient", "Vibrant gradient background", Icons.Outlined.Gradient),
+    GLASSMORPHISM("Glassmorphism", "Modern frosted glass effect", Icons.Outlined.BlurOn),
+    NEON("Neon", "Cyberpunk-inspired style", Icons.Outlined.Lightbulb),
+    CUTE("Cute", "Playful cartoon style", Icons.Outlined.Favorite),
+    ELEGANT("Elegant", "Premium business style", Icons.Outlined.Diamond),
+    FESTIVE("Festive", "Celebratory holiday style", Icons.Outlined.Celebration),
+    DARK("Dark", "Dark theme style", Icons.Outlined.DarkMode),
+    NATURE("Nature", "Fresh natural style", Icons.Outlined.Park)
 }
 
 /**
@@ -125,7 +125,7 @@ private fun MinimalTemplate(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
-            
+
             // 内容
             Text(
                 text = config.announcement.content,
@@ -134,9 +134,9 @@ private fun MinimalTemplate(
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // 按钮
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -198,7 +198,7 @@ private fun XiaohongshuTemplate(
                             )
                         )
                 )
-                
+
                 Column(modifier = Modifier.padding(24.dp)) {
                     // 图标和标题行
                     Row(
@@ -224,9 +224,9 @@ private fun XiaohongshuTemplate(
                                 modifier = Modifier.size(28.dp)
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.width(16.dp))
-                        
+
                         Column(modifier = Modifier.weight(1f)) {
                             if (config.announcement.title.isNotBlank()) {
                                 Text(
@@ -238,13 +238,13 @@ private fun XiaohongshuTemplate(
                             }
                             if (config.showEmoji) {
                                 Text(
-                                    text = "✨ 新消息",
+                                    text = Strings.newMessageLabel,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFFFF2442)
                                 )
                             }
                         }
-                        
+
                         // 关闭按钮
                         IconButton(
                             onClick = onDismiss,
@@ -260,9 +260,9 @@ private fun XiaohongshuTemplate(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(20.dp))
-                    
+
                     // 内容卡片
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -277,9 +277,9 @@ private fun XiaohongshuTemplate(
                             modifier = Modifier.padding(16.dp)
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
-                    
+
                     // 底部按钮
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -301,7 +301,7 @@ private fun XiaohongshuTemplate(
                                 )
                             }
                         }
-                        
+
                         Button(
                             onClick = onDismiss,
                             modifier = Modifier
@@ -338,7 +338,7 @@ private fun GradientTemplate(
         Color(0xFF764BA2),
         Color(0xFFF093FB)
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth(0.88f)
@@ -370,7 +370,7 @@ private fun GradientTemplate(
                     .offset(x = 20.dp, y = 40.dp)
                     .background(Color.White.copy(alpha = 0.1f), CircleShape)
             )
-            
+
             Column(
                 modifier = Modifier.padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -389,9 +389,9 @@ private fun GradientTemplate(
                         modifier = Modifier.size(36.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(20.dp))
-                
+
                 // 标题
                 if (config.announcement.title.isNotBlank()) {
                     Text(
@@ -403,7 +403,7 @@ private fun GradientTemplate(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
-                
+
                 // 内容
                 Text(
                     text = config.announcement.content,
@@ -412,9 +412,9 @@ private fun GradientTemplate(
                     textAlign = TextAlign.Center,
                     lineHeight = 26.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(28.dp))
-                
+
                 // 按钮
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -433,12 +433,13 @@ private fun GradientTemplate(
                             )
                         ) {
                             Text(
-                                config.announcement.linkText ?: "查看",
+                                config.announcement.linkText
+                                    ?: Strings.view,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
-                    
+
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier
@@ -479,7 +480,7 @@ private fun GlassmorphismTemplate(
         ),
         label = "glowOffset"
     )
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -504,7 +505,7 @@ private fun GlassmorphismTemplate(
                 )
                 .blur(30.dp)
         )
-        
+
         // 主毛玻璃卡片
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -590,7 +591,7 @@ private fun GlassmorphismTemplate(
                                     )
                             )
                         }
-                        
+
                         // 关闭按钮 - 毛玻璃风格
                         Surface(
                             onClick = onDismiss,
@@ -609,9 +610,9 @@ private fun GlassmorphismTemplate(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(28.dp))
-                    
+
                     // 图标 - 渐变背景
                     Box(
                         modifier = Modifier
@@ -636,9 +637,9 @@ private fun GlassmorphismTemplate(
                             modifier = Modifier.size(40.dp)
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
-                    
+
                     // 标题
                     if (config.announcement.title.isNotBlank()) {
                         Text(
@@ -650,7 +651,7 @@ private fun GlassmorphismTemplate(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
-                    
+
                     // 内容 - 半透明背景
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -667,9 +668,9 @@ private fun GlassmorphismTemplate(
                             modifier = Modifier.padding(16.dp)
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(28.dp))
-                    
+
                     // 主按钮 - 渐变
                     Button(
                         onClick = onDismiss,
@@ -704,7 +705,7 @@ private fun GlassmorphismTemplate(
                             )
                         }
                     }
-                    
+
                     // 链接按钮
                     if (config.announcement.linkUrl != null) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -750,7 +751,7 @@ private fun NeonTemplate(
         ),
         label = "glow"
     )
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -765,7 +766,7 @@ private fun NeonTemplate(
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFF00F5FF).copy(alpha = glowAlpha * 0.4f))
         )
-        
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -791,9 +792,9 @@ private fun NeonTemplate(
                             )
                         )
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // 图标
                 Box(
                     modifier = Modifier
@@ -808,9 +809,9 @@ private fun NeonTemplate(
                         modifier = Modifier.size(32.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(20.dp))
-                
+
                 // 标题
                 if (config.announcement.title.isNotBlank()) {
                     Text(
@@ -822,7 +823,7 @@ private fun NeonTemplate(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
-                
+
                 // 内容
                 Text(
                     text = config.announcement.content,
@@ -831,9 +832,9 @@ private fun NeonTemplate(
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(28.dp))
-                
+
                 // 按钮
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -855,7 +856,7 @@ private fun NeonTemplate(
                             )
                         }
                     }
-                    
+
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier
@@ -893,7 +894,7 @@ private fun CuteTemplate(
         ),
         label = "bounce"
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth(0.88f)
@@ -912,9 +913,9 @@ private fun CuteTemplate(
                 fontSize = 48.sp,
                 modifier = Modifier.offset(y = (-bounceAnim).dp)
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // 标题
             if (config.announcement.title.isNotBlank()) {
                 Text(
@@ -926,7 +927,7 @@ private fun CuteTemplate(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            
+
             // 装饰分隔线
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -948,9 +949,9 @@ private fun CuteTemplate(
                 )
                 Text("✿", color = Color(0xFFFFB6C1))
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // 内容
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -967,9 +968,9 @@ private fun CuteTemplate(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // 按钮
             Button(
                 onClick = onDismiss,
@@ -983,12 +984,12 @@ private fun CuteTemplate(
             ) {
                 Text(Strings.gotItCute, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-            
+
             if (config.announcement.linkUrl != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(onClick = { onLinkClick?.invoke(config.announcement.linkUrl!!) }) {
                     Text(
-                        "✨ ${config.announcement.linkText ?: "去看看"} ✨",
+                        "✨ ${config.announcement.linkText ?: Strings.view} ✨",
                         color = Color(0xFFFF69B4)
                     )
                 }
@@ -1031,7 +1032,7 @@ private fun ElegantTemplate(
                         )
                     )
             )
-            
+
             Column(
                 modifier = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -1042,9 +1043,9 @@ private fun ElegantTemplate(
                     fontSize = 24.sp,
                     color = Color(0xFFD4AF37)
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 标题
                 if (config.announcement.title.isNotBlank()) {
                     Text(
@@ -1055,9 +1056,9 @@ private fun ElegantTemplate(
                         letterSpacing = 4.sp,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // 装饰线
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -1083,10 +1084,10 @@ private fun ElegantTemplate(
                                 .background(Color(0xFFD4AF37))
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-                
+
                 // 内容
                 Text(
                     text = config.announcement.content,
@@ -1095,9 +1096,9 @@ private fun ElegantTemplate(
                     textAlign = TextAlign.Center,
                     lineHeight = 26.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
-                
+
                 // 按钮
                 OutlinedButton(
                     onClick = onDismiss,
@@ -1108,13 +1109,13 @@ private fun ElegantTemplate(
                     border = BorderStroke(1.dp, Color(0xFFD4AF37))
                 ) {
                     Text(
-                        "确认",
+                        Strings.confirm,
                         color = Color(0xFFD4AF37),
                         fontWeight = FontWeight.Light,
                         letterSpacing = 2.sp
                     )
                 }
-                
+
                 if (config.announcement.linkUrl != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     TextButton(onClick = { onLinkClick?.invoke(config.announcement.linkUrl!!) }) {
@@ -1148,7 +1149,7 @@ private fun FestiveTemplate(
         ),
         label = "sparkle"
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -1186,7 +1187,7 @@ private fun FestiveTemplate(
                     .offset(x = 40.dp, y = (-30).dp)
                     .rotate(sparkleAnim * 0.5f)
             )
-            
+
             Column(
                 modifier = Modifier.padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -1196,9 +1197,9 @@ private fun FestiveTemplate(
                     text = "🎊",
                     fontSize = 56.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 标题
                 if (config.announcement.title.isNotBlank()) {
                     Text(
@@ -1210,7 +1211,7 @@ private fun FestiveTemplate(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
-                
+
                 // 装饰
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -1227,9 +1228,9 @@ private fun FestiveTemplate(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("🎉", fontSize = 20.sp)
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 内容
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -1245,9 +1246,9 @@ private fun FestiveTemplate(
                         modifier = Modifier.padding(16.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // 按钮
                 Button(
                     onClick = onDismiss,
@@ -1260,9 +1261,13 @@ private fun FestiveTemplate(
                         contentColor = Color(0xFFB22222)
                     )
                 ) {
-                    Text("🎁 收到啦", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        Strings.gotIt,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
-                
+
                 if (config.announcement.linkUrl != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     TextButton(onClick = { onLinkClick?.invoke(config.announcement.linkUrl!!) }) {
@@ -1333,7 +1338,7 @@ private fun DarkTemplate(
                         )
                     }
                 }
-                
+
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier.size(32.dp)
@@ -1346,9 +1351,9 @@ private fun DarkTemplate(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
+
             // 标题
             if (config.announcement.title.isNotBlank()) {
                 Text(
@@ -1361,7 +1366,7 @@ private fun DarkTemplate(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            
+
             // 内容
             Text(
                 text = config.announcement.content,
@@ -1370,9 +1375,9 @@ private fun DarkTemplate(
                 lineHeight = 24.sp,
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // 按钮
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1393,7 +1398,7 @@ private fun DarkTemplate(
                         )
                     }
                 }
-                
+
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier
@@ -1455,7 +1460,7 @@ private fun NatureTemplate(
                     Text("🍃", fontSize = 28.sp)
                 }
             }
-            
+
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -1471,7 +1476,7 @@ private fun NatureTemplate(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-                
+
                 // 内容卡片
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -1488,9 +1493,9 @@ private fun NatureTemplate(
                         modifier = Modifier.padding(16.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // 按钮
                 Button(
                     onClick = onDismiss,
@@ -1504,7 +1509,7 @@ private fun NatureTemplate(
                 ) {
                     Text("🌱 " + Strings.btnOk, fontWeight = FontWeight.Medium, fontSize = 16.sp)
                 }
-                
+
                 if (config.announcement.linkUrl != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     TextButton(onClick = { onLinkClick?.invoke(config.announcement.linkUrl!!) }) {
@@ -1525,10 +1530,10 @@ private fun NatureTemplate(
 @Composable
 private fun Modifier.animateEnterExit(enabled: Boolean): Modifier {
     if (!enabled) return this
-    
+
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
-    
+
     val scale by animateFloatAsState(
         targetValue = if (visible) 1f else 0.8f,
         animationSpec = spring(
@@ -1537,13 +1542,13 @@ private fun Modifier.animateEnterExit(enabled: Boolean): Modifier {
         ),
         label = "scale"
     )
-    
+
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
         animationSpec = tween(300),
         label = "alpha"
     )
-    
+
     return this
         .scale(scale)
         .graphicsLayer { this.alpha = alpha }

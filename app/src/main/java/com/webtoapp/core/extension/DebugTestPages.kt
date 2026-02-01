@@ -4,11 +4,11 @@ import com.webtoapp.core.i18n.Strings
 
 /**
  * 调试测试页面
- * 
+ *
  * 提供多种类型的测试页面，用于开发和调试扩展模块
  */
 object DebugTestPages {
-    
+
     /**
      * 获取所有测试页面
      */
@@ -22,7 +22,7 @@ object DebugTestPages {
         apiTestPage(),
         styleTestPage()
     )
-    
+
     /**
      * 基础HTML测试页
      */
@@ -31,7 +31,8 @@ object DebugTestPages {
         name = Strings.testPageBasicHtml,
         description = Strings.testPageBasicHtmlDesc,
         icon = "📄",
-        html = """
+        html = Strings.localized(
+            chinese = """
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -52,13 +53,13 @@ object DebugTestPages {
 <body>
     <h1>🧪 基础HTML测试页</h1>
     <p>这是一个用于测试扩展模块的基础页面。</p>
-    
+
     <div class="card">
         <h2>文本内容</h2>
         <p>这是一段普通文本。<strong>这是粗体</strong>，<em>这是斜体</em>。</p>
         <p class="highlight">这是一个高亮提示框。</p>
     </div>
-    
+
     <div class="card">
         <h2>链接</h2>
         <ul>
@@ -67,18 +68,18 @@ object DebugTestPages {
             <li><a href="#section">页内锚点</a></li>
         </ul>
     </div>
-    
+
     <div class="card">
         <h2>按钮</h2>
         <button onclick="alert('按钮被点击!')">点击我</button>
         <button class="close-btn" onclick="this.parentElement.style.display='none'">关闭按钮</button>
     </div>
-    
+
     <div class="card">
         <h2>图片</h2>
         <img src="https://via.placeholder.com/400x200" alt="测试图片">
     </div>
-    
+
     <div class="card" id="section">
         <h2>表格</h2>
         <table border="1" style="width:100%;border-collapse:collapse;">
@@ -90,7 +91,68 @@ object DebugTestPages {
     </div>
 </body>
 </html>
-        """.trimIndent()
+            """.trimIndent(),
+            english = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic HTML Test Page</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        .card { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .highlight { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        a { color: #007bff; }
+        img { max-width: 100%; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Basic HTML Test Page</h1>
+    <p>This is a basic page for testing extension modules.</p>
+
+    <div class="card">
+        <h2>Text Content</h2>
+        <p>This is normal text. <strong>This is bold</strong>, <em>this is italic</em>.</p>
+        <p class="highlight">This is a highlighted box.</p>
+    </div>
+
+    <div class="card">
+        <h2>Links</h2>
+        <ul>
+            <li><a href="https://example.com">Example Link 1</a></li>
+            <li><a href="https://test.com">Example Link 2</a></li>
+            <li><a href="#section">In-page Anchor</a></li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Buttons</h2>
+        <button onclick="alert('Button clicked!')">Click Me</button>
+        <button class="close-btn" onclick="this.parentElement.style.display='none'">Close Button</button>
+    </div>
+
+    <div class="card">
+        <h2>Images</h2>
+        <img src="https://via.placeholder.com/400x200" alt="Test Image">
+    </div>
+
+    <div class="card" id="section">
+        <h2>Table</h2>
+        <table border="1" style="width:100%;border-collapse:collapse;">
+            <tr><th>Name</th><th>Value</th><th>Status</th></tr>
+            <tr><td>Item A</td><td>100</td><td>Normal</td></tr>
+            <tr><td>Item B</td><td>200</td><td>Warning</td></tr>
+            <tr><td>Item C</td><td>300</td><td>Error</td></tr>
+        </table>
+    </div>
+</body>
+</html>
+            """.trimIndent()
+        )
     )
 
     /**
@@ -101,7 +163,8 @@ object DebugTestPages {
         name = Strings.testPageForm,
         description = Strings.testPageFormDesc,
         icon = "📝",
-        html = """
+        html = Strings.localized(
+            chinese = """
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -162,9 +225,72 @@ object DebugTestPages {
     </script>
 </body>
 </html>
-        """.trimIndent()
+            """.trimIndent(),
+            english = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Test Page</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>📝 Form Test Page</h1>
+    <form id="testForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter password">
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="Enter phone number">
+        </div>
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+                <option value="">Please select</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" rows="4" placeholder="Enter your bio"></textarea>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" name="agree"> I agree to the terms of service</label>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById('testForm').onsubmit = function(e) {
+            e.preventDefault();
+            const data = new FormData(this);
+            console.log('Form data:', Object.fromEntries(data));
+            alert('Form submitted! Check console for data.');
+        };
+    </script>
+</body>
+</html>
+            """.trimIndent()
+        )
     )
-    
+
     /**
      * 媒体测试页
      */
@@ -190,7 +316,7 @@ object DebugTestPages {
 </head>
 <body>
     <h1>🎬 媒体测试页</h1>
-    
+
     <div class="media-section">
         <h2>图片画廊</h2>
         <div class="gallery">
@@ -202,7 +328,7 @@ object DebugTestPages {
             <img src="https://via.placeholder.com/300x200/DDA0DD/fff?text=Image+6" alt="图片6">
         </div>
     </div>
-    
+
     <div class="media-section">
         <h2>视频播放器</h2>
         <video controls poster="https://via.placeholder.com/800x450/333/fff?text=Video+Poster">
@@ -210,7 +336,7 @@ object DebugTestPages {
             您的浏览器不支持视频播放。
         </video>
     </div>
-    
+
     <div class="media-section">
         <h2>音频播放器</h2>
         <audio controls>
@@ -257,37 +383,37 @@ object DebugTestPages {
     <div class="content">
         <h1>🛡️ 广告模拟测试页</h1>
         <p>此页面模拟各种广告元素，用于测试广告拦截模块。</p>
-        
+
         <div class="ad-banner">
             <h3>📢 横幅广告 (class="ad-banner")</h3>
             <p>这是一个模拟的横幅广告</p>
         </div>
-        
+
         <p>这是正常的页面内容，不应该被隐藏。</p>
-        
+
         <div class="ads-container">
             <h3>📢 广告容器 (class="ads-container")</h3>
             <p>这是另一个广告区域</p>
         </div>
-        
+
         <p>更多正常内容...</p>
-        
+
         <div class="advertisement">
             <h3>📢 广告区 (class="advertisement")</h3>
             <p>Advertisement Area</p>
         </div>
-        
+
         <div data-ad="true">
             <h3>📢 数据广告 (data-ad="true")</h3>
             <p>Data Ad Element</p>
         </div>
-        
+
         <div class="sponsored">
             <h4>赞助内容 (class="sponsored")</h4>
             <p>这是赞助商内容</p>
         </div>
     </div>
-    
+
     <div class="overlay" id="overlay"></div>
     <div id="popup-ad">
         <span class="close-btn" onclick="document.getElementById('popup-ad').style.display='none';document.getElementById('overlay').style.display='none';">✕</span>
@@ -299,7 +425,7 @@ object DebugTestPages {
 </html>
         """.trimIndent()
     )
-    
+
     /**
      * 弹窗测试页
      */
@@ -329,14 +455,14 @@ object DebugTestPages {
 <body>
     <h1>💬 弹窗测试页</h1>
     <p>点击按钮测试各种弹窗：</p>
-    
+
     <button onclick="document.getElementById('modal1').style.display='block'">打开模态框</button>
     <button onclick="alert('这是一个 Alert 弹窗')">Alert 弹窗</button>
     <button onclick="confirm('这是一个 Confirm 弹窗')">Confirm 弹窗</button>
     <button onclick="prompt('这是一个 Prompt 弹窗')">Prompt 弹窗</button>
     <button onclick="window.open('about:blank', '_blank', 'width=400,height=300')">打开新窗口</button>
     <button onclick="Notification.requestPermission()">请求通知权限</button>
-    
+
     <div id="modal1" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="this.parentElement.parentElement.style.display='none'">×</span>
@@ -345,13 +471,13 @@ object DebugTestPages {
             <button onclick="this.parentElement.parentElement.style.display='none'">关闭</button>
         </div>
     </div>
-    
+
     <div class="cookie-banner" id="cookieBanner">
         🍪 本网站使用 Cookie 来提升您的体验。
         <button onclick="this.parentElement.style.display='none'" style="margin-left:20px;">接受</button>
         <button onclick="this.parentElement.style.display='none'">拒绝</button>
     </div>
-    
+
     <div class="notification-prompt" id="notifPrompt">
         🔔 是否允许发送通知？
         <div style="margin-top:10px;">
@@ -390,16 +516,16 @@ object DebugTestPages {
 </head>
 <body>
     <div class="scroll-indicator" id="scrollIndicator">滚动: 0%</div>
-    
+
     <h1>📜 滚动测试页</h1>
     <p>这是一个长页面，用于测试滚动相关的扩展模块。</p>
-    
+
     <div class="section"><h2>第 1 节</h2><p>向下滚动查看更多内容...</p></div>
     <div class="section"><h2>第 2 节</h2><p>继续滚动...</p></div>
     <div class="section"><h2>第 3 节</h2><p>还有更多...</p></div>
     <div class="section"><h2>第 4 节</h2><p>快到底了...</p></div>
     <div class="section"><h2>第 5 节</h2><p>这是最后一节！</p></div>
-    
+
     <script>
         window.addEventListener('scroll', () => {
             const scrollTop = window.scrollY;
@@ -412,7 +538,7 @@ object DebugTestPages {
 </html>
         """.trimIndent()
     )
-    
+
     /**
      * API测试页
      */
@@ -440,7 +566,7 @@ object DebugTestPages {
 <body>
     <h1>🌐 API测试页</h1>
     <p>测试各种网络请求：</p>
-    
+
     <div>
         <button onclick="testFetch()">Fetch 请求</button>
         <button onclick="testXHR()">XHR 请求</button>
@@ -448,20 +574,20 @@ object DebugTestPages {
         <button onclick="testWebSocket()">WebSocket</button>
         <button onclick="clearResult()">清除结果</button>
     </div>
-    
+
     <div id="result" class="result">点击按钮测试网络请求...</div>
-    
+
     <script>
         const resultEl = document.getElementById('result');
-        
+
         function log(msg, type = '') {
             const time = new Date().toLocaleTimeString();
             resultEl.innerHTML += '<div class="' + type + '">[' + time + '] ' + msg + '</div>';
             resultEl.scrollTop = resultEl.scrollHeight;
         }
-        
+
         function clearResult() { resultEl.innerHTML = ''; }
-        
+
         async function testFetch() {
             log('发起 Fetch 请求...', 'loading');
             try {
@@ -472,7 +598,7 @@ object DebugTestPages {
                 log('Fetch 失败: ' + e.message, 'error');
             }
         }
-        
+
         function testXHR() {
             log('发起 XHR 请求...', 'loading');
             const xhr = new XMLHttpRequest();
@@ -481,12 +607,12 @@ object DebugTestPages {
             xhr.onerror = () => log('XHR 失败', 'error');
             xhr.send();
         }
-        
+
         function testBeacon() {
             const success = navigator.sendBeacon('/beacon-test', 'test data');
             log('Beacon 发送: ' + (success ? '成功' : '失败'), success ? 'success' : 'error');
         }
-        
+
         function testWebSocket() {
             log('尝试 WebSocket 连接...', 'loading');
             try {
@@ -504,7 +630,7 @@ object DebugTestPages {
 </html>
         """.trimIndent()
     )
-    
+
     /**
      * 样式测试页
      */
@@ -531,14 +657,14 @@ object DebugTestPages {
 </head>
 <body>
     <h1>🎨 样式测试页</h1>
-    
+
     <h2>颜色</h2>
     <div class="color-box" style="background:#FF6B6B"></div>
     <div class="color-box" style="background:#4ECDC4"></div>
     <div class="color-box" style="background:#45B7D1"></div>
     <div class="color-box" style="background:#96CEB4"></div>
     <div class="color-box" style="background:#FFEAA7"></div>
-    
+
     <h2>排版</h2>
     <div class="typography">
         <h1>标题 H1</h1>
@@ -549,7 +675,7 @@ object DebugTestPages {
         <p style="font-size:16px">正常文字 (16px)</p>
         <p style="font-size:20px">大号文字 (20px)</p>
     </div>
-    
+
     <h2>布局</h2>
     <div class="layout-demo">
         <div class="layout-item">项目 1</div>
@@ -559,7 +685,7 @@ object DebugTestPages {
         <div class="layout-item">项目 5</div>
         <div class="layout-item">项目 6</div>
     </div>
-    
+
     <h2>动画</h2>
     <div class="animation-demo">
         <p>这个区域可以用来测试动画和过渡效果。</p>

@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import com.webtoapp.data.repository.AppCategoryRepository
 import com.webtoapp.ui.theme.ThemeManager
@@ -32,11 +33,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // 所有应用列表
     val webApps: StateFlow<List<WebApp>> = repository.allWebApps
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    
+
     // 所有分类列表
     val categories: StateFlow<List<AppCategory>> = categoryRepository.allCategories
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    
+
     // 当前选中的分类ID（null = 全部，-1 = 未分类）
     private val _selectedCategoryId = MutableStateFlow<Long?>(null)
     val selectedCategoryId: StateFlow<Long?> = _selectedCategoryId.asStateFlow()
@@ -56,7 +57,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // 搜索
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    
+
     /**
      * ViewModel 销毁时清理资源
      */
@@ -75,14 +76,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         selectedCategoryId
     ) { apps, query, categoryId ->
         var filtered = apps
-        
+
         // 分类过滤
         filtered = when (categoryId) {
             null -> filtered // 全部
             -1L -> filtered.filter { it.categoryId == null } // 未分类
             else -> filtered.filter { it.categoryId == categoryId } // 指定分类
         }
-        
+
         // 搜索过滤
         if (query.isNotBlank()) {
             filtered = filtered.filter {
@@ -90,7 +91,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 it.url.contains(query, ignoreCase = true)
             }
         }
-        
+
         filtered
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -109,7 +110,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun editApp(webApp: WebApp) {
         _currentApp.value = webApp
         _uiState.value = UiState.Idle  // 重置 UI 状态，避免显示旧的错误消息
-        
+
         _editState.value = EditState(
             name = webApp.name,
             url = webApp.url,
@@ -177,7 +178,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     savedIconPath = savedPath
                 )
             } else {
-                _uiState.value = UiState.Error("图标保存失败，请重试")
+                _uiState.value = UiState.Error(Strings.iconSaveFailed)
             }
         }
     }
@@ -206,7 +207,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     splashConfig = _editState.value.splashConfig.copy(type = newType)
                 )
             } else {
-                _uiState.value = UiState.Error("启动画面保存失败，请重试")
+                _uiState.value = UiState.Error(Strings.splashSaveFailed)
             }
         }
     }
@@ -244,14 +245,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 // 使用持久化的本地路径
                 val iconPath = state.savedIconPath ?: state.iconUri?.toString()
-                
+
                 // 构建启动画面配置
                 val splashConfig = if (state.splashEnabled && state.savedSplashPath != null) {
                     state.splashConfig.copy(mediaPath = state.savedSplashPath)
                 } else {
                     null
                 }
-                
+
                 // 构建背景音乐配置
                 val bgmConfig = if (state.bgmEnabled && state.bgmConfig.playlist.isNotEmpty()) {
                     state.bgmConfig
@@ -261,8 +262,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 // 构建 APK 导出配置（仅当有自定义值时才保存）
                 val apkExportConfig = state.apkExportConfig.let { config ->
-                    if (config.customPackageName.isNullOrBlank() && 
-                        config.customVersionName.isNullOrBlank() && 
+                    if (config.customPackageName.isNullOrBlank() &&
+                        config.customVersionName.isNullOrBlank() &&
                         config.customVersionCode == null) {
                         null
                     } else {
@@ -279,14 +280,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 // 将新格式激活码转换为字符串列表（用于兼容性）
                 val activationCodeStrings = state.activationCodeList.map { it.toJson() } + state.activationCodes
-                
+
                 // 构建扩展模块ID列表
                 val extensionModuleIds = if (state.extensionModuleEnabled) {
                     state.extensionModuleIds.toList()
                 } else {
                     emptyList()
                 }
-                
+
                 val webApp = _currentApp.value?.copy(
                     name = state.name,
                     url = normalizeUrl(state.url),
@@ -321,10 +322,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ) ?: run {
                     // 将新格式激活码转换为字符串列表（用于兼容性）
                     val activationCodeStrings = state.activationCodeList.map { it.toJson() } + state.activationCodes
-                    
+
                     // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
                     val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
-                    
+
                     WebApp(
                         name = state.name,
                         url = normalizeUrl(state.url),
@@ -364,10 +365,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     repository.createWebApp(webApp)
                 }
 
-                _uiState.value = UiState.Success("应用保存成功")
+                _uiState.value = UiState.Success(Strings.appSavedSuccess)
                 resetEditState()
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "保存失败")
+                _uiState.value = UiState.Error(e.message ?: Strings.saveFailed)
             }
         }
     }
@@ -379,9 +380,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 repository.deleteWebApp(webApp)
-                _uiState.value = UiState.Success("应用已删除")
+                _uiState.value = UiState.Success(Strings.appDeleted)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "删除失败")
+                _uiState.value = UiState.Error(e.message ?: Strings.deleteFailed)
             }
         }
     }
@@ -414,26 +415,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun validateInput(state: EditState): Boolean {
         return when {
             state.name.isBlank() -> {
-                _uiState.value = UiState.Error("请输入应用名称")
+                _uiState.value = UiState.Error(Strings.appNameRequired)
                 false
             }
             // 只有 WEB 类型需要验证 URL
             state.appType == AppType.WEB && state.url.isBlank() -> {
-                _uiState.value = UiState.Error("请输入网站地址")
+                _uiState.value = UiState.Error(Strings.urlRequired)
                 false
             }
             state.appType == AppType.WEB && !isValidUrl(state.url) -> {
-                _uiState.value = UiState.Error("请输入有效的网址")
+                _uiState.value = UiState.Error(Strings.urlInvalid)
                 false
             }
             // HTML 类型需要有 HTML 文件
             state.appType == AppType.HTML && (state.htmlConfig?.files?.isEmpty() != false) -> {
-                _uiState.value = UiState.Error("请选择 HTML 文件")
+                _uiState.value = UiState.Error(Strings.htmlFileRequired)
                 false
             }
             // IMAGE/VIDEO 类型需要有媒体文件路径
             (state.appType == AppType.IMAGE || state.appType == AppType.VIDEO) && state.url.isBlank() -> {
-                _uiState.value = UiState.Error("媒体文件路径不能为空")
+                _uiState.value = UiState.Error(Strings.mediaPathRequired)
                 false
             }
             else -> true
@@ -468,7 +469,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun normalizeUrl(url: String): String {
         return url.trim()
     }
-    
+
     /**
      * 保存媒体应用（图片/视频转APP）
      */
@@ -482,39 +483,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            
+
             try {
                 val context = getApplication<Application>()
                 val isVideo = appType == AppType.VIDEO
-                
+
                 // 从 ThemeManager 获取当前主题类型
                 val themeManager = ThemeManager.getInstance(context)
                 val currentThemeType = themeManager.themeTypeFlow.first().name
-                
+
                 // 保存图标（如果有）
                 val savedIconPath = iconUri?.let { uri ->
                     withContext(Dispatchers.IO) {
                         IconStorage.saveIconFromUri(context, uri)
                     }
                 }
-                
+
                 // 保存媒体文件
                 val savedMediaPath = mediaUri?.let { uri ->
                     withContext(Dispatchers.IO) {
                         MediaStorage.saveMedia(context, uri, isVideo)
                     }
                 }
-                
+
                 if (savedMediaPath == null) {
-                    _uiState.value = UiState.Error("媒体文件保存失败")
+                    _uiState.value = UiState.Error(Strings.mediaSaveFailed)
                     return@launch
                 }
-                
+
                 // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
                 val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
-                
+
                 val webApp = WebApp(
-                    name = name.ifBlank { if (isVideo) "视频应用" else "图片应用" },
+                    name = name.ifBlank { if (isVideo) Strings.videoAppName else Strings.imageAppName },
                     url = savedMediaPath,
                     iconPath = savedIconPath,
                     appType = appType,
@@ -527,23 +528,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     themeType = currentThemeType,
                     categoryId = categoryId
                 )
-                
+
                 // 保存到数据库
                 withContext(Dispatchers.IO) {
                     repository.createWebApp(webApp)
                 }
-                
-                _uiState.value = UiState.Success("媒体应用创建成功")
+
+                _uiState.value = UiState.Success(Strings.mediaAppCreated)
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.value = UiState.Error("创建失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.createFailedWithReason.format(e.message ?: ""))
             }
         }
     }
-    
+
     /**
      * 保存HTML应用（本地HTML+CSS+JS转APP）
-     * 
+     *
      * 重要：将 CSS 和 JS 内联到 HTML 文件中，确保在 WebView 中正确加载
      */
     fun saveHtmlApp(
@@ -554,46 +555,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            
+
             try {
                 val context = getApplication<Application>()
-                
+
                 // 从 ThemeManager 获取当前主题类型
                 val themeManager = ThemeManager.getInstance(context)
                 val currentThemeType = themeManager.themeTypeFlow.first().name
-                
+
                 // 保存图标（如果有）
                 val savedIconPath = iconUri?.let { uri ->
                     withContext(Dispatchers.IO) {
                         IconStorage.saveIconFromUri(context, uri)
                     }
                 }
-                
+
                 // 单HTML模式 - 使用 HtmlProjectProcessor 处理文件
                 val projectId = HtmlStorage.generateProjectId()
                 val savedHtmlFiles = withContext(Dispatchers.IO) {
                     val files = htmlConfig?.files ?: emptyList()
-                    
+
                     // 分类文件
-                    val htmlFiles = files.filter { 
-                        it.type == com.webtoapp.data.model.HtmlFileType.HTML || 
-                        it.name.endsWith(".html", ignoreCase = true) || 
+                    val htmlFiles = files.filter {
+                        it.type == com.webtoapp.data.model.HtmlFileType.HTML ||
+                        it.name.endsWith(".html", ignoreCase = true) ||
                         it.name.endsWith(".htm", ignoreCase = true)
                     }
-                    val cssFiles = files.filter { 
-                        it.type == com.webtoapp.data.model.HtmlFileType.CSS || 
+                    val cssFiles = files.filter {
+                        it.type == com.webtoapp.data.model.HtmlFileType.CSS ||
                         it.name.endsWith(".css", ignoreCase = true)
                     }
-                    val jsFiles = files.filter { 
-                        it.type == com.webtoapp.data.model.HtmlFileType.JS || 
+                    val jsFiles = files.filter {
+                        it.type == com.webtoapp.data.model.HtmlFileType.JS ||
                         it.name.endsWith(".js", ignoreCase = true)
                     }
                     val otherFiles = files.filter { file ->
                         file !in htmlFiles && file !in cssFiles && file !in jsFiles
                     }
-                    
+
                     android.util.Log.d("MainViewModel", "HTML文件分类: HTML=${htmlFiles.size}, CSS=${cssFiles.size}, JS=${jsFiles.size}, Other=${otherFiles.size}")
-                    
+
                     // 读取 CSS 内容
                     val cssContent = cssFiles.mapNotNull { cssFile ->
                         try {
@@ -606,7 +607,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             null
                         }
                     }.joinToString("\n\n")
-                    
+
                     // 读取 JS 内容
                     val jsContent = jsFiles.mapNotNull { jsFile ->
                         try {
@@ -619,9 +620,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             null
                         }
                     }.joinToString("\n\n")
-                    
+
                     android.util.Log.d("MainViewModel", "CSS 内容长度: ${cssContent.length}, JS 内容长度: ${jsContent.length}")
-                    
+
                     // 处理 HTML 文件，内联 CSS 和 JS
                     val processedHtmlFiles = htmlFiles.mapNotNull { htmlFile ->
                         try {
@@ -630,10 +631,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 android.util.Log.e("MainViewModel", "HTML 文件不存在或无法读取: ${htmlFile.path}")
                                 return@mapNotNull null
                             }
-                            
+
                             // 读取 HTML 内容
                             var htmlContent = com.webtoapp.util.HtmlProjectProcessor.readFileWithEncoding(sourceFile, null)
-                            
+
                             // 使用 HtmlProjectProcessor 处理 HTML 内容（内联 CSS/JS）
                             htmlContent = com.webtoapp.util.HtmlProjectProcessor.processHtmlContent(
                                 htmlContent = htmlContent,
@@ -641,12 +642,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 jsContent = jsContent.takeIf { it.isNotBlank() },
                                 fixPaths = true
                             )
-                            
+
                             // 保存处理后的 HTML 文件
                             val savedPath = HtmlStorage.saveProcessedHtml(
                                 context, htmlContent, htmlFile.name, projectId
                             )
-                            
+
                             if (savedPath != null) {
                                 android.util.Log.d("MainViewModel", "HTML 文件已保存(内联CSS/JS): ${htmlFile.name}")
                                 htmlFile.copy(path = savedPath)
@@ -659,7 +660,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             null
                         }
                     }
-                    
+
                     // 保存其他文件（图片、字体等）
                     val savedOtherFiles = otherFiles.mapNotNull { file ->
                         val savedPath = HtmlStorage.saveFromTempFile(
@@ -669,26 +670,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             file.copy(path = savedPath)
                         } else null
                     }
-                    
+
                     // 返回所有保存的文件（只包含 HTML 和其他文件，CSS/JS 已内联）
                     processedHtmlFiles + savedOtherFiles
                 }
-                
+
                 val savedHtmlConfig = htmlConfig?.copy(
                     projectId = projectId,
                     files = savedHtmlFiles
                 )
-                
+
                 // 清理临时文件
                 withContext(Dispatchers.IO) {
                     HtmlStorage.clearTempFiles(context)
                 }
-                
+
                 // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
                 val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
-                
+
                 val webApp = WebApp(
-                    name = name.ifBlank { "HTML应用" },
+                    name = name.ifBlank { Strings.htmlAppName },
                     url = "",
                     iconPath = savedIconPath,
                     appType = AppType.HTML,
@@ -701,23 +702,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     themeType = currentThemeType,
                     categoryId = categoryId
                 )
-                
+
                 // 保存到数据库
                 withContext(Dispatchers.IO) {
                     repository.createWebApp(webApp)
                 }
-                
-                _uiState.value = UiState.Success("HTML应用创建成功")
+
+                _uiState.value = UiState.Success(Strings.htmlAppCreated)
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.value = UiState.Error("创建失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.createFailedWithReason.format(e.message ?: ""))
             }
         }
     }
-    
+
     /**
      * 保存前端项目应用（Vue/React/Node.js 等）
-     * 
+     *
      * 将构建后的静态文件作为 HTML 应用保存
      */
     fun saveFrontendApp(
@@ -728,33 +729,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            
+
             try {
                 val context = getApplication<Application>()
-                
+
                 // 从 ThemeManager 获取当前主题类型
                 val themeManager = ThemeManager.getInstance(context)
                 val currentThemeType = themeManager.themeTypeFlow.first().name
-                
+
                 // 保存图标（如果有）
                 val savedIconPath = iconUri?.let { uri ->
                     withContext(Dispatchers.IO) {
                         IconStorage.saveIconFromUri(context, uri)
                     }
                 }
-                
+
                 // 生成项目 ID
                 val projectId = HtmlStorage.generateProjectId()
-                
+
                 // 复制构建输出到应用存储
                 val savedFiles = withContext(Dispatchers.IO) {
                     val outputDir = java.io.File(outputPath)
                     if (!outputDir.exists() || !outputDir.isDirectory) {
-                        throw Exception("构建输出目录不存在: $outputPath")
+                        throw Exception(Strings.buildOutputMissing.format(outputPath))
                     }
-                    
+
                     val files = mutableListOf<com.webtoapp.data.model.HtmlFile>()
-                    
+
                     // 递归复制所有文件
                     outputDir.walkTopDown().forEach { file ->
                         if (file.isFile) {
@@ -765,11 +766,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             if (savedPath != null) {
                                 val fileType = when {
                                     file.name.endsWith(".html", ignoreCase = true) ||
-                                    file.name.endsWith(".htm", ignoreCase = true) -> 
+                                    file.name.endsWith(".htm", ignoreCase = true) ->
                                         com.webtoapp.data.model.HtmlFileType.HTML
-                                    file.name.endsWith(".css", ignoreCase = true) -> 
+                                    file.name.endsWith(".css", ignoreCase = true) ->
                                         com.webtoapp.data.model.HtmlFileType.CSS
-                                    file.name.endsWith(".js", ignoreCase = true) -> 
+                                    file.name.endsWith(".js", ignoreCase = true) ->
                                         com.webtoapp.data.model.HtmlFileType.JS
                                     else -> com.webtoapp.data.model.HtmlFileType.OTHER
                                 }
@@ -781,10 +782,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             }
                         }
                     }
-                    
+
                     files
                 }
-                
+
                 // 创建 HTML 配置
                 val htmlConfig = HtmlConfig(
                     projectId = projectId,
@@ -792,12 +793,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     enableJavaScript = true,
                     enableLocalStorage = true
                 )
-                
+
                 // 如果当前选中了具体分类（非全部、非未分类），自动归类到该分类
                 val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
-                
+
                 val webApp = WebApp(
-                    name = name.ifBlank { "$framework 应用" },
+                    name = name.ifBlank { Strings.frameworkAppName.format(framework) },
                     url = "",
                     iconPath = savedIconPath,
                     appType = AppType.HTML,
@@ -810,22 +811,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     themeType = currentThemeType,
                     categoryId = categoryId
                 )
-                
+
                 // 保存到数据库
                 withContext(Dispatchers.IO) {
                     repository.createWebApp(webApp)
                 }
-                
-                _uiState.value = UiState.Success("$framework 应用创建成功")
+
+                _uiState.value = UiState.Success(Strings.frameworkAppCreated.format(framework))
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.value = UiState.Error("创建失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.createFailedWithReason.format(e.message ?: ""))
             }
         }
     }
-    
+
     // ==================== 分类管理 ====================
-    
+
     /**
      * 选择分类
      * @param categoryId null = 全部，-1 = 未分类，其他 = 指定分类ID
@@ -833,7 +834,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun selectCategory(categoryId: Long?) {
         _selectedCategoryId.value = categoryId
     }
-    
+
     /**
      * 创建分类
      */
@@ -848,11 +849,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 categoryRepository.createCategory(category)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("创建分类失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.createCategoryFailed.format(e.message ?: ""))
             }
         }
     }
-    
+
     /**
      * 更新分类
      */
@@ -861,11 +862,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 categoryRepository.updateCategory(category)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("更新分类失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.updateCategoryFailed.format(e.message ?: ""))
             }
         }
     }
-    
+
     /**
      * 删除分类
      * 删除后，该分类下的应用将变为未分类
@@ -885,11 +886,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _selectedCategoryId.value = null
                 }
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("删除分类失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.deleteCategoryFailed.format(e.message ?: ""))
             }
         }
     }
-    
+
     /**
      * 修改应用的分类
      */
@@ -898,7 +899,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 repository.updateWebApp(webApp.copy(categoryId = categoryId))
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("移动失败: ${e.message}")
+                _uiState.value = UiState.Error(Strings.moveFailed.format(e.message ?: ""))
             }
         }
     }
@@ -913,13 +914,13 @@ data class EditState(
     val iconUri: Uri? = null,           // 用于 UI 显示
     val savedIconPath: String? = null,  // 持久化的本地文件路径
     val iconBitmap: Bitmap? = null,
-    
+
     // 应用类型（用于区分 WEB/HTML/IMAGE/VIDEO）
     val appType: AppType = AppType.WEB,
-    
+
     // 媒体应用配置（IMAGE/VIDEO 类型）
     val mediaConfig: MediaConfig? = null,
-    
+
     // HTML应用配置（HTML 类型）
     val htmlConfig: HtmlConfig? = null,
 
@@ -949,34 +950,34 @@ data class EditState(
     val splashConfig: SplashConfig = SplashConfig(),
     val splashMediaUri: Uri? = null,        // 用于 UI 显示
     val savedSplashPath: String? = null,    // 持久化的本地文件路径
-    
+
     // 背景音乐
     val bgmEnabled: Boolean = false,
     val bgmConfig: BgmConfig = BgmConfig(),
-    
+
     // APK 导出配置（仅打包APK时生效）
     val apkExportConfig: ApkExportConfig = ApkExportConfig(),
-    
+
     // 主题配置（用于导出的应用 UI 风格）
     val themeType: String = "AURORA",
-    
+
     // 网页自动翻译配置
     val translateEnabled: Boolean = false,
     val translateConfig: TranslateConfig = TranslateConfig(),
-    
+
     // 扩展模块
     val extensionModuleEnabled: Boolean = false,
     val extensionModuleIds: Set<String> = emptySet(),
-    
+
     // 自启动配置
     val autoStartConfig: AutoStartConfig? = null,
-    
+
     // 强制运行配置
     val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
-    
+
     // 黑科技功能配置（独立模块）
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
-    
+
     // 应用伪装配置（独立模块）
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null
 )

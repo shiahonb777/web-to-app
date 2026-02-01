@@ -67,11 +67,11 @@ fun HomeScreen(
 ) {
     // 初始化多语言
     InitializeLanguage()
-    
+
     val apps by viewModel.filteredApps.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
-    
+
     // 分类相关状态
     val categories by viewModel.categories.collectAsState()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
@@ -106,7 +106,7 @@ fun HomeScreen(
 
     // 更多菜单状态
     var showMoreMenu by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -144,7 +144,7 @@ fun HomeScreen(
                             }
                         }
                     )
-                    
+
                     // 搜索按钮
                     IconButton(
                         onClick = {
@@ -159,7 +159,7 @@ fun HomeScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
                     // 更多菜单
                     Box {
                         IconButton(
@@ -172,7 +172,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        
+
                         DropdownMenu(
                             expanded = showMoreMenu,
                             onDismissRequest = { showMoreMenu = false }
@@ -316,11 +316,11 @@ fun HomeScreen(
                 // 主 FAB
                 ExtendedFloatingActionButton(
                     onClick = { showFabMenu = !showFabMenu },
-                    icon = { 
+                    icon = {
                         Icon(
-                            if (showFabMenu) Icons.Default.Close else Icons.Default.Add, 
+                            if (showFabMenu) Icons.Default.Close else Icons.Default.Add,
                             Strings.btnCreate
-                        ) 
+                        )
                     },
                     text = { Text(if (showFabMenu) Strings.close else Strings.createApp) },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -350,7 +350,7 @@ fun HomeScreen(
                 },
                 onDeleteCategory = { viewModel.deleteCategory(it) }
             )
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -519,7 +519,7 @@ fun HomeScreen(
             }
         )
     }
-    
+
     // 分类编辑对话框
     if (showCategoryEditor) {
         CategoryEditorDialog(
@@ -541,7 +541,7 @@ fun HomeScreen(
             }
         )
     }
-    
+
     // 移动到分类对话框
     if (showMoveToCategoryDialog && appToMove != null) {
         MoveToCategoryDialog(
@@ -830,21 +830,21 @@ fun BuildApkDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val apkBuilder = remember { ApkBuilder(context) }
-    
+
     var isBuilding by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
     var progressText by remember { mutableStateOf(Strings.preparing) }
-    
+
     // 加密配置状态
-    var encryptionConfig by remember { 
-        mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig()) 
+    var encryptionConfig by remember {
+        mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig())
     }
-    
+
     // 独立环境/多开配置状态
     var isolationConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.isolationConfig ?: com.webtoapp.core.isolation.IsolationConfig())
     }
-    
+
     // 后台运行配置状态
     var backgroundRunEnabled by remember {
         mutableStateOf(webApp.apkExportConfig?.backgroundRunEnabled ?: false)
@@ -892,21 +892,21 @@ fun BuildApkDialog(
                         )
                     }
                 }
-                
+
                 Divider()
-                
+
                 // 加密配置
                 com.webtoapp.ui.components.EncryptionConfigCard(
                     config = encryptionConfig,
                     onConfigChange = { encryptionConfig = it }
                 )
-                
+
                 // 独立环境/多开配置
                 com.webtoapp.ui.components.IsolationConfigCard(
                     config = isolationConfig,
                     onConfigChange = { isolationConfig = it }
                 )
-                
+
                 // 后台运行配置
                 com.webtoapp.ui.components.BackgroundRunConfigCard(
                     enabled = backgroundRunEnabled,
@@ -914,14 +914,14 @@ fun BuildApkDialog(
                     onEnabledChange = { backgroundRunEnabled = it },
                     onConfigChange = { backgroundRunConfig = it }
                 )
-                
+
                 Divider()
-                
+
                 Text(
                     Strings.buildApkForApp.replace("%s", webApp.name),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                
+
                 Text(
                     Strings.buildCompleteInstallHint,
                     style = MaterialTheme.typography.bodySmall,
@@ -967,7 +967,7 @@ fun BuildApkDialog(
                                 is BuildResult.Success -> {
                                     // 直接安装
                                     apkBuilder.installApk(result.apkFile)
-                                    onResult("APK 构建成功，正在启动安装...")
+                                    onResult(Strings.apkBuildSuccessInstalling)
                                 }
                                 is BuildResult.Error -> {
                                     onResult("${Strings.buildFailed}: ${result.message}")

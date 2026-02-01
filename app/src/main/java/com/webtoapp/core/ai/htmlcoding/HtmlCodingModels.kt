@@ -30,12 +30,24 @@ data class SessionConfig(
     val textModelId: String? = null,           // 文本模型ID
     val imageModelId: String? = null,          // 图像模型ID（可选）
     val temperature: Float = 0.7f,             // 温度 0.0-2.0
-    val rules: List<String> = listOf("使用中文进行对话"),  // 规则列表
+    val rules: List<String> = listOf(Strings.ruleUseChineseConversation),  // 规则列表
     val selectedTemplateId: String? = null,    // 选中的模板ID
     val selectedStyleId: String? = null,       // 选中的风格ID
     // 工具包配置
     val enabledTools: Set<HtmlToolType> = setOf(HtmlToolType.WRITE_HTML)  // 启用的工具
 )
+
+const val LEGACY_DEFAULT_RULE_ZH = "使用中文进行对话"
+const val LEGACY_RULE_CODE_COMMENTS_ZH = "代码注释使用中文"
+const val LEGACY_RULE_GAME_FLOW_ZH = "游戏要有完整的开始、进行、结束流程"
+const val LEGACY_RULE_GAME_SCORE_ZH = "添加分数显示和游戏说明"
+const val LEGACY_RULE_GAME_TOUCH_ZH = "确保触摸控制流畅"
+const val LEGACY_RULE_ANIMATION_SMOOTH_ZH = "添加流畅的 CSS 动画"
+const val LEGACY_RULE_ANIMATION_TRANSITION_ZH = "使用 transition 优化交互反馈"
+const val LEGACY_RULE_ANIMATION_PERFORMANCE_ZH = "考虑性能，避免过度动画"
+const val LEGACY_RULE_FORM_VALIDATION_ZH = "表单要有完整的验证逻辑"
+const val LEGACY_RULE_FORM_LABELS_ZH = "输入框要有清晰的标签和提示"
+const val LEGACY_RULE_FORM_SUBMIT_LOADING_ZH = "提交按钮要有加载状态"
 
 /**
  * HTML 工具类型
@@ -50,7 +62,7 @@ enum class HtmlToolType(
     GET_CONSOLE_LOGS("📋"),
     CHECK_SYNTAX("🔍"),
     AUTO_FIX("🔧");
-    
+
     fun getDisplayName(): String = when (this) {
         WRITE_HTML -> Strings.toolWriteHtml
         EDIT_HTML -> Strings.toolEditHtml
@@ -59,7 +71,7 @@ enum class HtmlToolType(
         CHECK_SYNTAX -> Strings.toolCheckSyntax
         AUTO_FIX -> Strings.toolAutoFix
     }
-    
+
     fun getDescription(): String = when (this) {
         WRITE_HTML -> Strings.toolWriteHtmlDesc
         EDIT_HTML -> Strings.toolEditHtmlDesc
@@ -182,7 +194,7 @@ enum class TemplateCategory {
     BUSINESS,
     CREATIVE,
     GAME;
-    
+
     fun getDisplayName(): String = when (this) {
         MODERN -> Strings.templateModern
         GLASSMORPHISM -> Strings.templateGlassmorphism
@@ -236,7 +248,7 @@ enum class StyleReferenceCategory {
     ART,
     ERA,
     CULTURE;
-    
+
     fun getDisplayName(): String = when (this) {
         MOVIE -> Strings.styleRefMovie
         BOOK -> Strings.styleRefBook

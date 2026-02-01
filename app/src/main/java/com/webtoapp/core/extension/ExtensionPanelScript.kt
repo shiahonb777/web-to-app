@@ -1,52 +1,63 @@
 package com.webtoapp.core.extension
 
 /**
- * 统一扩展模块面板脚本
- * 
- * 提供美观的统一 UI 面板，与应用主题风格一致
- * 采用毛玻璃效果、渐变色、圆角等现代设计元素
+ * 统一扩展模块面板脚本 / Unified extension panel script
+ *
+ * 提供美观的统一 UI 面板，与应用主题风格一致 / Provides a unified UI panel that matches the app theme.
+ * 采用毛玻璃效果、渐变色、圆角等现代设计元素 / Uses glassmorphism, gradients, rounded corners, and other modern design elements.
  */
 object ExtensionPanelScript {
-    
+
     /**
-     * 获取面板初始化脚本
-     * 应在页面加载时注入
+     * 获取面板初始化脚本 / Get the panel initialization script
+     * 应在页面加载时注入 / Should be injected when the page loads
      */
-    fun getPanelInitScript(): String = """
+    fun getPanelInitScript(languageCode: String): String = """
 (function() {
     'use strict';
-    
-    // 防止重复初始化
+
+    // 防止重复初始化 / Prevent duplicate initialization
     if (window.__WTA_PANEL__) return;
-    
-    // ==================== 多语言支持 ====================
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
-                 (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+
+    // ==================== 多语言支持 / Localization ====================
+    const APP_LANG = '${"$"}languageCode';
+    window.__WTA_APP_LANG__ = APP_LANG;
+    const LANG = (APP_LANG || navigator.language || 'zh').toLowerCase();
+    const LOCALE = LANG.startsWith('ar') ? 'ar' : (LANG.startsWith('zh') ? 'zh' : 'en');
     const I18N = {
         zh: {
             extensionModules: '扩展模块',
             noModulesAvailable: '暂无可用模块',
             panelInitialized: '扩展面板已初始化',
-            unnamed: '未命名'
+            unnamed: '未命名',
+            moduleDetail: '模块详情',
+            loading: '加载中...',
+            noPanel: '此模块无详情面板'
         },
         en: {
             extensionModules: 'Extension Modules',
             noModulesAvailable: 'No modules available',
             panelInitialized: 'Extension panel initialized',
-            unnamed: 'Unnamed'
+            unnamed: 'Unnamed',
+            moduleDetail: 'Module Details',
+            loading: 'Loading...',
+            noPanel: 'No details panel for this module'
         },
         ar: {
             extensionModules: 'الوحدات الإضافية',
             noModulesAvailable: 'لا توجد وحدات متاحة',
             panelInitialized: 'تم تهيئة لوحة الإضافات',
-            unnamed: 'بدون اسم'
+            unnamed: 'بدون اسم',
+            moduleDetail: 'تفاصيل الوحدة',
+            loading: 'جارٍ التحميل...',
+            noPanel: 'لا توجد لوحة تفاصيل لهذه الوحدة'
         }
     };
-    const T = I18N[LANG] || I18N.en;
-    
-    // ==================== 样式定义 ====================
+    const T = I18N[LOCALE] || I18N.en;
+
+    // ==================== 样式定义 / Style Definitions ====================
     const PANEL_STYLES = `
-        /* CSS 变量 - 主题色 */
+        /* CSS 变量 - 主题色 / CSS variables - theme colors */
         :root {
             --wta-primary: #7B68EE;
             --wta-primary-light: #9D8DF1;
@@ -64,7 +75,7 @@ object ExtensionPanelScript {
             --wta-radius-sm: 12px;
             --wta-radius-lg: 28px;
         }
-        
+
         @media (prefers-color-scheme: dark) {
             :root {
                 --wta-surface: rgba(30, 30, 46, 0.95);
@@ -77,7 +88,7 @@ object ExtensionPanelScript {
             }
         }
 
-        /* 主容器 */
+        /* 主容器 / Main container */
         #wta-ext-panel-container {
             position: fixed;
             bottom: 0;
@@ -88,8 +99,8 @@ object ExtensionPanelScript {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
-        
-        /* 悬浮触发按钮 - 毛玻璃效果 */
+
+        /* 悬浮触发按钮 - 毛玻璃效果 / Floating trigger button - glassmorphism */
         #wta-ext-fab {
             position: fixed;
             bottom: 80px;
@@ -114,18 +125,18 @@ object ExtensionPanelScript {
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
-        
+
         #wta-ext-fab:hover {
             transform: scale(1.08) translateY(-2px);
             box-shadow: var(--wta-shadow-lg), 0 0 30px rgba(123, 104, 238, 0.4);
         }
-        
+
         #wta-ext-fab:active {
             transform: scale(0.95);
             transition-duration: 0.1s;
         }
 
-        /* 模块数量徽章 */
+        /* 模块数量徽章 / Module count badge */
         #wta-ext-fab .badge {
             position: absolute;
             top: -6px;
@@ -144,8 +155,8 @@ object ExtensionPanelScript {
             box-shadow: 0 2px 8px rgba(238, 90, 90, 0.4);
             border: 2px solid var(--wta-surface);
         }
-        
-        /* 遮罩层 - 毛玻璃 */
+
+        /* 遮罩层 - 毛玻璃 / Overlay - glassmorphism */
         #wta-ext-overlay {
             position: fixed;
             top: 0;
@@ -161,13 +172,13 @@ object ExtensionPanelScript {
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
-        
+
         #wta-ext-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
 
-        /* 主面板 - 毛玻璃卡片 */
+        /* 主面板 - 毛玻璃卡片 / Main panel - glass card */
         #wta-ext-main-panel {
             position: fixed;
             bottom: 0;
@@ -187,12 +198,12 @@ object ExtensionPanelScript {
             border: 1px solid var(--wta-outline);
             border-bottom: none;
         }
-        
+
         #wta-ext-main-panel.visible {
             transform: translateY(0);
         }
 
-        /* 面板拖动条 */
+        /* 面板拖动条 / Panel handle */
         .wta-panel-handle {
             width: 40px;
             height: 5px;
@@ -201,8 +212,8 @@ object ExtensionPanelScript {
             margin: 14px auto 10px;
             opacity: 0.6;
         }
-        
-        /* 面板头部 */
+
+        /* 面板头部 / Panel header */
         .wta-panel-header {
             display: flex;
             align-items: center;
@@ -210,7 +221,7 @@ object ExtensionPanelScript {
             padding: 8px 20px 18px;
             border-bottom: 1px solid var(--wta-outline);
         }
-        
+
         .wta-panel-title {
             font-size: 20px;
             font-weight: 700;
@@ -220,7 +231,7 @@ object ExtensionPanelScript {
             background-clip: text;
             letter-spacing: -0.3px;
         }
-        
+
         .wta-panel-close {
             width: 36px;
             height: 36px;
@@ -234,26 +245,26 @@ object ExtensionPanelScript {
             color: var(--wta-on-surface-variant);
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-panel-close:hover {
             background: var(--wta-primary);
             color: white;
             transform: rotate(90deg);
         }
-        
+
         .wta-panel-close:active {
             transform: scale(0.9) rotate(90deg);
         }
 
-        /* 模块列表 */
+        /* 模块列表 / Module list */
         .wta-module-list {
             padding: 20px;
             max-height: calc(75vh - 100px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        
-        /* 自定义滚动条 */
+
+        /* 自定义滚动条 / Custom scrollbar */
         .wta-module-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -265,21 +276,21 @@ object ExtensionPanelScript {
             border-radius: 3px;
         }
 
-        /* 模块网格 */
+        /* 模块网格 / Module grid */
         .wta-module-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
         }
-        
+
         @media (max-width: 400px) {
             .wta-module-grid {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 12px;
             }
         }
-        
-        /* 模块项 - 卡片风格 */
+
+        /* 模块项 - 卡片风格 / Module item - card style */
         .wta-module-item {
             display: flex;
             flex-direction: column;
@@ -293,7 +304,7 @@ object ExtensionPanelScript {
             position: relative;
             overflow: hidden;
         }
-        
+
         .wta-module-item::before {
             content: '';
             position: absolute;
@@ -306,22 +317,22 @@ object ExtensionPanelScript {
             transition: opacity 0.3s ease;
             z-index: 0;
         }
-        
+
         .wta-module-item:hover {
             transform: translateY(-4px) scale(1.02);
             border-color: var(--wta-primary-light);
             box-shadow: 0 8px 24px rgba(123, 104, 238, 0.2);
         }
-        
+
         .wta-module-item:hover::before {
             opacity: 0.08;
         }
-        
+
         .wta-module-item:active {
             transform: scale(0.95);
             transition-duration: 0.1s;
         }
-        
+
         .wta-module-icon {
             width: 56px;
             height: 56px;
@@ -337,12 +348,12 @@ object ExtensionPanelScript {
             background: linear-gradient(135deg, rgba(123, 104, 238, 0.15) 0%, rgba(157, 141, 241, 0.1) 100%);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 4px 12px rgba(123, 104, 238, 0.1);
         }
-        
+
         .wta-module-item:hover .wta-module-icon {
             transform: scale(1.1) rotate(-3deg);
             box-shadow: 0 6px 20px rgba(123, 104, 238, 0.25);
         }
-        
+
         .wta-module-name {
             font-size: 12px;
             font-weight: 600;
@@ -357,7 +368,7 @@ object ExtensionPanelScript {
             letter-spacing: -0.2px;
         }
 
-        /* 模块详情面板 */
+        /* 模块详情面板 / Module detail panel */
         .wta-module-detail {
             position: absolute;
             top: 0;
@@ -373,11 +384,11 @@ object ExtensionPanelScript {
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
-        
+
         .wta-module-detail.visible {
             transform: translateX(0);
         }
-        
+
         .wta-detail-header {
             display: flex;
             align-items: center;
@@ -385,7 +396,7 @@ object ExtensionPanelScript {
             border-bottom: 1px solid var(--wta-outline);
             gap: 14px;
         }
-        
+
         .wta-detail-back {
             width: 40px;
             height: 40px;
@@ -400,13 +411,13 @@ object ExtensionPanelScript {
             color: var(--wta-on-surface-variant);
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-detail-back:hover {
             background: var(--wta-primary);
             color: white;
             transform: translateX(-3px);
         }
-        
+
         .wta-detail-title {
             flex: 1;
             font-size: 18px;
@@ -414,7 +425,7 @@ object ExtensionPanelScript {
             color: var(--wta-on-surface);
             letter-spacing: -0.3px;
         }
-        
+
         .wta-detail-content {
             flex: 1;
             overflow-y: auto;
@@ -422,7 +433,7 @@ object ExtensionPanelScript {
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Toast 提示 - 现代风格 */
+        /* Toast 提示 - 现代风格 / Toast - modern style */
         #wta-toast {
             position: fixed;
             top: 50%;
@@ -446,14 +457,14 @@ object ExtensionPanelScript {
             -webkit-backdrop-filter: blur(10px);
             letter-spacing: -0.2px;
         }
-        
+
         #wta-toast.visible {
             opacity: 1;
             visibility: visible;
             transform: translate(-50%, -50%) scale(1);
         }
-        
-        /* 空状态 */
+
+        /* 空状态 / Empty state */
         .wta-empty-state {
             display: flex;
             flex-direction: column;
@@ -462,20 +473,20 @@ object ExtensionPanelScript {
             padding: 48px 24px;
             color: var(--wta-on-surface-variant);
         }
-        
+
         .wta-empty-icon {
             font-size: 56px;
             margin-bottom: 16px;
             opacity: 0.6;
         }
-        
+
         .wta-empty-text {
             font-size: 15px;
             text-align: center;
             font-weight: 500;
         }
 
-        /* 按钮样式 */
+        /* 按钮样式 / Button styles */
         .wta-btn {
             display: inline-flex;
             align-items: center;
@@ -491,35 +502,35 @@ object ExtensionPanelScript {
             -webkit-tap-highlight-color: transparent;
             letter-spacing: -0.2px;
         }
-        
+
         .wta-btn-primary {
             background: var(--wta-gradient);
             color: white;
             box-shadow: 0 4px 16px rgba(123, 104, 238, 0.3);
         }
-        
+
         .wta-btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(123, 104, 238, 0.4);
         }
-        
+
         .wta-btn-primary:active {
             transform: scale(0.97);
         }
-        
+
         .wta-btn-secondary {
             background: var(--wta-surface-dim);
             color: var(--wta-on-surface);
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-btn-secondary:hover {
             background: var(--wta-primary);
             color: white;
             border-color: var(--wta-primary);
         }
-        
-        /* 输入框样式 */
+
+        /* 输入框样式 / Input styles */
         .wta-input {
             width: 100%;
             padding: 14px 18px;
@@ -531,17 +542,17 @@ object ExtensionPanelScript {
             outline: none;
             transition: all 0.25s ease;
         }
-        
+
         .wta-input:focus {
             border-color: var(--wta-primary);
             box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.15);
         }
-        
+
         .wta-input::placeholder {
             color: var(--wta-on-surface-variant);
         }
-        
-        /* 开关样式 */
+
+        /* 开关样式 / Switch styles */
         .wta-switch {
             position: relative;
             width: 52px;
@@ -552,12 +563,12 @@ object ExtensionPanelScript {
             transition: all 0.3s ease;
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-switch.active {
             background: var(--wta-gradient);
             border-color: transparent;
         }
-        
+
         .wta-switch::after {
             content: '';
             position: absolute;
@@ -570,28 +581,28 @@ object ExtensionPanelScript {
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
-        
+
         .wta-switch.active::after {
             transform: translateX(24px);
         }
     `;
 
 
-    // ==================== 面板管理器 ====================
+    // ==================== 面板管理器 / Panel Manager ====================
     const WTA_PANEL = {
         modules: [],
         isOpen: false,
         activeModuleId: null,
-        
-        // 初始化
+
+        // 初始化 / Initialize
         init() {
             this.injectStyles();
             this.createDOM();
             this.bindEvents();
             console.log('[WTA Panel] ' + T.panelInitialized);
         },
-        
-        // 注入样式
+
+        // 注入样式 / Inject styles
         injectStyles() {
             if (document.getElementById('wta-panel-styles')) return;
             const style = document.createElement('style');
@@ -599,31 +610,31 @@ object ExtensionPanelScript {
             style.textContent = PANEL_STYLES;
             document.head.appendChild(style);
         },
-        
-        // 创建 DOM 结构
+
+        // 创建 DOM 结构 / Create DOM structure
         createDOM() {
-            // 容器
+            // 容器 / Container
             const container = document.createElement('div');
             container.id = 'wta-ext-panel-container';
-            
-            // FAB 按钮
+
+            // FAB 按钮 / FAB button
             const fab = document.createElement('div');
             fab.id = 'wta-ext-fab';
             fab.innerHTML = '🧩<span class="badge" style="display:none">0</span>';
-            
-            // 遮罩
+
+            // 遮罩 / Overlay
             const overlay = document.createElement('div');
             overlay.id = 'wta-ext-overlay';
-            
-            // 主面板
+
+            // 主面板 / Main panel
             const panel = document.createElement('div');
             panel.id = 'wta-ext-main-panel';
             panel.innerHTML = this.getPanelHTML();
-            
+
             // Toast
             const toast = document.createElement('div');
             toast.id = 'wta-toast';
-            
+
             container.appendChild(fab);
             container.appendChild(overlay);
             container.appendChild(panel);
@@ -631,7 +642,7 @@ object ExtensionPanelScript {
             document.body.appendChild(container);
         },
 
-        // 获取面板 HTML
+        // 获取面板 HTML / Get panel HTML
         getPanelHTML() {
             return `
                 <div class="wta-panel-handle"></div>
@@ -660,15 +671,15 @@ object ExtensionPanelScript {
             `;
         },
 
-        // 绑定事件
+        // 绑定事件 / Bind events
         bindEvents() {
             const fab = document.getElementById('wta-ext-fab');
             const overlay = document.getElementById('wta-ext-overlay');
-            
+
             fab.addEventListener('click', () => this.togglePanel());
             overlay.addEventListener('click', () => this.hidePanel());
-            
-            // 触摸反馈
+
+            // 触摸反馈 / Touch feedback
             fab.addEventListener('touchstart', () => {
                 fab.style.transform = 'scale(0.92)';
             }, { passive: true });
@@ -677,7 +688,7 @@ object ExtensionPanelScript {
             }, { passive: true });
         },
 
-        // 注册模块
+        // 注册模块 / Register module
         registerModule(moduleInfo) {
             const existing = this.modules.findIndex(m => m.id === moduleInfo.id);
             if (existing >= 0) {
@@ -688,12 +699,12 @@ object ExtensionPanelScript {
             this.updateModules();
             this.updateBadge();
         },
-        
-        // 更新模块列表
+
+        // 更新模块列表 / Update module list
         updateModules() {
             const grid = document.getElementById('wta-module-grid');
             if (!grid) return;
-            
+
             if (this.modules.length === 0) {
                 grid.innerHTML = `
                     <div class="wta-empty-state" style="grid-column: 1/-1">
@@ -703,7 +714,7 @@ object ExtensionPanelScript {
                 `;
                 return;
             }
-            
+
             grid.innerHTML = this.modules.map(m => `
                 <div class="wta-module-item" onclick="__WTA_PANEL__.onModuleClick('${"$"}{m.id}')">
                     <div class="wta-module-icon">
@@ -713,8 +724,8 @@ object ExtensionPanelScript {
                 </div>
             `).join('');
         },
-        
-        // 更新徽章
+
+        // 更新徽章 / Update badge
         updateBadge() {
             const badge = document.querySelector('#wta-ext-fab .badge');
             if (badge) {
@@ -724,7 +735,7 @@ object ExtensionPanelScript {
             }
         },
 
-        // 切换面板
+        // 切换面板 / Toggle panel
         togglePanel() {
             if (this.isOpen) {
                 this.hidePanel();
@@ -732,80 +743,80 @@ object ExtensionPanelScript {
                 this.showPanel();
             }
         },
-        
-        // 显示面板
+
+        // 显示面板 / Show panel
         showPanel() {
             const panel = document.getElementById('wta-ext-main-panel');
             const overlay = document.getElementById('wta-ext-overlay');
             const fab = document.getElementById('wta-ext-fab');
-            
+
             panel.classList.add('visible');
             overlay.classList.add('visible');
             fab.style.display = 'none';
             this.isOpen = true;
-            
-            // 隐藏模块详情
+
+            // 隐藏模块详情 / Hide module detail
             this.hideModuleDetail();
         },
-        
-        // 隐藏面板
+
+        // 隐藏面板 / Hide panel
         hidePanel() {
             const panel = document.getElementById('wta-ext-main-panel');
             const overlay = document.getElementById('wta-ext-overlay');
             const fab = document.getElementById('wta-ext-fab');
-            
+
             panel.classList.remove('visible');
             overlay.classList.remove('visible');
             fab.style.display = 'flex';
             this.isOpen = false;
             this.activeModuleId = null;
-            
-            // 隐藏模块详情
+
+            // 隐藏模块详情 / Hide module detail
             this.hideModuleDetail();
         },
 
-        // 模块点击
+        // 模块点击 / Module click
         onModuleClick(moduleId) {
             const module = this.modules.find(m => m.id === moduleId);
             if (!module) return;
-            
-            // 如果模块有面板内容，显示详情
+
+            // 如果模块有面板内容，显示详情 / Show details if module has panel content
             if (module.panelHtml || module.onAction) {
                 this.showModulePanel(moduleId);
             } else if (module.onClick) {
-                // 执行点击回调
+                // 执行点击回调 / Execute click callback
                 module.onClick();
                 this.hidePanel();
             }
         },
 
-        // 显示模块详情面板
+        // 显示模块详情面板 / Show module detail panel
         showModulePanel(moduleId) {
             const module = this.modules.find(m => m.id === moduleId);
             if (!module) return;
-            
+
             this.activeModuleId = moduleId;
-            
+
             const detail = document.getElementById('wta-module-detail');
             const title = document.getElementById('wta-detail-title');
             const content = document.getElementById('wta-detail-content');
-            
-            title.textContent = module.name || '模块详情';
-            
-            // 设置面板内容
+
+            title.textContent = module.name || T.moduleDetail;
+
+            // 设置面板内容 / Set panel content
             if (module.panelHtml) {
                 content.innerHTML = module.panelHtml;
             } else if (module.onAction) {
-                content.innerHTML = '<div style="text-align:center;padding:20px;color:var(--wta-on-surface-variant)">加载中...</div>';
+                content.innerHTML = '<div style="text-align:center;padding:20px;color:var(--wta-on-surface-variant)">' + T.loading + '</div>';
                 module.onAction(content);
             } else {
-                content.innerHTML = '<div class="wta-empty-state"><div class="wta-empty-text">此模块无详情面板</div></div>';
+                content.innerHTML = '<div class="wta-empty-state"><div class="wta-empty-text">' + T.noPanel + '</div></div>';
             }
-            
+
             detail.classList.add('visible');
         },
-        
-        // 隐藏模块详情
+
+        // 隐藏模块详情 / Hide module detail
         hideModuleDetail() {
             const detail = document.getElementById('wta-module-detail');
             if (detail) {
@@ -813,8 +824,8 @@ object ExtensionPanelScript {
             }
             this.activeModuleId = null;
         },
-        
-        // 更新模块面板内容
+
+        // 更新模块面板内容 / Update module panel content
         updateModulePanelContent(moduleId, html) {
             if (this.activeModuleId !== moduleId) return;
             const content = document.getElementById('wta-detail-content');
@@ -823,29 +834,29 @@ object ExtensionPanelScript {
             }
         },
 
-        // 显示 Toast
+        // 显示 Toast / Show toast
         showToast(message, duration = 2000) {
             const toast = document.getElementById('wta-toast');
             if (!toast) return;
-            
+
             toast.textContent = message;
             toast.classList.add('visible');
-            
+
             clearTimeout(this._toastTimer);
             this._toastTimer = setTimeout(() => {
                 toast.classList.remove('visible');
             }, duration);
         },
-        
-        // 设置 FAB 可见性
+
+        // 设置 FAB 可见性 / Set FAB visibility
         setFabVisible(visible) {
             const fab = document.getElementById('wta-ext-fab');
             if (fab) {
                 fab.style.display = visible ? 'flex' : 'none';
             }
         },
-        
-        // 设置 FAB 位置
+
+        // 设置 FAB 位置 / Set FAB position
         setFabPosition(bottom, right) {
             const fab = document.getElementById('wta-ext-fab');
             if (fab) {
@@ -854,11 +865,11 @@ object ExtensionPanelScript {
             }
         }
     };
-    
-    // 暴露全局接口
+
+    // 暴露全局接口 / Expose global interface
     window.__WTA_PANEL__ = WTA_PANEL;
-    
-    // 初始化
+
+    // 初始化 / Initialize
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => WTA_PANEL.init());
     } else {
@@ -870,14 +881,14 @@ object ExtensionPanelScript {
 
 
     /**
-     * 获取模块注册辅助脚本
-     * 模块可以使用这些辅助函数来注册自己的 UI
+     * 获取模块注册辅助脚本 / Get module registration helper script
+     * 模块可以使用这些辅助函数来注册自己的 UI / Modules can use these helpers to register their UI
      */
     fun getModuleHelperScript(): String = """
 (function() {
     'use strict';
-    
-    // 等待面板初始化
+
+    // 等待面板初始化 / Wait for panel initialization
     function waitForPanel(callback, maxWait = 5000) {
         const start = Date.now();
         const check = () => {
@@ -889,55 +900,55 @@ object ExtensionPanelScript {
         };
         check();
     }
-    
-    // 模块 UI 辅助对象
+
+    // 模块 UI 辅助对象 / Module UI helper
     window.__WTA_MODULE_UI__ = {
         /**
-         * 注册模块到统一面板
-         * @param {Object} config 模块配置
-         * @param {string} config.id 模块ID
-         * @param {string} config.name 模块名称
-         * @param {string} config.icon 模块图标（emoji）
-         * @param {string} config.color 主题色（十六进制，如 #667eea）- 已弃用，使用统一主题
-         * @param {string} config.panelHtml 面板HTML内容（可选）
-         * @param {Function} config.onClick 点击回调（可选，无面板时使用）
-         * @param {Function} config.onAction 动态生成面板内容的回调（可选）
+         * 注册模块到统一面板 / Register module to unified panel
+         * @param {Object} config 模块配置 / Module config
+         * @param {string} config.id 模块ID / Module ID
+         * @param {string} config.name 模块名称 / Module name
+         * @param {string} config.icon 模块图标（emoji） / Module icon (emoji)
+         * @param {string} config.color 主题色（十六进制，如 #667eea）- 已弃用，使用统一主题 / Theme color (deprecated)
+         * @param {string} config.panelHtml 面板HTML内容（可选） / Panel HTML (optional)
+         * @param {Function} config.onClick 点击回调（可选，无面板时使用） / Click callback (optional)
+         * @param {Function} config.onAction 动态生成面板内容的回调（可选） / Dynamic panel callback (optional)
          */
         register(config) {
             waitForPanel(panel => {
                 panel.registerModule(config);
             });
         },
-        
+
         /**
-         * 更新模块面板内容
+         * 更新模块面板内容 / Update module panel content
          */
         updatePanel(moduleId, html) {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.updateModulePanelContent(moduleId, html);
             }
         },
-        
+
         /**
-         * 显示 Toast 提示
+         * 显示 Toast 提示 / Show toast
          */
         toast(message, duration = 2000) {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.showToast(message, duration);
             }
         },
-        
+
         /**
-         * 关闭面板
+         * 关闭面板 / Close panel
          */
         closePanel() {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.hidePanel();
             }
         },
-        
+
         /**
-         * 返回模块列表
+         * 返回模块列表 / Back to module list
          */
         back() {
             if (window.__WTA_PANEL__) {

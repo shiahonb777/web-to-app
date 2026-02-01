@@ -3,19 +3,20 @@ package com.webtoapp.core.frontend
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.webtoapp.core.i18n.Strings
 import java.io.File
 
 /**
  * 前端项目检测器
- * 
+ *
  * 自动检测项目类型、依赖等配置
  * 支持导入已构建好的 dist 目录
  */
 object ProjectDetector {
-    
+
     private const val TAG = "ProjectDetector"
     private val gson = Gson()
-    
+
     // 框架检测规则
     private val frameworkDetectors = mapOf(
         "vue" to FrontendFramework.VUE,
@@ -27,7 +28,7 @@ object ProjectDetector {
         "@angular/core" to FrontendFramework.ANGULAR,
         "svelte" to FrontendFramework.SVELTE
     )
-    
+
     // 数据库检测规则
     private val databaseDetectors = mapOf(
         "sqlite3" to DatabaseType.SQLITE,
@@ -42,7 +43,7 @@ object ProjectDetector {
         "ioredis" to DatabaseType.REDIS
     )
 
-    
+
     // 依赖分类规则
     private val categoryDetectors = mapOf(
         // UI 库
@@ -54,7 +55,7 @@ object ProjectDetector {
         "@mui/material" to DependencyCategory.UI_LIBRARY,
         "tailwindcss" to DependencyCategory.UI_LIBRARY,
         "bootstrap" to DependencyCategory.UI_LIBRARY,
-        
+
         // 状态管理
         "vuex" to DependencyCategory.STATE_MANAGEMENT,
         "pinia" to DependencyCategory.STATE_MANAGEMENT,
@@ -62,29 +63,29 @@ object ProjectDetector {
         "@reduxjs/toolkit" to DependencyCategory.STATE_MANAGEMENT,
         "mobx" to DependencyCategory.STATE_MANAGEMENT,
         "zustand" to DependencyCategory.STATE_MANAGEMENT,
-        
+
         // 路由
         "vue-router" to DependencyCategory.ROUTER,
         "react-router" to DependencyCategory.ROUTER,
         "react-router-dom" to DependencyCategory.ROUTER,
-        
+
         // HTTP 客户端
         "axios" to DependencyCategory.HTTP_CLIENT,
         "ky" to DependencyCategory.HTTP_CLIENT,
-        
+
         // 构建工具
         "vite" to DependencyCategory.BUILD_TOOL,
         "webpack" to DependencyCategory.BUILD_TOOL,
         "rollup" to DependencyCategory.BUILD_TOOL,
         "esbuild" to DependencyCategory.BUILD_TOOL,
-        
+
         // 测试
         "jest" to DependencyCategory.TESTING,
         "vitest" to DependencyCategory.TESTING,
         "mocha" to DependencyCategory.TESTING,
         "cypress" to DependencyCategory.TESTING
     )
-    
+
     /**
      * 检测项目
      */
@@ -92,13 +93,13 @@ object ProjectDetector {
         val projectDir = File(projectPath)
         val issues = mutableListOf<ProjectIssue>()
         val suggestions = mutableListOf<String>()
-        
+
         // 首先检查是否有 dist/build 目录（已构建的项目）
         val distDir = findDistDirectory(projectDir)
         if (distDir != null) {
-            suggestions.add("检测到已构建的输出目录: ${distDir.name}，可直接导入")
+            suggestions.add(Strings.projectDetectorDistDetected(distDir.name))
         }
-        
+
         // 检查 package.json
         val packageJsonFile = File(projectDir, "package.json")
         if (!packageJsonFile.exists()) {
@@ -106,58 +107,59 @@ object ProjectDetector {
             if (distDir != null || hasIndexHtml(projectDir)) {
                 return createStaticResult(projectDir, distDir, issues, suggestions)
             }
-            return createErrorResult("未找到 package.json 文件，也没有检测到静态文件", issues)
+            return createErrorResult(Strings.projectDetectorMissingPackageJson, issues)
         }
-        
+
         val packageJson = try {
             gson.fromJson(packageJsonFile.readText(), JsonObject::class.java)
         } catch (e: Exception) {
             Log.e(TAG, "解析 package.json 失败", e)
-            return createErrorResult("package.json 格式错误: ${e.message}", issues)
+            return createErrorResult(Strings.projectDetectorPackageJsonParseError(e.message ?: "unknown"), issues)
         }
-        
+
         // 解析依赖
         val dependencies = parseDependencies(packageJson, "dependencies", false)
         val devDependencies = parseDependencies(packageJson, "devDependencies", true)
         val allDeps = dependencies + devDependencies
-        
+
         // 检测框架
         val framework = detectFramework(allDeps, projectDir)
         val frameworkVersion = getFrameworkVersion(framework, allDeps)
-        
+
         // 检测包管理器
         val packageManager = detectPackageManager(projectDir)
-        
+
         // 检测 TypeScript
         val hasTypeScript = allDeps.any { it.name == "typescript" } ||
                            File(projectDir, "tsconfig.json").exists()
-        
+
         // 检测数据库
         val databases = detectDatabases(allDeps)
-        
+
         // 解析脚本
         val scripts = parseScripts(packageJson)
-        
+
         // 确定构建命令和输出目录
-        val (buildCommand, outputDir) = determineBuildConfig(framework, scripts, projectDir)
-        
+        val (buildCommand, outputDir) = determineBuildConfig(framework, scripts)
+
         // 确定开发命令
         val devCommand = determineDevCommand(scripts)
-        
+
         // 检查是否有已构建的输出
         val hasDistFolder = distDir != null
         if (!hasDistFolder) {
             issues.add(ProjectIssue(
                 severity = IssueSeverity.WARNING,
                 type = IssueType.NO_DIST_FOLDER,
-                message = "未检测到构建输出目录（dist/build）",
-                suggestion = "请先在电脑上运行 npm run build 构建项目，然后导入构建后的文件夹"
+                message = Strings.projectDetectorMissingDistFolder,
+                suggestion = Strings.projectDetectorBuildCommandSuggestion
             ))
+            suggestions.add(Strings.projectDetectorChooseOutputHint)
         }
-        
+
         // 生成建议
-        generateSuggestions(framework, allDeps, databases, hasDistFolder, suggestions)
-        
+        generateSuggestions(framework, databases, suggestions)
+
         return ProjectDetectionResult(
             framework = framework,
             frameworkVersion = frameworkVersion,
@@ -175,7 +177,7 @@ object ProjectDetector {
         )
     }
 
-    
+
     /**
      * 查找 dist 目录
      */
@@ -189,14 +191,14 @@ object ProjectDetector {
         }
         return null
     }
-    
+
     /**
      * 检查目录是否包含 index.html
      */
     private fun hasIndexHtml(dir: File): Boolean {
         return File(dir, "index.html").exists()
     }
-    
+
     /**
      * 创建静态项目结果
      */
@@ -207,17 +209,17 @@ object ProjectDetector {
         suggestions: MutableList<String>
     ): ProjectDetectionResult {
         val outputDir = distDir ?: projectDir
-        
+
         if (!hasIndexHtml(outputDir)) {
             issues.add(ProjectIssue(
                 severity = IssueSeverity.ERROR,
                 type = IssueType.MISSING_CONFIG,
-                message = "未找到 index.html 文件"
+                message = Strings.projectDetectorStaticIndexMissing
             ))
         }
-        
-        suggestions.add("检测到静态网站项目，将直接导入所有文件")
-        
+
+        suggestions.add(Strings.projectDetectorStaticImportHint)
+
         return ProjectDetectionResult(
             framework = FrontendFramework.UNKNOWN,
             frameworkVersion = null,
@@ -234,7 +236,7 @@ object ProjectDetector {
             suggestions = suggestions
         )
     }
-    
+
     /**
      * 解析依赖
      */
@@ -244,13 +246,13 @@ object ProjectDetector {
         isDevDependency: Boolean
     ): List<DependencyInfo> {
         val deps = packageJson.getAsJsonObject(key) ?: return emptyList()
-        
+
         return deps.entrySet().map { (name, version) ->
-            val category = categoryDetectors[name] 
+            val category = categoryDetectors[name]
                 ?: frameworkDetectors[name]?.let { DependencyCategory.FRAMEWORK }
                 ?: databaseDetectors[name]?.let { DependencyCategory.DATABASE }
                 ?: DependencyCategory.OTHER
-            
+
             DependencyInfo(
                 name = name,
                 version = version.asString,
@@ -259,13 +261,13 @@ object ProjectDetector {
             )
         }
     }
-    
+
     /**
      * 检测框架
      */
     private fun detectFramework(deps: List<DependencyInfo>, projectDir: File): FrontendFramework {
         val depNames = deps.map { it.name }.toSet()
-        
+
         return when {
             "nuxt" in depNames || "nuxt3" in depNames -> FrontendFramework.NUXT
             "next" in depNames -> FrontendFramework.NEXT
@@ -292,7 +294,7 @@ object ProjectDetector {
             }
         }
     }
-    
+
     /**
      * 获取框架版本
      */
@@ -307,12 +309,12 @@ object ProjectDetector {
             FrontendFramework.VITE -> "vite"
             else -> null
         }
-        
+
         return frameworkPackage?.let { pkg ->
             deps.find { it.name == pkg }?.version?.removePrefix("^")?.removePrefix("~")
         }
     }
-    
+
     /**
      * 检测包管理器
      */
@@ -324,7 +326,7 @@ object ProjectDetector {
             else -> PackageManager.NPM
         }
     }
-    
+
     /**
      * 检测数据库
      */
@@ -333,7 +335,7 @@ object ProjectDetector {
             databaseDetectors[dep.name]
         }.distinct()
     }
-    
+
     /**
      * 解析脚本
      */
@@ -341,14 +343,13 @@ object ProjectDetector {
         val scripts = packageJson.getAsJsonObject("scripts") ?: return emptyMap()
         return scripts.entrySet().associate { it.key to it.value.asString }
     }
-    
+
     /**
      * 确定构建配置
      */
     private fun determineBuildConfig(
         framework: FrontendFramework,
-        scripts: Map<String, String>,
-        projectDir: File
+        scripts: Map<String, String>
     ): Pair<String?, String> {
         val buildCommand = when {
             "build" in scripts -> "build"
@@ -356,7 +357,7 @@ object ProjectDetector {
             "generate" in scripts -> "generate"
             else -> "build"
         }
-        
+
         val outputDir = when (framework) {
             FrontendFramework.VUE -> "dist"
             FrontendFramework.REACT -> "build"
@@ -366,10 +367,10 @@ object ProjectDetector {
             FrontendFramework.VITE -> "dist"
             else -> "dist"
         }
-        
+
         return buildCommand to outputDir
     }
-    
+
     /**
      * 确定开发命令
      */
@@ -381,34 +382,27 @@ object ProjectDetector {
             else -> null
         }
     }
-    
+
     /**
      * 生成建议
      */
     private fun generateSuggestions(
         framework: FrontendFramework,
-        deps: List<DependencyInfo>,
         databases: List<DatabaseType>,
-        hasDistFolder: Boolean,
         suggestions: MutableList<String>
     ) {
-        if (!hasDistFolder) {
-            suggestions.add("💡 请先在电脑上构建项目：npm run build")
-            suggestions.add("💡 然后选择构建输出目录（通常是 dist 或 build）导入")
-        }
-        
         when (framework) {
             FrontendFramework.NEXT, FrontendFramework.NUXT -> {
-                suggestions.add("⚠️ SSR 框架需要使用静态导出模式构建")
+                suggestions.add(Strings.projectDetectorSsrExportHint)
             }
             else -> {}
         }
-        
+
         if (databases.isNotEmpty()) {
-            suggestions.add("⚠️ 检测到数据库依赖，前端应用无法直接使用后端数据库")
+            suggestions.add(Strings.projectDetectorDatabaseWarning)
         }
     }
-    
+
     /**
      * 创建错误结果
      */
@@ -418,7 +412,7 @@ object ProjectDetector {
             type = IssueType.MISSING_CONFIG,
             message = message
         ))
-        
+
         return ProjectDetectionResult(
             framework = FrontendFramework.UNKNOWN,
             frameworkVersion = null,

@@ -99,7 +99,7 @@ class ShellActivity : AppCompatActivity() {
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
-    
+
     // 权限请求相关
     private var pendingPermissionRequest: PermissionRequest? = null
     private var pendingGeolocationOrigin: String? = null
@@ -108,10 +108,10 @@ class ShellActivity : AppCompatActivity() {
     private var immersiveFullscreenEnabled: Boolean = false
     private var showStatusBarInFullscreen: Boolean = false  // 全屏模式下是否显示状态栏
     private var translateBridge: TranslateBridge? = null
-    
+
     // 视频全屏前的屏幕方向
     private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-    
+
     // 状态栏配置缓存
     private var statusBarColorMode: String = "THEME"
     private var statusBarCustomColor: String? = null
@@ -126,7 +126,7 @@ class ShellActivity : AppCompatActivity() {
 
     /**
      * 应用状态栏颜色配置
-     * 
+     *
      * @param colorMode 颜色模式：THEME（跟随主题）、TRANSPARENT（透明）、CUSTOM（自定义）
      * @param customColor 自定义颜色（仅 CUSTOM 模式生效）
      * @param darkIcons 图标颜色：true=深色图标，false=浅色图标，null=自动
@@ -139,7 +139,7 @@ class ShellActivity : AppCompatActivity() {
         isDarkTheme: Boolean
     ) {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
-        
+
         when (colorMode) {
             "TRANSPARENT" -> {
                 window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -155,7 +155,7 @@ class ShellActivity : AppCompatActivity() {
                     android.graphics.Color.WHITE
                 }
                 window.statusBarColor = color
-                
+
                 // 根据颜色亮度自动判断图标颜色，或使用用户指定的
                 val useDarkIcons = darkIcons ?: isColorLight(color)
                 controller.isAppearanceLightStatusBars = useDarkIcons
@@ -172,11 +172,11 @@ class ShellActivity : AppCompatActivity() {
                 }
             }
         }
-        
+
         // 导航栏也跟随设置
         controller.isAppearanceLightNavigationBars = controller.isAppearanceLightStatusBars
     }
-    
+
     /**
      * 判断颜色是否为浅色（用于自动选择图标颜色）
      */
@@ -191,7 +191,7 @@ class ShellActivity : AppCompatActivity() {
 
     /**
      * 应用沉浸式全屏模式
-     * 
+     *
      * @param enabled 是否启用沉浸式模式
      * @param hideNavBar 是否同时隐藏导航栏（视频全屏时为 true）
      * @param isDarkTheme 当前是否为深色主题（用于状态栏颜色）
@@ -200,22 +200,22 @@ class ShellActivity : AppCompatActivity() {
         try {
             // 支持刘海屏/挖孔屏
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                window.attributes.layoutInDisplayCutoutMode = 
+                window.attributes.layoutInDisplayCutoutMode =
                     android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
-            
+
             WindowInsetsControllerCompat(window, window.decorView).let { controller ->
                 if (enabled) {
                     // 沉浸式模式
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                    
+
                     // 根据配置决定是否显示状态栏
                     val shouldShowStatusBar = if (forceHideSystemUi) false else showStatusBarInFullscreen
                     if (shouldShowStatusBar) {
                         // 全屏模式但显示状态栏：内容延伸到状态栏区域
                         WindowCompat.setDecorFitsSystemWindows(window, false)
                         controller.show(WindowInsetsCompat.Type.statusBars())
-                        
+
                         // 如果是图片背景，状态栏设为透明，让 StatusBarOverlay 组件显示图片
                         if (statusBarBackgroundType == "IMAGE") {
                             window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -257,7 +257,7 @@ class ShellActivity : AppCompatActivity() {
                         window.statusBarColor = android.graphics.Color.TRANSPARENT
                         controller.hide(WindowInsetsCompat.Type.statusBars())
                     }
-                    
+
                     if (hideNavBar || forceHideSystemUi) {
                         // 同时隐藏导航栏（完全沉浸式）
                         controller.hide(WindowInsetsCompat.Type.navigationBars())
@@ -270,7 +270,7 @@ class ShellActivity : AppCompatActivity() {
                     WindowCompat.setDecorFitsSystemWindows(window, true)
                     controller.show(WindowInsetsCompat.Type.systemBars())
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                    
+
                     // 应用状态栏颜色配置
                     applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
                 }
@@ -283,13 +283,13 @@ class ShellActivity : AppCompatActivity() {
     fun onForcedRunStateChanged(active: Boolean, config: ForcedRunConfig?) {
         forcedRunConfig = config
         forceHideSystemUi = active && config?.blockSystemUI == true
-        
-        android.util.Log.d("ShellActivity", "强制运行状态变化: active=$active, protection=${config?.protectionLevel}")
-        
+
+        android.util.Log.d("ShellActivity", "Forced run state changed: active=$active, protection=${config?.protectionLevel}")
+
         if (active) {
             // 保持屏幕常亮
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            
+
             // 尝试 Lock Task Mode（作为额外防护层，可能需要用户确认）
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 try {
@@ -298,13 +298,13 @@ class ShellActivity : AppCompatActivity() {
                     android.util.Log.w("ShellActivity", "startLockTask failed (expected without device admin)", e)
                 }
             }
-            
+
             // 注意：真正的防护由 ForcedRunManager 启动的 AccessibilityService 和 GuardService 提供
             // 这里的 startLockTask 只是额外的防护层
-            
+
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 try {
                     stopLockTask()
@@ -313,13 +313,13 @@ class ShellActivity : AppCompatActivity() {
                 }
             }
         }
-        
+
         applyImmersiveFullscreen(customView != null || immersiveFullscreenEnabled || forceHideSystemUi)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
-        
+
         // 检查是否屏蔽音量键
         if (hardwareController.isBlockVolumeKeys) {
             when (event.keyCode) {
@@ -328,12 +328,12 @@ class ShellActivity : AppCompatActivity() {
                 KeyEvent.KEYCODE_VOLUME_MUTE -> return true
             }
         }
-        
+
         // 检查是否屏蔽电源键（注意：电源键在 Activity 中拦截有限）
         if (hardwareController.isBlockPowerKey && event.keyCode == KeyEvent.KEYCODE_POWER) {
             return true
         }
-        
+
         if (event.action == KeyEvent.ACTION_DOWN) {
             if (forcedRunManager.handleKeyEvent(event.keyCode)) {
                 return true
@@ -341,10 +341,10 @@ class ShellActivity : AppCompatActivity() {
         }
         return super.dispatchKeyEvent(event)
     }
-    
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
-        
+
         // 屏蔽音量键
         if (hardwareController.isBlockVolumeKeys) {
             when (keyCode) {
@@ -353,10 +353,10 @@ class ShellActivity : AppCompatActivity() {
                 KeyEvent.KEYCODE_VOLUME_MUTE -> return true
             }
         }
-        
+
         return super.onKeyDown(keyCode, event)
     }
-    
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         // 检查是否启用了触摸屏蔽
         val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
@@ -366,10 +366,10 @@ class ShellActivity : AppCompatActivity() {
         }
         return super.dispatchTouchEvent(ev)
     }
-    
+
     // 待下载信息（权限请求后使用）
     private var pendingDownload: PendingDownload? = null
-    
+
     private data class PendingDownload(
         val url: String,
         val userAgent: String,
@@ -384,7 +384,7 @@ class ShellActivity : AppCompatActivity() {
         filePathCallback?.onReceiveValue(uris.toTypedArray())
         filePathCallback = null
     }
-    
+
     // 存储权限请求
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -413,7 +413,7 @@ class ShellActivity : AppCompatActivity() {
         }
         pendingDownload = null
     }
-    
+
     // 权限请求launcher（用于摄像头、麦克风等）
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -428,7 +428,7 @@ class ShellActivity : AppCompatActivity() {
             pendingPermissionRequest = null
         }
     }
-    
+
     // 位置权限请求launcher
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -438,18 +438,18 @@ class ShellActivity : AppCompatActivity() {
         pendingGeolocationOrigin = null
         pendingGeolocationCallback = null
     }
-    
+
     // 通知权限请求launcher（Android 13+）
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            android.util.Log.d("ShellActivity", "通知权限已授予")
+            android.util.Log.d("ShellActivity", "Notification permission granted")
         } else {
-            android.util.Log.d("ShellActivity", "通知权限被拒绝")
+            android.util.Log.d("ShellActivity", "Notification permission denied")
         }
     }
-    
+
     /**
      * 请求通知权限（Android 13+）
      */
@@ -459,20 +459,20 @@ class ShellActivity : AppCompatActivity() {
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
-            
+
             if (!hasPermission) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
-    
+
     /**
      * 处理WebView权限请求，先请求Android系统权限
      */
     fun handlePermissionRequest(request: PermissionRequest) {
         val resources = request.resources
         val androidPermissions = mutableListOf<String>()
-        
+
         resources.forEach { resource ->
             when (resource) {
                 PermissionRequest.RESOURCE_VIDEO_CAPTURE -> {
@@ -483,7 +483,7 @@ class ShellActivity : AppCompatActivity() {
                 }
             }
         }
-        
+
         if (androidPermissions.isEmpty()) {
             // 不需要Android权限，直接授权WebView
             request.grant(resources)
@@ -493,7 +493,7 @@ class ShellActivity : AppCompatActivity() {
             permissionLauncher.launch(androidPermissions.toTypedArray())
         }
     }
-    
+
     /**
      * 处理地理位置权限请求
      */
@@ -505,7 +505,7 @@ class ShellActivity : AppCompatActivity() {
             android.Manifest.permission.ACCESS_COARSE_LOCATION
         ))
     }
-    
+
     /**
      * 处理下载（带权限检查）
      */
@@ -530,13 +530,13 @@ class ShellActivity : AppCompatActivity() {
             )
             return
         }
-        
+
         // Android 9 及以下需要检查存储权限
         val hasPermission = ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED
-        
+
         if (hasPermission) {
             DownloadHelper.handleDownload(
                 context = this,
@@ -565,26 +565,26 @@ class ShellActivity : AppCompatActivity() {
             val versionName = try {
                 packageManager.getPackageInfo(packageName, 0).versionName ?: "1.0.0"
             } catch (e: Exception) { "1.0.0" }
-            
+
             com.webtoapp.core.shell.ShellLogger.init(
                 context = this,
                 appName = tempConfig?.appName ?: "ShellApp",
                 appVersion = versionName
             )
-            com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "onCreate 开始")
+            com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "onCreate started")
         } catch (e: Exception) {
-            android.util.Log.e("ShellActivity", "日志系统初始化失败", e)
+            android.util.Log.e("ShellActivity", "Failed to initialize logging system", e)
         }
-        
+
         // 启用边到边显示（让内容延伸到系统栏区域）
         try {
             enableEdgeToEdge()
-            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "enableEdgeToEdge 成功")
+            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "enableEdgeToEdge succeeded")
         } catch (e: Exception) {
             android.util.Log.w("ShellActivity", "enableEdgeToEdge failed", e)
             com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "enableEdgeToEdge 失败", e)
         }
-        
+
         super.onCreate(savedInstanceState)
 
         val config = WebToAppApplication.shellMode.getConfig()
@@ -596,18 +596,18 @@ class ShellActivity : AppCompatActivity() {
             finish()
             return
         }
-        
+
         com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "配置加载成功: ${config.appName}")
-        
+
         forcedRunConfig = config.forcedRunConfig
-        
+
         // 记录配置详情
         com.webtoapp.core.shell.ShellLogger.logFeature("Config", "加载配置", buildString {
             append("强制运行=${config.forcedRunConfig?.enabled ?: false}, ")
             append("后台运行=${config.backgroundRunEnabled}, ")
             append("独立环境=${config.isolationEnabled}")
         })
-        
+
         // 设置硬件控制器的目标 Activity（用于屏幕翻转、黑屏等功能）
         try {
             val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
@@ -616,7 +616,7 @@ class ShellActivity : AppCompatActivity() {
         } catch (e: Exception) {
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "硬件控制器初始化失败", e)
         }
-        
+
         // 初始化强制运行管理器
         if (config.forcedRunConfig?.enabled == true) {
             try {
@@ -625,7 +625,7 @@ class ShellActivity : AppCompatActivity() {
                     packageName = packageName,
                     activityClass = this::class.java.name
                 )
-                
+
                 // 设置状态变化回调
                 forcedRunManager.setOnStateChangedCallback { active, forcedConfig ->
                     runOnUiThread {
@@ -658,7 +658,7 @@ class ShellActivity : AppCompatActivity() {
                 com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "自启动配置注册失败", e)
             }
         }
-        
+
         // 初始化独立环境/多开配置（如果启用）
         if (config.isolationEnabled && config.isolationConfig != null) {
             try {
@@ -672,7 +672,7 @@ class ShellActivity : AppCompatActivity() {
                 com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "独立环境初始化失败", e)
             }
         }
-        
+
         // 初始化后台运行服务（如果启用）
         if (config.backgroundRunEnabled) {
             try {
@@ -691,12 +691,12 @@ class ShellActivity : AppCompatActivity() {
                 com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "后台运行服务启动失败", e)
             }
         }
-        
+
         // 多桌面图标功能说明：
         // 多桌面图标现在通过 AndroidManifest 的 activity-alias 实现，
         // 在 APK 构建时由 AxmlRebuilder 动态添加，无需运行时处理。
         // 安装后会自动显示多个桌面图标。
-        
+
         // 设置任务列表中显示的应用名称
         // 使用 setTaskDescription 明确设置任务描述，避免系统自动拼接 Application label 和 Activity label
         try {
@@ -705,7 +705,7 @@ class ShellActivity : AppCompatActivity() {
         } catch (e: Exception) {
             com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "setTaskDescription 失败", e)
         }
-        
+
         // 请求通知权限（Android 13+），用于显示下载进度和完成通知
         try {
             requestNotificationPermissionIfNeeded()
@@ -713,7 +713,7 @@ class ShellActivity : AppCompatActivity() {
         } catch (e: Exception) {
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "通知权限请求失败", e)
         }
-        
+
         // 读取状态栏配置
         com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "开始读取状态栏配置")
         statusBarColorMode = config.webViewConfig.statusBarColorMode
@@ -724,7 +724,7 @@ class ShellActivity : AppCompatActivity() {
         statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
-        
+
         // 根据配置决定是否启用沉浸式全屏模式
         // hideToolbar=true 时启用沉浸式（隐藏状态栏），否则显示状态栏
         immersiveFullscreenEnabled = config.webViewConfig.hideToolbar
@@ -736,7 +736,7 @@ class ShellActivity : AppCompatActivity() {
         }
 
         com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "setContent 开始，主题=${config.themeType}")
-        
+
         setContent {
             ShellTheme(
                 themeTypeName = config.themeType,
@@ -744,14 +744,14 @@ class ShellActivity : AppCompatActivity() {
             ) {
                 // 获取当前主题状态
                 val isDarkTheme = com.webtoapp.ui.theme.LocalIsDarkTheme.current
-                
+
                 // 当主题变化时更新状态栏颜色
                 LaunchedEffect(isDarkTheme, statusBarColorMode) {
                     if (!immersiveFullscreenEnabled) {
                         applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
                     }
                 }
-                
+
                 ShellScreen(
                     config = config,
                     onWebViewCreated = { wv ->
@@ -824,7 +824,7 @@ class ShellActivity : AppCompatActivity() {
         // 保存当前屏幕方向，进入横屏全屏模式
         originalOrientationBeforeFullscreen = requestedOrientation
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        
+
         val decorView = window.decorView as FrameLayout
         decorView.addView(
             view,
@@ -843,11 +843,11 @@ class ShellActivity : AppCompatActivity() {
             customViewCallback?.onCustomViewHidden()
             customView = null
             customViewCallback = null
-            
+
             // 恢复原来的屏幕方向
             requestedOrientation = originalOrientationBeforeFullscreen
             originalOrientationBeforeFullscreen = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            
+
             applyImmersiveFullscreen(immersiveFullscreenEnabled)
         }
     }
@@ -895,7 +895,7 @@ fun ShellScreen(
     val forcedRunRemainingMs by forcedRunManager.remainingTimeMs.collectAsState()
     var forcedRunBlocked by remember { mutableStateOf(false) }
     var forcedRunBlockedMessage by remember { mutableStateOf("") }
-    
+
     // 强制运行权限引导状态
     var showForcedRunPermissionDialog by remember { mutableStateOf(false) }
     var forcedRunPermissionChecked by remember { mutableStateOf(false) }
@@ -922,30 +922,30 @@ fun ShellScreen(
             val extension = if (config.splashType == "VIDEO") "mp4" else "png"
             val assetPath = "splash_media.$extension"
             val encryptedPath = "$assetPath.enc"
-            
+
             // 先检查加密版本
             val hasEncrypted = try {
                 context.assets.open(encryptedPath).close()
                 true
             } catch (e: Exception) { false }
-            
+
             // 再检查非加密版本
             val hasNormal = try {
                 context.assets.open(assetPath).close()
                 true
             } catch (e: Exception) { false }
-            
+
             val exists = hasEncrypted || hasNormal
             android.util.Log.d("ShellActivity", "同步检查: 启动画面媒体 encrypted=$hasEncrypted, normal=$hasNormal, exists=$exists")
             exists
         } else false
     }
-    
+
     // 启动画面状态 - 根据配置同步初始化
     var showSplash by remember { mutableStateOf(config.splashEnabled && splashMediaExists) }
     var splashCountdown by remember { mutableIntStateOf(if (config.splashEnabled && splashMediaExists) config.splashDuration else 0) }
     var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
-    
+
     // 处理启动画面横屏
     LaunchedEffect(showSplash) {
         if (showSplash && config.splashLandscape) {
@@ -956,7 +956,7 @@ fun ShellScreen(
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
-    
+
     // 长按菜单状态
     var showLongPressMenu by remember { mutableStateOf(false) }
     var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
@@ -1002,25 +1002,25 @@ fun ShellScreen(
         }
 
         // 设置横屏模式（Web应用或HTML应用）
-        if (config.webViewConfig.landscapeMode || 
+        if (config.webViewConfig.landscapeMode ||
             (config.appType == "HTML" && config.htmlConfig.landscapeMode)) {
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
 
         // 启动画面已在同步初始化阶段处理
         android.util.Log.d("ShellActivity", "LaunchedEffect: showSplash=$showSplash, splashCountdown=$splashCountdown")
-        
+
         // 检查强制运行权限
         val forcedConfig = config.forcedRunConfig
         if (forcedConfig?.enabled == true && !forcedRunPermissionChecked) {
             val protectionLevel = forcedConfig.protectionLevel
             val permissionStatus = ForcedRunManager.checkProtectionPermissions(context, protectionLevel)
-            
+
             android.util.Log.d("ShellActivity", "强制运行权限检查: level=$protectionLevel, " +
                 "hasAccessibility=${permissionStatus.hasAccessibility}, " +
                 "hasUsageStats=${permissionStatus.hasUsageStats}, " +
                 "isFullyGranted=${permissionStatus.isFullyGranted}")
-            
+
             if (!permissionStatus.isFullyGranted) {
                 // 显示权限引导对话框
                 showForcedRunPermissionDialog = true
@@ -1055,9 +1055,9 @@ fun ShellScreen(
             val waitMs = forcedRunManager.getTimeUntilNextAccess(forcedConfig)
             val waitText = if (waitMs > 0) formatDuration(waitMs) else ""
             forcedRunBlockedMessage = if (waitText.isNotEmpty()) {
-                "当前不在允许进入时间，请稍后再试（剩余 $waitText）。"
+                Strings.forcedRunAccessBlockedWithRemainingFormat.format(waitText)
             } else {
-                "当前不在允许进入时间，请稍后再试。"
+                Strings.forcedRunAccessBlocked
             }
             forcedRunBlocked = true
             if (forcedRunActive) {
@@ -1102,7 +1102,7 @@ fun ShellScreen(
     LaunchedEffect(showSplash, splashCountdown) {
         // 视频类型不使用倒计时，由视频播放器控制结束
         if (config.splashType == "VIDEO") return@LaunchedEffect
-        
+
         if (showSplash && splashCountdown > 0) {
             delay(1000L)
             splashCountdown--
@@ -1115,22 +1115,22 @@ fun ShellScreen(
             }
         }
     }
-    
+
     // ===== 背景音乐播放器 =====
     var bgmPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var currentBgmIndex by remember { mutableIntStateOf(0) }
     var isBgmPlaying by remember { mutableStateOf(false) }
-    
+
     // ===== 歌词显示 =====
     var currentLrcData by remember { mutableStateOf<LrcData?>(null) }
     var currentLrcLineIndex by remember { mutableIntStateOf(-1) }
     var bgmCurrentPosition by remember { mutableLongStateOf(0L) }
-    
+
     // 解析 LRC 文本（必须定义在 loadLrcForCurrentBgm 之前）
     fun parseLrcText(text: String): LrcData? {
         val lines = mutableListOf<LrcLine>()
         val timeRegex = Regex("""\[(\d{2}):(\d{2})\.(\d{2,3})](.*)""")
-        
+
         text.lines().forEach { line ->
             timeRegex.find(line)?.let { match ->
                 val minutes = match.groupValues[1].toLongOrNull() ?: 0
@@ -1139,32 +1139,32 @@ fun ShellScreen(
                     if (it.length == 2) it.toLong() * 10 else it.toLong()
                 }
                 val lyricText = match.groupValues[4].trim()
-                
+
                 if (lyricText.isNotEmpty()) {
                     val startTime = minutes * 60000 + seconds * 1000 + millis
                     lines.add(LrcLine(startTime = startTime, endTime = startTime + 5000, text = lyricText))
                 }
             }
         }
-        
+
         // 计算结束时间
         for (i in 0 until lines.size - 1) {
             lines[i] = lines[i].copy(endTime = lines[i + 1].startTime)
         }
-        
+
         return if (lines.isNotEmpty()) LrcData(lines = lines) else null
     }
-    
+
     // 加载当前 BGM 的 LRC 数据
     fun loadLrcForCurrentBgm(bgmIndex: Int) {
         if (!config.bgmShowLyrics) {
             currentLrcData = null
             return
         }
-        
+
         val bgmItem = config.bgmPlaylist.getOrNull(bgmIndex) ?: return
         val lrcPath = bgmItem.lrcAssetPath ?: return
-        
+
         try {
             val lrcAssetPath = lrcPath.removePrefix("assets/")
             val lrcText = context.assets.open(lrcAssetPath).bufferedReader().readText()
@@ -1176,7 +1176,7 @@ fun ShellScreen(
             currentLrcData = null
         }
     }
-    
+
     // 初始化并播放 BGM
     LaunchedEffect(config.bgmEnabled) {
         if (config.bgmEnabled && config.bgmPlaylist.isNotEmpty()) {
@@ -1185,14 +1185,14 @@ fun ShellScreen(
                 val player = MediaPlayer()
                 val firstItem = config.bgmPlaylist.first()
                 val assetPath = firstItem.assetPath.removePrefix("assets/")
-                
+
                 val afd: AssetFileDescriptor = context.assets.openFd(assetPath)
                 player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                 afd.close()
-                
+
                 player.setVolume(config.bgmVolume, config.bgmVolume)
                 player.isLooping = config.bgmPlayMode == "LOOP" && config.bgmPlaylist.size == 1
-                
+
                 player.setOnCompletionListener {
                     // 播放下一首
                     val nextIndex = when (config.bgmPlayMode) {
@@ -1200,7 +1200,7 @@ fun ShellScreen(
                         "SEQUENTIAL" -> if (currentBgmIndex + 1 < config.bgmPlaylist.size) currentBgmIndex + 1 else -1
                         else -> (currentBgmIndex + 1) % config.bgmPlaylist.size // LOOP
                     }
-                    
+
                     if (nextIndex >= 0 && nextIndex < config.bgmPlaylist.size) {
                         currentBgmIndex = nextIndex
                         try {
@@ -1212,7 +1212,7 @@ fun ShellScreen(
                             nextAfd.close()
                             player.prepare()
                             player.start()
-                            
+
                             // 加载新歌曲的歌词
                             loadLrcForCurrentBgm(nextIndex)
                         } catch (e: Exception) {
@@ -1220,37 +1220,37 @@ fun ShellScreen(
                         }
                     }
                 }
-                
+
                 player.prepare()
-                
+
                 // 自动播放
                 if (config.bgmAutoPlay) {
                     player.start()
                     isBgmPlaying = true
                 }
-                
+
                 bgmPlayer = player
-                
+
                 // 加载第一首歌的歌词
                 loadLrcForCurrentBgm(0)
-                
+
                 android.util.Log.d("ShellActivity", "BGM 播放器初始化成功: ${firstItem.name}")
             } catch (e: Exception) {
                 android.util.Log.e("ShellActivity", "初始化 BGM 播放器失败", e)
             }
         }
     }
-    
+
     // 更新歌词显示（追踪播放进度）
     LaunchedEffect(isBgmPlaying, currentLrcData) {
         if (!isBgmPlaying || currentLrcData == null) return@LaunchedEffect
-        
+
         while (isBgmPlaying && currentLrcData != null) {
             bgmPlayer?.let { mp ->
                 try {
                     if (mp.isPlaying) {
                         bgmCurrentPosition = mp.currentPosition.toLong()
-                        
+
                         // 查找当前应显示的歌词行
                         val lrcData = currentLrcData
                         if (lrcData != null) {
@@ -1267,7 +1267,7 @@ fun ShellScreen(
             delay(100)
         }
     }
-    
+
     // 清理 BGM 播放器
     DisposableEffect(Unit) {
         onDispose {
@@ -1297,12 +1297,12 @@ fun ShellScreen(
                 webViewRef?.let {
                     canGoBack = it.canGoBack()
                     canGoForward = it.canGoForward()
-                    
+
                     // 注入自动翻译脚本
                     if (config.translateEnabled) {
                         injectTranslateScript(it, config.translateTargetLanguage, config.translateShowButton)
                     }
-                    
+
                     // 注入长按增强脚本（绕过小红书等网站的长按限制）
                     longPressHandler.injectLongPressEnhancer(it)
                 }
@@ -1325,7 +1325,7 @@ fun ShellScreen(
             }
 
             override fun onSslError(error: String) {
-                errorMessage = "SSL安全错误"
+                errorMessage = Strings.sslSecurityError
                 com.webtoapp.core.shell.ShellLogger.logWebView("SSL错误", currentUrl, error)
             }
 
@@ -1365,7 +1365,7 @@ fun ShellScreen(
             ): Boolean {
                 return onFileChooser(filePathCallback, fileChooserParams)
             }
-            
+
             override fun onDownloadStart(
                 url: String,
                 userAgent: String,
@@ -1378,18 +1378,18 @@ fun ShellScreen(
                     url, userAgent, contentDisposition, mimeType, contentLength
                 )
             }
-            
+
             override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
                 // 先同步检查 hitTestResult，判断是否需要拦截
                 val hitResult = webView.hitTestResult
                 val type = hitResult.type
-                
+
                 // 如果是编辑框或未知类型，不拦截，让 WebView 处理默认的文字选择
                 if (type == WebView.HitTestResult.EDIT_TEXT_TYPE ||
                     type == WebView.HitTestResult.UNKNOWN_TYPE) {
                     return false
                 }
-                
+
                 // 通过 JS 获取长按元素详情
                 longPressHandler.getLongPressDetails(webView, x, y) { result ->
                     when (result) {
@@ -1406,7 +1406,7 @@ fun ShellScreen(
                         }
                     }
                 }
-                
+
                 // 对于图片、链接等类型，拦截事件显示自定义菜单
                 return when (type) {
                     WebView.HitTestResult.IMAGE_TYPE,
@@ -1441,7 +1441,7 @@ fun ShellScreen(
         }
     )
 
-    val webViewManager = remember { 
+    val webViewManager = remember {
         com.webtoapp.core.webview.WebViewManager(context, adBlocker)
     }
 
@@ -1451,7 +1451,7 @@ fun ShellScreen(
     LaunchedEffect(hideToolbar) {
         onFullscreenModeChanged(hideToolbar)
     }
-    
+
     // 关闭启动画面的回调（提前定义）
     val closeSplash = {
         showSplash = false
@@ -1465,7 +1465,7 @@ fun ShellScreen(
     // 整体容器，确保启动画面覆盖在 Scaffold 之上
     // 使用 fillMaxSize 确保内容铺满整个屏幕（包括状态栏区域）
     Box(modifier = Modifier.fillMaxSize()) {
-    
+
     Scaffold(
         // 在沉浸式模式下，不添加任何内边距
         contentWindowInsets = if (hideToolbar) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
@@ -1495,16 +1495,16 @@ fun ShellScreen(
                             onClick = { webViewRef?.goBack() },
                             enabled = canGoBack
                         ) {
-                            Icon(Icons.Default.ArrowBack, "后退")
+                        Icon(Icons.Default.ArrowBack, Strings.back)
                         }
                         IconButton(
                             onClick = { webViewRef?.goForward() },
                             enabled = canGoForward
                         ) {
-                            Icon(Icons.Default.ArrowForward, "前进")
+                        Icon(Icons.Default.ArrowForward, Strings.navForward)
                         }
                         IconButton(onClick = { webViewRef?.reload() }) {
-                            Icon(Icons.Default.Refresh, "刷新")
+                        Icon(Icons.Default.Refresh, Strings.refresh)
                         }
                     }
                 )
@@ -1515,7 +1515,7 @@ fun ShellScreen(
         // 全屏模式 + 显示状态栏时，需要给内容添加状态栏高度的 padding，避免被遮挡
         val context = LocalContext.current
         val density = LocalDensity.current
-        
+
         // 获取系统状态栏高度
         val systemStatusBarHeightDp = remember {
             val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -1525,10 +1525,10 @@ fun ShellScreen(
                 24.dp
             }
         }
-        
+
         // 计算实际需要的状态栏 padding（使用自定义高度或系统默认高度）
         val actualStatusBarPadding = if (statusBarHeightDp > 0) statusBarHeightDp.dp else systemStatusBarHeightDp
-        
+
         val contentModifier = when {
             hideToolbar && config.webViewConfig.showStatusBarInFullscreen -> {
                 // 全屏模式但显示状态栏：内容需要在状态栏下方
@@ -1544,7 +1544,7 @@ fun ShellScreen(
                 Modifier.fillMaxSize().padding(padding)
             }
         }
-        
+
         Box(modifier = contentModifier) {
             // 进度条
             AnimatedVisibility(
@@ -1581,10 +1581,10 @@ fun ShellScreen(
                             tint = MaterialTheme.colorScheme.outline
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("请先激活应用")
+                        Text(Strings.pleaseActivateApp)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { showActivationDialog = true }) {
-                            Text("输入激活码")
+                            Text(Strings.enterActivationCode)
                         }
                     }
                 }
@@ -1614,7 +1614,7 @@ fun ShellScreen(
                 // HTML应用模式 - 加载嵌入在 APK assets 中的 HTML 文件
                 val htmlEntryFile = config.htmlConfig.getValidEntryFile()
                 val htmlUrl = "file:///android_asset/html/$htmlEntryFile"
-                
+
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
@@ -1645,7 +1645,7 @@ fun ShellScreen(
                                 // 允许混合内容（HTTPS 页面加载 HTTP 资源，以及 file:// 页面访问网络）
                                 mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             }
-                            
+
                             // 添加长按监听器
                             // 持续跟踪触摸位置，确保长按时使用最新坐标
                             var lastTouchX = 0f
@@ -1663,7 +1663,7 @@ fun ShellScreen(
                             setOnLongClickListener {
                                 webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
                             }
-                            
+
                             onWebViewCreated(this)
                             webViewRef = this
                             loadUrl(htmlUrl)
@@ -1687,7 +1687,7 @@ fun ShellScreen(
                                 config.extensionModuleIds,
                                 config.embeddedExtensionModules
                             )
-                            
+
                             // 添加长按监听器
                             // 持续跟踪触摸位置，确保长按时使用最新坐标
                             var lastTouchX = 0f
@@ -1705,7 +1705,7 @@ fun ShellScreen(
                             setOnLongClickListener {
                                 webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
                             }
-                            
+
                             onWebViewCreated(this)
                             webViewRef = this
                             loadUrl(config.targetUrl)
@@ -1728,7 +1728,7 @@ fun ShellScreen(
                 } catch (e: Exception) {
                     Color.Yellow
                 }
-                
+
                 Box(
                     modifier = Modifier
                         .align(
@@ -1787,12 +1787,12 @@ fun ShellScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(error, modifier = Modifier.weight(1f))
                         TextButton(onClick = { errorMessage = null }) {
-                            Text("关闭")
+                            Text(Strings.close)
                         }
                     }
                 }
             }
-            
+
             // 虚拟导航栏 - 仅在强制运行模式下显示
             VirtualNavigationBar(
                 visible = forcedRunActive,
@@ -1801,7 +1801,7 @@ fun ShellScreen(
                 onBack = { webViewRef?.goBack() },
                 onForward = { webViewRef?.goForward() },
                 onRefresh = { webViewRef?.reload() },
-                onHome = { 
+                onHome = {
                     // 返回主页
                     val homeUrl = when {
                         config.appType == "HTML" -> "file:///android_asset/html/${config.htmlConfig.getValidEntryFile()}"
@@ -1864,7 +1864,7 @@ fun ShellScreen(
             showEmoji = config.announcementShowEmoji,
             animationEnabled = config.announcementAnimationEnabled
         )
-        
+
         com.webtoapp.ui.components.announcement.AnnouncementDialog(
             config = com.webtoapp.ui.components.announcement.AnnouncementConfig(
                 announcement = shellAnnouncement,
@@ -1887,13 +1887,13 @@ fun ShellScreen(
             }
         )
     }
-    
+
     // 强制运行权限引导对话框
     if (showForcedRunPermissionDialog && config.forcedRunConfig != null) {
         ForcedRunPermissionDialog(
             protectionLevel = config.forcedRunConfig.protectionLevel,
-            onDismiss = { 
-                showForcedRunPermissionDialog = false 
+            onDismiss = {
+                showForcedRunPermissionDialog = false
             },
             onContinueAnyway = {
                 // 用户选择跳过，降级防护继续使用
@@ -1934,7 +1934,7 @@ fun ShellScreen(
             onComplete = closeSplash
         )
     }
-    
+
     // 长按菜单
     if (showLongPressMenu && longPressResult != null) {
         LongPressMenuSheet(
@@ -1966,7 +1966,7 @@ fun ShellScreen(
             }
         )
     }
-    
+
     // 状态栏背景覆盖层（在全屏模式下显示状态栏时）
     // 放在 Box 内部最上层，覆盖在所有内容之上，使用 align 固定在顶部
     if (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) {
@@ -1980,7 +1980,7 @@ fun ShellScreen(
             modifier = Modifier.align(Alignment.TopStart)
         )
     }
-    
+
     } // 关闭外层 Box
 }
 
@@ -2003,7 +2003,7 @@ fun ShellSplashOverlay(
     val assetPath = "splash_media.$extension"
     val videoDurationMs = videoEndMs - videoStartMs
     val contentScaleMode = if (fillScreen) ContentScale.Crop else ContentScale.Fit
-    
+
     // 视频剩余时间（用于动态倒计时显示）
     var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
@@ -2034,7 +2034,7 @@ fun ShellSplashOverlay(
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = "启动画面",
+                    contentDescription = Strings.splashScreen,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScaleMode
                 )
@@ -2044,7 +2044,7 @@ fun ShellSplashOverlay(
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
                 var isPlayerReady by remember { mutableStateOf(false) }
                 var tempVideoFile by remember { mutableStateOf<java.io.File?>(null) }
-                
+
                 // 监控播放进度
                 // 仅在播放器准备就绪后开始监控
                 LaunchedEffect(isPlayerReady) {
@@ -2070,7 +2070,7 @@ fun ShellSplashOverlay(
                         }
                     }
                 }
-                
+
                 AndroidView(
                     factory = { ctx ->
                         android.view.SurfaceView(ctx).apply {
@@ -2082,7 +2082,7 @@ fun ShellSplashOverlay(
                                         val hasEncrypted = try {
                                             ctx.assets.open(encryptedPath).use { true }
                                         } catch (e: Exception) { false }
-                                        
+
                                         if (hasEncrypted) {
                                             // 加密视频：解密到临时文件后播放
                                             android.util.Log.d("ShellSplash", "检测到加密启动画面视频")
@@ -2091,7 +2091,7 @@ fun ShellSplashOverlay(
                                             val tempFile = java.io.File(ctx.cacheDir, "splash_video_${System.currentTimeMillis()}.mp4")
                                             tempFile.writeBytes(decryptedData)
                                             tempVideoFile = tempFile
-                                            
+
                                             mediaPlayer = android.media.MediaPlayer().apply {
                                                 setDataSource(tempFile.absolutePath)
                                                 setSurface(holder.surface)
@@ -2140,7 +2140,7 @@ fun ShellSplashOverlay(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
-                
+
                 DisposableEffect(Unit) {
                     onDispose {
                         mediaPlayer?.release()
@@ -2156,7 +2156,7 @@ fun ShellSplashOverlay(
         // 倒计时/跳过提示
         // 视频使用动态剩余时间，图片使用传入的 countdown
         val displayTime = if (splashType == "VIDEO") ((videoRemainingMs + 999) / 1000).toInt() else countdown
-        
+
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -2185,7 +2185,7 @@ fun ShellSplashOverlay(
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     Text(
-                        text = "跳过",
+                        text = Strings.skip,
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -2204,7 +2204,7 @@ fun MediaContentDisplay(
     mediaConfig: com.webtoapp.core.shell.MediaShellConfig
 ) {
     val context = LocalContext.current
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -2216,7 +2216,7 @@ fun MediaContentDisplay(
             var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
             var tempVideoFile by remember { mutableStateOf<java.io.File?>(null) }
             val assetPath = "media_content.mp4"
-            
+
             AndroidView(
                 factory = { ctx ->
                     android.view.SurfaceView(ctx).apply {
@@ -2228,7 +2228,7 @@ fun MediaContentDisplay(
                                     val hasEncrypted = try {
                                         ctx.assets.open(encryptedPath).use { true }
                                     } catch (e: Exception) { false }
-                                    
+
                                     if (hasEncrypted) {
                                         // 加密视频：解密到临时文件后播放
                                         android.util.Log.d("MediaContent", "检测到加密媒体视频")
@@ -2237,7 +2237,7 @@ fun MediaContentDisplay(
                                         val tempFile = java.io.File(ctx.cacheDir, "media_video_${System.currentTimeMillis()}.mp4")
                                         tempFile.writeBytes(decryptedData)
                                         tempVideoFile = tempFile
-                                        
+
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(tempFile.absolutePath)
                                             setSurface(holder.surface)
@@ -2269,9 +2269,9 @@ fun MediaContentDisplay(
                                     e.printStackTrace()
                                 }
                             }
-                            
+
                             override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {}
-                            
+
                             override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
                                 mediaPlayer?.release()
                                 mediaPlayer = null
@@ -2281,7 +2281,7 @@ fun MediaContentDisplay(
                 },
                 modifier = Modifier.fillMaxSize()
             )
-            
+
             DisposableEffect(Unit) {
                 onDispose {
                     mediaPlayer?.release()
@@ -2299,14 +2299,14 @@ fun MediaContentDisplay(
                     .crossfade(true)
                     .build()
             )
-            
+
             Image(
                 painter = painter,
-                contentDescription = "媒体内容",
+                contentDescription = Strings.mediaContent,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = if (mediaConfig.fillScreen) 
-                    androidx.compose.ui.layout.ContentScale.Crop 
-                else 
+                contentScale = if (mediaConfig.fillScreen)
+                    androidx.compose.ui.layout.ContentScale.Crop
+                else
                     androidx.compose.ui.layout.ContentScale.Fit
             )
         }
@@ -2318,16 +2318,19 @@ fun MediaContentDisplay(
  * 使用Native桥接调用Google Translate API，避免CORS限制
  */
 private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguage: String, showButton: Boolean) {
+    val translateLabel = Strings.translateButton.replace("'", "\\'")
+    val translatingLabel = Strings.translating.replace("'", "\\'")
+    val translatedLabel = Strings.translated.replace("'", "\\'")
     val translateScript = """
         (function() {
             if (window._translateInjected) return;
             window._translateInjected = true;
-            
+
             var targetLang = '$targetLanguage';
             var showBtn = $showButton;
             var pendingCallbacks = {};
             var callbackIdCounter = 0;
-            
+
             // Native翻译回调处理
             window._translateCallback = function(callbackId, resultsJson, error) {
                 var cb = pendingCallbacks[callbackId];
@@ -2344,13 +2347,13 @@ private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguag
                     }
                 }
             };
-            
+
             // 调用Native翻译
             function nativeTranslate(texts) {
                 return new Promise(function(resolve, reject) {
                     var callbackId = 'cb_' + (++callbackIdCounter);
                     pendingCallbacks[callbackId] = { resolve: resolve, reject: reject };
-                    
+
                     if (window._nativeTranslate && window._nativeTranslate.translate) {
                         window._nativeTranslate.translate(JSON.stringify(texts), targetLang, callbackId);
                     } else {
@@ -2359,7 +2362,7 @@ private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguag
                     }
                 });
             }
-            
+
             // 降级翻译方案
             function fallbackTranslate(texts, callbackId) {
                 var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + targetLang + '&dt=t&q=' + encodeURIComponent(texts.join('\n'));
@@ -2378,22 +2381,22 @@ private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguag
                         window._translateCallback(callbackId, null, e.message);
                     });
             }
-            
+
             // 创建翻译按钮
             if (showBtn) {
                 var btn = document.createElement('div');
                 btn.id = '_translate_btn';
-                btn.innerHTML = '🌐 翻译';
+                btn.innerHTML = '🌐 $translateLabel';
                 btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:999999;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:12px 20px;border-radius:25px;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(102,126,234,0.4);transition:all 0.3s ease;';
                 btn.onclick = function() { translatePage(); };
                 document.body.appendChild(btn);
             }
-            
+
             // 翻译页面函数
             async function translatePage() {
                 var texts = [];
                 var elements = [];
-                
+
                 // 收集需要翻译的文本节点
                 var walker = document.createTreeWalker(
                     document.body,
@@ -2409,7 +2412,7 @@ private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguag
                         return NodeFilter.FILTER_ACCEPT;
                     }}
                 );
-                
+
                 while (walker.nextNode()) {
                     var text = walker.currentNode.textContent.trim();
                     if (text && texts.indexOf(text) === -1) {
@@ -2417,21 +2420,21 @@ private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguag
                         elements.push(walker.currentNode);
                     }
                 }
-                
+
                 if (texts.length === 0) return;
-                
+
                 // 更新按钮状态
                 if (showBtn) {
                     var btn = document.getElementById('_translate_btn');
-                    if (btn) btn.innerHTML = '⏳ 翻译中...';
+                    if (btn) btn.innerHTML = '⏳ $translatingLabel';
                 }
-                
+
                 // 分批翻译
                 var batchSize = 20;
                 for (var i = 0; i < texts.length; i += batchSize) {
                     var batch = texts.slice(i, i + batchSize);
                     var batchElements = elements.slice(i, i + batchSize);
-                    
+
                     try {
                         var results = await nativeTranslate(batch);
                         for (var j = 0; j < batchElements.length && j < results.length; j++) {
@@ -2443,17 +2446,17 @@ private fun injectTranslateScript(webView: android.webkit.WebView, targetLanguag
                         console.log('Translate batch error:', e);
                     }
                 }
-                
+
                 if (showBtn) {
                     var btn = document.getElementById('_translate_btn');
-                    if (btn) btn.innerHTML = '✅ 已翻译';
+                    if (btn) btn.innerHTML = '✅ $translatedLabel';
                 }
             }
-            
+
             // 自动翻译
             setTimeout(translatePage, 1500);
         })();
     """.trimIndent()
-    
+
     webView.evaluateJavascript(translateScript, null)
 }

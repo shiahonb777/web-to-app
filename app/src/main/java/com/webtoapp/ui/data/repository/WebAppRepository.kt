@@ -1,5 +1,6 @@
 package com.webtoapp.data.repository
 
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.dao.WebAppDao
 import com.webtoapp.data.model.WebApp
 import kotlinx.coroutines.flow.Flow
@@ -42,9 +43,9 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
     fun searchWebApps(query: String): Flow<List<WebApp>> = webAppDao.searchWebApps(query)
 
     suspend fun getWebAppCount(): Int = webAppDao.getCount()
-    
+
     // ==================== 批量操作优化 ====================
-    
+
     /**
      * 批量创建 WebApp
      * @return 插入的 ID 列表
@@ -53,7 +54,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         if (webApps.isEmpty()) return emptyList()
         return webAppDao.insertAll(webApps)
     }
-    
+
     /**
      * 批量更新 WebApp
      */
@@ -63,7 +64,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         val updatedApps = webApps.map { it.copy(updatedAt = now) }
         webAppDao.updateAll(updatedApps)
     }
-    
+
     /**
      * 批量删除 WebApp
      */
@@ -71,7 +72,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         if (webApps.isEmpty()) return
         webAppDao.deleteAll(webApps)
     }
-    
+
     /**
      * 批量删除 WebApp (通过 ID)
      */
@@ -79,7 +80,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         if (ids.isEmpty()) return
         webAppDao.deleteByIds(ids)
     }
-    
+
     /**
      * 批量激活 WebApp
      */
@@ -87,7 +88,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         if (ids.isEmpty()) return
         webAppDao.updateActivationStatusBatch(ids, true)
     }
-    
+
     /**
      * 批量停用 WebApp
      */
@@ -95,7 +96,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         if (ids.isEmpty()) return
         webAppDao.updateActivationStatusBatch(ids, false)
     }
-    
+
     /**
      * 获取多个 WebApp (通过 ID 列表)
      */
@@ -103,7 +104,7 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         if (ids.isEmpty()) return emptyList()
         return webAppDao.getWebAppsByIds(ids)
     }
-    
+
     /**
      * 复制 WebApp
      * @return 新创建的 WebApp ID
@@ -113,24 +114,24 @@ class WebAppRepository(private val webAppDao: WebAppDao) {
         val now = System.currentTimeMillis()
         val copy = original.copy(
             id = 0, // Room 会自动生成新 ID
-            name = newName ?: "${original.name} (副本)",
+            name = newName ?: Strings.webAppCopyNameFormat.format(original.name),
             createdAt = now,
             updatedAt = now,
             isActivated = false
         )
         return webAppDao.insert(copy)
     }
-    
+
     /**
      * 获取已激活的 WebApp 列表
      */
     fun getActivatedWebApps(): Flow<List<WebApp>> = webAppDao.getActivatedWebApps()
-    
+
     /**
      * 获取最近更新的 WebApp 列表
      */
     fun getRecentWebApps(limit: Int = 10): Flow<List<WebApp>> = webAppDao.getRecentWebApps(limit)
-    
+
     /**
      * 检查名称是否已存在
      */

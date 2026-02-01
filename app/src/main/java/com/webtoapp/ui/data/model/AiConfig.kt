@@ -17,97 +17,97 @@ enum class AiProvider(
         displayName = "OpenAI",
         baseUrl = "https://api.openai.com",
         modelsEndpoint = "/v1/models",
-        description = "文本表现出色，推理能力强，支持文本、视觉和图像生成",
+        description = "Excellent text performance, strong reasoning, supports text, vision, and image generation",
         apiKeyUrl = "https://platform.openai.com/api-keys",
-        pricing = "GPT 5.1 系列约 $10/ 百万token"
+        pricing = "GPT 5.1 series ~ $10 per 1M tokens"
     ),
     OPENROUTER(
         displayName = "OpenRouter",
         baseUrl = "https://openrouter.ai/api",
         modelsEndpoint = "/v1/models",
-        description = "聚合多家 AI 供应商，统一接口调用。可用同一 API Key 调用 OpenAI、Claude、Gemini 等多种模型",
+        description = "Aggregates multiple AI providers with a unified API. Use one API key to access OpenAI, Claude, Gemini, and more",
         apiKeyUrl = "https://openrouter.ai/keys",
-        pricing = "按模型不同计费，价格透明，有免费模型，强烈推荐"
+        pricing = "Pricing varies by model; transparent pricing with free models available"
     ),
     ANTHROPIC(
         displayName = "Anthropic/Claude",
         baseUrl = "https://api.anthropic.com",
         modelsEndpoint = "/v1/models",
-        description = "Claude 系列模型，擅长文本理解和代码生成且有视觉支持，编程能力强。",
+        description = "Claude models excel at text understanding and code generation with vision support",
         apiKeyUrl = "https://console.anthropic.com/settings/keys",
-        pricing = "Claude 4.5 Sonnet 约 $15/百万 token"
+        pricing = "Claude 4.5 Sonnet ~ $15 per 1M tokens"
     ),
     GOOGLE(
         displayName = "Google/Gemini",
         baseUrl = "https://generativelanguage.googleapis.com",
         modelsEndpoint = "/v1beta/models",
-        description = "★推荐★ Gemini 3.0 Pro 前端表现出色，原生多模态支持，全面顶配支持。",
+        description = "★ Recommended ★ Gemini 3.0 Pro excels in front-end use with native multimodal support",
         apiKeyUrl = "https://aistudio.google.com/apikey",
-        pricing = "有免费额度，超出后按 token 计费"
+        pricing = "Free quota available; charged per token after"
     ),
     DEEPSEEK(
         displayName = "DeepSeek",
         baseUrl = "https://api.deepseek.com",
         modelsEndpoint = "/v1/models",
-        description = "国家队，性价比高。目前仅支持文本和图像文本生成",
+        description = "Great value; currently supports text and image-text generation",
         apiKeyUrl = "https://platform.deepseek.com/api_keys",
-        pricing = "极低价格，约 ¥0.4/百万 token"
+        pricing = "Very low price, about ¥0.4 per 1M tokens"
     ),
     MINIMAX(
         displayName = "MiniMax",
         baseUrl = "https://api.minimax.chat",
         modelsEndpoint = "/v1/models",
-        description = "国产，支持高音质人声语音克隆/合成。文本模型性能优秀，代码agent能力较强",
+        description = "Supports high-quality voice cloning/synthesis. Strong text models and code-agent capability",
         apiKeyUrl = "https://platform.minimaxi.com/user-center/basic-information/interface-key",
-        pricing = "价格较低，约 $1/百万 token"
+        pricing = "Lower price, about $1 per 1M tokens"
     ),
     GLM(
-        displayName = "智谱GLM",
+        displayName = "Zhipu GLM",
         baseUrl = "https://open.bigmodel.cn/api/paas",
         modelsEndpoint = "/v4/models",
-        description = "国产，GLM-4.6 系列性能优秀，编码能力强，支持多模态",
+        description = "GLM-4.6 series with strong performance, coding ability, and multimodal support",
         apiKeyUrl = "https://open.bigmodel.cn/usercenter/apikeys",
-        pricing = "价格较低，约 $2/百万 token"
+        pricing = "Lower price, about $2 per 1M tokens"
     ),
     GROK(
         displayName = "xAI/Grok",
         baseUrl = "https://api.x.ai",
         modelsEndpoint = "/v1/models",
-        description = "马斯克旗下 xAI 的 Grok 系列，支持文本和视觉",
+        description = "xAI Grok series with text and vision support",
         apiKeyUrl = "https://console.x.ai/",
-        pricing = "价格便宜，Grok-4.1-fast 约 $0.5/百万 token"
+        pricing = "Low price, Grok-4.1-fast ~ $0.5 per 1M tokens"
     ),
     VOLCANO(
-        displayName = "火山引擎",
+        displayName = "Volcengine",
         baseUrl = "https://ark.cn-beijing.volces.com/api",
         modelsEndpoint = "/v3/models",
-        description = "字节跳动旗下，豆包大模型生态均衡。推荐模型：doubao-1.6-pro-256k",
+        description = "ByteDance Volcengine with a balanced Doubao model ecosystem. Recommended: doubao-1.6-pro-256k",
         apiKeyUrl = "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
-        pricing = "有免费额度，价格便宜"
+        pricing = "Free quota available, affordable pricing"
     ),
     SILICONFLOW(
-        displayName = "硅基流动",
+        displayName = "SiliconFlow",
         baseUrl = "https://api.siliconflow.cn",
         modelsEndpoint = "/v1/models",
-        description = "国产 AI 平台，聚合多种开源模型。",
+        description = "AI platform aggregating multiple open-source models",
         apiKeyUrl = "https://cloud.siliconflow.cn/account/ak",
-        pricing = "有免费额度，价格便宜"
+        pricing = "Free quota available, affordable pricing"
     ),
     QWEN(
-        displayName = "通义千问",
+        displayName = "Qwen",
         baseUrl = "https://dashscope.aliyuncs.com/compatible-mode",
         modelsEndpoint = "/v1/models",
-        description = "阿里云通义千问，支持文本、视觉、音频等多模态。Qwen3 系列推理能力强",
+        description = "Alibaba Cloud Qwen supports text, vision, audio, and more. Qwen3 has strong reasoning",
         apiKeyUrl = "https://dashscope.console.aliyun.com/apiKey",
-        pricing = "有免费额度，价格便宜，约 ¥0.5/百万 token"
+        pricing = "Free quota available, affordable; about ¥0.5 per 1M tokens"
     ),
     CUSTOM(
-        displayName = "自定义",
+        displayName = "Custom",
         baseUrl = "",
         modelsEndpoint = "/v1/models",
-        description = "兼容 OpenAI API 格式的自定义服务。需要填写完整的 Base URL",
+        description = "Custom service compatible with OpenAI API format. Requires a full Base URL",
         apiKeyUrl = "",
-        pricing = "取决于服务商"
+        pricing = "Depends on the provider"
     )
 }
 
@@ -126,7 +126,7 @@ enum class AiFeature(
     LRC_GENERATION("MusicNote", listOf(ModelCapability.AUDIO, ModelCapability.TEXT)),
     TRANSLATION("Translate", listOf(ModelCapability.TEXT)),
     GENERAL("Chat", listOf(ModelCapability.TEXT));
-    
+
     val displayName: String get() = when (this) {
         HTML_CODING -> Strings.featureHtmlCoding
         HTML_CODING_IMAGE -> Strings.featureHtmlCodingImage
@@ -136,7 +136,7 @@ enum class AiFeature(
         TRANSLATION -> Strings.featureTranslate
         GENERAL -> Strings.featureGeneral
     }
-    
+
     val description: String get() = when (this) {
         HTML_CODING -> Strings.featureHtmlCodingDesc
         HTML_CODING_IMAGE -> Strings.featureHtmlCodingImageDesc
@@ -153,7 +153,7 @@ enum class AiFeature(
  */
 enum class ModelCapability {
     TEXT, AUDIO, IMAGE, IMAGE_GENERATION, VIDEO, CODE, FUNCTION_CALL, LONG_CONTEXT;
-    
+
     val displayName: String get() = when (this) {
         TEXT -> Strings.capabilityText
         AUDIO -> Strings.capabilityAudio
@@ -164,7 +164,7 @@ enum class ModelCapability {
         FUNCTION_CALL -> Strings.capabilityFunctionCall
         LONG_CONTEXT -> Strings.capabilityLongContext
     }
-    
+
     val description: String get() = when (this) {
         TEXT -> Strings.capabilityTextDesc
         AUDIO -> Strings.capabilityAudioDesc
@@ -286,14 +286,14 @@ data class SavedModel(
         }
         return features
     }
-    
+
     /**
      * 检查此模型是否支持指定功能
      */
     fun supportsFeature(feature: AiFeature): Boolean {
         return getSupportedFeatures().contains(feature)
     }
-    
+
     /**
      * 获取指定能力对应的功能列表
      */
@@ -417,7 +417,7 @@ object PresetLrcThemes {
             animationType = LrcAnimationType.SCALE
         )
     )
-    
+
     fun getById(id: String): LrcTheme? = themes.find { it.id == id }
 }
 

@@ -26,9 +26,9 @@ import com.webtoapp.data.model.SavedModel
 
 /**
  * 模型选择器组件
- * 
+ *
  * 用于在 AI 模块开发界面选择要使用的 AI 模型
- * 
+ *
  * @param selectedModel 当前选中的模型
  * @param availableModels 可用的模型列表（已过滤支持 MODULE_DEVELOPMENT 的模型）
  * @param onModelSelected 模型选择回调
@@ -45,18 +45,18 @@ fun ModelSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     // 过滤支持 MODULE_DEVELOPMENT 的模型
     val filteredModels = remember(availableModels) {
         filterModelsForModuleDevelopment(availableModels)
     }
-    
+
     Box(modifier = modifier) {
         // 选择器按钮
         ModelSelectorButton(
             selectedModel = selectedModel,
             hasModels = filteredModels.isNotEmpty(),
-            onClick = { 
+            onClick = {
                 if (filteredModels.isNotEmpty()) {
                     expanded = true
                 } else {
@@ -64,7 +64,7 @@ fun ModelSelector(
                 }
             }
         )
-        
+
         // 下拉菜单
         DropdownMenu(
             expanded = expanded,
@@ -84,12 +84,12 @@ fun ModelSelector(
             } else {
                 // 模型列表
                 Text(
-                    "选择模型",
+                    Strings.selectModel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
+
                 filteredModels.forEach { model ->
                     ModelDropdownItem(
                         model = model,
@@ -100,9 +100,9 @@ fun ModelSelector(
                         }
                     )
                 }
-                
+
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
                 // 配置更多模型
                 DropdownMenuItem(
                     text = {
@@ -117,7 +117,7 @@ fun ModelSelector(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                "配置更多模型",
+                                Strings.configureMoreModels,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -158,7 +158,7 @@ private fun ModelSelectorButton(
                 provider = selectedModel?.model?.provider,
                 modifier = Modifier.size(28.dp)
             )
-            
+
             // 模型信息
             Column(modifier = Modifier.weight(1f)) {
                 if (selectedModel != null) {
@@ -176,28 +176,28 @@ private fun ModelSelectorButton(
                     )
                 } else if (!hasModels) {
                     Text(
-                        "未配置模型",
+                        Strings.noModelConfigured,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
                     Text(
-                        "点击配置 AI 模型",
+                        Strings.configureAiModelsHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Text(
-                        "选择模型",
+                        Strings.selectModel,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            
+
             // 下拉箭头
             Icon(
                 Icons.Default.ArrowDropDown,
-                contentDescription = "展开",
+                contentDescription = Strings.expand,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -225,7 +225,7 @@ private fun ModelDropdownItem(
                     provider = model.model.provider,
                     modifier = Modifier.size(24.dp)
                 )
-                
+
                 // 模型信息
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -250,7 +250,7 @@ private fun ModelDropdownItem(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    "默认",
+                                    Strings.defaultLabel,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -259,12 +259,12 @@ private fun ModelDropdownItem(
                         }
                     }
                 }
-                
+
                 // 选中标记
                 if (isSelected) {
                     Icon(
                         Icons.Default.Check,
-                        contentDescription = "已选中",
+                        contentDescription = Strings.selected,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -299,20 +299,20 @@ private fun EmptyModelState(
             modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         )
-        
+
         Text(
-            "暂无可用模型",
+            Strings.noAvailableModels,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
-        
+
         Text(
-            "请先在 AI 设置中配置支持模块开发功能的模型",
+            Strings.configureModuleDevModelHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        
+
         Button(
             onClick = onConfigureClick,
             modifier = Modifier.padding(top = 8.dp)
@@ -351,7 +351,7 @@ fun ProviderIcon(
         AiProvider.CUSTOM -> "⚙️" to MaterialTheme.colorScheme.surfaceVariant
         null -> "❓" to MaterialTheme.colorScheme.surfaceVariant
     }
-    
+
     Box(
         modifier = modifier
             .clip(CircleShape)
@@ -367,9 +367,9 @@ fun ProviderIcon(
 
 /**
  * 过滤支持模块开发功能的模型
- * 
+ *
  * 此函数用于筛选出支持 MODULE_DEVELOPMENT 功能的模型
- * 
+ *
  * @param models 所有已保存的模型列表
  * @return 支持模块开发功能的模型列表
  */

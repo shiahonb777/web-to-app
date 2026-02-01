@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.webtoapp.core.i18n.Strings
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -20,10 +21,10 @@ import java.net.URL
  * 支持将图片和视频保存到系统相册，确保在图库 App 中可见
  */
 object MediaSaver {
-    
+
     private const val APP_FOLDER = "WebToApp"
     private const val DEFAULT_BUFFER_SIZE = 8192
-    
+
     /**
      * 媒体类型
      */
@@ -31,7 +32,7 @@ object MediaSaver {
         IMAGE,
         VIDEO
     }
-    
+
     /**
      * 保存结果
      */
@@ -39,7 +40,7 @@ object MediaSaver {
         data class Success(val uri: Uri, val path: String) : SaveResult()
         data class Error(val message: String) : SaveResult()
     }
-    
+
     /**
      * 下载进度回调
      */
@@ -51,30 +52,30 @@ object MediaSaver {
          * @param progress 进度百分比 (0-100, -1 表示未知)
          */
         fun onProgress(bytesDownloaded: Long, totalBytes: Long, progress: Int)
-        
+
         /**
          * 下载开始
          */
         fun onStart(totalBytes: Long) {}
-        
+
         /**
          * 下载完成
          */
         fun onComplete() {}
-        
+
         /**
          * 下载失败
          */
         fun onError(message: String) {}
     }
-    
+
     /**
      * 简化的进度回调 (仅关注进度百分比)
      */
     fun interface SimpleProgressCallback {
         fun onProgress(progress: Int)
     }
-    
+
     /**
      * 将 SimpleProgressCallback 转换为 ProgressCallback
      */
@@ -85,7 +86,7 @@ object MediaSaver {
             }
         }
     }
-    
+
     /**
      * 根据 MIME 类型判断媒体类型
      */
@@ -96,7 +97,7 @@ object MediaSaver {
             else -> null
         }
     }
-    
+
     /**
      * 根据文件扩展名判断媒体类型
      */
@@ -108,7 +109,7 @@ object MediaSaver {
             else -> null
         }
     }
-    
+
     /**
      * 从 URL 下载并保存媒体文件到相册
      */
@@ -123,23 +124,23 @@ object MediaSaver {
             val connection = URL(url).openConnection()
             connection.connectTimeout = 30000
             connection.readTimeout = 30000
-            
+
             val actualMimeType = mimeType ?: connection.contentType ?: guessMimeType(fileName)
             val mediaType = getMediaType(actualMimeType) ?: getMediaTypeByExtension(fileName)
-                ?: return@withContext SaveResult.Error("不支持的媒体类型")
-            
+                ?: return@withContext SaveResult.Error(Strings.unsupportedMediaType)
+
             val contentLength = connection.contentLengthLong
             progressCallback?.onStart(contentLength)
-            
+
             connection.getInputStream().use { inputStream ->
                 saveToGalleryWithProgress(context, inputStream, fileName, actualMimeType, mediaType, contentLength, progressCallback)
             }
         } catch (e: Exception) {
-            progressCallback?.onError(e.message ?: "未知错误")
-            SaveResult.Error("下载失败: ${e.message}")
+            progressCallback?.onError(e.message ?: Strings.unknownError)
+            SaveResult.Error(Strings.downloadFailedWithReason.format(e.message ?: ""))
         }
     }
-    
+
     /**
      * 从 URL 下载并保存媒体文件到相册 (简化版进度回调)
      */
@@ -150,7 +151,7 @@ object MediaSaver {
         mimeType: String? = null,
         onProgress: SimpleProgressCallback
     ): SaveResult = saveFromUrl(context, url, fileName, mimeType, onProgress.toProgressCallback())
-    
+
     /**
      * 从 URL 下载并保存媒体文件到相册（支持自定义 Headers 和进度回调）
      */
@@ -167,40 +168,40 @@ object MediaSaver {
             connection.connectTimeout = 30000
             connection.readTimeout = 30000
             connection.requestMethod = "GET"
-            
+
             // 添加自定义 Headers
             headers.forEach { (key, value) ->
                 connection.setRequestProperty(key, value)
             }
-            
+
             // 添加常用 Headers
             if (!headers.containsKey("User-Agent")) {
-                connection.setRequestProperty("User-Agent", 
+                connection.setRequestProperty("User-Agent",
                     "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36")
             }
-            
+
             val responseCode = connection.responseCode
             if (responseCode != java.net.HttpURLConnection.HTTP_OK) {
-                progressCallback?.onError("HTTP 错误: $responseCode")
-                return@withContext SaveResult.Error("HTTP 错误: $responseCode")
+                progressCallback?.onError(Strings.httpErrorFormat.format(responseCode))
+                return@withContext SaveResult.Error(Strings.httpErrorFormat.format(responseCode))
             }
-            
+
             val actualMimeType = mimeType ?: connection.contentType ?: guessMimeType(fileName)
             val mediaType = getMediaType(actualMimeType) ?: getMediaTypeByExtension(fileName)
-                ?: return@withContext SaveResult.Error("不支持的媒体类型")
-            
+                ?: return@withContext SaveResult.Error(Strings.unsupportedMediaType)
+
             val contentLength = connection.contentLengthLong
             progressCallback?.onStart(contentLength)
-            
+
             connection.inputStream.use { inputStream ->
                 saveToGalleryWithProgress(context, inputStream, fileName, actualMimeType, mediaType, contentLength, progressCallback)
             }
         } catch (e: Exception) {
-            progressCallback?.onError(e.message ?: "未知错误")
-            SaveResult.Error("下载失败: ${e.message}")
+            progressCallback?.onError(e.message ?: Strings.unknownError)
+            SaveResult.Error(Strings.downloadFailedWithReason.format(e.message ?: ""))
         }
     }
-    
+
     /**
      * 从本地文件保存到相册
      */
@@ -213,12 +214,12 @@ object MediaSaver {
             if (!file.exists()) {
                 return@withContext SaveResult.Error("文件不存在")
             }
-            
+
             val fileName = file.name
             val actualMimeType = mimeType ?: guessMimeType(fileName)
             val mediaType = getMediaType(actualMimeType) ?: getMediaTypeByExtension(fileName)
-                ?: return@withContext SaveResult.Error("不支持的媒体类型")
-            
+                ?: return@withContext SaveResult.Error(Strings.unsupportedMediaType)
+
             FileInputStream(file).use { inputStream ->
                 saveToGallery(context, inputStream, fileName, actualMimeType, mediaType)
             }
@@ -226,7 +227,7 @@ object MediaSaver {
             SaveResult.Error("保存失败: ${e.message}")
         }
     }
-    
+
     /**
      * 从字节数组保存到相册
      */
@@ -238,8 +239,8 @@ object MediaSaver {
     ): SaveResult = withContext(Dispatchers.IO) {
         try {
             val mediaType = getMediaType(mimeType) ?: getMediaTypeByExtension(fileName)
-                ?: return@withContext SaveResult.Error("不支持的媒体类型")
-            
+                ?: return@withContext SaveResult.Error(Strings.unsupportedMediaType)
+
             bytes.inputStream().use { inputStream ->
                 saveToGallery(context, inputStream, fileName, mimeType, mediaType)
             }
@@ -248,7 +249,7 @@ object MediaSaver {
         }
     }
 
-    
+
     /**
      * 保存媒体文件到系统相册
      */
@@ -261,7 +262,7 @@ object MediaSaver {
     ): SaveResult {
         return saveToGalleryWithProgress(context, inputStream, fileName, mimeType, mediaType, -1, null)
     }
-    
+
     /**
      * 保存媒体文件到系统相册 (带进度回调)
      */
@@ -280,7 +281,7 @@ object MediaSaver {
             saveToGalleryLegacyWithProgress(context, inputStream, fileName, mimeType, mediaType, totalBytes, progressCallback)
         }
     }
-    
+
     /**
      * 带进度的流复制
      */
@@ -294,18 +295,18 @@ object MediaSaver {
         var bytesRead: Int
         var totalBytesRead = 0L
         var lastReportedProgress = -1
-        
+
         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
             outputStream.write(buffer, 0, bytesRead)
             totalBytesRead += bytesRead
-            
+
             if (progressCallback != null) {
                 val progress = if (totalBytes > 0) {
                     ((totalBytesRead * 100) / totalBytes).toInt().coerceIn(0, 100)
                 } else {
                     -1
                 }
-                
+
                 // 只在进度变化时回调，避免频繁调用
                 if (progress != lastReportedProgress) {
                     progressCallback.onProgress(totalBytesRead, totalBytes, progress)
@@ -313,10 +314,10 @@ object MediaSaver {
                 }
             }
         }
-        
+
         return totalBytesRead
     }
-    
+
     /**
      * Android 10+ 使用 MediaStore API 保存 (带进度回调)
      */
@@ -331,15 +332,15 @@ object MediaSaver {
     ): SaveResult {
         val (contentUri, relativePath) = when (mediaType) {
             MediaType.IMAGE -> {
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI to 
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI to
                     "${Environment.DIRECTORY_PICTURES}/$APP_FOLDER"
             }
             MediaType.VIDEO -> {
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI to 
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI to
                     "${Environment.DIRECTORY_MOVIES}/$APP_FOLDER"
             }
         }
-        
+
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
@@ -348,22 +349,22 @@ object MediaSaver {
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
         }
-        
+
         val uri = context.contentResolver.insert(contentUri, contentValues)
             ?: return SaveResult.Error("无法创建媒体文件")
-        
+
         return try {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 copyWithProgress(inputStream, outputStream, totalBytes, progressCallback)
             } ?: return SaveResult.Error("无法写入文件")
-            
+
             // 标记文件写入完成
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 contentValues.clear()
                 contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
                 context.contentResolver.update(uri, contentValues, null, null)
             }
-            
+
             progressCallback?.onComplete()
             SaveResult.Success(uri, "$relativePath/$fileName")
         } catch (e: Exception) {
@@ -373,7 +374,7 @@ object MediaSaver {
             SaveResult.Error("写入失败: ${e.message}")
         }
     }
-    
+
     /**
      * Android 9 及以下使用传统文件 API 保存 (带进度回调)
      */
@@ -390,35 +391,35 @@ object MediaSaver {
             MediaType.IMAGE -> Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
             MediaType.VIDEO -> Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
         }
-        
+
         val appDir = File(baseDir, APP_FOLDER)
         if (!appDir.exists()) {
             appDir.mkdirs()
         }
-        
+
         // 处理文件名冲突
         var targetFile = File(appDir, fileName)
         var counter = 1
         val nameWithoutExt = fileName.substringBeforeLast(".")
         val ext = fileName.substringAfterLast(".", "")
-        
+
         while (targetFile.exists()) {
             val newName = if (ext.isNotEmpty()) "${nameWithoutExt}_$counter.$ext" else "${nameWithoutExt}_$counter"
             targetFile = File(appDir, newName)
             counter++
         }
-        
+
         return try {
             targetFile.outputStream().use { outputStream ->
                 copyWithProgress(inputStream, outputStream, totalBytes, progressCallback)
             }
-            
+
             // 通知媒体库扫描新文件
             val contentUri = when (mediaType) {
                 MediaType.IMAGE -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                 MediaType.VIDEO -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             }
-            
+
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DATA, targetFile.absolutePath)
                 put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
@@ -431,10 +432,10 @@ object MediaSaver {
                     }
                 }
             }
-            
+
             val uri = context.contentResolver.insert(contentUri, values)
                 ?: Uri.fromFile(targetFile)
-            
+
             progressCallback?.onComplete()
             SaveResult.Success(uri, targetFile.absolutePath)
         } catch (e: Exception) {
@@ -442,7 +443,7 @@ object MediaSaver {
             SaveResult.Error("保存失败: ${e.message}")
         }
     }
-    
+
     /**
      * 根据文件名猜测 MIME 类型
      */
@@ -461,7 +462,7 @@ object MediaSaver {
                 else -> "application/octet-stream"
             }
     }
-    
+
     /**
      * 检查是否为媒体文件（图片或视频）
      */

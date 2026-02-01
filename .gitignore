@@ -79,3 +79,8 @@ obj/
 .idea/encodings.xml
 .idea/scopes/scope_settings.xml
 .idea/vcs.xml
+
+# AI Coding files
+.llms/
+
+.vscode/

@@ -1,6 +1,7 @@
 package com.webtoapp.core.ads
 
 import android.content.Context
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.AdConfig
 
 /**
@@ -58,7 +59,7 @@ class AdManager(private val context: Context) {
     fun loadInterstitialAd(onLoaded: () -> Unit, onFailed: (String) -> Unit) {
         val config = adConfig ?: return
         if (!config.interstitialEnabled || config.interstitialId.isBlank()) {
-            onFailed("插屏广告未配置")
+            onFailed(Strings.interstitialAdNotConfigured)
             return
         }
 

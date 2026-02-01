@@ -16,32 +16,32 @@ import java.util.regex.Pattern
 
 /**
  * 网站图标获取器
- * 
+ *
  * 支持多种方式获取网站图标：
  * 1. 直接获取 /favicon.ico
  * 2. 解析 HTML 中的 link 标签
  * 3. 使用 Google Favicon 服务作为后备
  */
 object FaviconFetcher {
-    
+
     private const val TAG = "FaviconFetcher"
-    
+
     // 最小图标尺寸（过滤掉太小的图标）
     private const val MIN_ICON_SIZE = 32
-    
+
     // 首选图标尺寸
     private const val PREFERRED_ICON_SIZE = 192
-    
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
         .build()
-    
+
     /**
      * 获取网站图标
-     * 
+     *
      * @param context 上下文
      * @param url 网站地址
      * @return 图标本地路径，失败返回 null
@@ -50,9 +50,9 @@ object FaviconFetcher {
         try {
             val normalizedUrl = normalizeUrl(url)
             val baseUrl = getBaseUrl(normalizedUrl)
-            
-            Log.d(TAG, "开始获取网站图标: $baseUrl")
-            
+
+            Log.d(TAG, "Starting favicon fetch: $baseUrl")
+
             // 策略 1: 尝试从 HTML 中解析高清图标
             val htmlIcons = tryParseHtmlForIcons(normalizedUrl)
             if (htmlIcons.isNotEmpty()) {
@@ -62,20 +62,20 @@ object FaviconFetcher {
                     val iconUrl = resolveIconUrl(baseUrl, iconInfo.href)
                     val savedPath = downloadAndSaveIcon(context, iconUrl)
                     if (savedPath != null) {
-                        Log.d(TAG, "从 HTML 获取图标成功: ${iconInfo.href}")
+            Log.d(TAG, "Favicon fetched from HTML: ${iconInfo.href}")
                         return@withContext savedPath
                     }
                 }
             }
-            
+
             // 策略 2: 尝试直接获取 favicon.ico
             val faviconUrl = "$baseUrl/favicon.ico"
             val faviconPath = downloadAndSaveIcon(context, faviconUrl)
             if (faviconPath != null) {
-                Log.d(TAG, "从 favicon.ico 获取图标成功")
+            Log.d(TAG, "Favicon fetched from favicon.ico")
                 return@withContext faviconPath
             }
-            
+
             // 策略 3: 使用 Google Favicon 服务（作为后备）
             val googleFaviconUrl = "https://www.google.com/s2/favicons?sz=128&domain_url=$baseUrl"
             val googlePath = downloadAndSaveIcon(context, googleFaviconUrl)
@@ -83,16 +83,16 @@ object FaviconFetcher {
                 Log.d(TAG, "从 Google Favicon 服务获取图标成功")
                 return@withContext googlePath
             }
-            
+
             Log.w(TAG, "无法获取网站图标: $url")
             null
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "获取网站图标失败: $url", e)
             null
         }
     }
-    
+
     /**
      * 图标信息
      */
@@ -101,7 +101,7 @@ object FaviconFetcher {
         val size: Int = 0,
         val type: String = ""
     )
-    
+
     /**
      * 解析 HTML 获取图标链接
      */
@@ -111,13 +111,13 @@ object FaviconFetcher {
                 .url(url)
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .build()
-            
+
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) return emptyList()
-            
+
             val html = response.body?.string() ?: return emptyList()
             val icons = mutableListOf<IconInfo>()
-            
+
             // 匹配 link 标签中的图标
             // <link rel="icon" href="..." sizes="..." type="...">
             // <link rel="apple-touch-icon" href="..." sizes="...">
@@ -128,15 +128,15 @@ object FaviconFetcher {
             )
             val hrefPattern = Pattern.compile("href\\s*=\\s*[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE)
             val sizesPattern = Pattern.compile("sizes\\s*=\\s*[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE)
-            
+
             val linkMatcher = linkPattern.matcher(html)
             while (linkMatcher.find()) {
                 val linkTag = linkMatcher.group()
-                
+
                 val hrefMatcher = hrefPattern.matcher(linkTag)
                 if (hrefMatcher.find()) {
                     val href = hrefMatcher.group(1) ?: continue
-                    
+
                     var size = 0
                     val sizesMatcher = sizesPattern.matcher(linkTag)
                     if (sizesMatcher.find()) {
@@ -147,14 +147,14 @@ object FaviconFetcher {
                             size = sizeMatch.groupValues[1].toIntOrNull() ?: 0
                         }
                     }
-                    
+
                     // 过滤太小的图标
                     if (size == 0 || size >= MIN_ICON_SIZE) {
                         icons.add(IconInfo(href, size))
                     }
                 }
             }
-            
+
             // 也尝试匹配 meta 标签中的 og:image（作为备选）
             val ogImagePattern = Pattern.compile(
                 "<meta[^>]*property\\s*=\\s*[\"']og:image[\"'][^>]*content\\s*=\\s*[\"']([^\"']+)[\"'][^>]*>",
@@ -167,15 +167,15 @@ object FaviconFetcher {
                     icons.add(IconInfo(ogImage, PREFERRED_ICON_SIZE))
                 }
             }
-            
+
             icons
-            
+
         } catch (e: Exception) {
             Log.w(TAG, "解析 HTML 获取图标失败", e)
             emptyList()
         }
     }
-    
+
     /**
      * 下载并保存图标
      */
@@ -185,58 +185,58 @@ object FaviconFetcher {
                 .url(iconUrl)
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .build()
-            
+
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) return null
-            
+
             val bytes = response.body?.bytes() ?: return null
             if (bytes.isEmpty()) return null
-            
+
             // 验证是否为有效图片
             val options = BitmapFactory.Options().apply {
                 inJustDecodeBounds = true
             }
             BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
-            
+
             if (options.outWidth <= 0 || options.outHeight <= 0) {
                 Log.w(TAG, "无效的图片: $iconUrl")
                 return null
             }
-            
+
             // 检查图标尺寸
             if (options.outWidth < MIN_ICON_SIZE && options.outHeight < MIN_ICON_SIZE) {
                 Log.w(TAG, "图标太小: ${options.outWidth}x${options.outHeight}")
                 return null
             }
-            
+
             // 保存到本地
             val iconsDir = File(context.filesDir, "website_icons")
             iconsDir.mkdirs()
-            
+
             val fileName = "favicon_${System.currentTimeMillis()}.png"
             val outputFile = File(iconsDir, fileName)
-            
+
             // 解码并重新编码为 PNG（确保格式统一）
             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bitmap == null) {
                 Log.w(TAG, "无法解码图片: $iconUrl")
                 return null
             }
-            
+
             FileOutputStream(outputFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
             }
             bitmap.recycle()
-            
+
             Log.d(TAG, "图标已保存: ${outputFile.absolutePath} (${options.outWidth}x${options.outHeight})")
             outputFile.absolutePath
-            
+
         } catch (e: Exception) {
             Log.w(TAG, "下载图标失败: $iconUrl", e)
             null
         }
     }
-    
+
     /**
      * 标准化 URL
      */
@@ -247,7 +247,7 @@ object FaviconFetcher {
         }
         return normalized
     }
-    
+
     /**
      * 获取基础 URL（协议 + 域名）
      */
@@ -262,7 +262,7 @@ object FaviconFetcher {
             }
         }
     }
-    
+
     /**
      * 解析图标 URL（处理相对路径）
      */

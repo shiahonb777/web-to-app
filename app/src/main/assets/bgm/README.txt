@@ -1,16 +1,16 @@
-背景音乐预置目录
+Built-in Background Music Directory
 ================
 
-将 MP3 音乐文件放入此目录即可作为预置背景音乐使用。
+Place MP3 files in this directory to make them available as built-in background music.
 
-文件命名规则：
-- 音乐文件：小乔.mp3
-- 封面图片：小乔.png（或 .jpg/.jpeg）
+File naming rules:
+- Music file: xiaoqiao.mp3
+- Cover image: xiaoqiao.png (or .jpg/.jpeg)
 
-同名的音乐和图片会自动配对，图片将作为音乐的封面图标显示。
-封面图片是可选的，仅用于在选择界面方便识别。
+Music and image files with the same name are automatically paired, and the image will be shown as the cover icon.
+Cover images are optional and only used to make selection easier.
 
-示例：
-- 小乔.mp3 + 小乔.png
-- 背景音乐1.mp3 + 背景音乐1.jpg
-- bgm_01.mp3（无封面）
+Examples:
+- xiaoqiao.mp3 + xiaoqiao.png
+- background_music_1.mp3 + background_music_1.jpg
+- bgm_01.mp3 (no cover)

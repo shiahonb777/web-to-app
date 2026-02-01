@@ -104,8 +104,8 @@ fun MarkdownText(
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
     // 检测是否包含代码内容
-    val isCodeContent = text.contains("```") || 
-        text.contains("<!DOCTYPE") || 
+    val isCodeContent = text.contains("```") ||
+        text.contains("<!DOCTYPE") ||
         text.contains("<html") ||
         text.contains("<style>") ||
         text.contains("<script>") ||
@@ -113,7 +113,7 @@ fun MarkdownText(
         text.contains("const ") ||
         text.contains("let ") ||
         text.contains("var ")
-    
+
     SelectionContainer {
         if (isCodeContent) {
             // 代码内容使用纯文本，保留所有字符
@@ -278,7 +278,7 @@ fun CodeBlocksTabContainer(
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
     var showMoreMenu by remember { mutableStateOf(false) }
-    
+
     Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = colors.background, shadowElevation = 4.dp) {
         Column {
             Surface(color = colors.headerBackground, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)) {
@@ -752,17 +752,17 @@ fun StyleReferenceCard(style: StyleReference, isSelected: Boolean, onClick: () -
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigPanel(
-    config: SessionConfig, 
-    onConfigChange: (SessionConfig) -> Unit, 
-    textModels: List<com.webtoapp.data.model.SavedModel>, 
-    imageModels: List<com.webtoapp.data.model.SavedModel>, 
-    rulesTemplates: List<RulesTemplate>, 
+    config: SessionConfig,
+    onConfigChange: (SessionConfig) -> Unit,
+    textModels: List<com.webtoapp.data.model.SavedModel>,
+    imageModels: List<com.webtoapp.data.model.SavedModel>,
+    rulesTemplates: List<RulesTemplate>,
     onNavigateToAiSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(Strings.sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        
+
         // Text model - 使用 ModelSelector 组件
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
@@ -776,7 +776,7 @@ fun ConfigPanel(
                 )
             }
         }
-        
+
         // Image model - 使用自定义的图像模型选择器
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
@@ -790,7 +790,7 @@ fun ConfigPanel(
                 )
             }
         }
-        
+
         // Temperature
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
@@ -803,9 +803,9 @@ fun ConfigPanel(
                 Text(Strings.temperatureHint, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
         }
-        
+
         Divider()
-        
+
         // 工具包配置
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
@@ -828,14 +828,14 @@ fun ConfigPanel(
                     color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(Modifier.height(12.dp))
-                
+
                 HtmlToolType.entries.forEach { toolType ->
                     val isEnabled = toolType in config.enabledTools
                     val isRequired = toolType == HtmlToolType.WRITE_HTML
-                    
+
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (isEnabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) 
+                        color = if (isEnabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                                else MaterialTheme.colorScheme.surface,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                     ) {
@@ -912,9 +912,9 @@ fun ConfigPanel(
                 }
             }
         }
-        
+
         Divider()
-        
+
         // Rules
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Column(Modifier.padding(16.dp)) {
@@ -958,7 +958,7 @@ private fun ImageModelSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     Box(modifier = modifier) {
         // 选择器按钮
         Surface(
@@ -977,7 +977,7 @@ private fun ImageModelSelector(
                     provider = selectedModel?.model?.provider,
                     modifier = Modifier.size(28.dp)
                 )
-                
+
                 // 模型信息
                 Column(modifier = Modifier.weight(1f)) {
                     if (selectedModel != null) {
@@ -1001,7 +1001,7 @@ private fun ImageModelSelector(
                         )
                     }
                 }
-                
+
                 // 下拉箭头
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -1010,7 +1010,7 @@ private fun ImageModelSelector(
                 )
             }
         }
-        
+
         // 下拉菜单
         DropdownMenu(
             expanded = expanded,
@@ -1045,17 +1045,17 @@ private fun ImageModelSelector(
                     else MaterialTheme.colorScheme.surface
                 )
             )
-            
+
             if (availableModels.isNotEmpty()) {
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
                 Text(
                     Strings.selectImageModel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
+
                 availableModels.forEach { model ->
                     DropdownMenuItem(
                         text = {
@@ -1103,9 +1103,9 @@ private fun ImageModelSelector(
                     )
                 }
             }
-            
+
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            
+
             // 配置更多模型
             DropdownMenuItem(
                 text = {
@@ -1246,7 +1246,7 @@ fun ProjectFilesPanel(
                     }
                 }
             }
-            
+
             // 文件列表
             AnimatedVisibility(
                 visible = isExpanded,
@@ -1283,7 +1283,7 @@ fun ProjectFilesPanel(
                 } else {
                     // 按基础文件名分组
                     val groupedFiles = files.groupBy { it.getBaseName() }
-                    
+
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1294,7 +1294,7 @@ fun ProjectFilesPanel(
                         groupedFiles.forEach { (baseName, versions) ->
                             val sortedVersions = versions.sortedByDescending { it.version }
                             val latestVersion = sortedVersions.first()
-                            
+
                             item(key = baseName) {
                                 FileGroupItem(
                                     baseName = baseName,
@@ -1326,7 +1326,7 @@ private fun FileGroupItem(
     onPreviewClick: (ProjectFileInfo) -> Unit
 ) {
     var showVersions by remember { mutableStateOf(false) }
-    
+
     Column {
         // 主文件项（最新版本）
         Surface(
@@ -1345,7 +1345,7 @@ private fun FileGroupItem(
             ) {
                 // 文件图标
                 FileTypeIcon(type = latestFile.type, modifier = Modifier.size(32.dp))
-                
+
                 // 文件信息
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1377,7 +1377,7 @@ private fun FileGroupItem(
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
-                
+
                 // 版本历史按钮
                 if (versions.size > 1) {
                     IconButton(
@@ -1392,7 +1392,7 @@ private fun FileGroupItem(
                         )
                     }
                 }
-                
+
                 // 预览按钮
                 if (latestFile.type == ProjectFileType.HTML) {
                     IconButton(
@@ -1401,7 +1401,7 @@ private fun FileGroupItem(
                     ) {
                         Icon(
                             Icons.Outlined.PlayArrow,
-                            contentDescription = "预览",
+                            contentDescription = Strings.preview,
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -1409,7 +1409,7 @@ private fun FileGroupItem(
                 }
             }
         }
-        
+
         // 版本历史列表
         AnimatedVisibility(
             visible = showVersions && versions.size > 1,
@@ -1457,7 +1457,7 @@ private fun FileGroupItem(
                                 ) {
                                     Icon(
                                         Icons.Outlined.PlayArrow,
-                                        contentDescription = "预览",
+                                        contentDescription = Strings.preview,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -1485,7 +1485,7 @@ fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
         ProjectFileType.IMAGE -> Icons.Outlined.Image to Color(0xFF4CAF50)
         ProjectFileType.OTHER -> Icons.Outlined.InsertDriveFile to Color(0xFF6B7280)
     }
-    
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
@@ -1514,7 +1514,7 @@ fun FilePreviewPanel(
     modifier: Modifier = Modifier
 ) {
     if (file == null || content == null) return
-    
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -1543,7 +1543,7 @@ fun FilePreviewPanel(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "${content.lines().size} 行 · ${file.formatSize()}",
+                            Strings.fileLineSizeFormat.format(content.lines().size, file.formatSize()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -1561,15 +1561,15 @@ fun FilePreviewPanel(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("预览")
+                            Text(Strings.preview)
                         }
                     }
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = "关闭")
+                        Icon(Icons.Default.Close, contentDescription = Strings.close)
                     }
                 }
             }
-            
+
             // 代码内容
             val colors = codeBlockColors()
             Surface(

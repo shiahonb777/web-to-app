@@ -30,10 +30,10 @@ data class WebApp(
     val iconPath: String? = null,
     val packageName: String? = null,
     val appType: AppType = AppType.WEB,        // 应用类型
-    
+
     // 媒体应用配置（仅 IMAGE/VIDEO 类型）
     val mediaConfig: MediaConfig? = null,
-    
+
     // HTML应用配置（仅 HTML 类型）
     val htmlConfig: HtmlConfig? = null,
 
@@ -66,32 +66,32 @@ data class WebApp(
     // 背景音乐配置
     val bgmEnabled: Boolean = false,
     val bgmConfig: BgmConfig? = null,
-    
+
     // APK 导出配置（仅打包APK时生效）
     val apkExportConfig: ApkExportConfig? = null,
-    
+
     // 主题配置（用于导出的应用 UI 风格）
     val themeType: String = "AURORA",
-    
+
     // 网页自动翻译配置
     val translateEnabled: Boolean = false,
     val translateConfig: TranslateConfig? = null,
-    
+
     // 扩展模块配置
     val extensionModuleIds: List<String> = emptyList(),  // 启用的扩展模块ID列表
-    
+
     // 自启动配置
     val autoStartConfig: AutoStartConfig? = null,
-    
+
     // 强制运行配置
     val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
-    
+
     // 黑科技功能配置（独立模块）
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
-    
+
     // 应用伪装配置（独立模块）
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
-    
+
     // 分类ID（关联 AppCategory）
     val categoryId: Long? = null,
 
@@ -222,7 +222,7 @@ data class SplashConfig(
     val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // 显示方向
     val fillScreen: Boolean = true,            // 是否自动放大铺满屏幕
     val enableAudio: Boolean = false,          // 是否启用视频音频
-    
+
     // 视频裁剪配置
     val videoStartMs: Long = 0,                // 视频裁剪起始时间（毫秒）
     val videoEndMs: Long = 5000,               // 视频裁剪结束时间（毫秒）
@@ -277,8 +277,8 @@ data class HtmlConfig(
      * 验证 entryFile 必须有文件名部分（不能只是 .html 或空字符串）
      */
     fun getValidEntryFile(): String {
-        return entryFile.takeIf { 
-            it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
+        return entryFile.takeIf {
+            it.isNotBlank() && it.substringBeforeLast(".").isNotBlank()
         } ?: "index.html"
     }
 }
@@ -316,27 +316,51 @@ enum class BgmPlayMode {
 /**
  * 音乐标签 - 用于分类
  */
-enum class BgmTag(val displayName: String) {
-    PURE_MUSIC("纯音乐"),
-    POP("流行"),
-    ROCK("摇滚"),
-    CLASSICAL("古典"),
-    JAZZ("爵士"),
-    ELECTRONIC("电子"),
-    FOLK("民谣"),
-    CHINESE_STYLE("古风"),
-    ANIME("动漫"),
-    GAME("游戏"),
-    MOVIE("影视"),
-    HEALING("治愈"),
-    EXCITING("激昂"),
-    SAD("伤感"),
-    ROMANTIC("浪漫"),
-    RELAXING("轻松"),
-    WORKOUT("运动"),
-    SLEEP("助眠"),
-    STUDY("学习"),
-    OTHER("其他")
+enum class BgmTag {
+    PURE_MUSIC,
+    POP,
+    ROCK,
+    CLASSICAL,
+    JAZZ,
+    ELECTRONIC,
+    FOLK,
+    CHINESE_STYLE,
+    ANIME,
+    GAME,
+    MOVIE,
+    HEALING,
+    EXCITING,
+    SAD,
+    ROMANTIC,
+    RELAXING,
+    WORKOUT,
+    SLEEP,
+    STUDY,
+    OTHER;
+
+    val displayName: String
+        get() = when (this) {
+            PURE_MUSIC -> com.webtoapp.core.i18n.Strings.bgmTagPureMusic
+            POP -> com.webtoapp.core.i18n.Strings.bgmTagPop
+            ROCK -> com.webtoapp.core.i18n.Strings.bgmTagRock
+            CLASSICAL -> com.webtoapp.core.i18n.Strings.bgmTagClassical
+            JAZZ -> com.webtoapp.core.i18n.Strings.bgmTagJazz
+            ELECTRONIC -> com.webtoapp.core.i18n.Strings.bgmTagElectronic
+            FOLK -> com.webtoapp.core.i18n.Strings.bgmTagFolk
+            CHINESE_STYLE -> com.webtoapp.core.i18n.Strings.bgmTagChineseStyle
+            ANIME -> com.webtoapp.core.i18n.Strings.bgmTagAnime
+            GAME -> com.webtoapp.core.i18n.Strings.bgmTagGame
+            MOVIE -> com.webtoapp.core.i18n.Strings.bgmTagMovie
+            HEALING -> com.webtoapp.core.i18n.Strings.bgmTagHealing
+            EXCITING -> com.webtoapp.core.i18n.Strings.bgmTagExciting
+            SAD -> com.webtoapp.core.i18n.Strings.bgmTagSad
+            ROMANTIC -> com.webtoapp.core.i18n.Strings.bgmTagRomantic
+            RELAXING -> com.webtoapp.core.i18n.Strings.bgmTagRelaxing
+            WORKOUT -> com.webtoapp.core.i18n.Strings.bgmTagWorkout
+            SLEEP -> com.webtoapp.core.i18n.Strings.bgmTagSleep
+            STUDY -> com.webtoapp.core.i18n.Strings.bgmTagStudy
+            OTHER -> com.webtoapp.core.i18n.Strings.bgmTagOther
+        }
 }
 
 /**
@@ -382,23 +406,41 @@ data class LrcTheme(
 /**
  * 字幕动画类型
  */
-enum class LrcAnimationType(val displayName: String) {
-    NONE("无动画"),
-    FADE("淡入淡出"),
-    SLIDE_UP("向上滑动"),
-    SLIDE_LEFT("向左滑动"),
-    SCALE("缩放"),
-    TYPEWRITER("打字机"),
-    KARAOKE("卡拉OK高亮")
+enum class LrcAnimationType {
+    NONE,
+    FADE,
+    SLIDE_UP,
+    SLIDE_LEFT,
+    SCALE,
+    TYPEWRITER,
+    KARAOKE;
+
+    val displayName: String
+        get() = when (this) {
+            NONE -> com.webtoapp.core.i18n.Strings.lrcAnimationNone
+            FADE -> com.webtoapp.core.i18n.Strings.lrcAnimationFade
+            SLIDE_UP -> com.webtoapp.core.i18n.Strings.lrcAnimationSlideUp
+            SLIDE_LEFT -> com.webtoapp.core.i18n.Strings.lrcAnimationSlideLeft
+            SCALE -> com.webtoapp.core.i18n.Strings.lrcAnimationScale
+            TYPEWRITER -> com.webtoapp.core.i18n.Strings.lrcAnimationTypewriter
+            KARAOKE -> com.webtoapp.core.i18n.Strings.lrcAnimationKaraoke
+        }
 }
 
 /**
  * 字幕位置
  */
-enum class LrcPosition(val displayName: String) {
-    TOP("顶部"),
-    CENTER("居中"),
-    BOTTOM("底部")
+enum class LrcPosition {
+    TOP,
+    CENTER,
+    BOTTOM;
+
+    val displayName: String
+        get() = when (this) {
+            TOP -> com.webtoapp.core.i18n.Strings.lrcPositionTop
+            CENTER -> com.webtoapp.core.i18n.Strings.lrcPositionCenter
+            BOTTOM -> com.webtoapp.core.i18n.Strings.lrcPositionBottom
+        }
 }
 
 /**
@@ -472,17 +514,25 @@ data class ApkEncryptionConfig(
     /**
      * 加密强度级别
      */
-    enum class EncryptionLevel(val iterations: Int, val description: String) {
-        FAST(5000, "快速（较低安全性）"),
-        STANDARD(10000, "标准（推荐）"),
-        HIGH(50000, "高强度（较慢）"),
-        PARANOID(100000, "极高强度（很慢）")
+    enum class EncryptionLevel(val iterations: Int) {
+        FAST(5000),
+        STANDARD(10000),
+        HIGH(50000),
+        PARANOID(100000);
+
+        val description: String
+            get() = when (this) {
+                FAST -> com.webtoapp.core.i18n.Strings.encryptionLevelFast
+                STANDARD -> com.webtoapp.core.i18n.Strings.encryptionLevelStandard
+                HIGH -> com.webtoapp.core.i18n.Strings.encryptionLevelHigh
+                PARANOID -> com.webtoapp.core.i18n.Strings.encryptionLevelParanoid
+            }
     }
-    
+
     companion object {
         /** 不加密 */
         val DISABLED = ApkEncryptionConfig(enabled = false)
-        
+
         /** 基础加密（仅加密代码和配置） */
         val BASIC = ApkEncryptionConfig(
             enabled = true,
@@ -493,7 +543,7 @@ data class ApkEncryptionConfig(
             enableAntiDebug = false,
             encryptionLevel = EncryptionLevel.STANDARD
         )
-        
+
         /** 完全加密（加密所有资源） */
         val FULL = ApkEncryptionConfig(
             enabled = true,
@@ -507,7 +557,7 @@ data class ApkEncryptionConfig(
             enableAntiTamper = true,
             encryptionLevel = EncryptionLevel.HIGH
         )
-        
+
         /** 最高安全级别 */
         val MAXIMUM = ApkEncryptionConfig(
             enabled = true,
@@ -523,7 +573,7 @@ data class ApkEncryptionConfig(
             encryptionLevel = EncryptionLevel.PARANOID
         )
     }
-    
+
     /** 转换为内部加密配置 */
     fun toEncryptionConfig(): com.webtoapp.core.crypto.EncryptionConfig {
         return com.webtoapp.core.crypto.EncryptionConfig(
@@ -555,11 +605,19 @@ data class ApkEncryptionConfig(
 /**
  * 翻译目标语言
  */
-enum class TranslateLanguage(val code: String, val displayName: String) {
-    CHINESE("zh-CN", "中文"),
-    ENGLISH("en", "英文"),
-    JAPANESE("ja", "日文"),
-    ARABIC("ar", "阿拉伯语")
+enum class TranslateLanguage(val code: String) {
+    CHINESE("zh-CN"),
+    ENGLISH("en"),
+    JAPANESE("ja"),
+    ARABIC("ar");
+
+    val displayName: String
+        get() = when (this) {
+            CHINESE -> com.webtoapp.core.i18n.Strings.langChinese
+            ENGLISH -> com.webtoapp.core.i18n.Strings.langEnglish
+            JAPANESE -> com.webtoapp.core.i18n.Strings.langJapanese
+            ARABIC -> com.webtoapp.core.i18n.Strings.langArabic
+        }
 }
 
 /**
@@ -575,10 +633,10 @@ data class TranslateConfig(
  */
 fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.ActivationCode> {
     val codes = mutableListOf<com.webtoapp.core.activation.ActivationCode>()
-    
+
     // 添加新格式激活码
     codes.addAll(activationCodeList)
-    
+
     // 添加旧格式激活码（转换为新格式）
     activationCodes.forEach { codeStr ->
         // 尝试解析为新格式
@@ -590,7 +648,7 @@ fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.Activation
             codes.add(com.webtoapp.core.activation.ActivationCode.fromLegacyString(codeStr))
         }
     }
-    
+
     return codes
 }
 
@@ -599,12 +657,12 @@ fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.Activation
  */
 fun WebApp.getActivationCodeStrings(): List<String> {
     val strings = mutableListOf<String>()
-    
+
     // 添加新格式激活码的 JSON 字符串
     activationCodeList.forEach { code ->
         strings.add(code.toJson())
     }
-    
+
     // 添加旧格式激活码
     activationCodes.forEach { codeStr ->
         // 如果不是 JSON 格式，直接添加
@@ -612,7 +670,7 @@ fun WebApp.getActivationCodeStrings(): List<String> {
             strings.add(codeStr)
         }
     }
-    
+
     return strings
 }
 

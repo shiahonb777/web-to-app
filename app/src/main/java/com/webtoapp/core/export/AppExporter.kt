@@ -16,6 +16,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.webview.WebViewActivity
 import java.io.File
@@ -32,12 +33,12 @@ class AppExporter(private val context: Context) {
         private const val ACTION_SHORTCUT_CREATED = "com.webtoapp.SHORTCUT_CREATED"
         private const val SHORTCUT_ICON_SIZE = 192
         private const val BUFFER_SIZE = 8192
-        
+
         // Gson 单例
         private val gson: Gson by lazy {
             GsonBuilder().setPrettyPrinting().create()
         }
-        
+
         // 日期格式化器（线程安全）
         private val dateFormat: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
             SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
@@ -78,7 +79,8 @@ class AppExporter(private val context: Context) {
                 }
             }
         } catch (e: Exception) {
-            ShortcutResult.Error("创建失败: ${e.message}")
+            val reason = e.message ?: ""
+            ShortcutResult.Error(Strings.shortcutCreationFailedWithReason.replaceFirst("%s", reason))
         }
     }
 
@@ -94,7 +96,7 @@ class AppExporter(private val context: Context) {
         if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             // 尝试引导用户到设置页面
             return tryOpenShortcutSettings() ?: ShortcutResult.Error(
-                "当前启动器不支持创建快捷方式，请尝试更换默认桌面或手动授权"
+                Strings.shortcutLauncherNotSupported
             )
         }
 
@@ -146,7 +148,7 @@ class AppExporter(private val context: Context) {
             putExtra(Intent.EXTRA_SHORTCUT_NAME, webApp.name)
             putExtra(Intent.EXTRA_SHORTCUT_INTENT, launchIntent)
             putExtra("duplicate", false) // 不允许重复创建
-            
+
             if (iconBitmap != null) {
                 putExtra(Intent.EXTRA_SHORTCUT_ICON, iconBitmap)
             } else {
@@ -161,9 +163,9 @@ class AppExporter(private val context: Context) {
         }
 
         context.sendBroadcast(shortcutIntent)
-        
+
         // 传统方式无法确认是否成功，返回待确认状态
-        return ShortcutResult.Pending("快捷方式请求已发送，请检查桌面")
+        return ShortcutResult.Pending(Strings.shortcutRequestSent)
     }
 
     /**
@@ -197,7 +199,7 @@ class AppExporter(private val context: Context) {
                         }
                     }
                 }
-                
+
                 if (original != null) {
                     // 调整为适合快捷方式的尺寸 (192x192)
                     val scaled = Bitmap.createScaledBitmap(original, SHORTCUT_ICON_SIZE, SHORTCUT_ICON_SIZE, true)
@@ -221,31 +223,31 @@ class AppExporter(private val context: Context) {
      */
     private fun checkAndRequestPermission(): ShortcutResult {
         val manufacturer = Build.MANUFACTURER.lowercase()
-        
+
         val message = when {
             manufacturer.contains("xiaomi") || manufacturer.contains("redmi") -> {
-                "请在 设置 > 应用设置 > 应用管理 > WebToApp > 权限管理 中开启「桌面快捷方式」权限"
+                Strings.shortcutPermissionMessageXiaomi
             }
             manufacturer.contains("huawei") || manufacturer.contains("honor") -> {
-                "请在 设置 > 应用 > 应用管理 > WebToApp > 权限 中开启「创建桌面快捷方式」权限"
+                Strings.shortcutPermissionMessageHuawei
             }
             manufacturer.contains("oppo") -> {
-                "请在 设置 > 应用管理 > WebToApp > 权限 中开启「桌面快捷方式」权限"
+                Strings.shortcutPermissionMessageOppo
             }
             manufacturer.contains("vivo") -> {
-                "请在 i管家 > 应用管理 > 权限管理 中开启「桌面快捷方式」权限"
+                Strings.shortcutPermissionMessageVivo
             }
             manufacturer.contains("meizu") -> {
-                "请在 手机管家 > 权限管理 中开启「桌面快捷方式」权限"
+                Strings.shortcutPermissionMessageMeizu
             }
             manufacturer.contains("samsung") -> {
-                "请确认桌面已解锁编辑状态，或尝试长按应用图标添加到主屏幕"
+                Strings.shortcutPermissionMessageSamsung
             }
             else -> {
-                "创建快捷方式失败，请检查桌面设置或应用权限"
+                Strings.shortcutPermissionMessageGeneric
             }
         }
-        
+
         return ShortcutResult.PermissionRequired(message)
     }
 
@@ -259,7 +261,7 @@ class AppExporter(private val context: Context) {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
-            ShortcutResult.PermissionRequired("请在应用设置中开启快捷方式权限后重试")
+            ShortcutResult.PermissionRequired(Strings.shortcutPermissionRetry)
         } catch (e: Exception) {
             null
         }
@@ -293,7 +295,7 @@ class AppExporter(private val context: Context) {
 
             ExportResult.Success(file.absolutePath)
         } catch (e: Exception) {
-            ExportResult.Error(e.message ?: "导出失败")
+            ExportResult.Error(e.message ?: Strings.exportFailedMessage)
         }
     }
 
@@ -315,7 +317,7 @@ class AppExporter(private val context: Context) {
 
             ExportResult.Success(projectDir.absolutePath)
         } catch (e: Exception) {
-            ExportResult.Error(e.message ?: "导出模板失败")
+            ExportResult.Error(e.message ?: Strings.exportTemplateFailedMessage)
         }
     }
 
@@ -431,7 +433,10 @@ dependencies {
         """.trimIndent()
     }
 
-    private fun generateManifest(webApp: WebApp): String = """
+    private fun generateManifest(webApp: WebApp): String {
+        val label = webApp.name.takeIf(String::isNotBlank)?.let(::escapeForXml) ?: "@string/app_name"
+
+        return """
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
@@ -440,7 +445,7 @@ dependencies {
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="$label"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
@@ -456,6 +461,7 @@ dependencies {
     </application>
 </manifest>
     """.trimIndent()
+    }
 
     private fun generateAppConfig(webApp: WebApp): String {
         return """
@@ -467,22 +473,22 @@ package com.webtoapp.generated
 object AppConfig {
     const val APP_NAME = "${webApp.name}"
     const val TARGET_URL = "${webApp.url}"
-    
+
     // 激活码配置
     const val ACTIVATION_ENABLED = ${webApp.activationEnabled}
     val ACTIVATION_CODES = listOf(${webApp.activationCodes.joinToString { "\"$it\"" }})
-    
+
     // 广告拦截配置
     const val AD_BLOCK_ENABLED = ${webApp.adBlockEnabled}
     val AD_BLOCK_RULES = listOf(${webApp.adBlockRules.joinToString { "\"$it\"" }})
-    
+
     // 公告配置
     const val ANNOUNCEMENT_ENABLED = ${webApp.announcementEnabled}
     const val ANNOUNCEMENT_TITLE = "${webApp.announcement?.title ?: ""}"
     const val ANNOUNCEMENT_CONTENT = "${webApp.announcement?.content ?: ""}"
     const val ANNOUNCEMENT_LINK = "${webApp.announcement?.linkUrl ?: ""}"
     const val ANNOUNCEMENT_SHOW_ONCE = ${webApp.announcement?.showOnce ?: true}
-    
+
     // WebView配置
     const val JAVASCRIPT_ENABLED = ${webApp.webViewConfig.javaScriptEnabled}
     const val DOM_STORAGE_ENABLED = ${webApp.webViewConfig.domStorageEnabled}
@@ -525,6 +531,15 @@ object AppConfig {
 - 首次编译需要下载依赖，请确保网络畅通
     """.trimIndent()
 
+    private fun escapeForXml(value: String): String {
+        return value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&apos;")
+    }
+
     private fun sanitizeFileName(name: String): String {
         return name.replace(Regex("[^a-zA-Z0-9_\\-\\u4e00-\\u9fa5]"), "_")
     }
@@ -565,13 +580,13 @@ data class AppExportData(
 sealed class ShortcutResult {
     /** 创建成功 */
     data object Success : ShortcutResult()
-    
+
     /** 请求已发送，等待用户确认（Android 7.x 传统方式） */
     data class Pending(val message: String) : ShortcutResult()
-    
+
     /** 需要用户手动授予权限（国产 ROM 限制） */
     data class PermissionRequired(val message: String) : ShortcutResult()
-    
+
     /** 创建失败 */
     data class Error(val message: String) : ShortcutResult()
 }

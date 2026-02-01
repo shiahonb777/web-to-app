@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name" translatable="false">WebToApp&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</string>
     <string name="app_description">Convert any website to standalone App</string>
 
     <!-- Main Interface -->
@@ -248,6 +249,8 @@
     <string name="new_update">New Update Available</string>
     <string name="update_now">Update Now</string>
     <string name="latest_version">Already latest version</string>
+    <string name="update_download_title">Downloading update</string>
+    <string name="update_download_description">Downloading version %s...</string>
     <string name="network_error">Network Error</string>
     <string name="retry">Retry</string>
     <string name="loading">Loading...</string>
@@ -509,6 +512,21 @@
     <string name="encryption_settings">Encryption Settings</string>
     <string name="enable_encryption">Enable Encryption</string>
     <string name="encryption_hint">Encrypt app resources for protection</string>
+    <string name="accessibility_service_description">Forced run protection service. When enabled, it blocks switching to other apps while forced run mode is active, keeping you focused. This service only takes effect when you explicitly enable forced run.</string>
+    <string name="forced_run_service_name">Focus Mode Guard</string>
+    <string name="forced_run_active">Focus mode running</string>
+    <string name="forced_run_remaining">Time remaining: %s</string>
+    <string name="cannot_exit_forced_run">Cannot exit in focus mode</string>
+    <string name="emergency_exit">Emergency Exit</string>
+    <string name="enter_emergency_password">Enter emergency exit password</string>
+    <string name="password_incorrect">Incorrect password</string>
+    <string name="accessibility_not_enabled">Please enable Accessibility service first</string>
+    <string name="usage_access_not_enabled">Please grant Usage Access permission first</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="forced_run_protection_level">Protection Level</string>
+    <string name="protection_level_basic">Basic (block Back button only)</string>
+    <string name="protection_level_standard">Standard (requires Accessibility)</string>
+    <string name="protection_level_maximum">Maximum (requires Accessibility + Usage Access)</string>
     <string name="encryption_level">Encryption Level</string>
     <string name="basic_encryption">Basic</string>
     <string name="standard_encryption">Standard</string>
@@ -523,7 +541,7 @@
     <string name="ip_spoofing">IP Spoofing</string>
     <string name="storage_isolation">Storage Isolation</string>
     <string name="regenerate_on_launch">Regenerate on Launch</string>
-    
+
     <!-- Help -->
     <string name="help">Help</string>
     <string name="usage_help">Usage Help</string>
@@ -531,7 +549,7 @@
     <string name="select_module_category">Select Module Category</string>
     <string name="auto_detect">Auto Detect</string>
     <string name="auto_detect_category_hint">Let AI automatically select category based on requirements</string>
-    
+
     <!-- AI Module Development Help -->
     <string name="help_how_to_use">How to Use</string>
     <string name="help_how_to_use_content">Describe the functionality you want in natural language in the input box, and AI will automatically analyze the requirements and generate the corresponding extension module code.</string>
@@ -547,7 +565,7 @@
     <string name="help_code_edit_content">Generated code can be directly edited and modified. The modified version will be used when saving.</string>
     <string name="help_save_module">Save Module</string>
     <string name="help_save_module_content">After generation is complete, click \'Save\' to add it to your module library for use when creating apps.</string>
-    
+
     <!-- Additional UI Strings -->
     <string name="project_template_export">Project Template Export</string>
     <string name="encoding_and_size">Encoding: %1$s | Size: %2$s</string>

@@ -1,0 +1,16 @@
+{
+  "pageTitle": "React 待办应用",
+  "appHeading": "React 待办",
+  "appDescription": "React 18 待办事项应用，展示 Hooks 用法",
+  "loadingHint": "正在加载 React...",
+  "inputPlaceholder": "添加新的任务...",
+  "addButton": "添加",
+  "noTodos": "🎉 还没有待办",
+  "deleteButton": "删除",
+  "errorTitle": "加载失败",
+  "errorHint": "请检查网络连接并重试",
+  "reloadButton": "重新加载",
+  "reactLoadError": "React 加载失败，请检查网络连接",
+  "reactDOMLoadError": "ReactDOM 加载失败，请检查网络连接",
+  "appScriptLoadError": "应用脚本加载失败"
+}

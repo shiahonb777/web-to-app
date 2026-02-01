@@ -46,45 +46,55 @@ fun OnlineMusicSelectorDialog(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     // 搜索关键词
     var searchQuery by remember { mutableStateOf("") }
-    
+
     // 搜索结果列表
     var searchResults by remember { mutableStateOf<List<OnlineMusicData>>(emptyList()) }
-    
+
     // 加载状态
     var isLoading by remember { mutableStateOf(false) }
-    
+
     // 错误信息
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // 当前下载的音乐
     var downloadingMusic by remember { mutableStateOf<OnlineMusicData?>(null) }
     var downloadProgress by remember { mutableFloatStateOf(0f) }
-    
+
     // 搜索历史
     var searchHistory by remember { mutableStateOf<List<String>>(emptyList()) }
-    
+
     // 热门推荐关键词
     val hotKeywords = remember {
-        listOf("周杰伦", "林俊杰", "邓紫棋", "薛之谦", "纯音乐", "轻音乐", "钢琴曲", "古风", "动漫")
+        listOf(
+            Strings.hotKeywordJayChou,
+            Strings.hotKeywordJjLin,
+            Strings.hotKeywordGem,
+            Strings.hotKeywordJokerXue,
+            Strings.hotKeywordInstrumental,
+            Strings.hotKeywordLightMusic,
+            Strings.hotKeywordPianoMusic,
+            Strings.hotKeywordChineseStyle,
+            Strings.hotKeywordAnime
+        )
     }
-    
+
     // 执行搜索
     fun performSearch(query: String) {
         if (query.isBlank()) return
-        
+
         scope.launch {
             isLoading = true
             errorMessage = null
             searchResults = emptyList()
-            
+
             // 添加到搜索历史
             if (!searchHistory.contains(query)) {
                 searchHistory = (listOf(query) + searchHistory).take(10)
             }
-            
+
             // 搜索多个结果（通过不同的 n 参数）
             val results = mutableListOf<OnlineMusicData>()
             for (n in 1..10) {
@@ -102,18 +112,18 @@ fun OnlineMusicSelectorDialog(
                     }
                 }
             }
-            
+
             searchResults = results
             isLoading = false
         }
     }
-    
+
     // 下载音乐
     fun downloadMusic(musicData: OnlineMusicData) {
         scope.launch {
             downloadingMusic = musicData
             downloadProgress = 0f
-            
+
             val bgmItem = OnlineMusicDownloader.downloadMusic(
                 context = context,
                 musicData = musicData,
@@ -121,9 +131,9 @@ fun OnlineMusicSelectorDialog(
                     downloadProgress = progress
                 }
             )
-            
+
             downloadingMusic = null
-            
+
             if (bgmItem != null) {
                 onMusicSelected(bgmItem)
             } else {
@@ -131,7 +141,7 @@ fun OnlineMusicSelectorDialog(
             }
         }
     }
-    
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -176,7 +186,7 @@ fun OnlineMusicSelectorDialog(
                         }
                     }
                 )
-                
+
                 // 搜索框
                 OutlinedTextField(
                     value = searchQuery,
@@ -200,9 +210,9 @@ fun OnlineMusicSelectorDialog(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // 搜索按钮
                 Button(
                     onClick = { performSearch(searchQuery) },
@@ -221,9 +231,9 @@ fun OnlineMusicSelectorDialog(
                     }
                     Text(if (isLoading) Strings.searching else Strings.search.replace("...", ""))
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 内容区域
                 Box(modifier = Modifier.weight(1f)) {
                     when {
@@ -289,7 +299,7 @@ fun OnlineMusicSelectorDialog(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                
+
                                 FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -305,7 +315,7 @@ fun OnlineMusicSelectorDialog(
                                         )
                                     }
                                 }
-                                
+
                                 // 搜索历史
                                 if (searchHistory.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(24.dp))
@@ -324,7 +334,7 @@ fun OnlineMusicSelectorDialog(
                                         }
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    
+
                                     FlowRow(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -348,7 +358,7 @@ fun OnlineMusicSelectorDialog(
                                         }
                                     }
                                 }
-                                
+
                                 // 提示信息
                                 Spacer(modifier = Modifier.weight(1f))
                                 Text(
@@ -399,9 +409,9 @@ private fun OnlineMusicItem(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentScale = ContentScale.Crop
             )
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             // 歌曲信息
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -418,7 +428,7 @@ private fun OnlineMusicItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 // 下载进度条
                 if (isDownloading) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -428,9 +438,9 @@ private fun OnlineMusicItem(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // 下载按钮
             when {
                 isDownloading -> {

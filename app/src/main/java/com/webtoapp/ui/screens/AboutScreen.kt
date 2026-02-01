@@ -63,26 +63,26 @@ fun AboutScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     // 当前版本信息
     val (currentVersionName, currentVersionCode) = remember {
         AppUpdateChecker.getCurrentVersionInfo(context)
     }
-    
+
     // 检查更新状态
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<AppUpdateChecker.UpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var checkError by remember { mutableStateOf<String?>(null) }
-    
+
     // 下载状态
     var isDownloading by remember { mutableStateOf(false) }
     var downloadId by remember { mutableLongStateOf(-1L) }
-    
+
     // 监听下载完成
     DisposableEffect(downloadId) {
         if (downloadId == -1L) return@DisposableEffect onDispose {}
-        
+
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
                 val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
@@ -93,19 +93,19 @@ fun AboutScreen(
                 }
             }
         }
-        
+
         context.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
             Context.RECEIVER_EXPORTED)
-        
+
         onDispose {
             try { context.unregisterReceiver(receiver) } catch (_: Exception) {}
         }
     }
-    
+
     // 主题色
     val primaryGradient = listOf(Color(0xFF667eea), Color(0xFF764ba2))
     val accentColor = Color(0xFF667eea)
-    
+
     // 动画
     val infiniteTransition = rememberInfiniteTransition(label = "about")
     val glowAlpha by infiniteTransition.animateFloat(
@@ -153,7 +153,7 @@ fun AboutScreen(
                         )
                     )
             )
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -199,27 +199,27 @@ fun AboutScreen(
                                 contentScale = ContentScale.Crop
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(20.dp))
-                        
+
                         // 作者名
                         Text(
                             text = "Shiaho",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         // 标语
                         Text(
                             text = Strings.authorTagline,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // 应用信息
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -276,7 +276,7 @@ fun AboutScreen(
                         }
                     }
                 }
-                
+
                 // ========== 检查更新按钮 ==========
                 EnhancedElevatedCard(
                     modifier = Modifier
@@ -321,7 +321,7 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    if (isDownloading) Strings.downloading 
+                                    if (isDownloading) Strings.downloading
                                     else if (isCheckingUpdate) Strings.checking
                                     else "${Strings.currentVersion} v$currentVersionName",
                                     style = MaterialTheme.typography.bodySmall,
@@ -329,7 +329,7 @@ fun AboutScreen(
                                 )
                             }
                         }
-                        
+
                         if (isCheckingUpdate || isDownloading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
@@ -344,16 +344,16 @@ fun AboutScreen(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 // ========== 数据备份卡片 ==========
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                     com.webtoapp.ui.components.DataBackupCard()
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 // ========== 联系卡片区 ==========
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -388,7 +388,7 @@ fun AboutScreen(
                             )
                         }
                     }
-                    
+
                     // ========== 社交媒体快捷入口 ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -409,9 +409,9 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // 社交媒体网格 - 第一行
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -427,7 +427,7 @@ fun AboutScreen(
                                     link = "https://x.com/@shiaho777",
                                     context = context
                                 )
-                                
+
                                 // Telegram
                                 SocialMediaButton(
                                     modifier = Modifier.weight(1f),
@@ -439,9 +439,9 @@ fun AboutScreen(
                                     context = context
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // 社交媒体网格 - 第二行
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -457,7 +457,7 @@ fun AboutScreen(
                                     link = "https://github.com/shiahonb777/web-to-app",
                                     context = context
                                 )
-                                
+
                                 // Bilibili
                                 SocialMediaButton(
                                     modifier = Modifier.weight(1f),
@@ -471,7 +471,7 @@ fun AboutScreen(
                             }
                         }
                     }
-                    
+
                     // ========== 交流群卡片 ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -492,17 +492,17 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             Text(
                                 Strings.communityGroupDescription,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // QQ群
                             ContactCardCompact(
                                 context = context,
@@ -515,9 +515,9 @@ fun AboutScreen(
                                 link = "https://qun.qq.com/universal-share/share?ac=1&authKey=85Y3%2FckhO7c13%2F1%2F4kee5U7dg5dBPQ%2BDvKyGRVxiLVIgO8WxHdq%2BviYCtfWP4IsJ&busi_data=eyJncm91cENvZGUiOiIxMDQxMTMwMjA2IiwidG9rZW4iOiI1ZUhyRWF0bWhYVjN1T2p2VDJVODRPS3lKNzRCMjlyRmgrK3Robzg1cDhrbkF0bHlYR1d4eU43eW9QUTRGOUs4IiwidWluIjoiMjcxMTY3NDE4NCJ9&data=KG-7jSMVH0EM00Ekocv3-F15tvRkal3f4yQPgRmKS7dK0h13g8VPDADK2doELNhlgyPjrFJDFANTkzbibLL1ug&svctype=4&tempid=h5_group_info",
                                 copyValue = "1041130206"
                             )
-                            
+
                             Spacer(modifier = Modifier.height(10.dp))
-                            
+
                             // TG群
                             ContactCardCompact(
                                 context = context,
@@ -532,7 +532,7 @@ fun AboutScreen(
                             )
                         }
                     }
-                    
+
                     // ========== 联系作者卡片 ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -553,17 +553,17 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             Text(
                                 Strings.contactAuthorDescription,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // 作者QQ
                             ContactCardCompact(
                                 context = context,
@@ -576,9 +576,9 @@ fun AboutScreen(
                                 link = "https://i.qq.com/2711674184",
                                 copyValue = "2711674184"
                             )
-                            
+
                             Spacer(modifier = Modifier.height(10.dp))
-                            
+
                             // QQ邮箱
                             ContactCardCompact(
                                 context = context,
@@ -591,9 +591,9 @@ fun AboutScreen(
                                 link = "mailto:2711674184@qq.com",
                                 copyValue = "2711674184@qq.com"
                             )
-                            
+
                             Spacer(modifier = Modifier.height(10.dp))
-                            
+
                             // Gmail
                             ContactCardCompact(
                                 context = context,
@@ -608,7 +608,7 @@ fun AboutScreen(
                             )
                         }
                     }
-                    
+
                     // ========== 开源仓库卡片 ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -629,17 +629,17 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             Text(
                                 Strings.welcomeStarSupport,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // GitHub
                             ContactCardCompact(
                                 context = context,
@@ -652,9 +652,9 @@ fun AboutScreen(
                                 link = "https://github.com/shiahonb777/web-to-app",
                                 copyValue = "https://github.com/shiahonb777/web-to-app"
                             )
-                            
+
                             Spacer(modifier = Modifier.height(10.dp))
-                            
+
                             // Gitee
                             ContactCardCompact(
                                 context = context,
@@ -669,7 +669,7 @@ fun AboutScreen(
                             )
                         }
                     }
-                    
+
                     // ========== 更新日志 ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -690,9 +690,9 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // v1.8.5
                             VersionSection(
                                 version = "v1.8.5",
@@ -708,9 +708,9 @@ fun AboutScreen(
                                 ChangeItem("🐛", Strings.fixBackgroundRunCrash)
                                 ChangeItem("🐛", Strings.fixI18nStringAdaptation)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.8.0
                             VersionSection(
                                 version = "v1.8.0"
@@ -726,9 +726,9 @@ fun AboutScreen(
                                 ChangeItem("🐛", Strings.fixFullscreenStatusBarIssue)
                                 ChangeItem("🐛", Strings.fixDeviceCrashIssue)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.8.0
                             VersionSection(
                                 version = "v1.8.0"
@@ -736,9 +736,9 @@ fun AboutScreen(
                                 ChangeItem("🌐", Strings.isolatedBrowserEnvironment)
                                 ChangeItem("▶️", Strings.backgroundRunFeature)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.7
                             VersionSection(
                                 version = "v1.7.7"
@@ -746,9 +746,9 @@ fun AboutScreen(
                                 ChangeItem("🎨", Strings.statusBarStyleConfig)
                                 ChangeItem("🔐", Strings.apkEncryptionProtection)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.6
                             VersionSection(
                                 version = "v1.7.6"
@@ -757,9 +757,9 @@ fun AboutScreen(
                                 ChangeItem("💾", Strings.dataBackupExportImport)
                                 ChangeItem("✨", Strings.fullscreenStatusBarOverlay)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.5
                             VersionSection(
                                 version = "v1.7.5"
@@ -768,9 +768,9 @@ fun AboutScreen(
                                 ChangeItem("🐛", Strings.fixHtmlLongPressCopy)
                                 ChangeItem("📱", Strings.supportAndroid6)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.4
                             VersionSection(
                                 version = "v1.7.4"
@@ -781,9 +781,9 @@ fun AboutScreen(
                                 ChangeItem("🐛", Strings.fixAiHtmlToolCallFailed)
                                 ChangeItem("✨", Strings.optimizeAiHtmlPrompt)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.3
                             VersionSection(
                                 version = "v1.7.3"
@@ -792,17 +792,17 @@ fun AboutScreen(
                                 ChangeItem("✨", Strings.customStatusBarBgColor)
                                 ChangeItem("🐛", Strings.fixStatusBarTextVisibility)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.2
                             VersionSection(version = "v1.7.2") {
                                 ChangeItem("🐛", Strings.fixJsFileSelectorCompat)
                                 ChangeItem("🐛", Strings.fixVideoFullscreenRotation)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.1
                             VersionSection(version = "v1.7.1") {
                                 ChangeItem("🐛", Strings.fixXhsImageSave)
@@ -811,17 +811,17 @@ fun AboutScreen(
                                 ChangeItem("🐛", Strings.fixHtmlCssJsNotWorking)
                                 ChangeItem("🐛", Strings.fixTaskListDuplicateName)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.7.0
                             VersionSection(version = "v1.7.0") {
                                 ChangeItem("🐛", Strings.fixKnownIssues)
                                 ChangeItem("🤖", Strings.optimizeAiAgentArch)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.6.0
                             VersionSection(version = "v1.6.0") {
                                 ChangeItem("🧩", Strings.extensionModuleSystem)
@@ -832,9 +832,9 @@ fun AboutScreen(
                                 ChangeItem("📢", Strings.announcementTemplates)
                                 ChangeItem("🌐", Strings.webAutoTranslate)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.5.0
                             VersionSection(version = "v1.5.0") {
                                 ChangeItem("✨", Strings.aiHtmlCoding)
@@ -843,9 +843,9 @@ fun AboutScreen(
                                 ChangeItem("✨", Strings.bgmLrcFeature)
                                 ChangeItem("✨", Strings.aiSettingsFeature)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.3.0
                             VersionSection(version = "v1.3.0") {
                                 ChangeItem("✨", Strings.mediaAppFeature)
@@ -854,9 +854,9 @@ fun AboutScreen(
                                 ChangeItem("✨", Strings.videoTrimFeature)
                                 ChangeItem("🐛", Strings.fixShortcutIconError)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.2.x
                             VersionSection(version = "v1.2.x") {
                                 ChangeItem("✨", Strings.fullscreenModeFeature)
@@ -864,9 +864,9 @@ fun AboutScreen(
                                 ChangeItem("🐛", Strings.fixReleaseIconNotWorking)
                                 ChangeItem("🐛", Strings.fixApkPackageConflict)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.1.0
                             VersionSection(version = "v1.1.0") {
                                 ChangeItem("✨", Strings.oneClickBuildApk)
@@ -875,9 +875,9 @@ fun AboutScreen(
                                 ChangeItem("✨", Strings.desktopModeFeature)
                                 ChangeItem("🎨", Strings.materialDesign3UI)
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // v1.0.0
                             VersionSection(version = "v1.0.0") {
                                 ChangeItem("🎉", Strings.initialVersionRelease)
@@ -887,9 +887,9 @@ fun AboutScreen(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // ========== 法律免责声明 ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -910,9 +910,9 @@ fun AboutScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             // 重要提示框
                             Surface(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
@@ -925,72 +925,54 @@ fun AboutScreen(
                                     Text("⚠️", fontSize = 16.sp)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "使用本软件即表示您已阅读、理解并同意以下全部条款",
+                                        Strings.legalNoticeIntro,
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // 1. 软件性质声明
                             LegalSection(
-                                title = "一、软件性质与用途",
-                                content = "本软件为开源技术研究与教育演示工具，所有功能均基于Android系统公开API实现，" +
-                                        "旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。"
+                                title = Strings.legalSection1Title,
+                                content = Strings.legalSection1Content
                             )
-                            
+
                             // 2. 用户责任
                             LegalSection(
-                                title = "二、用户责任与义务",
-                                content = "用户应确保在合法、正当的场景下使用本软件，包括但不限于：\n" +
-                                        "• 自我管理：用于个人专注力训练、学习时间管理\n" +
-                                        "• 企业展示：用于展会、商场等场景的展示终端\n" +
-                                        "• 家长监护：在未成年人知情同意下的合理使用\n" +
-                                        "• 教育研究：用于技术学习和安全研究\n\n" +
-                                        "严禁将本软件用于任何侵犯他人人身自由、隐私权、财产权等合法权益的行为。"
+                                title = Strings.legalSection2Title,
+                                content = Strings.legalSection2Content
                             )
-                            
+
                             // 3. 特殊功能声明
                             LegalSection(
-                                title = "三、高级功能特别声明",
-                                content = "本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于技术演示性质：\n\n" +
-                                        "1. 【知情同意原则】高级功能仅应在设备所有者或使用者完全知情并明确同意的情况下启用\n\n" +
-                                        "2. 【自主控制原则】所有功能均提供紧急退出机制，用户可通过密码随时终止\n\n" +
-                                        "3. 【技术中立原则】功能本身不具有违法性，其合法性取决于使用者的具体使用方式和目的\n\n" +
-                                        "4. 【风险自担原则】启用高级功能可能造成设备发热、电池消耗加快等情况，用户需自行承担相关风险"
+                                title = Strings.legalSection3Title,
+                                content = Strings.legalSection3Content
                             )
-                            
+
                             // 4. 免责条款
                             LegalSection(
-                                title = "四、免责条款",
-                                content = "1. 本软件按「现状」提供，开发者不对软件的适用性、可靠性、安全性作任何明示或暗示的保证\n\n" +
-                                        "2. 用户因违反法律法规或本声明使用本软件所产生的一切法律责任，由用户自行承担，与开发者无关\n\n" +
-                                        "3. 开发者不对因使用本软件导致的任何直接、间接、偶然、特殊或惩罚性损害承担责任\n\n" +
-                                        "4. 任何第三方利用本软件源代码进行的修改、分发行为，其法律责任由该第三方自行承担"
+                                title = Strings.legalSection4Title,
+                                content = Strings.legalSection4Content
                             )
-                            
+
                             // 5. 合规使用
                             LegalSection(
-                                title = "五、合规使用指引",
-                                content = "为确保合法合规使用，建议用户：\n" +
-                                        "• 在使用前获取设备实际使用者的书面或电子形式同意\n" +
-                                        "• 在企业场景下制定相应的使用规范和管理制度\n" +
-                                        "• 在教育场景下确保符合相关教育法规要求\n" +
-                                        "• 定期检查并遵守当地法律法规的最新要求"
+                                title = Strings.legalSection5Title,
+                                content = Strings.legalSection5Content
                             )
-                            
+
                             // 6. 版权与开源
                             LegalSection(
-                                title = "六、知识产权声明",
-                                content = "本软件基于MIT开源协议发布，用户可自由使用、修改和分发，但需保留原始版权声明。" +
-                                        "用户基于本软件进行的二次开发，其法律责任由二次开发者自行承担。"
+                                title = Strings.legalSection6Title,
+                                content = Strings.legalSection6Content
                             )
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // 最终声明
                             Surface(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
@@ -998,29 +980,25 @@ fun AboutScreen(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        "📋 最终用户协议确认",
+                                        Strings.legalAgreementTitle,
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        "继续使用本软件即表示您：\n" +
-                                        "✓ 已年满18周岁或已获得法定监护人同意\n" +
-                                        "✓ 已完整阅读并理解上述所有条款\n" +
-                                        "✓ 同意遵守所有使用条款和当地法律法规\n" +
-                                        "✓ 自愿承担使用本软件可能产生的一切风险和责任",
+                                        Strings.legalAgreementContent,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         lineHeight = 20.sp
                                     )
                                 }
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             Text(
-                                "本声明自发布之日起生效，开发者保留随时修改本声明的权利。\n最后更新：2026年1月",
+                                Strings.legalEffectiveStatement,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -1028,10 +1006,10 @@ fun AboutScreen(
                             )
                         }
                     }
-                    
+
                     // 底部留白
                     Spacer(modifier = Modifier.height(32.dp))
-                    
+
                     // 底部信息
                     Text(
                         text = "Made with ❤️ by Shiaho",
@@ -1040,13 +1018,13 @@ fun AboutScreen(
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
     }
-    
+
     // ========== 更新对话框 ==========
     if (showUpdateDialog && updateInfo != null) {
         UpdateDialog(
@@ -1146,9 +1124,9 @@ private fun UpdateDialog(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // 更新说明
                     if (updateInfo.releaseNotes.isNotEmpty()) {
                         Surface(
@@ -1164,9 +1142,9 @@ private fun UpdateDialog(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         Strings.updateRecommendation,
                         style = MaterialTheme.typography.bodySmall,
@@ -1271,7 +1249,7 @@ private fun ContactItem(
                     )
                 }
             }
-            
+
             FilledTonalIconButton(onClick = onCopy) {
                 Icon(
                     Icons.Default.ContentCopy,
@@ -1350,7 +1328,7 @@ private fun ContactItemWithLink(
                     )
                 }
             }
-            
+
             Row {
                 // 复制按钮
                 FilledTonalIconButton(onClick = onCopy) {
@@ -1504,9 +1482,9 @@ private fun SocialMediaButton(
                     color = Color.White
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             Column {
                 Text(
                     text = label,
@@ -1581,9 +1559,9 @@ private fun ContactCardCompact(
                         color = iconColor
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -1605,7 +1583,7 @@ private fun ContactCardCompact(
                     )
                 }
             }
-            
+
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 // 复制按钮
                 FilledTonalIconButton(
@@ -1665,4 +1643,3 @@ private fun LegalSection(
         )
     }
 }
-

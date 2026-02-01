@@ -48,44 +48,44 @@ fun CreateMediaAppScreen(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    
+
     // 应用信息
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
-    
+
     // 媒体类型
     var mediaType by remember { mutableStateOf(AppType.IMAGE) }
-    
+
     // 单媒体模式
     var mediaUri by remember { mutableStateOf<Uri?>(null) }
-    
+
     // 媒体配置
     var enableAudio by remember { mutableStateOf(true) }
     var loop by remember { mutableStateOf(true) }
     var autoPlay by remember { mutableStateOf(true) }
     var fillScreen by remember { mutableStateOf(true) }
     var orientation by remember { mutableStateOf(SplashOrientation.PORTRAIT) }
-    
+
     // 主题配置
     var themeType by remember { mutableStateOf("AURORA") }
-    
+
     // 文件选择器
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { mediaUri = it } }
-    
+
     val videoPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { mediaUri = it } }
-    
+
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
-    
+
     // 判断是否可以创建
     val canCreate = mediaUri != null
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -141,7 +141,7 @@ fun CreateMediaAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -157,7 +157,7 @@ fun CreateMediaAppScreen(
                             },
                             modifier = Modifier.weight(1f)
                         )
-                        
+
                         // 视频选项
                         MediaTypeOption(
                             icon = Icons.Outlined.Videocam,
@@ -172,7 +172,7 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
-            
+
             // 选择媒体文件
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -181,7 +181,7 @@ fun CreateMediaAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -212,7 +212,7 @@ fun CreateMediaAppScreen(
                                         .data(mediaUri)
                                         .crossfade(true)
                                         .build(),
-                                    contentDescription = "选中的图片",
+                                    contentDescription = Strings.selectedImage,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
@@ -240,9 +240,9 @@ fun CreateMediaAppScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Icon(
-                                    if (mediaType == AppType.IMAGE) 
-                                        Icons.Outlined.AddPhotoAlternate 
-                                    else 
+                                    if (mediaType == AppType.IMAGE)
+                                        Icons.Outlined.AddPhotoAlternate
+                                    else
                                         Icons.Outlined.VideoLibrary,
                                     contentDescription = null,
                                     modifier = Modifier.size(48.dp),
@@ -259,7 +259,7 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
-            
+
             // 应用信息
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -268,28 +268,28 @@ fun CreateMediaAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // 应用名称（带随机按钮）
                     AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it },
                         placeholder = Strings.createMediaApp
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     IconPickerWithLibrary(
                         iconUri = appIcon,
                         iconPath = appIconPath,
                         onSelectFromGallery = { iconPickerLauncher.launch("image/*") },
-                        onSelectFromLibrary = { path -> 
-                            appIconPath = path 
+                        onSelectFromLibrary = { path ->
+                            appIconPath = path
                             appIcon = null
                         }
                     )
                 }
             }
-            
+
             // 显示配置
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -298,7 +298,7 @@ fun CreateMediaAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     SettingsRow(
                         title = Strings.fillScreen,
                         subtitle = Strings.fillScreenHint
@@ -308,22 +308,22 @@ fun CreateMediaAppScreen(
                             onCheckedChange = { fillScreen = it }
                         )
                     }
-                    
+
                     SettingsRow(
                         title = Strings.landscapeMode,
                         subtitle = Strings.landscapeModeHint
                     ) {
                         Switch(
                             checked = orientation == SplashOrientation.LANDSCAPE,
-                            onCheckedChange = { 
+                            onCheckedChange = {
                                 orientation = if (it) SplashOrientation.LANDSCAPE else SplashOrientation.PORTRAIT
                             }
                         )
                     }
-                    
+
                     if (mediaType == AppType.VIDEO) {
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
-                        
+
                         SettingsRow(
                             title = Strings.enableAudio,
                             subtitle = Strings.enableAudioHint
@@ -333,7 +333,7 @@ fun CreateMediaAppScreen(
                                 onCheckedChange = { enableAudio = it }
                             )
                         }
-                        
+
                         SettingsRow(
                             title = Strings.loopPlay,
                             subtitle = Strings.loopPlayHint
@@ -343,7 +343,7 @@ fun CreateMediaAppScreen(
                                 onCheckedChange = { loop = it }
                             )
                         }
-                        
+
                         SettingsRow(
                             title = Strings.autoPlay,
                             subtitle = Strings.autoPlayHint
@@ -356,7 +356,7 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
-            
+
             // 提示信息
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -376,7 +376,7 @@ fun CreateMediaAppScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.mediaAppHint.replace("%s", 
+                        text = Strings.mediaAppHint.replace("%s",
                             if (mediaType == AppType.IMAGE) Strings.fullscreenDisplayImage else Strings.fullscreenPlayVideo
                         ),
                         style = MaterialTheme.typography.bodySmall,

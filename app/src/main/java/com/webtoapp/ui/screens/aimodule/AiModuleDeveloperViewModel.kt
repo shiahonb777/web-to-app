@@ -14,6 +14,7 @@ import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.agent.*
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.AiFeature
 import com.webtoapp.data.model.SavedModel
 import kotlinx.coroutines.flow.*
@@ -26,22 +27,22 @@ private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataS
 
 /**
  * AI 模块开发器 ViewModel
- * 
+ *
  * 管理 AI 模块开发界面的状态和业务逻辑
  * 集成 EnhancedAgentEngine 处理流式事件
- * 
+ *
  * Requirements: 2.1, 4.8, 8.6
  */
 class AiModuleDeveloperViewModel(
     private val context: Context
 ) : ViewModel() {
-    
+
     // 依赖
     private val aiConfigManager = AiConfigManager(context)
     private val agentEngine = EnhancedAgentEngine(context)
     private val extensionManager = ExtensionManager.getInstance(context)
     private val gson = Gson()
-    
+
     // DataStore keys for session persistence
     private object SessionKeys {
         val USER_INPUT = stringPreferencesKey("user_input")
@@ -53,19 +54,19 @@ class AiModuleDeveloperViewModel(
         val HAS_INTERRUPTED_SESSION = booleanPreferencesKey("has_interrupted_session")
         val LAST_SESSION_TIMESTAMP = longPreferencesKey("last_session_timestamp")
     }
-    
+
     // UI 状态
     private val _uiState = MutableStateFlow(AiModuleDeveloperUiState())
     val uiState: StateFlow<AiModuleDeveloperUiState> = _uiState.asStateFlow()
-    
+
     // 一次性事件
     private val _events = MutableSharedFlow<AiModuleDeveloperEvent>()
     val events: SharedFlow<AiModuleDeveloperEvent> = _events.asSharedFlow()
-    
+
     // 是否有可恢复的会话
     private val _hasInterruptedSession = MutableStateFlow(false)
     val hasInterruptedSession: StateFlow<Boolean> = _hasInterruptedSession.asStateFlow()
-    
+
     init {
         // 加载可用模型
         loadAvailableModels()
@@ -74,7 +75,7 @@ class AiModuleDeveloperViewModel(
         // 检查是否有中断的会话
         checkForInterruptedSession()
     }
-    
+
     /**
      * 加载支持模块开发的模型列表
      */
@@ -86,7 +87,7 @@ class AiModuleDeveloperViewModel(
                 }
         }
     }
-    
+
     /**
      * 加载默认模型
      */
@@ -100,16 +101,16 @@ class AiModuleDeveloperViewModel(
                 }
         }
     }
-    
+
     // ==================== 用户输入操作 ====================
-    
+
     /**
      * 更新用户输入
      */
     fun updateUserInput(input: String) {
         _uiState.update { it.copy(userInput = input) }
     }
-    
+
     /**
      * 选择模型
      */
@@ -120,57 +121,57 @@ class AiModuleDeveloperViewModel(
             aiConfigManager.setDefaultModel(model.id)
         }
     }
-    
+
     /**
      * 切换模型选择器显示
      */
     fun toggleModelSelector(show: Boolean) {
         _uiState.update { it.copy(showModelSelector = show) }
     }
-    
+
     /**
      * 选择分类
      */
     fun selectCategory(category: ModuleCategory?) {
         _uiState.update { it.copy(selectedCategory = category, showCategorySelector = false) }
     }
-    
+
     /**
      * 切换分类选择器显示
      */
     fun toggleCategorySelector(show: Boolean) {
         _uiState.update { it.copy(showCategorySelector = show) }
     }
-    
+
     /**
      * 切换帮助对话框显示
      */
     fun toggleHelpDialog(show: Boolean) {
         _uiState.update { it.copy(showHelpDialog = show) }
     }
-    
+
     // ==================== 开发操作 ====================
-    
+
     /**
      * 开始开发
      */
     fun startDevelopment() {
         val state = _uiState.value
-        
+
         if (state.userInput.isBlank()) {
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("请输入功能需求"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModulePromptRequired))
             }
             return
         }
-        
+
         // 添加用户消息到对话列表
         val userMessage = ConversationMessage(
             role = MessageRole.USER,
             content = state.userInput
         )
-        
-        _uiState.update { 
+
+        _uiState.update {
             it.copy(
                 messages = it.messages + userMessage,
                 isStreaming = true,
@@ -181,10 +182,10 @@ class AiModuleDeveloperViewModel(
                 shouldAutoScroll = true
             )
         }
-        
+
         // 保存会话状态（用于恢复）
         saveSessionState()
-        
+
         // 开始流式开发
         viewModelScope.launch {
             agentEngine.developWithStream(
@@ -197,10 +198,10 @@ class AiModuleDeveloperViewModel(
         }
     }
 
-    
+
     /**
      * 处理 Agent 流式事件
-     * 
+     *
      * Requirements: 2.1, 4.8
      */
     private suspend fun handleAgentStreamEvent(event: AgentStreamEvent) {
@@ -208,28 +209,28 @@ class AiModuleDeveloperViewModel(
             is AgentStreamEvent.StateChange -> {
                 _uiState.update { it.copy(agentState = event.state) }
             }
-            
+
             is AgentStreamEvent.Thinking -> {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(thinkingContent = event.fullContent)
                 }
                 _events.emit(AiModuleDeveloperEvent.ScrollToBottom)
             }
-            
+
             is AgentStreamEvent.Content -> {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(streamingContent = event.fullContent)
                 }
                 _events.emit(AiModuleDeveloperEvent.ScrollToBottom)
             }
-            
+
             is AgentStreamEvent.ToolStart -> {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(currentToolCalls = it.currentToolCalls + event.toolCall)
                 }
                 _events.emit(AiModuleDeveloperEvent.ScrollToBottom)
             }
-            
+
             is AgentStreamEvent.ToolComplete -> {
                 _uiState.update { state ->
                     val updatedToolCalls = state.currentToolCalls.map { toolCall ->
@@ -242,9 +243,9 @@ class AiModuleDeveloperViewModel(
                     state.copy(currentToolCalls = updatedToolCalls)
                 }
             }
-            
+
             is AgentStreamEvent.ModuleGenerated -> {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         generatedModule = event.module,
                         editedJsCode = event.module.jsCode,
@@ -254,7 +255,7 @@ class AiModuleDeveloperViewModel(
                 }
                 _events.emit(AiModuleDeveloperEvent.ScrollToBottom)
             }
-            
+
             is AgentStreamEvent.Error -> {
                 val errorInfo = ErrorInfo(
                     message = event.message,
@@ -262,7 +263,7 @@ class AiModuleDeveloperViewModel(
                     recoverable = event.recoverable,
                     rawResponse = event.rawResponse
                 )
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         error = errorInfo,
                         isStreaming = false,
@@ -274,7 +275,7 @@ class AiModuleDeveloperViewModel(
                 saveSessionState()
                 _events.emit(AiModuleDeveloperEvent.ShowToast(event.message))
             }
-            
+
             is AgentStreamEvent.Completed -> {
                 // 创建 AI 响应消息
                 val state = _uiState.value
@@ -286,8 +287,8 @@ class AiModuleDeveloperViewModel(
                     generatedModule = event.module,
                     isStreaming = false
                 )
-                
-                _uiState.update { 
+
+                _uiState.update {
                     it.copy(
                         messages = it.messages + assistantMessage,
                         isStreaming = false,
@@ -303,51 +304,51 @@ class AiModuleDeveloperViewModel(
                 }
                 // 保存会话状态（包含生成的模块）
                 saveSessionState()
-                _events.emit(AiModuleDeveloperEvent.ShowToast("✅ 模块生成成功"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.moduleGeneratedSuccess))
             }
         }
     }
-    
+
     // ==================== 代码编辑操作 ====================
-    
+
     /**
      * 更新 JavaScript 代码
      */
     fun updateJsCode(code: String) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 editedJsCode = code,
                 hasEdits = code != it.generatedModule?.jsCode
             )
         }
     }
-    
+
     /**
      * 更新 CSS 代码
      */
     fun updateCssCode(code: String) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 editedCssCode = code,
                 hasEdits = code != it.generatedModule?.cssCode
             )
         }
     }
-    
+
     /**
      * 验证代码
      */
     fun validateCode() {
         val state = _uiState.value
         val jsCode = state.editedJsCode.ifBlank { state.generatedModule?.jsCode ?: "" }
-        
+
         if (jsCode.isBlank()) {
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("没有代码可验证"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.noCodeToVerify))
             }
             return
         }
-        
+
         viewModelScope.launch {
             agentEngine.performSyntaxCheckAndAutoFix(jsCode)
                 .collect { event ->
@@ -355,58 +356,58 @@ class AiModuleDeveloperViewModel(
                 }
         }
     }
-    
+
     /**
      * 复制代码到剪贴板
      */
     fun copyCode(code: String) {
         viewModelScope.launch {
             _events.emit(AiModuleDeveloperEvent.CopyToClipboard(code))
-            _events.emit(AiModuleDeveloperEvent.ShowToast("已复制到剪贴板"))
+            _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.copiedToClipboard))
         }
     }
-    
+
     // ==================== 模块保存操作 ====================
-    
+
     /**
      * 保存模块
-     * 
+     *
      * Requirements: 7.7 - 使用编辑后的代码
      */
     fun saveModule(onSuccess: (ExtensionModule) -> Unit) {
         val state = _uiState.value
         val module = state.generatedModule ?: return
-        
+
         // 获取用于保存的代码（优先使用编辑后的代码）
         val (jsCode, cssCode) = state.getCodeForSave()
-        
+
         // 创建最终模块
         val finalModule = module.copy(
             jsCode = jsCode,
             cssCode = cssCode
         ).toExtensionModule()
-        
+
         viewModelScope.launch {
             extensionManager.addModule(finalModule)
                 .onSuccess { savedModule ->
-                    _events.emit(AiModuleDeveloperEvent.ShowToast("✅ 模块已保存"))
+                    _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.moduleSavedSuccess))
                     _events.emit(AiModuleDeveloperEvent.ModuleCreated(savedModule.id))
                     onSuccess(savedModule)
                 }
                 .onFailure { e ->
-                    _events.emit(AiModuleDeveloperEvent.ShowToast("保存失败: ${e.message}"))
+                    _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.saveFailedWithReason.format(e.message ?: "")))
                 }
         }
     }
-    
+
     // ==================== 重置操作 ====================
-    
+
     /**
      * 重置状态
      */
     fun resetState() {
         agentEngine.reset()
-        _uiState.update { 
+        _uiState.update {
             AiModuleDeveloperUiState(
                 selectedModel = it.selectedModel,
                 availableModels = it.availableModels
@@ -417,16 +418,16 @@ class AiModuleDeveloperViewModel(
             clearSessionState()
         }
     }
-    
+
     /**
      * 重试开发
-     * 
+     *
      * Requirements: 8.4, 8.5 - 保留用户输入并重试
      */
     fun retry() {
         val state = _uiState.value
         // 保留用户输入，清除错误状态
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 error = null,
                 agentState = AgentState.IDLE,
@@ -438,17 +439,17 @@ class AiModuleDeveloperViewModel(
             startDevelopment()
         }
     }
-    
+
     /**
      * 使用不同模型重试
-     * 
+     *
      * Requirements: 8.4 - 提供换模型重试选项
      */
     fun retryWithDifferentModel() {
         val state = _uiState.value
         val currentModel = state.selectedModel
         val availableModels = state.availableModels
-        
+
         // 找到下一个可用模型
         val currentIndex = availableModels.indexOfFirst { it.id == currentModel?.id }
         val nextModel = if (currentIndex >= 0 && availableModels.size > 1) {
@@ -456,10 +457,10 @@ class AiModuleDeveloperViewModel(
         } else {
             availableModels.firstOrNull { it.id != currentModel?.id }
         }
-        
+
         if (nextModel != null) {
             // 切换模型并重试
-            _uiState.update { 
+            _uiState.update {
                 it.copy(
                     selectedModel = nextModel,
                     error = null,
@@ -467,29 +468,29 @@ class AiModuleDeveloperViewModel(
                     isStreaming = false
                 )
             }
-            
+
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("已切换到 ${nextModel.alias ?: nextModel.model.name}"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.switchedToModel.format(nextModel.alias ?: nextModel.model.name)))
             }
-            
+
             // 如果有用户输入，重新开始开发
             if (state.userInput.isNotBlank()) {
                 startDevelopment()
             }
         } else {
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("没有其他可用模型"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.noOtherModels))
             }
         }
     }
-    
+
     /**
      * 清除错误状态
-     * 
+     *
      * Requirements: 8.5 - 保留用户输入
      */
     fun dismissError() {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 error = null,
                 agentState = AgentState.IDLE
@@ -497,42 +498,42 @@ class AiModuleDeveloperViewModel(
             )
         }
     }
-    
+
     /**
      * 恢复用户输入
      * 用于从最后一条用户消息恢复输入
-     * 
+     *
      * Requirements: 8.5
      */
     fun restoreLastUserInput() {
         val lastUserMessage = _uiState.value.messages
             .lastOrNull { it.role == MessageRole.USER }
-        
+
         if (lastUserMessage != null) {
-            _uiState.update { 
+            _uiState.update {
                 it.copy(userInput = lastUserMessage.content)
             }
         }
     }
-    
+
     // ==================== 滚动控制 ====================
-    
+
     /**
      * 设置自动滚动
      */
     fun setAutoScroll(enabled: Boolean) {
         _uiState.update { it.copy(shouldAutoScroll = enabled) }
     }
-    
+
     /**
      * 清除错误状态
-     * 
+     *
      * Requirements: 8.4 - 允许用户关闭错误提示
      */
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
-    
+
     /**
      * 导航到 AI 设置
      */
@@ -541,12 +542,12 @@ class AiModuleDeveloperViewModel(
             _events.emit(AiModuleDeveloperEvent.NavigateToAiSettings)
         }
     }
-    
+
     // ==================== 会话持久化和恢复 ====================
-    
+
     /**
      * 检查是否有中断的会话
-     * 
+     *
      * Requirements: 8.6
      */
     private fun checkForInterruptedSession() {
@@ -554,25 +555,25 @@ class AiModuleDeveloperViewModel(
             context.sessionDataStore.data.first().let { prefs ->
                 val hasSession = prefs[SessionKeys.HAS_INTERRUPTED_SESSION] ?: false
                 val lastTimestamp = prefs[SessionKeys.LAST_SESSION_TIMESTAMP] ?: 0L
-                
+
                 // 只恢复24小时内的会话
                 val isRecent = System.currentTimeMillis() - lastTimestamp < 24 * 60 * 60 * 1000
-                
+
                 _hasInterruptedSession.value = hasSession && isRecent
             }
         }
     }
-    
+
     /**
      * 保存当前会话状态
      * 在开发过程中定期调用，以便在中断时恢复
-     * 
+     *
      * Requirements: 8.6
      */
     private fun saveSessionState() {
         viewModelScope.launch {
             val state = _uiState.value
-            
+
             context.sessionDataStore.edit { prefs ->
                 prefs[SessionKeys.USER_INPUT] = state.userInput
                 prefs[SessionKeys.SELECTED_CATEGORY] = state.selectedCategory?.name ?: ""
@@ -585,10 +586,10 @@ class AiModuleDeveloperViewModel(
             }
         }
     }
-    
+
     /**
      * 恢复中断的会话
-     * 
+     *
      * Requirements: 8.6
      */
     fun resumeInterruptedSession() {
@@ -601,7 +602,7 @@ class AiModuleDeveloperViewModel(
                     val moduleJson = prefs[SessionKeys.GENERATED_MODULE] ?: ""
                     val editedJsCode = prefs[SessionKeys.EDITED_JS_CODE] ?: ""
                     val editedCssCode = prefs[SessionKeys.EDITED_CSS_CODE] ?: ""
-                    
+
                     // 解析消息列表
                     val messagesType = object : TypeToken<List<ConversationMessage>>() {}.type
                     val messages: List<ConversationMessage> = try {
@@ -609,7 +610,7 @@ class AiModuleDeveloperViewModel(
                     } catch (e: Exception) {
                         emptyList()
                     }
-                    
+
                     // 解析生成的模块
                     val generatedModule: GeneratedModuleData? = if (moduleJson.isNotBlank()) {
                         try {
@@ -618,7 +619,7 @@ class AiModuleDeveloperViewModel(
                             null
                         }
                     } else null
-                    
+
                     // 解析分类
                     val category = if (categoryName.isNotBlank()) {
                         try {
@@ -627,9 +628,9 @@ class AiModuleDeveloperViewModel(
                             null
                         }
                     } else null
-                    
+
                     // 恢复状态
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
                             userInput = userInput,
                             selectedCategory = category,
@@ -641,31 +642,31 @@ class AiModuleDeveloperViewModel(
                             agentState = AgentState.IDLE
                         )
                     }
-                    
+
                     // 清除中断标记
                     _hasInterruptedSession.value = false
-                    
-                    _events.emit(AiModuleDeveloperEvent.ShowToast("已恢复上次会话"))
+
+                    _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.sessionRestored))
                 }
             } catch (e: Exception) {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("恢复会话失败: ${e.message}"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.restoreSessionFailed.format(e.message ?: "")))
             }
         }
     }
-    
+
     /**
      * 放弃中断的会话
-     * 
+     *
      * Requirements: 8.6
      */
     fun discardInterruptedSession() {
         viewModelScope.launch {
             clearSessionState()
             _hasInterruptedSession.value = false
-            _events.emit(AiModuleDeveloperEvent.ShowToast("已放弃上次会话"))
+            _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.sessionAbandoned))
         }
     }
-    
+
     /**
      * 清除保存的会话状态
      */
@@ -681,7 +682,7 @@ class AiModuleDeveloperViewModel(
             prefs[SessionKeys.LAST_SESSION_TIMESTAMP] = 0L
         }
     }
-    
+
     /**
      * ViewModel 工厂
      */

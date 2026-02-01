@@ -1,5 +1,8 @@
 package com.webtoapp.core.ai.htmlcoding
 
+import com.webtoapp.core.i18n.AppLanguage
+import com.webtoapp.core.i18n.Strings
+
 /**
  * HTML编程AI - 教程内容
  * 帮助用户更好地使用AI生成HTML
@@ -29,7 +32,7 @@ object HtmlCodingTutorial {
     /**
      * 所有教程章节
      */
-    val chapters = listOf(
+    private val chaptersZh = listOf(
         // ===== 第一章：基础概念 =====
         TutorialChapter(
             id = "basics",
@@ -144,12 +147,12 @@ SVG（Scalable Vector Graphics）是一种矢量图形格式，可以无限缩�
 
 <!-- SVG可以用CSS样式化 -->
 <style>
-    .icon { 
-        color: #3B82F6; 
+    .icon {
+        color: #3B82F6;
         transition: transform 0.2s;
     }
-    .icon:hover { 
-        transform: scale(1.1); 
+    .icon:hover {
+        transform: scale(1.1);
     }
 </style>
                     """.trimIndent(),
@@ -306,7 +309,7 @@ AI对人类文化有广泛的理解，你只需要说出一个它知道的名字
 /* 新拟物化效果 */
 .neumorphic {
     background: #e0e5ec;
-    box-shadow: 
+    box-shadow:
         8px 8px 16px #b8bcc2,
         -8px -8px 16px #ffffff;
     border-radius: 12px;
@@ -725,6 +728,709 @@ AI对人类文化有广泛的理解，你只需要说出一个它知道的名字
         )
     )
 
+    private val chaptersEn = listOf(
+        // ===== Chapter 1: Basics =====
+        TutorialChapter(
+            id = "basics",
+            title = "Basics",
+            icon = "School",
+            sections = listOf(
+                TutorialSection(
+                    title = "What is HTML?",
+                    content = """
+HTML (HyperText Markup Language) is the standard markup language for building web pages. It uses tags to define structure and content.
+
+**Core elements:**
+- **Tags**: e.g. `<div>`, `<p>`, `<h1>` to define elements
+- **Attributes**: e.g. `class`, `id`, `style` to configure elements
+- **Nesting**: elements can contain other elements, forming a tree structure
+
+**Modern HTML5 features:**
+- Semantic tags: `<header>`, `<nav>`, `<main>`, `<footer>`
+- Media support: `<video>`, `<audio>`
+- Enhanced forms: date pickers, color pickers, etc.
+                    """.trimIndent(),
+                    codeExample = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Page</title>
+</head>
+<body>
+    <header>Header</header>
+    <main>Main Content</main>
+    <footer>Footer</footer>
+</body>
+</html>
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Tell the AI to use semantic tags for cleaner structure",
+                        "HTML5 doesn't require closing some tags like <br> and <img>"
+                    )
+                ),
+                TutorialSection(
+                    title = "What is CSS?",
+                    content = """
+CSS (Cascading Style Sheets) controls the visual presentation of a web page, including layout, color, typography, and animation.
+
+**Core concepts:**
+- **Selectors**: target elements to style
+- **Properties**: e.g. `color`, `margin`, `display`
+- **Box model**: content → padding → border → margin
+
+**Modern CSS features:**
+- **Flexbox**: powerful 1D layout
+- **Grid**: 2D grid layout
+- **CSS variables**: `--primary-color: #3B82F6;`
+- **Animations**: `transition`, `animation`, `@keyframes`
+                    """.trimIndent(),
+                    codeExample = """
+/* CSS variables */
+:root {
+    --primary: #3B82F6;
+    --radius: 8px;
+}
+
+/* Flexbox centering */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Card style */
+.card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Ask the AI to use CSS variables for easy theming",
+                        "Prefer Flexbox and Grid; avoid float-based layouts"
+                    )
+                ),
+                TutorialSection(
+                    title = "What is SVG?",
+                    content = """
+SVG (Scalable Vector Graphics) is a vector graphic format that scales infinitely without losing quality.
+
+**Why SVG:**
+- **Infinite scaling**: no blurring when enlarged
+- **Small files**: smaller than bitmaps for simple graphics
+- **Programmable**: controllable with CSS and JavaScript
+- **Inline-friendly**: can be embedded directly in HTML
+
+**Common uses:**
+- Icons
+- Logos
+- Illustrations
+- Data visualization charts
+- Animations
+
+**Tips for AI-generated SVG:**
+Tell the AI "Use inline SVG icons" or "Draw an SVG of..."
+                    """.trimIndent(),
+                    codeExample = """
+<!-- Simple SVG icon -->
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 6v6l4 2"/>
+</svg>
+
+<!-- SVG can be styled with CSS -->
+<style>
+    .icon {
+        color: #3B82F6;
+        transition: transform 0.2s;
+    }
+    .icon:hover {
+        transform: scale(1.1);
+    }
+</style>
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Tell the AI: 'Use inline SVG icons, no images'",
+                        "SVG icons can inherit the parent element's color",
+                        "AI can generate complex SVG illustrations and animations"
+                    )
+                ),
+                TutorialSection(
+                    title = "What is TailwindCSS?",
+                    content = """
+TailwindCSS is a utility-first CSS framework that builds UI by composing small utility classes.
+
+**Why Tailwind:**
+- **Fast development**: no separate CSS file needed
+- **Consistency**: built-in design system
+- **Responsive**: simple breakpoint prefixes `md:`, `lg:`
+- **State variants**: `hover:`, `focus:`, `dark:`
+
+**Common classes:**
+- Spacing: `p-4` (padding), `m-2` (margin), `gap-4`
+- Color: `bg-blue-500`, `text-white`, `border-gray-200`
+- Layout: `flex`, `grid`, `items-center`, `justify-between`
+- Size: `w-full`, `h-screen`, `max-w-md`
+- Radius: `rounded`, `rounded-lg`, `rounded-full`
+
+**Usage:**
+Quickly include via CDN:
+                    """.trimIndent(),
+                    codeExample = """
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">
+            Welcome
+        </h1>
+        <p class="text-gray-600 mb-6">
+            This is a TailwindCSS example.
+        </p>
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition">
+            Get Started
+        </button>
+    </div>
+</body>
+</html>
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Tell the AI: 'Use TailwindCSS CDN'",
+                        "Tailwind code is easier to understand and tweak",
+                        "Combine utilities like 'hover:bg-blue-600 transition'"
+                    )
+                )
+            )
+        ),
+
+        // ===== Chapter 2: Design Styles =====
+        TutorialChapter(
+            id = "design-styles",
+            title = "Design Styles",
+            icon = "Palette",
+            sections = listOf(
+                TutorialSection(
+                    title = "What is a design style?",
+                    content = """
+Design style is the overall combination of visual elements: colors, typography, shapes, materials, and motion. A consistent style makes interfaces feel professional and recognizable.
+
+**Core elements of style:**
+- **Color palette**: primary, secondary, background, accent
+- **Typography**: font choices, hierarchy, line height, spacing
+- **Shape language**: rounded vs. sharp, geometric vs. organic
+- **Material feel**: flat, skeuomorphic, glass, gradient
+- **Motion**: transitions and easing curves
+
+**How to define a style:**
+Describe it with a single word or reference, and the AI will mimic it. For example:
+- A film: Avatar style
+- A book: Harry Potter style
+- A brand: Apple style
+- A genre: cyberpunk
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Say: 'Make it feel like *Your Name*'",
+                        "AI is great at mimicking known visual styles",
+                        "Mix styles: 'cyberpunk with softer colors'"
+                    )
+                ),
+                TutorialSection(
+                    title = "The power of style references",
+                    content = """
+AI has broad cultural knowledge. If you mention a known reference, it can generate a matching style.
+
+**Film style examples:**
+- **Blade Runner**: neon, rainy nights, cyberpunk
+- **Avatar**: bioluminescence, alien flora, sci‑fi
+- **Harry Potter**: magic, classic, mysterious academy
+- **Star Wars**: space opera, holograms
+
+**Animation style examples:**
+- **Studio Ghibli**: warm, natural, hand‑drawn
+- **Makoto Shinkai**: dramatic lighting, dreamy youth
+- **Cyberpunk: Edgerunners**: neon, high‑contrast
+
+**Brand style examples:**
+- **Apple**: minimal, refined, lots of white space
+- **Spotify**: energetic gradients, music vibe
+- **Cyberpunk 2077**: yellow warning colors, glitch art
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Try: 'Create a mysterious puzzle page in a Sherlock Holmes style'",
+                        "Be specific: 'Spider‑Man red/blue palette'",
+                        "Combine with a scene: 'Hogwarts library vibe'"
+                    )
+                ),
+                TutorialSection(
+                    title = "Popular design trends",
+                    content = """
+Knowing current trends helps your designs feel modern.
+
+**Glassmorphism**
+Frosted glass effects that add depth.
+Keywords: `backdrop-filter: blur()`, translucent backgrounds
+
+**Neumorphism**
+Soft shadows that create raised/pressed surfaces.
+Keywords: dual shadows (light/dark), soft backgrounds
+
+**Gradients are back**
+Colorful gradients are popular again.
+Keywords: `linear-gradient`, gradient borders
+
+**Dark mode**
+Eye‑friendly and modern dark UIs.
+Keywords: dark backgrounds, bright text, glow
+
+**Micro‑interactions**
+Subtle animations improve UX.
+Keywords: hover states, button feedback, loading animations
+                    """.trimIndent(),
+                    codeExample = """
+/* Glassmorphism */
+.glass {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+}
+
+/* Neumorphism */
+.neumorphic {
+    background: #e0e5ec;
+    box-shadow:
+        8px 8px 16px #b8bcc2,
+        -8px -8px 16px #ffffff;
+    border-radius: 12px;
+}
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Say 'use glassmorphism' and AI will apply it",
+                        "Combine trends: 'dark theme + glassmorphism'"
+                    )
+                )
+            )
+        ),
+
+        // ===== Chapter 3: Interaction Design =====
+        TutorialChapter(
+            id = "interaction",
+            title = "Interaction Design",
+            icon = "TouchApp",
+            sections = listOf(
+                TutorialSection(
+                    title = "What is interaction?",
+                    content = """
+Interaction is the dialogue between the user and the interface. Good interaction design feels natural and provides clear feedback.
+
+**Core principles:**
+
+**1. Visibility**
+Users should see what they can do.
+- Buttons look clickable
+- Inputs have clear boundaries
+- Draggable elements have handles
+
+**2. Feedback**
+Every action gets a response.
+- Buttons have press states
+- Loading shows progress
+- Success/failure is communicated
+
+**3. Consistency**
+Same actions behave the same.
+- All buttons act consistently
+- Similar elements share styles
+
+**4. Error tolerance**
+Allow mistakes and undo.
+- Confirm destructive actions
+- Provide undo options
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Tell the AI: 'Add hover and active states to all buttons'",
+                        "Ask for loading states and success feedback"
+                    )
+                ),
+                TutorialSection(
+                    title = "CSS animations and transitions",
+                    content = """
+Animations enhance UX, but should be used with restraint.
+
+**Transitions**
+Simple state changes.
+- Use for: hover effects, expand/collapse
+- Example: `transition: all 0.3s ease`
+
+**Animations**
+Complex or looping sequences.
+- Use for: loaders, onboarding
+- Keywords: `animation`, `@keyframes`
+
+**Performance tips**
+Animate GPU‑friendly properties:
+- `transform` (move, scale, rotate)
+- `opacity`
+- Avoid animating `width`, `height`, `margin`
+                    """.trimIndent(),
+                    codeExample = """
+/* Button interaction */
+.button {
+    background: #3B82F6;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    transform: translateY(0);
+}
+
+.button:hover {
+    background: #2563EB;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+/* Loading spinner */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3B82F6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Say 'add smooth animations'",
+                        "Specify 'use transform animations for performance'",
+                        "Ask for skeleton loaders"
+                    )
+                ),
+                TutorialSection(
+                    title = "Responsive design",
+                    content = """
+Responsive design ensures a good experience on all devices.
+
+**Core techniques:**
+
+**1. Media queries**
+```css
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+}
+```
+
+**2. Relative units**
+- `%` relative to parent
+- `vw/vh` relative to viewport
+- `rem` relative to root font size
+- `em` relative to current font size
+
+**3. Flexible layout**
+- Flexbox: `flex-wrap: wrap`
+- Grid: `grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))`
+
+**Breakpoint references:**
+- Phone: < 640px
+- Tablet: 640px – 1024px
+- Desktop: > 1024px
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Tell the AI: 'Must be mobile friendly'",
+                        "Use mobile‑first responsive design",
+                        "On phones hide the sidebar and show a hamburger menu"
+                    )
+                )
+            )
+        ),
+
+        // ===== Chapter 4: Prompting =====
+        TutorialChapter(
+            id = "prompting",
+            title = "Prompting Tips",
+            icon = "AutoAwesome",
+            sections = listOf(
+                TutorialSection(
+                    title = "How to write good prompts?",
+                    content = """
+Good prompts help the AI understand your intent and generate better code.
+
+**Prompt structure:**
+
+**1. State the goal**
+"Make a login page."
+
+**2. Describe the visual style**
+"Use glassmorphism with a dark gradient background."
+
+**3. Specify the tech**
+"Use TailwindCSS, single‑file output."
+
+**4. List required features**
+"Include email/password fields, remember‑me, login button."
+
+**5. Add details**
+"Buttons should animate on hover; inputs should highlight on focus."
+
+**Full example:**
+"Create a login page with a glassmorphism style on a deep purple gradient background. Use TailwindCSS CDN. Include email and password inputs, a remember‑me checkbox, a login button, and 'Forgot password'/'Sign up' links. Add smooth animations to all interactions."
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Be specific, but not overly verbose",
+                        "Ask in steps: start with structure, then refine details",
+                        "If the result isn't right, add constraints or rephrase"
+                    )
+                ),
+                TutorialSection(
+                    title = "Common prompt templates",
+                    content = """
+Here are proven prompt templates:
+
+**Full page template:**
+"Create a [page type] in a [style]. Use [tech stack]. Include: [features]. Requirements: [extra requirements]."
+
+**Component template:**
+"Build a [component] with [visual description]. Features: [feature list]. Interactions: [interaction requirements]."
+
+**Refinement template:**
+"On top of the current version, [changes]. Keep [what to preserve]."
+
+**Style transfer template:**
+"Convert the current page to [target style], keep the functionality, adjust [items to change]."
+                    """.trimIndent(),
+                    codeExample = """
+// Example prompts
+
+// 1. Full page
+"Create a personal portfolio landing page in a cyberpunk style using TailwindCSS.
+Include: navbar, hero (headline + subheadline + CTA),
+portfolio grid, skill tags, contact form. Responsive with flashy animations."
+
+// 2. Component
+"Design a pricing card component with three columns and a highlighted middle plan.
+Each card: title, price, feature list, button.
+The featured card should have a glowing border."
+
+// 3. Refinement
+"Make the button a pill shape with a larger radius, and change the color to a gradient.
+Add a click scale animation."
+
+// 4. Style transfer
+"Convert this page to a Studio Ghibli style, keep the layout unchanged.
+Replace the background with sky and clouds, and use warm natural colors."
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Save templates you use often",
+                        "Use different templates for different page types",
+                        "Good prompts are reusable and easy to tweak"
+                    )
+                ),
+                TutorialSection(
+                    title = "Avoid common mistakes",
+                    content = """
+Common prompt mistakes to avoid:
+
+**❌ Too vague**
+"Make a nice web page"
+→ The AI doesn't know what \"nice\" means.
+
+**✅ Better**
+"Make a modern minimalist page with a blue/white/gray palette and lots of whitespace."
+
+---
+
+**❌ Too broad**
+"Build an e‑commerce site"
+→ Too complex to build in one go.
+
+**✅ Better**
+"Create a product detail page with image carousel, product info, options, and an add‑to‑cart button."
+
+---
+
+**❌ Contradictory**
+"Make a minimal page with lots of decorations and animations"
+→ Minimal and \"lots\" conflict.
+
+**✅ Better**
+"Make a clean page with a few refined micro‑interactions."
+
+---
+
+**❌ Assumes context**
+"Change that button"
+→ The AI doesn't know which button.
+
+**✅ Better**
+"Change the submit button at the bottom of the page to green."
+                    """.trimIndent(),
+                    tips = listOf(
+                        "If the AI misunderstands, restate your intent",
+                        "Split complex requirements into steps",
+                        "Check for self‑contradictory requirements"
+                    )
+                )
+            )
+        ),
+
+        // ===== Chapter 5: Examples =====
+        TutorialChapter(
+            id = "examples",
+            title = "Examples",
+            icon = "Code",
+            sections = listOf(
+                TutorialSection(
+                    title = "Example 1: Landing page",
+                    content = """
+**Scenario**: Create a marketing landing page for a product
+
+**Prompt example:**
+"Create a SaaS landing page with a modern gradient style.
+
+Structure:
+1. Navbar - logo, nav links, CTA button
+2. Hero - headline, subheadline, two buttons (primary + secondary), product screenshot
+3. Features - three columns with icon + title + description
+4. Pricing - three cards with the middle highlighted
+5. FAQ - accordion Q&A
+6. Footer - link groups, social icons, copyright
+
+Requirements:
+- Use TailwindCSS
+- Responsive design
+- Smooth scrolling
+- Use SVG for all icons"
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Landing pages work best with clear sections",
+                        "Specify the elements in each section",
+                        "CTA buttons should stand out"
+                    )
+                ),
+                TutorialSection(
+                    title = "Example 2: Dashboard",
+                    content = """
+**Scenario**: Build a data analytics dashboard
+
+**Prompt example:**
+"Create a data analytics dashboard in a dark theme.
+
+Layout:
+- Left: collapsed sidebar (icons + hover labels)
+- Top: search box, notification icon, user avatar
+- Main: card grid layout
+
+Cards (use CSS mock data, no real data):
+1. Stats cards x4 - icon, number, label, trend arrow
+2. Line chart area - draw a simple line chart using SVG
+3. Recent activity list - 5 items
+4. Circular progress chart - draw with SVG
+
+Requirements:
+- Dark gray palette with neon blue/green/purple accents
+- Subtle glow on cards
+- Use a monospace font for numbers"
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Dashboards are all about layout structure",
+                        "Use SVG shapes instead of real charts",
+                        "Dark themes + glow look great for dashboards"
+                    )
+                ),
+                TutorialSection(
+                    title = "Example 3: Interactive game",
+                    content = """
+**Scenario**: Create a simple HTML5 mini game
+
+**Prompt example:**
+"Create a retro pixel Snake game.
+
+Features:
+- Draw the game on a Canvas
+- Arrow keys or WASD controls
+- Eat food to grow and score
+- Game over on wall or self collision
+- Show current score and high score
+- Start/restart button
+- Mobile support with touch directional buttons
+
+Visuals:
+- Pixel snake and food
+- Green snake, red food
+- Retro grid background
+- Pixel font for score
+- Flashing effect on game over
+
+Sound (optional):
+- Eat sound
+- Game over sound"
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Specify control methods clearly",
+                        "Canvas games need a game loop",
+                        "Mobile controls are important"
+                    )
+                ),
+                TutorialSection(
+                    title = "Example 4: Interactive form",
+                    content = """
+**Scenario**: Build a multi‑step form
+
+**Prompt example:**
+"Create a multi‑step registration form with glassmorphism and a gradient background.
+
+Steps:
+1. Account - email, password, confirm password
+2. Profile - name, avatar upload area, birthday picker
+3. Preferences - multi‑select tags, notification toggles
+4. Done - success animation and summary
+
+Features:
+- Top step indicator (shows current step)
+- Back/next buttons
+- Validation (email format, password strength, required fields)
+- Errors shown under inputs
+- Password strength meter
+- Checkmark animation on completion
+
+Interactions:
+- Slide transition between steps
+- Focus highlight on inputs
+- Shake on errors
+- Loading state on buttons"
+                    """.trimIndent(),
+                    tips = listOf(
+                        "Multi‑step forms need clear progress",
+                        "Validation improves UX",
+                        "Completion animations feel rewarding"
+                    )
+                )
+            )
+        )
+    )
+
+    val chapters: List<TutorialChapter>
+        get() = when (Strings.currentLanguage.value) {
+            AppLanguage.CHINESE -> chaptersZh
+            AppLanguage.ENGLISH -> chaptersEn
+            AppLanguage.ARABIC -> chaptersZh
+        }
+
     /**
      * 获取章节通过ID
      */
@@ -733,14 +1439,51 @@ AI对人类文化有广泛的理解，你只需要说出一个它知道的名字
     /**
      * 快速提示词示例（用于快速复制）
      */
-    val quickPrompts = listOf(
-        "创建一个现代简约的个人主页，使用TailwindCSS，包含导航、英雄区、作品展示、联系方式。",
-        "做一个玻璃拟态风格的登录页面，深色渐变背景，有邮箱密码输入和社交登录按钮。",
-        "创建一个赛博朋克风格的404错误页面，有霓虹效果和故障艺术动画。",
-        "做一个音乐播放器界面，暗黑主题，有唱片旋转动画、进度条、播放控制按钮。",
-        "创建一个天气卡片组件，根据天气类型显示不同的图标和背景渐变。",
-        "做一个响应式的图片画廊，瀑布流布局，点击图片有灯箱效果。",
-        "创建一个待办事项应用，有添加、完成、删除功能，数据存储在localStorage。",
-        "做一个倒计时页面，显示距离某个日期的天时分秒，有翻牌动画效果。"
+    private data class LocalizedContent(val zh: String, val en: String, val ar: String? = null)
+
+    private val _quickPrompts = listOf(
+        LocalizedContent(
+            zh = "创建一个现代简约的个人主页，使用TailwindCSS，包含导航、英雄区、作品展示、联系方式。",
+            en = "Create a modern minimalist personal homepage with TailwindCSS, including a navigation bar, hero section, portfolio showcase, and contact area."
+        ),
+        LocalizedContent(
+            zh = "做一个玻璃拟态风格的登录页面，深色渐变背景，有邮箱密码输入和社交登录按钮。",
+            en = "Build a glassmorphism-style login screen with dark gradient background, email/password fields, and social login buttons."
+        ),
+        LocalizedContent(
+            zh = "创建一个赛博朋克风格的404错误页面，有霓虹效果和故障艺术动画。",
+            en = "Design a cyberpunk 404 error page with neon lighting and glitch art animations."
+        ),
+        LocalizedContent(
+            zh = "做一个音乐播放器界面，暗黑主题，有唱片旋转动画、进度条、播放控制按钮。",
+            en = "Make a music player interface in dark mode featuring a rotating record animation, progress bar, and playback controls."
+        ),
+        LocalizedContent(
+            zh = "创建一个天气卡片组件，根据天气类型显示不同的图标和背景渐变。",
+            en = "Create a weather card component that shows different icons and gradient backgrounds depending on the weather."
+        ),
+        LocalizedContent(
+            zh = "做一个响应式的图片画廊，瀑布流布局，点击图片有灯箱效果。",
+            en = "Build a responsive image gallery with a waterfall layout and a lightbox when images are clicked."
+        ),
+        LocalizedContent(
+            zh = "创建一个待办事项应用，有添加、完成、删除功能，数据存储在localStorage。",
+            en = "Create a todo app with add, complete, and delete actions, storing its data in localStorage."
+        ),
+        LocalizedContent(
+            zh = "做一个倒计时页面，显示距离某个日期的天时分秒，有翻牌动画效果。",
+            en = "Make a countdown page showing days/hours/minutes/seconds to a target date with a flip-card animation."
+        )
     )
+
+    val quickPrompts: List<String>
+        get() = _quickPrompts.map { localize(it) }
+
+    private fun localize(content: LocalizedContent): String {
+        return when (Strings.currentLanguage.value) {
+            AppLanguage.CHINESE -> content.zh
+            AppLanguage.ENGLISH -> content.en
+            AppLanguage.ARABIC -> content.ar ?: content.zh
+        }
+    }
 }

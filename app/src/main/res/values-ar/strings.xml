@@ -248,6 +248,8 @@
     <string name="new_update">تحديث جديد متاح</string>
     <string name="update_now">تحديث الآن</string>
     <string name="latest_version">أحدث إصدار بالفعل</string>
+    <string name="update_download_title">جاري تنزيل التحديث</string>
+    <string name="update_download_description">جارٍ تنزيل الإصدار %s...</string>
     <string name="network_error">خطأ في الشبكة</string>
     <string name="retry">إعادة المحاولة</string>
     <string name="loading">جاري التحميل...</string>
@@ -523,7 +525,7 @@
     <string name="ip_spoofing">تزييف IP</string>
     <string name="storage_isolation">عزل التخزين</string>
     <string name="regenerate_on_launch">إعادة التوليد عند التشغيل</string>
-    
+
     <!-- المساعدة -->
     <string name="help">مساعدة</string>
     <string name="usage_help">مساعدة الاستخدام</string>
@@ -531,7 +533,7 @@
     <string name="select_module_category">اختر فئة الوحدة</string>
     <string name="auto_detect">الكشف التلقائي</string>
     <string name="auto_detect_category_hint">دع الذكاء الاصطناعي يختار الفئة تلقائيًا بناءً على المتطلبات</string>
-    
+
     <!-- مساعدة تطوير وحدات AI -->
     <string name="help_how_to_use">كيفية الاستخدام</string>
     <string name="help_how_to_use_content">صف الوظيفة التي تريدها بلغة طبيعية في مربع الإدخال، وسيقوم الذكاء الاصطناعي بتحليل المتطلبات تلقائيًا وإنشاء كود وحدة الإضافة المقابل.</string>
@@ -547,7 +549,7 @@
     <string name="help_code_edit_content">يمكن تحرير وتعديل الكود المُنشأ مباشرة. سيتم استخدام النسخة المعدلة عند الحفظ.</string>
     <string name="help_save_module">حفظ الوحدة</string>
     <string name="help_save_module_content">بعد اكتمال الإنشاء، انقر على \'حفظ\' لإضافته إلى مكتبة الوحدات الخاصة بك لاستخدامه عند إنشاء التطبيقات.</string>
-    
+
     <!-- سلاسل واجهة المستخدم الإضافية -->
     <string name="project_template_export">تصدير قالب المشروع</string>
     <string name="encoding_and_size">الترميز: %1$s | الحجم: %2$s</string>

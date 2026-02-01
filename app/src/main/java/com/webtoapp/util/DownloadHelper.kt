@@ -20,42 +20,42 @@ import java.util.regex.Pattern
  * 下载处理工具类
  */
 object DownloadHelper {
-    
+
     // 下载重试配置
     private const val MAX_RETRY_COUNT = 3
     private const val RETRY_DELAY_MS = 1000L
-    
+
     // 记录下载重试次数
     private val retryCountMap = mutableMapOf<String, Int>()
-    
+
     /**
      * 从 Content-Disposition 和 URL 中智能解析文件名
      * 优先级：Content-Disposition > URL路径 > 系统猜测
      */
     fun parseFileName(url: String, contentDisposition: String?, mimeType: String?): String {
         var fileName: String? = null
-        
+
         // 1. 优先从 Content-Disposition 解析
         if (!contentDisposition.isNullOrBlank()) {
             fileName = parseContentDisposition(contentDisposition)
         }
-        
+
         // 2. 从 URL 路径解析
         if (fileName.isNullOrBlank()) {
             fileName = parseFileNameFromUrl(url)
         }
-        
+
         // 3. 降级到系统方法
         if (fileName.isNullOrBlank()) {
             fileName = URLUtil.guessFileName(url, contentDisposition, mimeType) ?: "download"
         }
-        
+
         // 4. 确保有正确的扩展名
         fileName = ensureExtension(fileName, mimeType)
-        
+
         return fileName
     }
-    
+
     /**
      * 解析 Content-Disposition 头获取文件名
      * 支持多种格式：
@@ -82,7 +82,7 @@ object DownloadHelper {
                 }
             }
         }
-        
+
         // 尝试带引号的 filename="xxx"
         val quotedPattern = Pattern.compile(
             "filename\\s*=\\s*\"([^\"]+)\"",
@@ -95,7 +95,7 @@ object DownloadHelper {
                 return decodeFileName(name)
             }
         }
-        
+
         // 尝试不带引号的 filename=xxx
         val unquotedPattern = Pattern.compile(
             "filename\\s*=\\s*([^;\\s]+)",
@@ -108,10 +108,10 @@ object DownloadHelper {
                 return decodeFileName(name)
             }
         }
-        
+
         return null
     }
-    
+
     /**
      * 解码文件名（处理 URL 编码和特殊字符）
      */
@@ -128,7 +128,7 @@ object DownloadHelper {
         // 移除可能的引号
         return decoded.trim().removeSurrounding("\"").removeSurrounding("'")
     }
-    
+
     /**
      * 从 URL 路径中解析文件名
      */
@@ -136,11 +136,11 @@ object DownloadHelper {
         try {
             val uri = Uri.parse(url)
             val path = uri.path ?: return null
-            
+
             // 获取路径最后一段
             val lastSegment = path.substringAfterLast('/')
             if (lastSegment.isBlank()) return null
-            
+
             // 检查是否像一个有效的文件名（包含扩展名）
             if (lastSegment.contains('.') && !lastSegment.startsWith('.')) {
                 val decoded = try {
@@ -158,7 +158,7 @@ object DownloadHelper {
         }
         return null
     }
-    
+
     /**
      * 确保文件名有正确的扩展名
      */
@@ -172,7 +172,7 @@ object DownloadHelper {
                 return fileName
             }
         }
-        
+
         // 尝试从 MIME 类型获取扩展名
         if (!mimeType.isNullOrBlank()) {
             val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
@@ -181,10 +181,10 @@ object DownloadHelper {
                 return "$baseName.$ext"
             }
         }
-        
+
         return fileName
     }
-    
+
     /**
      * 下载方式
      */
@@ -192,7 +192,7 @@ object DownloadHelper {
         DOWNLOAD_MANAGER,  // 使用系统下载管理器
         BROWSER           // 跳转浏览器下载
     }
-    
+
     /**
      * 处理下载请求
      * @param context 上下文
@@ -222,30 +222,30 @@ object DownloadHelper {
         if (url.startsWith("blob:")) {
             Toast.makeText(
                 context,
-                "Blob 下载将由应用内部处理",
+                Strings.blobDownloadHandledInternally,
                 Toast.LENGTH_SHORT
             ).show()
             return
         }
-        
+
         // 检查是否为 Data URL
         if (url.startsWith("data:")) {
             Toast.makeText(
                 context,
-                "Data URL 下载将由应用内部处理",
+                Strings.dataUrlDownloadHandledInternally,
                 Toast.LENGTH_SHORT
             ).show()
             return
         }
-        
+
         val fileName = parseFileName(url, contentDisposition, mimeType)
-        
+
         // 检查是否为媒体文件，如果是且启用了保存到相册，则使用 MediaSaver
         if (saveToGallery && MediaSaver.isMediaFile(mimeType, fileName) && scope != null) {
             saveMediaToGallery(context, url, fileName, mimeType, scope)
             return
         }
-        
+
         when (method) {
             DownloadMethod.DOWNLOAD_MANAGER -> {
                 downloadWithManager(context, url, userAgent, contentDisposition, mimeType, showEnhancedNotification)
@@ -255,7 +255,7 @@ object DownloadHelper {
             }
         }
     }
-    
+
     /**
      * 保存媒体文件到相册
      */
@@ -268,24 +268,24 @@ object DownloadHelper {
     ) {
         val mediaType = MediaSaver.getMediaType(mimeType) ?: MediaSaver.getMediaTypeByExtension(fileName)
         val typeText = when (mediaType) {
-            MediaSaver.MediaType.IMAGE -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "图片" else "image"
-            MediaSaver.MediaType.VIDEO -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "视频" else "video"
-            else -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "文件" else "file"
+            MediaSaver.MediaType.IMAGE -> Strings.image
+            MediaSaver.MediaType.VIDEO -> Strings.video
+            else -> Strings.fileLabel
         }
-        
+
         val notificationManager = DownloadNotificationManager.getInstance(context)
         val progressNotificationId = notificationManager.showIndeterminateProgress(fileName)
-        
+
         val savingMsg = when (mediaType) {
             MediaSaver.MediaType.IMAGE -> Strings.savingImageToGallery
             MediaSaver.MediaType.VIDEO -> Strings.savingVideoToGallery
             else -> Strings.savingToGallery
         }
         Toast.makeText(context, savingMsg, Toast.LENGTH_SHORT).show()
-        
+
         scope.launch(Dispatchers.Main) {
             val result = MediaSaver.saveFromUrl(context, url, fileName, mimeType)
-            
+
             when (result) {
                 is MediaSaver.SaveResult.Success -> {
                     val savedMsg = when (mediaType) {
@@ -294,7 +294,7 @@ object DownloadHelper {
                         else -> Strings.imageSavedToGallery
                     }
                     Toast.makeText(context, savedMsg, Toast.LENGTH_SHORT).show()
-                    
+
                     // 显示完成通知
                     notificationManager.showMediaSaveComplete(
                         fileName = fileName,
@@ -311,7 +311,7 @@ object DownloadHelper {
             }
         }
     }
-    
+
     /**
      * 使用系统下载管理器下载（带重试机制）
      */
@@ -327,11 +327,11 @@ object DownloadHelper {
         try {
             // 使用智能文件名解析
             val fileName = parseFileName(url, contentDisposition, mimeType)
-            
+
             val request = DownloadManager.Request(Uri.parse(url)).apply {
                 // 设置User-Agent
                 addRequestHeader("User-Agent", userAgent)
-                
+
                 // 设置通知栏显示
                 if (showEnhancedNotification) {
                     // 使用增强通知时，隐藏系统默认通知，由我们自己管理
@@ -340,51 +340,51 @@ object DownloadHelper {
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 }
                 setTitle(fileName)
-                setDescription("正在下载...")
-                
+                setDescription(Strings.downloadingEllipsis)
+
                 // 设置保存位置到Download文件夹
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-                
+
                 // 允许在移动网络和WiFi下下载
                 setAllowedNetworkTypes(
-                    DownloadManager.Request.NETWORK_WIFI or 
+                    DownloadManager.Request.NETWORK_WIFI or
                     DownloadManager.Request.NETWORK_MOBILE
                 )
-                
+
                 // 设置MIME类型
                 if (mimeType.isNotBlank()) {
                     setMimeType(mimeType)
                 }
             }
-            
+
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val downloadId = downloadManager.enqueue(request)
-            
+
             // 使用增强通知管理器跟踪下载
             if (showEnhancedNotification) {
                 val notificationManager = DownloadNotificationManager.getInstance(context)
                 notificationManager.trackDownload(downloadId, fileName, mimeType)
             }
-            
+
             // 清除重试计数
             retryCountMap.remove(url)
-            
+
             Toast.makeText(context, Strings.startDownload.replace("%s", fileName), Toast.LENGTH_SHORT).show()
-            
+
         } catch (e: Exception) {
             e.printStackTrace()
-            
+
             // 重试逻辑
             if (retryOnFailure) {
                 val currentRetry = retryCountMap.getOrDefault(url, 0)
                 if (currentRetry < MAX_RETRY_COUNT) {
                     retryCountMap[url] = currentRetry + 1
                     Toast.makeText(
-                        context, 
-                        "${Strings.downloadFailed}, ${Strings.retry} (${currentRetry + 1}/$MAX_RETRY_COUNT)...", 
+                        context,
+                        "${Strings.downloadFailed}, ${Strings.retry} (${currentRetry + 1}/$MAX_RETRY_COUNT)...",
                         Toast.LENGTH_SHORT
                     ).show()
-                    
+
                     // 延迟重试
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         downloadWithManager(context, url, userAgent, contentDisposition, mimeType, showEnhancedNotification, true)
@@ -392,14 +392,14 @@ object DownloadHelper {
                     return
                 }
             }
-            
+
             // 重试次数用尽，清除计数并降级到浏览器
             retryCountMap.remove(url)
             Toast.makeText(context, Strings.downloadFailedTryBrowser, Toast.LENGTH_SHORT).show()
             openInBrowser(context, url)
         }
     }
-    
+
     /**
      * 跳转到浏览器下载
      */
@@ -414,7 +414,7 @@ object DownloadHelper {
             Toast.makeText(context, Strings.cannotOpenBrowser, Toast.LENGTH_SHORT).show()
         }
     }
-    
+
     /**
      * 从URL猜测文件扩展名
      */
@@ -424,7 +424,7 @@ object DownloadHelper {
             val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(it)
             if (!ext.isNullOrBlank()) return ".$ext"
         }
-        
+
         // 尝试从URL获取
         val path = Uri.parse(url).path ?: return ""
         val lastDot = path.lastIndexOf('.')
@@ -432,7 +432,7 @@ object DownloadHelper {
             val ext = path.substring(lastDot)
             if (ext.length <= 5) return ext
         }
-        
+
         return ""
     }
 }

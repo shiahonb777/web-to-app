@@ -6,6 +6,7 @@ import android.util.Base64
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -23,14 +24,23 @@ import java.util.concurrent.TimeUnit
  * 支持多种 AI 服务提供商
  */
 class AiApiClient(private val context: Context) {
-    
+
     private val gson = Gson()
-    
+
     /**
      * 清理 API Key，移除所有换行符和空白字符
      */
     private fun String.sanitize(): String = this.replace("\n", "").replace("\r", "").trim()
-    
+
+    private fun requestFailedMessage(code: Int, errorBody: String?): String =
+        Strings.requestFailedWithBodyFormat.format(code, errorBody ?: "")
+
+    private fun invalidRequestParametersMessage(details: String): String =
+        Strings.invalidRequestParametersFormat.format(details)
+
+    private fun apiBaseUrlNotConfiguredMessage(withSettingsHint: Boolean): String =
+        if (withSettingsHint) Strings.apiBaseUrlNotConfiguredWithSettings else Strings.apiBaseUrlNotConfigured
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(90, TimeUnit.SECONDS)
         .readTimeout(300, TimeUnit.SECONDS)  // 流式响应需要更长的读取超时
@@ -38,7 +48,7 @@ class AiApiClient(private val context: Context) {
         .retryOnConnectionFailure(true)  // 启用连接失败重试
         .connectionPool(ConnectionPool(5, 30, TimeUnit.SECONDS))  // 连接池配置
         .build()
-    
+
     /**
      * 测试 API 连接
      */
@@ -46,7 +56,7 @@ class AiApiClient(private val context: Context) {
         try {
             val baseUrl = apiKey.baseUrl ?: apiKey.provider.baseUrl
             val modelsEndpoint = apiKey.provider.modelsEndpoint
-            
+
             val request = when (apiKey.provider) {
                 AiProvider.GOOGLE -> {
                     // Google Gemini 使用不同的认证方式
@@ -71,18 +81,22 @@ class AiApiClient(private val context: Context) {
                         .build()
                 }
             }
-            
+
             val response = client.newCall(request).execute()
             if (response.isSuccessful) {
                 Result.success(true)
             } else {
-                Result.failure(Exception("连接失败: ${response.code} - ${response.message}"))
+                Result.failure(
+                    Exception(
+                        Strings.connectionFailedFormat.format(response.code, response.message)
+                    )
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 获取模型列表（从 API 实时获取）
      */
@@ -90,7 +104,7 @@ class AiApiClient(private val context: Context) {
         try {
             val baseUrl = apiKey.baseUrl ?: apiKey.provider.baseUrl
             val modelsEndpoint = apiKey.provider.modelsEndpoint
-            
+
             val request = when (apiKey.provider) {
                 AiProvider.GOOGLE -> {
                     Request.Builder()
@@ -121,32 +135,40 @@ class AiApiClient(private val context: Context) {
                         .build()
                 }
             }
-            
+
             val response = client.newCall(request).execute()
             if (response.isSuccessful) {
                 val body = response.body?.string() ?: ""
                 val models = parseModelsResponse(apiKey.provider, body)
                 if (models.isEmpty()) {
-                    Result.failure(Exception("API 返回的模型列表为空"))
+                    Result.failure(Exception(Strings.apiModelListEmpty))
                 } else {
                     Result.success(models)
                 }
             } else {
                 val errorBody = response.body?.string() ?: ""
-                Result.failure(Exception("获取模型列表失败: ${response.code} - $errorBody"))
+                Result.failure(
+                    Exception(
+                        Strings.fetchModelListFailedFormat.format(response.code, errorBody)
+                    )
+                )
             }
         } catch (e: Exception) {
-            Result.failure(Exception("获取模型列表出错: ${e.message}"))
+            Result.failure(
+                Exception(
+                    Strings.fetchModelListErrorFormat.format(e.message ?: Strings.unknownError)
+                )
+            )
         }
     }
-    
+
     /**
      * 解析模型列表响应（支持各供应商不同的响应格式）
      */
     private fun parseModelsResponse(provider: AiProvider, response: String): List<AiModel> {
         return try {
             val json = JsonParser.parseString(response).asJsonObject
-            
+
             when (provider) {
                 AiProvider.GOOGLE -> {
                     // Google 格式: {"models": [{"name": "models/gemini-1.5-pro", "displayName": "..."}]}
@@ -156,11 +178,11 @@ class AiApiClient(private val context: Context) {
                         val modelId = name.substringAfterLast("/")
                         // 过滤掉不支持 generateContent 的模型
                         val methods = obj.getAsJsonArray("supportedGenerationMethods")
-                        val supportsGenerate = methods?.any { 
-                            it.asString == "generateContent" 
+                        val supportsGenerate = methods?.any {
+                            it.asString == "generateContent"
                         } ?: false
                         if (!supportsGenerate) return@mapNotNull null
-                        
+
                         AiModel(
                             id = modelId,
                             name = obj.get("displayName")?.asString ?: modelId,
@@ -201,8 +223,8 @@ class AiApiClient(private val context: Context) {
                     val dataArray = json.getAsJsonArray("data") ?: json.getAsJsonArray("models")
                     dataArray?.mapNotNull { modelJson ->
                         val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString 
-                            ?: obj.get("model")?.asString 
+                        val modelId = obj.get("id")?.asString
+                            ?: obj.get("model")?.asString
                             ?: return@mapNotNull null
                         AiModel(
                             id = modelId,
@@ -217,8 +239,8 @@ class AiApiClient(private val context: Context) {
                     val dataArray = json.getAsJsonArray("data") ?: json.getAsJsonArray("models")
                     dataArray?.mapNotNull { modelJson ->
                         val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString 
-                            ?: obj.get("model")?.asString 
+                        val modelId = obj.get("id")?.asString
+                            ?: obj.get("model")?.asString
                             ?: return@mapNotNull null
                         AiModel(
                             id = modelId,
@@ -280,46 +302,46 @@ class AiApiClient(private val context: Context) {
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AiApiClient", "解析模型列表失败: ${e.message}, response: $response")
+            android.util.Log.e("AiApiClient", "Failed to parse model list: ${e.message}, response: $response")
             emptyList()
         }
     }
-    
+
     /**
      * 根据模型名称推断能力
      */
     private fun inferCapabilities(modelId: String): List<ModelCapability> {
         val id = modelId.lowercase()
         val capabilities = mutableListOf(ModelCapability.TEXT)
-        
+
         // 音频能力
-        if (id.contains("audio") || id.contains("whisper") || 
+        if (id.contains("audio") || id.contains("whisper") ||
             id.contains("gemini-1.5") || id.contains("gemini-2") ||
             id.contains("gpt-4o") || id.contains("realtime")) {
             capabilities.add(ModelCapability.AUDIO)
         }
-        
+
         // 图像能力
-        if (id.contains("vision") || id.contains("gpt-4o") || 
+        if (id.contains("vision") || id.contains("gpt-4o") ||
             id.contains("gemini") || id.contains("claude-3")) {
             capabilities.add(ModelCapability.IMAGE)
         }
-        
+
         // 代码能力
-        if (id.contains("code") || id.contains("codex") || 
+        if (id.contains("code") || id.contains("codex") ||
             id.contains("deepseek-coder")) {
             capabilities.add(ModelCapability.CODE)
         }
-        
+
         // 图像生成能力
-        if (id.contains("dall-e") || id.contains("imagen") || 
+        if (id.contains("dall-e") || id.contains("imagen") ||
             id.contains("image-generation") || id.contains("gpt-image")) {
             capabilities.add(ModelCapability.IMAGE_GENERATION)
         }
-        
+
         return capabilities
     }
-    
+
     /**
      * 根据模型名称推断上下文长度
      */
@@ -350,7 +372,7 @@ class AiApiClient(private val context: Context) {
             else -> 8192  // 默认8K
         }
     }
-    
+
     /**
      * 根据模型名称推断输入价格（$/百万token）
      */
@@ -380,7 +402,7 @@ class AiApiClient(private val context: Context) {
             else -> 0.0  // 未知价格显示为0
         }
     }
-    
+
     /**
      * 生成应用图标
      */
@@ -394,7 +416,7 @@ class AiApiClient(private val context: Context) {
         try {
             val baseUrl = apiKey.baseUrl ?: apiKey.provider.baseUrl
             val iconPrompt = buildIconPrompt(prompt)
-            
+
             // 读取参考图片（最多3张）
             val imageDataList = referenceImages.take(3).mapNotNull { path ->
                 try {
@@ -406,7 +428,7 @@ class AiApiClient(private val context: Context) {
                     bytes?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
                 } catch (e: Exception) { null }
             }
-            
+
             when (apiKey.provider) {
                 AiProvider.GOOGLE -> generateIconWithGemini(baseUrl, apiKey.apiKey.trim(), model.model.id, iconPrompt, imageDataList)
                 else -> generateIconWithOpenAIFormat(baseUrl, apiKey.apiKey.trim(), model.model.id, iconPrompt, imageDataList)
@@ -415,21 +437,12 @@ class AiApiClient(private val context: Context) {
             Result.failure(e)
         }
     }
-    
-    private fun buildIconPrompt(userPrompt: String): String = """
-生成一个精美的应用图标：
-- 尺寸：1024x1024，正方形
-- 风格：现代简洁专业
-- 背景：纯色或简单渐变
-- 图案：居中清晰，辨识度高
 
-用户需求：$userPrompt
+    private fun buildIconPrompt(userPrompt: String): String =
+        Strings.iconPromptTemplate.format(userPrompt)
 
-直接输出图标图片。
-    """.trimIndent()
-    
     private fun generateIconWithGemini(
-        baseUrl: String, apiKey: String, modelId: String, 
+        baseUrl: String, apiKey: String, modelId: String,
         prompt: String, images: List<String>
     ): Result<String> {
         val parts = com.google.gson.JsonArray().apply {
@@ -443,7 +456,7 @@ class AiApiClient(private val context: Context) {
                 })
             }
         }
-        
+
         val body = JsonObject().apply {
             add("contents", com.google.gson.JsonArray().apply {
                 add(JsonObject().apply { add("parts", parts) })
@@ -453,28 +466,28 @@ class AiApiClient(private val context: Context) {
                 add("responseModalities", com.google.gson.JsonArray().apply { add("IMAGE"); add("TEXT") })
             })
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1beta/models/$modelId:generateContent?key=$apiKey")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseImageFromGeminiResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("生成失败: ${response.code}"))
+            Result.failure(Exception(Strings.generationFailedWithCodeFormat.format(response.code)))
         }
     }
-    
+
     private fun generateIconWithOpenAIFormat(
         baseUrl: String, apiKey: String, modelId: String,
         prompt: String, images: List<String>
     ): Result<String> {
         val content = com.google.gson.JsonArray().apply {
-            add(JsonObject().apply { 
+            add(JsonObject().apply {
                 addProperty("type", "text")
-                addProperty("text", prompt) 
+                addProperty("text", prompt)
             })
             images.forEach { img ->
                 add(JsonObject().apply {
@@ -485,7 +498,7 @@ class AiApiClient(private val context: Context) {
                 })
             }
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", com.google.gson.JsonArray().apply {
@@ -496,21 +509,21 @@ class AiApiClient(private val context: Context) {
             })
             addProperty("max_tokens", 4096)
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1/chat/completions")
             .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseImageFromChatResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("生成失败: ${response.code}"))
+            Result.failure(Exception(Strings.generationFailedWithCodeFormat.format(response.code)))
         }
     }
-    
+
     private fun parseImageFromGeminiResponse(body: String): Result<String> {
         return try {
             val json = gson.fromJson(body, JsonObject::class.java)
@@ -518,7 +531,7 @@ class AiApiClient(private val context: Context) {
                 ?.get(0)?.asJsonObject
                 ?.getAsJsonObject("content")
                 ?.getAsJsonArray("parts")
-            
+
             parts?.forEach { part ->
                 val inlineData = part.asJsonObject.getAsJsonObject("inlineData")
                 if (inlineData != null) {
@@ -526,12 +539,12 @@ class AiApiClient(private val context: Context) {
                     if (data != null) return Result.success(data)
                 }
             }
-            Result.failure(Exception("未找到图像数据"))
+            Result.failure(Exception(Strings.noImageDataFound))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     private fun parseImageFromChatResponse(body: String): Result<String> {
         return try {
             val json = gson.fromJson(body, JsonObject::class.java)
@@ -539,22 +552,22 @@ class AiApiClient(private val context: Context) {
                 ?.get(0)?.asJsonObject
                 ?.getAsJsonObject("message")
                 ?.get("content")?.asString ?: ""
-            
+
             // 尝试从内容中提取 base64 图像
             val base64Regex = "data:image/[^;]+;base64,([A-Za-z0-9+/=]+)".toRegex()
             val match = base64Regex.find(content)
             if (match != null) {
                 Result.success(match.groupValues[1])
             } else {
-                Result.failure(Exception("未找到图像数据"))
+                Result.failure(Exception(Strings.noImageDataFound))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     // ==================== 通用聊天接口 ====================
-    
+
     /**
      * 通用聊天接口
      * @param apiKey API密钥配置
@@ -574,9 +587,11 @@ class AiApiClient(private val context: Context) {
             val baseUrl = when {
                 !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
                 apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
-                else -> return@withContext Result.failure(Exception("未配置API地址，请在设置中填写Base URL"))
+                else -> return@withContext Result.failure(
+                    Exception(apiBaseUrlNotConfiguredMessage(true))
+                )
             }
-            
+
             when (apiKey.provider) {
                 AiProvider.GOOGLE -> chatWithGemini(baseUrl, apiKey.apiKey, model.id, messages, temperature)
                 AiProvider.ANTHROPIC -> chatWithAnthropic(baseUrl, apiKey.apiKey, model.id, messages, temperature)
@@ -588,7 +603,7 @@ class AiApiClient(private val context: Context) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * Gemini 聊天
      */
@@ -602,11 +617,11 @@ class AiApiClient(private val context: Context) {
         // 转换消息格式
         val contents = com.google.gson.JsonArray()
         var systemInstruction: String? = null
-        
+
         messages.forEach { msg ->
             val role = msg["role"] ?: "user"
             val content = msg["content"] ?: ""
-            
+
             if (role == "system") {
                 systemInstruction = content
             } else {
@@ -620,7 +635,7 @@ class AiApiClient(private val context: Context) {
                 })
             }
         }
-        
+
         val body = JsonObject().apply {
             add("contents", contents)
             systemInstruction?.let { instruction ->
@@ -637,20 +652,21 @@ class AiApiClient(private val context: Context) {
                 addProperty("maxOutputTokens", 8192)
             })
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1beta/models/$modelId:generateContent?key=$apiKey")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseGeminiChatResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     private fun parseGeminiChatResponse(body: String): Result<String> {
         return try {
             val json = gson.fromJson(body, JsonObject::class.java)
@@ -660,17 +676,17 @@ class AiApiClient(private val context: Context) {
                 ?.getAsJsonArray("parts")
                 ?.get(0)?.asJsonObject
                 ?.get("text")?.asString
-            
+
             if (text != null) {
                 Result.success(text)
             } else {
-                Result.failure(Exception("无法解析响应"))
+                Result.failure(Exception(Strings.unableToParseResponse))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * Anthropic/Claude 聊天
      */
@@ -684,7 +700,7 @@ class AiApiClient(private val context: Context) {
         // 提取系统消息
         val systemMessage = messages.find { it["role"] == "system" }?.get("content")
         val chatMessages = messages.filter { it["role"] != "system" }
-        
+
         val messagesArray = com.google.gson.JsonArray()
         chatMessages.forEach { msg ->
             messagesArray.add(JsonObject().apply {
@@ -692,7 +708,7 @@ class AiApiClient(private val context: Context) {
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
@@ -700,7 +716,7 @@ class AiApiClient(private val context: Context) {
             addProperty("temperature", temperature)
             systemMessage?.let { addProperty("system", it) }
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1/messages")
             .header("x-api-key", apiKey)
@@ -708,32 +724,33 @@ class AiApiClient(private val context: Context) {
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseAnthropicChatResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     private fun parseAnthropicChatResponse(body: String): Result<String> {
         return try {
             val json = gson.fromJson(body, JsonObject::class.java)
             val text = json.getAsJsonArray("content")
                 ?.get(0)?.asJsonObject
                 ?.get("text")?.asString
-            
+
             if (text != null) {
                 Result.success(text)
             } else {
-                Result.failure(Exception("无法解析响应"))
+                Result.failure(Exception(Strings.unableToParseResponse))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 智谱GLM 聊天
      */
@@ -751,29 +768,30 @@ class AiApiClient(private val context: Context) {
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
             addProperty("temperature", temperature)
             addProperty("max_tokens", 8192)
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v4/chat/completions")
             .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseOpenAIChatResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     /**
      * 火山引擎 聊天
      */
@@ -791,29 +809,30 @@ class AiApiClient(private val context: Context) {
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
             addProperty("temperature", temperature)
             addProperty("max_tokens", 8192)
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v3/chat/completions")
             .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseOpenAIChatResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     /**
      * OpenAI 兼容格式聊天（适用于大多数供应商）
      */
@@ -831,49 +850,50 @@ class AiApiClient(private val context: Context) {
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
             addProperty("temperature", temperature)
             addProperty("max_tokens", 8192)
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1/chat/completions")
             .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseOpenAIChatResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     private fun parseOpenAIChatResponse(body: String): Result<String> {
         return try {
 val json = gson.fromJson(body, JsonObject::class.java)
             val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
             val content = extractContentFrom(choiceObj)
-            
+
             if (content != null) {
                 Result.success(content)
             } else {
-                Result.failure(Exception("无法解析响应"))
+                Result.failure(Exception(Strings.unableToParseResponse))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 流式聊天 - 返回Flow实时输出内容
      * 支持 Google Gemini、Anthropic Claude 和 OpenAI 兼容格式
-     * 
+     *
      * 优化：添加节流机制，减少UI更新频率，避免卡顿
      */
     fun chatStream(
@@ -887,44 +907,44 @@ val json = gson.fromJson(body, JsonObject::class.java)
             !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
             apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
             else -> {
-                trySend(StreamEvent.Error("未配置API地址，请在设置中填写Base URL"))
+                trySend(StreamEvent.Error(apiBaseUrlNotConfiguredMessage(true)))
                 close()
                 return@callbackFlow
             }
         }
-        
+
         // 根据供应商构建不同的请求
         val request = when (apiKey.provider) {
             AiProvider.GOOGLE -> buildGeminiStreamRequest(baseUrl, apiKey.apiKey.trim(), model.id, messages, temperature)
             AiProvider.ANTHROPIC -> buildAnthropicStreamRequest(baseUrl, apiKey.apiKey.sanitize(), model.id, messages, temperature)
             else -> buildOpenAIStreamRequest(baseUrl, apiKey, model.id, messages, temperature)
         }
-        
+
         trySend(StreamEvent.Started)
-        
+
         val call = client.newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 val errorMsg = when {
-                    e.message?.contains("connection abort", ignoreCase = true) == true -> 
-                        "网络连接中断，请检查网络后重试"
-                    e.message?.contains("timeout", ignoreCase = true) == true -> 
-                        "请求超时，请检查网络连接"
-                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true -> 
-                        "无法连接服务器，请检查网络或API地址"
-                    e.message?.contains("Connection refused", ignoreCase = true) == true -> 
-                        "服务器拒绝连接，请检查API地址是否正确"
-                    else -> e.message ?: "网络连接失败"
+                    e.message?.contains("connection abort", ignoreCase = true) == true ->
+                        Strings.networkConnectionInterrupted
+                    e.message?.contains("timeout", ignoreCase = true) == true ->
+                        Strings.requestTimedOut
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ->
+                        Strings.unableToConnectServer
+                    e.message?.contains("Connection refused", ignoreCase = true) == true ->
+                        Strings.serverRefusedConnection
+                    else -> e.message ?: Strings.networkConnectionFailed
                 }
                 trySend(StreamEvent.Error(errorMsg))
                 close(e)
             }
-            
+
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
                     val errorBody = response.body?.string() ?: ""
                     response.body?.close()
-                    
+
                     // 解析错误信息
                     val errorMsg = when (response.code) {
                         400 -> {
@@ -932,39 +952,39 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 val json = gson.fromJson(errorBody, JsonObject::class.java)
                                 val error = json.getAsJsonObject("error")
                                 val message = error?.get("message")?.asString ?: errorBody
-                                "请求参数错误: $message"
+                                invalidRequestParametersMessage(message)
                             } catch (e: Exception) {
-                                "请求参数错误: $errorBody"
+                                invalidRequestParametersMessage(errorBody)
                             }
                         }
-                        401 -> "API Key 无效或已过期，请检查设置"
-                        403 -> "API 访问被拒绝，请检查权限或配额"
-                        404 -> "模型不存在或 API 端点错误，请检查模型名称"
-                        429 -> "请求过于频繁，请稍后重试"
-                        500, 502, 503 -> "服务器错误，请稍后重试"
-                        else -> "请求失败: ${response.code} - $errorBody"
+                        401 -> Strings.apiKeyInvalidOrExpired
+                        403 -> Strings.apiAccessDenied
+                        404 -> Strings.modelNotFoundOrEndpointError
+                        429 -> Strings.tooManyRequests
+                        500, 502, 503 -> Strings.serverErrorTryLater
+                        else -> requestFailedMessage(response.code, errorBody)
                     }
-                    
+
                     trySend(StreamEvent.Error(errorMsg))
                     close()
                     return
                 }
-                
+
                 try {
                     val reader = response.body?.source() ?: run {
-                        trySend(StreamEvent.Error("响应体为空"))
+                        trySend(StreamEvent.Error(Strings.emptyResponseBody))
                         close()
                         return
                     }
-                    
+
                     val contentBuilder = StringBuilder()
                     var doneSent = false
                     var hasReceivedData = false
                     var lastReceivedPayload = ""  // 记录最后收到的数据，用于调试
-                    
+
                     var currentEvent: String? = null
                     val dataBuffer = StringBuilder()
-                    
+
                     fun flushEvent() {
                         val payload = dataBuffer.toString().trim()
                         dataBuffer.setLength(0)
@@ -981,16 +1001,16 @@ val json = gson.fromJson(body, JsonObject::class.java)
                         }
                         try {
                             val json = gson.fromJson(payload, JsonObject::class.java)
-                            
+
                             // 错误处理
                             val error = json.getAsJsonObject("error")
                             if (error != null) {
-                                val errorMsg = error.get("message")?.asString ?: "API返回错误"
+                                val errorMsg = error.get("message")?.asString ?: Strings.apiReturnedError
                                 trySend(StreamEvent.Error(errorMsg))
                                 close()
                                 return
                             }
-                            
+
                             // 根据供应商解析响应
                             when (apiKey.provider) {
                                 AiProvider.GOOGLE -> {
@@ -1030,11 +1050,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                     // OpenAI 兼容格式
                                     val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
                                     val delta = choiceObj?.getAsJsonObject("delta")
-                                    
+
                                     val content: String? = extractContentFrom(choiceObj)
                                     val reasoning = extractReasoningFrom(choiceObj, delta)
                                     if (reasoning != null) trySend(StreamEvent.Thinking(reasoning))
-                                    
+
                                     if (content != null) {
                                         // 调试：检测空格字符
                                         val spaceCount = content.count { it == ' ' }
@@ -1044,7 +1064,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                             android.util.Log.d("AiApiClient", "🔍 StreamChat Space Debug - length: ${content.length}, spaceCount: $spaceCount")
                                             android.util.Log.d("AiApiClient", "🔍 StreamChat Space Debug - charCodes: ${content.map { "${it}(${it.code})" }}")
                                         }
-                                        
+
                                         // 注意：之前这里会跳过开头的纯空白内容，可能导致空格丢失
                                         val shouldAppend = if (contentBuilder.isEmpty()) content.any { !it.isWhitespace() } else true
                                         if (shouldAppend) {
@@ -1060,10 +1080,10 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             // 忽略无法解析的分片
                         }
                     }
-                    
+
                     while (!reader.exhausted()) {
                         val line = reader.readUtf8Line() ?: break
-                        
+
                         when {
                             line.startsWith("event:") -> {
                                 currentEvent = line.removePrefix("event:").trim()
@@ -1102,16 +1122,18 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     if (dataBuffer.isNotEmpty() && !doneSent) {
                         flushEvent()
                     }
-                    
+
                     // 确保发送Done事件
                     if (!doneSent) {
                         if (contentBuilder.isEmpty()) {
                             val debugInfo = if (!hasReceivedData) {
-                                "未收到任何数据，API可能不支持流式输出"
+                                Strings.noDataReceivedStreaming
                             } else {
                                 // 记录详细日志帮助调试
-                                android.util.Log.e("AiApiClient", "StreamChat 解析失败，最后收到的数据: $lastReceivedPayload")
-                                "API返回数据格式异常，请查看日志或尝试其他模型。数据预览: ${lastReceivedPayload.take(100)}..."
+                                android.util.Log.e("AiApiClient", "StreamChat parse failed, last payload: $lastReceivedPayload")
+                                Strings.unexpectedApiResponseFormatPreviewFormat.format(
+                                    lastReceivedPayload.take(100)
+                                )
                             }
                             trySend(StreamEvent.Error(debugInfo))
                         } else {
@@ -1123,15 +1145,15 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     close()
                 } catch (e: Exception) {
                     response.body?.close()
-                    trySend(StreamEvent.Error(e.message ?: "读取响应失败"))
+                    trySend(StreamEvent.Error(e.message ?: Strings.failedToReadResponse))
                     close(e)
                 }
             }
         })
-        
+
         awaitClose { call.cancel() }
     }
-    
+
     /**
      * 构建 Google Gemini 流式请求
      */
@@ -1144,11 +1166,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
     ): Request {
         val contents = com.google.gson.JsonArray()
         var systemInstruction: String? = null
-        
+
         messages.forEach { msg ->
             val role = msg["role"] ?: "user"
             val content = msg["content"] ?: ""
-            
+
             if (role == "system") {
                 systemInstruction = content
             } else {
@@ -1162,7 +1184,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 })
             }
         }
-        
+
         val body = JsonObject().apply {
             add("contents", contents)
             systemInstruction?.let { instruction ->
@@ -1179,7 +1201,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("maxOutputTokens", 8192)
             })
         }
-        
+
         // Gemini 流式 API 使用 streamGenerateContent 端点
         return Request.Builder()
             .url("$baseUrl/v1beta/models/$modelId:streamGenerateContent?alt=sse&key=$apiKey")
@@ -1187,7 +1209,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
     }
-    
+
     /**
      * 构建 Anthropic Claude 流式请求
      */
@@ -1200,7 +1222,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
     ): Request {
         val systemMessage = messages.find { it["role"] == "system" }?.get("content")
         val chatMessages = messages.filter { it["role"] != "system" }
-        
+
         val messagesArray = com.google.gson.JsonArray()
         chatMessages.forEach { msg ->
             messagesArray.add(JsonObject().apply {
@@ -1208,7 +1230,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
@@ -1217,7 +1239,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             addProperty("stream", true)
             systemMessage?.let { addProperty("system", it) }
         }
-        
+
         return Request.Builder()
             .url("$baseUrl/v1/messages")
             .header("x-api-key", apiKey)
@@ -1227,7 +1249,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
     }
-    
+
     /**
      * 构建 OpenAI 兼容格式流式请求
      */
@@ -1245,7 +1267,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
@@ -1253,13 +1275,13 @@ val json = gson.fromJson(body, JsonObject::class.java)
             addProperty("max_tokens", 8192)
             addProperty("stream", true)
         }
-        
+
         val streamEndpoint = when (apiKey.provider) {
             AiProvider.GLM -> "/v4/chat/completions"
             AiProvider.VOLCANO -> "/v3/chat/completions"
             else -> "/v1/chat/completions"
         }
-        
+
         return Request.Builder()
             .url("$baseUrl$streamEndpoint")
             .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
@@ -1268,9 +1290,9 @@ val json = gson.fromJson(body, JsonObject::class.java)
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
     }
-    
+
     // ==================== Tool Calling 接口 ====================
-    
+
     /**
      * 带工具调用的聊天接口
      * 支持 OpenAI 兼容格式的 Function Calling
@@ -1286,9 +1308,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
             val baseUrl = when {
                 !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
                 apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
-                else -> return@withContext Result.failure(Exception("未配置API地址"))
+                else -> return@withContext Result.failure(
+                    Exception(apiBaseUrlNotConfiguredMessage(false))
+                )
             }
-            
+
             when (apiKey.provider) {
                 AiProvider.GOOGLE -> chatWithToolsGemini(baseUrl, apiKey.apiKey.trim(), model.id, messages, tools, temperature)
                 AiProvider.ANTHROPIC -> chatWithToolsAnthropic(baseUrl, apiKey.apiKey.sanitize(), model.id, messages, tools, temperature)
@@ -1298,7 +1322,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             Result.failure(e)
         }
     }
-    
+
     /**
      * OpenAI 格式的 Tool Calling
      */
@@ -1317,12 +1341,12 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val toolsArray = com.google.gson.JsonArray()
         tools.forEach { tool ->
             toolsArray.add(gson.toJsonTree(tool))
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
@@ -1330,22 +1354,23 @@ val json = gson.fromJson(body, JsonObject::class.java)
             addProperty("temperature", temperature)
             addProperty("max_tokens", 16384)
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1/chat/completions")
             .header("Authorization", "Bearer $apiKey")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseOpenAIToolResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     /**
      * 解析 OpenAI Tool Calling 响应
      */
@@ -1354,10 +1379,10 @@ val json = gson.fromJson(body, JsonObject::class.java)
             val json = gson.fromJson(body, JsonObject::class.java)
             val choice = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
             val message = choice?.getAsJsonObject("message")
-            
+
             val textContent = message?.get("content")?.asString ?: ""
             val toolCallsJson = message?.getAsJsonArray("tool_calls")
-            
+
             val toolCalls = toolCallsJson?.mapNotNull { tc ->
                 val tcObj = tc.asJsonObject
                 val function = tcObj.getAsJsonObject("function")
@@ -1371,7 +1396,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 }
                 ToolCallData(id, name, args)
             } ?: emptyList()
-            
+
             Result.success(ToolCallResponse(
                 textContent = textContent,
                 toolCalls = toolCalls
@@ -1380,7 +1405,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             Result.failure(e)
         }
     }
-    
+
     /**
      * Gemini 格式的 Tool Calling
      */
@@ -1394,11 +1419,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
     ): Result<ToolCallResponse> {
         val contents = com.google.gson.JsonArray()
         var systemInstruction: String? = null
-        
+
         messages.forEach { msg ->
             val role = msg["role"] ?: "user"
             val content = msg["content"] ?: ""
-            
+
             if (role == "system") {
                 systemInstruction = content
             } else {
@@ -1412,11 +1437,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 })
             }
         }
-        
+
         // 转换工具格式为 Gemini 格式
         val geminiTools = com.google.gson.JsonArray()
         val functionDeclarations = com.google.gson.JsonArray()
-        
+
         tools.forEach { tool ->
             val function = tool["function"] as? Map<*, *> ?: return@forEach
             functionDeclarations.add(JsonObject().apply {
@@ -1425,11 +1450,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 add("parameters", gson.toJsonTree(function["parameters"]))
             })
         }
-        
+
         geminiTools.add(JsonObject().apply {
             add("functionDeclarations", functionDeclarations)
         })
-        
+
         val body = JsonObject().apply {
             add("contents", contents)
             add("tools", geminiTools)
@@ -1447,20 +1472,21 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("maxOutputTokens", 16384)
             })
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1beta/models/$modelId:generateContent?key=$apiKey")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseGeminiToolResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     /**
      * 解析 Gemini Tool Calling 响应
      */
@@ -1471,18 +1497,18 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 ?.get(0)?.asJsonObject
                 ?.getAsJsonObject("content")
                 ?.getAsJsonArray("parts")
-            
+
             var textContent = ""
             val toolCalls = mutableListOf<ToolCallData>()
-            
+
             parts?.forEach { part ->
                 val partObj = part.asJsonObject
-                
+
                 // 文本内容
                 partObj.get("text")?.asString?.let {
                     textContent += it
                 }
-                
+
                 // 函数调用
                 partObj.getAsJsonObject("functionCall")?.let { fc ->
                     val name = fc.get("name")?.asString ?: return@let
@@ -1496,7 +1522,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     ))
                 }
             }
-            
+
             Result.success(ToolCallResponse(
                 textContent = textContent,
                 toolCalls = toolCalls
@@ -1505,7 +1531,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             Result.failure(e)
         }
     }
-    
+
     /**
      * Anthropic 格式的 Tool Calling
      */
@@ -1519,7 +1545,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
     ): Result<ToolCallResponse> {
         val systemMessage = messages.find { it["role"] == "system" }?.get("content")
         val chatMessages = messages.filter { it["role"] != "system" }
-        
+
         val messagesArray = com.google.gson.JsonArray()
         chatMessages.forEach { msg ->
             messagesArray.add(JsonObject().apply {
@@ -1527,7 +1553,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("content", msg["content"])
             })
         }
-        
+
         // 转换工具格式为 Anthropic 格式
         val anthropicTools = com.google.gson.JsonArray()
         tools.forEach { tool ->
@@ -1538,7 +1564,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 add("input_schema", gson.toJsonTree(function["parameters"]))
             })
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
@@ -1547,7 +1573,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             addProperty("temperature", temperature)
             systemMessage?.let { addProperty("system", it) }
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1/messages")
             .header("x-api-key", apiKey)
@@ -1555,15 +1581,16 @@ val json = gson.fromJson(body, JsonObject::class.java)
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseAnthropicToolResponse(response.body?.string() ?: "")
         } else {
-            Result.failure(Exception("请求失败: ${response.code} - ${response.body?.string()}"))
+            val errorBody = response.body?.string()
+            Result.failure(Exception(requestFailedMessage(response.code, errorBody)))
         }
     }
-    
+
     /**
      * 解析 Anthropic Tool Calling 响应
      */
@@ -1571,14 +1598,14 @@ val json = gson.fromJson(body, JsonObject::class.java)
         return try {
             val json = gson.fromJson(body, JsonObject::class.java)
             val content = json.getAsJsonArray("content")
-            
+
             var textContent = ""
             val toolCalls = mutableListOf<ToolCallData>()
-            
+
             content?.forEach { block ->
                 val blockObj = block.asJsonObject
                 val type = blockObj.get("type")?.asString
-                
+
                 when (type) {
                     "text" -> {
                         textContent += blockObj.get("text")?.asString ?: ""
@@ -1593,7 +1620,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     }
                 }
             }
-            
+
             Result.success(ToolCallResponse(
                 textContent = textContent,
                 toolCalls = toolCalls
@@ -1602,9 +1629,9 @@ val json = gson.fromJson(body, JsonObject::class.java)
             Result.failure(e)
         }
     }
-    
+
     // ==================== 流式 Tool Calling 接口 ====================
-    
+
     /**
      * 流式带工具调用的聊天接口
      * 支持实时输出工具参数（如 HTML 代码）
@@ -1620,40 +1647,40 @@ val json = gson.fromJson(body, JsonObject::class.java)
             !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
             apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
             else -> {
-                trySend(ToolStreamEvent.Error("未配置API地址"))
+                trySend(ToolStreamEvent.Error(apiBaseUrlNotConfiguredMessage(false)))
                 close()
                 return@callbackFlow
             }
         }
-        
+
         // 构建请求
         val request = buildOpenAIStreamWithToolsRequest(baseUrl, apiKey, model.id, messages, tools, temperature)
-        
+
         trySend(ToolStreamEvent.Started)
-        
+
         val call = client.newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 val errorMsg = when {
-                    e.message?.contains("connection abort", ignoreCase = true) == true -> 
-                        "网络连接中断，请检查网络后重试"
-                    e.message?.contains("timeout", ignoreCase = true) == true -> 
-                        "请求超时，请检查网络连接"
-                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true -> 
-                        "无法连接服务器，请检查网络或API地址"
-                    e.message?.contains("Connection refused", ignoreCase = true) == true -> 
-                        "服务器拒绝连接，请检查API地址是否正确"
-                    else -> e.message ?: "网络连接失败"
+                    e.message?.contains("connection abort", ignoreCase = true) == true ->
+                        Strings.networkConnectionInterrupted
+                    e.message?.contains("timeout", ignoreCase = true) == true ->
+                        Strings.requestTimedOut
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ->
+                        Strings.unableToConnectServer
+                    e.message?.contains("Connection refused", ignoreCase = true) == true ->
+                        Strings.serverRefusedConnection
+                    else -> e.message ?: Strings.networkConnectionFailed
                 }
                 trySend(ToolStreamEvent.Error(errorMsg))
                 close(e)
             }
-            
+
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
                     val errorBody = response.body?.string() ?: ""
                     response.body?.close()
-                    
+
                     // 解析错误信息
                     val errorMsg = when (response.code) {
                         400 -> {
@@ -1662,41 +1689,41 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 val json = gson.fromJson(errorBody, JsonObject::class.java)
                                 val error = json.getAsJsonObject("error")
                                 val message = error?.get("message")?.asString ?: errorBody
-                                "请求参数错误: $message"
+                                invalidRequestParametersMessage(message)
                             } catch (e: Exception) {
-                                "请求参数错误: $errorBody"
+                                invalidRequestParametersMessage(errorBody)
                             }
                         }
-                        401 -> "API Key 无效或已过期，请检查设置"
-                        403 -> "API 访问被拒绝，请检查权限或配额"
-                        404 -> "模型不存在或 API 端点错误，请检查模型名称"
-                        429 -> "请求过于频繁，请稍后重试"
-                        500, 502, 503 -> "服务器错误，请稍后重试"
-                        else -> "请求失败: ${response.code} - $errorBody"
+                        401 -> Strings.apiKeyInvalidOrExpired
+                        403 -> Strings.apiAccessDenied
+                        404 -> Strings.modelNotFoundOrEndpointError
+                        429 -> Strings.tooManyRequests
+                        500, 502, 503 -> Strings.serverErrorTryLater
+                        else -> requestFailedMessage(response.code, errorBody)
                     }
-                    
+
                     trySend(ToolStreamEvent.Error(errorMsg))
                     close()
                     return
                 }
-                
+
                 try {
                     val reader = response.body?.source() ?: run {
-                        trySend(ToolStreamEvent.Error("响应体为空"))
+                        trySend(ToolStreamEvent.Error(Strings.emptyResponseBody))
                         close()
                         return
                     }
-                    
+
                     val textBuilder = StringBuilder()
                     val thinkingBuilder = StringBuilder()
-                    
+
                     // 工具调用状态
                     val toolCallsMap = mutableMapOf<Int, ToolCallState>()
                     val completedToolCalls = mutableListOf<ToolCallInfo>()
-                    
+
                     var doneSent = false
                     val dataBuffer = StringBuilder()
-                    
+
                     // 处理单个 JSON chunk
                     fun processStreamChunk(
                         json: JsonObject,
@@ -1707,21 +1734,21 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     ) {
                         // 记录原始 JSON 用于调试
                         android.util.Log.d("AiApiClient", "📦 Raw chunk: ${json.toString().take(300)}...")
-                        
+
                         val choicesArray = json.getAsJsonArray("choices")
                         if (choicesArray == null || choicesArray.size() == 0) {
                             android.util.Log.w("AiApiClient", "⚠️ No choices in response: ${json.toString().take(200)}")
                             return
                         }
-                        
+
                         val choiceObj = choicesArray.get(0)?.asJsonObject ?: return
                         val delta = choiceObj.getAsJsonObject("delta")
-                        val finishReason = choiceObj.get("finish_reason")?.let { 
-                            if (it.isJsonNull) null else it.asString 
+                        val finishReason = choiceObj.get("finish_reason")?.let {
+                            if (it.isJsonNull) null else it.asString
                         }
-                        
+
                         android.util.Log.d("AiApiClient", "📝 Delta: ${delta?.toString()?.take(200) ?: "null"}, finishReason: $finishReason")
-                        
+
                         // 处理文本内容
                         delta?.get("content")?.let { contentElem ->
                             if (!contentElem.isJsonNull) {
@@ -1741,40 +1768,40 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 }
                             }
                         }
-                        
+
                         // 处理思考内容 - 支持多种字段名
                         // MiniMax 使用 reasoning_content
-                        val thinkingContent = delta?.get("reasoning_content")?.let { 
-                            if (!it.isJsonNull) it.asString else null 
-                        } ?: delta?.get("reasoning")?.let { 
-                            if (!it.isJsonNull) it.asString else null 
-                        } ?: delta?.get("thinking")?.let { 
-                            if (!it.isJsonNull) it.asString else null 
+                        val thinkingContent = delta?.get("reasoning_content")?.let {
+                            if (!it.isJsonNull) it.asString else null
+                        } ?: delta?.get("reasoning")?.let {
+                            if (!it.isJsonNull) it.asString else null
+                        } ?: delta?.get("thinking")?.let {
+                            if (!it.isJsonNull) it.asString else null
                         }
-                        
+
                         if (!thinkingContent.isNullOrEmpty()) {
                             thinkingBuilder.append(thinkingContent)
                             android.util.Log.d("AiApiClient", "ThinkingDelta: ${thinkingContent.take(50)}...")
                             trySend(ToolStreamEvent.ThinkingDelta(thinkingContent, thinkingBuilder.toString()))
                         }
-                        
+
                         // 处理工具调用 - 支持多种格式
                         // 1. OpenAI 标准格式: delta.tool_calls
                         delta?.getAsJsonArray("tool_calls")?.forEach { tc ->
                             val tcObj = tc.asJsonObject
                             val index = tcObj.get("index")?.asInt ?: 0
-                            
+
                             android.util.Log.d("AiApiClient", "Tool call chunk (delta.tool_calls): index=$index, tcObj=$tcObj")
-                            
+
                             val state = toolCallsMap.getOrPut(index) { ToolCallState() }
-                            
+
                             tcObj.get("id")?.asString?.let { id ->
                                 if (state.id.isEmpty()) {
                                     state.id = id
                                     android.util.Log.d("AiApiClient", "Tool call id: $id")
                                 }
                             }
-                            
+
                             tcObj.getAsJsonObject("function")?.let { func ->
                                 func.get("name")?.asString?.let { name ->
                                     if (state.name.isEmpty()) {
@@ -1783,7 +1810,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                         trySend(ToolStreamEvent.ToolCallStart(name, state.id))
                                     }
                                 }
-                                
+
                                 func.get("arguments")?.asString?.let { argsDelta ->
                                     state.arguments.append(argsDelta)
                                     android.util.Log.d("AiApiClient", "Tool arguments delta: ${argsDelta.take(100)}..., total: ${state.arguments.length}")
@@ -1795,14 +1822,14 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 }
                             }
                         }
-                        
+
                         // 2. 旧版 OpenAI 格式: delta.function_call
                         if (toolCallsMap.isEmpty()) {
                             delta?.getAsJsonObject("function_call")?.let { funcCall ->
                                 android.util.Log.d("AiApiClient", "Tool call chunk (delta.function_call): $funcCall")
-                                
+
                                 val state = toolCallsMap.getOrPut(0) { ToolCallState() }
-                                
+
                                 funcCall.get("name")?.asString?.let { name ->
                                     if (state.name.isEmpty()) {
                                         state.name = name
@@ -1811,7 +1838,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                         trySend(ToolStreamEvent.ToolCallStart(name, state.id))
                                     }
                                 }
-                                
+
                                 funcCall.get("arguments")?.asString?.let { argsDelta ->
                                     state.arguments.append(argsDelta)
                                     android.util.Log.d("AiApiClient", "Function arguments delta: ${argsDelta.take(100)}...")
@@ -1823,28 +1850,28 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 }
                             }
                         }
-                        
+
                         // 3. 某些模型在 message 而不是 delta 中返回工具调用（非流式部分）
                         if (toolCallsMap.isEmpty()) {
                             choiceObj.getAsJsonObject("message")?.let { message ->
                                 message.getAsJsonArray("tool_calls")?.forEach { tc ->
                                     val tcObj = tc.asJsonObject
                                     val index = tcObj.get("index")?.asInt ?: toolCallsMap.size
-                                    
+
                                     android.util.Log.d("AiApiClient", "Tool call chunk (message.tool_calls): index=$index, tcObj=$tcObj")
-                                    
+
                                     val state = toolCallsMap.getOrPut(index) { ToolCallState() }
-                                    
+
                                     tcObj.get("id")?.asString?.let { id ->
                                         state.id = id
                                     }
-                                    
+
                                     tcObj.getAsJsonObject("function")?.let { func ->
                                         func.get("name")?.asString?.let { name ->
                                             state.name = name
                                             trySend(ToolStreamEvent.ToolCallStart(name, state.id))
                                         }
-                                        
+
                                         func.get("arguments")?.asString?.let { args ->
                                             state.arguments.clear()
                                             state.arguments.append(args)
@@ -1856,19 +1883,19 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                         }
                                     }
                                 }
-                                
+
                                 // 旧版格式: message.function_call
                                 message.getAsJsonObject("function_call")?.let { funcCall ->
                                     android.util.Log.d("AiApiClient", "Tool call chunk (message.function_call): $funcCall")
-                                    
+
                                     val state = toolCallsMap.getOrPut(0) { ToolCallState() }
-                                    
+
                                     funcCall.get("name")?.asString?.let { name ->
                                         state.name = name
                                         state.id = "func_call_0"
                                         trySend(ToolStreamEvent.ToolCallStart(name, state.id))
                                     }
-                                    
+
                                     funcCall.get("arguments")?.asString?.let { args ->
                                         state.arguments.clear()
                                         state.arguments.append(args)
@@ -1881,7 +1908,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 }
                             }
                         }
-                        
+
                         // 检查是否完成
                         // 支持多种 finish_reason: tool_calls, function_call, stop
                         if (finishReason == "tool_calls" || finishReason == "function_call" || finishReason == "stop") {
@@ -1900,10 +1927,10 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             }
                         }
                     }
-                    
+
                     while (!reader.exhausted()) {
                         val line = reader.readUtf8Line() ?: break
-                        
+
                         when {
                             line.startsWith("data:") -> {
                                 val data = line.removePrefix("data:").trimStart()
@@ -1916,7 +1943,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                                 } else if (data.isNotEmpty()) {
                                     // 累积数据到 buffer
                                     dataBuffer.append(data)
-                                    
+
                                     // 尝试解析累积的 JSON
                                     val fullPayload = dataBuffer.toString()
                                     try {
@@ -1949,7 +1976,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             }
                         }
                     }
-                    
+
                     // 处理最后的数据
                     if (dataBuffer.isNotEmpty() && !doneSent) {
                         val payload = dataBuffer.toString().trim()
@@ -1963,26 +1990,26 @@ val json = gson.fromJson(body, JsonObject::class.java)
                             }
                         }
                     }
-                    
+
                     if (!doneSent) {
                         android.util.Log.d("AiApiClient", "Final Done: text=${textBuilder.length}, thinking=${thinkingBuilder.length}, tools=${completedToolCalls.size}")
                         trySend(ToolStreamEvent.Done(textBuilder.toString(), completedToolCalls))
                     }
-                    
+
                     // 确保关闭 response body
                     response.body?.close()
                     close()
                 } catch (e: Exception) {
                     response.body?.close()
-                    trySend(ToolStreamEvent.Error(e.message ?: "读取响应失败"))
+                    trySend(ToolStreamEvent.Error(e.message ?: Strings.failedToReadResponse))
                     close(e)
                 }
             }
         })
-        
+
         awaitClose { call.cancel() }
     }
-    
+
     /**
      * 工具调用状态（用于流式解析）
      */
@@ -1991,7 +2018,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
         var name: String = ""
         val arguments = StringBuilder()
     }
-    
+
     /**
      * 构建 OpenAI 格式的流式工具调用请求
      */
@@ -2010,12 +2037,12 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 addProperty("content", msg["content"])
             })
         }
-        
+
         val toolsArray = com.google.gson.JsonArray()
         tools.forEach { tool ->
             toolsArray.add(gson.toJsonTree(tool))
         }
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             add("messages", messagesArray)
@@ -2023,7 +2050,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             addProperty("temperature", temperature)
             addProperty("max_tokens", 16384)
             addProperty("stream", true)
-            
+
             // 强制模型使用工具（如果提供了工具）
             // 根据模型类型选择合适的 tool_choice 值
             // 某些模型（如 DeepSeek、GLM）可能不支持 "required"
@@ -2050,7 +2077,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 }
                 addProperty("tool_choice", toolChoice)
             }
-            
+
             // 为支持思考模式的模型添加特殊参数
             val modelLower = modelId.lowercase()
             when {
@@ -2070,26 +2097,26 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     })
                 }
             }
-            
+
             // 启用流式选项以获取更多信息
             add("stream_options", JsonObject().apply {
                 addProperty("include_usage", true)
             })
         }
-        
+
         val streamEndpoint = when (apiKey.provider) {
             AiProvider.GLM -> "/v4/chat/completions"
             AiProvider.VOLCANO -> "/v3/chat/completions"
             else -> "/v1/chat/completions"
         }
-        
+
         // 记录完整的请求体用于调试
         val requestBodyJson = gson.toJson(body)
         android.util.Log.d("AiApiClient", "🔧 Tool calling request URL: $baseUrl$streamEndpoint")
         android.util.Log.d("AiApiClient", "🔧 Tool calling request model: $modelId")
         android.util.Log.d("AiApiClient", "🔧 Tool calling request tools count: ${tools.size}")
         android.util.Log.d("AiApiClient", "🔧 Tool calling request body (first 1000 chars): ${requestBodyJson.take(1000)}")
-        
+
         return Request.Builder()
             .url("$baseUrl$streamEndpoint")
             .header("Authorization", "Bearer ${apiKey.apiKey.sanitize()}")
@@ -2098,9 +2125,9 @@ val json = gson.fromJson(body, JsonObject::class.java)
             .post(requestBodyJson.toRequestBody("application/json".toMediaType()))
             .build()
     }
-    
+
     // ==================== 图像生成接口 ====================
-    
+
     /**
      * 生成图像
      * @return 返回 base64 编码的图像数据
@@ -2117,9 +2144,11 @@ val json = gson.fromJson(body, JsonObject::class.java)
             val baseUrl = when {
                 !apiKey.baseUrl.isNullOrBlank() -> apiKey.baseUrl.trimEnd('/')
                 apiKey.provider.baseUrl.isNotBlank() -> apiKey.provider.baseUrl.trimEnd('/')
-                else -> return@withContext Result.failure(Exception("未配置API地址"))
+                else -> return@withContext Result.failure(
+                    Exception(apiBaseUrlNotConfiguredMessage(false))
+                )
             }
-            
+
             when (apiKey.provider) {
                 AiProvider.OPENAI, AiProvider.OPENROUTER -> {
                     generateImageWithDallE(baseUrl, apiKey.apiKey, model.model.id, prompt, width, height)
@@ -2136,7 +2165,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             Result.failure(e)
         }
     }
-    
+
     /**
      * 使用 DALL-E 格式生成图像
      */
@@ -2149,7 +2178,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
         height: Int
     ): Result<String> {
         val size = "${width}x${height}"
-        
+
         val body = JsonObject().apply {
             addProperty("model", modelId)
             addProperty("prompt", prompt)
@@ -2157,23 +2186,25 @@ val json = gson.fromJson(body, JsonObject::class.java)
             addProperty("size", size)
             addProperty("response_format", "b64_json")
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1/images/generations")
             .header("Authorization", "Bearer ${apiKey.sanitize()}")
             .header("Content-Type", "application/json")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseImageFromDallEResponse(response.body?.string() ?: "")
         } else {
             val errorBody = response.body?.string() ?: ""
-            Result.failure(Exception("图像生成失败: ${response.code} - $errorBody"))
+            Result.failure(
+                Exception(Strings.imageGenerationFailedWithBodyFormat.format(response.code, errorBody))
+            )
         }
     }
-    
+
     /**
      * 使用 Gemini 生成图像
      */
@@ -2186,34 +2217,36 @@ val json = gson.fromJson(body, JsonObject::class.java)
         val parts = com.google.gson.JsonArray().apply {
             add(JsonObject().apply { addProperty("text", prompt) })
         }
-        
+
         val body = JsonObject().apply {
             add("contents", com.google.gson.JsonArray().apply {
                 add(JsonObject().apply { add("parts", parts) })
             })
             add("generationConfig", JsonObject().apply {
                 addProperty("temperature", 0.8)
-                add("responseModalities", com.google.gson.JsonArray().apply { 
+                add("responseModalities", com.google.gson.JsonArray().apply {
                     add("IMAGE")
-                    add("TEXT") 
+                    add("TEXT")
                 })
             })
         }
-        
+
         val request = Request.Builder()
             .url("$baseUrl/v1beta/models/$modelId:generateContent?key=$apiKey")
             .post(gson.toJson(body).toRequestBody("application/json".toMediaType()))
             .build()
-        
+
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
             parseImageFromGeminiImageResponse(response.body?.string() ?: "")
         } else {
             val errorBody = response.body?.string() ?: ""
-            Result.failure(Exception("图像生成失败: ${response.code} - $errorBody"))
+            Result.failure(
+                Exception(Strings.imageGenerationFailedWithBodyFormat.format(response.code, errorBody))
+            )
         }
     }
-    
+
     /**
      * 使用 OpenAI 兼容格式生成图像
      */
@@ -2228,7 +2261,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
         // 尝试 DALL-E 格式
         return generateImageWithDallE(baseUrl, apiKey, modelId, prompt, width, height)
     }
-    
+
     /**
      * 解析 DALL-E 响应
      */
@@ -2237,7 +2270,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
             val json = gson.fromJson(body, JsonObject::class.java)
             val data = json.getAsJsonArray("data")?.get(0)?.asJsonObject
             val b64Json = data?.get("b64_json")?.asString
-            
+
             if (b64Json != null) {
                 Result.success(b64Json)
             } else {
@@ -2246,14 +2279,14 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 if (url != null) {
                     downloadImageAsBase64(url)
                 } else {
-                    Result.failure(Exception("未找到图像数据"))
+                    Result.failure(Exception(Strings.noImageDataFound))
                 }
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 解析 Gemini 图像响应
      */
@@ -2264,7 +2297,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 ?.get(0)?.asJsonObject
                 ?.getAsJsonObject("content")
                 ?.getAsJsonArray("parts")
-            
+
             parts?.forEach { part ->
                 val inlineData = part.asJsonObject.getAsJsonObject("inlineData")
                     ?: part.asJsonObject.getAsJsonObject("inline_data")
@@ -2273,12 +2306,12 @@ val json = gson.fromJson(body, JsonObject::class.java)
                     if (data != null) return Result.success(data)
                 }
             }
-            Result.failure(Exception("未找到图像数据"))
+            Result.failure(Exception(Strings.noImageDataFound))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 下载图像并转为 base64
      */
@@ -2291,10 +2324,12 @@ val json = gson.fromJson(body, JsonObject::class.java)
                 if (bytes != null) {
                     Result.success(Base64.encodeToString(bytes, Base64.NO_WRAP))
                 } else {
-                    Result.failure(Exception("下载图像失败"))
+                    Result.failure(Exception(Strings.failedToDownloadImage))
                 }
             } else {
-                Result.failure(Exception("下载图像失败: ${response.code}"))
+                Result.failure(
+                    Exception(Strings.failedToDownloadImageWithCodeFormat.format(response.code))
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)

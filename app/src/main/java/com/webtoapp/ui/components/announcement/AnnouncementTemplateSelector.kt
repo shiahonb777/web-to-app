@@ -57,7 +57,7 @@ fun AnnouncementTemplateSelector(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 4.dp)
@@ -86,9 +86,9 @@ private fun TemplateCard(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
         label = "border"
     )
-    
+
     val colors = templateColors[template] ?: listOf(Color.Gray, Color.DarkGray)
-    
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -143,19 +143,19 @@ private fun TemplateCard(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // 模板名称
         Text(
             text = template.getLocalizedDisplayName(),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) MaterialTheme.colorScheme.primary 
+            color = if (isSelected) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
-        
+
         // 选中指示器
         if (isSelected) {
             Spacer(modifier = Modifier.height(4.dp))
@@ -251,7 +251,7 @@ fun EnhancedAnnouncementCard(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "弹窗公告",
+                        text = Strings.popupAnnouncement,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -267,9 +267,9 @@ fun EnhancedAnnouncementCard(
                     selectedTemplate = template,
                     onTemplateSelected = onTemplateChange
                 )
-                
+
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
                 // 公告标题
                 OutlinedTextField(
                     value = title,
@@ -300,7 +300,7 @@ fun EnhancedAnnouncementCard(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 if (!linkUrl.isNullOrBlank()) {
                     OutlinedTextField(
                         value = linkText ?: "",
@@ -318,7 +318,7 @@ fun EnhancedAnnouncementCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -340,7 +340,7 @@ fun EnhancedAnnouncementCard(
                         } else null
                     )
                 }
-                
+
                 // 预览按钮
                 OutlinedButton(
                     onClick = onPreview,

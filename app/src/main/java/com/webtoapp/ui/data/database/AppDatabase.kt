@@ -38,7 +38,7 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
             }
         }
-        
+
         /**
          * 关闭数据库连接
          * 通常在 Application.onTerminate 或测试时调用
@@ -49,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE = null
             }
         }
-        
+
         /**
          * 通用迁移：添加新列（如果不存在）
          */
@@ -66,37 +66,37 @@ abstract class AppDatabase : RoomDatabase() {
                         db.execSQL("ALTER TABLE web_apps ADD COLUMN $columnName $columnType DEFAULT $defaultValue")
                     } catch (e: Exception) {
                         // 列可能已存在，忽略错误
-                        android.util.Log.w("AppDatabase", "迁移 $startVersion->$endVersion 跳过: ${e.message}")
+                        android.util.Log.w("AppDatabase", "Migration $startVersion->$endVersion skipped: ${e.message}")
                     }
                 }
             }
         }
-        
+
         // 迁移定义 - autoStartConfig
         private val MIGRATION_11_12 = createAddColumnMigration(11, 12, "autoStartConfig")
         private val MIGRATION_10_12 = createAddColumnMigration(10, 12, "autoStartConfig")
         private val MIGRATION_9_12 = createAddColumnMigration(9, 12, "autoStartConfig")
         private val MIGRATION_8_12 = createAddColumnMigration(8, 12, "autoStartConfig")
-        
+
         // 迁移定义 - forcedRunConfig (版本 12 -> 13)
         private val MIGRATION_12_13 = createAddColumnMigration(12, 13, "forcedRunConfig")
-        
+
         // 迁移定义 - blackTechConfig, disguiseConfig (版本 13 -> 14)
         private val MIGRATION_13_14 = object : Migration(13, 14) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN blackTechConfig TEXT DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 13->14 blackTechConfig 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 13->14 blackTechConfig skipped: ${e.message}")
                 }
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN disguiseConfig TEXT DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 13->14 disguiseConfig 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 13->14 disguiseConfig skipped: ${e.message}")
                 }
             }
         }
-        
+
         // 迁移定义 - 添加 categoryId 和 app_categories 表 (版本 14 -> 15)
         private val MIGRATION_14_15 = object : Migration(14, 15) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -113,13 +113,13 @@ abstract class AppDatabase : RoomDatabase() {
                         )
                     """.trimIndent())
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 14->15 创建 app_categories 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 14->15 create app_categories skipped: ${e.message}")
                 }
                 // 添加 categoryId 列
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN categoryId INTEGER DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 14->15 categoryId 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 14->15 categoryId skipped: ${e.message}")
                 }
             }
         }
@@ -128,12 +128,12 @@ abstract class AppDatabase : RoomDatabase() {
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN autoStartConfig TEXT DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 11->13 autoStartConfig 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 11->13 autoStartConfig skipped: ${e.message}")
                 }
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN forcedRunConfig TEXT DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 11->13 forcedRunConfig 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 11->13 forcedRunConfig skipped: ${e.message}")
                 }
             }
         }
@@ -142,12 +142,12 @@ abstract class AppDatabase : RoomDatabase() {
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN autoStartConfig TEXT DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 10->13 autoStartConfig 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 10->13 autoStartConfig skipped: ${e.message}")
                 }
                 try {
                     db.execSQL("ALTER TABLE web_apps ADD COLUMN forcedRunConfig TEXT DEFAULT NULL")
                 } catch (e: Exception) {
-                    android.util.Log.w("AppDatabase", "迁移 10->13 forcedRunConfig 跳过: ${e.message}")
+                    android.util.Log.w("AppDatabase", "Migration 10->13 forcedRunConfig skipped: ${e.message}")
                 }
             }
         }

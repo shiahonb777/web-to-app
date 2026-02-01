@@ -1,0 +1,10 @@
+{
+  "pageTitle": "Vue Demo App",
+  "appHeading": "Vue Demo",
+  "appDescription": "This is a Vue 3 sample app showcasing a reactive counter.",
+  "featureReactive": "Reactive",
+  "featureComponentBased": "Component-based",
+  "featureLightweight": "Lightweight",
+  "featureExtensible": "Extensible",
+  "loadingHint": "Initializing..."
+}

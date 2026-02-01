@@ -38,7 +38,7 @@ import java.io.File
 
 /**
  * 创建前端项目应用页面
- * 
+ *
  * 支持两种模式：
  * 1. 导入已构建的 dist 目录
  * 2. 完整构建（使用内置 Linux 环境）
@@ -58,33 +58,33 @@ fun CreateFrontendAppScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    
+
     // Linux 环境
     val linuxEnv = remember { LinuxEnvironmentManager.getInstance(context) }
     val linuxState by linuxEnv.state.collectAsState()
-    
+
     // 构建模式
     var buildMode by remember { mutableStateOf(BuildMode.IMPORT_DIST) }
-    
+
     // 项目信息
     var projectPath by remember { mutableStateOf<String?>(null) }
     var projectName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
-    
+
     // 检测结果
     var detectionResult by remember { mutableStateOf<ProjectDetectionResult?>(null) }
     var isDetecting by remember { mutableStateOf(false) }
-    
+
     // 构建器
     val importBuilder = remember { FrontendProjectBuilder(context) }
     val nodeBuilder = remember { NodeProjectBuilder(context) }
-    
+
     val importState by importBuilder.buildState.collectAsState()
     val importLogs by importBuilder.buildLogs.collectAsState()
-    
+
     val nodeBuildState by nodeBuilder.buildState.collectAsState()
     val nodeBuildLogs by nodeBuilder.buildLogs.collectAsState()
-    
+
     // 当前使用的状态和日志
     val currentBuildState = if (buildMode == BuildMode.FULL_BUILD) {
         when (val state = nodeBuildState) {
@@ -100,22 +100,22 @@ fun CreateFrontendAppScreen(
     } else {
         importState
     }
-    
+
     val currentLogs = if (buildMode == BuildMode.FULL_BUILD) nodeBuildLogs else importLogs
-    
+
     // 显示日志对话框
     var showLogsDialog by remember { mutableStateOf(false) }
-    
+
     // 检查 Linux 环境
     LaunchedEffect(Unit) {
         linuxEnv.checkEnvironment()
     }
-    
+
     // 图标选择器
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
-    
+
     // 文件夹选择器
     val folderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -125,7 +125,7 @@ fun CreateFrontendAppScreen(
             if (path != null) {
                 projectPath = path
                 projectName = File(path).name
-                
+
                 // 自动检测项目
                 scope.launch {
                     isDetecting = true
@@ -135,18 +135,18 @@ fun CreateFrontendAppScreen(
             }
         }
     }
-    
+
     // 判断是否可以操作
-    val canImport = projectPath != null && 
-                   detectionResult != null && 
+    val canImport = projectPath != null &&
+                   detectionResult != null &&
                    detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true &&
                    currentBuildState is BuildState.Idle
-    
+
     val canBuild = projectPath != null &&
                   detectionResult != null &&
                   linuxState is EnvironmentState.Ready &&
                   currentBuildState is BuildState.Idle
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -215,9 +215,9 @@ fun CreateFrontendAppScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     if (projectPath == null) {
                         OutlinedButton(
                             onClick = { folderPickerLauncher.launch(null) },
@@ -227,9 +227,9 @@ fun CreateFrontendAppScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(Strings.selectProjectFolder)
                         }
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Text(
                             Strings.selectProjectHint,
                             style = MaterialTheme.typography.bodySmall,
@@ -279,7 +279,7 @@ fun CreateFrontendAppScreen(
                     }
                 }
             }
-            
+
             // ========== 项目检测结果 ==========
             AnimatedVisibility(visible = isDetecting || detectionResult != null) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -296,7 +296,7 @@ fun CreateFrontendAppScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            
+
                             if (isDetecting) {
                                 Spacer(modifier = Modifier.width(12.dp))
                                 CircularProgressIndicator(
@@ -305,10 +305,10 @@ fun CreateFrontendAppScreen(
                                 )
                             }
                         }
-                        
+
                         if (detectionResult != null) {
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // 框架信息
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Code,
@@ -316,7 +316,7 @@ fun CreateFrontendAppScreen(
                                 value = getFrameworkDisplayName(detectionResult!!.framework),
                                 valueColor = getFrameworkColor(detectionResult!!.framework)
                             )
-                            
+
                             if (detectionResult!!.frameworkVersion != null) {
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Tag,
@@ -324,13 +324,13 @@ fun CreateFrontendAppScreen(
                                     value = detectionResult!!.frameworkVersion!!
                                 )
                             }
-                            
+
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Inventory,
                                 label = Strings.packageManagerLabel,
                                 value = detectionResult!!.packageManager.name
                             )
-                            
+
                             if (detectionResult!!.hasTypeScript) {
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Code,
@@ -339,9 +339,9 @@ fun CreateFrontendAppScreen(
                                     valueColor = Color(0xFF3178C6)
                                 )
                             }
-                            
+
                             // 依赖统计
-                            val totalDeps = detectionResult!!.dependencies.size + 
+                            val totalDeps = detectionResult!!.dependencies.size +
                                            detectionResult!!.devDependencies.size
                             if (totalDeps > 0) {
                                 DetectionInfoRow(
@@ -350,7 +350,7 @@ fun CreateFrontendAppScreen(
                                     value = Strings.dependencyCountValue.format(totalDeps)
                                 )
                             }
-                            
+
                             // 输出目录
                             DetectionInfoRow(
                                 icon = Icons.Outlined.FolderOpen,
@@ -358,7 +358,7 @@ fun CreateFrontendAppScreen(
                                 value = File(detectionResult!!.outputDir).name
                             )
 
-                            
+
                             // 问题和建议
                             if (detectionResult!!.issues.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -366,7 +366,7 @@ fun CreateFrontendAppScreen(
                                     IssueItem(issue)
                                 }
                             }
-                            
+
                             if (detectionResult!!.suggestions.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 detectionResult!!.suggestions.forEach { suggestion ->
@@ -386,9 +386,9 @@ fun CreateFrontendAppScreen(
                     }
                 }
             }
-            
+
             // ========== 应用配置 ==========
-            AnimatedVisibility(visible = detectionResult != null && 
+            AnimatedVisibility(visible = detectionResult != null &&
                 detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -405,17 +405,17 @@ fun CreateFrontendAppScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // 应用名称（带随机按钮）
                         AppNameTextFieldSimple(
                             value = projectName,
                             onValueChange = { projectName = it }
                         )
-                        
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         // 应用图标
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -429,7 +429,7 @@ fun CreateFrontendAppScreen(
                             IconPickerWithLibrary(
                                 iconUri = appIcon,
                                 onSelectFromGallery = { iconPickerLauncher.launch("image/*") },
-                                onSelectFromLibrary = { path -> 
+                                onSelectFromLibrary = { path ->
                                     appIcon = Uri.parse(path)
                                 }
                             )
@@ -437,17 +437,17 @@ fun CreateFrontendAppScreen(
                     }
                 }
             }
-            
+
             // ========== 构建状态 ==========
             AnimatedVisibility(visible = currentBuildState !is BuildState.Idle) {
                 BuildStatusCard(currentBuildState, currentLogs.size) {
                     showLogsDialog = true
                 }
             }
-            
+
             // ========== 操作按钮 ==========
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             when (val state = currentBuildState) {
                 is BuildState.Idle -> {
                     if (buildMode == BuildMode.IMPORT_DIST) {
@@ -516,7 +516,7 @@ fun CreateFrontendAppScreen(
                 is BuildState.Error -> {
                     Column {
                         Button(
-                            onClick = { 
+                            onClick = {
                                 importBuilder.reset()
                                 nodeBuilder.reset()
                             },
@@ -530,7 +530,7 @@ fun CreateFrontendAppScreen(
                 }
                 else -> {
                     OutlinedButton(
-                        onClick = { 
+                        onClick = {
                             importBuilder.reset()
                             nodeBuilder.reset()
                         },
@@ -540,11 +540,11 @@ fun CreateFrontendAppScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-    
+
     // 日志对话框
     if (showLogsDialog) {
         BuildLogsDialog(
@@ -588,9 +588,9 @@ private fun BuildModeSelector(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // 使用说明
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -611,10 +611,10 @@ private fun BuildModeSelector(
                     )
                 }
             }
-            
+
             // 内置构建引擎说明
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -690,7 +690,7 @@ private fun IssueItem(issue: ProjectIssue) {
         IssueSeverity.WARNING -> Icons.Filled.Warning to Color(0xFFFFA726)
         IssueSeverity.INFO -> Icons.Filled.Info to Color(0xFF42A5F5)
     }
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -861,9 +861,9 @@ private fun BuildStatusCard(
                     }
                     else -> {}
                 }
-                
+
                 Spacer(modifier = Modifier.weight(1f))
-                
+
                 TextButton(onClick = onViewLogs) {
                     Text("${Strings.logs} ($logCount)")
                 }
@@ -897,7 +897,7 @@ private fun BuildLogsDialog(
                         LogLevel.INFO -> MaterialTheme.colorScheme.onSurface
                         LogLevel.DEBUG -> MaterialTheme.colorScheme.onSurfaceVariant
                     }
-                    
+
                     Text(
                         text = entry.message,
                         style = MaterialTheme.typography.bodySmall,
@@ -928,7 +928,7 @@ private fun getFrameworkDisplayName(framework: FrontendFramework): String {
         FrontendFramework.ANGULAR -> "Angular"
         FrontendFramework.SVELTE -> "Svelte"
         FrontendFramework.VITE -> "Vite"
-        FrontendFramework.UNKNOWN -> "静态网站"
+        FrontendFramework.UNKNOWN -> Strings.staticWebsite
     }
 }
 

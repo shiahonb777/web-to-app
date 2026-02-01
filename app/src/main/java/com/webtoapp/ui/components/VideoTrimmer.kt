@@ -40,7 +40,7 @@ fun VideoTrimmer(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     // 检查视频文件是否存在
     val videoExists = remember(videoPath) {
         when {
@@ -56,7 +56,7 @@ fun VideoTrimmer(
             else -> false
         }
     }
-    
+
     // 如果文件不存在，显示提示
     if (!videoExists) {
         Box(
@@ -74,17 +74,17 @@ fun VideoTrimmer(
         }
         return
     }
-    
+
     // 获取视频信息和缩略图
     var totalDuration by remember { mutableLongStateOf(videoDurationMs) }
     var thumbnail by remember { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var currentPreviewMs by remember { mutableLongStateOf(startMs) }
-    
+
     // MediaMetadataRetriever 实例（用于实时预览）
     val retriever = remember { MediaMetadataRetriever() }
     var retrieverReady by remember { mutableStateOf(false) }
-    
+
     // 初始化 retriever 和加载视频信息
     LaunchedEffect(videoPath) {
         isLoading = true
@@ -96,18 +96,18 @@ fun VideoTrimmer(
                     else -> retriever.setDataSource(videoPath)
                 }
                 retrieverReady = true
-                
+
                 // 获取时长
                 val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 val duration = durationStr?.toLongOrNull() ?: 0L
-                
+
                 // 获取初始缩略图
                 val frame = retriever.getFrameAtTime(startMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                
+
                 totalDuration = duration
                 thumbnail = frame
                 currentPreviewMs = startMs
-                
+
                 // 初始化裁剪范围（使用整个视频）
                 if (videoDurationMs == 0L && duration > 0) {
                     onTrimChange(0L, duration, duration)
@@ -118,15 +118,15 @@ fun VideoTrimmer(
         }
         isLoading = false
     }
-    
+
     // 当起始位置变化时更新预览帧（带防抖处理，避免频繁调用导致卡顿）
     var previewJob by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
-    
+
     LaunchedEffect(currentPreviewMs) {
         // 取消之前的任务
         previewJob?.cancel()
-        
+
         if (retrieverReady && currentPreviewMs >= 0) {
             // 防抖延迟 150ms
             previewJob = scope.launch {
@@ -134,7 +134,7 @@ fun VideoTrimmer(
                 withContext(Dispatchers.IO) {
                     try {
                         val frame = retriever.getFrameAtTime(
-                            currentPreviewMs * 1000, 
+                            currentPreviewMs * 1000,
                             MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                         )
                         if (frame != null) {
@@ -147,7 +147,7 @@ fun VideoTrimmer(
             }
         }
     }
-    
+
     // 清理 retriever
     DisposableEffect(Unit) {
         onDispose {
@@ -158,11 +158,11 @@ fun VideoTrimmer(
             }
         }
     }
-    
+
     // 计算当前选择的时长
     val selectedDuration = endMs - startMs
     val selectedSeconds = selectedDuration / 1000f
-    
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -209,7 +209,7 @@ fun VideoTrimmer(
                 )
             }
         }
-        
+
         // 时长信息
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -226,7 +226,7 @@ fun VideoTrimmer(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
+
         // 裁剪范围滑块
         if (totalDuration > 0) {
             Column {
@@ -235,30 +235,30 @@ fun VideoTrimmer(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 // 使用 RangeSlider 选择起止时间
                 RangeSlider(
                     value = startMs.toFloat()..endMs.toFloat(),
                     onValueChange = { range ->
                         val newStart = range.start.toLong()
                         var newEnd = range.endInclusive.toLong()
-                        
+
                         // 确保至少有 1 秒
                         if (newEnd - newStart < 1000) {
                             newEnd = minOf(newStart + 1000, totalDuration)
                         }
-                        
+
                         // 更新预览帧位置（优先显示起始位置）
                         currentPreviewMs = newStart
-                        
+
                         onTrimChange(newStart, newEnd, totalDuration)
                     },
                     valueRange = 0f..totalDuration.toFloat(),
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 // 时间标签
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -291,6 +291,6 @@ private fun formatTime(ms: Long): String {
     return if (minutes > 0) {
         "%d:%02d.%d".format(minutes, seconds, millis)
     } else {
-        "%d.%d 秒".format(seconds, millis)
+        Strings.secondsShortFormat.format(seconds, millis)
     }
 }

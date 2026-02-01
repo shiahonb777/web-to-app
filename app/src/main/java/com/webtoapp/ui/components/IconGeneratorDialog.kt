@@ -52,16 +52,16 @@ fun IconGeneratorDialog(
     val scope = rememberCoroutineScope()
     val configManager = remember { AiConfigManager(context) }
     val aiClient = remember { AiApiClient(context) }
-    
+
     // 模型和密钥
     val savedModels by configManager.savedModelsFlow.collectAsState(initial = emptyList())
     val apiKeys by configManager.apiKeysFlow.collectAsState(initial = emptyList())
-    
+
     // 筛选支持图标生成功能的模型
     val imageGenModels = savedModels.filter { model ->
         model.supportsFeature(AiFeature.ICON_GENERATION)
     }
-    
+
     // 状态
     var selectedModel by remember { mutableStateOf<SavedModel?>(null) }
     var prompt by remember { mutableStateOf("") }
@@ -70,14 +70,14 @@ fun IconGeneratorDialog(
     var generatedIcon by remember { mutableStateOf<String?>(null) }  // Base64 数据
     var savedIconPath by remember { mutableStateOf<String?>(null) }  // 保存后的文件路径
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // 自动选择第一个模型
     LaunchedEffect(imageGenModels) {
         if (selectedModel == null && imageGenModels.isNotEmpty()) {
             selectedModel = imageGenModels.first()
         }
     }
-    
+
     // 图片选择器
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -86,7 +86,7 @@ fun IconGeneratorDialog(
             referenceImages = (referenceImages + uris).take(3)
         }
     }
-    
+
     AlertDialog(
         onDismissRequest = { if (!isGenerating) onDismiss() },
         title = {
@@ -130,7 +130,7 @@ fun IconGeneratorDialog(
                     }
                 } else {
                     Text(Strings.selectModel, style = MaterialTheme.typography.labelMedium)
-                    
+
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -161,7 +161,7 @@ fun IconGeneratorDialog(
                         }
                     }
                 }
-                
+
                 // 提示词输入
                 Text(Strings.describeIcon, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
@@ -172,13 +172,13 @@ fun IconGeneratorDialog(
                     minLines = 2,
                     maxLines = 4
                 )
-                
+
                 // 参考图片
                 Text(
                     Strings.referenceImages,
                     style = MaterialTheme.typography.labelMedium
                 )
-                
+
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -210,7 +210,7 @@ fun IconGeneratorDialog(
                             }
                         }
                     }
-                    
+
                     if (referenceImages.size < 3) {
                         item {
                             Box(
@@ -234,7 +234,7 @@ fun IconGeneratorDialog(
                         }
                     }
                 }
-                
+
                 // 生成结果预览
                 generatedIcon?.let { base64 ->
                     Text(Strings.generationResult, style = MaterialTheme.typography.labelMedium)
@@ -261,7 +261,7 @@ fun IconGeneratorDialog(
                         }
                     }
                 }
-                
+
                 // 错误信息
                 errorMessage?.let {
                     Text(
@@ -270,7 +270,7 @@ fun IconGeneratorDialog(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-                
+
                 // 生成中提示
                 if (isGenerating) {
                     Row(
@@ -300,16 +300,16 @@ fun IconGeneratorDialog(
                     onClick = {
                         val model = selectedModel ?: return@Button
                         val apiKey = apiKeys.find { it.id == model.apiKeyId } ?: return@Button
-                        
+
                         isGenerating = true
                         errorMessage = null
-                        
+
                         scope.launch {
                             val imagePaths = referenceImages.map { it.toString() }
                             val result = aiClient.generateAppIcon(
                                 context, prompt, imagePaths, apiKey, model
                             )
-                            
+
                             withContext(Dispatchers.Main) {
                                 isGenerating = false
                                 result.fold(
@@ -318,8 +318,8 @@ fun IconGeneratorDialog(
                                         // 自动保存到图标库
                                         scope.launch {
                                             val item = IconLibraryStorage.saveFromBase64(
-                                                context, base64, 
-                                                prompt.take(20).ifBlank { "AI图标" }
+                                                context, base64,
+                                                prompt.take(20).ifBlank { Strings.aiIcon }
                                             )
                                             savedIconPath = item?.path
                                         }
@@ -337,8 +337,8 @@ fun IconGeneratorDialog(
         },
         dismissButton = {
             if (generatedIcon != null) {
-                TextButton(onClick = { 
-                    generatedIcon = null 
+                TextButton(onClick = {
+                    generatedIcon = null
                     savedIconPath = null
                 }) {
                     Text(Strings.regenerate)

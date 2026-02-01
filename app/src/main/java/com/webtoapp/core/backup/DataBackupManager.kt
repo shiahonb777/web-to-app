@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.repository.WebAppRepository
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +25,7 @@ import kotlin.coroutines.coroutineContext
  * 支持一键导出和导入所有应用数据
  */
 class DataBackupManager(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "DataBackupManager"
         private const val BACKUP_VERSION = 2  // 版本升级：支持更多资源类型
@@ -38,10 +39,10 @@ class DataBackupManager(private val context: Context) {
         private const val HTML_DIR = "resources/html/"
         private const val MEDIA_DIR = "resources/media/"
         private const val STATUSBAR_DIR = "resources/statusbar/" // 状态栌背景图
-        
+
         // 缓冲区大小
         private const val BUFFER_SIZE = 8192
-        
+
         // 单例 Gson
         private val gson: Gson by lazy {
             GsonBuilder()
@@ -49,7 +50,7 @@ class DataBackupManager(private val context: Context) {
                 .create()
         }
     }
-    
+
     /**
      * 备份数据结构
      */
@@ -59,7 +60,7 @@ class DataBackupManager(private val context: Context) {
         val appCount: Int = 0,
         val apps: List<WebApp> = emptyList()
     )
-    
+
     /**
      * 导出所有数据到 ZIP 文件
      * @param repository 数据仓库
@@ -73,43 +74,47 @@ class DataBackupManager(private val context: Context) {
         onProgress: (Int, Int, String) -> Unit = { _, _, _ -> }
     ): Result<ExportResult> = withContext(Dispatchers.IO) {
         try {
-            onProgress(0, 100, "正在读取应用数据...")
+            onProgress(0, 100, Strings.backupReadingAppData)
             coroutineContext.ensureActive() // 支持取消
-            
+
             // 获取所有应用
             val apps = repository.allWebApps.first()
             if (apps.isEmpty()) {
-                return@withContext Result.failure(Exception("没有可导出的应用数据"))
+                return@withContext Result.failure(Exception(Strings.backupNoDataToExport))
             }
-            
-            Log.d(TAG, "准备导出 ${apps.size} 个应用")
-            
+
+            Log.d(TAG, "Preparing to export ${apps.size} apps")
+
             // 收集所有资源文件
             val resourceFiles = mutableMapOf<String, String>() // zipPath -> localPath
-            
+
             apps.forEachIndexed { index, app ->
                 coroutineContext.ensureActive()
-                onProgress(10 + (index * 30 / apps.size), 100, "正在收集资源: ${app.name}")
+                onProgress(
+                    10 + (index * 30 / apps.size),
+                    100,
+                    Strings.backupCollectingResourcesFormat.format(app.name)
+                )
                 collectAppResources(app, resourceFiles)
             }
-            
-            Log.d(TAG, "收集到 ${resourceFiles.size} 个资源文件")
-            
+
+            Log.d(TAG, "Collected ${resourceFiles.size} resource files")
+
             // 创建备份数据（更新资源路径为相对路径）
             val appsWithRelativePaths = apps.map { app ->
                 updateAppPathsToRelative(app, resourceFiles)
             }
-            
+
             val backupData = BackupData(
                 version = BACKUP_VERSION,
                 exportTime = System.currentTimeMillis(),
                 appCount = apps.size,
                 apps = appsWithRelativePaths
             )
-            
-            onProgress(50, 100, "正在创建备份文件...")
+
+            onProgress(50, 100, Strings.backupCreatingFile)
             coroutineContext.ensureActive()
-            
+
             // 写入 ZIP 文件
             context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
                 ZipOutputStream(BufferedOutputStream(outputStream, BUFFER_SIZE)).use { zipOut ->
@@ -118,7 +123,7 @@ class DataBackupManager(private val context: Context) {
                     zipOut.putNextEntry(ZipEntry(APPS_JSON))
                     zipOut.write(jsonBytes)
                     zipOut.closeEntry()
-                    
+
                     // 写入资源文件
                     var processedFiles = 0
                     resourceFiles.forEach { (zipPath, localPath) ->
@@ -127,9 +132,9 @@ class DataBackupManager(private val context: Context) {
                         onProgress(
                             50 + (processedFiles * 45 / resourceFiles.size),
                             100,
-                            "正在打包资源文件..."
+                            Strings.backupPackagingResources
                         )
-                        
+
                         try {
                             val file = File(localPath)
                             if (file.exists() && file.canRead()) {
@@ -140,25 +145,25 @@ class DataBackupManager(private val context: Context) {
                                 zipOut.closeEntry()
                             }
                         } catch (e: Exception) {
-                            Log.w(TAG, "无法打包资源文件: $localPath", e)
+                            Log.w(TAG, "Failed to package resource file: $localPath", e)
                         }
                     }
                 }
-            } ?: return@withContext Result.failure(Exception("无法创建输出文件"))
-            
-            onProgress(100, 100, "导出完成")
-            
+            } ?: return@withContext Result.failure(Exception(Strings.backupUnableToCreateOutput))
+
+            onProgress(100, 100, Strings.backupExportComplete)
+
             Result.success(ExportResult(
                 appCount = apps.size,
                 resourceCount = resourceFiles.size
             ))
-            
+
         } catch (e: Exception) {
-            Log.e(TAG, "导出失败", e)
+            Log.e(TAG, "Export failed", e)
             Result.failure(e)
         }
     }
-    
+
     /**
      * 从 ZIP 文件导入所有数据
      * @param repository 数据仓库
@@ -172,32 +177,36 @@ class DataBackupManager(private val context: Context) {
         onProgress: (Int, Int, String) -> Unit = { _, _, _ -> }
     ): Result<ImportResult> = withContext(Dispatchers.IO) {
         val extractedFiles = mutableListOf<File>() // 用于失败时清理
-        
+
         try {
-            onProgress(0, 100, "正在读取备份文件...")
+            onProgress(0, 100, Strings.backupReadingFile)
             coroutineContext.ensureActive()
-            
+
             var backupData: BackupData? = null
             val extractedResources = mutableMapOf<String, String>() // zipPath -> extractedLocalPath
-            
+
             // 读取 ZIP 文件
             context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
                 ZipInputStream(BufferedInputStream(inputStream, BUFFER_SIZE)).use { zipIn ->
                     var entry = zipIn.nextEntry
                     var totalEntries = 0
-                    
+
                     while (entry != null) {
                         coroutineContext.ensureActive()
                         totalEntries++
-                        onProgress(10 + (totalEntries % 40), 100, "正在解压: ${entry.name}")
-                        
+                        onProgress(
+                            10 + (totalEntries % 40),
+                            100,
+                            Strings.backupExtractingEntryFormat.format(entry.name)
+                        )
+
                         when {
                             entry.name == APPS_JSON -> {
                                 // 读取应用数据
                                 val jsonBytes = zipIn.readBytes()
                                 val jsonStr = String(jsonBytes, Charsets.UTF_8)
                                 backupData = gson.fromJson(jsonStr, BackupData::class.java)
-                                Log.d(TAG, "读取到 ${backupData?.appCount} 个应用")
+                                Log.d(TAG, "Loaded ${backupData?.appCount} apps from backup")
                             }
                             entry.name.startsWith(RESOURCES_DIR) && !entry.isDirectory -> {
                                 // 解压资源文件
@@ -208,67 +217,67 @@ class DataBackupManager(private val context: Context) {
                                 }
                             }
                         }
-                        
+
                         zipIn.closeEntry()
                         entry = zipIn.nextEntry
                     }
                 }
-            } ?: return@withContext Result.failure(Exception("无法读取备份文件"))
-            
+            } ?: return@withContext Result.failure(Exception(Strings.backupUnableToReadFile))
+
             if (backupData == null) {
                 cleanupExtractedFiles(extractedFiles)
-                return@withContext Result.failure(Exception("备份文件格式无效"))
+                return@withContext Result.failure(Exception(Strings.backupInvalidFormat))
             }
-            
-            onProgress(60, 100, "正在导入应用数据...")
+
+            onProgress(60, 100, Strings.backupImportingAppData)
             coroutineContext.ensureActive()
-            
+
             // 导入应用
             var importedCount = 0
             var skippedCount = 0
-            
+
             backupData!!.apps.forEachIndexed { index, app ->
                 coroutineContext.ensureActive()
                 onProgress(
                     60 + (index * 35 / backupData!!.apps.size),
                     100,
-                    "正在导入: ${app.name}"
+                    Strings.backupImportingAppFormat.format(app.name)
                 )
-                
+
                 try {
                     // 更新资源路径为本地路径
                     val appWithLocalPaths = updateAppPathsToLocal(app, extractedResources)
-                    
+
                     // 创建新应用（重置 ID 以避免冲突）
                     val newApp = appWithLocalPaths.copy(
                         id = 0,
                         createdAt = System.currentTimeMillis(),
                         updatedAt = System.currentTimeMillis()
                     )
-                    
+
                     repository.createWebApp(newApp)
                     importedCount++
                 } catch (e: Exception) {
-                    Log.w(TAG, "导入应用失败: ${app.name}", e)
+                    Log.w(TAG, "Failed to import app: ${app.name}", e)
                     skippedCount++
                 }
             }
-            
-            onProgress(100, 100, "导入完成")
-            
+
+            onProgress(100, 100, Strings.backupImportComplete)
+
             Result.success(ImportResult(
                 totalCount = backupData!!.appCount,
                 importedCount = importedCount,
                 skippedCount = skippedCount
             ))
-            
+
         } catch (e: Exception) {
-            Log.e(TAG, "导入失败", e)
+            Log.e(TAG, "Import failed", e)
             cleanupExtractedFiles(extractedFiles)
             Result.failure(e)
         }
     }
-    
+
     /**
      * 清理已解压的文件（导入失败时调用）
      */
@@ -279,21 +288,21 @@ class DataBackupManager(private val context: Context) {
                     file.delete()
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "清理文件失败: ${file.absolutePath}", e)
+                Log.w(TAG, "Failed to clean up file: ${file.absolutePath}", e)
             }
         }
     }
-    
+
     /**
      * 清理所有备份临时文件
      */
     fun cleanupBackupTempFiles() {
         val backupDirs = listOf(
-            "backup_icons", "backup_splash", "backup_bgm", 
+            "backup_icons", "backup_splash", "backup_bgm",
             "backup_bgm_lrc", "backup_bgm_cover",
             "backup_html", "backup_media", "backup_statusbar", "backup_other"
         )
-        
+
         backupDirs.forEach { dirName ->
             try {
                 val dir = File(context.filesDir, dirName)
@@ -301,11 +310,11 @@ class DataBackupManager(private val context: Context) {
                     dir.deleteRecursively()
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "清理备份目录失败: $dirName", e)
+                Log.w(TAG, "Failed to clean backup directory: $dirName", e)
             }
         }
     }
-    
+
     /**
      * 获取备份临时文件大小
      */
@@ -315,7 +324,7 @@ class DataBackupManager(private val context: Context) {
             "backup_bgm_lrc", "backup_bgm_cover",
             "backup_html", "backup_media", "backup_statusbar", "backup_other"
         )
-        
+
         return backupDirs.sumOf { dirName ->
             val dir = File(context.filesDir, dirName)
             if (dir.exists() && dir.isDirectory) {
@@ -323,13 +332,13 @@ class DataBackupManager(private val context: Context) {
             } else 0L
         }
     }
-    
+
     /**
      * 收集应用的所有资源文件
      */
     private fun collectAppResources(app: WebApp, resources: MutableMap<String, String>) {
         val appId = app.id.toString()
-        
+
         // 图标
         app.iconPath?.let { path ->
             if (File(path).exists()) {
@@ -337,7 +346,7 @@ class DataBackupManager(private val context: Context) {
                 resources["${ICONS_DIR}${appId}_icon.$ext"] = path
             }
         }
-        
+
         // 启动画面
         app.splashConfig?.mediaPath?.let { path ->
             if (File(path).exists()) {
@@ -345,7 +354,7 @@ class DataBackupManager(private val context: Context) {
                 resources["${SPLASH_DIR}${appId}_splash.$ext"] = path
             }
         }
-        
+
         // BGM 文件
         app.bgmConfig?.playlist?.forEachIndexed { index, bgmItem ->
             // BGM 音频文件
@@ -367,7 +376,7 @@ class DataBackupManager(private val context: Context) {
                 }
             }
         }
-        
+
         // 状态栌背景图片
         app.webViewConfig.statusBarBackgroundImage?.let { path ->
             if (File(path).exists()) {
@@ -375,16 +384,16 @@ class DataBackupManager(private val context: Context) {
                 resources["${STATUSBAR_DIR}${appId}_statusbar.$ext"] = path
             }
         }
-        
+
         // HTML 文件
         app.htmlConfig?.files?.forEach { htmlFile ->
             if (File(htmlFile.path).exists()) {
                 resources["${HTML_DIR}${appId}/${htmlFile.name}"] = htmlFile.path
             }
         }
-        
+
         // 媒体应用内容
-        if (app.appType == com.webtoapp.data.model.AppType.IMAGE || 
+        if (app.appType == com.webtoapp.data.model.AppType.IMAGE ||
             app.appType == com.webtoapp.data.model.AppType.VIDEO) {
             val mediaPath = app.url
             if (mediaPath.isNotBlank() && File(mediaPath).exists()) {
@@ -393,7 +402,7 @@ class DataBackupManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * 更新应用路径为相对路径（用于导出）
      */
@@ -402,13 +411,13 @@ class DataBackupManager(private val context: Context) {
         resources: Map<String, String>
     ): WebApp {
         val appId = app.id.toString()
-        
+
         // 查找对应的 ZIP 路径
         fun findZipPath(localPath: String?): String? {
             if (localPath == null) return null
             return resources.entries.find { it.value == localPath }?.key
         }
-        
+
         return app.copy(
             iconPath = findZipPath(app.iconPath),
             splashConfig = app.splashConfig?.copy(
@@ -439,7 +448,7 @@ class DataBackupManager(private val context: Context) {
             } else app.url
         )
     }
-    
+
     /**
      * 更新应用路径为本地路径（用于导入）
      */
@@ -479,7 +488,7 @@ class DataBackupManager(private val context: Context) {
             } else app.url
         )
     }
-    
+
     /**
      * 解压资源文件到本地
      */
@@ -496,23 +505,23 @@ class DataBackupManager(private val context: Context) {
                 zipPath.startsWith(STATUSBAR_DIR) -> File(context.filesDir, "backup_statusbar")
                 else -> File(context.filesDir, "backup_other")
             }
-            
+
             targetDir.mkdirs()
-            
+
             val fileName = zipPath.substringAfterLast('/')
             val targetFile = File(targetDir, fileName)
-            
+
             FileOutputStream(targetFile).use { output ->
                 zipIn.copyTo(output)
             }
-            
+
             targetFile.absolutePath
         } catch (e: Exception) {
-            Log.w(TAG, "解压资源文件失败: $zipPath", e)
+            Log.w(TAG, "Failed to extract resource file: $zipPath", e)
             null
         }
     }
-    
+
     /**
      * 生成备份文件名
      */

@@ -12,11 +12,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.webtoapp.core.i18n.Strings
 import java.io.File
 
 /**
  * 状态栏背景组件
- * 
+ *
  * 在全屏模式下显示状态栏时，渲染自定义的状态栏背景
  * 支持纯色背景和图片背景，以及透明度调整
  */
@@ -31,7 +32,7 @@ fun StatusBarBackground(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    
+
     // 获取系统状态栏高度
     val systemStatusBarHeight = remember {
         val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -41,10 +42,10 @@ fun StatusBarBackground(
             24.dp
         }
     }
-    
+
     // 使用自定义高度或系统默认高度
     val actualHeight = if (heightDp > 0) heightDp.dp else systemStatusBarHeight
-    
+
     // 加载图片背景
     val imageBitmap = remember(backgroundImagePath) {
         if (backgroundType == "IMAGE" && !backgroundImagePath.isNullOrEmpty()) {
@@ -68,7 +69,7 @@ fun StatusBarBackground(
             null
         }
     }
-    
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -80,7 +81,7 @@ fun StatusBarBackground(
                 // 图片背景
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = "状态栏背景",
+                    contentDescription = Strings.statusBarBackground,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 1f - alpha)),
@@ -112,10 +113,10 @@ fun StatusBarBackground(
 
 /**
  * 状态栏背景覆盖层
- * 
+ *
  * 用于在全屏模式下覆盖在内容上方，显示自定义状态栏背景
  * 这个组件应该放在 Box 的最上层
- * 
+ *
  * 注意：此组件需要放在一个使用 fillMaxSize() 的容器中
  */
 @Composable
@@ -129,10 +130,10 @@ fun StatusBarOverlay(
     modifier: Modifier = Modifier
 ) {
     if (!show) return
-    
+
     val context = LocalContext.current
     val density = LocalDensity.current
-    
+
     // 获取系统状态栏高度
     val systemStatusBarHeight = remember {
         val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -142,10 +143,10 @@ fun StatusBarOverlay(
             24.dp
         }
     }
-    
+
     // 使用自定义高度或系统默认高度
     val actualHeight = if (heightDp > 0) heightDp.dp else systemStatusBarHeight
-    
+
     // 加载图片背景
     val imageBitmap = remember(backgroundImagePath) {
         if (backgroundType == "IMAGE" && !backgroundImagePath.isNullOrEmpty()) {
@@ -169,7 +170,7 @@ fun StatusBarOverlay(
             null
         }
     }
-    
+
     // 状态栏背景 - 从屏幕最顶部开始，覆盖状态栏区域
     Box(
         modifier = modifier
@@ -181,7 +182,7 @@ fun StatusBarOverlay(
                 // 图片背景
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = "状态栏背景",
+                    contentDescription = Strings.statusBarBackground,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     alpha = alpha

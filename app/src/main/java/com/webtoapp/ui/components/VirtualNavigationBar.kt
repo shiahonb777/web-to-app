@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.webtoapp.core.i18n.Strings
 
 /**
  * 虚拟导航栏配置
@@ -37,7 +38,7 @@ data class VirtualNavBarConfig(
 
 /**
  * 虚拟导航栏 - 在强制运行模式下提供应用内导航
- * 
+ *
  * 包含：返回、前进、刷新、主页 按钮
  */
 @Composable
@@ -84,43 +85,43 @@ fun VirtualNavigationBar(
                     if (config.showBackButton) {
                         NavButton(
                             icon = Icons.Filled.ArrowBack,
-                            contentDescription = "返回",
+                            contentDescription = Strings.back,
                             enabled = canGoBack,
                             onClick = onBack,
                             iconColor = config.iconColor,
                             disabledIconColor = config.disabledIconColor
                         )
                     }
-                    
+
                     // 前进按钮
                     if (config.showForwardButton) {
                         NavButton(
                             icon = Icons.Filled.ArrowForward,
-                            contentDescription = "前进",
+                            contentDescription = Strings.navForward,
                             enabled = canGoForward,
                             onClick = onForward,
                             iconColor = config.iconColor,
                             disabledIconColor = config.disabledIconColor
                         )
                     }
-                    
+
                     // 刷新按钮
                     if (config.showRefreshButton) {
                         NavButton(
                             icon = Icons.Filled.Refresh,
-                            contentDescription = "刷新",
+                            contentDescription = Strings.refresh,
                             enabled = true,
                             onClick = onRefresh,
                             iconColor = config.iconColor,
                             disabledIconColor = config.disabledIconColor
                         )
                     }
-                    
+
                     // 主页按钮
                     if (config.showHomeButton) {
                         NavButton(
                             icon = Icons.Filled.Home,
-                            contentDescription = "主页",
+                            contentDescription = Strings.home,
                             enabled = true,
                             onClick = onHome,
                             iconColor = config.iconColor,

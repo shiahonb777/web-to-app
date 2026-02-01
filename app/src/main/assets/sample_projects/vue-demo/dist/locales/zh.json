@@ -1,0 +1,10 @@
+{
+  "pageTitle": "Vue 示例应用",
+  "appHeading": "Vue 示例",
+  "appDescription": "Vue 3 响应式计数器示例，展示 Composition API",
+  "featureReactive": "响应式",
+  "featureComponentBased": "组件化",
+  "featureLightweight": "轻量",
+  "featureExtensible": "可扩展",
+  "loadingHint": "正在初始化..."
+}

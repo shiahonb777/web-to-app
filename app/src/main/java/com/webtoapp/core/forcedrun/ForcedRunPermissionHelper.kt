@@ -18,10 +18,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.webtoapp.core.i18n.Strings
 
 /**
  * 强制运行权限引导组件
- * 
+ *
  * 引导用户授权必要的权限以启用强制运行功能
  */
 @Composable
@@ -31,27 +32,27 @@ fun ForcedRunPermissionGuide(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     // 权限状态
     var hasAccessibility by remember { mutableStateOf(false) }
     var hasUsageStats by remember { mutableStateOf(false) }
-    
+
     // 刷新权限状态
     fun refreshPermissions() {
         hasAccessibility = ForcedRunAccessibilityService.isAccessibilityServiceEnabled(context)
         hasUsageStats = ForcedRunGuardService.hasUsageStatsPermission(context)
     }
-    
+
     // 初始检查和定期刷新
     LaunchedEffect(Unit) {
         refreshPermissions()
     }
-    
+
     // 每次 resume 时刷新
     DisposableEffect(Unit) {
         onDispose { }
     }
-    
+
     // 检查是否所有需要的权限都已授权
     LaunchedEffect(hasAccessibility, hasUsageStats) {
         val allGranted = when (protectionLevel) {
@@ -63,7 +64,7 @@ fun ForcedRunPermissionGuide(
             onAllPermissionsGranted()
         }
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -77,24 +78,24 @@ fun ForcedRunPermissionGuide(
         ) {
             // 标题
             Text(
-                text = "强制运行权限设置",
+                text = Strings.forcedRunPermissionSetup,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Text(
-                text = "为了确保强制运行功能有效，请授权以下权限：",
+                text = Strings.forcedRunPermissionIntro,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Divider()
-            
+
             // 辅助功能权限
             if (protectionLevel != ProtectionLevel.BASIC) {
                 PermissionItem(
-                    title = "辅助功能服务",
-                    description = "监控窗口变化，防止用户切换应用",
+                    title = Strings.accessibilityService,
+                    description = Strings.accessibilityServiceDesc,
                     isGranted = hasAccessibility,
                     onRequestPermission = {
                         ForcedRunAccessibilityService.openAccessibilitySettings(context)
@@ -102,12 +103,12 @@ fun ForcedRunPermissionGuide(
                     onRefresh = { refreshPermissions() }
                 )
             }
-            
+
             // 使用情况访问权限
             if (protectionLevel == ProtectionLevel.MAXIMUM) {
                 PermissionItem(
-                    title = "使用情况访问",
-                    description = "检测当前前台应用，提供双重防护",
+                    title = Strings.usageAccess,
+                    description = Strings.usageAccessDesc,
                     isGranted = hasUsageStats,
                     onRequestPermission = {
                         ForcedRunGuardService.openUsageAccessSettings(context)
@@ -115,18 +116,18 @@ fun ForcedRunPermissionGuide(
                     onRefresh = { refreshPermissions() }
                 )
             }
-            
+
             // 防护级别说明
             Divider()
-            
+
             ProtectionLevelInfo(protectionLevel)
-            
+
             // 刷新按钮
             OutlinedButton(
                 onClick = { refreshPermissions() },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("刷新权限状态")
+                Text(Strings.refreshPermissionStatus)
             }
         }
     }
@@ -152,7 +153,7 @@ private fun PermissionItem(
             tint = if (isGranted) Color(0xFF4CAF50) else Color(0xFFFF9800),
             modifier = Modifier.size(28.dp)
         )
-        
+
         // 权限信息
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -166,7 +167,7 @@ private fun PermissionItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
+
         // 操作按钮
         if (!isGranted) {
             FilledTonalButton(
@@ -179,11 +180,11 @@ private fun PermissionItem(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text("授权", fontSize = 14.sp)
+                Text(Strings.grant, fontSize = 14.sp)
             }
         } else {
             Text(
-                text = "已授权",
+                text = Strings.granted,
                 color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp
@@ -196,22 +197,22 @@ private fun PermissionItem(
 private fun ProtectionLevelInfo(level: ProtectionLevel) {
     val (levelName, levelDescription, levelColor) = when (level) {
         ProtectionLevel.BASIC -> Triple(
-            "基础防护",
-            "仅拦截返回键，防护效果有限",
+            Strings.protectionBasic,
+            Strings.protectionBasicDesc,
             Color(0xFF9E9E9E)
         )
         ProtectionLevel.STANDARD -> Triple(
-            "标准防护",
-            "通过辅助功能监控窗口，有效阻止应用切换",
+            Strings.protectionStandard,
+            Strings.protectionStandardDesc,
             Color(0xFF2196F3)
         )
         ProtectionLevel.MAXIMUM -> Triple(
-            "最强防护",
-            "辅助功能 + 后台守护服务，双重防护确保万无一失",
+            Strings.protectionMaximum,
+            Strings.protectionMaximumDesc,
             Color(0xFF4CAF50)
         )
     }
-    
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -228,7 +229,7 @@ private fun ProtectionLevelInfo(level: ProtectionLevel) {
                 fontSize = 12.sp
             )
         }
-        
+
         Text(
             text = levelDescription,
             style = MaterialTheme.typography.bodySmall,
@@ -251,12 +252,16 @@ fun ForcedRunPermissionDialog(
     val permissionStatus = remember(protectionLevel) {
         ForcedRunManager.checkProtectionPermissions(context, protectionLevel)
     }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (permissionStatus.isFullyGranted) "权限已就绪" else "需要授权",
+                text = if (permissionStatus.isFullyGranted) {
+                    Strings.permissionsReady
+                } else {
+                    Strings.permissionsRequired
+                },
                 fontWeight = FontWeight.Bold
             )
         },
@@ -269,17 +274,17 @@ fun ForcedRunPermissionDialog(
         confirmButton = {
             if (permissionStatus.isFullyGranted) {
                 Button(onClick = onAllPermissionsGranted) {
-                    Text("开始")
+                    Text(Strings.start)
                 }
             } else {
                 TextButton(onClick = onContinueAnyway) {
-                    Text("跳过（降级防护）")
+                    Text(Strings.skipReducedProtection)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(Strings.btnCancel)
             }
         }
     )

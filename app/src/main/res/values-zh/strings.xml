@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 
+    <!--
     使用固定长度占位符，确保有足够字节空间支持长自定义名称
     重要：使用 Unicode 不间断空格 (\u00A0) 代替普通空格，防止 AAPT2 trim
     总长度：8(WebToApp) + 88(填充) = 96 字节，支持约 30 个中文字符
@@ -152,7 +152,7 @@
     <string name="upload">上传</string>
     <string name="import_text">导入</string>
     <string name="export_text">导出</string>
-    
+
     <!-- 帮助 -->
     <string name="help">帮助</string>
     <string name="usage_help">使用帮助</string>
@@ -160,7 +160,7 @@
     <string name="select_module_category">选择模块分类</string>
     <string name="auto_detect">自动识别</string>
     <string name="auto_detect_category_hint">让 AI 根据需求自动选择分类</string>
-    
+
     <!-- AI 模块开发帮助 -->
     <string name="help_how_to_use">如何使用</string>
     <string name="help_how_to_use_content">在输入框中用自然语言描述你想要的功能，AI 会自动分析需求并生成对应的扩展模块代码。</string>
@@ -176,7 +176,7 @@
     <string name="help_code_edit_content">生成的代码可以直接编辑修改，保存时会使用修改后的版本。</string>
     <string name="help_save_module">保存模块</string>
     <string name="help_save_module_content">生成完成后，点击「保存」将其添加到你的模块库中，之后可以在创建应用时使用。</string>
-    
+
     <!-- 补充 UI 字符串 -->
     <string name="project_template_export">项目模板导出</string>
     <string name="encoding_and_size">编码: %1$s | 大小: %2$s</string>
@@ -346,6 +346,8 @@
     <string name="new_update">有新版本可用</string>
     <string name="update_now">立即更新</string>
     <string name="latest_version">已是最新版本</string>
+    <string name="update_download_title">正在下载更新</string>
+    <string name="update_download_description">正在下载版本 %s...</string>
     <string name="network_error">网络错误</string>
     <string name="retry">重试</string>
     <string name="loading">加载中...</string>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 
+    <!--
     Uzun özel adları desteklemek için sabit uzunlukta yer tutucu kullanın.
     Önemli: AAPT2 trim işlemini önlemek için normal boşluk yerine Unicode kesintisiz boşluk (\u00A0) kullanın.
     Toplam uzunluk: 8(WebToApp) + 88(dolgu) = 96 bayt, yaklaşık 30 Çince karakteri destekler.
@@ -152,7 +152,7 @@
     <string name="upload">Yükle</string>
     <string name="import_text">İçe Aktar</string>
     <string name="export_text">Dışa Aktar</string>
-    
+
     <!-- Yardım -->
     <string name="help">Yardım</string>
     <string name="usage_help">Kullanım Kılavuzu</string>
@@ -160,7 +160,7 @@
     <string name="select_module_category">Modül Kategorisi Seçin</string>
     <string name="auto_detect">Otomatik Algıla</string>
     <string name="auto_detect_category_hint">AI\'nın ihtiyaca göre otomatik kategori seçmesine izin verin</string>
-    
+
     <!-- AI Modül Geliştirme Yardımı -->
     <string name="help_how_to_use">Nasıl Kullanılır?</string>
     <string name="help_how_to_use_content">İstediğiniz özelliği doğal dilde tanımlayın. AI, gereksinimleri analiz edecek ve ilgili eklenti modül kodunu otomatik olarak oluşturacaktır.</string>
@@ -176,7 +176,7 @@
     <string name="help_code_edit_content">Oluşturulan kod doğrudan düzenlenebilir; kaydedildiğinde düzenlenmiş sürüm kullanılır.</string>
     <string name="help_save_module">Modülü Kaydetme</string>
     <string name="help_save_module_content">Oluşturma bittiğinde, modül kütüphanenize eklemek için \"Kaydet\"e tıklayın. Daha sonra uygulama oluştururken kullanabilirsiniz.</string>
-    
+
     <!-- Ek Kullanıcı Arayüzü -->
     <string name="project_template_export">Proje Şablonunu Dışa Aktar</string>
     <string name="encoding_and_size">Kodlama: %1$s | Boyut: %2$s</string>
@@ -346,6 +346,8 @@
     <string name="new_update">Yeni sürüm mevcut</string>
     <string name="update_now">Şimdi Güncelle</string>
     <string name="latest_version">Zaten güncel sürümdesiniz</string>
+    <string name="update_download_title">Güncelleme indiriliyor</string>
+    <string name="update_download_description">Sürüm %s indiriliyor...</string>
     <string name="network_error">Ağ hatası</string>
     <string name="retry">Yeniden Dene</string>
     <string name="loading">Yükleniyor...</string>

@@ -97,7 +97,7 @@ class WebViewActivity : AppCompatActivity() {
                 putExtra(EXTRA_URL, url)
             })
         }
-        
+
         /**
          * 启动测试模式 - 用于测试扩展模块
          */
@@ -113,7 +113,7 @@ class WebViewActivity : AppCompatActivity() {
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
-    
+
     // 权限请求相关
     private var pendingPermissionRequest: PermissionRequest? = null
     private var pendingGeolocationOrigin: String? = null
@@ -121,10 +121,10 @@ class WebViewActivity : AppCompatActivity() {
 
     private var immersiveFullscreenEnabled: Boolean = false
     private var showStatusBarInFullscreen: Boolean = false  // 全屏模式下是否显示状态栏
-    
+
     // 视频全屏前的屏幕方向
     private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-    
+
     // 状态栏配置缓存
     private var statusBarColorMode: com.webtoapp.data.model.StatusBarColorMode = com.webtoapp.data.model.StatusBarColorMode.THEME
     private var statusBarCustomColor: String? = null
@@ -133,7 +133,7 @@ class WebViewActivity : AppCompatActivity() {
 
     /**
      * 应用状态栏颜色配置
-     * 
+     *
      * @param colorMode 颜色模式
      * @param customColor 自定义颜色（仅 CUSTOM 模式生效）
      * @param darkIcons 图标颜色：true=深色图标，false=浅色图标，null=自动
@@ -146,7 +146,7 @@ class WebViewActivity : AppCompatActivity() {
         isDarkTheme: Boolean
     ) {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
-        
+
         when (colorMode) {
             com.webtoapp.data.model.StatusBarColorMode.TRANSPARENT -> {
                 window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -162,7 +162,7 @@ class WebViewActivity : AppCompatActivity() {
                     android.graphics.Color.WHITE
                 }
                 window.statusBarColor = color
-                
+
                 // 根据颜色亮度自动判断图标颜色，或使用用户指定的
                 val useDarkIcons = darkIcons ?: isColorLight(color)
                 controller.isAppearanceLightStatusBars = useDarkIcons
@@ -178,10 +178,10 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
         }
-        
+
         controller.isAppearanceLightNavigationBars = controller.isAppearanceLightStatusBars
     }
-    
+
     /**
      * 判断颜色是否为浅色
      */
@@ -195,7 +195,7 @@ class WebViewActivity : AppCompatActivity() {
 
     /**
      * 应用沉浸式全屏模式
-     * 
+     *
      * @param enabled 是否启用沉浸式模式
      * @param hideNavBar 是否同时隐藏导航栏（视频全屏时为 true）
      * @param isDarkTheme 当前是否为深色主题
@@ -204,21 +204,21 @@ class WebViewActivity : AppCompatActivity() {
         try {
             // 支持刘海屏/挖孔屏
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                window.attributes.layoutInDisplayCutoutMode = 
+                window.attributes.layoutInDisplayCutoutMode =
                     android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
-            
+
             WindowInsetsControllerCompat(window, window.decorView).let { controller ->
                 if (enabled) {
                     // 沉浸式模式
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                    
+
                     // 根据配置决定是否显示状态栏
                     if (showStatusBarInFullscreen) {
                         // 全屏模式但显示状态栏：内容延伸到状态栏区域
                         WindowCompat.setDecorFitsSystemWindows(window, false)
                         controller.show(WindowInsetsCompat.Type.statusBars())
-                        
+
                         // 如果是图片背景，状态栏设为透明，让 StatusBarOverlay 组件显示图片
                         if (statusBarBackgroundType == com.webtoapp.data.model.StatusBarBackgroundType.IMAGE) {
                             window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -260,7 +260,7 @@ class WebViewActivity : AppCompatActivity() {
                         window.statusBarColor = android.graphics.Color.TRANSPARENT
                         controller.hide(WindowInsetsCompat.Type.statusBars())
                     }
-                    
+
                     if (hideNavBar) {
                         controller.hide(WindowInsetsCompat.Type.navigationBars())
                     }
@@ -271,7 +271,7 @@ class WebViewActivity : AppCompatActivity() {
                     WindowCompat.setDecorFitsSystemWindows(window, true)
                     controller.show(WindowInsetsCompat.Type.systemBars())
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                    
+
                     applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
                 }
             }
@@ -286,7 +286,7 @@ class WebViewActivity : AppCompatActivity() {
         filePathCallback?.onReceiveValue(uris.toTypedArray())
         filePathCallback = null
     }
-    
+
     // 权限请求launcher（用于摄像头、麦克风等）
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -301,7 +301,7 @@ class WebViewActivity : AppCompatActivity() {
             pendingPermissionRequest = null
         }
     }
-    
+
     // 位置权限请求launcher
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -311,18 +311,18 @@ class WebViewActivity : AppCompatActivity() {
         pendingGeolocationOrigin = null
         pendingGeolocationCallback = null
     }
-    
+
     // 通知权限请求launcher（Android 13+）
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            android.util.Log.d("WebViewActivity", "通知权限已授予")
+            android.util.Log.d("WebViewActivity", "Notification permission granted")
         } else {
-            android.util.Log.d("WebViewActivity", "通知权限被拒绝")
+            android.util.Log.d("WebViewActivity", "Notification permission denied")
         }
     }
-    
+
     /**
      * 请求通知权限（Android 13+）
      */
@@ -332,20 +332,20 @@ class WebViewActivity : AppCompatActivity() {
                 this,
                 android.Manifest.permission.POST_NOTIFICATIONS
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            
+
             if (!hasPermission) {
                 notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
-    
+
     /**
      * 处理WebView权限请求，先请求Android系统权限
      */
     fun handlePermissionRequest(request: PermissionRequest) {
         val resources = request.resources
         val androidPermissions = mutableListOf<String>()
-        
+
         resources.forEach { resource ->
             when (resource) {
                 PermissionRequest.RESOURCE_VIDEO_CAPTURE -> {
@@ -356,7 +356,7 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
         }
-        
+
         if (androidPermissions.isEmpty()) {
             // 不需要Android权限，直接授权WebView
             request.grant(resources)
@@ -366,7 +366,7 @@ class WebViewActivity : AppCompatActivity() {
             permissionLauncher.launch(androidPermissions.toTypedArray())
         }
     }
-    
+
     /**
      * 处理地理位置权限请求
      */
@@ -386,12 +386,12 @@ class WebViewActivity : AppCompatActivity() {
         } catch (e: Exception) {
             android.util.Log.w("WebViewActivity", "enableEdgeToEdge failed", e)
         }
-        
+
         super.onCreate(savedInstanceState)
-        
+
         // 请求通知权限（Android 13+），用于显示下载进度和完成通知
         requestNotificationPermissionIfNeeded()
-        
+
         // 初始化时不启用沉浸式模式，等待 WebApp 配置加载后再根据 hideToolbar 决定
         // 这样可以确保非全屏模式下状态栏正常显示
         immersiveFullscreenEnabled = false
@@ -399,7 +399,7 @@ class WebViewActivity : AppCompatActivity() {
 
         val appId = intent.getLongExtra(EXTRA_APP_ID, -1)
         val directUrl = intent.getStringExtra(EXTRA_URL)
-        
+
         // 测试模式参数
         val testUrl = intent.getStringExtra(EXTRA_TEST_URL)
         val testModuleIds = intent.getStringArrayListExtra(EXTRA_TEST_MODULE_IDS)
@@ -412,7 +412,7 @@ class WebViewActivity : AppCompatActivity() {
                         applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
                     }
                 }
-                
+
                 WebViewScreen(
                     appId = appId,
                     directUrl = directUrl,
@@ -426,7 +426,7 @@ class WebViewActivity : AppCompatActivity() {
                         showStatusBarInFullscreen = showStatusBar
                         statusBarBackgroundType = backgroundType
                     },
-                    onWebViewCreated = { wv -> 
+                    onWebViewCreated = { wv ->
                         webView = wv
                         // 添加下载桥接（支持 Blob/Data URL 下载）
                         val downloadBridge = com.webtoapp.core.webview.DownloadBridge(this@WebViewActivity, lifecycleScope)
@@ -474,7 +474,7 @@ class WebViewActivity : AppCompatActivity() {
         // 保存当前屏幕方向，进入横屏全屏模式
         originalOrientationBeforeFullscreen = requestedOrientation
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        
+
         val decorView = window.decorView as FrameLayout
         decorView.addView(
             view,
@@ -493,11 +493,11 @@ class WebViewActivity : AppCompatActivity() {
             customViewCallback?.onCustomViewHidden()
             customView = null
             customViewCallback = null
-            
+
             // 恢复原来的屏幕方向
             requestedOrientation = originalOrientationBeforeFullscreen
             originalOrientationBeforeFullscreen = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            
+
             applyImmersiveFullscreen(immersiveFullscreenEnabled)
         }
     }
@@ -536,7 +536,7 @@ fun WebViewScreen(
     val activation = WebToAppApplication.activation
     val announcement = WebToAppApplication.announcement
     val adBlocker = WebToAppApplication.adBlock
-    
+
     // 是否为测试模式
     val isTestMode = !testUrl.isNullOrBlank()
 
@@ -556,7 +556,7 @@ fun WebViewScreen(
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
-    
+
     // 启动画面状态
     var showSplash by remember { mutableStateOf(false) }
     var splashCountdown by remember { mutableIntStateOf(0) }
@@ -567,24 +567,24 @@ fun WebViewScreen(
 
     // WebView引用
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
-    
+
     // 长按菜单状态
     var showLongPressMenu by remember { mutableStateOf(false) }
     var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
     val scope = rememberCoroutineScope()
     val longPressHandler = remember { LongPressHandler(context, scope) }
-    
+
     // 控制台状态
     var showConsole by remember { mutableStateOf(false) }
     var consoleMessages by remember { mutableStateOf<List<ConsoleLogEntry>>(emptyList()) }
-    
+
     // 状态栏背景配置（用于预览时显示）
     var statusBarBackgroundType by remember { mutableStateOf("COLOR") }
     var statusBarBackgroundColor by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundImage by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundAlpha by remember { mutableFloatStateOf(1.0f) }
     var statusBarHeightDp by remember { mutableIntStateOf(0) }
-    
+
     // 当 webApp 加载完成后，通知状态栏配置并更新本地状态
     LaunchedEffect(webApp) {
         webApp?.let { app ->
@@ -612,14 +612,14 @@ fun WebViewScreen(
             isActivationChecked = true
             return@LaunchedEffect
         }
-        
+
         // 如果是直接URL模式，不需要激活检查
         if (!directUrl.isNullOrBlank()) {
             isActivated = true
             isActivationChecked = true
             return@LaunchedEffect
         }
-        
+
         if (appId > 0) {
             val app = repository.getWebApp(appId)
             webApp = app
@@ -664,7 +664,7 @@ fun WebViewScreen(
                     if (mediaPath != null && File(mediaPath).exists()) {
                         showSplash = true
                         splashCountdown = app.splashConfig.duration
-                        
+
                         // 处理横屏显示
                         if (app.splashConfig.orientation == SplashOrientation.LANDSCAPE) {
                             originalOrientation = activity.requestedOrientation
@@ -672,12 +672,12 @@ fun WebViewScreen(
                         }
                     }
                 }
-                
+
                 // 初始化背景音乐
                 if (app.bgmEnabled && app.bgmConfig != null && isActivated) {
                     bgmPlayer.initialize(app.bgmConfig)
                 }
-                
+
                 // 设置横屏模式
                 if (app.webViewConfig.landscapeMode) {
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -693,7 +693,7 @@ fun WebViewScreen(
             isActivationChecked = true
         }
     }
-    
+
     // 释放背景音乐播放器
     DisposableEffect(Unit) {
         onDispose {
@@ -705,7 +705,7 @@ fun WebViewScreen(
     LaunchedEffect(showSplash, splashCountdown) {
         // 视频类型不使用倒计时，由视频播放器控制结束
         if (webApp?.splashConfig?.type == SplashType.VIDEO) return@LaunchedEffect
-        
+
         if (showSplash && splashCountdown > 0) {
             delay(1000L)
             splashCountdown--
@@ -734,7 +734,7 @@ fun WebViewScreen(
                 webViewRef?.let {
                     canGoBack = it.canGoBack()
                     canGoForward = it.canGoForward()
-                    
+
                     // 注入长按增强脚本（绕过小红书等网站的长按限制）
                     longPressHandler.injectLongPressEnhancer(it)
                 }
@@ -756,7 +756,7 @@ fun WebViewScreen(
             }
 
             override fun onSslError(error: String) {
-                errorMessage = "SSL安全错误"
+                errorMessage = Strings.sslSecurityError
             }
 
             override fun onExternalLink(url: String) {
@@ -795,7 +795,7 @@ fun WebViewScreen(
             ): Boolean {
                 return onFileChooser(filePathCallback, fileChooserParams)
             }
-            
+
             override fun onDownloadStart(
                 url: String,
                 userAgent: String,
@@ -816,18 +816,18 @@ fun WebViewScreen(
                     scope = scope
                 )
             }
-            
+
             override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
                 // 先同步检查 hitTestResult，判断是否需要拦截
                 val hitResult = webView.hitTestResult
                 val type = hitResult.type
-                
+
                 // 如果是编辑框或未知类型，不拦截，让 WebView 处理默认的文字选择
                 if (type == WebView.HitTestResult.EDIT_TEXT_TYPE ||
                     type == WebView.HitTestResult.UNKNOWN_TYPE) {
                     return false
                 }
-                
+
                 // 通过 JS 获取长按元素详情
                 longPressHandler.getLongPressDetails(webView, x, y) { result ->
                     when (result) {
@@ -846,7 +846,7 @@ fun WebViewScreen(
                         }
                     }
                 }
-                
+
                 // 对于图片、链接等类型，拦截事件显示自定义菜单
                 return when (type) {
                     WebView.HitTestResult.IMAGE_TYPE,
@@ -856,7 +856,7 @@ fun WebViewScreen(
                     else -> false  // 其他情况不拦截，允许默认的文字选择
                 }
             }
-            
+
             override fun onConsoleMessage(level: Int, message: String, sourceId: String, lineNumber: Int) {
                 val consoleLevel = when (level) {
                     0 -> ConsoleLevel.DEBUG
@@ -878,10 +878,10 @@ fun WebViewScreen(
     }
 
     val webViewManager = remember { WebViewManager(context, adBlocker) }
-    
+
     // 本地 HTTP 服务器
     val localHttpServer = remember { LocalHttpServer.getInstance(context) }
-    
+
     // 根据应用类型构建目标 URL
     val targetUrl = remember(directUrl, webApp, testUrl) {
         val app = webApp  // 捕获到局部变量以支持智能转换
@@ -894,14 +894,14 @@ fun WebViewScreen(
                 val projectId = app.htmlConfig?.projectId ?: ""
                 val entryFile = app.htmlConfig?.getValidEntryFile() ?: "index.html"
                 val htmlDir = File(context.filesDir, "html_projects/$projectId")
-                
+
                 if (htmlDir.exists()) {
                     try {
                         // 启动本地服务器并获取 URL
                         val baseUrl = localHttpServer.start(htmlDir)
                         "$baseUrl/$entryFile"
                     } catch (e: Exception) {
-                        Log.e("WebViewActivity", "启动本地服务器失败", e)
+                        Log.e("WebViewActivity", "Failed to start local server", e)
                         // 降级到 file:// 协议
                         "file://${htmlDir.absolutePath}/$entryFile"
                     }
@@ -912,7 +912,7 @@ fun WebViewScreen(
             else -> app?.url ?: ""
         }
     }
-    
+
     // 清理：停止本地服务器
     DisposableEffect(Unit) {
         onDispose {
@@ -920,10 +920,10 @@ fun WebViewScreen(
             // localHttpServer.stop()
         }
     }
-    
+
     // 是否隐藏工具栏（全屏模式）- 测试模式下始终显示工具栏
     val hideToolbar = !isTestMode && webApp?.webViewConfig?.hideToolbar == true
-    
+
     LaunchedEffect(hideToolbar) {
         onFullscreenModeChanged(hideToolbar)
     }
@@ -940,13 +940,17 @@ fun WebViewScreen(
                     title = {
                         Column {
                             Text(
-                                text = if (isTestMode) "🧪 模块测试" else pageTitle.ifEmpty { webApp?.name ?: "WebApp" },
+                                text = if (isTestMode) {
+                                    Strings.moduleTestTitle
+                                } else {
+                                    pageTitle.ifEmpty { webApp?.name ?: "WebApp" }
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1
                             )
                             if (isTestMode && !testModuleIds.isNullOrEmpty()) {
                                 Text(
-                                    text = "测试 ${testModuleIds.size} 个模块",
+                                    text = Strings.testModuleCount.format(testModuleIds.size),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1
@@ -963,7 +967,7 @@ fun WebViewScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = { (context as? AppCompatActivity)?.finish() }) {
-                            Icon(Icons.Default.Close, "关闭")
+                            Icon(Icons.Default.Close, Strings.close)
                         }
                     },
                     actions = {
@@ -979,7 +983,7 @@ fun WebViewScreen(
                             ) {
                                 Icon(
                                     if (showConsole) Icons.Filled.Terminal else Icons.Outlined.Terminal,
-                                    "控制台"
+                                    Strings.console
                                 )
                             }
                         }
@@ -987,16 +991,16 @@ fun WebViewScreen(
                             onClick = { webViewRef?.goBack() },
                             enabled = canGoBack
                         ) {
-                            Icon(Icons.Default.ArrowBack, "后退")
+                            Icon(Icons.Default.ArrowBack, Strings.back)
                         }
                         IconButton(
                             onClick = { webViewRef?.goForward() },
                             enabled = canGoForward
                         ) {
-                            Icon(Icons.Default.ArrowForward, "前进")
+                            Icon(Icons.Default.ArrowForward, Strings.navForward)
                         }
                         IconButton(onClick = { webViewRef?.reload() }) {
-                            Icon(Icons.Default.Refresh, "刷新")
+                            Icon(Icons.Default.Refresh, Strings.refresh)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -1013,7 +1017,7 @@ fun WebViewScreen(
         // 全屏模式 + 显示状态栏时，需要给内容添加状态栏高度的 padding，避免被遮挡
         val context = LocalContext.current
         val density = LocalDensity.current
-        
+
         // 获取系统状态栏高度
         val systemStatusBarHeightDp = remember {
             val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -1023,10 +1027,10 @@ fun WebViewScreen(
                 24.dp
             }
         }
-        
+
         // 计算实际需要的状态栏 padding（使用自定义高度或系统默认高度）
         val actualStatusBarPadding = if (statusBarHeightDp > 0) statusBarHeightDp.dp else systemStatusBarHeightDp
-        
+
         val contentModifier = when {
             hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true -> {
                 // 全屏模式但显示状态栏：内容需要在状态栏下方
@@ -1042,7 +1046,7 @@ fun WebViewScreen(
                 Modifier.fillMaxSize().padding(padding)
             }
         }
-        
+
         Box(modifier = contentModifier) {
             // 进度条
             AnimatedVisibility(
@@ -1089,7 +1093,7 @@ fun WebViewScreen(
             } else if (targetUrl.isNotEmpty() && isActivationChecked) {
                 // 控制台展开状态
                 var isConsoleExpanded by remember { mutableStateOf(false) }
-                
+
                 Column(modifier = Modifier.fillMaxSize()) {
                     // WebView
                     AndroidView(
@@ -1125,7 +1129,7 @@ fun WebViewScreen(
                                         domStorageEnabled = currentApp.htmlConfig?.enableLocalStorage ?: true
                                     }
                                 }
-                                
+
                                 // 添加长按监听器
                                 // 持续跟踪触摸位置，确保长按时使用最新坐标
                                 var lastTouchX = 0f
@@ -1143,10 +1147,10 @@ fun WebViewScreen(
                                 setOnLongClickListener {
                                     webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
                                 }
-                                
+
                                 onWebViewCreated(this)
                                 webViewRef = this
-                                
+
                                 // 加载目标 URL
                                 // HTML 应用通过 LocalHttpServer 提供 http://localhost:PORT 的 URL
                                 // 这样可以正常加载外部 CDN 资源
@@ -1155,7 +1159,7 @@ fun WebViewScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     // 控制台面板
                     AnimatedVisibility(
                         visible = showConsole,
@@ -1211,11 +1215,11 @@ fun WebViewScreen(
                     }
                 }
             }
-            
+
             // 注意：状态栏覆盖层已移到 Scaffold 外部
         }
     }
-    
+
     // 状态栏背景覆盖层（在全屏模式下显示状态栏时）
     // 放在 Scaffold 外部，才能正确覆盖在状态栏区域
     if (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) {
@@ -1242,7 +1246,7 @@ fun WebViewScreen(
                 }
             }
         }
-        
+
         com.webtoapp.ui.components.EnhancedActivationDialog(
             onDismiss = { showActivationDialog = false },
             onActivate = { code ->
@@ -1251,7 +1255,7 @@ fun WebViewScreen(
             },
             activationStatus = activationStatus
         )
-        
+
         // 监听激活状态变化
         LaunchedEffect(Unit) {
             activation.isActivated(appId).collect { activated ->
@@ -1303,7 +1307,7 @@ fun WebViewScreen(
             originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
-    
+
     // 启动画面覆盖层
     AnimatedVisibility(
         visible = showSplash,
@@ -1321,7 +1325,7 @@ fun WebViewScreen(
             )
         }
     }
-    
+
     // 长按菜单
     if (showLongPressMenu && longPressResult != null) {
         LongPressMenuSheet(
@@ -1423,7 +1427,7 @@ fun SplashOverlay(
     val videoEndMs = splashConfig.videoEndMs
     val videoDurationMs = videoEndMs - videoStartMs
     val contentScaleMode = if (splashConfig.fillScreen) ContentScale.Crop else ContentScale.Fit
-    
+
     // 视频剩余时间（用于动态倒计时显示）
     var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
@@ -1453,7 +1457,7 @@ fun SplashOverlay(
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = "启动画面",
+                    contentDescription = Strings.splashScreen,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScaleMode
                 )
@@ -1462,7 +1466,7 @@ fun SplashOverlay(
                 // 视频启动画面 - 支持裁剪播放
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
                 var isPlayerReady by remember { mutableStateOf(false) }
-                
+
                 // 监控播放进度，到达结束时间时停止
                 // 仅在播放器准备就绪后开始监控
                 LaunchedEffect(isPlayerReady) {
@@ -1489,7 +1493,7 @@ fun SplashOverlay(
                         }
                     }
                 }
-                
+
                 AndroidView(
                     factory = { ctx ->
                         android.view.SurfaceView(ctx).apply {
@@ -1503,7 +1507,7 @@ fun SplashOverlay(
                                             val volume = if (splashConfig.enableAudio) 1f else 0f
                                             setVolume(volume, volume)
                                             isLooping = false
-                                            setOnPreparedListener { 
+                                            setOnPreparedListener {
                                                 // 跳到裁剪起始位置
                                                 seekTo(videoStartMs.toInt())
                                                 start()
@@ -1527,7 +1531,7 @@ fun SplashOverlay(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
-                
+
                 // 组件销毁时释放 MediaPlayer
                 DisposableEffect(Unit) {
                     onDispose {
@@ -1545,7 +1549,7 @@ fun SplashOverlay(
         } else {
             countdown
         }
-        
+
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -1574,7 +1578,7 @@ fun SplashOverlay(
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     Text(
-                        text = "跳过",
+                        text = Strings.skip,
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -1624,7 +1628,7 @@ fun ConsolePanel(
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
     val context = LocalContext.current
     val timeFormat = remember { java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()) }
-    
+
     // 主题颜色
     val surfaceColor = MaterialTheme.colorScheme.surface
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
@@ -1633,17 +1637,17 @@ fun ConsolePanel(
     val primary = MaterialTheme.colorScheme.primary
     val errorColor = MaterialTheme.colorScheme.error
     val errorContainer = MaterialTheme.colorScheme.errorContainer
-    
+
     // 自动滚动到底部
     LaunchedEffect(consoleMessages.size) {
         if (consoleMessages.isNotEmpty()) {
             listState.animateScrollToItem(consoleMessages.size - 1)
         }
     }
-    
+
     // 固定高度，确保可以滑动
     val panelHeight = if (isExpanded) 350.dp else 200.dp
-    
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -1676,7 +1680,7 @@ fun ConsolePanel(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            "控制台",
+                            Strings.console,
                             style = MaterialTheme.typography.titleSmall,
                             color = onSurface
                         )
@@ -1694,7 +1698,7 @@ fun ConsolePanel(
                             }
                         }
                     }
-                    
+
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         // 复制全部
                         IconButton(
@@ -1728,7 +1732,7 @@ fun ConsolePanel(
                     }
                 }
             }
-            
+
             // 控制台消息列表
             Box(
                 modifier = Modifier
@@ -1749,7 +1753,7 @@ fun ConsolePanel(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "暂无控制台消息",
+                                Strings.noConsoleMessages,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = onSurfaceVariant.copy(alpha = 0.5f)
                             )
@@ -1775,7 +1779,7 @@ fun ConsolePanel(
                     }
                 }
             }
-            
+
             // 脚本输入区
             Surface(
                 color = surfaceVariant,
@@ -1797,11 +1801,11 @@ fun ConsolePanel(
                     OutlinedTextField(
                         value = scriptInput,
                         onValueChange = { scriptInput = it },
-                        placeholder = { 
+                        placeholder = {
                             Text(
-                                "输入 JavaScript...",
+                                Strings.jsConsoleInputHint,
                                 style = MaterialTheme.typography.bodySmall
-                            ) 
+                            )
                         },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
@@ -1820,7 +1824,7 @@ fun ConsolePanel(
                         },
                         enabled = scriptInput.isNotBlank()
                     ) {
-                        Icon(Icons.Default.PlayArrow, "运行")
+                        Icon(Icons.Default.PlayArrow, Strings.run)
                     }
                 }
             }
@@ -1839,20 +1843,20 @@ private fun ConsoleLogItem(
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
-    
+
     val backgroundColor = when (entry.level) {
         ConsoleLevel.ERROR -> errorContainer.copy(alpha = 0.3f)
         ConsoleLevel.WARNING -> Color(0xFFFFB74D).copy(alpha = 0.15f)
         else -> Color.Transparent
     }
-    
+
     val textColor = when (entry.level) {
         ConsoleLevel.ERROR -> errorColor
         ConsoleLevel.WARNING -> Color(0xFFFF9800)
         ConsoleLevel.DEBUG -> Color(0xFF4CAF50)
         else -> onSurface
     }
-    
+
     val icon = when (entry.level) {
         ConsoleLevel.ERROR -> "❌"
         ConsoleLevel.WARNING -> "⚠️"
@@ -1860,7 +1864,7 @@ private fun ConsoleLogItem(
         ConsoleLevel.INFO -> "ℹ️"
         ConsoleLevel.LOG -> "📝"
     }
-    
+
     Surface(
         color = backgroundColor,
         modifier = Modifier.fillMaxWidth()
@@ -1877,7 +1881,7 @@ private fun ConsoleLogItem(
                 modifier = Modifier.padding(end = 8.dp),
                 fontSize = 14.sp
             )
-            
+
             // 消息内容
             Column(modifier = Modifier.weight(1f)) {
                 androidx.compose.foundation.text.selection.SelectionContainer {
@@ -1890,7 +1894,7 @@ private fun ConsoleLogItem(
                         color = textColor
                     )
                 }
-                
+
                 // 来源信息
                 Text(
                     "${entry.source}:${entry.lineNumber} • ${timeFormat.format(java.util.Date(entry.timestamp))}",
@@ -1899,7 +1903,7 @@ private fun ConsoleLogItem(
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
-            
+
             // 复制按钮
             IconButton(
                 onClick = onCopy,
@@ -1907,7 +1911,7 @@ private fun ConsoleLogItem(
             ) {
                 Icon(
                     Icons.Outlined.ContentCopy,
-                    "复制",
+                    Strings.copy,
                     tint = onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.size(16.dp)
                 )

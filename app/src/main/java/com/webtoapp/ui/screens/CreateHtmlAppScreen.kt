@@ -57,17 +57,17 @@ fun CreateHtmlAppScreen(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    
+
     // 应用信息
     var appName by remember { mutableStateOf(importProjectName ?: "") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
-    
+
     // 单HTML模式 - 三个独立的文件槽位
     var htmlFile by remember { mutableStateOf<HtmlFile?>(null) }
     var cssFile by remember { mutableStateOf<HtmlFile?>(null) }
     var jsFile by remember { mutableStateOf<HtmlFile?>(null) }
-    
+
     // 从AI编程导入文件
     LaunchedEffect(importDir) {
         if (importDir != null) {
@@ -75,7 +75,7 @@ fun CreateHtmlAppScreen(
             if (dir.exists() && dir.isDirectory) {
                 dir.listFiles()?.forEach { file ->
                     when {
-                        file.name.endsWith(".html", ignoreCase = true) || 
+                        file.name.endsWith(".html", ignoreCase = true) ||
                         file.name.endsWith(".htm", ignoreCase = true) -> {
                             htmlFile = HtmlFile(
                                 name = file.name,
@@ -102,41 +102,44 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
+
     // 配置选项
     var enableJavaScript by remember { mutableStateOf(true) }
     var enableLocalStorage by remember { mutableStateOf(true) }
     var landscapeMode by remember { mutableStateOf(false) }
-    
+
     // 主题配置
     var themeType by remember { mutableStateOf("AURORA") }
-    
+
+    val currentLanguage by Strings.currentLanguage
+
     // 项目分析结果
     var projectAnalysis by remember { mutableStateOf<HtmlProjectProcessor.ProjectAnalysis?>(null) }
     var showAnalysisDialog by remember { mutableStateOf(false) }
-    
+
     // 当文件变化时重新分析
-    LaunchedEffect(htmlFile, cssFile, jsFile) {
+    LaunchedEffect(htmlFile, cssFile, jsFile, currentLanguage) {
         if (htmlFile != null) {
             projectAnalysis = HtmlProjectProcessor.analyzeProject(
                 htmlFilePath = htmlFile?.path,
                 cssFilePath = cssFile?.path,
                 jsFilePath = jsFile?.path
+                , language = currentLanguage
             )
         } else {
             projectAnalysis = null
         }
     }
-    
+
     // 判断是否可以创建
     val canCreate = htmlFile != null
-    
+
     // 是否有问题需要关注
-    val hasIssues = projectAnalysis?.issues?.any { 
-        it.severity == HtmlProjectProcessor.IssueSeverity.ERROR || 
-        it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
+    val hasIssues = projectAnalysis?.issues?.any {
+        it.severity == HtmlProjectProcessor.IssueSeverity.ERROR ||
+        it.severity == HtmlProjectProcessor.IssueSeverity.WARNING
     } == true
-    
+
     // HTML文件选择器
     val htmlPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -157,7 +160,7 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
+
     // CSS文件选择器
     val cssPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -174,7 +177,7 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
+
     // JS文件选择器
     val jsPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -191,21 +194,21 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
+
     // 构建文件列表
     val htmlFiles = remember(htmlFile, cssFile, jsFile) {
         listOfNotNull(htmlFile, cssFile, jsFile)
     }
     // 验证 entryFile：必须有文件名部分（不能只是 .html）
-    val entryFile = htmlFile?.name?.takeIf { 
-        it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
+    val entryFile = htmlFile?.name?.takeIf {
+        it.isNotBlank() && it.substringBeforeLast(".").isNotBlank()
     } ?: "index.html"
-    
+
     // 图标选择器
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -219,7 +222,7 @@ fun CreateHtmlAppScreen(
                     TextButton(
                         onClick = {
                             val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
-                            
+
                             // 单HTML模式
                             val config = HtmlConfig(
                                 entryFile = entryFile,
@@ -265,7 +268,7 @@ fun CreateHtmlAppScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // HTML文件槽位（必选）
                     FileSlot(
                         label = Strings.htmlFile,
@@ -275,9 +278,9 @@ fun CreateHtmlAppScreen(
                         onSelect = { htmlPickerLauncher.launch("text/html") },
                         onClear = { htmlFile = null }
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // CSS文件槽位（可选）
                     FileSlot(
                         label = Strings.cssFile,
@@ -287,9 +290,9 @@ fun CreateHtmlAppScreen(
                         onSelect = { cssPickerLauncher.launch("text/css") },
                         onClear = { cssFile = null }
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // JS文件槽位（可选）
                     FileSlot(
                         label = Strings.jsFile,
@@ -301,7 +304,7 @@ fun CreateHtmlAppScreen(
                     )
                 }
             }
-            
+
             // 应用信息
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -310,28 +313,28 @@ fun CreateHtmlAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // 应用名称（带随机按钮）
                     AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it }
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // 应用图标（带图标库功能）
                     IconPickerWithLibrary(
                         iconUri = appIcon,
                         iconPath = appIconPath,
                         onSelectFromGallery = { iconPickerLauncher.launch("image/*") },
-                        onSelectFromLibrary = { path -> 
-                            appIconPath = path 
+                        onSelectFromLibrary = { path ->
+                            appIconPath = path
                             appIcon = null
                         }
                     )
                 }
             }
-            
+
             // 高级配置
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -340,7 +343,7 @@ fun CreateHtmlAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // JavaScript 开关
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -360,11 +363,11 @@ fun CreateHtmlAppScreen(
                             onCheckedChange = { enableJavaScript = it }
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
                     Divider()
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // 本地存储开关
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -384,11 +387,11 @@ fun CreateHtmlAppScreen(
                             onCheckedChange = { enableLocalStorage = it }
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
                     Divider()
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // 横屏模式开关
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -410,7 +413,7 @@ fun CreateHtmlAppScreen(
                     }
                 }
             }
-            
+
             // 项目问题警告卡片
             if (hasIssues && projectAnalysis != null) {
                 Card(
@@ -435,11 +438,11 @@ fun CreateHtmlAppScreen(
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
-                                val errorCount = projectAnalysis!!.issues.count { 
-                                    it.severity == HtmlProjectProcessor.IssueSeverity.ERROR 
+                                val errorCount = projectAnalysis!!.issues.count {
+                                    it.severity == HtmlProjectProcessor.IssueSeverity.ERROR
                                 }
-                                val warningCount = projectAnalysis!!.issues.count { 
-                                    it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
+                                val warningCount = projectAnalysis!!.issues.count {
+                                    it.severity == HtmlProjectProcessor.IssueSeverity.WARNING
                                 }
                                 Text(
                                     text = buildString {
@@ -476,7 +479,7 @@ fun CreateHtmlAppScreen(
                     }
                 }
             }
-            
+
             // 提示信息
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -501,7 +504,7 @@ fun CreateHtmlAppScreen(
                     )
                 }
             }
-            
+
             // 功能提示
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -526,7 +529,7 @@ fun CreateHtmlAppScreen(
                     )
                 }
             }
-            
+
             // 路径引用提示
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -561,7 +564,7 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
+
     // 项目分析结果对话框
     if (showAnalysisDialog && projectAnalysis != null) {
         ProjectAnalysisDialog(
@@ -604,7 +607,7 @@ private fun ProjectAnalysisDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                
+
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         analysis.htmlFiles.forEach { file ->
@@ -618,7 +621,7 @@ private fun ProjectAnalysisDialog(
                         }
                     }
                 }
-                
+
                 // 问题列表
                 if (analysis.issues.isNotEmpty()) {
                     item {
@@ -629,12 +632,12 @@ private fun ProjectAnalysisDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     items(analysis.issues) { issue ->
                         IssueCard(issue)
                     }
                 }
-                
+
                 // 建议
                 if (analysis.suggestions.isNotEmpty()) {
                     item {
@@ -645,7 +648,7 @@ private fun ProjectAnalysisDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     items(analysis.suggestions) { suggestion ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -666,7 +669,7 @@ private fun ProjectAnalysisDialog(
                         }
                     }
                 }
-                
+
                 // 自动修复说明
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -769,7 +772,7 @@ private fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
             MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
-    
+
     Card(
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
@@ -836,9 +839,9 @@ private fun FileSlot(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .background(
-                if (file != null) 
+                if (file != null)
                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else 
+                else
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )
             .border(
@@ -858,9 +861,9 @@ private fun FileSlot(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (file != null) 
-                MaterialTheme.colorScheme.primary 
-            else 
+            tint = if (file != null)
+                MaterialTheme.colorScheme.primary
+            else
                 MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp)
         )

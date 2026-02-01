@@ -30,6 +30,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.view.WindowCompat
 import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.InitializeLanguage
 import com.webtoapp.core.i18n.LanguageManager
 import com.webtoapp.ui.components.FirstLaunchLanguageScreen
 import com.webtoapp.ui.navigation.AppNavigation
@@ -45,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
     // 首次启动语言选择状态
     private var showLanguageSelection by mutableStateOf(true)
-    
+
     // 快捷方式权限对话框状态
     private var showShortcutPermissionDialog by mutableStateOf(false)
     private var shortcutPermissionMessage by mutableStateOf("")
@@ -58,34 +60,34 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // 检查是否为 Shell 模式（添加异常保护）
         val isShell = try {
             val shellManager = WebToAppApplication.shellMode
             val result = shellManager.isShellMode()
-            android.util.Log.d("MainActivity", "检查 Shell 模式: isShellMode=$result")
+            android.util.Log.d("MainActivity", "Check shell mode: isShellMode=$result")
             result
         } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "检查 Shell 模式失败", e)
+            android.util.Log.e("MainActivity", "Failed to check shell mode", e)
             false
         } catch (e: Error) {
-            android.util.Log.e("MainActivity", "检查 Shell 模式时发生严重错误", e)
+            android.util.Log.e("MainActivity", "Critical error while checking shell mode", e)
             false
         }
-        
+
         if (isShell) {
             // Shell 模式：直接跳转到 ShellActivity
-            android.util.Log.d("MainActivity", "进入 Shell 模式，跳转到 ShellActivity")
+            android.util.Log.d("MainActivity", "Shell mode detected, launching ShellActivity")
             try {
                 startActivity(Intent(this, ShellActivity::class.java))
                 finish()
                 return
             } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "跳转到 ShellActivity 失败", e)
+                android.util.Log.e("MainActivity", "Failed to launch ShellActivity", e)
                 // 继续显示主界面
             }
         }
-        android.util.Log.d("MainActivity", "普通模式，显示主界面")
+        android.util.Log.d("MainActivity", "Normal mode, showing main UI")
 
         // 启用边到边显示（Android 15+ 兼容）
         try {
@@ -95,7 +97,7 @@ class MainActivity : ComponentActivity() {
         }
 
         requestNecessaryPermissions()
-        
+
         // 检查快捷方式权限
         checkShortcutPermission()
 
@@ -105,13 +107,13 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             android.util.Log.w("MainActivity", "setDecorFitsSystemWindows failed", e)
         }
-        
+
         setContent {
             WebToAppTheme { isDarkTheme ->
                 // 根据主题设置状态栏颜色（跟随主题色）
                 LaunchedEffect(isDarkTheme) {
                     val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-                    
+
                     // 主应用使用主题色状态栏
                     if (isDarkTheme) {
                         // 深色主题：深色背景 + 浅色图标
@@ -122,18 +124,19 @@ class MainActivity : ComponentActivity() {
                         window.statusBarColor = android.graphics.Color.parseColor("#FFFBFE")
                         windowInsetsController.isAppearanceLightStatusBars = true
                     }
-                    
+
                     // 导航栏保持透明
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
                     windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
                 }
-                
+
                 // 强化版主题包装器 - 根据 UI 模式自动显示增强背景
                 EnhancedThemeWrapper {
                     val context = LocalContext.current
+                    InitializeLanguage()
                     val languageManager = remember { LanguageManager.getInstance(context) }
                     val hasSelectedLanguage by languageManager.hasSelectedLanguageFlow.collectAsState(initial = true)
-                    
+
                     // 首次启动显示语言选择，否则显示主内容
                     if (!hasSelectedLanguage && showLanguageSelection) {
                         FirstLaunchLanguageScreen(
@@ -145,12 +148,12 @@ class MainActivity : ComponentActivity() {
                         // 主内容
                         AppNavigation()
                     }
-                    
+
                     // 快捷方式权限提示对话框
                     if (showShortcutPermissionDialog) {
                         AlertDialog(
                             onDismissRequest = { showShortcutPermissionDialog = false },
-                            title = { Text("需要快捷方式权限") },
+                            title = { Text(Strings.shortcutPermissionTitle) },
                             text = { Text(shortcutPermissionMessage) },
                             confirmButton = {
                                 TextButton(
@@ -159,14 +162,14 @@ class MainActivity : ComponentActivity() {
                                         openAppSettings()
                                     }
                                 ) {
-                                    Text("去设置")
+                                    Text(Strings.openSettings)
                                 }
                             },
                             dismissButton = {
                                 TextButton(
                                     onClick = { showShortcutPermissionDialog = false }
                                 ) {
-                                    Text("稍后再说")
+                                    Text(Strings.notNow)
                                 }
                             }
                         )
@@ -196,35 +199,28 @@ class MainActivity : ComponentActivity() {
      */
     private fun buildShortcutPermissionMessage(): String {
         val manufacturer = Build.MANUFACTURER.lowercase()
-        
+
         return when {
             manufacturer.contains("xiaomi") || manufacturer.contains("redmi") -> {
-                "检测到您使用的是小米/红米手机，需要开启「桌面快捷方式」权限才能创建应用快捷方式。\n\n" +
-                "请前往：设置 > 应用设置 > 应用管理 > WebToApp > 权限管理 > 桌面快捷方式"
+                Strings.shortcutPermissionMessageXiaomi
             }
             manufacturer.contains("huawei") || manufacturer.contains("honor") -> {
-                "检测到您使用的是华为/荣耀手机，需要开启「创建桌面快捷方式」权限。\n\n" +
-                "请前往：设置 > 应用 > 应用管理 > WebToApp > 权限 > 创建桌面快捷方式"
+                Strings.shortcutPermissionMessageHuawei
             }
             manufacturer.contains("oppo") -> {
-                "检测到您使用的是 OPPO 手机，需要开启「桌面快捷方式」权限。\n\n" +
-                "请前往：设置 > 应用管理 > WebToApp > 权限 > 桌面快捷方式"
+                Strings.shortcutPermissionMessageOppo
             }
             manufacturer.contains("vivo") -> {
-                "检测到您使用的是 vivo 手机，需要开启「桌面快捷方式」权限。\n\n" +
-                "请前往：i管家 > 应用管理 > 权限管理 > WebToApp > 桌面快捷方式"
+                Strings.shortcutPermissionMessageVivo
             }
             manufacturer.contains("meizu") -> {
-                "检测到您使用的是魅族手机，需要开启「桌面快捷方式」权限。\n\n" +
-                "请前往：手机管家 > 权限管理 > WebToApp > 桌面快捷方式"
+                Strings.shortcutPermissionMessageMeizu
             }
             manufacturer.contains("samsung") -> {
-                "检测到您使用的是三星手机，请确认桌面已解锁编辑状态。\n\n" +
-                "您也可以长按应用图标，选择「添加到主屏幕」来创建快捷方式。"
+                Strings.shortcutPermissionMessageSamsung
             }
             else -> {
-                "当前启动器可能不支持创建快捷方式，请检查桌面设置或应用权限。\n\n" +
-                "点击「去设置」打开应用详情页，查看是否有相关权限选项。"
+                Strings.shortcutPermissionMessageGeneric
             }
         }
     }

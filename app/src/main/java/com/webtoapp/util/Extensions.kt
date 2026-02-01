@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.widget.Toast
+import com.webtoapp.core.i18n.Strings
 import java.io.File
 import java.net.URLEncoder
 import java.security.MessageDigest
@@ -45,11 +46,11 @@ fun Context.openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(intent)
     } catch (e: Exception) {
-        toast("无法打开链接")
+        toast(Strings.cannotOpenLink)
     }
 }
 
-fun Context.shareText(text: String, title: String = "分享") {
+fun Context.shareText(text: String, title: String = Strings.share) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
@@ -170,7 +171,7 @@ fun Long.toDurationString(): String {
     val hours = seconds / 3600
     val minutes = (seconds % 3600) / 60
     val secs = seconds % 60
-    
+
     return if (hours > 0) {
         String.format("%d:%02d:%02d", hours, minutes, secs)
     } else {
@@ -186,7 +187,7 @@ fun Long.toDurationString(): String {
 fun File.calculateDirSize(): Long {
     if (!exists()) return 0L
     if (isFile) return length()
-    
+
     return walkTopDown()
         .filter { it.isFile }
         .sumOf { it.length() }

@@ -21,10 +21,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.webtoapp.core.i18n.Strings
 
 /**
  * 强制运行倒计时覆盖层
- * 
+ *
  * 显示剩余时间，并提供密码退出功能
  */
 @Composable
@@ -37,7 +38,7 @@ fun ForcedRunCountdownOverlay(
 ) {
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
-    
+
     // 格式化剩余时间
     val formattedTime = remember(remainingMs) {
         val totalSeconds = (remainingMs.coerceAtLeast(0) / 1000).toInt()
@@ -50,7 +51,7 @@ fun ForcedRunCountdownOverlay(
             String.format("%02d:%02d", minutes, seconds)
         }
     }
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -76,16 +77,16 @@ fun ForcedRunCountdownOverlay(
             ) {
                 // 锁图标（可点击退出时显示不同图标）
                 Icon(
-                    imageVector = if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) 
+                    imageVector = if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty())
                         Icons.Filled.LockOpen else Icons.Filled.Lock,
-                    contentDescription = if (allowEmergencyExit) "点击输入密码退出" else null,
+                    contentDescription = if (allowEmergencyExit) Strings.tapToExit else null,
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.size(20.dp)
                 )
-                
+
                 Column {
                     Text(
-                        text = "强制运行中",
+                        text = Strings.forcedRunActive,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -95,11 +96,11 @@ fun ForcedRunCountdownOverlay(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
-                    
+
                     // 提示文字
                     if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) {
                         Text(
-                            text = "点击输入密码退出",
+                            text = Strings.tapToExit,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
                             fontSize = 10.sp
@@ -109,13 +110,13 @@ fun ForcedRunCountdownOverlay(
             }
         }
     }
-    
+
     // 密码输入对话框
     if (showPasswordDialog) {
         EmergencyExitPasswordDialog(
             correctPassword = emergencyPassword ?: "",
-            onDismiss = { 
-                showPasswordDialog = false 
+            onDismiss = {
+                showPasswordDialog = false
                 passwordError = false
             },
             onPasswordCorrect = {
@@ -143,7 +144,7 @@ private fun EmergencyExitPasswordDialog(
     var showError by remember { mutableStateOf(false) }
     var attempts by remember { mutableIntStateOf(0) }
     val maxAttempts = 5
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
@@ -156,7 +157,7 @@ private fun EmergencyExitPasswordDialog(
         },
         title = {
             Text(
-                text = "输入退出密码",
+                text = Strings.enterExitPassword,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -165,19 +166,19 @@ private fun EmergencyExitPasswordDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "请输入管理员密码以退出强制运行模式",
+                    text = Strings.exitPasswordPrompt,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 OutlinedTextField(
                     value = inputPassword,
-                    onValueChange = { 
+                    onValueChange = {
                         inputPassword = it
                         showError = false
                     },
-                    label = { Text("密码") },
-                    placeholder = { Text("请输入密码") },
+                    label = { Text(Strings.passwordLabel) },
+                    placeholder = { Text(Strings.passwordPlaceholder) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -199,7 +200,7 @@ private fun EmergencyExitPasswordDialog(
                     supportingText = if (showError) {
                         {
                             Text(
-                                text = "密码错误，剩余 ${maxAttempts - attempts} 次尝试",
+                                text = Strings.passwordAttemptsRemaining.format(maxAttempts - attempts),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -207,10 +208,10 @@ private fun EmergencyExitPasswordDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 if (attempts >= maxAttempts) {
                     Text(
-                        text = "尝试次数过多，请稍后再试",
+                        text = Strings.tooManyPasswordAttempts,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -231,12 +232,12 @@ private fun EmergencyExitPasswordDialog(
                 },
                 enabled = inputPassword.isNotEmpty() && attempts < maxAttempts
             ) {
-                Text("确认退出")
+                Text(Strings.confirmExit)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(Strings.btnCancel)
             }
         }
     )

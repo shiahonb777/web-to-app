@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 /**
  * HTML编程AI - 提示词与模板管理
- * 
+ *
  * 优化原则：
  * 1. 简洁明确，避免冗余
  * 2. 关键规则前置
@@ -296,17 +296,20 @@ object HtmlCodingPrompts {
             id = "chinese",
             name = Strings.rulesChinese,
             description = Strings.rulesChineseDesc,
-            rules = listOf("使用中文进行对话", "代码注释使用中文")
+            rules = listOf(
+                Strings.ruleUseChineseConversation,
+                Strings.ruleUseChineseComments
+            )
         ),
         RulesTemplate(
             id = "game",
             name = Strings.rulesGame,
             description = Strings.rulesGameDesc,
             rules = listOf(
-                "使用中文进行对话",
-                "游戏要有完整的开始、进行、结束流程",
-                "添加分数显示和游戏说明",
-                "确保触摸控制流畅"
+                Strings.ruleUseChineseConversation,
+                Strings.ruleGameFlowComplete,
+                Strings.ruleGameScoreAndInstructions,
+                Strings.ruleGameTouchSmooth
             )
         ),
         RulesTemplate(
@@ -314,10 +317,10 @@ object HtmlCodingPrompts {
             name = Strings.rulesAnimation,
             description = Strings.rulesAnimationDesc,
             rules = listOf(
-                "使用中文进行对话",
-                "添加流畅的 CSS 动画",
-                "使用 transition 优化交互反馈",
-                "考虑性能，避免过度动画"
+                Strings.ruleUseChineseConversation,
+                Strings.ruleAnimationSmoothCss,
+                Strings.ruleAnimationUseTransition,
+                Strings.ruleAnimationPerformance
             )
         ),
         RulesTemplate(
@@ -325,10 +328,10 @@ object HtmlCodingPrompts {
             name = Strings.rulesForm,
             description = Strings.rulesFormDesc,
             rules = listOf(
-                "使用中文进行对话",
-                "表单要有完整的验证逻辑",
-                "输入框要有清晰的标签和提示",
-                "提交按钮要有加载状态"
+                Strings.ruleUseChineseConversation,
+                Strings.ruleFormValidation,
+                Strings.ruleFormLabelsHints,
+                Strings.ruleFormSubmitLoading
             )
         )
     )

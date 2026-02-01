@@ -23,7 +23,7 @@ class WebToAppApplication : Application() {
     val webAppRepository: WebAppRepository by lazy {
         WebAppRepository(database.webAppDao())
     }
-    
+
     val appCategoryRepository: AppCategoryRepository by lazy {
         AppCategoryRepository(database.appCategoryDao())
     }
@@ -46,7 +46,7 @@ class WebToAppApplication : Application() {
         try {
             ShellModeManager(this)
         } catch (e: Exception) {
-            android.util.Log.e("WebToAppApplication", "ShellModeManager 初始化失败", e)
+            android.util.Log.e("WebToAppApplication", "ShellModeManager initialization failed", e)
             // 返回一个新实例，让它在后续调用时再次尝试
             ShellModeManager(this)
         }
@@ -55,24 +55,24 @@ class WebToAppApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        
+
         // 预加载 Shell 模式检查（捕获可能的初始化错误）
         try {
             val isShell = shellModeManager.isShellMode()
-            android.util.Log.d("WebToAppApplication", "Shell 模式预检查: $isShell")
+            android.util.Log.d("WebToAppApplication", "Shell mode precheck: $isShell")
         } catch (e: Exception) {
-            android.util.Log.e("WebToAppApplication", "Shell 模式预检查失败", e)
+            android.util.Log.e("WebToAppApplication", "Shell mode precheck failed", e)
         } catch (e: Error) {
-            android.util.Log.e("WebToAppApplication", "Shell 模式预检查发生严重错误", e)
+            android.util.Log.e("WebToAppApplication", "Critical error during shell mode precheck", e)
         }
     }
-    
+
     override fun onTerminate() {
         super.onTerminate()
         // 清理所有单例资源
         cleanupSingletons()
     }
-    
+
     override fun onLowMemory() {
         super.onLowMemory()
         // 低内存时清理缓存
@@ -86,7 +86,7 @@ class WebToAppApplication : Application() {
             android.util.Log.e("WebToAppApplication", "低内存清理失败", e)
         }
     }
-    
+
     /**
      * 清理所有单例资源
      */
@@ -110,7 +110,7 @@ class WebToAppApplication : Application() {
 
         val repository: WebAppRepository
             get() = instance.webAppRepository
-        
+
         val categoryRepository: AppCategoryRepository
             get() = instance.appCategoryRepository
 
