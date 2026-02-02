@@ -232,6 +232,25 @@ object HtmlProjectProcessor {
             suggestions.add(htmlRelativePathsSuggestion(language))
         }
 
+        additionalFiles.forEach { path ->
+            val file = File(path)
+            if (file.exists()) {
+                otherFiles.add(FileInfo(
+                    name = file.name,
+                    path = path,
+                    size = file.length(),
+                    encoding = detectEncoding(file)
+                ))
+            } else {
+                issues.add(ProjectIssue(
+                    severity = IssueSeverity.WARNING,
+                    type = IssueType.MISSING_FILE,
+                    message = resourceMissingFileIssue(language, path),
+                    suggestion = ensureResourceImportedSuggestion(language, path)
+                ))
+            }
+        }
+
         return ProjectAnalysis(
             htmlFiles = htmlFiles,
             cssFiles = cssFiles,
@@ -290,7 +309,7 @@ object HtmlProjectProcessor {
         result = absolutePathRegex.replace(result) { match ->
             val attr = match.groupValues[1]
             val path = match.groupValues[2]
-            """$attr=".${path}""""
+            "$attr=\".${path}\""
         }
 
         // 修复 ../ 开头的路径（可能导致访问应用外部）
@@ -299,7 +318,7 @@ object HtmlProjectProcessor {
             val path = match.groupValues[2]
             // 将 ../ 替换为 ./
             val fixedPath = path.replace(Regex("""^\.\.+/"""), "./")
-            """$attr="$fixedPath""""
+            "$attr=\"$fixedPath\""
         }
 
         return result

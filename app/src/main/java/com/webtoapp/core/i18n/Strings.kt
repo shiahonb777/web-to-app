@@ -14886,6 +14886,30 @@ object Strings {
         AppLanguage.ARABIC -> "اتركه فارغًا للمحتوى الافتراضي"
     }
 
+    val backgroundRunChannelName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "后台运行"
+        AppLanguage.ENGLISH -> "Background Run"
+        AppLanguage.ARABIC -> "التشغيل في الخلفية"
+    }
+
+    val backgroundRunChannelDescription: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保持应用在后台持续运行"
+        AppLanguage.ENGLISH -> "Keep the app running in the background"
+        AppLanguage.ARABIC -> "إبقاء التطبيق يعمل في الخلفية"
+    }
+
+    val backgroundRunNotificationDefaultTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%s正在后台运行"
+        AppLanguage.ENGLISH -> "%s is running in background"
+        AppLanguage.ARABIC -> "%s يعمل في الخلفية"
+    }
+
+    val backgroundRunNotificationDefaultContent: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击返回应用"
+        AppLanguage.ENGLISH -> "Tap to return to the app"
+        AppLanguage.ARABIC -> "اضغط للعودة إلى التطبيق"
+    }
+
     val showAdvanced: String get() = when (lang) {
         AppLanguage.CHINESE -> "显示高级设置"
         AppLanguage.ENGLISH -> "Show Advanced"

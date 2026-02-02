@@ -1,0 +1,16 @@
+# Default: normalize text to LF in the repo
+* text=auto eol=lf
+
+# Keep binaries untouched
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.keystore binary
+*.jks binary
+*.jar binary
+*.apk binary
+*.aab binary
+*.so binary

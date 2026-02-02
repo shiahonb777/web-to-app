@@ -346,8 +346,6 @@
     <string name="new_update">有新版本可用</string>
     <string name="update_now">立即更新</string>
     <string name="latest_version">已是最新版本</string>
-    <string name="update_download_title">正在下载更新</string>
-    <string name="update_download_description">正在下载版本 %s...</string>
     <string name="network_error">网络错误</string>
     <string name="retry">重试</string>
     <string name="loading">加载中...</string>
@@ -578,6 +576,8 @@
     <string name="check_update">检查更新</string>
     <string name="checking">正在检查...</string>
     <string name="downloading">正在下载...</string>
+    <string name="update_download_title">WebToApp 更新</string>
+    <string name="update_download_description">正在下载 %s ...</string>
     <string name="current_version">当前版本</string>
     <string name="about_this_app">关于这个应用</string>
     <string name="about_app_description">WebToApp 是我独立开发的一款工具，可以将网站、图片、视频快速转换成独立的 Android 应用。\n\n如果你有任何问题、建议或想法，欢迎随时联系我！</string>

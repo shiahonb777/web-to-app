@@ -248,8 +248,6 @@
     <string name="new_update">تحديث جديد متاح</string>
     <string name="update_now">تحديث الآن</string>
     <string name="latest_version">أحدث إصدار بالفعل</string>
-    <string name="update_download_title">جاري تنزيل التحديث</string>
-    <string name="update_download_description">جارٍ تنزيل الإصدار %s...</string>
     <string name="network_error">خطأ في الشبكة</string>
     <string name="retry">إعادة المحاولة</string>
     <string name="loading">جاري التحميل...</string>
@@ -480,6 +478,8 @@
     <string name="check_update">التحقق من التحديثات</string>
     <string name="checking">جاري التحقق...</string>
     <string name="downloading">جاري التحميل...</string>
+    <string name="update_download_title">تحديث WebToApp</string>
+    <string name="update_download_description">يتم تنزيل %s ...</string>
     <string name="current_version">الإصدار الحالي</string>
     <string name="about_this_app">حول هذا التطبيق</string>
     <string name="about_app_description">WebToApp هي أداة طورتها بشكل مستقل يمكنها تحويل المواقع والصور ومقاطع الفيديو بسرعة إلى تطبيقات Android مستقلة.\n\nإذا كان لديك أي أسئلة أو اقتراحات أو أفكار، لا تتردد في الاتصال بي!</string>

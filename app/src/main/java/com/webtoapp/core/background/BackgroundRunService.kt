@@ -13,6 +13,8 @@ import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.webtoapp.R
+import com.webtoapp.core.i18n.Strings
+import java.util.Locale
 
 /**
  * 后台运行服务
@@ -108,9 +110,12 @@ class BackgroundRunService : Service() {
         keepCpuAwake = intent?.getBooleanExtra(EXTRA_KEEP_CPU_AWAKE, true) ?: true
         
         // 启动前台服务
+        val appLabel = if (appName.isNotEmpty()) appName else Strings.untitled
+        val defaultTitle = String.format(Locale.getDefault(), Strings.backgroundRunNotificationDefaultTitle, appLabel)
         val notification = createNotification(
-            title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "应用") + "正在后台运行",
-            content = notificationContent ?: "点击返回应用"
+            title = notificationTitle ?: defaultTitle,
+            content = notificationContent ?: Strings.backgroundRunNotificationDefaultContent,
+            showNotification = showNotification
         )
         startForeground(NOTIFICATION_ID, notification)
         isRunning = true
@@ -139,10 +144,10 @@ class BackgroundRunService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "后台运行",
+                Strings.backgroundRunChannelName,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "保持应用在后台持续运行"
+                description = Strings.backgroundRunChannelDescription
                 setShowBadge(false)
                 enableLights(false)
                 enableVibration(false)
@@ -153,7 +158,7 @@ class BackgroundRunService : Service() {
         }
     }
     
-    private fun createNotification(title: String, content: String): Notification {
+    private fun createNotification(title: String, content: String, showNotification: Boolean): Notification {
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = if (launchIntent != null) {
             PendingIntent.getActivity(
@@ -172,6 +177,10 @@ class BackgroundRunService : Service() {
             .setOngoing(true)
             .setShowWhen(false)
             .apply {
+                if (!showNotification) {
+                    setSilent(true)
+                    priority = NotificationCompat.PRIORITY_MIN
+                }
                 if (pendingIntent != null) {
                     setContentIntent(pendingIntent)
                 }

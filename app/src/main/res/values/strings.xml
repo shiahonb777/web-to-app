@@ -254,8 +254,6 @@
     <string name="new_update">New Update Available</string>
     <string name="update_now">Update Now</string>
     <string name="latest_version">Already latest version</string>
-    <string name="update_download_title">Downloading update</string>
-    <string name="update_download_description">Downloading version %s...</string>
     <string name="network_error">Network Error</string>
     <string name="retry">Retry</string>
     <string name="loading">Loading...</string>
@@ -486,6 +484,8 @@
     <string name="check_update">Check Update</string>
     <string name="checking">Checking...</string>
     <string name="downloading">Downloading...</string>
+    <string name="update_download_title">WebToApp Update</string>
+    <string name="update_download_description">Downloading %s ...</string>
     <string name="current_version">Current Version</string>
     <string name="about_this_app">About This App</string>
     <string name="about_app_description">WebToApp is a tool I independently developed that can quickly convert websites, images, and videos into standalone Android apps.\n\nIf you have any questions, suggestions, or ideas, feel free to contact me!</string>
