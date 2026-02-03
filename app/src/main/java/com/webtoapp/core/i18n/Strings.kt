@@ -6861,6 +6861,109 @@ object Strings {
     }
     
     // ==================== 更新日志 ====================
+    // v1.9.0
+    val browserEngineFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增浏览器内核功能"
+        AppLanguage.ENGLISH -> "Browser engine feature"
+        AppLanguage.ARABIC -> "ميزة محرك المتصفح"
+    }
+    
+    val browserSpoofingFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增浏览器伪装功能"
+        AppLanguage.ENGLISH -> "Browser spoofing feature"
+        AppLanguage.ARABIC -> "ميزة انتحال المتصفح"
+    }
+    
+    val hostsBlockFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增 Hosts 拦截功能"
+        AppLanguage.ENGLISH -> "Hosts blocking feature"
+        AppLanguage.ARABIC -> "ميزة حظر Hosts"
+    }
+    
+    val longPressMenuFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增长按菜单功能"
+        AppLanguage.ENGLISH -> "Long press menu feature"
+        AppLanguage.ARABIC -> "ميزة قائمة الضغط المطول"
+    }
+    
+    val apkArchitectureFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增 APK 架构功能"
+        AppLanguage.ENGLISH -> "APK architecture feature"
+        AppLanguage.ARABIC -> "ميزة بنية APK"
+    }
+    
+    val mediaGalleryFeature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "新增媒体画廊功能"
+        AppLanguage.ENGLISH -> "Media gallery feature"
+        AppLanguage.ARABIC -> "ميزة معرض الوسائط"
+    }
+    
+    val optimizeExtensionModule: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化扩展模块功能"
+        AppLanguage.ENGLISH -> "Optimized extension module"
+        AppLanguage.ARABIC -> "تحسين وحدة الإضافات"
+    }
+    
+    val optimizeEnglishArabicTranslation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化英文、阿拉伯语翻译支持"
+        AppLanguage.ENGLISH -> "Optimized English & Arabic translation"
+        AppLanguage.ARABIC -> "تحسين الترجمة الإنجليزية والعربية"
+    }
+    
+    val optimizeThemeInteraction: String get() = when (lang) {
+        AppLanguage.CHINESE -> "强化主题交互与性能"
+        AppLanguage.ENGLISH -> "Enhanced theme interaction & performance"
+        AppLanguage.ARABIC -> "تحسين تفاعل وأداء السمة"
+    }
+    
+    val optimizeApiConfigTest: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化 API 配置测试"
+        AppLanguage.ENGLISH -> "Optimized API config testing"
+        AppLanguage.ARABIC -> "تحسين اختبار تكوين API"
+    }
+    
+    val fixAppNameSpaces: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复应用名称大量空格问题"
+        AppLanguage.ENGLISH -> "Fixed app name excessive spaces issue"
+        AppLanguage.ARABIC -> "إصلاح مشكلة المسافات الزائدة في اسم التطبيق"
+    }
+    
+    val fixAnnouncementJump: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复弹窗公告跳转问题"
+        AppLanguage.ENGLISH -> "Fixed announcement popup redirect issue"
+        AppLanguage.ARABIC -> "إصلاح مشكلة إعادة توجيه الإعلان المنبثق"
+    }
+    
+    val fixExternalBrowserCrash: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复调用外部浏览器崩溃问题"
+        AppLanguage.ENGLISH -> "Fixed external browser launch crash"
+        AppLanguage.ARABIC -> "إصلاح تعطل تشغيل المتصفح الخارجي"
+    }
+    
+    val fixDownloadError: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复下载错误问题"
+        AppLanguage.ENGLISH -> "Fixed download error issue"
+        AppLanguage.ARABIC -> "إصلاح مشكلة خطأ التنزيل"
+    }
+    
+    val fixModuleEditCrash: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复编辑模块时崩溃问题"
+        AppLanguage.ENGLISH -> "Fixed module edit crash"
+        AppLanguage.ARABIC -> "إصلاح تعطل تحرير الوحدة"
+    }
+    
+    val fixAiImageInvalid: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复 AI 生成图像无效问题"
+        AppLanguage.ENGLISH -> "Fixed AI generated image invalid issue"
+        AppLanguage.ARABIC -> "إصلاح مشكلة صورة AI غير الصالحة"
+    }
+    
+    val fixDownloaderPlayerCooperation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复下载器与播放器协同处理问题"
+        AppLanguage.ENGLISH -> "Fixed downloader and player cooperation issue"
+        AppLanguage.ARABIC -> "إصلاح مشكلة تعاون المُنزِّل والمشغل"
+    }
+    
     // v1.8.5
     val appCategoryFeature: String get() = when (lang) {
         AppLanguage.CHINESE -> "新增应用分类功能"

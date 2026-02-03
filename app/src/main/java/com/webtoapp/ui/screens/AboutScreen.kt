@@ -693,10 +693,35 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // v1.9.0
+                            VersionSection(
+                                version = "v1.9.0",
+                                isLatest = true
+                            ) {
+                                ChangeItem("✨", Strings.browserEngineFeature)
+                                ChangeItem("✨", Strings.browserSpoofingFeature)
+                                ChangeItem("✨", Strings.hostsBlockFeature)
+                                ChangeItem("✨", Strings.longPressMenuFeature)
+                                ChangeItem("✨", Strings.apkArchitectureFeature)
+                                ChangeItem("✨", Strings.mediaGalleryFeature)
+                                ChangeItem("💪", Strings.optimizeExtensionModule)
+                                ChangeItem("💪", Strings.optimizeEnglishArabicTranslation)
+                                ChangeItem("💪", Strings.optimizeThemeInteraction)
+                                ChangeItem("💪", Strings.optimizeApiConfigTest)
+                                ChangeItem("🐛", Strings.fixAppNameSpaces)
+                                ChangeItem("🐛", Strings.fixAnnouncementJump)
+                                ChangeItem("🐛", Strings.fixExternalBrowserCrash)
+                                ChangeItem("🐛", Strings.fixDownloadError)
+                                ChangeItem("🐛", Strings.fixModuleEditCrash)
+                                ChangeItem("🐛", Strings.fixAiImageInvalid)
+                                ChangeItem("🐛", Strings.fixDownloaderPlayerCooperation)
+                            }
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             // v1.8.5
                             VersionSection(
-                                version = "v1.8.5",
-                                isLatest = true
+                                version = "v1.8.5"
                             ) {
                                 ChangeItem("✨", Strings.appCategoryFeature)
                                 ChangeItem("✨", Strings.faviconFetchFeature)
