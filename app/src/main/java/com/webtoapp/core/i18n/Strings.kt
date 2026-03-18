@@ -25,6 +25,18 @@ object Strings {
     // ==================== 应用标题 ====================
     val appTitle: String get() = "WebToApp"
     
+    val typewriterText1: String get() = "WebToApp"
+    val typewriterText2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "探索网页与APK的边界"
+        AppLanguage.ENGLISH -> "Explore the boundary of Web & APK"
+        AppLanguage.ARABIC -> "استكشف حدود الويب و APK"
+    }
+    val typewriterText3: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码的无限可能"
+        AppLanguage.ENGLISH -> "Infinite possibilities of code"
+        AppLanguage.ARABIC -> "إمكانيات لا حدود لها للبرمجة"
+    }
+    
     // ==================== 主界面 ====================
     val myApps: String get() = when (lang) {
         AppLanguage.CHINESE -> "我的应用"
@@ -63,10 +75,10 @@ object Strings {
     }
     
     // ==================== 菜单项 ====================
-    val menuAiHtmlCoding: String get() = when (lang) {
-        AppLanguage.CHINESE -> "AI HTML编程"
-        AppLanguage.ENGLISH -> "AI HTML Coding"
-        AppLanguage.ARABIC -> "برمجة AI HTML"
+    val menuAiCoding: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 编程"
+        AppLanguage.ENGLISH -> "AI Coding"
+        AppLanguage.ARABIC -> "برمجة AI"
     }
     
     val menuThemeSettings: String get() = when (lang) {
@@ -97,6 +109,1415 @@ object Strings {
         AppLanguage.CHINESE -> "关于"
         AppLanguage.ENGLISH -> "About"
         AppLanguage.ARABIC -> "حول"
+    }
+
+    // ==================== 底部 Tab ====================
+    val tabHome: String get() = when (lang) {
+        AppLanguage.CHINESE -> "首页"
+        AppLanguage.ENGLISH -> "Home"
+        AppLanguage.ARABIC -> "الرئيسية"
+    }
+    val tabStore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "市场"
+        AppLanguage.ENGLISH -> "Market"
+        AppLanguage.ARABIC -> "السوق"
+    }
+    val marketTabApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用"
+        AppLanguage.ENGLISH -> "Apps"
+        AppLanguage.ARABIC -> "التطبيقات"
+    }
+    val marketTabModules: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块"
+        AppLanguage.ENGLISH -> "Modules"
+        AppLanguage.ARABIC -> "الوحدات"
+    }
+    val moduleStoreSearchPlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索模块..."
+        AppLanguage.ENGLISH -> "Search modules..."
+        AppLanguage.ARABIC -> "البحث عن وحدات..."
+    }
+    val moduleStoreEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无模块\n成为第一个发布者吧"
+        AppLanguage.ENGLISH -> "No modules yet\nBe the first to publish!"
+        AppLanguage.ARABIC -> "لا توجد وحدات بعد\nكن أول من ينشر!"
+    }
+    val moduleStoreEmptySearch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "没有找到匹配的模块"
+        AppLanguage.ENGLISH -> "No matching modules found"
+        AppLanguage.ARABIC -> "لم يتم العثور على وحدات مطابقة"
+    }
+    val moduleStoreInstall: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装"
+        AppLanguage.ENGLISH -> "Install"
+        AppLanguage.ARABIC -> "تثبيت"
+    }
+    val moduleStoreFeatured: String get() = when (lang) {
+        AppLanguage.CHINESE -> "精选"
+        AppLanguage.ENGLISH -> "Featured"
+        AppLanguage.ARABIC -> "مميز"
+    }
+    val moduleStoreSortDownloads: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载"
+        AppLanguage.ENGLISH -> "Downloads"
+        AppLanguage.ARABIC -> "التنزيلات"
+    }
+    val moduleStoreSortRating: String get() = when (lang) {
+        AppLanguage.CHINESE -> "评分"
+        AppLanguage.ENGLISH -> "Rating"
+        AppLanguage.ARABIC -> "التقييم"
+    }
+    val moduleStoreSortNewest: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最新"
+        AppLanguage.ENGLISH -> "Newest"
+        AppLanguage.ARABIC -> "الأحدث"
+    }
+    val moduleStoreSortLikes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点赞"
+        AppLanguage.ENGLISH -> "Likes"
+        AppLanguage.ARABIC -> "الإعجابات"
+    }
+    val moduleStoreCatAll: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全部"
+        AppLanguage.ENGLISH -> "All"
+        AppLanguage.ARABIC -> "الكل"
+    }
+    val tabProfile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "我的"
+        AppLanguage.ENGLISH -> "Profile"
+        AppLanguage.ARABIC -> "حسابي"
+    }
+    val tabMore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更多"
+        AppLanguage.ENGLISH -> "More"
+        AppLanguage.ARABIC -> "المزيد"
+    }
+
+    // More 页面分类标题
+    val moreSectionAiTools: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 工具"
+        AppLanguage.ENGLISH -> "AI Tools"
+        AppLanguage.ARABIC -> "أدوات AI"
+    }
+    val moreSectionDevTools: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开发工具"
+        AppLanguage.ENGLISH -> "Dev Tools"
+        AppLanguage.ARABIC -> "أدوات التطوير"
+    }
+    val moreSectionBrowser: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浏览器 & 网络"
+        AppLanguage.ENGLISH -> "Browser & Network"
+        AppLanguage.ARABIC -> "المتصفح والشبكة"
+    }
+    val moreSectionAppearance: String get() = when (lang) {
+        AppLanguage.CHINESE -> "外观 & 数据"
+        AppLanguage.ENGLISH -> "Appearance & Data"
+        AppLanguage.ARABIC -> "المظهر والبيانات"
+    }
+    val storeComingSoon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用商店即将上线\n发现和分享精彩应用"
+        AppLanguage.ENGLISH -> "App Store Coming Soon\nDiscover & Share Amazing Apps"
+        AppLanguage.ARABIC -> "المتجر قريباً\nاكتشف وشارك التطبيقات المذهلة"
+    }
+
+    // ==================== 应用商店 ====================
+    val storeSearchPlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索应用..."
+        AppLanguage.ENGLISH -> "Search apps..."
+        AppLanguage.ARABIC -> "البحث عن التطبيقات..."
+    }
+    val storeAllCategories: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全部"
+        AppLanguage.ENGLISH -> "All"
+        AppLanguage.ARABIC -> "الكل"
+    }
+    val storeAppsCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用数量"
+        AppLanguage.ENGLISH -> "Apps"
+        AppLanguage.ARABIC -> "التطبيقات"
+    }
+    val storeEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无应用\n快来发布第一个吧"
+        AppLanguage.ENGLISH -> "No apps yet\nBe the first to publish!"
+        AppLanguage.ARABIC -> "لا توجد تطبيقات بعد\nكن أول من ينشر!"
+    }
+    val storeLoadMore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加载更多"
+        AppLanguage.ENGLISH -> "Load More"
+        AppLanguage.ARABIC -> "تحميل المزيد"
+    }
+    val storeSortDownloads: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载"
+        AppLanguage.ENGLISH -> "Downloads"
+        AppLanguage.ARABIC -> "التنزيلات"
+    }
+    val storeSortRating: String get() = when (lang) {
+        AppLanguage.CHINESE -> "评分"
+        AppLanguage.ENGLISH -> "Rating"
+        AppLanguage.ARABIC -> "التقييم"
+    }
+    val storeSortNewest: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最新"
+        AppLanguage.ENGLISH -> "Newest"
+        AppLanguage.ARABIC -> "الأحدث"
+    }
+    val storeSortLikes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点赞"
+        AppLanguage.ENGLISH -> "Likes"
+        AppLanguage.ARABIC -> "الإعجابات"
+    }
+    val storeReviews: String get() = when (lang) {
+        AppLanguage.CHINESE -> "评价"
+        AppLanguage.ENGLISH -> "reviews"
+        AppLanguage.ARABIC -> "مراجعات"
+    }
+    val storeDownloads: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载量"
+        AppLanguage.ENGLISH -> "downloads"
+        AppLanguage.ARABIC -> "تنزيلات"
+    }
+    val storeLikes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点赞"
+        AppLanguage.ENGLISH -> "likes"
+        AppLanguage.ARABIC -> "إعجابات"
+    }
+    val storeDownloadBtn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载安装"
+        AppLanguage.ENGLISH -> "Download"
+        AppLanguage.ARABIC -> "تحميل"
+    }
+    val storeScreenshots: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用截图"
+        AppLanguage.ENGLISH -> "Screenshots"
+        AppLanguage.ARABIC -> "لقطات الشاشة"
+    }
+    val storeDescription: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用介绍"
+        AppLanguage.ENGLISH -> "About"
+        AppLanguage.ARABIC -> "حول التطبيق"
+    }
+    val storeDeveloperInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开发者信息"
+        AppLanguage.ENGLISH -> "Developer"
+        AppLanguage.ARABIC -> "المطور"
+    }
+    val storeEmail: String get() = when (lang) {
+        AppLanguage.CHINESE -> "联系邮箱"
+        AppLanguage.ENGLISH -> "Email"
+        AppLanguage.ARABIC -> "البريد الإلكتروني"
+    }
+    val storeWebsite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "官网"
+        AppLanguage.ENGLISH -> "Website"
+        AppLanguage.ARABIC -> "الموقع"
+    }
+    val storeGroupChat: String get() = when (lang) {
+        AppLanguage.CHINESE -> "群聊"
+        AppLanguage.ENGLISH -> "Group"
+        AppLanguage.ARABIC -> "المجموعة"
+    }
+    val storePrivacyPolicy: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐私政策"
+        AppLanguage.ENGLISH -> "Privacy"
+        AppLanguage.ARABIC -> "الخصوصية"
+    }
+    val storePhone: String get() = when (lang) {
+        AppLanguage.CHINESE -> "联系电话"
+        AppLanguage.ENGLISH -> "Phone"
+        AppLanguage.ARABIC -> "الهاتف"
+    }
+    val storeReport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "举报"
+        AppLanguage.ENGLISH -> "Report"
+        AppLanguage.ARABIC -> "إبلاغ"
+    }
+    // Store categories
+    val storeCatTools: String get() = when (lang) {
+        AppLanguage.CHINESE -> "工具"
+        AppLanguage.ENGLISH -> "Tools"
+        AppLanguage.ARABIC -> "أدوات"
+    }
+    val storeCatSocial: String get() = when (lang) {
+        AppLanguage.CHINESE -> "社交"
+        AppLanguage.ENGLISH -> "Social"
+        AppLanguage.ARABIC -> "اجتماعي"
+    }
+    val storeCatEducation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "教育"
+        AppLanguage.ENGLISH -> "Education"
+        AppLanguage.ARABIC -> "تعليم"
+    }
+    val storeCatEntertainment: String get() = when (lang) {
+        AppLanguage.CHINESE -> "娱乐"
+        AppLanguage.ENGLISH -> "Entertainment"
+        AppLanguage.ARABIC -> "ترفيه"
+    }
+    val storeCatProductivity: String get() = when (lang) {
+        AppLanguage.CHINESE -> "效率"
+        AppLanguage.ENGLISH -> "Productivity"
+        AppLanguage.ARABIC -> "إنتاجية"
+    }
+    val storeCatLifestyle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "生活"
+        AppLanguage.ENGLISH -> "Lifestyle"
+        AppLanguage.ARABIC -> "نمط الحياة"
+    }
+    val storeCatBusiness: String get() = when (lang) {
+        AppLanguage.CHINESE -> "商务"
+        AppLanguage.ENGLISH -> "Business"
+        AppLanguage.ARABIC -> "أعمال"
+    }
+    val storeCatNews: String get() = when (lang) {
+        AppLanguage.CHINESE -> "资讯"
+        AppLanguage.ENGLISH -> "News"
+        AppLanguage.ARABIC -> "أخبار"
+    }
+    val storeCatFinance: String get() = when (lang) {
+        AppLanguage.CHINESE -> "财务"
+        AppLanguage.ENGLISH -> "Finance"
+        AppLanguage.ARABIC -> "مالية"
+    }
+    val storeCatHealth: String get() = when (lang) {
+        AppLanguage.CHINESE -> "健康"
+        AppLanguage.ENGLISH -> "Health"
+        AppLanguage.ARABIC -> "صحة"
+    }
+    val storeCatOther: String get() = when (lang) {
+        AppLanguage.CHINESE -> "其他"
+        AppLanguage.ENGLISH -> "Other"
+        AppLanguage.ARABIC -> "أخرى"
+    }
+
+    // ── 商店 - 下载管理 / 我的应用 / 发布 ──
+    val storeDownloadManager: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载管理"
+        AppLanguage.ENGLISH -> "Download Manager"
+        AppLanguage.ARABIC -> "مدير التنزيلات"
+    }
+    val storeDownloadedApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已下载应用"
+        AppLanguage.ENGLISH -> "Downloaded Apps"
+        AppLanguage.ARABIC -> "التطبيقات المحملة"
+    }
+    val storeMyApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "我的应用"
+        AppLanguage.ENGLISH -> "My Apps"
+        AppLanguage.ARABIC -> "تطبيقاتي"
+    }
+    val storePublishApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发布应用"
+        AppLanguage.ENGLISH -> "Publish App"
+        AppLanguage.ARABIC -> "نشر تطبيق"
+    }
+    val storeNoDownloads: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无下载任务"
+        AppLanguage.ENGLISH -> "No active downloads"
+        AppLanguage.ARABIC -> "لا توجد تنزيلات نشطة"
+    }
+    val storeNoDownloadedApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "没有已下载的应用"
+        AppLanguage.ENGLISH -> "No downloaded apps"
+        AppLanguage.ARABIC -> "لا توجد تطبيقات محملة"
+    }
+    val storeNoPublishedApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "还没有发布过应用"
+        AppLanguage.ENGLISH -> "No published apps yet"
+        AppLanguage.ARABIC -> "لم تنشر تطبيقات بعد"
+    }
+    val storeConfirmUnpublish: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确认下架"
+        AppLanguage.ENGLISH -> "Confirm Unpublish"
+        AppLanguage.ARABIC -> "تأكيد إلغاء النشر"
+    }
+    val storeInstall: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装"
+        AppLanguage.ENGLISH -> "Install"
+        AppLanguage.ARABIC -> "تثبيت"
+    }
+    val storeDelete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除"
+        AppLanguage.ENGLISH -> "Delete"
+        AppLanguage.ARABIC -> "حذف"
+    }
+    val storeCancel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "取消"
+        AppLanguage.ENGLISH -> "Cancel"
+        AppLanguage.ARABIC -> "إلغاء"
+    }
+    val storePublishing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发布中..."
+        AppLanguage.ENGLISH -> "Publishing..."
+        AppLanguage.ARABIC -> "جارٍ النشر..."
+    }
+    val storePublishSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "🎉 应用发布成功!"
+        AppLanguage.ENGLISH -> "🎉 App published successfully!"
+        AppLanguage.ARABIC -> "🎉 تم نشر التطبيق بنجاح!"
+    }
+    val storePublishFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发布失败"
+        AppLanguage.ENGLISH -> "Publish failed"
+        AppLanguage.ARABIC -> "فشل النشر"
+    }
+    val storeFetchingLink: String get() = when (lang) {
+        AppLanguage.CHINESE -> "获取下载链接..."
+        AppLanguage.ENGLISH -> "Fetching download link..."
+        AppLanguage.ARABIC -> "جارٍ جلب رابط التنزيل..."
+    }
+    val storeLoadFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加载失败"
+        AppLanguage.ENGLISH -> "Loading failed"
+        AppLanguage.ARABIC -> "فشل التحميل"
+    }
+    val storeAppName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用名称"
+        AppLanguage.ENGLISH -> "App Name"
+        AppLanguage.ARABIC -> "اسم التطبيق"
+    }
+    val storeAppDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用描述"
+        AppLanguage.ENGLISH -> "Description"
+        AppLanguage.ARABIC -> "الوصف"
+    }
+    val storeCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分类"
+        AppLanguage.ENGLISH -> "Category"
+        AppLanguage.ARABIC -> "الفئة"
+    }
+    val storeTags: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标签"
+        AppLanguage.ENGLISH -> "Tags"
+        AppLanguage.ARABIC -> "العلامات"
+    }
+    val storeVersionName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本名"
+        AppLanguage.ENGLISH -> "Version"
+        AppLanguage.ARABIC -> "الإصدار"
+    }
+    val storeVersionCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本号"
+        AppLanguage.ENGLISH -> "Version Code"
+        AppLanguage.ARABIC -> "رقم الإصدار"
+    }
+    val storePackageName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "包名"
+        AppLanguage.ENGLISH -> "Package Name"
+        AppLanguage.ARABIC -> "اسم الحزمة"
+    }
+    val storeIconUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图标 URL"
+        AppLanguage.ENGLISH -> "Icon URL"
+        AppLanguage.ARABIC -> "رابط الأيقونة"
+    }
+    val storeScreenshotUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "截图 URL"
+        AppLanguage.ENGLISH -> "Screenshot URL"
+        AppLanguage.ARABIC -> "رابط لقطة الشاشة"
+    }
+    val storeBasicInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基本信息"
+        AppLanguage.ENGLISH -> "Basic Info"
+        AppLanguage.ARABIC -> "المعلومات الأساسية"
+    }
+    val storeDescAndTags: String get() = when (lang) {
+        AppLanguage.CHINESE -> "描述和标签"
+        AppLanguage.ENGLISH -> "Description & Tags"
+        AppLanguage.ARABIC -> "الوصف والعلامات"
+    }
+    val storeContactInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "联系信息"
+        AppLanguage.ENGLISH -> "Contact Info"
+        AppLanguage.ARABIC -> "معلومات الاتصال"
+    }
+    val storeApkLinks: String get() = when (lang) {
+        AppLanguage.CHINESE -> "APK 下载链接"
+        AppLanguage.ENGLISH -> "APK Download Links"
+        AppLanguage.ARABIC -> "روابط تنزيل APK"
+    }
+    val storePublishFormSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "填写以下信息将应用发布到商店"
+        AppLanguage.ENGLISH -> "Fill in the details to publish your app"
+        AppLanguage.ARABIC -> "أكمل المعلومات لنشر تطبيقك"
+    }
+    val storeScreenshotsAdded: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已添加 %d 张截图"
+        AppLanguage.ENGLISH -> "%d screenshot(s) added"
+        AppLanguage.ARABIC -> "تمت إضافة %d لقطة شاشة"
+    }
+    val storeFillRequired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请填写应用名称和描述"
+        AppLanguage.ENGLISH -> "Please fill in app name and description"
+        AppLanguage.ARABIC -> "يرجى ملء اسم التطبيق والوصف"
+    }
+    val storeAddScreenshot: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请添加至少一张截图"
+        AppLanguage.ENGLISH -> "Please add at least one screenshot"
+        AppLanguage.ARABIC -> "يرجى إضافة لقطة شاشة واحدة على الأقل"
+    }
+    // ── 模块市场 - 我的模块 / 发布模块 ──
+    val storeMyModules: String get() = when (lang) {
+        AppLanguage.CHINESE -> "我的模块"
+        AppLanguage.ENGLISH -> "My Modules"
+        AppLanguage.ARABIC -> "وحداتي"
+    }
+    val storePublishModule: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发布模块"
+        AppLanguage.ENGLISH -> "Publish Module"
+        AppLanguage.ARABIC -> "نشر وحدة"
+    }
+    val storeNoPublishedModules: String get() = when (lang) {
+        AppLanguage.CHINESE -> "还没有发布过模块"
+        AppLanguage.ENGLISH -> "No published modules yet"
+        AppLanguage.ARABIC -> "لم تنشر وحدات بعد"
+    }
+    val storeModuleShareCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块分享码"
+        AppLanguage.ENGLISH -> "Module Share Code"
+        AppLanguage.ARABIC -> "رمز مشاركة الوحدة"
+    }
+    val storeModuleName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块名称"
+        AppLanguage.ENGLISH -> "Module Name"
+        AppLanguage.ARABIC -> "اسم الوحدة"
+    }
+    val storeModuleDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块描述"
+        AppLanguage.ENGLISH -> "Module Description"
+        AppLanguage.ARABIC -> "وصف الوحدة"
+    }
+    val storeModulePublishSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将你的扩展模块分享到模块市场，让更多人使用"
+        AppLanguage.ENGLISH -> "Share your extension module to the market"
+        AppLanguage.ARABIC -> "شارك وحدتك في السوق ليستخدمها الآخرون"
+    }
+    val storeModulePublishSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块发布成功！等待审核后将在市场上线"
+        AppLanguage.ENGLISH -> "Module published! It will appear after review"
+        AppLanguage.ARABIC -> "تم نشر الوحدة! ستظهر بعد المراجعة"
+    }
+
+    // ==================== 团队协作 ====================
+    val teamTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "团队管理"
+        AppLanguage.ENGLISH -> "Teams"
+        AppLanguage.ARABIC -> "الفرق"
+    }
+    val teamCreate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建团队"
+        AppLanguage.ENGLISH -> "Create Team"
+        AppLanguage.ARABIC -> "إنشاء فريق"
+    }
+    val teamName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "团队名称"
+        AppLanguage.ENGLISH -> "Team Name"
+        AppLanguage.ARABIC -> "اسم الفريق"
+    }
+    val teamDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "团队简介"
+        AppLanguage.ENGLISH -> "Description"
+        AppLanguage.ARABIC -> "الوصف"
+    }
+    val teamMembers: String get() = when (lang) {
+        AppLanguage.CHINESE -> "成员"
+        AppLanguage.ENGLISH -> "Members"
+        AppLanguage.ARABIC -> "الأعضاء"
+    }
+    val teamInvite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "邀请成员"
+        AppLanguage.ENGLISH -> "Invite"
+        AppLanguage.ARABIC -> "دعوة"
+    }
+    val teamUsername: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用户名"
+        AppLanguage.ENGLISH -> "Username"
+        AppLanguage.ARABIC -> "اسم المستخدم"
+    }
+    val teamRole: String get() = when (lang) {
+        AppLanguage.CHINESE -> "角色"
+        AppLanguage.ENGLISH -> "Role"
+        AppLanguage.ARABIC -> "الدور"
+    }
+    val teamRoleOwner: String get() = when (lang) {
+        AppLanguage.CHINESE -> "所有者"
+        AppLanguage.ENGLISH -> "Owner"
+        AppLanguage.ARABIC -> "المالك"
+    }
+    val teamRoleAdmin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理员"
+        AppLanguage.ENGLISH -> "Admin"
+        AppLanguage.ARABIC -> "مسؤول"
+    }
+    val teamRoleEditor: String get() = when (lang) {
+        AppLanguage.CHINESE -> "编辑"
+        AppLanguage.ENGLISH -> "Editor"
+        AppLanguage.ARABIC -> "محرر"
+    }
+    val teamRoleViewer: String get() = when (lang) {
+        AppLanguage.CHINESE -> "查看者"
+        AppLanguage.ENGLISH -> "Viewer"
+        AppLanguage.ARABIC -> "مشاهد"
+    }
+    val teamDelete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除团队"
+        AppLanguage.ENGLISH -> "Delete Team"
+        AppLanguage.ARABIC -> "حذف الفريق"
+    }
+    val teamEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无团队\n创建您的第一个团队"
+        AppLanguage.ENGLISH -> "No teams yet\nCreate your first team"
+        AppLanguage.ARABIC -> "لا توجد فرق بعد\nأنشئ فريقك الأول"
+    }
+    val teamQuota: String get() = when (lang) {
+        AppLanguage.CHINESE -> "团队配额"
+        AppLanguage.ENGLISH -> "Team Quota"
+        AppLanguage.ARABIC -> "حصة الفرق"
+    }
+
+    // ==================== 高级数据看板 ====================
+    val analyticsOpens: String get() = when (lang) {
+        AppLanguage.CHINESE -> "打开次数"
+        AppLanguage.ENGLISH -> "Opens"
+        AppLanguage.ARABIC -> "مرات الفتح"
+    }
+    val analyticsActiveUsers: String get() = when (lang) {
+        AppLanguage.CHINESE -> "活跃用户"
+        AppLanguage.ENGLISH -> "Active Users"
+        AppLanguage.ARABIC -> "المستخدمون النشطون"
+    }
+    val analyticsInstalls: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装量"
+        AppLanguage.ENGLISH -> "Installs"
+        AppLanguage.ARABIC -> "التثبيتات"
+    }
+    val analyticsCrashes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "崩溃"
+        AppLanguage.ENGLISH -> "Crashes"
+        AppLanguage.ARABIC -> "الأعطال"
+    }
+    val analyticsDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设备数"
+        AppLanguage.ENGLISH -> "Devices"
+        AppLanguage.ARABIC -> "الأجهزة"
+    }
+    val analyticsAvgDaily: String get() = when (lang) {
+        AppLanguage.CHINESE -> "日均活跃"
+        AppLanguage.ENGLISH -> "Avg Daily"
+        AppLanguage.ARABIC -> "المتوسط اليومي"
+    }
+    val analyticsTrend: String get() = when (lang) {
+        AppLanguage.CHINESE -> "趋势图"
+        AppLanguage.ENGLISH -> "Trend"
+        AppLanguage.ARABIC -> "الاتجاه"
+    }
+    val analyticsOsDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "系统版本分布"
+        AppLanguage.ENGLISH -> "OS Distribution"
+        AppLanguage.ARABIC -> "توزيع نظام التشغيل"
+    }
+    val analyticsDeviceDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设备品牌分布"
+        AppLanguage.ENGLISH -> "Device Distribution"
+        AppLanguage.ARABIC -> "توزيع الأجهزة"
+    }
+    val analyticsCountryDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "地区分布"
+        AppLanguage.ENGLISH -> "Country Distribution"
+        AppLanguage.ARABIC -> "التوزيع الجغرافي"
+    }
+    val analyticsVersionDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本分布"
+        AppLanguage.ENGLISH -> "Version Distribution"
+        AppLanguage.ARABIC -> "توزيع الإصدارات"
+    }
+    val analyticsDashboard: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据看板"
+        AppLanguage.ENGLISH -> "Analytics"
+        AppLanguage.ARABIC -> "لوحة البيانات"
+    }
+
+    // ==================== 云项目 Tab 名称 ====================
+    val cloudOverview: String get() = when (lang) {
+        AppLanguage.CHINESE -> "概览"
+        AppLanguage.ENGLISH -> "Overview"
+        AppLanguage.ARABIC -> "نظرة عامة"
+    }
+    val cloudSync: String get() = when (lang) {
+        AppLanguage.CHINESE -> "同步"
+        AppLanguage.ENGLISH -> "Sync"
+        AppLanguage.ARABIC -> "المزامنة"
+    }
+    val cloudScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "脚本"
+        AppLanguage.ENGLISH -> "Scripts"
+        AppLanguage.ARABIC -> "السكريبتات"
+    }
+    val cloudShare: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分享"
+        AppLanguage.ENGLISH -> "Share"
+        AppLanguage.ARABIC -> "مشاركة"
+    }
+    val cloudActivationCodes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "激活码"
+        AppLanguage.ENGLISH -> "Keys"
+        AppLanguage.ARABIC -> "مفاتيح"
+    }
+    val cloudAnnouncements: String get() = when (lang) {
+        AppLanguage.CHINESE -> "公告"
+        AppLanguage.ENGLISH -> "News"
+        AppLanguage.ARABIC -> "الإعلانات"
+    }
+    val cloudPush: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推送"
+        AppLanguage.ENGLISH -> "Push"
+        AppLanguage.ARABIC -> "الإشعارات"
+    }
+    val pushAnnouncement: String get() = when (lang) {
+        AppLanguage.CHINESE -> "公告推送"
+        AppLanguage.ENGLISH -> "Announcement"
+        AppLanguage.ARABIC -> "إعلان"
+    }
+    val pushUpdate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更新推送"
+        AppLanguage.ENGLISH -> "Update"
+        AppLanguage.ARABIC -> "تحديث"
+    }
+    val pushTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推送标题"
+        AppLanguage.ENGLISH -> "Title"
+        AppLanguage.ARABIC -> "العنوان"
+    }
+    val pushBody: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推送内容"
+        AppLanguage.ENGLISH -> "Content"
+        AppLanguage.ARABIC -> "المحتوى"
+    }
+    val pushVersionName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本号"
+        AppLanguage.ENGLISH -> "Version"
+        AppLanguage.ARABIC -> "الإصدار"
+    }
+    val pushForceUpdate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "强制更新"
+        AppLanguage.ENGLISH -> "Force Update"
+        AppLanguage.ARABIC -> "تحديث إجباري"
+    }
+    val pushOptionalUpdate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可选更新"
+        AppLanguage.ENGLISH -> "Optional"
+        AppLanguage.ARABIC -> "اختياري"
+    }
+    val pushSendBtn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发送推送"
+        AppLanguage.ENGLISH -> "Send Push"
+        AppLanguage.ARABIC -> "إرسال"
+    }
+    val pushHistory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推送历史"
+        AppLanguage.ENGLISH -> "Push History"
+        AppLanguage.ARABIC -> "سجل الإشعارات"
+    }
+    val pushDailyLimit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "今日已用"
+        AppLanguage.ENGLISH -> "Today"
+        AppLanguage.ARABIC -> "اليوم"
+    }
+    val pushSent: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已发送"
+        AppLanguage.ENGLISH -> "Sent"
+        AppLanguage.ARABIC -> "تم الإرسال"
+    }
+    val pushFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发送失败"
+        AppLanguage.ENGLISH -> "Failed"
+        AppLanguage.ARABIC -> "فشل"
+    }
+    val pushEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无推送记录"
+        AppLanguage.ENGLISH -> "No push history"
+        AppLanguage.ARABIC -> "لا يوجد سجل"
+    }
+    val cloudRemoteConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置"
+        AppLanguage.ENGLISH -> "Config"
+        AppLanguage.ARABIC -> "الإعدادات"
+    }
+    val cloudVersions: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本"
+        AppLanguage.ENGLISH -> "Versions"
+        AppLanguage.ARABIC -> "الإصدارات"
+    }
+    val cloudBackups: String get() = when (lang) {
+        AppLanguage.CHINESE -> "备份"
+        AppLanguage.ENGLISH -> "Backups"
+        AppLanguage.ARABIC -> "النسخ الاحتياطي"
+    }
+    // ==================== 用户认证 ====================
+    val authCloudService: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WebToApp 云服务"
+        AppLanguage.ENGLISH -> "WebToApp Cloud"
+        AppLanguage.ARABIC -> "WebToApp السحابية"
+    }
+    val authCloudDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "登录账号，解锁云端构建与项目同步"
+        AppLanguage.ENGLISH -> "Sign in to unlock cloud builds & project sync"
+        AppLanguage.ARABIC -> "سجل الدخول لفتح البناء السحابي ومزامنة المشاريع"
+    }
+    val authLogin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "登录"
+        AppLanguage.ENGLISH -> "Sign In"
+        AppLanguage.ARABIC -> "تسجيل الدخول"
+    }
+    val authRegister: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注册"
+        AppLanguage.ENGLISH -> "Sign Up"
+        AppLanguage.ARABIC -> "إنشاء حساب"
+    }
+    val authEmail: String get() = when (lang) {
+        AppLanguage.CHINESE -> "邮箱"
+        AppLanguage.ENGLISH -> "Email"
+        AppLanguage.ARABIC -> "البريد الإلكتروني"
+    }
+    val authUsername: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用户名"
+        AppLanguage.ENGLISH -> "Username"
+        AppLanguage.ARABIC -> "اسم المستخدم"
+    }
+    val authUsernameHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "字母、数字和下划线"
+        AppLanguage.ENGLISH -> "Letters, numbers and underscores"
+        AppLanguage.ARABIC -> "حروف وأرقام وشرطة سفلية"
+    }
+    val authPassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "密码"
+        AppLanguage.ENGLISH -> "Password"
+        AppLanguage.ARABIC -> "كلمة المرور"
+    }
+    val authPasswordHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "至少 6 位字符"
+        AppLanguage.ENGLISH -> "At least 6 characters"
+        AppLanguage.ARABIC -> "6 أحرف على الأقل"
+    }
+    val authConfirmPassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确认密码"
+        AppLanguage.ENGLISH -> "Confirm Password"
+        AppLanguage.ARABIC -> "تأكيد كلمة المرور"
+    }
+    val authLoggingIn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "登录中..."
+        AppLanguage.ENGLISH -> "Signing in..."
+        AppLanguage.ARABIC -> "جارٍ تسجيل الدخول..."
+    }
+    val authRegistering: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注册中..."
+        AppLanguage.ENGLISH -> "Signing up..."
+        AppLanguage.ARABIC -> "جارٍ إنشاء الحساب..."
+    }
+    val authNoAccount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "还没有账号？"
+        AppLanguage.ENGLISH -> "Don't have an account?"
+        AppLanguage.ARABIC -> "ليس لديك حساب؟"
+    }
+    val authRegisterNow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "立即注册"
+        AppLanguage.ENGLISH -> "Sign up now"
+        AppLanguage.ARABIC -> "سجل الآن"
+    }
+    val authHasAccount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已有账号？"
+        AppLanguage.ENGLISH -> "Already have an account?"
+        AppLanguage.ARABIC -> "لديك حساب بالفعل؟"
+    }
+    val authLoginNow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "立即登录"
+        AppLanguage.ENGLISH -> "Sign in now"
+        AppLanguage.ARABIC -> "سجل الدخول الآن"
+    }
+    val authWhyRegister: String get() = when (lang) {
+        AppLanguage.CHINESE -> "为什么要注册？"
+        AppLanguage.ENGLISH -> "Why sign up?"
+        AppLanguage.ARABIC -> "لماذا تسجيل حساب؟"
+    }
+    val authFeatureCloud: String get() = when (lang) {
+        AppLanguage.CHINESE -> "云端项目管理，激活码批量生成"
+        AppLanguage.ENGLISH -> "Cloud project management & activation codes"
+        AppLanguage.ARABIC -> "إدارة المشاريع السحابية ورموز التفعيل"
+    }
+    val authFeatureStats: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用使用统计和数据分析仪表板"
+        AppLanguage.ENGLISH -> "App usage analytics dashboard"
+        AppLanguage.ARABIC -> "لوحة تحليلات استخدام التطبيق"
+    }
+    val authFeatureShare: String get() = when (lang) {
+        AppLanguage.CHINESE -> "一键生成 APK 分享下载页"
+        AppLanguage.ENGLISH -> "Generate APK share & download page"
+        AppLanguage.ARABIC -> "إنشاء صفحة مشاركة وتنزيل APK"
+    }
+    val authFeatureBackup: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目云端备份到 GitHub/Gitee"
+        AppLanguage.ENGLISH -> "Cloud backup to GitHub/Gitee"
+        AppLanguage.ARABIC -> "نسخ احتياطي سحابي إلى GitHub/Gitee"
+    }
+    val authFreeNote: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基础功能完全免费，无需注册即可使用"
+        AppLanguage.ENGLISH -> "Basic features are completely free, no sign-up required"
+        AppLanguage.ARABIC -> "الميزات الأساسية مجانية بالكامل، بدون تسجيل"
+    }
+    val authProfile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "个人中心"
+        AppLanguage.ENGLISH -> "Profile"
+        AppLanguage.ARABIC -> "الملف الشخصي"
+    }
+    val authLogout: String get() = when (lang) {
+        AppLanguage.CHINESE -> "退出登录"
+        AppLanguage.ENGLISH -> "Sign Out"
+        AppLanguage.ARABIC -> "تسجيل الخروج"
+    }
+    val authLogoutConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要退出登录吗？退出后需要重新登录才能使用云服务。"
+        AppLanguage.ENGLISH -> "Are you sure you want to sign out? You'll need to sign in again to use cloud services."
+        AppLanguage.ARABIC -> "هل أنت متأكد من تسجيل الخروج؟ ستحتاج إلى تسجيل الدخول مرة أخرى لاستخدام الخدمات السحابية."
+    }
+    val authStatsAppsCreated: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已创建应用"
+        AppLanguage.ENGLISH -> "Apps Created"
+        AppLanguage.ARABIC -> "التطبيقات المنشأة"
+    }
+    val authStatsApksBuilt: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已构建 APK"
+        AppLanguage.ENGLISH -> "APKs Built"
+        AppLanguage.ARABIC -> "APK المبنية"
+    }
+    val authStatsMaxDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最大设备数"
+        AppLanguage.ENGLISH -> "Max Devices"
+        AppLanguage.ARABIC -> "الحد الأقصى للأجهزة"
+    }
+    val authProActive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Pro 会员已激活"
+        AppLanguage.ENGLISH -> "Pro Membership Active"
+        AppLanguage.ARABIC -> "عضوية Pro نشطة"
+    }
+    val authUltraActive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Ultra 会员已激活"
+        AppLanguage.ENGLISH -> "Ultra Membership Active"
+        AppLanguage.ARABIC -> "عضوية Ultra نشطة"
+    }
+    val authLifetimeActive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Pro 永久会员已激活"
+        AppLanguage.ENGLISH -> "Pro Lifetime Active"
+        AppLanguage.ARABIC -> "عضوية Pro الدائمة نشطة"
+    }
+    val authUltraLifetimeActive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Ultra 永久会员已激活"
+        AppLanguage.ENGLISH -> "Ultra Lifetime Active"
+        AppLanguage.ARABIC -> "عضوية Ultra الدائمة نشطة"
+    }
+    val authUpgradeToUltra: String get() = when (lang) {
+        AppLanguage.CHINESE -> "升级至 Ultra 永久"
+        AppLanguage.ENGLISH -> "Upgrade to Ultra Lifetime"
+        AppLanguage.ARABIC -> "الترقية إلى Ultra الدائمة"
+    }
+    val authUpgradeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "补差价即可升级"
+        AppLanguage.ENGLISH -> "Pay the difference to upgrade"
+        AppLanguage.ARABIC -> "ادفع الفرق للترقية"
+    }
+    val authProInactive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "免费版用户"
+        AppLanguage.ENGLISH -> "Free Plan"
+        AppLanguage.ARABIC -> "الخطة المجانية"
+    }
+    val authProRemaining: String get() = when (lang) {
+        AppLanguage.CHINESE -> "剩余"
+        AppLanguage.ENGLISH -> "Remaining"
+        AppLanguage.ARABIC -> "المتبقي"
+    }
+    val authProDays: String get() = when (lang) {
+        AppLanguage.CHINESE -> "天"
+        AppLanguage.ENGLISH -> "days"
+        AppLanguage.ARABIC -> "يوم"
+    }
+    val authMenuDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设备管理"
+        AppLanguage.ENGLISH -> "Device Management"
+        AppLanguage.ARABIC -> "إدارة الأجهزة"
+    }
+    val authMenuDevicesMax: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最多绑定设备"
+        AppLanguage.ENGLISH -> "Max bound devices"
+        AppLanguage.ARABIC -> "الحد الأقصى للأجهزة المرتبطة"
+    }
+    val authMenuCloudProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "云端项目"
+        AppLanguage.ENGLISH -> "Cloud Projects"
+        AppLanguage.ARABIC -> "المشاريع السحابية"
+    }
+    val authMenuCloudAvailable: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可用"
+        AppLanguage.ENGLISH -> "Available"
+        AppLanguage.ARABIC -> "متاح"
+    }
+    val authMenuCloudUpgrade: String get() = when (lang) {
+        AppLanguage.CHINESE -> "升级 Pro 解锁"
+        AppLanguage.ENGLISH -> "Upgrade to Pro to unlock"
+        AppLanguage.ARABIC -> "ترقية إلى Pro للفتح"
+    }
+    val authMenuSecurity: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安全设置"
+        AppLanguage.ENGLISH -> "Security Settings"
+        AppLanguage.ARABIC -> "إعدادات الأمان"
+    }
+    val authMenuSecurityDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修改密码、管理登录设备"
+        AppLanguage.ENGLISH -> "Change password, manage login devices"
+        AppLanguage.ARABIC -> "تغيير كلمة المرور، إدارة أجهزة تسجيل الدخول"
+    }
+    val menuAccount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "账号"
+        AppLanguage.ENGLISH -> "Account"
+        AppLanguage.ARABIC -> "الحساب"
+    }
+    val menuLoginRegister: String get() = when (lang) {
+        AppLanguage.CHINESE -> "登录 / 注册"
+        AppLanguage.ENGLISH -> "Sign In / Sign Up"
+        AppLanguage.ARABIC -> "تسجيل الدخول / إنشاء حساب"
+    }
+
+    // ==================== 云服务 ====================
+    val cloudActivationCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "激活码兑换"
+        AppLanguage.ENGLISH -> "Redeem Code"
+        AppLanguage.ARABIC -> "استرداد الرمز"
+    }
+    val cloudRedeemTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "兑换激活码"
+        AppLanguage.ENGLISH -> "Redeem Activation Code"
+        AppLanguage.ARABIC -> "استرداد رمز التفعيل"
+    }
+    val cloudRedeemDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入激活码激活会员"
+        AppLanguage.ENGLISH -> "Enter your code to activate membership"
+        AppLanguage.ARABIC -> "أدخل رمزك لتفعيل العضوية"
+    }
+    val cloudCodePlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入激活码"
+        AppLanguage.ENGLISH -> "Enter activation code"
+        AppLanguage.ARABIC -> "أدخل رمز التفعيل"
+    }
+    val cloudRedeemBtn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "立即兑换"
+        AppLanguage.ENGLISH -> "Redeem Now"
+        AppLanguage.ARABIC -> "استرداد الآن"
+    }
+    val cloudRedeeming: String get() = when (lang) {
+        AppLanguage.CHINESE -> "兑换中..."
+        AppLanguage.ENGLISH -> "Redeeming..."
+        AppLanguage.ARABIC -> "جاري الاسترداد..."
+    }
+    val cloudRedeemHistory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "兑换历史"
+        AppLanguage.ENGLISH -> "Redemption History"
+        AppLanguage.ARABIC -> "سجل الاسترداد"
+    }
+    val cloudValidUntil: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有效至"
+        AppLanguage.ENGLISH -> "Valid until"
+        AppLanguage.ARABIC -> "صالح حتى"
+    }
+    val cloudDeviceManagement: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设备管理"
+        AppLanguage.ENGLISH -> "Device Management"
+        AppLanguage.ARABIC -> "إدارة الأجهزة"
+    }
+    val cloudDeviceCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已绑定设备"
+        AppLanguage.ENGLISH -> "Bound devices"
+        AppLanguage.ARABIC -> "الأجهزة المربوطة"
+    }
+    val cloudNoDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无绑定设备"
+        AppLanguage.ENGLISH -> "No bound devices"
+        AppLanguage.ARABIC -> "لا توجد أجهزة مربوطة"
+    }
+    val cloudCurrentDevice: String get() = when (lang) {
+        AppLanguage.CHINESE -> "当前设备"
+        AppLanguage.ENGLISH -> "Current"
+        AppLanguage.ARABIC -> "الحالي"
+    }
+    val cloudLastActive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最后活跃"
+        AppLanguage.ENGLISH -> "Last active"
+        AppLanguage.ARABIC -> "آخر نشاط"
+    }
+    val cloudRemoveDevice: String get() = when (lang) {
+        AppLanguage.CHINESE -> "解绑设备"
+        AppLanguage.ENGLISH -> "Remove Device"
+        AppLanguage.ARABIC -> "إزالة الجهاز"
+    }
+    val cloudRemoveDeviceConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要解绑此设备吗？解绑后该设备需要重新登录。"
+        AppLanguage.ENGLISH -> "Remove this device? It will need to log in again."
+        AppLanguage.ARABIC -> "إزالة هذا الجهاز؟ سيحتاج إلى تسجيل الدخول مرة أخرى."
+    }
+    val cloudDismiss: String get() = when (lang) {
+        AppLanguage.CHINESE -> "知道了"
+        AppLanguage.ENGLISH -> "Dismiss"
+        AppLanguage.ARABIC -> "تجاهل"
+    }
+    val cloudProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "云端项目"
+        AppLanguage.ENGLISH -> "Cloud Projects"
+        AppLanguage.ARABIC -> "المشاريع السحابية"
+    }
+    val cloudCreateProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建项目"
+        AppLanguage.ENGLISH -> "Create Project"
+        AppLanguage.ARABIC -> "إنشاء مشروع"
+    }
+    val cloudNoProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无云端项目"
+        AppLanguage.ENGLISH -> "No cloud projects"
+        AppLanguage.ARABIC -> "لا توجد مشاريع سحابية"
+    }
+    val cloudCreateProjectHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击下方按钮创建第一个项目"
+        AppLanguage.ENGLISH -> "Tap below to create your first project"
+        AppLanguage.ARABIC -> "انقر أدناه لإنشاء مشروعك الأول"
+    }
+    val cloudProjectName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目名称"
+        AppLanguage.ENGLISH -> "Project Name"
+        AppLanguage.ARABIC -> "اسم المشروع"
+    }
+    val cloudProjectDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目描述"
+        AppLanguage.ENGLISH -> "Description"
+        AppLanguage.ARABIC -> "الوصف"
+    }
+    val cloudOptional: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可选"
+        AppLanguage.ENGLISH -> "optional"
+        AppLanguage.ARABIC -> "اختياري"
+    }
+    val cloudCreate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建"
+        AppLanguage.ENGLISH -> "Create"
+        AppLanguage.ARABIC -> "إنشاء"
+    }
+    val cloudDeleteProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除项目"
+        AppLanguage.ENGLISH -> "Delete Project"
+        AppLanguage.ARABIC -> "حذف المشروع"
+    }
+    val cloudDeleteProjectConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要删除此项目吗？此操作不可恢复。"
+        AppLanguage.ENGLISH -> "Delete this project? This action cannot be undone."
+        AppLanguage.ARABIC -> "حذف هذا المشروع؟ لا يمكن التراجع عن هذا الإجراء."
+    }
+    val cloudAnalytics: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据分析"
+        AppLanguage.ENGLISH -> "Analytics"
+        AppLanguage.ARABIC -> "التحليلات"
+    }
+    val cloudDays: String get() = when (lang) {
+        AppLanguage.CHINESE -> "天"
+        AppLanguage.ENGLISH -> "d"
+        AppLanguage.ARABIC -> "يوم"
+    }
+    val cloudInstalls: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装"
+        AppLanguage.ENGLISH -> "Installs"
+        AppLanguage.ARABIC -> "التثبيتات"
+    }
+    val cloudOpens: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动"
+        AppLanguage.ENGLISH -> "Opens"
+        AppLanguage.ARABIC -> "الفتحات"
+    }
+    val cloudActive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "活跃"
+        AppLanguage.ENGLISH -> "Active"
+        AppLanguage.ARABIC -> "نشط"
+    }
+    val cloudCrashes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "崩溃"
+        AppLanguage.ENGLISH -> "Crashes"
+        AppLanguage.ARABIC -> "الأعطال"
+    }
+    val cloudVersionHistory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本历史"
+        AppLanguage.ENGLISH -> "Version History"
+        AppLanguage.ARABIC -> "سجل الإصدارات"
+    }
+    val cloudNoVersions: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无发布版本"
+        AppLanguage.ENGLISH -> "No published versions"
+        AppLanguage.ARABIC -> "لا توجد إصدارات منشورة"
+    }
+    val cloudProBenefits: String get() = when (lang) {
+        AppLanguage.CHINESE -> "会员特权"
+        AppLanguage.ENGLISH -> "Benefits"
+        AppLanguage.ARABIC -> "المزايا"
+    }
+    val cloudBenefitCloud: String get() = when (lang) {
+        AppLanguage.CHINESE -> "云端项目管理与发布"
+        AppLanguage.ENGLISH -> "Cloud project management & publishing"
+        AppLanguage.ARABIC -> "إدارة ونشر المشاريع السحابية"
+    }
+    val cloudBenefitPriority: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优先构建与加速下载"
+        AppLanguage.ENGLISH -> "Priority build & accelerated downloads"
+        AppLanguage.ARABIC -> "بناء ذو أولوية وتنزيلات سريعة"
+    }
+    val cloudBenefitDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最多绑定 5 台设备"
+        AppLanguage.ENGLISH -> "Up to 5 devices"
+        AppLanguage.ARABIC -> "حتى 5 أجهزة"
+    }
+    val cloudBenefitAnalytics: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高级数据分析与统计"
+        AppLanguage.ENGLISH -> "Advanced analytics & statistics"
+        AppLanguage.ARABIC -> "تحليلات وإحصائيات متقدمة"
+    }
+    val cloudLoadingDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在加载设备..."
+        AppLanguage.ENGLISH -> "Loading devices..."
+        AppLanguage.ARABIC -> "جاري تحميل الأجهزة..."
+    }
+    val cloudDevicesOnline: String get() = when (lang) {
+        AppLanguage.CHINESE -> "台设备在线"
+        AppLanguage.ENGLISH -> "devices online"
+        AppLanguage.ARABIC -> "أجهزة متصلة"
+    }
+    val cloudLoadingProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在加载项目..."
+        AppLanguage.ENGLISH -> "Loading projects..."
+        AppLanguage.ARABIC -> "جاري تحميل المشاريع..."
+    }
+    val cloudProjectsTotal: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目"
+        AppLanguage.ENGLISH -> "Projects"
+        AppLanguage.ARABIC -> "مشاريع"
+    }
+    val cloudShowAdvanced: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高级选项"
+        AppLanguage.ENGLISH -> "Advanced"
+        AppLanguage.ARABIC -> "متقدم"
+    }
+    val cloudHideAdvanced: String get() = when (lang) {
+        AppLanguage.CHINESE -> "收起"
+        AppLanguage.ENGLISH -> "Hide"
+        AppLanguage.ARABIC -> "إخفاء"
+    }
+    
+    // ==================== 使用统计 ====================
+    val menuStats: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用统计"
+        AppLanguage.ENGLISH -> "Usage Stats"
+        AppLanguage.ARABIC -> "إحصائيات الاستخدام"
+    }
+    val statsTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用统计"
+        AppLanguage.ENGLISH -> "Usage Statistics"
+        AppLanguage.ARABIC -> "إحصائيات الاستخدام"
+    }
+    val statsTotalLaunches: String get() = when (lang) {
+        AppLanguage.CHINESE -> "总启动次数"
+        AppLanguage.ENGLISH -> "Total Launches"
+        AppLanguage.ARABIC -> "إجمالي عمليات الإطلاق"
+    }
+    val statsTotalUsage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "总使用时长"
+        AppLanguage.ENGLISH -> "Total Usage"
+        AppLanguage.ARABIC -> "إجمالي الاستخدام"
+    }
+    val statsActiveApps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "活跃应用"
+        AppLanguage.ENGLISH -> "Active Apps"
+        AppLanguage.ARABIC -> "التطبيقات النشطة"
+    }
+    val statsMostUsed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最常使用"
+        AppLanguage.ENGLISH -> "Most Used"
+        AppLanguage.ARABIC -> "الأكثر استخدامًا"
+    }
+    val statsMostTime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用最久"
+        AppLanguage.ENGLISH -> "Most Time Spent"
+        AppLanguage.ARABIC -> "الأطول استخدامًا"
+    }
+    val statsRecentlyUsed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最近使用"
+        AppLanguage.ENGLISH -> "Recently Used"
+        AppLanguage.ARABIC -> "المستخدمة مؤخرًا"
+    }
+    val statsLaunches: String get() = when (lang) {
+        AppLanguage.CHINESE -> "次"
+        AppLanguage.ENGLISH -> "launches"
+        AppLanguage.ARABIC -> "مرة"
+    }
+    val statsNeverUsed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "从未使用"
+        AppLanguage.ENGLISH -> "Never used"
+        AppLanguage.ARABIC -> "لم يُستخدم"
+    }
+    val statsNoData: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无使用数据"
+        AppLanguage.ENGLISH -> "No usage data yet"
+        AppLanguage.ARABIC -> "لا توجد بيانات استخدام بعد"
+    }
+    val statsJustNow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "刚刚"
+        AppLanguage.ENGLISH -> "Just now"
+        AppLanguage.ARABIC -> "الآن"
+    }
+    val statsMinutesAgo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分钟前"
+        AppLanguage.ENGLISH -> "min ago"
+        AppLanguage.ARABIC -> "دقيقة مضت"
+    }
+    val statsHoursAgo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "小时前"
+        AppLanguage.ENGLISH -> "h ago"
+        AppLanguage.ARABIC -> "ساعة مضت"
+    }
+    val statsDaysAgo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "天前"
+        AppLanguage.ENGLISH -> "d ago"
+        AppLanguage.ARABIC -> "يوم مضت"
+    }
+    
+    // ==================== 网站健康监控 ====================
+    val healthTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "网站健康"
+        AppLanguage.ENGLISH -> "Site Health"
+        AppLanguage.ARABIC -> "صحة الموقع"
+    }
+    val healthOnline: String get() = when (lang) {
+        AppLanguage.CHINESE -> "在线"
+        AppLanguage.ENGLISH -> "Online"
+        AppLanguage.ARABIC -> "متصل"
+    }
+    val healthSlow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "慢速"
+        AppLanguage.ENGLISH -> "Slow"
+        AppLanguage.ARABIC -> "بطيء"
+    }
+    val healthOffline: String get() = when (lang) {
+        AppLanguage.CHINESE -> "离线"
+        AppLanguage.ENGLISH -> "Offline"
+        AppLanguage.ARABIC -> "غير متصل"
+    }
+    val healthUnknown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未检测"
+        AppLanguage.ENGLISH -> "Unknown"
+        AppLanguage.ARABIC -> "غير معروف"
+    }
+    val healthCheckNow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "立即检测"
+        AppLanguage.ENGLISH -> "Check Now"
+        AppLanguage.ARABIC -> "تحقق الآن"
+    }
+    val healthChecking: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测中..."
+        AppLanguage.ENGLISH -> "Checking..."
+        AppLanguage.ARABIC -> "جارٍ التحقق..."
+    }
+    val healthResponseTime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应时间"
+        AppLanguage.ENGLISH -> "Response Time"
+        AppLanguage.ARABIC -> "وقت الاستجابة"
+    }
+    val healthUptime24h: String get() = when (lang) {
+        AppLanguage.CHINESE -> "24h 在线率"
+        AppLanguage.ENGLISH -> "24h Uptime"
+        AppLanguage.ARABIC -> "وقت التشغيل 24 ساعة"
+    }
+    val healthHistory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应时间趋势"
+        AppLanguage.ENGLISH -> "Response Time Trend"
+        AppLanguage.ARABIC -> "اتجاه وقت الاستجابة"
+    }
+    
+    // ==================== 网站截图 ====================
+    val screenshotCapture: String get() = when (lang) {
+        AppLanguage.CHINESE -> "截取预览"
+        AppLanguage.ENGLISH -> "Capture Preview"
+        AppLanguage.ARABIC -> "التقاط معاينة"
+    }
+    val screenshotRefresh: String get() = when (lang) {
+        AppLanguage.CHINESE -> "刷新截图"
+        AppLanguage.ENGLISH -> "Refresh Screenshot"
+        AppLanguage.ARABIC -> "تحديث لقطة الشاشة"
+    }
+    val screenshotCapturing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在截取..."
+        AppLanguage.ENGLISH -> "Capturing..."
+        AppLanguage.ARABIC -> "جارٍ الالتقاط..."
+    }
+    
+    // ==================== 批量导入 ====================
+    val menuBatchImport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "批量导入"
+        AppLanguage.ENGLISH -> "Batch Import"
+        AppLanguage.ARABIC -> "استيراد مجمع"
+    }
+    val batchImportTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "批量导入"
+        AppLanguage.ENGLISH -> "Batch Import"
+        AppLanguage.ARABIC -> "استيراد مجمع"
+    }
+    val batchImportFromText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "从文本导入"
+        AppLanguage.ENGLISH -> "Import from Text"
+        AppLanguage.ARABIC -> "استيراد من نص"
+    }
+    val batchImportFromBookmarks: String get() = when (lang) {
+        AppLanguage.CHINESE -> "从书签文件导入"
+        AppLanguage.ENGLISH -> "Import from Bookmarks"
+        AppLanguage.ARABIC -> "استيراد من الإشارات المرجعية"
+    }
+    val batchImportHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "每行一个URL，格式：URL 或 名称|URL"
+        AppLanguage.ENGLISH -> "One URL per line: URL or Name|URL"
+        AppLanguage.ARABIC -> "رابط واحد لكل سطر: URL أو الاسم|URL"
+    }
+    val batchImportParsed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已解析 %d 个URL"
+        AppLanguage.ENGLISH -> "%d URLs parsed"
+        AppLanguage.ARABIC -> "تم تحليل %d روابط"
+    }
+    val batchImportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "成功导入 %d 个应用"
+        AppLanguage.ENGLISH -> "%d apps imported successfully"
+        AppLanguage.ARABIC -> "تم استيراد %d تطبيقات بنجاح"
+    }
+    val batchImportBtn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入"
+        AppLanguage.ENGLISH -> "Import"
+        AppLanguage.ARABIC -> "استيراد"
+    }
+    
+    // ==================== 模板分享 ====================
+    val templateExport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导出为模板"
+        AppLanguage.ENGLISH -> "Export as Template"
+        AppLanguage.ARABIC -> "تصدير كقالب"
+    }
+    val templateImport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入模板"
+        AppLanguage.ENGLISH -> "Import Template"
+        AppLanguage.ARABIC -> "استيراد قالب"
+    }
+    val templateExportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模板已导出"
+        AppLanguage.ENGLISH -> "Template exported"
+        AppLanguage.ARABIC -> "تم تصدير القالب"
+    }
+    val templateImportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模板导入成功"
+        AppLanguage.ENGLISH -> "Template imported"
+        AppLanguage.ARABIC -> "تم استيراد القالب"
     }
     
     val menuLinuxEnvironment: String get() = when (lang) {
@@ -142,6 +1563,42 @@ object Strings {
         AppLanguage.ARABIC -> "تعديل مشروع الواجهة الأمامية"
     }
     
+    val createWordPressApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 应用"
+        AppLanguage.ENGLISH -> "WordPress App"
+        AppLanguage.ARABIC -> "تطبيق WordPress"
+    }
+    
+    val createNodeJsApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 应用"
+        AppLanguage.ENGLISH -> "Node.js App"
+        AppLanguage.ARABIC -> "تطبيق Node.js"
+    }
+    
+    val createPhpApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 应用"
+        AppLanguage.ENGLISH -> "PHP App"
+        AppLanguage.ARABIC -> "تطبيق PHP"
+    }
+    
+    val createPythonApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 应用"
+        AppLanguage.ENGLISH -> "Python App"
+        AppLanguage.ARABIC -> "تطبيق Python"
+    }
+    
+    val createGoApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 服务"
+        AppLanguage.ENGLISH -> "Go Service"
+        AppLanguage.ARABIC -> "خدمة Go"
+    }
+    
+    val createDocsSite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文档站点"
+        AppLanguage.ENGLISH -> "Docs Site"
+        AppLanguage.ARABIC -> "موقع التوثيق"
+    }
+    
     // ==================== 应用类型标签 ====================
     val appTypeWeb: String get() = when (lang) {
         AppLanguage.CHINESE -> "网页"
@@ -177,6 +1634,710 @@ object Strings {
         AppLanguage.CHINESE -> "前端"
         AppLanguage.ENGLISH -> "Frontend"
         AppLanguage.ARABIC -> "الواجهة الأمامية"
+    }
+    
+    val appTypeWordPress: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress"
+        AppLanguage.ENGLISH -> "WordPress"
+        AppLanguage.ARABIC -> "WordPress"
+    }
+    
+    val appTypeNodeJs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js"
+        AppLanguage.ENGLISH -> "Node.js"
+        AppLanguage.ARABIC -> "Node.js"
+    }
+    
+    val appTypePhp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP"
+        AppLanguage.ENGLISH -> "PHP"
+        AppLanguage.ARABIC -> "PHP"
+    }
+    
+    val appTypePython: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python"
+        AppLanguage.ENGLISH -> "Python"
+        AppLanguage.ARABIC -> "Python"
+    }
+    
+    val appTypeGo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go"
+        AppLanguage.ENGLISH -> "Go"
+        AppLanguage.ARABIC -> "Go"
+    }
+    
+    val appTypeDocsSite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文档"
+        AppLanguage.ENGLISH -> "Docs"
+        AppLanguage.ARABIC -> "التوثيق"
+    }
+    
+    // ==================== 通用项目字符串 ====================
+    val dirNotExists: String get() = when (lang) {
+        AppLanguage.CHINESE -> "目录不存在"
+        AppLanguage.ENGLISH -> "Directory does not exist"
+        AppLanguage.ARABIC -> "المجلد غير موجود"
+    }
+    
+    val copyingDocsFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在复制文档文件..."
+        AppLanguage.ENGLISH -> "Copying docs files..."
+        AppLanguage.ARABIC -> "جارٍ نسخ ملفات التوثيق..."
+    }
+    
+    val projectImportFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目导入失败"
+        AppLanguage.ENGLISH -> "Project import failed"
+        AppLanguage.ARABIC -> "فشل استيراد المشروع"
+    }
+    
+    val frameworkDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到框架"
+        AppLanguage.ENGLISH -> "Framework Detected"
+        AppLanguage.ARABIC -> "تم اكتشاف الإطار"
+    }
+    
+    val enableSearch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用搜索"
+        AppLanguage.ENGLISH -> "Enable Search"
+        AppLanguage.ARABIC -> "تمكين البحث"
+    }
+    
+    val preparingEnv: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在准备环境..."
+        AppLanguage.ENGLISH -> "Preparing environment..."
+        AppLanguage.ARABIC -> "جارٍ تحضير البيئة..."
+    }
+    
+    val startingServer: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在启动服务器..."
+        AppLanguage.ENGLISH -> "Starting server..."
+        AppLanguage.ARABIC -> "جارٍ تشغيل الخادم..."
+    }
+    
+    val serverStartFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "服务启动失败"
+        AppLanguage.ENGLISH -> "Server failed to start"
+        AppLanguage.ARABIC -> "فشل تشغيل الخادم"
+    }
+    
+    val phpSupportedFrameworks: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 Laravel、ThinkPHP、CodeIgniter、Slim 和原生 PHP 项目"
+        AppLanguage.ENGLISH -> "Supports Laravel, ThinkPHP, CodeIgniter, Slim and plain PHP projects"
+        AppLanguage.ARABIC -> "يدعم Laravel و ThinkPHP و CodeIgniter و Slim ومشاريع PHP الأصلية"
+    }
+    
+    val pySupportedFrameworks: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 Flask、Django、FastAPI、Tornado 和原生 Python Web 项目"
+        AppLanguage.ENGLISH -> "Supports Flask, Django, FastAPI, Tornado and plain Python Web projects"
+        AppLanguage.ARABIC -> "يدعم Flask و Django و FastAPI و Tornado ومشاريع Python Web الأصلية"
+    }
+    
+    val goSupportedFrameworks: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 Gin、Fiber、Echo、Chi 和 net/http 项目，需包含预编译的 ARM64 二进制文件"
+        AppLanguage.ENGLISH -> "Supports Gin, Fiber, Echo, Chi and net/http projects. Pre-compiled ARM64 binary required."
+        AppLanguage.ARABIC -> "يدعم Gin و Fiber و Echo و Chi و net/http. يتطلب ملف ثنائي ARM64 مسبق التجميع."
+    }
+    
+    val docsSiteDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择文档站点构建输出目录（dist/build/public），支持 VitePress、Hexo、Hugo、MkDocs、Docusaurus"
+        AppLanguage.ENGLISH -> "Select docs site build output (dist/build/public). Supports VitePress, Hexo, Hugo, MkDocs, Docusaurus."
+        AppLanguage.ARABIC -> "اختر مجلد إخراج بناء موقع التوثيق (dist/build/public). يدعم VitePress و Hexo و Hugo و MkDocs و Docusaurus."
+    }
+    
+    val docsNoIndex: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未找到 index.html，请选择文档站点构建输出目录"
+        AppLanguage.ENGLISH -> "index.html not found. Please select the docs site build output directory."
+        AppLanguage.ARABIC -> "لم يتم العثور على index.html. يرجى اختيار مجلد إخراج بناء موقع التوثيق."
+    }
+    
+    val docsHashRouting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Hash (#/) - 推荐"
+        AppLanguage.ENGLISH -> "Hash (#/) - Recommended"
+        AppLanguage.ARABIC -> "Hash (#/) - موصى به"
+    }
+    
+    val docsHistoryRouting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "History (/) - 需要服务端支持"
+        AppLanguage.ENGLISH -> "History (/) - Requires server support"
+        AppLanguage.ARABIC -> "History (/) - يتطلب دعم الخادم"
+    }
+    
+    // ==================== PHP 应用字符串 ====================
+    val phpFrameworkDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到框架"
+        AppLanguage.ENGLISH -> "Framework Detected"
+        AppLanguage.ARABIC -> "تم اكتشاف الإطار"
+    }
+    
+    val phpDocumentRoot: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Web 根目录"
+        AppLanguage.ENGLISH -> "Document Root"
+        AppLanguage.ARABIC -> "جذر المستند"
+    }
+    
+    val phpEntryFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "入口文件"
+        AppLanguage.ENGLISH -> "Entry File"
+        AppLanguage.ARABIC -> "ملف الدخول"
+    }
+    
+    val phpProjectReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 项目已就绪"
+        AppLanguage.ENGLISH -> "PHP project ready"
+        AppLanguage.ARABIC -> "مشروع PHP جاهز"
+    }
+    
+    val phpSelectProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择 PHP 项目目录"
+        AppLanguage.ENGLISH -> "Select PHP Project Directory"
+        AppLanguage.ARABIC -> "اختر مجلد مشروع PHP"
+    }
+    
+    val phpNoIndexFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未找到 PHP 入口文件"
+        AppLanguage.ENGLISH -> "No PHP entry file found"
+        AppLanguage.ARABIC -> "لم يتم العثور على ملف دخول PHP"
+    }
+    
+    val phpAppCheckingDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查 PHP 环境..."
+        AppLanguage.ENGLISH -> "Checking PHP environment..."
+        AppLanguage.ARABIC -> "جارٍ فحص بيئة PHP..."
+    }
+    
+    val phpAppDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在下载 PHP 运行时"
+        AppLanguage.ENGLISH -> "Downloading PHP runtime"
+        AppLanguage.ARABIC -> "جارٍ تنزيل بيئة تشغيل PHP"
+    }
+    
+    val phpAppStartingServer: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在启动 PHP 服务器..."
+        AppLanguage.ENGLISH -> "Starting PHP server..."
+        AppLanguage.ARABIC -> "جارٍ تشغيل خادم PHP..."
+    }
+    
+    val phpAppServerError: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 服务器启动失败"
+        AppLanguage.ENGLISH -> "PHP server failed to start"
+        AppLanguage.ARABIC -> "فشل تشغيل خادم PHP"
+    }
+    
+    val phpAppDownloadFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 运行时下载失败，请检查网络后重试"
+        AppLanguage.ENGLISH -> "PHP runtime download failed, please check network and retry"
+        AppLanguage.ARABIC -> "فشل تنزيل بيئة تشغيل PHP، يرجى التحقق من الشبكة والمحاولة مرة أخرى"
+    }
+    
+    val phpAppProjectNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 项目文件不存在"
+        AppLanguage.ENGLISH -> "PHP project files not found"
+        AppLanguage.ARABIC -> "ملفات مشروع PHP غير موجودة"
+    }
+    
+    val phpImportZip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入 ZIP 压缩包"
+        AppLanguage.ENGLISH -> "Import ZIP Archive"
+        AppLanguage.ARABIC -> "استيراد أرشيف ZIP"
+    }
+    
+    val phpExtractingZip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在解压 ZIP 文件..."
+        AppLanguage.ENGLISH -> "Extracting ZIP file..."
+        AppLanguage.ARABIC -> "جارٍ استخراج ملف ZIP..."
+    }
+    
+    val phpZipExtractFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ZIP 解压失败"
+        AppLanguage.ENGLISH -> "ZIP extraction failed"
+        AppLanguage.ARABIC -> "فشل استخراج ZIP"
+    }
+    
+    val phpZipNoPhpFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ZIP 中未找到 PHP 项目文件"
+        AppLanguage.ENGLISH -> "No PHP project files found in ZIP"
+        AppLanguage.ARABIC -> "لم يتم العثور على ملفات مشروع PHP في ZIP"
+    }
+    
+    // ==================== Python 应用字符串 ====================
+    val pySelectProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择 Python 项目目录"
+        AppLanguage.ENGLISH -> "Select Python Project Directory"
+        AppLanguage.ARABIC -> "اختر مجلد مشروع Python"
+    }
+    
+    val pyServerType: String get() = when (lang) {
+        AppLanguage.CHINESE -> "服务器类型"
+        AppLanguage.ENGLISH -> "Server Type"
+        AppLanguage.ARABIC -> "نوع الخادم"
+    }
+    
+    val pyProjectReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 项目已就绪"
+        AppLanguage.ENGLISH -> "Python project ready"
+        AppLanguage.ARABIC -> "مشروع Python جاهز"
+    }
+    
+    val pyProjectNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 项目文件不存在"
+        AppLanguage.ENGLISH -> "Python project files not found"
+        AppLanguage.ARABIC -> "ملفات مشروع Python غير موجودة"
+    }
+    
+    val pyStartingPreview: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在启动 Python 应用预览..."
+        AppLanguage.ENGLISH -> "Starting Python app preview..."
+        AppLanguage.ARABIC -> "جارٍ تشغيل معاينة تطبيق Python..."
+    }
+    
+    val pyNoStaticContent: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 项目中未找到可显示的静态文件\n（后端应用需要 Python 运行时支持）"
+        AppLanguage.ENGLISH -> "No displayable static files found in Python project\n(Backend apps require Python runtime support)"
+        AppLanguage.ARABIC -> "لم يتم العثور على ملفات ثابتة قابلة للعرض في مشروع Python\n(تتطلب تطبيقات الواجهة الخلفية دعم بيئة تشغيل Python)"
+    }
+    
+    val pyPreviewFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 应用预览启动失败"
+        AppLanguage.ENGLISH -> "Python app preview failed to start"
+        AppLanguage.ARABIC -> "فشل تشغيل معاينة تطبيق Python"
+    }
+    
+    // ==================== Go 应用字符串 ====================
+    val goSelectBinary: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择 Go 二进制文件"
+        AppLanguage.ENGLISH -> "Select Go Binary"
+        AppLanguage.ARABIC -> "اختر ملف Go الثنائي"
+    }
+    
+    val goSelectProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择 Go 项目目录"
+        AppLanguage.ENGLISH -> "Select Go Project Directory"
+        AppLanguage.ARABIC -> "اختر مجلد مشروع Go"
+    }
+    
+    val goProjectReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 服务已就绪"
+        AppLanguage.ENGLISH -> "Go service ready"
+        AppLanguage.ARABIC -> "خدمة Go جاهزة"
+    }
+    
+    val goProjectNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 项目文件不存在"
+        AppLanguage.ENGLISH -> "Go project files not found"
+        AppLanguage.ARABIC -> "ملفات مشروع Go غير موجودة"
+    }
+    
+    val goStartingPreview: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在启动 Go 应用预览..."
+        AppLanguage.ENGLISH -> "Starting Go app preview..."
+        AppLanguage.ARABIC -> "جارٍ تشغيل معاينة تطبيق Go..."
+    }
+    
+    val goPreviewFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 应用预览启动失败"
+        AppLanguage.ENGLISH -> "Go app preview failed to start"
+        AppLanguage.ARABIC -> "فشل تشغيل معاينة تطبيق Go"
+    }
+    
+    // ==================== Node.js 应用预览字符串 ====================
+    val nodeProjectNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 项目文件不存在"
+        AppLanguage.ENGLISH -> "Node.js project files not found"
+        AppLanguage.ARABIC -> "ملفات مشروع Node.js غير موجودة"
+    }
+    
+    val nodeStartingPreview: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在启动 Node.js 应用预览..."
+        AppLanguage.ENGLISH -> "Starting Node.js app preview..."
+        AppLanguage.ARABIC -> "جارٍ تشغيل معاينة تطبيق Node.js..."
+    }
+    
+    val nodePreviewFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 应用预览启动失败"
+        AppLanguage.ENGLISH -> "Node.js app preview failed to start"
+        AppLanguage.ARABIC -> "فشل تشغيل معاينة تطبيق Node.js"
+    }
+    
+    // ==================== 文档站点字符串 ====================
+    val docsSelectProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择文档站点目录"
+        AppLanguage.ENGLISH -> "Select Docs Site Directory"
+        AppLanguage.ARABIC -> "اختر مجلد موقع التوثيق"
+    }
+    
+    val docsGeneratorDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到生成器"
+        AppLanguage.ENGLISH -> "Generator Detected"
+        AppLanguage.ARABIC -> "تم اكتشاف المولد"
+    }
+    
+    val docsRoutingMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "路由模式"
+        AppLanguage.ENGLISH -> "Routing Mode"
+        AppLanguage.ARABIC -> "وضع التوجيه"
+    }
+    
+    val docsProjectReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文档站点已就绪"
+        AppLanguage.ENGLISH -> "Docs site ready"
+        AppLanguage.ARABIC -> "موقع التوثيق جاهز"
+    }
+    
+    // ==================== WordPress 功能字符串 ====================
+    val wpDownloadDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载 WordPress 依赖"
+        AppLanguage.ENGLISH -> "Download WordPress Dependencies"
+        AppLanguage.ARABIC -> "تنزيل متطلبات WordPress"
+    }
+    
+    val wpDownloadDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "首次使用需要下载 PHP 解释器和 WordPress 核心文件（级 25MB）"
+        AppLanguage.ENGLISH -> "First use requires downloading PHP interpreter and WordPress core (~25MB)"
+        AppLanguage.ARABIC -> "يتطلب الاستخدام الأول تنزيل مترجم PHP ونواة WordPress (~25MB)"
+    }
+    
+    val wpMirrorCN: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国内镜像"
+        AppLanguage.ENGLISH -> "China Mirror"
+        AppLanguage.ARABIC -> "مرآة الصين"
+    }
+    
+    val wpMirrorGlobal: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国际源"
+        AppLanguage.ENGLISH -> "Global Source"
+        AppLanguage.ARABIC -> "مصدر عالمي"
+    }
+    
+    val wpDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在下载"
+        AppLanguage.ENGLISH -> "Downloading"
+        AppLanguage.ARABIC -> "جارٍ التنزيل"
+    }
+    
+    val wpExtracting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在解压"
+        AppLanguage.ENGLISH -> "Extracting"
+        AppLanguage.ARABIC -> "جارٍ الاستخراج"
+    }
+    
+    val wpDepsReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "依赖已就绪"
+        AppLanguage.ENGLISH -> "Dependencies Ready"
+        AppLanguage.ARABIC -> "المتطلبات جاهزة"
+    }
+    
+    val wpSiteTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "站点标题"
+        AppLanguage.ENGLISH -> "Site Title"
+        AppLanguage.ARABIC -> "عنوان الموقع"
+    }
+    
+    val wpAdminUser: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理员用户名"
+        AppLanguage.ENGLISH -> "Admin Username"
+        AppLanguage.ARABIC -> "اسم المستخدم المسؤول"
+    }
+    
+    val wpImportTheme: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入主题"
+        AppLanguage.ENGLISH -> "Import Theme"
+        AppLanguage.ARABIC -> "استيراد السمة"
+    }
+    
+    val wpImportPlugin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入插件"
+        AppLanguage.ENGLISH -> "Import Plugin"
+        AppLanguage.ARABIC -> "استيراد الإضافة"
+    }
+    
+    val wpImportFull: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入完整 WordPress 压缩包"
+        AppLanguage.ENGLISH -> "Import Full WordPress Package"
+        AppLanguage.ARABIC -> "استيراد حزمة WordPress كاملة"
+    }
+    
+    val wpStartingServer: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在启动 PHP 服务器..."
+        AppLanguage.ENGLISH -> "Starting PHP server..."
+        AppLanguage.ARABIC -> "جارٍ تشغيل خادم PHP..."
+    }
+    
+    val wpServerError: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 服务器启动失败"
+        AppLanguage.ENGLISH -> "PHP server failed to start"
+        AppLanguage.ARABIC -> "فشل تشغيل خادم PHP"
+    }
+    
+    val wpClearCache: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理 WordPress 缓存"
+        AppLanguage.ENGLISH -> "Clear WordPress Cache"
+        AppLanguage.ARABIC -> "مسح ذاكرة التخزين المؤقت WordPress"
+    }
+    
+    val wpMirrorSource: String get() = when (lang) {
+        AppLanguage.CHINESE -> "镜像源"
+        AppLanguage.ENGLISH -> "Mirror Source"
+        AppLanguage.ARABIC -> "مصدر المرآة"
+    }
+    
+    val wpAutoDetect: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动检测"
+        AppLanguage.ENGLISH -> "Auto Detect"
+        AppLanguage.ARABIC -> "كشف تلقائي"
+    }
+    
+    val wpCheckingDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查依赖..."
+        AppLanguage.ENGLISH -> "Checking dependencies..."
+        AppLanguage.ARABIC -> "جارٍ فحص المتطلبات..."
+    }
+    
+    val wpCreatingProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建 WordPress 项目..."
+        AppLanguage.ENGLISH -> "Creating WordPress project..."
+        AppLanguage.ARABIC -> "جارٍ إنشاء مشروع WordPress..."
+    }
+    
+    val wpDownloadFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "依赖下载失败，请检查网络后重试"
+        AppLanguage.ENGLISH -> "Dependency download failed, please check network and retry"
+        AppLanguage.ARABIC -> "فشل تنزيل المتطلبات، يرجى التحقق من الشبكة والمحاولة مرة أخرى"
+    }
+    
+    val wpProjectCreateFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 项目创建失败"
+        AppLanguage.ENGLISH -> "WordPress project creation failed"
+        AppLanguage.ARABIC -> "فشل إنشاء مشروع WordPress"
+    }
+    
+    val wpCreateTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建 WordPress 应用"
+        AppLanguage.ENGLISH -> "Create WordPress App"
+        AppLanguage.ARABIC -> "إنشاء تطبيق WordPress"
+    }
+    
+    val wpSiteTitleHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入站点标题"
+        AppLanguage.ENGLISH -> "Enter site title"
+        AppLanguage.ARABIC -> "أدخل عنوان الموقع"
+    }
+    
+    val wpAdminUserHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理员用户名（默认 admin）"
+        AppLanguage.ENGLISH -> "Admin username (default: admin)"
+        AppLanguage.ARABIC -> "اسم المستخدم المسؤول (افتراضي: admin)"
+    }
+    
+    val wpBasicConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基本配置"
+        AppLanguage.ENGLISH -> "Basic Configuration"
+        AppLanguage.ARABIC -> "الإعدادات الأساسية"
+    }
+    
+    val wpImportProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入 WordPress 项目"
+        AppLanguage.ENGLISH -> "Import WordPress Project"
+        AppLanguage.ARABIC -> "استيراد مشروع WordPress"
+    }
+    
+    val wpImportProjectDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择完整的 WordPress 压缩包（.zip），包含主题和插件"
+        AppLanguage.ENGLISH -> "Select a complete WordPress archive (.zip) with themes and plugins"
+        AppLanguage.ARABIC -> "حدد أرشيف WordPress كامل (.zip) مع السمات والإضافات"
+    }
+    
+    val wpOrCreateNew: String get() = when (lang) {
+        AppLanguage.CHINESE -> "或者创建全新站点"
+        AppLanguage.ENGLISH -> "Or create a new site"
+        AppLanguage.ARABIC -> "أو أنشئ موقعًا جديدًا"
+    }
+    
+    val wpCreateNewSite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建新站点"
+        AppLanguage.ENGLISH -> "Create New Site"
+        AppLanguage.ARABIC -> "إنشاء موقع جديد"
+    }
+    
+    val wpCreateNewSiteDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用默认 WordPress 核心创建空白站点"
+        AppLanguage.ENGLISH -> "Create blank site with default WordPress core"
+        AppLanguage.ARABIC -> "إنشاء موقع فارغ باستخدام نواة WordPress الافتراضية"
+    }
+    
+    val wpSettings: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 设置"
+        AppLanguage.ENGLISH -> "WordPress Settings"
+        AppLanguage.ARABIC -> "إعدادات WordPress"
+    }
+    
+    val wpCacheSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缓存占用"
+        AppLanguage.ENGLISH -> "Cache Size"
+        AppLanguage.ARABIC -> "حجم ذاكرة التخزين المؤقت"
+    }
+    
+    val wpCacheCleared: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 缓存已清理"
+        AppLanguage.ENGLISH -> "WordPress cache cleared"
+        AppLanguage.ARABIC -> "تم مسح ذاكرة التخزين المؤقت WordPress"
+    }
+    
+    val wpLandscapeMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "横屏模式"
+        AppLanguage.ENGLISH -> "Landscape Mode"
+        AppLanguage.ARABIC -> "وضع أفقي"
+    }
+    
+    val wpProjectReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 项目已就绪"
+        AppLanguage.ENGLISH -> "WordPress project ready"
+        AppLanguage.ARABIC -> "مشروع WordPress جاهز"
+    }
+    
+    val wpImportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 项目导入成功"
+        AppLanguage.ENGLISH -> "WordPress project imported successfully"
+        AppLanguage.ARABIC -> "تم استيراد مشروع WordPress بنجاح"
+    }
+    
+    // ==================== Node.js 功能字符串 ====================
+    val njsCreateTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建 Node.js 应用"
+        AppLanguage.ENGLISH -> "Create Node.js App"
+        AppLanguage.ARABIC -> "إنشاء تطبيق Node.js"
+    }
+    
+    val njsBasicConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基本配置"
+        AppLanguage.ENGLISH -> "Basic Configuration"
+        AppLanguage.ARABIC -> "الإعدادات الأساسية"
+    }
+    
+    val njsSelectProjectFolder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择项目文件夹"
+        AppLanguage.ENGLISH -> "Select Project Folder"
+        AppLanguage.ARABIC -> "اختر مجلد المشروع"
+    }
+    
+    val njsSelectProjectDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择包含 package.json 的 Node.js 项目目录"
+        AppLanguage.ENGLISH -> "Select a Node.js project directory containing package.json"
+        AppLanguage.ARABIC -> "حدد مجلد مشروع Node.js يحتوي على package.json"
+    }
+    
+    val njsBuildMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "构建模式"
+        AppLanguage.ENGLISH -> "Build Mode"
+        AppLanguage.ARABIC -> "وضع البناء"
+    }
+    
+    val njsModeStatic: String get() = when (lang) {
+        AppLanguage.CHINESE -> "静态前端"
+        AppLanguage.ENGLISH -> "Static Frontend"
+        AppLanguage.ARABIC -> "الواجهة الأمامية الثابتة"
+    }
+    
+    val njsModeStaticDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "打包构建产物（dist 目录）为本地应用"
+        AppLanguage.ENGLISH -> "Package build output (dist) as local app"
+        AppLanguage.ARABIC -> "تغليف مخرجات البناء (dist) كتطبيق محلي"
+    }
+    
+    val njsModeBackend: String get() = when (lang) {
+        AppLanguage.CHINESE -> "API 后端"
+        AppLanguage.ENGLISH -> "API Backend"
+        AppLanguage.ARABIC -> "الخلفية API"
+    }
+    
+    val njsModeBackendDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行 Node.js 服务器（Express/Fastify/Koa 等）"
+        AppLanguage.ENGLISH -> "Run Node.js server (Express/Fastify/Koa etc.)"
+        AppLanguage.ARABIC -> "تشغيل خادم Node.js (Express/Fastify/Koa إلخ)"
+    }
+    
+    val njsModeFullstack: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全栈应用"
+        AppLanguage.ENGLISH -> "Fullstack App"
+        AppLanguage.ARABIC -> "تطبيق كامل"
+    }
+    
+    val njsModeFullstackDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "前端 + API 服务器（Next.js/Nuxt.js 等）"
+        AppLanguage.ENGLISH -> "Frontend + API server (Next.js/Nuxt.js etc.)"
+        AppLanguage.ARABIC -> "الواجهة + خادم API (Next.js/Nuxt.js إلخ)"
+    }
+    
+    val njsEntryFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "入口文件"
+        AppLanguage.ENGLISH -> "Entry File"
+        AppLanguage.ARABIC -> "ملف الإدخال"
+    }
+    
+    val njsEntryFileHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "如 server.js, index.js, app.js"
+        AppLanguage.ENGLISH -> "e.g. server.js, index.js, app.js"
+        AppLanguage.ARABIC -> "مثل server.js, index.js, app.js"
+    }
+    
+    val njsEnvVars: String get() = when (lang) {
+        AppLanguage.CHINESE -> "环境变量"
+        AppLanguage.ENGLISH -> "Environment Variables"
+        AppLanguage.ARABIC -> "متغيرات البيئة"
+    }
+    
+    val njsAddEnvVar: String get() = when (lang) {
+        AppLanguage.CHINESE -> "添加环境变量"
+        AppLanguage.ENGLISH -> "Add Env Variable"
+        AppLanguage.ARABIC -> "إضافة متغير بيئة"
+    }
+    
+    val njsDownloadDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载 Node.js 依赖"
+        AppLanguage.ENGLISH -> "Download Node.js Dependencies"
+        AppLanguage.ARABIC -> "تنزيل متطلبات Node.js"
+    }
+    
+    val njsDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在下载 Node.js 运行时..."
+        AppLanguage.ENGLISH -> "Downloading Node.js runtime..."
+        AppLanguage.ARABIC -> "جاري تنزيل Node.js..."
+    }
+    
+    val njsDownloadComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 运行时已就绪"
+        AppLanguage.ENGLISH -> "Node.js runtime ready"
+        AppLanguage.ARABIC -> "Node.js جاهز"
+    }
+    
+    val njsDownloadFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 下载失败"
+        AppLanguage.ENGLISH -> "Node.js download failed"
+        AppLanguage.ARABIC -> "فشل تنزيل Node.js"
+    }
+    
+    val njsProjectDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到 Node.js 项目"
+        AppLanguage.ENGLISH -> "Node.js project detected"
+        AppLanguage.ARABIC -> "تم اكتشاف مشروع Node.js"
+    }
+    
+    val njsFramework: String get() = when (lang) {
+        AppLanguage.CHINESE -> "后端框架"
+        AppLanguage.ENGLISH -> "Backend Framework"
+        AppLanguage.ARABIC -> "إطار الخلفية"
+    }
+    
+    val njsProjectReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 项目已就绪"
+        AppLanguage.ENGLISH -> "Node.js project ready"
+        AppLanguage.ARABIC -> "مشروع Node.js جاهز"
+    }
+    
+    val njsLandscapeMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "横屏模式"
+        AppLanguage.ENGLISH -> "Landscape Mode"
+        AppLanguage.ARABIC -> "وضع أفقي"
     }
     
     // ==================== 操作按钮 ====================
@@ -525,6 +2686,526 @@ object Strings {
         AppLanguage.ARABIC -> "تم الحذف"
     }
 
+    // ==================== 统一运行时依赖管理 ====================
+    val menuRuntimeDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时管理"
+        AppLanguage.ENGLISH -> "Runtime Manager"
+        AppLanguage.ARABIC -> "مدير وقت التشغيل"
+    }
+    
+    // ==================== 端口管理 ====================
+    val menuPortManager: String get() = when (lang) {
+        AppLanguage.CHINESE -> "端口管理"
+        AppLanguage.ENGLISH -> "Port Manager"
+        AppLanguage.ARABIC -> "مدير المنافذ"
+    }
+    
+    val portManagerTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "端口管理"
+        AppLanguage.ENGLISH -> "Port Manager"
+        AppLanguage.ARABIC -> "مدير المنافذ"
+    }
+    
+    val portManagerRunningServices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行中的服务"
+        AppLanguage.ENGLISH -> "Running Services"
+        AppLanguage.ARABIC -> "الخدمات قيد التشغيل"
+    }
+    
+    val portManagerNoServices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "没有运行中的服务"
+        AppLanguage.ENGLISH -> "No running services"
+        AppLanguage.ARABIC -> "لا توجد خدمات قيد التشغيل"
+    }
+    
+    val portManagerAllReleased: String get() = when (lang) {
+        AppLanguage.CHINESE -> "所有端口均已释放"
+        AppLanguage.ENGLISH -> "All ports released"
+        AppLanguage.ARABIC -> "تم تحرير جميع المنافذ"
+    }
+    
+    val portManagerKillAll: String get() = when (lang) {
+        AppLanguage.CHINESE -> "终止所有"
+        AppLanguage.ENGLISH -> "Kill All"
+        AppLanguage.ARABIC -> "إنهاء الكل"
+    }
+    
+    val portManagerKillAllConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要终止所有运行中的服务吗？"
+        AppLanguage.ENGLISH -> "Kill all running services?"
+        AppLanguage.ARABIC -> "هل تريد إنهاء جميع الخدمات قيد التشغيل؟"
+    }
+    
+    val portManagerKillService: String get() = when (lang) {
+        AppLanguage.CHINESE -> "终止服务"
+        AppLanguage.ENGLISH -> "Kill Service"
+        AppLanguage.ARABIC -> "إنهاء الخدمة"
+    }
+    
+    val portManagerOpen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "打开"
+        AppLanguage.ENGLISH -> "Open"
+        AppLanguage.ARABIC -> "فتح"
+    }
+    
+    val portManagerKill: String get() = when (lang) {
+        AppLanguage.CHINESE -> "终止"
+        AppLanguage.ENGLISH -> "Kill"
+        AppLanguage.ARABIC -> "إنهاء"
+    }
+    
+    val portManagerPort: String get() = when (lang) {
+        AppLanguage.CHINESE -> "端口"
+        AppLanguage.ENGLISH -> "Port"
+        AppLanguage.ARABIC -> "المنفذ"
+    }
+    
+    val portManagerType: String get() = when (lang) {
+        AppLanguage.CHINESE -> "类型"
+        AppLanguage.ENGLISH -> "Type"
+        AppLanguage.ARABIC -> "النوع"
+    }
+    
+    val portManagerProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目"
+        AppLanguage.ENGLISH -> "Project"
+        AppLanguage.ARABIC -> "المشروع"
+    }
+    
+    val portManagerStatus: String get() = when (lang) {
+        AppLanguage.CHINESE -> "状态"
+        AppLanguage.ENGLISH -> "Status"
+        AppLanguage.ARABIC -> "الحالة"
+    }
+    
+    val portManagerResponding: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应中"
+        AppLanguage.ENGLISH -> "Responding"
+        AppLanguage.ARABIC -> "يستجيب"
+    }
+    
+    val portManagerNotResponding: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无响应"
+        AppLanguage.ENGLISH -> "Not Responding"
+        AppLanguage.ARABIC -> "لا يستجيب"
+    }
+    
+    val portManagerUnknown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未知"
+        AppLanguage.ENGLISH -> "Unknown"
+        AppLanguage.ARABIC -> "غير معروف"
+    }
+    
+    val portManagerOrphanProcess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未知 (残留进程)"
+        AppLanguage.ENGLISH -> "Unknown (orphan process)"
+        AppLanguage.ARABIC -> "غير معروف (عملية يتيمة)"
+    }
+    
+    val portManagerServiceKilled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已终止端口 %d 的服务"
+        AppLanguage.ENGLISH -> "Killed service on port %d"
+        AppLanguage.ARABIC -> "تم إنهاء الخدمة على المنفذ %d"
+    }
+    
+    val portManagerAllKilled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已终止 %d 个服务"
+        AppLanguage.ENGLISH -> "Killed %d services"
+        AppLanguage.ARABIC -> "تم إنهاء %d خدمات"
+    }
+    
+    val portManagerKillFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "终止失败，请重试"
+        AppLanguage.ENGLISH -> "Kill failed, please retry"
+        AppLanguage.ARABIC -> "فشل الإنهاء، يرجى المحاولة مرة أخرى"
+    }
+    
+    val portManagerTypeLocalHttp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "静态服务"
+        AppLanguage.ENGLISH -> "Static Server"
+        AppLanguage.ARABIC -> "خادم ثابت"
+    }
+    
+    val portManagerTypeNodeJs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js"
+        AppLanguage.ENGLISH -> "Node.js"
+        AppLanguage.ARABIC -> "Node.js"
+    }
+    
+    val portManagerTypePhp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP"
+        AppLanguage.ENGLISH -> "PHP"
+        AppLanguage.ARABIC -> "PHP"
+    }
+    
+    val portManagerTypePython: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python"
+        AppLanguage.ENGLISH -> "Python"
+        AppLanguage.ARABIC -> "Python"
+    }
+    
+    val portManagerTypeGo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go"
+        AppLanguage.ENGLISH -> "Go"
+        AppLanguage.ARABIC -> "Go"
+    }
+    
+    val portManagerUptime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时长"
+        AppLanguage.ENGLISH -> "Uptime"
+        AppLanguage.ARABIC -> "وقت التشغيل"
+    }
+    
+    val portManagerLatency: String get() = when (lang) {
+        AppLanguage.CHINESE -> "延迟"
+        AppLanguage.ENGLISH -> "Latency"
+        AppLanguage.ARABIC -> "زمن الاستجابة"
+    }
+    
+    val portManagerPortRanges: String get() = when (lang) {
+        AppLanguage.CHINESE -> "端口范围"
+        AppLanguage.ENGLISH -> "Port Ranges"
+        AppLanguage.ARABIC -> "نطاقات المنافذ"
+    }
+    
+    val portManagerAutoRefresh: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动刷新"
+        AppLanguage.ENGLISH -> "Auto Refresh"
+        AppLanguage.ARABIC -> "تحديث تلقائي"
+    }
+    
+    val portManagerKillConfirmSingle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要终止此服务吗？"
+        AppLanguage.ENGLISH -> "Kill this service?"
+        AppLanguage.ARABIC -> "هل تريد إنهاء هذه الخدمة؟"
+    }
+    
+    val portManagerProcess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "进程"
+        AppLanguage.ENGLISH -> "Process"
+        AppLanguage.ARABIC -> "العملية"
+    }
+    
+    val portManagerStaleCleanedUp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已清理 %d 个僵尸端口"
+        AppLanguage.ENGLISH -> "Cleaned up %d stale ports"
+        AppLanguage.ARABIC -> "تم تنظيف %d منافذ قديمة"
+    }
+    
+    val runtimeDepsTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时 & 依赖管理"
+        AppLanguage.ENGLISH -> "Runtime & Dependencies"
+        AppLanguage.ARABIC -> "وقت التشغيل والتبعيات"
+    }
+    
+    val runtimeDepsSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理运行时环境、项目文件与缓存"
+        AppLanguage.ENGLISH -> "Manage runtimes, project files & cache"
+        AppLanguage.ARABIC -> "إدارة بيئات التشغيل وملفات المشاريع وذاكرة التخزين المؤقت"
+    }
+    
+    val depSectionRuntimes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时环境"
+        AppLanguage.ENGLISH -> "Runtimes"
+        AppLanguage.ARABIC -> "بيئات التشغيل"
+    }
+    
+    val depSectionProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目文件"
+        AppLanguage.ENGLISH -> "Project Files"
+        AppLanguage.ARABIC -> "ملفات المشاريع"
+    }
+    
+    val depSectionDownload: String get() = when (lang) {
+        AppLanguage.CHINESE -> "镜像源 & 下载"
+        AppLanguage.ENGLISH -> "Mirror & Download"
+        AppLanguage.ARABIC -> "المرآة والتنزيل"
+    }
+    
+    val depSectionStorage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "存储空间"
+        AppLanguage.ENGLISH -> "Storage"
+        AppLanguage.ARABIC -> "التخزين"
+    }
+    
+    val depStatusReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已就绪"
+        AppLanguage.ENGLISH -> "Ready"
+        AppLanguage.ARABIC -> "جاهز"
+    }
+    
+    val depStatusNotInstalled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未安装"
+        AppLanguage.ENGLISH -> "Not Installed"
+        AppLanguage.ARABIC -> "غير مثبت"
+    }
+    
+    val depStatusDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载中..."
+        AppLanguage.ENGLISH -> "Downloading..."
+        AppLanguage.ARABIC -> "جارٍ التنزيل..."
+    }
+    
+    val depPhpRuntime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 运行时"
+        AppLanguage.ENGLISH -> "PHP Runtime"
+        AppLanguage.ARABIC -> "وقت تشغيل PHP"
+    }
+    
+    val depPhpDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP ${com.webtoapp.core.wordpress.WordPressDependencyManager.PHP_VERSION} · WordPress / PHP 应用"
+        AppLanguage.ENGLISH -> "PHP ${com.webtoapp.core.wordpress.WordPressDependencyManager.PHP_VERSION} · WordPress / PHP Apps"
+        AppLanguage.ARABIC -> "PHP ${com.webtoapp.core.wordpress.WordPressDependencyManager.PHP_VERSION} · تطبيقات WordPress / PHP"
+    }
+    
+    val depWpCore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 核心"
+        AppLanguage.ENGLISH -> "WordPress Core"
+        AppLanguage.ARABIC -> "نواة WordPress"
+    }
+    
+    val depWpCoreDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress ${com.webtoapp.core.wordpress.WordPressDependencyManager.WORDPRESS_VERSION} 核心文件"
+        AppLanguage.ENGLISH -> "WordPress ${com.webtoapp.core.wordpress.WordPressDependencyManager.WORDPRESS_VERSION} core files"
+        AppLanguage.ARABIC -> "ملفات نواة WordPress ${com.webtoapp.core.wordpress.WordPressDependencyManager.WORDPRESS_VERSION}"
+    }
+    
+    val depSqlitePlugin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "SQLite 数据库插件"
+        AppLanguage.ENGLISH -> "SQLite Database Plugin"
+        AppLanguage.ARABIC -> "إضافة قاعدة بيانات SQLite"
+    }
+    
+    val depSqliteDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress SQLite 集成 v${com.webtoapp.core.wordpress.WordPressDependencyManager.SQLITE_PLUGIN_VERSION}"
+        AppLanguage.ENGLISH -> "WordPress SQLite Integration v${com.webtoapp.core.wordpress.WordPressDependencyManager.SQLITE_PLUGIN_VERSION}"
+        AppLanguage.ARABIC -> "تكامل WordPress SQLite v${com.webtoapp.core.wordpress.WordPressDependencyManager.SQLITE_PLUGIN_VERSION}"
+    }
+    
+    val depNodeRuntime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 运行时"
+        AppLanguage.ENGLISH -> "Node.js Runtime"
+        AppLanguage.ARABIC -> "وقت تشغيل Node.js"
+    }
+    
+    val depNodeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js ${com.webtoapp.core.nodejs.NodeDependencyManager.NODE_VERSION} · 全栈 / API 后端"
+        AppLanguage.ENGLISH -> "Node.js ${com.webtoapp.core.nodejs.NodeDependencyManager.NODE_VERSION} · Fullstack / API Backend"
+        AppLanguage.ARABIC -> "Node.js ${com.webtoapp.core.nodejs.NodeDependencyManager.NODE_VERSION} · كامل / خلفية API"
+    }
+    
+    val depPythonRuntime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 运行时"
+        AppLanguage.ENGLISH -> "Python Runtime"
+        AppLanguage.ARABIC -> "وقت تشغيل Python"
+    }
+    
+    val depPythonDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python ${com.webtoapp.core.python.PythonDependencyManager.PYTHON_FULL_VERSION} · 脚本 / Web 后端"
+        AppLanguage.ENGLISH -> "Python ${com.webtoapp.core.python.PythonDependencyManager.PYTHON_FULL_VERSION} · Scripting / Web Backend"
+        AppLanguage.ARABIC -> "Python ${com.webtoapp.core.python.PythonDependencyManager.PYTHON_FULL_VERSION} · برمجة / خلفية الويب"
+    }
+    
+    val depGoInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 应用"
+        AppLanguage.ENGLISH -> "Go Apps"
+        AppLanguage.ARABIC -> "تطبيقات Go"
+    }
+    
+    val depGoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "预编译二进制 · 无需运行时"
+        AppLanguage.ENGLISH -> "Pre-compiled binaries · No runtime needed"
+        AppLanguage.ARABIC -> "ثنائيات مترجمة مسبقًا · لا حاجة لوقت التشغيل"
+    }
+    
+    val depProjectFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目文件"
+        AppLanguage.ENGLISH -> "Project files"
+        AppLanguage.ARABIC -> "ملفات المشروع"
+    }
+    
+    val depWpProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 项目"
+        AppLanguage.ENGLISH -> "WordPress Projects"
+        AppLanguage.ARABIC -> "مشاريع WordPress"
+    }
+    
+    val depNodeProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 项目"
+        AppLanguage.ENGLISH -> "Node.js Projects"
+        AppLanguage.ARABIC -> "مشاريع Node.js"
+    }
+    
+    val depPythonProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 项目"
+        AppLanguage.ENGLISH -> "Python Projects"
+        AppLanguage.ARABIC -> "مشاريع Python"
+    }
+    
+    val depGoProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 项目"
+        AppLanguage.ENGLISH -> "Go Projects"
+        AppLanguage.ARABIC -> "مشاريع Go"
+    }
+    
+    val depDocsProjects: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文档站点"
+        AppLanguage.ENGLISH -> "Docs Sites"
+        AppLanguage.ARABIC -> "مواقع التوثيق"
+    }
+    
+    fun depProjectCount(count: Int): String = when (lang) {
+        AppLanguage.CHINESE -> "$count 个项目"
+        AppLanguage.ENGLISH -> "$count project${if (count != 1) "s" else ""}"
+        AppLanguage.ARABIC -> "$count مشروع"
+    }
+    
+    val depMirrorSource: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载镜像源"
+        AppLanguage.ENGLISH -> "Download Mirror"
+        AppLanguage.ARABIC -> "مرآة التنزيل"
+    }
+    
+    val depMirrorDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "影响 PHP、WordPress 和 Node.js 的下载速度"
+        AppLanguage.ENGLISH -> "Affects download speed for PHP, WordPress & Node.js"
+        AppLanguage.ARABIC -> "يؤثر على سرعة تنزيل PHP و WordPress و Node.js"
+    }
+    
+    val depMirrorCN: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国内镜像"
+        AppLanguage.ENGLISH -> "China Mirror"
+        AppLanguage.ARABIC -> "مرآة الصين"
+    }
+    
+    val depMirrorGlobal: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国际源"
+        AppLanguage.ENGLISH -> "Global Source"
+        AppLanguage.ARABIC -> "مصدر عالمي"
+    }
+    
+    val depMirrorAuto: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动"
+        AppLanguage.ENGLISH -> "Auto"
+        AppLanguage.ARABIC -> "تلقائي"
+    }
+    
+    val depDownloadAll: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载全部运行时"
+        AppLanguage.ENGLISH -> "Download All Runtimes"
+        AppLanguage.ARABIC -> "تنزيل جميع بيئات التشغيل"
+    }
+    
+    val depDownloadAllDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "一键下载所有缺失的运行时组件（约 50MB）"
+        AppLanguage.ENGLISH -> "Download all missing runtime components (~50MB)"
+        AppLanguage.ARABIC -> "تنزيل جميع مكونات وقت التشغيل المفقودة (~50MB)"
+    }
+    
+    val depTotalStorage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "总占用空间"
+        AppLanguage.ENGLISH -> "Total Storage"
+        AppLanguage.ARABIC -> "إجمالي التخزين"
+    }
+    
+    val depClearAll: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理全部缓存"
+        AppLanguage.ENGLISH -> "Clear All Cache"
+        AppLanguage.ARABIC -> "مسح كل ذاكرة التخزين المؤقت"
+    }
+    
+    val depClearConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将删除所有已下载的运行时和缓存文件，下次使用时需要重新下载。确定继续？"
+        AppLanguage.ENGLISH -> "This will delete all downloaded runtimes and cache. They will need to be re-downloaded. Continue?"
+        AppLanguage.ARABIC -> "سيؤدي هذا إلى حذف جميع بيئات التشغيل وذاكرة التخزين المؤقت المحملة. ستحتاج إلى إعادة التنزيل. هل تريد المتابعة؟"
+    }
+    
+    val depClearWpCache: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理 WordPress 缓存"
+        AppLanguage.ENGLISH -> "Clear WordPress Cache"
+        AppLanguage.ARABIC -> "مسح ذاكرة التخزين المؤقت WordPress"
+    }
+    
+    val depClearNodeCache: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理 Node.js 缓存"
+        AppLanguage.ENGLISH -> "Clear Node.js Cache"
+        AppLanguage.ARABIC -> "مسح ذاكرة التخزين المؤقت Node.js"
+    }
+    
+    val depClearPythonCache: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理 Python 缓存"
+        AppLanguage.ENGLISH -> "Clear Python Cache"
+        AppLanguage.ARABIC -> "مسح ذاكرة التخزين المؤقت Python"
+    }
+    
+    val depClearGoCache: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理 Go 缓存"
+        AppLanguage.ENGLISH -> "Clear Go Cache"
+        AppLanguage.ARABIC -> "مسح ذاكرة التخزين المؤقت Go"
+    }
+    
+    val depAllReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "所有运行时已就绪"
+        AppLanguage.ENGLISH -> "All runtimes ready"
+        AppLanguage.ARABIC -> "جميع بيئات التشغيل جاهزة"
+    }
+    
+    val depSomeNotReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "部分运行时未安装"
+        AppLanguage.ENGLISH -> "Some runtimes not installed"
+        AppLanguage.ARABIC -> "بعض بيئات التشغيل غير مثبتة"
+    }
+    
+    val depInstall: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装"
+        AppLanguage.ENGLISH -> "Install"
+        AppLanguage.ARABIC -> "تثبيت"
+    }
+    
+    // ==================== 下载详情 ====================
+    
+    val depDlPause: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂停"
+        AppLanguage.ENGLISH -> "Pause"
+        AppLanguage.ARABIC -> "إيقاف مؤقت"
+    }
+    
+    val depDlResume: String get() = when (lang) {
+        AppLanguage.CHINESE -> "继续"
+        AppLanguage.ENGLISH -> "Resume"
+        AppLanguage.ARABIC -> "استئناف"
+    }
+    
+    val depDlSpeed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "速度"
+        AppLanguage.ENGLISH -> "Speed"
+        AppLanguage.ARABIC -> "السرعة"
+    }
+    
+    val depDlEta: String get() = when (lang) {
+        AppLanguage.CHINESE -> "剩余时间"
+        AppLanguage.ENGLISH -> "Time Left"
+        AppLanguage.ARABIC -> "الوقت المتبقي"
+    }
+    
+    val depDlStartTime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开始时间"
+        AppLanguage.ENGLISH -> "Start Time"
+        AppLanguage.ARABIC -> "وقت البدء"
+    }
+    
+    val depDlUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载地址"
+        AppLanguage.ENGLISH -> "URL"
+        AppLanguage.ARABIC -> "رابط التنزيل"
+    }
+    
+    val depDlPaused: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已暂停"
+        AppLanguage.ENGLISH -> "Paused"
+        AppLanguage.ARABIC -> "متوقف مؤقتًا"
+    }
+    
     // ==================== 删除确认对话框 ====================
     val deleteConfirmTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "确认删除"
@@ -1089,6 +3770,18 @@ object Strings {
         AppLanguage.ARABIC -> "الوضع الأفقي"
     }
     
+    val keepScreenOnLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保持屏幕常亮"
+        AppLanguage.ENGLISH -> "Keep Screen On"
+        AppLanguage.ARABIC -> "إبقاء الشاشة مضاءة"
+    }
+    
+    val keepScreenOnHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "防止屏幕自动熄灭，适用于 code-server 等长时间使用场景"
+        AppLanguage.ENGLISH -> "Prevent screen from dimming, ideal for code-server and long-use scenarios"
+        AppLanguage.ARABIC -> "منع إطفاء الشاشة تلقائيًا، مناسب لسيناريوهات الاستخدام الطويل"
+    }
+    
     val landscapeModeHintHtml: String get() = when (lang) {
         AppLanguage.CHINESE -> "以横屏方向显示应用内容"
         AppLanguage.ENGLISH -> "Display app content in landscape orientation"
@@ -1183,6 +3876,160 @@ object Strings {
         AppLanguage.CHINESE -> "知道了"
         AppLanguage.ENGLISH -> "Got it"
         AppLanguage.ARABIC -> "فهمت"
+    }
+
+    // ==================== ZIP 导入 ====================
+    
+    val zipImportMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ZIP 导入"
+        AppLanguage.ENGLISH -> "ZIP Import"
+        AppLanguage.ARABIC -> "استيراد ZIP"
+    }
+    
+    val manualSelectMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "手动选择"
+        AppLanguage.ENGLISH -> "Manual Select"
+        AppLanguage.ARABIC -> "اختيار يدوي"
+    }
+    
+    val selectZipFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择 ZIP 文件"
+        AppLanguage.ENGLISH -> "Select ZIP File"
+        AppLanguage.ARABIC -> "اختيار ملف ZIP"
+    }
+    
+    val selectZipHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择包含 HTML 项目的 ZIP 文件，自动解压并配置所有资源"
+        AppLanguage.ENGLISH -> "Select a ZIP file containing your HTML project, auto-extract and configure all resources"
+        AppLanguage.ARABIC -> "اختر ملف ZIP يحتوي على مشروع HTML، سيتم استخراج وتكوين جميع الموارد تلقائيًا"
+    }
+    
+    val zipImporting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在解压并分析项目..."
+        AppLanguage.ENGLISH -> "Extracting and analyzing project..."
+        AppLanguage.ARABIC -> "جاري استخراج وتحليل المشروع..."
+    }
+    
+    val zipImportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目导入成功"
+        AppLanguage.ENGLISH -> "Project imported successfully"
+        AppLanguage.ARABIC -> "تم استيراد المشروع بنجاح"
+    }
+    
+    val zipImportFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ZIP 导入失败: %s"
+        AppLanguage.ENGLISH -> "ZIP import failed: %s"
+        AppLanguage.ARABIC -> "فشل استيراد ZIP: %s"
+    }
+    
+    val zipProjectAnalysis: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目分析"
+        AppLanguage.ENGLISH -> "Project Analysis"
+        AppLanguage.ARABIC -> "تحليل المشروع"
+    }
+    
+    val zipEntryFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "入口文件"
+        AppLanguage.ENGLISH -> "Entry File"
+        AppLanguage.ARABIC -> "ملف الدخول"
+    }
+    
+    val zipResourceStats: String get() = when (lang) {
+        AppLanguage.CHINESE -> "资源统计"
+        AppLanguage.ENGLISH -> "Resource Stats"
+        AppLanguage.ARABIC -> "إحصائيات الموارد"
+    }
+    
+    val zipTotalFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%d 个文件"
+        AppLanguage.ENGLISH -> "%d files"
+        AppLanguage.ARABIC -> "%d ملفات"
+    }
+    
+    val zipTotalSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "总大小: %s"
+        AppLanguage.ENGLISH -> "Total size: %s"
+        AppLanguage.ARABIC -> "الحجم الإجمالي: %s"
+    }
+    
+    val zipChangeEntry: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更换入口文件"
+        AppLanguage.ENGLISH -> "Change Entry File"
+        AppLanguage.ARABIC -> "تغيير ملف الدخول"
+    }
+    
+    val zipReimport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "重新导入"
+        AppLanguage.ENGLISH -> "Re-import"
+        AppLanguage.ARABIC -> "إعادة الاستيراد"
+    }
+    
+    val zipTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "提示：ZIP 项目会保留完整目录结构，所有相对路径引用（CSS/JS/图片/音视频/字体等）自动生效，无需手动配置。"
+        AppLanguage.ENGLISH -> "Tip: ZIP projects preserve the full directory structure. All relative path references (CSS/JS/images/media/fonts etc.) work automatically."
+        AppLanguage.ARABIC -> "تلميح: تحتفظ مشاريع ZIP ببنية المجلدات الكاملة. تعمل جميع المراجع ذات المسارات النسبية (CSS/JS/صور/وسائط/خطوط إلخ) تلقائيًا."
+    }
+    
+    val zipNoHtmlWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ZIP 中未找到 HTML 文件，请确认文件内容"
+        AppLanguage.ENGLISH -> "No HTML files found in ZIP, please verify contents"
+        AppLanguage.ARABIC -> "لم يتم العثور على ملفات HTML في ZIP، يرجى التحقق من المحتويات"
+    }
+    
+    val zipSelectEntryTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择入口文件"
+        AppLanguage.ENGLISH -> "Select Entry File"
+        AppLanguage.ARABIC -> "اختيار ملف الدخول"
+    }
+    
+    val zipFileTreeTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件列表"
+        AppLanguage.ENGLISH -> "File List"
+        AppLanguage.ARABIC -> "قائمة الملفات"
+    }
+
+    // ==================== 文件夹导入 ====================
+
+    val folderImportMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件夹导入"
+        AppLanguage.ENGLISH -> "Folder Import"
+        AppLanguage.ARABIC -> "استيراد مجلد"
+    }
+
+    val folderSelectFolder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择项目文件夹"
+        AppLanguage.ENGLISH -> "Select Project Folder"
+        AppLanguage.ARABIC -> "اختيار مجلد المشروع"
+    }
+
+    val folderSelectHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择包含 HTML 项目的文件夹，自动扫描并导入所有资源文件"
+        AppLanguage.ENGLISH -> "Select a folder containing your HTML project, auto-scan and import all resource files"
+        AppLanguage.ARABIC -> "اختر مجلدًا يحتوي على مشروع HTML، سيتم فحص واستيراد جميع ملفات الموارد تلقائيًا"
+    }
+
+    val folderImporting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在扫描并导入文件夹..."
+        AppLanguage.ENGLISH -> "Scanning and importing folder..."
+        AppLanguage.ARABIC -> "جاري فحص واستيراد المجلد..."
+    }
+
+    val folderNoHtmlWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件夹中未找到 HTML 文件，请确认选择的目录"
+        AppLanguage.ENGLISH -> "No HTML files found in folder, please verify the selected directory"
+        AppLanguage.ARABIC -> "لم يتم العثور على ملفات HTML في المجلد، يرجى التحقق من الدليل المحدد"
+    }
+
+    val folderTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "提示：文件夹导入会保留完整目录结构，所有相对路径引用（CSS/JS/图片/音视频/字体等）自动生效，适合多文件 HTML 项目。"
+        AppLanguage.ENGLISH -> "Tip: Folder import preserves the full directory structure. All relative path references (CSS/JS/images/media/fonts etc.) work automatically, ideal for multi-file HTML projects."
+        AppLanguage.ARABIC -> "تلميح: يحتفظ استيراد المجلد ببنية المجلدات الكاملة. تعمل جميع المراجع ذات المسارات النسبية تلقائيًا، مثالي لمشاريع HTML متعددة الملفات."
+    }
+
+    val folderImportFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件夹导入失败: %s"
+        AppLanguage.ENGLISH -> "Folder import failed: %s"
+        AppLanguage.ARABIC -> "فشل استيراد المجلد: %s"
     }
 
     // ==================== 创建应用页面 ====================
@@ -1427,6 +4274,24 @@ object Strings {
         AppLanguage.ARABIC -> "ملف غير معروف"
     }
 
+    val extensionFabIconLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮按钮图标"
+        AppLanguage.ENGLISH -> "FAB Icon"
+        AppLanguage.ARABIC -> "أيقونة الزر العائم"
+    }
+    
+    val fabIconFromGallery: String get() = when (lang) {
+        AppLanguage.CHINESE -> "相册"
+        AppLanguage.ENGLISH -> "Gallery"
+        AppLanguage.ARABIC -> "المعرض"
+    }
+    
+    val fabIconSelected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已选择自定义图标"
+        AppLanguage.ENGLISH -> "Custom icon selected"
+        AppLanguage.ARABIC -> "تم تحديد أيقونة مخصصة"
+    }
+    
     // ==================== 扩展模块页面 ====================
     val extensionModule: String get() = when (lang) {
         AppLanguage.CHINESE -> "扩展模块"
@@ -1657,12 +4522,6 @@ object Strings {
         AppLanguage.ARABIC -> "إعدادات السمة"
     }
     
-    val enhancedMode: String get() = when (lang) {
-        AppLanguage.CHINESE -> "强化版"
-        AppLanguage.ENGLISH -> "Enhanced"
-        AppLanguage.ARABIC -> "محسّن"
-    }
-    
     val theme: String get() = when (lang) {
         AppLanguage.CHINESE -> "主题"
         AppLanguage.ENGLISH -> "Theme"
@@ -1679,12 +4538,6 @@ object Strings {
         AppLanguage.CHINESE -> "效果"
         AppLanguage.ENGLISH -> "Effects"
         AppLanguage.ARABIC -> "التأثيرات"
-    }
-    
-    val uiMode: String get() = when (lang) {
-        AppLanguage.CHINESE -> "UI 模式"
-        AppLanguage.ENGLISH -> "UI Mode"
-        AppLanguage.ARABIC -> "وضع واجهة المستخدم"
     }
     
     val selectUiStyle: String get() = when (lang) {
@@ -1742,31 +4595,6 @@ object Strings {
         AppLanguage.ARABIC -> "داكن دائمًا"
     }
     
-    // ==================== UI 模式 ====================
-    val defaultMode: String get() = when (lang) {
-        AppLanguage.CHINESE -> "默认模式"
-        AppLanguage.ENGLISH -> "Default Mode"
-        AppLanguage.ARABIC -> "الوضع الافتراضي"
-    }
-    
-    val defaultModeDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "简洁配色，流畅体验"
-        AppLanguage.ENGLISH -> "Clean colors, smooth experience"
-        AppLanguage.ARABIC -> "ألوان نظيفة، تجربة سلسة"
-    }
-    
-    val uiEnhancedMode: String get() = when (lang) {
-        AppLanguage.CHINESE -> "强化模式"
-        AppLanguage.ENGLISH -> "Enhanced Mode"
-        AppLanguage.ARABIC -> "الوضع المحسّن"
-    }
-    
-    val enhancedModeDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "沉浸式视觉盛宴，展示极致前端能力"
-        AppLanguage.ENGLISH -> "Immersive visual feast, showcase cutting-edge capabilities"
-        AppLanguage.ARABIC -> "وليمة بصرية غامرة، عرض قدرات متطورة"
-    }
-    
     // ==================== 动画速度 ====================
     val speedSlow: String get() = when (lang) {
         AppLanguage.CHINESE -> "慢速"
@@ -1804,18 +4632,6 @@ object Strings {
         AppLanguage.ARABIC -> "زر"
     }
     
-    val enhancedModeEnabled: String get() = when (lang) {
-        AppLanguage.CHINESE -> "强化模式已启用"
-        AppLanguage.ENGLISH -> "Enhanced mode enabled"
-        AppLanguage.ARABIC -> "تم تفعيل الوضع المحسّن"
-    }
-    
-    val enjoyImmersiveExperience: String get() = when (lang) {
-        AppLanguage.CHINESE -> "享受 %s 的沉浸式视觉体验"
-        AppLanguage.ENGLISH -> "Enjoy immersive visual experience of %s"
-        AppLanguage.ARABIC -> "استمتع بتجربة بصرية غامرة لـ %s"
-    }
-    
     val enableAnimations: String get() = when (lang) {
         AppLanguage.CHINESE -> "启用动画"
         AppLanguage.ENGLISH -> "Enable Animations"
@@ -1840,10 +4656,10 @@ object Strings {
         AppLanguage.ARABIC -> "عرض رسوم الجسيمات الخلفية الخاصة بالسمة"
     }
     
-    val particleEffectsEnhancedHint: String get() = when (lang) {
-        AppLanguage.CHINESE -> "强化模式下的沉浸式背景效果"
-        AppLanguage.ENGLISH -> "Immersive background effects in enhanced mode"
-        AppLanguage.ARABIC -> "تأثيرات خلفية غامرة في الوضع المحسّن"
+    val particleNotSupported: String get() = when (lang) {
+        AppLanguage.CHINESE -> "当前主题不支持粒子效果，切换其他主题可体验"
+        AppLanguage.ENGLISH -> "Current theme doesn't support particles, try switching themes"
+        AppLanguage.ARABIC -> "السمة الحالية لا تدعم تأثيرات الجسيمات، جرب تغيير السمة"
     }
     
     val hapticFeedback: String get() = when (lang) {
@@ -2070,7 +4886,7 @@ object Strings {
         AppLanguage.ARABIC -> "تخطيط التطوير..."
     }
     
-    val aiCoding: String get() = when (lang) {
+    val aiGeneratingCode: String get() = when (lang) {
         AppLanguage.CHINESE -> "生成代码中..."
         AppLanguage.ENGLISH -> "Generating code..."
         AppLanguage.ARABIC -> "توليد الكود..."
@@ -2126,13 +4942,13 @@ object Strings {
     }
     
     val close: String get() = when (lang) {
-        AppLanguage.CHINESE -> "Close"
+        AppLanguage.CHINESE -> "关闭"
         AppLanguage.ENGLISH -> "Close"
         AppLanguage.ARABIC -> "إغلاق"
     }
     
     val cancel: String get() = when (lang) {
-        AppLanguage.CHINESE -> "Cancel"
+        AppLanguage.CHINESE -> "取消"
         AppLanguage.ENGLISH -> "Cancel"
         AppLanguage.ARABIC -> "إلغاء"
     }
@@ -2183,6 +4999,18 @@ object Strings {
         AppLanguage.CHINESE -> "已禁用"
         AppLanguage.ENGLISH -> "Disabled"
         AppLanguage.ARABIC -> "معطل"
+    }
+    
+    val enable: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用"
+        AppLanguage.ENGLISH -> "Enable"
+        AppLanguage.ARABIC -> "تمكين"
+    }
+    
+    val disable: String get() = when (lang) {
+        AppLanguage.CHINESE -> "禁用"
+        AppLanguage.ENGLISH -> "Disable"
+        AppLanguage.ARABIC -> "تعطيل"
     }
     
     val tip: String get() = when (lang) {
@@ -2245,6 +5073,16 @@ object Strings {
         AppLanguage.CHINESE -> "esbuild 高性能构建（可选）"
         AppLanguage.ENGLISH -> "esbuild high-performance build (optional)"
         AppLanguage.ARABIC -> "بناء esbuild عالي الأداء (اختياري)"
+    }
+    val featureHtmlOptimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "HTML 应用 JS/CSS 压缩优化"
+        AppLanguage.ENGLISH -> "HTML app JS/CSS minification"
+        AppLanguage.ARABIC -> "ضغط JS/CSS لتطبيقات HTML"
+    }
+    val featureNodeTsPreCompile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js TypeScript 预编译"
+        AppLanguage.ENGLISH -> "Node.js TypeScript pre-compilation"
+        AppLanguage.ARABIC -> "تجميع TypeScript المسبق لـ Node.js"
     }
     
     val techDescriptionContent: String get() = when (lang) {
@@ -2437,6 +5275,66 @@ object Strings {
         AppLanguage.ARABIC -> "يتطلب التحقق في كل تشغيل"
     }
     
+    val customDialogText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义对话框文本"
+        AppLanguage.ENGLISH -> "Custom Dialog Text"
+        AppLanguage.ARABIC -> "نص الحوار المخصص"
+    }
+    
+    val customDialogTextHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义激活对话框中显示的文本，留空使用默认文本"
+        AppLanguage.ENGLISH -> "Customize text shown in activation dialog, leave empty for default"
+        AppLanguage.ARABIC -> "تخصيص النص المعروض في حوار التفعيل، اتركه فارغًا للافتراضي"
+    }
+    
+    val dialogTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标题"
+        AppLanguage.ENGLISH -> "Title"
+        AppLanguage.ARABIC -> "العنوان"
+    }
+    
+    val dialogTitleHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "默认：激活应用"
+        AppLanguage.ENGLISH -> "Default: Activate App"
+        AppLanguage.ARABIC -> "الافتراضي: تفعيل التطبيق"
+    }
+    
+    val dialogSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "副标题"
+        AppLanguage.ENGLISH -> "Subtitle"
+        AppLanguage.ARABIC -> "العنوان الفرعي"
+    }
+    
+    val dialogSubtitleHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "默认：请输入激活码以继续使用"
+        AppLanguage.ENGLISH -> "Default: Please enter activation code to continue"
+        AppLanguage.ARABIC -> "الافتراضي: يرجى إدخال رمز التفعيل للمتابعة"
+    }
+    
+    val dialogInputLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入框标签"
+        AppLanguage.ENGLISH -> "Input Label"
+        AppLanguage.ARABIC -> "علامة الإدخال"
+    }
+    
+    val dialogInputLabelHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "默认：激活码"
+        AppLanguage.ENGLISH -> "Default: Activation Code"
+        AppLanguage.ARABIC -> "الافتراضي: رمز التفعيل"
+    }
+    
+    val dialogButtonText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "按钮文字"
+        AppLanguage.ENGLISH -> "Button Text"
+        AppLanguage.ARABIC -> "نص الزر"
+    }
+    
+    val dialogButtonTextHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "默认：激活"
+        AppLanguage.ENGLISH -> "Default: Activate"
+        AppLanguage.ARABIC -> "الافتراضي: تفعيل"
+    }
+    
     val requireEveryLaunchHintOn: String get() = when (lang) {
         AppLanguage.CHINESE -> "每次打开应用都需要输入激活码"
         AppLanguage.ENGLISH -> "Enter activation code every time app opens"
@@ -2485,6 +5383,108 @@ object Strings {
         AppLanguage.CHINESE -> "付费"
         AppLanguage.ENGLISH -> "Paid"
         AppLanguage.ARABIC -> "مدفوع"
+    }
+    
+    val musicChannel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "音乐渠道"
+        AppLanguage.ENGLISH -> "Music Channel"
+        AppLanguage.ARABIC -> "قناة الموسيقى"
+    }
+    
+    val testConnection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "测试连接"
+        AppLanguage.ENGLISH -> "Test Connection"
+        AppLanguage.ARABIC -> "اختبار الاتصال"
+    }
+    
+    val testAllChannels: String get() = when (lang) {
+        AppLanguage.CHINESE -> "测试全部"
+        AppLanguage.ENGLISH -> "Test All"
+        AppLanguage.ARABIC -> "اختبار الكل"
+    }
+    
+    val channelAvailable: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可用"
+        AppLanguage.ENGLISH -> "Available"
+        AppLanguage.ARABIC -> "متاح"
+    }
+    
+    val channelUnavailable: String get() = when (lang) {
+        AppLanguage.CHINESE -> "不可用"
+        AppLanguage.ENGLISH -> "Unavailable"
+        AppLanguage.ARABIC -> "غير متاح"
+    }
+    
+    val channelTesting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "测试中..."
+        AppLanguage.ENGLISH -> "Testing..."
+        AppLanguage.ARABIC -> "جاري الاختبار..."
+    }
+    
+    val channelUntested: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未测试"
+        AppLanguage.ENGLISH -> "Not tested"
+        AppLanguage.ARABIC -> "لم يتم الاختبار"
+    }
+    
+    val searchOnlineMusic: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索在线音乐"
+        AppLanguage.ENGLISH -> "Search online music"
+        AppLanguage.ARABIC -> "البحث عن الموسيقى عبر الإنترنت"
+    }
+    
+    val noMusicResults: String get() = when (lang) {
+        AppLanguage.CHINESE -> "没有搜索结果"
+        AppLanguage.ENGLISH -> "No results found"
+        AppLanguage.ARABIC -> "لا توجد نتائج"
+    }
+    
+    val previewListen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "试听"
+        AppLanguage.ENGLISH -> "Preview"
+        AppLanguage.ARABIC -> "معاينة"
+    }
+    
+    val downloadToBgm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载为BGM"
+        AppLanguage.ENGLISH -> "Download as BGM"
+        AppLanguage.ARABIC -> "تنزيل كـ BGM"
+    }
+    
+    val downloadSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载成功"
+        AppLanguage.ENGLISH -> "Download successful"
+        AppLanguage.ARABIC -> "تم التنزيل بنجاح"
+    }
+    
+    val previewNote: String get() = when (lang) {
+        AppLanguage.CHINESE -> "预览 (30秒)"
+        AppLanguage.ENGLISH -> "Preview (30s)"
+        AppLanguage.ARABIC -> "معاينة (30 ثانية)"
+    }
+    
+    val loadingPlayUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "获取播放链接..."
+        AppLanguage.ENGLISH -> "Loading play URL..."
+        AppLanguage.ARABIC -> "جاري تحميل رابط التشغيل..."
+    }
+    
+    val searchFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索失败"
+        AppLanguage.ENGLISH -> "Search failed"
+        AppLanguage.ARABIC -> "فشل البحث"
+    }
+    
+    val selectChannelFirst: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请先选择一个音乐渠道"
+        AppLanguage.ENGLISH -> "Please select a music channel first"
+        AppLanguage.ARABIC -> "يرجى اختيار قناة موسيقية أولاً"
+    }
+    
+    val results: String get() = when (lang) {
+        AppLanguage.CHINESE -> "个结果"
+        AppLanguage.ENGLISH -> "results"
+        AppLanguage.ARABIC -> "نتائج"
     }
 
     // ==================== 图标生成器 ====================
@@ -3170,7 +6170,7 @@ object Strings {
 
     // ==================== 下载和保存 ====================
     val saveFailed: String get() = when (lang) {
-        AppLanguage.CHINESE -> "Save failed"
+        AppLanguage.CHINESE -> "保存失败"
         AppLanguage.ENGLISH -> "Save failed"
         AppLanguage.ARABIC -> "فشل الحفظ"
     }
@@ -3389,7 +6389,7 @@ object Strings {
 
     // ==================== 通用操作 ====================
     val closeDialog: String get() = when (lang) {
-        AppLanguage.CHINESE -> "Close"
+        AppLanguage.CHINESE -> "关闭"
         AppLanguage.ENGLISH -> "Close"
         AppLanguage.ARABIC -> "إغلاق"
     }
@@ -5171,9 +8171,9 @@ object Strings {
     }
     
     val packageNameHint: String get() = when (lang) {
-        AppLanguage.CHINESE -> "留空自动生成，最多%d字符，如：com.w2a.app"
-        AppLanguage.ENGLISH -> "Leave empty for auto-generation, max %d characters, e.g.: com.w2a.app"
-        AppLanguage.ARABIC -> "اتركه فارغًا للإنشاء التلقائي، الحد الأقصى %d حرف، مثال: com.w2a.app"
+        AppLanguage.CHINESE -> "留空自动生成，如：com.example.myapp"
+        AppLanguage.ENGLISH -> "Leave empty for auto-generation, e.g.: com.example.myapp"
+        AppLanguage.ARABIC -> "اتركه فارغًا للإنشاء التلقائي، مثال: com.example.myapp"
     }
     
     val apkConfigNote: String get() = when (lang) {
@@ -5594,8 +8594,20 @@ object Strings {
         AppLanguage.ARABIC -> "طي"
     }
     
+    val expandAll: String get() = when (lang) {
+        AppLanguage.CHINESE -> "展开全部"
+        AppLanguage.ENGLISH -> "Expand All"
+        AppLanguage.ARABIC -> "توسيع الكل"
+    }
+    
+    val depClearDone: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已清除"
+        AppLanguage.ENGLISH -> "Cleared"
+        AppLanguage.ARABIC -> "تم المسح"
+    }
+    
     val custom: String get() = when (lang) {
-        AppLanguage.CHINESE -> "Custom"
+        AppLanguage.CHINESE -> "自定义"
         AppLanguage.ENGLISH -> "Custom"
         AppLanguage.ARABIC -> "مخصص"
     }
@@ -6279,11 +9291,6 @@ object Strings {
         AppLanguage.ARABIC -> "الوصول الدولي"
     }
     
-    val domesticDirectFaster: String get() = when (lang) {
-        AppLanguage.CHINESE -> "国内直连，访问更快"
-        AppLanguage.ENGLISH -> "Direct access in China, faster"
-        AppLanguage.ARABIC -> "وصول مباشر في الصين، أسرع"
-    }
     
     val authorAvatar: String get() = when (lang) {
         AppLanguage.CHINESE -> "作者头像"
@@ -6515,9 +9522,9 @@ object Strings {
     }
     
     val autoDetectCategory: String get() = when (lang) {
-        AppLanguage.CHINESE -> "🤖 自动识别"
-        AppLanguage.ENGLISH -> "🤖 Auto Detect"
-        AppLanguage.ARABIC -> "🤖 كشف تلقائي"
+        AppLanguage.CHINESE -> "Auto Detect"
+        AppLanguage.ENGLISH -> "Auto Detect"
+        AppLanguage.ARABIC -> "كشف تلقائي"
     }
     
     val inputPlaceholder: String get() = when (lang) {
@@ -6630,9 +9637,9 @@ object Strings {
     }
     
     val lyricsSaved: String get() = when (lang) {
-        AppLanguage.CHINESE -> "✓ 歌词已保存"
-        AppLanguage.ENGLISH -> "✓ Lyrics saved"
-        AppLanguage.ARABIC -> "✓ تم حفظ كلمات الأغنية"
+        AppLanguage.CHINESE -> "[OK] 歌词已保存"
+        AppLanguage.ENGLISH -> "[OK] Lyrics saved"
+        AppLanguage.ARABIC -> "[OK] تم حفظ كلمات الأغنية"
     }
     
     // ==================== AI 模块开发器补充 ====================
@@ -6824,9 +9831,9 @@ object Strings {
     }
     
     val lyricsUpdated: String get() = when (lang) {
-        AppLanguage.CHINESE -> "✓ 歌词已更新"
-        AppLanguage.ENGLISH -> "✓ Lyrics updated"
-        AppLanguage.ARABIC -> "✓ تم تحديث كلمات الأغنية"
+        AppLanguage.CHINESE -> "[OK] 歌词已更新"
+        AppLanguage.ENGLISH -> "[OK] Lyrics updated"
+        AppLanguage.ARABIC -> "[OK] تم تحديث كلمات الأغنية"
     }
     
     val backward10s: String get() = when (lang) {
@@ -7370,7 +10377,7 @@ object Strings {
         AppLanguage.ARABIC -> "الترجمة التلقائية للويب: ترجمة محتوى الويب تلقائيًا"
     }
     
-    val aiHtmlCoding: String get() = when (lang) {
+    val aiHtmlCodingFeature: String get() = when (lang) {
         AppLanguage.CHINESE -> "AI HTML编程：AI辅助生成代码"
         AppLanguage.ENGLISH -> "AI HTML coding: AI-assisted code generation"
         AppLanguage.ARABIC -> "برمجة AI HTML: إنشاء الكود بمساعدة AI"
@@ -7790,6 +10797,114 @@ object Strings {
         AppLanguage.CHINESE -> "普罗旺斯的紫色海洋，芬芳宁静的治愈"
         AppLanguage.ENGLISH -> "Purple ocean of Provence, fragrant and peaceful healing"
         AppLanguage.ARABIC -> "محيط بنفسجي من بروفانس، شفاء عطري وهادئ"
+    }
+    
+    val themeKimiNoNawa: String get() = when (lang) {
+        AppLanguage.CHINESE -> "你的名字"
+        AppLanguage.ENGLISH -> "Your Name"
+        AppLanguage.ARABIC -> "اسمك"
+    }
+    
+    val themeKimiNoNawaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "黄昏天空的彗星轨迹，新海诚式的浪漫黄昏"
+        AppLanguage.ENGLISH -> "Comet trails across twilight sky, Shinkai-style romantic dusk"
+        AppLanguage.ARABIC -> "آثار المذنب عبر سماء الشفق، غسق رومانسي بأسلوب شينكاي"
+    }
+    
+    val themeAnohana: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未闻花名"
+        AppLanguage.ENGLISH -> "Anohana"
+        AppLanguage.ARABIC -> "أنوهانا"
+    }
+    
+    val themeAnohanaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "夏日午后的温暖怀旧，花瓣飘落的柔软时光"
+        AppLanguage.ENGLISH -> "Warm nostalgia of summer afternoon, soft moments with falling petals"
+        AppLanguage.ARABIC -> "حنين دافئ لبعد ظهر صيفي، لحظات ناعمة مع سقوط البتلات"
+    }
+    
+    val themeDeathNote: String get() = when (lang) {
+        AppLanguage.CHINESE -> "死亡笔记"
+        AppLanguage.ENGLISH -> "Death Note"
+        AppLanguage.ARABIC -> "مذكرة الموت"
+    }
+    
+    val themeDeathNoteDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "死神之眼的猩红视野，黑暗中书写命运的笔触"
+        AppLanguage.ENGLISH -> "Crimson gaze of Shinigami eyes, strokes of fate written in darkness"
+        AppLanguage.ARABIC -> "نظرة شينيغامي القرمزية، ضربات القدر المكتوبة في الظلام"
+    }
+    
+    val themeNaruto: String get() = when (lang) {
+        AppLanguage.CHINESE -> "火影忍者"
+        AppLanguage.ENGLISH -> "Naruto"
+        AppLanguage.ARABIC -> "ناروتو"
+    }
+    
+    val themeNarutoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "火之意志燃烧的木叶橙，忍道永不放弃的热血"
+        AppLanguage.ENGLISH -> "Blazing Konoha orange of the Will of Fire, the unyielding nindō spirit"
+        AppLanguage.ARABIC -> "برتقال كونوها المشتعل لإرادة النار، روح النيندو التي لا تستسلم"
+    }
+    
+    val themeOnePiece: String get() = when (lang) {
+        AppLanguage.CHINESE -> "海贼王"
+        AppLanguage.ENGLISH -> "One Piece"
+        AppLanguage.ARABIC -> "ون بيس"
+    }
+    
+    val themeOnePieceDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "伟大航路的湛蓝深海，追逐自由与宝藏的冒险"
+        AppLanguage.ENGLISH -> "Azure deep sea of the Grand Line, an adventure chasing freedom and treasure"
+        AppLanguage.ARABIC -> "بحر أزرق عميق للخط الكبير، مغامرة تطارد الحرية والكنز"
+    }
+    
+    val themeBoonieBears: String get() = when (lang) {
+        AppLanguage.CHINESE -> "熊出没"
+        AppLanguage.ENGLISH -> "Boonie Bears"
+        AppLanguage.ARABIC -> "الدببة المشاغبة"
+    }
+    
+    val themeBoonieBearDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "阳光森林的自然童趣，熊大熊二的欢乐冒险"
+        AppLanguage.ENGLISH -> "Sunny forest fun, the joyful adventures of Briar and Bramble"
+        AppLanguage.ARABIC -> "مرح الغابة المشمسة، مغامرات الدببة المبهجة"
+    }
+    
+    val themeTomAndJerry: String get() = when (lang) {
+        AppLanguage.CHINESE -> "猫和老鼠"
+        AppLanguage.ENGLISH -> "Tom and Jerry"
+        AppLanguage.ARABIC -> "توم وجيري"
+    }
+    
+    val themeTomAndJerryDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "经典追逐的欢乐色调，永不过时的童年回忆"
+        AppLanguage.ENGLISH -> "Joyful tones of classic chase, timeless childhood memories"
+        AppLanguage.ARABIC -> "ألوان مبهجة للمطاردة الكلاسيكية، ذكريات طفولة خالدة"
+    }
+    
+    val themeZarathustra: String get() = when (lang) {
+        AppLanguage.CHINESE -> "查拉图斯特拉如是说"
+        AppLanguage.ENGLISH -> "Thus Spoke Zarathustra"
+        AppLanguage.ARABIC -> "هكذا تكلم زرادشت"
+    }
+    
+    val themeZarathustraDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "超人晨曦的山巅金光，永恒轮回中意志的觉醒"
+        AppLanguage.ENGLISH -> "Golden dawn on the Übermensch's summit, the will awakening in eternal recurrence"
+        AppLanguage.ARABIC -> "فجر ذهبي على قمة الإنسان الأعلى، الإرادة تستيقظ في العودة الأبدية"
+    }
+    
+    val themeWillAndRepresentation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "作为意志和表象的世界"
+        AppLanguage.ENGLISH -> "The World as Will"
+        AppLanguage.ARABIC -> "العالم كإرادة وتمثل"
+    }
+    
+    val themeWillAndRepresentationDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "叔本华的深渊凝视，意志暗涌与表象幻象的交织"
+        AppLanguage.ENGLISH -> "Schopenhauer's gaze into the abyss, intertwined currents of will and veil of representation"
+        AppLanguage.ARABIC -> "تحديق شوبنهاور في الهاوية، تيارات الإرادة وحجاب التمثل المتشابكة"
     }
     
     // ==================== 动画风格 ====================
@@ -8623,6 +11738,12 @@ object Strings {
         AppLanguage.ARABIC -> "الوصف (اختياري)"
     }
     
+    val optionalLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可选"
+        AppLanguage.ENGLISH -> "Optional"
+        AppLanguage.ARABIC -> "اختياري"
+    }
+    
     val briefDescribeSchemeHint: String get() = when (lang) {
         AppLanguage.CHINESE -> "简要描述方案用途"
         AppLanguage.ENGLISH -> "Briefly describe scheme purpose"
@@ -8735,13 +11856,13 @@ object Strings {
     }
     
     // ==================== AI功能描述 ====================
-    val htmlCodingDesc: String get() = when (lang) {
+    val aiCodingDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "AI 辅助生成和修改 HTML/CSS/JS 代码"
         AppLanguage.ENGLISH -> "AI-assisted HTML/CSS/JS code generation and modification"
         AppLanguage.ARABIC -> "إنشاء وتعديل كود HTML/CSS/JS بمساعدة الذكاء الاصطناعي"
     }
     
-    val htmlCodingImageDesc: String get() = when (lang) {
+    val aiCodingImageDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "HTML 编程中的图像生成功能"
         AppLanguage.ENGLISH -> "Image generation in HTML coding"
         AppLanguage.ARABIC -> "إنشاء الصور في برمجة HTML"
@@ -8971,6 +12092,16 @@ object Strings {
         AppLanguage.ENGLISH -> "Legal Disclaimer"
         AppLanguage.ARABIC -> "إخلاء المسؤولية القانونية"
     }
+    val disclaimerWarningText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "⚠️ 重要提示：请务必仔细阅读以下条款，使用本软件即表示您同意遵守所有条款。"
+        AppLanguage.ENGLISH -> "⚠️ Important: Please read the following terms carefully. By using this software, you agree to comply with all terms."
+        AppLanguage.ARABIC -> "⚠️ هام: يرجى قراءة الشروط التالية بعناية. باستخدام هذا البرنامج، فإنك توافق على الالتزام بجميع الشروط."
+    }
+    val finalUserAgreementConfirmation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "📋 用户确认声明"
+        AppLanguage.ENGLISH -> "📋 User Confirmation Statement"
+        AppLanguage.ARABIC -> "📋 بيان تأكيد المستخدم"
+    }
     
     // ==================== HTML 工具类型 ====================
     val toolWriteHtml: String get() = when (lang) {
@@ -9032,6 +12163,26 @@ object Strings {
         AppLanguage.CHINESE -> "自动修复检测到的语法错误"
         AppLanguage.ENGLISH -> "Automatically fix detected syntax errors"
         AppLanguage.ARABIC -> "إصلاح أخطاء بناء الجملة المكتشفة تلقائيًا"
+    }
+    val toolReadCurrentCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "读取当前代码"
+        AppLanguage.ENGLISH -> "Read Current Code"
+        AppLanguage.ARABIC -> "قراءة الكود الحالي"
+    }
+    val toolReadCurrentCodeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "读取当前 HTML 代码内容，用于在编辑前了解现有代码"
+        AppLanguage.ENGLISH -> "Read current HTML code content to understand existing code before editing"
+        AppLanguage.ARABIC -> "قراءة محتوى كود HTML الحالي لفهم الكود الموجود قبل التحرير"
+    }
+    val featureReadCurrentCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "读取当前代码"
+        AppLanguage.ENGLISH -> "Read Current Code"
+        AppLanguage.ARABIC -> "قراءة الكود الحالي"
+    }
+    val readCurrentCodeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "读取当前 HTML 代码，编辑前先了解现有代码结构"
+        AppLanguage.ENGLISH -> "Read current HTML code to understand existing code structure before editing"
+        AppLanguage.ARABIC -> "قراءة كود HTML الحالي لفهم هيكل الكود الموجود قبل التحرير"
     }
     val required: String get() = when (lang) {
         AppLanguage.CHINESE -> "必需"
@@ -10958,6 +14109,837 @@ object Strings {
         AppLanguage.ENGLISH -> "Shortcuts Config"
         AppLanguage.ARABIC -> "تكوين الاختصارات"
     }
+    val templateShortcutsConfigDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "格式：键=动作，每行一个"
+        AppLanguage.ENGLISH -> "Format: key=action, one per line"
+        AppLanguage.ARABIC -> "الصيغة: مفتاح=إجراء، واحد في كل سطر"
+    }
+    val templateExtractAttrDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "留空则提取文本"
+        AppLanguage.ENGLISH -> "Leave empty to extract text"
+        AppLanguage.ARABIC -> "اتركه فارغاً لاستخراج النص"
+    }
+    val templateFilterKeywordDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "仅收集包含关键词的链接"
+        AppLanguage.ENGLISH -> "Only collect links containing keyword"
+        AppLanguage.ARABIC -> "جمع الروابط التي تحتوي على الكلمة المفتاحية فقط"
+    }
+    val aiErrorNoApiKey: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请先在 AI 设置中配置 API Key"
+        AppLanguage.ENGLISH -> "Please configure an API Key in AI settings first"
+        AppLanguage.ARABIC -> "يرجى تكوين مفتاح API في إعدادات الذكاء الاصطناعي أولاً"
+    }
+    val aiErrorNoModel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请先在 AI 设置中添加并保存模型"
+        AppLanguage.ENGLISH -> "Please add and save a model in AI settings first"
+        AppLanguage.ARABIC -> "يرجى إضافة وحفظ نموذج في إعدادات الذكاء الاصطناعي أولاً"
+    }
+    val aiErrorNoApiKeyForModel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "找不到模型对应的 API Key"
+        AppLanguage.ENGLISH -> "Cannot find API Key for the model"
+        AppLanguage.ARABIC -> "لا يمكن العثور على مفتاح API للنموذج"
+    }
+    val aiErrorUnknown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未知错误"
+        AppLanguage.ENGLISH -> "Unknown error"
+        AppLanguage.ARABIC -> "خطأ غير معروف"
+    }
+    val aiGeneratedModule: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 生成模块"
+        AppLanguage.ENGLISH -> "AI Generated Module"
+        AppLanguage.ARABIC -> "وحدة مولدة بالذكاء الاصطناعي"
+    }
+    val aiGeneratedModuleDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "由 AI 生成的扩展模块"
+        AppLanguage.ENGLISH -> "Extension module generated by AI"
+        AppLanguage.ARABIC -> "وحدة إضافية تم إنشاؤها بواسطة الذكاء الاصطناعي"
+    }
+
+    // ==================== 模块管理错误信息 ====================
+    val errModuleNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块不存在"
+        AppLanguage.ENGLISH -> "Module not found"
+        AppLanguage.ARABIC -> "الوحدة غير موجودة"
+    }
+    val errNoModulesToExport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "没有找到要导出的模块"
+        AppLanguage.ENGLISH -> "No modules found to export"
+        AppLanguage.ARABIC -> "لم يتم العثور على وحدات للتصدير"
+    }
+    val errInvalidModuleFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无效的模块文件"
+        AppLanguage.ENGLISH -> "Invalid module file"
+        AppLanguage.ARABIC -> "ملف وحدة غير صالح"
+    }
+    val errInvalidShareCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无效的分享码"
+        AppLanguage.ENGLISH -> "Invalid share code"
+        AppLanguage.ARABIC -> "رمز مشاركة غير صالح"
+    }
+    val errInvalidModulePackage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无效的模块包文件"
+        AppLanguage.ENGLISH -> "Invalid module package file"
+        AppLanguage.ARABIC -> "ملف حزمة وحدات غير صالح"
+    }
+    val errCannotOpenOutputStream: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无法打开输出流"
+        AppLanguage.ENGLISH -> "Cannot open output stream"
+        AppLanguage.ARABIC -> "لا يمكن فتح تدفق الإخراج"
+    }
+    val shareModuleTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "📦 WebToApp 扩展模块分享"
+        AppLanguage.ENGLISH -> "📦 WebToApp Extension Module Share"
+        AppLanguage.ARABIC -> "📦 مشاركة وحدة إضافية WebToApp"
+    }
+    val shareModuleName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块名称"
+        AppLanguage.ENGLISH -> "Module Name"
+        AppLanguage.ARABIC -> "اسم الوحدة"
+    }
+    val shareModuleDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "描述"
+        AppLanguage.ENGLISH -> "Description"
+        AppLanguage.ARABIC -> "الوصف"
+    }
+    val shareModuleCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分类"
+        AppLanguage.ENGLISH -> "Category"
+        AppLanguage.ARABIC -> "التصنيف"
+    }
+    val shareModuleVersion: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本"
+        AppLanguage.ENGLISH -> "Version"
+        AppLanguage.ARABIC -> "الإصدار"
+    }
+    val shareModuleCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分享码"
+        AppLanguage.ENGLISH -> "Share Code"
+        AppLanguage.ARABIC -> "رمز المشاركة"
+    }
+    val shareModuleHowTo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用方法：复制分享码，在 WebToApp 扩展模块页面点击\"导入\" -> \"从分享码导入\""
+        AppLanguage.ENGLISH -> "How to use: Copy the share code, go to WebToApp extension modules page and click \"Import\" -> \"Import from share code\""
+        AppLanguage.ARABIC -> "طريقة الاستخدام: انسخ رمز المشاركة، انتقل إلى صفحة وحدات WebToApp الإضافية وانقر على \"استيراد\" -> \"استيراد من رمز المشاركة\""
+    }
+    val shareModuleSubject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WebToApp 扩展模块"
+        AppLanguage.ENGLISH -> "WebToApp Extension Module"
+        AppLanguage.ARABIC -> "وحدة إضافية WebToApp"
+    }
+    val moduleCopySuffix: String get() = when (lang) {
+        AppLanguage.CHINESE -> "副本"
+        AppLanguage.ENGLISH -> "Copy"
+        AppLanguage.ARABIC -> "نسخة"
+    }
+
+    // ==================== 模块验证 ====================
+    val validateNameEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块名称不能为空"
+        AppLanguage.ENGLISH -> "Module name cannot be empty"
+        AppLanguage.ARABIC -> "لا يمكن أن يكون اسم الوحدة فارغاً"
+    }
+    val validateCodeEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码内容不能为空"
+        AppLanguage.ENGLISH -> "Code content cannot be empty"
+        AppLanguage.ARABIC -> "لا يمكن أن يكون محتوى الكود فارغاً"
+    }
+    val validateConfigRequired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置项 '%s' 为必填项"
+        AppLanguage.ENGLISH -> "Config item '%s' is required"
+        AppLanguage.ARABIC -> "عنصر التكوين '%s' مطلوب"
+    }
+
+    // ==================== 模块预设工厂 ====================
+    val presetBlockElements: String get() = when (lang) {
+        AppLanguage.CHINESE -> "屏蔽指定元素"
+        AppLanguage.ENGLISH -> "Block specified elements"
+        AppLanguage.ARABIC -> "حظر العناصر المحددة"
+    }
+    val presetInjectStyle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注入自定义样式"
+        AppLanguage.ENGLISH -> "Inject custom styles"
+        AppLanguage.ARABIC -> "حقن أنماط مخصصة"
+    }
+    val presetAutoClick: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动点击指定元素"
+        AppLanguage.ENGLISH -> "Auto-click specified element"
+        AppLanguage.ARABIC -> "النقر التلقائي على العنصر المحدد"
+    }
+    val presetFloatingButton: String get() = when (lang) {
+        AppLanguage.CHINESE -> "添加悬浮按钮"
+        AppLanguage.ENGLISH -> "Add floating button"
+        AppLanguage.ARABIC -> "إضافة زر عائم"
+    }
+    val tagBlock: String get() = when (lang) {
+        AppLanguage.CHINESE -> "屏蔽"
+        AppLanguage.ENGLISH -> "Block"
+        AppLanguage.ARABIC -> "حظر"
+    }
+    val tagHideElement: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏"
+        AppLanguage.ENGLISH -> "Hide"
+        AppLanguage.ARABIC -> "إخفاء"
+    }
+    val tagStyleCss: String get() = when (lang) {
+        AppLanguage.CHINESE -> "样式"
+        AppLanguage.ENGLISH -> "Style"
+        AppLanguage.ARABIC -> "نمط"
+    }
+    val tagAuto: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动"
+        AppLanguage.ENGLISH -> "Auto"
+        AppLanguage.ARABIC -> "تلقائي"
+    }
+    val tagClickAction: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击"
+        AppLanguage.ENGLISH -> "Click"
+        AppLanguage.ARABIC -> "نقر"
+    }
+    val tagButton: String get() = when (lang) {
+        AppLanguage.CHINESE -> "按钮"
+        AppLanguage.ENGLISH -> "Button"
+        AppLanguage.ARABIC -> "زر"
+    }
+    val tagFloatingWidget: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮"
+        AppLanguage.ENGLISH -> "Floating"
+        AppLanguage.ARABIC -> "عائم"
+    }
+    val builtInVersion: String get() = when (lang) {
+        AppLanguage.CHINESE -> "内置版本"
+        AppLanguage.ENGLISH -> "Built-in version"
+        AppLanguage.ARABIC -> "الإصدار المدمج"
+    }
+
+    // ==================== Agent 状态 ====================
+    val agentStateIdle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "空闲"
+        AppLanguage.ENGLISH -> "Idle"
+        AppLanguage.ARABIC -> "خامل"
+    }
+    val agentStateThinking: String get() = when (lang) {
+        AppLanguage.CHINESE -> "思考中"
+        AppLanguage.ENGLISH -> "Thinking"
+        AppLanguage.ARABIC -> "يفكر"
+    }
+    val agentStateGenerating: String get() = when (lang) {
+        AppLanguage.CHINESE -> "生成中"
+        AppLanguage.ENGLISH -> "Generating"
+        AppLanguage.ARABIC -> "يولّد"
+    }
+    val agentStateToolCalling: String get() = when (lang) {
+        AppLanguage.CHINESE -> "调用工具"
+        AppLanguage.ENGLISH -> "Calling Tool"
+        AppLanguage.ARABIC -> "استدعاء أداة"
+    }
+    val agentStateSyntaxCheck: String get() = when (lang) {
+        AppLanguage.CHINESE -> "语法检查"
+        AppLanguage.ENGLISH -> "Syntax Check"
+        AppLanguage.ARABIC -> "فحص القواعد"
+    }
+    val agentStateFixing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复中"
+        AppLanguage.ENGLISH -> "Fixing"
+        AppLanguage.ARABIC -> "يصلح"
+    }
+    val agentStateSecurityScan: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安全扫描"
+        AppLanguage.ENGLISH -> "Security Scan"
+        AppLanguage.ARABIC -> "فحص أمني"
+    }
+    val agentStateCompleted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "完成"
+        AppLanguage.ENGLISH -> "Completed"
+        AppLanguage.ARABIC -> "مكتمل"
+    }
+    val agentStateError: String get() = when (lang) {
+        AppLanguage.CHINESE -> "错误"
+        AppLanguage.ENGLISH -> "Error"
+        AppLanguage.ARABIC -> "خطأ"
+    }
+
+    // ==================== 思考类型 ====================
+    val thoughtAnalysis: String get() = when (lang) {
+        AppLanguage.CHINESE -> "需求分析"
+        AppLanguage.ENGLISH -> "Analysis"
+        AppLanguage.ARABIC -> "تحليل"
+    }
+    val thoughtPlanning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "制定计划"
+        AppLanguage.ENGLISH -> "Planning"
+        AppLanguage.ARABIC -> "تخطيط"
+    }
+    val thoughtToolCall: String get() = when (lang) {
+        AppLanguage.CHINESE -> "调用工具"
+        AppLanguage.ENGLISH -> "Tool Call"
+        AppLanguage.ARABIC -> "استدعاء أداة"
+    }
+    val thoughtToolResult: String get() = when (lang) {
+        AppLanguage.CHINESE -> "工具结果"
+        AppLanguage.ENGLISH -> "Tool Result"
+        AppLanguage.ARABIC -> "نتيجة الأداة"
+    }
+    val thoughtGeneration: String get() = when (lang) {
+        AppLanguage.CHINESE -> "生成代码"
+        AppLanguage.ENGLISH -> "Code Generation"
+        AppLanguage.ARABIC -> "توليد الكود"
+    }
+    val thoughtReview: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码审查"
+        AppLanguage.ENGLISH -> "Code Review"
+        AppLanguage.ARABIC -> "مراجعة الكود"
+    }
+    val thoughtFix: String get() = when (lang) {
+        AppLanguage.CHINESE -> "修复问题"
+        AppLanguage.ENGLISH -> "Fix Issues"
+        AppLanguage.ARABIC -> "إصلاح المشاكل"
+    }
+    val thoughtConclusion: String get() = when (lang) {
+        AppLanguage.CHINESE -> "总结"
+        AppLanguage.ENGLISH -> "Conclusion"
+        AppLanguage.ARABIC -> "خاتمة"
+    }
+
+    // ==================== Agent 工具执行器 ====================
+    val toolErrUnknown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未知工具"
+        AppLanguage.ENGLISH -> "Unknown tool"
+        AppLanguage.ARABIC -> "أداة غير معروفة"
+    }
+    val toolErrExecFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "执行失败"
+        AppLanguage.ENGLISH -> "Execution failed"
+        AppLanguage.ARABIC -> "فشل التنفيذ"
+    }
+    val toolErrChainFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "工具执行失败"
+        AppLanguage.ENGLISH -> "Tool execution failed"
+        AppLanguage.ARABIC -> "فشل تنفيذ الأداة"
+    }
+    val toolErrSyntaxCheckFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "语法检查执行失败"
+        AppLanguage.ENGLISH -> "Syntax check failed"
+        AppLanguage.ARABIC -> "فشل فحص القواعد"
+    }
+    val toolErrAutoFixFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动修复执行失败"
+        AppLanguage.ENGLISH -> "Auto-fix failed"
+        AppLanguage.ARABIC -> "فشل الإصلاح التلقائي"
+    }
+    val toolErrMaxFixAttempts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已达到最大自动修复次数 (%s 次)，仍有语法错误"
+        AppLanguage.ENGLISH -> "Max auto-fix attempts reached (%s), syntax errors remain"
+        AppLanguage.ARABIC -> "تم الوصول إلى الحد الأقصى لمحاولات الإصلاح التلقائي (%s)، لا تزال هناك أخطاء"
+    }
+    val toolErrMissingCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 code 参数"
+        AppLanguage.ENGLISH -> "Missing code parameter"
+        AppLanguage.ARABIC -> "معامل الكود مفقود"
+    }
+    val toolErrUnsupportedLang: String get() = when (lang) {
+        AppLanguage.CHINESE -> "不支持的语言"
+        AppLanguage.ENGLISH -> "Unsupported language"
+        AppLanguage.ARABIC -> "لغة غير مدعومة"
+    }
+    val toolErrMissingModuleName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少模块名称"
+        AppLanguage.ENGLISH -> "Missing module name"
+        AppLanguage.ARABIC -> "اسم الوحدة مفقود"
+    }
+    val toolModuleCreated: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块创建成功"
+        AppLanguage.ENGLISH -> "Module created successfully"
+        AppLanguage.ARABIC -> "تم إنشاء الوحدة بنجاح"
+    }
+    val toolModuleCreateFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建失败"
+        AppLanguage.ENGLISH -> "Creation failed"
+        AppLanguage.ARABIC -> "فشل الإنشاء"
+    }
+
+    // ==================== 语法检查消息 ====================
+    val syntaxBraceMismatch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "大括号不匹配"
+        AppLanguage.ENGLISH -> "Braces mismatch"
+        AppLanguage.ARABIC -> "عدم تطابق الأقواس المعقوفة"
+    }
+    val syntaxBraceMissing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 %s 个 }"
+        AppLanguage.ENGLISH -> "Missing %s }"
+        AppLanguage.ARABIC -> "مفقود %s }"
+    }
+    val syntaxBraceExtra: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余 %s 个 }"
+        AppLanguage.ENGLISH -> "Extra %s }"
+        AppLanguage.ARABIC -> "زائد %s }"
+    }
+    val syntaxBraceCheckPair: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查所有 { } 是否正确配对"
+        AppLanguage.ENGLISH -> "Check all { } are properly paired"
+        AppLanguage.ARABIC -> "تحقق من تطابق جميع { }"
+    }
+    val syntaxParenMismatch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "小括号不匹配"
+        AppLanguage.ENGLISH -> "Parentheses mismatch"
+        AppLanguage.ARABIC -> "عدم تطابق الأقواس"
+    }
+    val syntaxParenMissing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 %s 个 )"
+        AppLanguage.ENGLISH -> "Missing %s )"
+        AppLanguage.ARABIC -> "مفقود %s )"
+    }
+    val syntaxParenExtra: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余 %s 个 )"
+        AppLanguage.ENGLISH -> "Extra %s )"
+        AppLanguage.ARABIC -> "زائد %s )"
+    }
+    val syntaxParenCheckPair: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查所有 ( ) 是否正确配对"
+        AppLanguage.ENGLISH -> "Check all ( ) are properly paired"
+        AppLanguage.ARABIC -> "تحقق من تطابق جميع ( )"
+    }
+    val syntaxBracketMismatch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "方括号不匹配"
+        AppLanguage.ENGLISH -> "Brackets mismatch"
+        AppLanguage.ARABIC -> "عدم تطابق الأقواس المربعة"
+    }
+    val syntaxBracketMissing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 %s 个 ]"
+        AppLanguage.ENGLISH -> "Missing %s ]"
+        AppLanguage.ARABIC -> "مفقود %s ]"
+    }
+    val syntaxBracketExtra: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余 %s 个 ]"
+        AppLanguage.ENGLISH -> "Extra %s ]"
+        AppLanguage.ARABIC -> "زائد %s ]"
+    }
+    val syntaxBracketCheckPair: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查所有 [ ] 是否正确配对"
+        AppLanguage.ENGLISH -> "Check all [ ] are properly paired"
+        AppLanguage.ARABIC -> "تحقق من تطابق جميع [ ]"
+    }
+
+    // ==================== Lint 警告 ====================
+    val lintNoVar: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议使用 let 或 const 代替 var"
+        AppLanguage.ENGLISH -> "Prefer let or const instead of var"
+        AppLanguage.ARABIC -> "يُفضل استخدام let أو const بدلاً من var"
+    }
+    val lintEqeqeq: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议使用 === 代替 =="
+        AppLanguage.ENGLISH -> "Prefer === instead of =="
+        AppLanguage.ARABIC -> "يُفضل استخدام === بدلاً من =="
+    }
+    val lintNoEval: String get() = when (lang) {
+        AppLanguage.CHINESE -> "避免使用 eval()，存在安全风险"
+        AppLanguage.ENGLISH -> "Avoid eval(), security risk"
+        AppLanguage.ARABIC -> "تجنب eval()، مخاطر أمنية"
+    }
+    val lintNoDocWrite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "避免使用 document.write()，可能导致页面问题"
+        AppLanguage.ENGLISH -> "Avoid document.write(), may cause page issues"
+        AppLanguage.ARABIC -> "تجنب document.write()، قد يسبب مشاكل في الصفحة"
+    }
+    val lintNoConsole: String get() = when (lang) {
+        AppLanguage.CHINESE -> "生产代码中建议移除 console.log"
+        AppLanguage.ENGLISH -> "Consider removing console.log in production"
+        AppLanguage.ARABIC -> "يُنصح بإزالة console.log في الإنتاج"
+    }
+    val lintCssMissingSemicolon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "CSS 属性可能缺少分号"
+        AppLanguage.ENGLISH -> "CSS property may be missing semicolon"
+        AppLanguage.ARABIC -> "قد تكون خاصية CSS تفتقر إلى فاصلة منقوطة"
+    }
+    val lintCssNoImportant: String get() = when (lang) {
+        AppLanguage.CHINESE -> "尽量避免过度使用 !important"
+        AppLanguage.ENGLISH -> "Avoid excessive use of !important"
+        AppLanguage.ARABIC -> "تجنب الاستخدام المفرط لـ !important"
+    }
+    val lintUseStrict: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议在代码开头添加 'use strict' 启用严格模式"
+        AppLanguage.ENGLISH -> "Consider adding 'use strict' at the beginning"
+        AppLanguage.ARABIC -> "يُنصح بإضافة 'use strict' في البداية"
+    }
+    val lintUseArrowFn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "考虑使用箭头函数简化代码"
+        AppLanguage.ENGLISH -> "Consider using arrow functions to simplify code"
+        AppLanguage.ARABIC -> "فكر في استخدام الدوال السهمية لتبسيط الكود"
+    }
+    val lintLineTooLong: String get() = when (lang) {
+        AppLanguage.CHINESE -> "部分行超过 120 字符，建议拆分以提高可读性"
+        AppLanguage.ENGLISH -> "Some lines exceed 120 characters, consider splitting for readability"
+        AppLanguage.ARABIC -> "بعض الأسطر تتجاوز 120 حرفاً، يُنصح بتقسيمها"
+    }
+
+    // ==================== 自动修复 ====================
+    val fixVarToLet: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 var 替换为 let"
+        AppLanguage.ENGLISH -> "Replaced var with let"
+        AppLanguage.ARABIC -> "تم استبدال var بـ let"
+    }
+    val fixLooseEq: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 == 替换为 ==="
+        AppLanguage.ENGLISH -> "Replaced == with ==="
+        AppLanguage.ARABIC -> "تم استبدال == بـ ==="
+    }
+
+    // ==================== 配置验证 ====================
+    val validateConfigMissingKey: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置项缺少 key"
+        AppLanguage.ENGLISH -> "Config item missing key"
+        AppLanguage.ARABIC -> "عنصر التكوين يفتقر إلى المفتاح"
+    }
+    val validateConfigMissingName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置项缺少显示名称"
+        AppLanguage.ENGLISH -> "Config item missing display name"
+        AppLanguage.ARABIC -> "عنصر التكوين يفتقر إلى اسم العرض"
+    }
+    val validateConfigRequiredNotSet: String get() = when (lang) {
+        AppLanguage.CHINESE -> "必填配置项 '%s' 未设置值"
+        AppLanguage.ENGLISH -> "Required config item '%s' has no value"
+        AppLanguage.ARABIC -> "عنصر التكوين المطلوب '%s' بدون قيمة"
+    }
+
+    // ==================== 安全扫描 ====================
+    val secEvalDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用 eval() 执行动态代码"
+        AppLanguage.ENGLISH -> "Using eval() to execute dynamic code"
+        AppLanguage.ARABIC -> "استخدام eval() لتنفيذ كود ديناميكي"
+    }
+    val secEvalRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "避免使用 eval()，使用更安全的替代方案"
+        AppLanguage.ENGLISH -> "Avoid eval(), use safer alternatives"
+        AppLanguage.ARABIC -> "تجنب eval()، استخدم بدائل أكثر أماناً"
+    }
+    val secInnerHtmlDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "直接设置 innerHTML 可能导致 XSS"
+        AppLanguage.ENGLISH -> "Setting innerHTML directly may cause XSS"
+        AppLanguage.ARABIC -> "تعيين innerHTML مباشرة قد يسبب XSS"
+    }
+    val secInnerHtmlRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用 textContent 或 DOMPurify 清理 HTML"
+        AppLanguage.ENGLISH -> "Use textContent or DOMPurify to sanitize HTML"
+        AppLanguage.ARABIC -> "استخدم textContent أو DOMPurify لتنظيف HTML"
+    }
+    val secDocWriteDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "document.write 可能被滥用"
+        AppLanguage.ENGLISH -> "document.write can be misused"
+        AppLanguage.ARABIC -> "document.write قد يُساء استخدامه"
+    }
+    val secDocWriteRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用 DOM API 操作页面"
+        AppLanguage.ENGLISH -> "Use DOM API to manipulate the page"
+        AppLanguage.ARABIC -> "استخدم DOM API للتعامل مع الصفحة"
+    }
+    val secNewFuncDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "动态创建函数存在安全风险"
+        AppLanguage.ENGLISH -> "Dynamically creating functions is a security risk"
+        AppLanguage.ARABIC -> "إنشاء الدوال ديناميكياً يشكل مخاطر أمنية"
+    }
+    val secNewFuncRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "避免动态创建函数"
+        AppLanguage.ENGLISH -> "Avoid dynamically creating functions"
+        AppLanguage.ARABIC -> "تجنب إنشاء الدوال ديناميكياً"
+    }
+    val secLocationDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "URL 跳转可能被利用"
+        AppLanguage.ENGLISH -> "URL redirection may be exploited"
+        AppLanguage.ARABIC -> "إعادة توجيه URL قد يُستغل"
+    }
+    val secLocationRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "验证跳转目标 URL"
+        AppLanguage.ENGLISH -> "Validate redirect target URL"
+        AppLanguage.ARABIC -> "تحقق من عنوان URL المستهدف"
+    }
+    val secStorageDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "存储敏感数据需谨慎"
+        AppLanguage.ENGLISH -> "Handle sensitive data storage carefully"
+        AppLanguage.ARABIC -> "تعامل مع تخزين البيانات الحساسة بحذر"
+    }
+    val secStorageRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "不要在本地存储中保存敏感信息"
+        AppLanguage.ENGLISH -> "Don't store sensitive info in local storage"
+        AppLanguage.ARABIC -> "لا تخزن معلومات حساسة في التخزين المحلي"
+    }
+    val secFetchDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "网络请求需注意安全"
+        AppLanguage.ENGLISH -> "Network requests require security awareness"
+        AppLanguage.ARABIC -> "طلبات الشبكة تتطلب وعياً أمنياً"
+    }
+    val secFetchRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确保请求目标可信，处理 CORS"
+        AppLanguage.ENGLISH -> "Ensure request target is trusted, handle CORS"
+        AppLanguage.ARABIC -> "تأكد من أن الهدف موثوق، تعامل مع CORS"
+    }
+    val secPostMsgDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "跨窗口通信需验证来源"
+        AppLanguage.ENGLISH -> "Cross-window communication requires origin verification"
+        AppLanguage.ARABIC -> "الاتصال عبر النوافذ يتطلب التحقق من المصدر"
+    }
+    val secPostMsgRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "验证 message 事件的 origin"
+        AppLanguage.ENGLISH -> "Verify message event origin"
+        AppLanguage.ARABIC -> "تحقق من مصدر حدث الرسالة"
+    }
+    val secTemplateDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模板字符串注入风险"
+        AppLanguage.ENGLISH -> "Template string injection risk"
+        AppLanguage.ARABIC -> "مخاطر حقن سلسلة القالب"
+    }
+    val secTemplateRec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确保插入的变量已经过验证"
+        AppLanguage.ENGLISH -> "Ensure inserted variables are validated"
+        AppLanguage.ARABIC -> "تأكد من التحقق من المتغيرات المدرجة"
+    }
+    val secBase64Desc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Base64 不是加密"
+        AppLanguage.ENGLISH -> "Base64 is not encryption"
+        AppLanguage.ARABIC -> "Base64 ليس تشفيراً"
+    }
+    val secBase64Rec: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Base64 仅用于编码，不要用于安全目的"
+        AppLanguage.ENGLISH -> "Base64 is for encoding only, not for security"
+        AppLanguage.ARABIC -> "Base64 للترميز فقط، ليس لأغراض أمنية"
+    }
+
+    // ==================== 工具参数描述 ====================
+    val paramCodeToCheck: String get() = when (lang) {
+        AppLanguage.CHINESE -> "要检查的代码"
+        AppLanguage.ENGLISH -> "Code to check"
+        AppLanguage.ARABIC -> "الكود المراد فحصه"
+    }
+    val paramCodeLang: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码语言"
+        AppLanguage.ENGLISH -> "Code language"
+        AppLanguage.ARABIC -> "لغة الكود"
+    }
+    val paramCodeToScan: String get() = when (lang) {
+        AppLanguage.CHINESE -> "要扫描的代码"
+        AppLanguage.ENGLISH -> "Code to scan"
+        AppLanguage.ARABIC -> "الكود المراد مسحه"
+    }
+    val paramRequirement: String get() = when (lang) {
+        AppLanguage.CHINESE -> "功能需求描述"
+        AppLanguage.ENGLISH -> "Feature requirement description"
+        AppLanguage.ARABIC -> "وصف متطلبات الميزة"
+    }
+    val paramTargetLang: String get() = when (lang) {
+        AppLanguage.CHINESE -> "目标语言"
+        AppLanguage.ENGLISH -> "Target language"
+        AppLanguage.ARABIC -> "اللغة المستهدفة"
+    }
+    val paramContext: String get() = when (lang) {
+        AppLanguage.CHINESE -> "上下文信息，如现有代码"
+        AppLanguage.ENGLISH -> "Context info, e.g. existing code"
+        AppLanguage.ARABIC -> "معلومات السياق، مثل الكود الموجود"
+    }
+    val paramCodeWithErrors: String get() = when (lang) {
+        AppLanguage.CHINESE -> "包含错误的代码"
+        AppLanguage.ENGLISH -> "Code containing errors"
+        AppLanguage.ARABIC -> "الكود الذي يحتوي على أخطاء"
+    }
+    val paramErrorList: String get() = when (lang) {
+        AppLanguage.CHINESE -> "错误列表"
+        AppLanguage.ENGLISH -> "Error list"
+        AppLanguage.ARABIC -> "قائمة الأخطاء"
+    }
+    val paramCodeToRefactor: String get() = when (lang) {
+        AppLanguage.CHINESE -> "要重构的代码"
+        AppLanguage.ENGLISH -> "Code to refactor"
+        AppLanguage.ARABIC -> "الكود المراد إعادة هيكلته"
+    }
+    val paramRefactorGoals: String get() = when (lang) {
+        AppLanguage.CHINESE -> "重构目标"
+        AppLanguage.ENGLISH -> "Refactoring goals"
+        AppLanguage.ARABIC -> "أهداف إعادة الهيكلة"
+    }
+    val paramTestUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "测试页面 URL"
+        AppLanguage.ENGLISH -> "Test page URL"
+        AppLanguage.ARABIC -> "عنوان URL لصفحة الاختبار"
+    }
+    val paramConfigItems: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置项列表"
+        AppLanguage.ENGLISH -> "Config items list"
+        AppLanguage.ARABIC -> "قائمة عناصر التكوين"
+    }
+    val paramConfigValues: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置值"
+        AppLanguage.ENGLISH -> "Config values"
+        AppLanguage.ARABIC -> "قيم التكوين"
+    }
+    val paramKeywords: String get() = when (lang) {
+        AppLanguage.CHINESE -> "关键词"
+        AppLanguage.ENGLISH -> "Keywords"
+        AppLanguage.ARABIC -> "كلمات مفتاحية"
+    }
+    val paramSearchKeyword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索关键词"
+        AppLanguage.ENGLISH -> "Search keywords"
+        AppLanguage.ARABIC -> "كلمات البحث"
+    }
+    val paramSnippetCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码片段分类"
+        AppLanguage.ENGLISH -> "Snippet category"
+        AppLanguage.ARABIC -> "فئة مقتطف الكود"
+    }
+    val paramModuleIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块图标 (emoji)"
+        AppLanguage.ENGLISH -> "Module icon (emoji)"
+        AppLanguage.ARABIC -> "أيقونة الوحدة (emoji)"
+    }
+    val paramRunAt: String get() = when (lang) {
+        AppLanguage.CHINESE -> "执行时机"
+        AppLanguage.ENGLISH -> "Run timing"
+        AppLanguage.ARABIC -> "توقيت التنفيذ"
+    }
+    val paramModuleId: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块 ID"
+        AppLanguage.ENGLISH -> "Module ID"
+        AppLanguage.ARABIC -> "معرّف الوحدة"
+    }
+    val paramPreviewUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "预览页面 URL"
+        AppLanguage.ENGLISH -> "Preview page URL"
+        AppLanguage.ARABIC -> "عنوان URL لصفحة المعاينة"
+    }
+
+    // ==================== Agent 思考消息 ====================
+    val agentAnalyzing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在分析需求"
+        AppLanguage.ENGLISH -> "Analyzing requirement"
+        AppLanguage.ARABIC -> "تحليل المتطلبات"
+    }
+    val agentPlanning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "制定开发计划..."
+        AppLanguage.ENGLISH -> "Creating development plan..."
+        AppLanguage.ARABIC -> "إنشاء خطة التطوير..."
+    }
+    val agentCallingAi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "调用 AI 模型生成扩展模块代码..."
+        AppLanguage.ENGLISH -> "Calling AI model to generate module code..."
+        AppLanguage.ARABIC -> "استدعاء نموذج AI لتوليد كود الوحدة..."
+    }
+    val agentAiCallFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 调用失败"
+        AppLanguage.ENGLISH -> "AI call failed"
+        AppLanguage.ARABIC -> "فشل استدعاء AI"
+    }
+    val agentParsing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码生成完成，正在解析..."
+        AppLanguage.ENGLISH -> "Code generated, parsing..."
+        AppLanguage.ARABIC -> "تم توليد الكود، جاري التحليل..."
+    }
+    val agentParseFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无法解析 AI 生成的代码"
+        AppLanguage.ENGLISH -> "Failed to parse AI-generated code"
+        AppLanguage.ARABIC -> "فشل تحليل الكود المولّد بواسطة AI"
+    }
+    val agentSyntaxChecking: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在检查代码语法..."
+        AppLanguage.ENGLISH -> "Checking code syntax..."
+        AppLanguage.ARABIC -> "فحص قواعد الكود..."
+    }
+    val agentFoundErrors: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发现 %d 个语法错误，%d 个警告"
+        AppLanguage.ENGLISH -> "Found %d syntax errors, %d warnings"
+        AppLanguage.ARABIC -> "تم العثور على %d أخطاء نحوية، %d تحذيرات"
+    }
+    val agentAutoFixing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在尝试自动修复..."
+        AppLanguage.ENGLISH -> "Attempting auto-fix..."
+        AppLanguage.ARABIC -> "محاولة الإصلاح التلقائي..."
+    }
+    val agentErrorsFixed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "错误已修复"
+        AppLanguage.ENGLISH -> "Errors fixed"
+        AppLanguage.ARABIC -> "تم إصلاح الأخطاء"
+    }
+    val agentSyntaxPassed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "语法检查通过 [PASS]"
+        AppLanguage.ENGLISH -> "Syntax check passed [PASS]"
+        AppLanguage.ARABIC -> "اجتاز فحص القواعد [PASS]"
+    }
+    val agentSecurityScanning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在进行安全扫描..."
+        AppLanguage.ENGLISH -> "Running security scan..."
+        AppLanguage.ARABIC -> "تشغيل فحص أمني..."
+    }
+    val agentSecurityIssues: String get() = when (lang) {
+        AppLanguage.CHINESE -> "[!] 发现 %d 个安全问题，风险等级: %s"
+        AppLanguage.ENGLISH -> "[!] Found %d security issues, risk level: %s"
+        AppLanguage.ARABIC -> "[!] تم العثور على %d مشاكل أمنية، مستوى الخطر: %s"
+    }
+    val agentSecurityPassed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安全扫描通过 [PASS]"
+        AppLanguage.ENGLISH -> "Security scan passed [PASS]"
+        AppLanguage.ARABIC -> "اجتاز الفحص الأمني [PASS]"
+    }
+    val agentModuleCompleted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "[OK] 模块「%s」开发完成！"
+        AppLanguage.ENGLISH -> "[OK] Module \"%s\" development complete!"
+        AppLanguage.ARABIC -> "[OK] اكتمل تطوير الوحدة \"%s\"!"
+    }
+    val agentModuleGenerated: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已成功生成模块「%s」"
+        AppLanguage.ENGLISH -> "Successfully generated module \"%s\""
+        AppLanguage.ARABIC -> "تم توليد الوحدة \"%s\" بنجاح"
+    }
+    val agentAutoFixFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动修复失败，请手动检查代码"
+        AppLanguage.ENGLISH -> "Auto-fix failed, please check code manually"
+        AppLanguage.ARABIC -> "فشل الإصلاح التلقائي، يرجى فحص الكود يدوياً"
+    }
+    val agentRequestTimeout: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请求超时，请检查网络连接后重试"
+        AppLanguage.ENGLISH -> "Request timeout, please check network and retry"
+        AppLanguage.ARABIC -> "انتهت مهلة الطلب، يرجى التحقق من الشبكة وإعادة المحاولة"
+    }
+    val agentToolFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "工具 %s 执行失败: %s"
+        AppLanguage.ENGLISH -> "Tool %s failed: %s"
+        AppLanguage.ARABIC -> "فشلت الأداة %s: %s"
+    }
+    val versionMultiUi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持多种UI类型"
+        AppLanguage.ENGLISH -> "Supports multiple UI types"
+        AppLanguage.ARABIC -> "يدعم أنواع واجهات متعددة"
+    }
+    val versionV4Ui: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持交互/自动运行模式与独立窗口"
+        AppLanguage.ENGLISH -> "Interactive/Auto mode with independent window"
+        AppLanguage.ARABIC -> "وضع تفاعلي/تلقائي مع نافذة مستقلة"
+    }
+    val runModeInteractive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "交互模式"
+        AppLanguage.ENGLISH -> "Interactive"
+        AppLanguage.ARABIC -> "تفاعلي"
+    }
+    val runModeAuto: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动模式"
+        AppLanguage.ENGLISH -> "Auto"
+        AppLanguage.ARABIC -> "تلقائي"
+    }
+    val runModeInteractiveDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可在管理面板中操作简单UI，也可启动独立窗口使用完整UI"
+        AppLanguage.ENGLISH -> "Simple UI in management panel, or launch independent window for full UI"
+        AppLanguage.ARABIC -> "واجهة بسيطة في لوحة الإدارة، أو تشغيل نافذة مستقلة للواجهة الكاملة"
+    }
+    val runModeAutoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动加载运行，无UI操作界面，不可交互"
+        AppLanguage.ENGLISH -> "Auto-load and run, no UI, non-interactive"
+        AppLanguage.ARABIC -> "تحميل وتشغيل تلقائي، بدون واجهة، غير تفاعلي"
+    }
+    val runModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行方式"
+        AppLanguage.ENGLISH -> "Run Mode"
+        AppLanguage.ARABIC -> "وضع التشغيل"
+    }
+    val tagSelectedText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选中"
+        AppLanguage.ENGLISH -> "Selection"
+        AppLanguage.ARABIC -> "تحديد"
+    }
     val templateAutoRefresh: String get() = when (lang) {
         AppLanguage.CHINESE -> "自动刷新"
         AppLanguage.ENGLISH -> "Auto Refresh"
@@ -11244,6 +15226,18 @@ object Strings {
         AppLanguage.CHINESE -> "单击选择元素，双击屏蔽，去除页面烦人元素"
         AppLanguage.ENGLISH -> "Click to select, double-click to block annoying elements"
         AppLanguage.ARABIC -> "انقر للتحديد، انقر مرتين لحظر العناصر المزعجة"
+    }
+    
+    // ==================== 内置 Chrome 扩展 ====================
+    val builtinBewlyCat: String get() = when (lang) {
+        AppLanguage.CHINESE -> "BewlyCat (B站增强)"
+        AppLanguage.ENGLISH -> "BewlyCat (Bilibili Enhanced)"
+        AppLanguage.ARABIC -> "BewlyCat (تحسين Bilibili)"
+    }
+    val builtinBewlyCatDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "为 B站提供美观的界面增强，优化首页、搜索、视频页面等"
+        AppLanguage.ENGLISH -> "Beautiful UI enhancements for Bilibili: improved homepage, search, video pages and more"
+        AppLanguage.ARABIC -> "تحسينات واجهة جميلة لـ Bilibili: الصفحة الرئيسية والبحث وصفحات الفيديو والمزيد"
     }
     
     // ==================== 模块触发条件 ====================
@@ -11995,6 +15989,16 @@ object Strings {
         AppLanguage.ENGLISH -> "Test CSS style modification effects"
         AppLanguage.ARABIC -> "اختبار تأثيرات تعديل أنماط CSS"
     }
+    val testPageApi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "API测试页"
+        AppLanguage.ENGLISH -> "API Test Page"
+        AppLanguage.ARABIC -> "صفحة اختبار API"
+    }
+    val testPageApiDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "测试网络请求和API调用"
+        AppLanguage.ENGLISH -> "Test network requests and API calls"
+        AppLanguage.ARABIC -> "اختبار طلبات الشبكة واستدعاءات API"
+    }
     
     // ==================== 模块方案预设 ====================
     val presetReading: String get() = when (lang) {
@@ -12342,22 +16346,22 @@ object Strings {
     }
     
     // ==================== AI 功能场景 ====================
-    val featureHtmlCoding: String get() = when (lang) {
+    val featureAiCoding: String get() = when (lang) {
         AppLanguage.CHINESE -> "HTML 编程"
         AppLanguage.ENGLISH -> "HTML Coding"
         AppLanguage.ARABIC -> "برمجة HTML"
     }
-    val featureHtmlCodingDesc: String get() = when (lang) {
+    val featureAiCodingDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "AI 辅助生成和修改 HTML/CSS/JS 代码"
         AppLanguage.ENGLISH -> "AI-assisted HTML/CSS/JS code generation and modification"
         AppLanguage.ARABIC -> "إنشاء وتعديل كود HTML/CSS/JS بمساعدة الذكاء الاصطناعي"
     }
-    val featureHtmlCodingImage: String get() = when (lang) {
+    val featureAiCodingImage: String get() = when (lang) {
         AppLanguage.CHINESE -> "HTML 编程（图像）"
         AppLanguage.ENGLISH -> "HTML Coding (Image)"
         AppLanguage.ARABIC -> "برمجة HTML (صورة)"
     }
-    val featureHtmlCodingImageDesc: String get() = when (lang) {
+    val featureAiCodingImageDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "HTML 编程中的图像生成功能"
         AppLanguage.ENGLISH -> "Image generation for HTML coding"
         AppLanguage.ARABIC -> "إنشاء الصور لبرمجة HTML"
@@ -12667,6 +16671,30 @@ object Strings {
         AppLanguage.CHINESE -> "全屏模式下仍显示状态栏，可解决导航栏问题"
         AppLanguage.ENGLISH -> "Show status bar in fullscreen mode, can fix navigation bar issues"
         AppLanguage.ARABIC -> "إظهار شريط الحالة في وضع ملء الشاشة، يمكن أن يحل مشاكل شريط التنقل"
+    }
+    
+    val showNavigationBar: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示导航栏"
+        AppLanguage.ENGLISH -> "Show Navigation Bar"
+        AppLanguage.ARABIC -> "إظهار شريط التنقل"
+    }
+    
+    val showNavigationBarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全屏模式下仍显示底部导航栏（返回、主页、最近任务）"
+        AppLanguage.ENGLISH -> "Keep bottom navigation bar visible in fullscreen mode (Back, Home, Recents)"
+        AppLanguage.ARABIC -> "إبقاء شريط التنقل السفلي مرئيًا في وضع ملء الشاشة (رجوع، الرئيسية، الأخيرة)"
+    }
+    
+    val showToolbar: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示顶部导航栏"
+        AppLanguage.ENGLISH -> "Show Top Toolbar"
+        AppLanguage.ARABIC -> "إظهار شريط الأدوات العلوي"
+    }
+    
+    val showToolbarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全屏模式下仍显示浏览器顶部导航栏（标题、URL、返回/前进/刷新按钮）"
+        AppLanguage.ENGLISH -> "Keep browser toolbar visible in fullscreen mode (title, URL, back/forward/refresh)"
+        AppLanguage.ARABIC -> "إبقاء شريط أدوات المتصفح العلوي مرئيًا في وضع ملء الشاشة (العنوان، الرابط، أزرار التنقل)"
     }
     
     val statusBarStyleConfigLabel: String get() = when (lang) {
@@ -12989,9 +17017,9 @@ object Strings {
     }
     
     val connectionSuccess: String get() = when (lang) {
-        AppLanguage.CHINESE -> "✓ 连接成功"
-        AppLanguage.ENGLISH -> "✓ Connection successful"
-        AppLanguage.ARABIC -> "✓ الاتصال ناجح"
+        AppLanguage.CHINESE -> "[OK] 连接成功"
+        AppLanguage.ENGLISH -> "[OK] Connection successful"
+        AppLanguage.ARABIC -> "[OK] الاتصال ناجح"
     }
     
     val test: String get() = when (lang) {
@@ -13222,12 +17250,6 @@ object Strings {
         AppLanguage.CHINESE -> "按住体验"
         AppLanguage.ENGLISH -> "Hold to experience"
         AppLanguage.ARABIC -> "اضغط مع الاستمرار للتجربة"
-    }
-    
-    val enhancedVersion: String get() = when (lang) {
-        AppLanguage.CHINESE -> "强化版"
-        AppLanguage.ENGLISH -> "Enhanced"
-        AppLanguage.ARABIC -> "محسّن"
     }
     
     val primaryColor: String get() = when (lang) {
@@ -13686,6 +17708,134 @@ object Strings {
         AppLanguage.ARABIC -> "بنية APK"
     }
 
+    // ==================== 自定义签名相关字符串 ====================
+    
+    val customSigning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义签名"
+        AppLanguage.ENGLISH -> "Custom Signing"
+        AppLanguage.ARABIC -> "التوقيع المخصص"
+    }
+    
+    val customSigningDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入自己的签名证书，使打包的 APK 使用您的签名"
+        AppLanguage.ENGLISH -> "Import your own signing certificate for built APKs"
+        AppLanguage.ARABIC -> "استيراد شهادة التوقيع الخاصة بك لملفات APK المبنية"
+    }
+    
+    val currentSigningStatus: String get() = when (lang) {
+        AppLanguage.CHINESE -> "当前签名状态"
+        AppLanguage.ENGLISH -> "Current Signing Status"
+        AppLanguage.ARABIC -> "حالة التوقيع الحالية"
+    }
+    
+    val signingTypeAutoGenerated: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动生成的证书"
+        AppLanguage.ENGLISH -> "Auto-generated certificate"
+        AppLanguage.ARABIC -> "شهادة مولدة تلقائيًا"
+    }
+    
+    val signingTypeCustom: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义证书"
+        AppLanguage.ENGLISH -> "Custom certificate"
+        AppLanguage.ARABIC -> "شهادة مخصصة"
+    }
+    
+    val signingTypeAndroidKeyStore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Android 系统密钥库"
+        AppLanguage.ENGLISH -> "Android KeyStore"
+        AppLanguage.ARABIC -> "مخزن مفاتيح أندرويد"
+    }
+    
+    val importKeystore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入签名文件"
+        AppLanguage.ENGLISH -> "Import Keystore"
+        AppLanguage.ARABIC -> "استيراد ملف التوقيع"
+    }
+    
+    val exportKeystore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导出签名文件"
+        AppLanguage.ENGLISH -> "Export Keystore"
+        AppLanguage.ARABIC -> "تصدير ملف التوقيع"
+    }
+    
+    val removeCustomKeystore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除自定义证书"
+        AppLanguage.ENGLISH -> "Remove Custom Certificate"
+        AppLanguage.ARABIC -> "إزالة الشهادة المخصصة"
+    }
+    
+    val keystorePassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "密钥库密码"
+        AppLanguage.ENGLISH -> "Keystore Password"
+        AppLanguage.ARABIC -> "كلمة مرور مخزن المفاتيح"
+    }
+    
+    val keystorePasswordHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入签名文件的密码"
+        AppLanguage.ENGLISH -> "Enter keystore password"
+        AppLanguage.ARABIC -> "أدخل كلمة مرور مخزن المفاتيح"
+    }
+    
+    val exportPassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导出密码"
+        AppLanguage.ENGLISH -> "Export Password"
+        AppLanguage.ARABIC -> "كلمة مرور التصدير"
+    }
+    
+    val exportPasswordHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设置导出文件的密码"
+        AppLanguage.ENGLISH -> "Set password for exported file"
+        AppLanguage.ARABIC -> "تعيين كلمة مرور للملف المصدر"
+    }
+    
+    val keystoreImportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "签名证书导入成功"
+        AppLanguage.ENGLISH -> "Keystore imported successfully"
+        AppLanguage.ARABIC -> "تم استيراد مخزن المفاتيح بنجاح"
+    }
+    
+    val keystoreImportFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "签名证书导入失败，请检查密码是否正确"
+        AppLanguage.ENGLISH -> "Keystore import failed, please check password"
+        AppLanguage.ARABIC -> "فشل استيراد مخزن المفاتيح، يرجى التحقق من كلمة المرور"
+    }
+    
+    val keystoreExportSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "签名证书导出成功"
+        AppLanguage.ENGLISH -> "Keystore exported successfully"
+        AppLanguage.ARABIC -> "تم تصدير مخزن المفاتيح بنجاح"
+    }
+    
+    val keystoreExportFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "签名证书导出失败"
+        AppLanguage.ENGLISH -> "Keystore export failed"
+        AppLanguage.ARABIC -> "فشل تصدير مخزن المفاتيح"
+    }
+    
+    val keystoreRemoveSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已删除自定义证书，将使用自动生成的证书"
+        AppLanguage.ENGLISH -> "Custom certificate removed, will use auto-generated certificate"
+        AppLanguage.ARABIC -> "تمت إزالة الشهادة المخصصة، سيتم استخدام الشهادة المولدة تلقائيًا"
+    }
+    
+    val keystoreRemoveConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要删除自定义签名证书吗？删除后将使用自动生成的证书进行签名。"
+        AppLanguage.ENGLISH -> "Are you sure you want to remove the custom certificate? Auto-generated certificate will be used for signing."
+        AppLanguage.ARABIC -> "هل أنت متأكد من إزالة الشهادة المخصصة؟ سيتم استخدام الشهادة المولدة تلقائيًا للتوقيع."
+    }
+    
+    val supportedKeystoreFormats: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 .p12 / .pfx / .jks / .keystore 格式"
+        AppLanguage.ENGLISH -> "Supports .p12 / .pfx / .jks / .keystore formats"
+        AppLanguage.ARABIC -> "يدعم صيغ .p12 / .pfx / .jks / .keystore"
+    }
+    
+    val customSigningNote: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义签名为全局设置，导入后所有新打包的 APK 都将使用此证书签名"
+        AppLanguage.ENGLISH -> "Custom signing is a global setting. All newly built APKs will use this certificate"
+        AppLanguage.ARABIC -> "التوقيع المخصص إعداد عام. جميع ملفات APK المبنية حديثًا ستستخدم هذه الشهادة"
+    }
+
     // ==================== User-Agent 伪装相关字符串 ====================
     
     val userAgentMode: String get() = when (lang) {
@@ -13823,12 +17973,6 @@ object Strings {
     }
 
     // ==================== 主题设置相关字符串（补充） ====================
-    
-    val selectUiStyleHint: String get() = when (lang) {
-        AppLanguage.CHINESE -> "选择界面视觉风格"
-        AppLanguage.ENGLISH -> "Select UI visual style"
-        AppLanguage.ARABIC -> "اختر نمط واجهة المستخدم المرئي"
-    }
     
     val particle: String get() = when (lang) {
         AppLanguage.CHINESE -> "粒子"
@@ -14466,6 +18610,127 @@ object Strings {
         AppLanguage.ARABIC -> "ℹ️ ملاحظة: تتطلب ميزات التنكر إذن مسؤول الجهاز للعمل بالكامل. قد تكون ميزة الأيقونات المتعددة محدودة على بعض الأجهزة."
     }
     
+    // ==================== 悬浮小窗 ====================
+    val floatingWindowTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮小窗"
+        AppLanguage.ENGLISH -> "Floating Window"
+        AppLanguage.ARABIC -> "النافذة العائمة"
+    }
+    
+    val floatingWindowDescription: String get() = when (lang) {
+        AppLanguage.CHINESE -> "以悬浮窗模式运行，可自由调整大小和透明度"
+        AppLanguage.ENGLISH -> "Run in floating window mode with adjustable size and opacity"
+        AppLanguage.ARABIC -> "التشغيل في وضع النافذة العائمة مع حجم وشفافية قابلين للتعديل"
+    }
+    
+    val floatingWindowSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "窗口大小"
+        AppLanguage.ENGLISH -> "Window Size"
+        AppLanguage.ARABIC -> "حجم النافذة"
+    }
+    
+    val floatingWindowSizeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设置悬浮窗占屏幕的百分比（50%-100%）"
+        AppLanguage.ENGLISH -> "Set the floating window size as percentage of screen (50%-100%)"
+        AppLanguage.ARABIC -> "تعيين حجم النافذة العائمة كنسبة مئوية من الشاشة (50%-100%)"
+    }
+    
+    val floatingWindowOpacity: String get() = when (lang) {
+        AppLanguage.CHINESE -> "透明度"
+        AppLanguage.ENGLISH -> "Opacity"
+        AppLanguage.ARABIC -> "الشفافية"
+    }
+    
+    val floatingWindowOpacityDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设置悬浮窗的透明度（30%-100%）"
+        AppLanguage.ENGLISH -> "Set the floating window opacity (30%-100%)"
+        AppLanguage.ARABIC -> "تعيين شفافية النافذة العائمة (30%-100%)"
+    }
+    
+    val floatingWindowShowTitleBar: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示标题栏"
+        AppLanguage.ENGLISH -> "Show Title Bar"
+        AppLanguage.ARABIC -> "عرض شريط العنوان"
+    }
+    
+    val floatingWindowShowTitleBarDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示标题栏以便拖拽移动窗口位置"
+        AppLanguage.ENGLISH -> "Show title bar to drag and move window position"
+        AppLanguage.ARABIC -> "عرض شريط العنوان لسحب وتحريك موضع النافذة"
+    }
+    
+    val floatingWindowStartMinimized: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动时最小化"
+        AppLanguage.ENGLISH -> "Start Minimized"
+        AppLanguage.ARABIC -> "البدء مصغرًا"
+    }
+    
+    val floatingWindowStartMinimizedDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动时自动最小化为悬浮按钮，点击展开"
+        AppLanguage.ENGLISH -> "Auto minimize to floating button on start, tap to expand"
+        AppLanguage.ARABIC -> "تصغير تلقائي إلى زر عائم عند البدء، انقر للتوسيع"
+    }
+    
+    val floatingWindowRememberPosition: String get() = when (lang) {
+        AppLanguage.CHINESE -> "记住位置"
+        AppLanguage.ENGLISH -> "Remember Position"
+        AppLanguage.ARABIC -> "تذكر الموضع"
+    }
+    
+    val floatingWindowRememberPositionDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下次打开时恢复到上次窗口位置"
+        AppLanguage.ENGLISH -> "Restore to last window position on next open"
+        AppLanguage.ARABIC -> "الاستعادة إلى آخر موضع للنافذة عند الفتح التالي"
+    }
+    
+    val floatingWindowNotificationChannel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮窗服务"
+        AppLanguage.ENGLISH -> "Floating Window Service"
+        AppLanguage.ARABIC -> "خدمة النافذة العائمة"
+    }
+    
+    val floatingWindowNotificationChannelDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮小窗运行时的通知"
+        AppLanguage.ENGLISH -> "Notifications for floating window service"
+        AppLanguage.ARABIC -> "إشعارات خدمة النافذة العائمة"
+    }
+    
+    val floatingWindowNotificationTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮窗运行中"
+        AppLanguage.ENGLISH -> "Floating Window Active"
+        AppLanguage.ARABIC -> "النافذة العائمة نشطة"
+    }
+    
+    val floatingWindowNotificationContent: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%s 正在悬浮窗中运行"
+        AppLanguage.ENGLISH -> "%s is running in floating window"
+        AppLanguage.ARABIC -> "%s يعمل في النافذة العائمة"
+    }
+    
+    val floatingWindowNotificationContentDefault: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用正在悬浮窗中运行"
+        AppLanguage.ENGLISH -> "App is running in floating window"
+        AppLanguage.ARABIC -> "التطبيق يعمل في النافذة العائمة"
+    }
+    
+    val floatingWindowClose: String get() = when (lang) {
+        AppLanguage.CHINESE -> "关闭"
+        AppLanguage.ENGLISH -> "Close"
+        AppLanguage.ARABIC -> "إغلاق"
+    }
+    
+    val floatingWindowPermissionRequired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "悬浮窗需要\"显示在其他应用上层\"权限"
+        AppLanguage.ENGLISH -> "Floating window requires \"Display over other apps\" permission"
+        AppLanguage.ARABIC -> "تتطلب النافذة العائمة إذن \"العرض فوق التطبيقات الأخرى\""
+    }
+    
+    val floatingWindowGoToSettings: String get() = when (lang) {
+        AppLanguage.CHINESE -> "前往设置授权"
+        AppLanguage.ENGLISH -> "Go to Settings"
+        AppLanguage.ARABIC -> "الذهاب إلى الإعدادات"
+    }
+    
     // ==================== 后台运行 ====================
     val backgroundRunTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "Background Run"
@@ -14698,6 +18963,24 @@ object Strings {
         AppLanguage.ARABIC -> "%d سكريبتات"
     }
     
+    val scriptImportFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入 JS 文件"
+        AppLanguage.ENGLISH -> "Import JS File"
+        AppLanguage.ARABIC -> "استيراد ملف JS"
+    }
+    
+    val scriptFileLoaded: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已导入文件 · %d 行 · %s"
+        AppLanguage.ENGLISH -> "File imported · %d lines · %s"
+        AppLanguage.ARABIC -> "تم استيراد الملف · %d سطر · %s"
+    }
+    
+    val scriptClearCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清除代码"
+        AppLanguage.ENGLISH -> "Clear Code"
+        AppLanguage.ARABIC -> "مسح الكود"
+    }
+    
     // ==================== 应用分类 ====================
     val allApps: String get() = when (lang) {
         AppLanguage.CHINESE -> "全部"
@@ -14831,6 +19114,30 @@ object Strings {
         AppLanguage.CHINESE -> "Vite + 原生 JS 天气查询应用，无框架依赖"
         AppLanguage.ENGLISH -> "Vite + Vanilla JS weather app, no framework dependency"
         AppLanguage.ARABIC -> "تطبيق طقس Vite + JS أصلي، بدون إطار عمل"
+    }
+    
+    val sampleLeafletBenchName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "长椅探索者"
+        AppLanguage.ENGLISH -> "Bench Explorer"
+        AppLanguage.ARABIC -> "مستكشف المقاعد"
+    }
+    
+    val sampleLeafletBenchDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Leaflet 地图应用，获取定位搜索附近长椅并导航"
+        AppLanguage.ENGLISH -> "Leaflet map app, find nearby benches with GPS and routing"
+        AppLanguage.ARABIC -> "تطبيق خريطة Leaflet، ابحث عن المقاعد القريبة مع GPS والتوجيه"
+    }
+    
+    val sampleLeafletBenchTagMap: String get() = when (lang) {
+        AppLanguage.CHINESE -> "地图"
+        AppLanguage.ENGLISH -> "Map"
+        AppLanguage.ARABIC -> "خريطة"
+    }
+    
+    val sampleLeafletBenchTagGPS: String get() = when (lang) {
+        AppLanguage.CHINESE -> "定位"
+        AppLanguage.ENGLISH -> "GPS"
+        AppLanguage.ARABIC -> "GPS"
     }
     
     // ==================== 公告确认 ====================
@@ -15555,6 +19862,80 @@ object Strings {
         AppLanguage.ARABIC -> "إعادة تحميل الصفحة"
     }
     
+    // ==================== 扩展模块 Tab 管理 ====================
+    
+    val extensionModulesTab: String get() = when (lang) {
+        AppLanguage.CHINESE -> "扩展模块"
+        AppLanguage.ENGLISH -> "Extensions"
+        AppLanguage.ARABIC -> "الإضافات"
+    }
+    
+    val userScriptsTab: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浏览器扩展"
+        AppLanguage.ENGLISH -> "Browser Extensions"
+        AppLanguage.ARABIC -> "إضافات المتصفح"
+    }
+    
+    val noUserScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无浏览器扩展"
+        AppLanguage.ENGLISH -> "No browser extensions"
+        AppLanguage.ARABIC -> "لا توجد إضافات متصفح"
+    }
+    
+    val noUserScriptsHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入油猴脚本 (.user.js) 或 Chrome 扩展 (.crx/.zip)"
+        AppLanguage.ENGLISH -> "Import userscripts (.user.js) or Chrome extensions (.crx/.zip)"
+        AppLanguage.ARABIC -> "استيراد سكريبتات (.user.js) أو إضافات كروم (.crx/.zip)"
+    }
+    
+    val viewSourceCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "查看源码"
+        AppLanguage.ENGLISH -> "View Source"
+        AppLanguage.ARABIC -> "عرض المصدر"
+    }
+    
+    val cannotReadFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无法读取文件内容"
+        AppLanguage.ENGLISH -> "Cannot read file content"
+        AppLanguage.ARABIC -> "لا يمكن قراءة محتوى الملف"
+    }
+    
+    val imageFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片文件（不支持预览）"
+        AppLanguage.ENGLISH -> "Image file (preview not supported)"
+        AppLanguage.ARABIC -> "ملف صورة (المعاينة غير مدعومة)"
+    }
+    
+    val binaryFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "二进制文件（不支持预览）"
+        AppLanguage.ENGLISH -> "Binary file (preview not supported)"
+        AppLanguage.ARABIC -> "ملف ثنائي (المعاينة غير مدعومة)"
+    }
+    
+    val scriptEnabledStatus: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已启用"
+        AppLanguage.ENGLISH -> "Enabled"
+        AppLanguage.ARABIC -> "مفعل"
+    }
+    
+    val grantedApis: String get() = when (lang) {
+        AppLanguage.CHINESE -> "授权 API"
+        AppLanguage.ENGLISH -> "Granted APIs"
+        AppLanguage.ARABIC -> "واجهات API الممنوحة"
+    }
+    
+    val userscriptsCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%d 个脚本"
+        AppLanguage.ENGLISH -> "%d scripts"
+        AppLanguage.ARABIC -> "%d سكريبت"
+    }
+    
+    val extensionsCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%d 个模块"
+        AppLanguage.ENGLISH -> "%d modules"
+        AppLanguage.ARABIC -> "%d وحدة"
+    }
+    
     // ==================== Hosts 广告拦截 ====================
     val hostsAdBlock: String get() = when (lang) {
         AppLanguage.CHINESE -> "Hosts 广告拦截"
@@ -15720,7 +20101,7 @@ object Strings {
     }
     
     val galleryAddMedia: String get() = when (lang) {
-        AppLanguage.CHINESE -> "Add media"
+        AppLanguage.CHINESE -> "添加媒体"
         AppLanguage.ENGLISH -> "Add Media"
         AppLanguage.ARABIC -> "إضافة وسائط"
     }
@@ -16580,11 +20961,6 @@ object Strings {
         AppLanguage.ENGLISH -> "Anti-Track"
         AppLanguage.ARABIC -> "مكافحة التتبع"
     }
-    val tagBlock: String get() = when (lang) {
-        AppLanguage.CHINESE -> "屏蔽"
-        AppLanguage.ENGLISH -> "Block"
-        AppLanguage.ARABIC -> "حظر"
-    }
     val tagAd: String get() = when (lang) {
         AppLanguage.CHINESE -> "广告"
         AppLanguage.ENGLISH -> "Ad"
@@ -16783,11 +21159,6 @@ object Strings {
         AppLanguage.CHINESE -> "导出"
         AppLanguage.ENGLISH -> "Export"
         AppLanguage.ARABIC -> "تصدير"
-    }
-    val tagButton: String get() = when (lang) {
-        AppLanguage.CHINESE -> "按钮"
-        AppLanguage.ENGLISH -> "Button"
-        AppLanguage.ARABIC -> "زر"
     }
     val tagFloating: String get() = when (lang) {
         AppLanguage.CHINESE -> "悬浮"
@@ -17253,11 +21624,6 @@ object Strings {
         AppLanguage.CHINESE -> "底部"
         AppLanguage.ENGLISH -> "Bottom"
         AppLanguage.ARABIC -> "أسفل"
-    }
-    val tagAuto: String get() = when (lang) {
-        AppLanguage.CHINESE -> "自动"
-        AppLanguage.ENGLISH -> "Auto"
-        AppLanguage.ARABIC -> "تلقائي"
     }
     val tagBackToTop: String get() = when (lang) {
         AppLanguage.CHINESE -> "返回顶部"
@@ -17747,6 +22113,324 @@ object Strings {
         AppLanguage.ARABIC -> "يعتمد على المزود"
     }
     
+    // ============ Provider Category ============
+    val providerCategoryRecommended: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推荐"
+        AppLanguage.ENGLISH -> "Recommended"
+        AppLanguage.ARABIC -> "موصى به"
+    }
+    val providerCategoryInternational: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国际供应商"
+        AppLanguage.ENGLISH -> "International"
+        AppLanguage.ARABIC -> "دولي"
+    }
+    val providerCategoryChinese: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国内供应商"
+        AppLanguage.ENGLISH -> "Chinese"
+        AppLanguage.ARABIC -> "صيني"
+    }
+    val providerCategoryAggregator: String get() = when (lang) {
+        AppLanguage.CHINESE -> "聚合平台"
+        AppLanguage.ENGLISH -> "Aggregator"
+        AppLanguage.ARABIC -> "منصة تجميع"
+    }
+    val providerCategorySelfHosted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "本地/自托管"
+        AppLanguage.ENGLISH -> "Self-Hosted"
+        AppLanguage.ARABIC -> "استضافة ذاتية"
+    }
+    val providerCategoryCustom: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义"
+        AppLanguage.ENGLISH -> "Custom"
+        AppLanguage.ARABIC -> "مخصص"
+    }
+    
+    // ============ New AI Providers (LiteLLM) ============
+    
+    // --- Mistral AI ---
+    val providerMistral: String get() = "Mistral AI"
+    val providerMistralDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "欧洲领先 AI 公司，Mistral Large 系列推理能力强，支持多语言和代码生成"
+        AppLanguage.ENGLISH -> "Leading European AI company. Mistral Large series with strong reasoning, multilingual and code generation support"
+        AppLanguage.ARABIC -> "شركة ذكاء اصطناعي أوروبية رائدة. سلسلة Mistral Large مع استدلال قوي ودعم متعدد اللغات وتوليد الكود"
+    }
+    val providerMistralPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Mistral Large 约 \$2/百万 token，有免费模型"
+        AppLanguage.ENGLISH -> "Mistral Large ~\$2/M tokens, free models available"
+        AppLanguage.ARABIC -> "Mistral Large حوالي \$2/مليون رمز، نماذج مجانية متاحة"
+    }
+    
+    // --- Cohere ---
+    val providerCohere: String get() = "Cohere"
+    val providerCohereDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "企业级 AI 平台，Command R+ 系列擅长 RAG 和企业搜索，支持 100+ 语言"
+        AppLanguage.ENGLISH -> "Enterprise AI platform. Command R+ series excels at RAG and enterprise search, supports 100+ languages"
+        AppLanguage.ARABIC -> "منصة ذكاء اصطناعي للمؤسسات. سلسلة Command R+ متميزة في RAG والبحث المؤسسي، تدعم 100+ لغة"
+    }
+    val providerCoherePricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Command R+ 约 \$2.5/百万 token"
+        AppLanguage.ENGLISH -> "Command R+ ~\$2.5/M tokens"
+        AppLanguage.ARABIC -> "Command R+ حوالي \$2.5/مليون رمز"
+    }
+    
+    // --- AI21 ---
+    val providerAI21: String get() = "AI21 Labs"
+    val providerAI21Desc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "以色列 AI 公司，Jamba 系列基于 SSM-Transformer 混合架构，长上下文处理出色"
+        AppLanguage.ENGLISH -> "Israeli AI company. Jamba series based on SSM-Transformer hybrid, excels at long context processing"
+        AppLanguage.ARABIC -> "شركة ذكاء اصطناعي إسرائيلية. سلسلة Jamba مبنية على هجين SSM-Transformer، متميزة في معالجة السياق الطويل"
+    }
+    val providerAI21Pricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Jamba 系列约 \$2/百万 token"
+        AppLanguage.ENGLISH -> "Jamba series ~\$2/M tokens"
+        AppLanguage.ARABIC -> "سلسلة Jamba حوالي \$2/مليون رمز"
+    }
+    
+    // --- Groq ---
+    val providerGroq: String get() = "Groq"
+    val providerGroqDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "超快推理引擎，基于 LPU 硬件加速。响应速度极快，适合实时对话场景"
+        AppLanguage.ENGLISH -> "Ultra-fast inference engine powered by LPU hardware. Extremely fast response, ideal for real-time chat"
+        AppLanguage.ARABIC -> "محرك استدلال فائق السرعة مدعوم بأجهزة LPU. استجابة سريعة للغاية، مثالي للدردشة في الوقت الفعلي"
+    }
+    val providerGroqPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，价格低廉"
+        AppLanguage.ENGLISH -> "Free tier available, very affordable"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، بأسعار معقولة جداً"
+    }
+    
+    // --- Cerebras ---
+    val providerCerebras: String get() = "Cerebras"
+    val providerCerebrasDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "晶圆级芯片推理，速度极快。支持 Llama 等开源模型的超高速推理"
+        AppLanguage.ENGLISH -> "Wafer-scale chip inference, extremely fast. Supports ultra-fast inference for Llama and other open-source models"
+        AppLanguage.ARABIC -> "استدلال على مستوى الرقاقة، سريع للغاية. يدعم الاستدلال فائق السرعة لـ Llama ونماذج مفتوحة المصدر أخرى"
+    }
+    val providerCerebrasPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，按量计费"
+        AppLanguage.ENGLISH -> "Free tier available, pay per usage"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، الدفع حسب الاستخدام"
+    }
+    
+    // --- SambaNova ---
+    val providerSambanova: String get() = "SambaNova"
+    val providerSambanovaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 芯片公司，提供高速推理服务。支持 Llama、DeepSeek 等开源模型"
+        AppLanguage.ENGLISH -> "AI chip company providing high-speed inference. Supports Llama, DeepSeek and other open-source models"
+        AppLanguage.ARABIC -> "شركة شرائح ذكاء اصطناعي توفر استدلال عالي السرعة. تدعم Llama وDeepSeek ونماذج مفتوحة المصدر أخرى"
+    }
+    val providerSambanovaPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，价格低廉"
+        AppLanguage.ENGLISH -> "Free tier available, affordable pricing"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، تسعير معقول"
+    }
+    
+    // --- Together AI ---
+    val providerTogether: String get() = "Together AI"
+    val providerTogetherDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开源模型聚合平台，支持数百种开源模型。OpenAI 兼容接口，支持微调"
+        AppLanguage.ENGLISH -> "Open-source model aggregator, supports hundreds of models. OpenAI-compatible API with fine-tuning support"
+        AppLanguage.ARABIC -> "منصة تجميع نماذج مفتوحة المصدر، تدعم مئات النماذج. واجهة متوافقة مع OpenAI مع دعم الضبط الدقيق"
+    }
+    val providerTogetherPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "按模型计费，开源模型价格低"
+        AppLanguage.ENGLISH -> "Pay per model, low prices for open-source models"
+        AppLanguage.ARABIC -> "الدفع لكل نموذج، أسعار منخفضة للنماذج مفتوحة المصدر"
+    }
+    
+    // --- Perplexity ---
+    val providerPerplexity: String get() = "Perplexity"
+    val providerPerplexityDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 搜索引擎，Sonar 系列模型自带在线搜索能力，适合需要实时信息的场景"
+        AppLanguage.ENGLISH -> "AI search engine. Sonar series models with built-in web search, ideal for real-time information needs"
+        AppLanguage.ARABIC -> "محرك بحث ذكاء اصطناعي. سلسلة Sonar مع بحث ويب مدمج، مثالي لاحتياجات المعلومات في الوقت الفعلي"
+    }
+    val providerPerplexityPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Sonar Pro 约 \$3/百万 token + 搜索费用"
+        AppLanguage.ENGLISH -> "Sonar Pro ~\$3/M tokens + search costs"
+        AppLanguage.ARABIC -> "Sonar Pro حوالي \$3/مليون رمز + تكاليف البحث"
+    }
+    
+    // --- Fireworks AI ---
+    val providerFireworks: String get() = "Fireworks AI"
+    val providerFireworksDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高性能推理平台，支持多种开源模型。专注低延迟推理优化"
+        AppLanguage.ENGLISH -> "High-performance inference platform with multiple open-source models. Focuses on low-latency inference optimization"
+        AppLanguage.ARABIC -> "منصة استدلال عالية الأداء مع نماذج مفتوحة المصدر متعددة. تركز على تحسين الاستدلال منخفض الكمون"
+    }
+    val providerFireworksPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "按模型计费，价格有竞争力"
+        AppLanguage.ENGLISH -> "Pay per model, competitive pricing"
+        AppLanguage.ARABIC -> "الدفع لكل نموذج، تسعير تنافسي"
+    }
+    
+    // --- DeepInfra ---
+    val providerDeepInfra: String get() = "DeepInfra"
+    val providerDeepInfraDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开源模型推理平台，支持数百种模型。OpenAI 兼容接口，价格低廉"
+        AppLanguage.ENGLISH -> "Open-source model inference platform, supports hundreds of models. OpenAI-compatible API, affordable pricing"
+        AppLanguage.ARABIC -> "منصة استدلال نماذج مفتوحة المصدر، تدعم مئات النماذج. واجهة متوافقة مع OpenAI، تسعير معقول"
+    }
+    val providerDeepInfraPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "按量计费，价格低廉"
+        AppLanguage.ENGLISH -> "Pay per usage, affordable pricing"
+        AppLanguage.ARABIC -> "الدفع حسب الاستخدام، تسعير معقول"
+    }
+    
+    // --- Novita AI ---
+    val providerNovita: String get() = "Novita AI"
+    val providerNovitaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 模型推理平台，支持 LLM 和图像生成模型。OpenAI 兼容接口"
+        AppLanguage.ENGLISH -> "AI model inference platform, supports LLM and image generation models. OpenAI-compatible API"
+        AppLanguage.ARABIC -> "منصة استدلال نماذج الذكاء الاصطناعي، تدعم LLM ونماذج توليد الصور. واجهة متوافقة مع OpenAI"
+    }
+    val providerNovitaPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "按量计费，价格有竞争力"
+        AppLanguage.ENGLISH -> "Pay per usage, competitive pricing"
+        AppLanguage.ARABIC -> "الدفع حسب الاستخدام، تسعير تنافسي"
+    }
+    
+    // --- Moonshot/Kimi ---
+    val providerMoonshot: String get() = when (lang) {
+        AppLanguage.CHINESE -> "月之暗面/Kimi"
+        AppLanguage.ENGLISH -> "Moonshot/Kimi"
+        AppLanguage.ARABIC -> "Moonshot/Kimi"
+    }
+    val providerMoonshotDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国产大模型，Kimi 系列擅长长文本处理（200K+ 上下文），编程能力强"
+        AppLanguage.ENGLISH -> "Chinese LLM, Kimi series excels at long text processing (200K+ context), strong coding ability"
+        AppLanguage.ARABIC -> "نموذج لغوي صيني كبير، سلسلة Kimi متميزة في معالجة النصوص الطويلة (200K+ سياق)، قدرة برمجة قوية"
+    }
+    val providerMoonshotPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，约 ¥12/百万 token"
+        AppLanguage.ENGLISH -> "Free tier available, ~¥12/M tokens"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، حوالي ¥12/مليون رمز"
+    }
+    
+    // --- Baichuan ---
+    val providerBaichuan: String get() = when (lang) {
+        AppLanguage.CHINESE -> "百川智能"
+        AppLanguage.ENGLISH -> "Baichuan"
+        AppLanguage.ARABIC -> "Baichuan"
+    }
+    val providerBaichuanDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国产大模型，擅长中文理解和生成，支持搜索增强"
+        AppLanguage.ENGLISH -> "Chinese LLM, excels at Chinese language understanding and generation, supports search augmentation"
+        AppLanguage.ARABIC -> "نموذج لغوي صيني كبير، متميز في فهم وتوليد اللغة الصينية، يدعم تعزيز البحث"
+    }
+    val providerBaichuanPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，价格低廉"
+        AppLanguage.ENGLISH -> "Free tier available, affordable"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، بأسعار معقولة"
+    }
+    
+    // --- Yi (零一万物) ---
+    val providerYi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "零一万物"
+        AppLanguage.ENGLISH -> "Yi/Lingyiwanwu"
+        AppLanguage.ARABIC -> "Yi/Lingyiwanwu"
+    }
+    val providerYiDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "李开复创办，Yi 系列模型中英文表现均衡，支持长上下文"
+        AppLanguage.ENGLISH -> "Founded by Kai-Fu Lee. Yi series models balanced in Chinese-English, supports long context"
+        AppLanguage.ARABIC -> "أسسها كاي-فو لي. سلسلة Yi متوازنة في الصينية-الإنجليزية، تدعم السياق الطويل"
+    }
+    val providerYiPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，价格低廉"
+        AppLanguage.ENGLISH -> "Free tier available, affordable"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، بأسعار معقولة"
+    }
+    
+    // --- Stepfun (阶跃星辰) ---
+    val providerStepfun: String get() = when (lang) {
+        AppLanguage.CHINESE -> "阶跃星辰"
+        AppLanguage.ENGLISH -> "Stepfun"
+        AppLanguage.ARABIC -> "Stepfun"
+    }
+    val providerStepfunDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "国产大模型，Step 系列支持超长上下文（256K），多模态能力强"
+        AppLanguage.ENGLISH -> "Chinese LLM, Step series supports ultra-long context (256K), strong multimodal capability"
+        AppLanguage.ARABIC -> "نموذج لغوي صيني كبير، سلسلة Step تدعم سياق فائق الطول (256K)، قدرة متعددة الوسائط قوية"
+    }
+    val providerStepfunPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，按量计费"
+        AppLanguage.ENGLISH -> "Free tier available, pay per usage"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، الدفع حسب الاستخدام"
+    }
+    
+    // --- Hunyuan (腾讯混元) ---
+    val providerHunyuan: String get() = when (lang) {
+        AppLanguage.CHINESE -> "腾讯混元"
+        AppLanguage.ENGLISH -> "Tencent Hunyuan"
+        AppLanguage.ARABIC -> "Tencent Hunyuan"
+    }
+    val providerHunyuanDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "腾讯自研大模型，擅长中文对话和代码生成，支持多模态"
+        AppLanguage.ENGLISH -> "Tencent's LLM, excels at Chinese dialogue and code generation, supports multimodal"
+        AppLanguage.ARABIC -> "نموذج Tencent اللغوي الكبير، متميز في الحوار الصيني وتوليد الكود، يدعم متعدد الوسائط"
+    }
+    val providerHunyuanPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，价格较低"
+        AppLanguage.ENGLISH -> "Free tier available, low pricing"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، تسعير منخفض"
+    }
+    
+    // --- Spark (讯飞星火) ---
+    val providerSpark: String get() = when (lang) {
+        AppLanguage.CHINESE -> "讯飞星火"
+        AppLanguage.ENGLISH -> "iFlytek Spark"
+        AppLanguage.ARABIC -> "iFlytek Spark"
+    }
+    val providerSparkDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "科大讯飞大模型，语音识别和中文理解能力强，OpenAI 兼容接口"
+        AppLanguage.ENGLISH -> "iFlytek's LLM, strong speech recognition and Chinese understanding, OpenAI-compatible API"
+        AppLanguage.ARABIC -> "نموذج iFlytek اللغوي الكبير، تعرف قوي على الكلام وفهم اللغة الصينية، واجهة متوافقة مع OpenAI"
+    }
+    val providerSparkPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "有免费额度，按量计费"
+        AppLanguage.ENGLISH -> "Free tier available, pay per usage"
+        AppLanguage.ARABIC -> "مستوى مجاني متاح، الدفع حسب الاستخدام"
+    }
+    
+    // --- Ollama ---
+    val providerOllama: String get() = "Ollama"
+    val providerOllamaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "本地运行开源模型，完全免费。需在电脑上安装 Ollama 并确保手机可访问"
+        AppLanguage.ENGLISH -> "Run open-source models locally, completely free. Install Ollama on PC and ensure mobile access"
+        AppLanguage.ARABIC -> "تشغيل نماذج مفتوحة المصدر محلياً، مجاني تماماً. ثبت Ollama على الكمبيوتر وتأكد من الوصول عبر الجوال"
+    }
+    val providerOllamaPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "完全免费（本地运行）"
+        AppLanguage.ENGLISH -> "Completely free (local)"
+        AppLanguage.ARABIC -> "مجاني تماماً (محلي)"
+    }
+    
+    // --- LM Studio ---
+    val providerLmStudio: String get() = "LM Studio"
+    val providerLmStudioDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "桌面端本地模型运行工具，提供 OpenAI 兼容 API。图形化界面管理模型"
+        AppLanguage.ENGLISH -> "Desktop local model runner with OpenAI-compatible API. GUI-based model management"
+        AppLanguage.ARABIC -> "أداة تشغيل نماذج محلية لسطح المكتب مع واجهة متوافقة مع OpenAI. إدارة نماذج بواجهة رسومية"
+    }
+    val providerLmStudioPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "完全免费（本地运行）"
+        AppLanguage.ENGLISH -> "Completely free (local)"
+        AppLanguage.ARABIC -> "مجاني تماماً (محلي)"
+    }
+    
+    // --- vLLM ---
+    val providerVllm: String get() = "vLLM"
+    val providerVllmDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高性能 LLM 推理引擎，提供 OpenAI 兼容 API。适合自部署生产环境"
+        AppLanguage.ENGLISH -> "High-performance LLM inference engine with OpenAI-compatible API. Suitable for self-hosted production"
+        AppLanguage.ARABIC -> "محرك استدلال LLM عالي الأداء مع واجهة متوافقة مع OpenAI. مناسب للاستضافة الذاتية في الإنتاج"
+    }
+    val providerVllmPricing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "完全免费（自部署）"
+        AppLanguage.ENGLISH -> "Completely free (self-hosted)"
+        AppLanguage.ARABIC -> "مجاني تماماً (استضافة ذاتية)"
+    }
+    
     // ============ APK Architecture ============
     val archUniversal: String get() = when (lang) {
         AppLanguage.CHINESE -> "通用"
@@ -17962,6 +22646,165 @@ object Strings {
         AppLanguage.ARABIC -> "أخرى"
     }
     
+    // ==================== 内嵌浏览器引擎 ====================
+    val embeddedEngineTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "内嵌浏览器引擎"
+        AppLanguage.ENGLISH -> "Embedded Browser Engine"
+        AppLanguage.ARABIC -> "محرك المتصفح المضمن"
+    }
+    val embeddedEngineDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载独立浏览器引擎，可嵌入导出的 APK 中"
+        AppLanguage.ENGLISH -> "Download standalone engine to embed in exported APKs"
+        AppLanguage.ARABIC -> "تنزيل محرك مستقل لتضمينه في ملفات APK المصدرة"
+    }
+    val engineSystemWebView: String get() = when (lang) {
+        AppLanguage.CHINESE -> "系统 WebView"
+        AppLanguage.ENGLISH -> "System WebView"
+        AppLanguage.ARABIC -> "WebView النظام"
+    }
+    val engineSystemWebViewDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用设备内置的 Android WebView，零额外体积"
+        AppLanguage.ENGLISH -> "Uses built-in Android WebView, zero extra size"
+        AppLanguage.ARABIC -> "يستخدم WebView المدمج في Android، بدون حجم إضافي"
+    }
+    val engineGeckoView: String get() = when (lang) {
+        AppLanguage.CHINESE -> "GeckoView (Firefox)"
+        AppLanguage.ENGLISH -> "GeckoView (Firefox)"
+        AppLanguage.ARABIC -> "GeckoView (Firefox)"
+    }
+    val engineGeckoViewDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "内嵌 Firefox 引擎，内置隐私保护与广告拦截"
+        AppLanguage.ENGLISH -> "Embedded Firefox engine with privacy protection & ad blocking"
+        AppLanguage.ARABIC -> "محرك Firefox مضمن مع حماية الخصوصية وحظر الإعلانات"
+    }
+    val engineReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "就绪"
+        AppLanguage.ENGLISH -> "Ready"
+        AppLanguage.ARABIC -> "جاهز"
+    }
+    val engineNotDownloaded: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未下载"
+        AppLanguage.ENGLISH -> "Not Downloaded"
+        AppLanguage.ARABIC -> "لم يتم التنزيل"
+    }
+    val engineDownloaded: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已下载"
+        AppLanguage.ENGLISH -> "Downloaded"
+        AppLanguage.ARABIC -> "تم التنزيل"
+    }
+    val engineDownloadBtn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载引擎"
+        AppLanguage.ENGLISH -> "Download Engine"
+        AppLanguage.ARABIC -> "تنزيل المحرك"
+    }
+    val engineDeleteBtn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除引擎"
+        AppLanguage.ENGLISH -> "Delete Engine"
+        AppLanguage.ARABIC -> "حذف المحرك"
+    }
+    val engineDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在下载..."
+        AppLanguage.ENGLISH -> "Downloading..."
+        AppLanguage.ARABIC -> "جاري التنزيل..."
+    }
+    val engineCancelDownload: String get() = when (lang) {
+        AppLanguage.CHINESE -> "取消下载"
+        AppLanguage.ENGLISH -> "Cancel Download"
+        AppLanguage.ARABIC -> "إلغاء التنزيل"
+    }
+    val engineDownloadComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载完成"
+        AppLanguage.ENGLISH -> "Download Complete"
+        AppLanguage.ARABIC -> "اكتمل التنزيل"
+    }
+    val engineDownloadFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载失败"
+        AppLanguage.ENGLISH -> "Download Failed"
+        AppLanguage.ARABIC -> "فشل التنزيل"
+    }
+    val engineRetry: String get() = when (lang) {
+        AppLanguage.CHINESE -> "重试"
+        AppLanguage.ENGLISH -> "Retry"
+        AppLanguage.ARABIC -> "إعادة المحاولة"
+    }
+    val engineEstimatedSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "预估大小"
+        AppLanguage.ENGLISH -> "Est. size"
+        AppLanguage.ARABIC -> "الحجم المقدر"
+    }
+    val engineCurrentSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "占用空间"
+        AppLanguage.ENGLISH -> "Disk usage"
+        AppLanguage.ARABIC -> "استخدام القرص"
+    }
+    val engineDeleteConfirm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确定要删除已下载的引擎文件吗？"
+        AppLanguage.ENGLISH -> "Are you sure you want to delete the engine files?"
+        AppLanguage.ARABIC -> "هل أنت متأكد من حذف ملفات المحرك؟"
+    }
+    val engineVersionLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本"
+        AppLanguage.ENGLISH -> "Version"
+        AppLanguage.ARABIC -> "الإصدار"
+    }
+    val engineDefault: String get() = when (lang) {
+        AppLanguage.CHINESE -> "默认"
+        AppLanguage.ENGLISH -> "Default"
+        AppLanguage.ARABIC -> "افتراضي"
+    }
+    val engineSelectTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浏览器引擎"
+        AppLanguage.ENGLISH -> "Browser Engine"
+        AppLanguage.ARABIC -> "محرك المتصفح"
+    }
+    val engineSelectDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择导出 APK 使用的浏览器引擎"
+        AppLanguage.ENGLISH -> "Select browser engine for exported APK"
+        AppLanguage.ARABIC -> "اختر محرك المتصفح لملف APK المصدر"
+    }
+    val engineGeckoNotDownloaded: String get() = when (lang) {
+        AppLanguage.CHINESE -> "GeckoView 引擎未下载，请先在“浏览器内核”页面下载"
+        AppLanguage.ENGLISH -> "GeckoView engine not downloaded. Please download it from Browser Kernel page first."
+        AppLanguage.ARABIC -> "لم يتم تنزيل محرك GeckoView. يرجى تنزيله من صفحة نواة المتصفح أولاً."
+    }
+    val engineApkSizeWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用 GeckoView 将增加 APK 体积约 %s MB"
+        AppLanguage.ENGLISH -> "Using GeckoView will increase APK size by ~%s MB"
+        AppLanguage.ARABIC -> "استخدام GeckoView سيزيد حجم APK بنحو %s MB"
+    }
+    
+    // ==================== Deep Link 配置 ====================
+    
+    val deepLinkSetting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "链接打开"
+        AppLanguage.ENGLISH -> "Deep Link"
+        AppLanguage.ARABIC -> "الرابط العميق"
+    }
+    
+    val deepLinkSettingHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "允许从外部打开匹配的链接"
+        AppLanguage.ENGLISH -> "Allow opening matching links from external apps"
+        AppLanguage.ARABIC -> "السماح بفتح الروابط المطابقة من التطبيقات الخارجية"
+    }
+    
+    val deepLinkHost: String get() = when (lang) {
+        AppLanguage.CHINESE -> "匹配域名: %s"
+        AppLanguage.ENGLISH -> "Matching host: %s"
+        AppLanguage.ARABIC -> "المضيف المطابق: %s"
+    }
+    
+    val deepLinkCustomHostsLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "额外匹配域名"
+        AppLanguage.ENGLISH -> "Additional Domains"
+        AppLanguage.ARABIC -> "نطاقات إضافية"
+    }
+    
+    val deepLinkCustomHostsHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "主域名和 www 子域名会自动匹配，此处可添加其他需要拦截的域名（每行一个）"
+        AppLanguage.ENGLISH -> "Main domain and www subdomain are auto-matched. Add extra domains here (one per line)"
+        AppLanguage.ARABIC -> "يتم مطابقة النطاق الرئيسي والنطاق الفرعي www تلقائيًا. أضف نطاقات إضافية هنا (واحد لكل سطر)"
+    }
+    
     // ============ Encryption Level ============
     val encryptLevelFast: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速（较低安全性）"
@@ -17982,6 +22825,3391 @@ object Strings {
         AppLanguage.CHINESE -> "极高强度（很慢）"
         AppLanguage.ENGLISH -> "Paranoid (very slow)"
         AppLanguage.ARABIC -> "بجنون العظمة (بطيء جداً)"
+    }
+    
+    // ==================== PHP 应用增强字符串 ====================
+    val phpHeroTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 应用"
+        AppLanguage.ENGLISH -> "PHP Application"
+        AppLanguage.ARABIC -> "تطبيق PHP"
+    }
+    val phpHeroDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 PHP 项目打包为独立 Android 应用"
+        AppLanguage.ENGLISH -> "Package PHP project as standalone Android app"
+        AppLanguage.ARABIC -> "تغليف مشروع PHP كتطبيق Android مستقل"
+    }
+    val phpComposerDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Composer 依赖"
+        AppLanguage.ENGLISH -> "Composer Dependencies"
+        AppLanguage.ARABIC -> "متطلبات Composer"
+    }
+    val phpRequireDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行依赖"
+        AppLanguage.ENGLISH -> "Dependencies"
+        AppLanguage.ARABIC -> "التبعيات"
+    }
+    val phpRequireDevDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开发依赖"
+        AppLanguage.ENGLISH -> "Dev Dependencies"
+        AppLanguage.ARABIC -> "تبعيات التطوير"
+    }
+    val phpDocRootSelect: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Web 根目录选择"
+        AppLanguage.ENGLISH -> "Document Root Selection"
+        AppLanguage.ARABIC -> "اختيار جذر المستند"
+    }
+    val phpDocRootHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Web 服务器的根目录，通常为 public/ 或项目根目录"
+        AppLanguage.ENGLISH -> "Web server root directory, usually public/ or project root"
+        AppLanguage.ARABIC -> "دليل جذر خادم الويب، عادة public/ أو جذر المشروع"
+    }
+    val phpExtensions: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 扩展"
+        AppLanguage.ENGLISH -> "PHP Extensions"
+        AppLanguage.ARABIC -> "إضافات PHP"
+    }
+    val phpExtensionsHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用项目所需的 PHP 扩展模块"
+        AppLanguage.ENGLISH -> "Enable PHP extensions required by your project"
+        AppLanguage.ARABIC -> "تمكين إضافات PHP المطلوبة لمشروعك"
+    }
+    val phpDatabaseConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据库配置"
+        AppLanguage.ENGLISH -> "Database Configuration"
+        AppLanguage.ARABIC -> "إعدادات قاعدة البيانات"
+    }
+    val phpSqlitePath: String get() = when (lang) {
+        AppLanguage.CHINESE -> "SQLite 数据库路径"
+        AppLanguage.ENGLISH -> "SQLite Database Path"
+        AppLanguage.ARABIC -> "مسار قاعدة بيانات SQLite"
+    }
+    val phpDbDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到数据库文件"
+        AppLanguage.ENGLISH -> "Database file detected"
+        AppLanguage.ARABIC -> "تم اكتشاف ملف قاعدة البيانات"
+    }
+    val phpFrameworkTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "框架提示"
+        AppLanguage.ENGLISH -> "Framework Tips"
+        AppLanguage.ARABIC -> "نصائح الإطار"
+    }
+    val phpLaravelTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Laravel 项目：已自动配置 storage/、bootstrap/cache/ 目录权限，APP_KEY 将自动生成"
+        AppLanguage.ENGLISH -> "Laravel: storage/ and bootstrap/cache/ permissions auto-configured. APP_KEY will be auto-generated."
+        AppLanguage.ARABIC -> "Laravel: تم تكوين أذونات storage/ و bootstrap/cache/ تلقائياً. سيتم إنشاء APP_KEY تلقائياً."
+    }
+    val phpThinkPhpTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ThinkPHP 项目：runtime/ 目录已自动配置，支持多应用模式"
+        AppLanguage.ENGLISH -> "ThinkPHP: runtime/ directory auto-configured. Multi-app mode supported."
+        AppLanguage.ARABIC -> "ThinkPHP: تم تكوين دليل runtime/ تلقائياً. وضع التطبيقات المتعددة مدعوم."
+    }
+    val phpCodeIgniterTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "CodeIgniter 项目：writable/ 目录已自动配置，环境已设置为 production"
+        AppLanguage.ENGLISH -> "CodeIgniter: writable/ directory auto-configured. Environment set to production."
+        AppLanguage.ARABIC -> "CodeIgniter: تم تكوين دليل writable/ تلقائياً. تم ضبط البيئة على production."
+    }
+    val phpSlimTip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Slim 项目：已检测到路由配置，支持 PSR-7 中间件"
+        AppLanguage.ENGLISH -> "Slim: Routes detected. PSR-7 middleware supported."
+        AppLanguage.ARABIC -> "Slim: تم اكتشاف المسارات. وسيط PSR-7 مدعوم."
+    }
+    val phpAdvancedConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高级配置"
+        AppLanguage.ENGLISH -> "Advanced Configuration"
+        AppLanguage.ARABIC -> "إعدادات متقدمة"
+    }
+    val phpProjectRoot: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目根目录"
+        AppLanguage.ENGLISH -> "Project Root"
+        AppLanguage.ARABIC -> "جذر المشروع"
+    }
+    val phpVersion: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 版本"
+        AppLanguage.ENGLISH -> "PHP Version"
+        AppLanguage.ARABIC -> "إصدار PHP"
+    }
+    val phpDetectedDirs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到的 Web 目录"
+        AppLanguage.ENGLISH -> "Detected Web Directories"
+        AppLanguage.ARABIC -> "أدلة الويب المكتشفة"
+    }
+    val phpCustomPath: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义路径"
+        AppLanguage.ENGLISH -> "Custom Path"
+        AppLanguage.ARABIC -> "مسار مخصص"
+    }
+    
+    // ==================== Python 应用增强字符串 ====================
+    val pyHeroTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python 应用"
+        AppLanguage.ENGLISH -> "Python Application"
+        AppLanguage.ARABIC -> "تطبيق Python"
+    }
+    val pyHeroDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 Python Web 项目打包为独立 Android 应用"
+        AppLanguage.ENGLISH -> "Package Python Web project as standalone Android app"
+        AppLanguage.ARABIC -> "تغليف مشروع Python Web كتطبيق Android مستقل"
+    }
+    val pyRequirements: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目依赖"
+        AppLanguage.ENGLISH -> "Project Dependencies"
+        AppLanguage.ARABIC -> "تبعيات المشروع"
+    }
+    val pyRequirementsFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "依赖来源"
+        AppLanguage.ENGLISH -> "Dependency Source"
+        AppLanguage.ARABIC -> "مصدر التبعيات"
+    }
+    val pyServerBuiltin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "内置服务器"
+        AppLanguage.ENGLISH -> "Built-in Server"
+        AppLanguage.ARABIC -> "الخادم المدمج"
+    }
+    val pyServerBuiltinDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用框架自带的开发服务器"
+        AppLanguage.ENGLISH -> "Use framework's built-in development server"
+        AppLanguage.ARABIC -> "استخدام خادم التطوير المدمج في الإطار"
+    }
+    val pyServerGunicorn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Gunicorn (WSGI)"
+        AppLanguage.ENGLISH -> "Gunicorn (WSGI)"
+        AppLanguage.ARABIC -> "Gunicorn (WSGI)"
+    }
+    val pyServerGunicornDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "适用于 Flask、Django 等 WSGI 框架"
+        AppLanguage.ENGLISH -> "For Flask, Django and other WSGI frameworks"
+        AppLanguage.ARABIC -> "لأطر WSGI مثل Flask و Django"
+    }
+    val pyServerUvicorn: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Uvicorn (ASGI)"
+        AppLanguage.ENGLISH -> "Uvicorn (ASGI)"
+        AppLanguage.ARABIC -> "Uvicorn (ASGI)"
+    }
+    val pyServerUvicornDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "适用于 FastAPI、Starlette 等 ASGI 框架"
+        AppLanguage.ENGLISH -> "For FastAPI, Starlette and other ASGI frameworks"
+        AppLanguage.ARABIC -> "لأطر ASGI مثل FastAPI و Starlette"
+    }
+    val pyRecommended: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推荐"
+        AppLanguage.ENGLISH -> "Recommended"
+        AppLanguage.ARABIC -> "موصى به"
+    }
+    val pyWsgiModule: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WSGI/ASGI 模块"
+        AppLanguage.ENGLISH -> "WSGI/ASGI Module"
+        AppLanguage.ARABIC -> "وحدة WSGI/ASGI"
+    }
+    val pyWsgiModuleHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "如 myapp.wsgi:application 或 main:app"
+        AppLanguage.ENGLISH -> "e.g. myapp.wsgi:application or main:app"
+        AppLanguage.ARABIC -> "مثل myapp.wsgi:application أو main:app"
+    }
+    val pyVenvDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "虚拟环境"
+        AppLanguage.ENGLISH -> "Virtual Environment"
+        AppLanguage.ARABIC -> "البيئة الافتراضية"
+    }
+    val pyVenvFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已检测到虚拟环境"
+        AppLanguage.ENGLISH -> "Virtual environment detected"
+        AppLanguage.ARABIC -> "تم اكتشاف البيئة الافتراضية"
+    }
+    val pyVenvNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未检测到虚拟环境"
+        AppLanguage.ENGLISH -> "No virtual environment detected"
+        AppLanguage.ARABIC -> "لم يتم اكتشاف بيئة افتراضية"
+    }
+    val pyDjangoSettings: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Django 配置"
+        AppLanguage.ENGLISH -> "Django Settings"
+        AppLanguage.ARABIC -> "إعدادات Django"
+    }
+    val pyDjangoSettingsModule: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Settings 模块"
+        AppLanguage.ENGLISH -> "Settings Module"
+        AppLanguage.ARABIC -> "وحدة الإعدادات"
+    }
+    val pyDjangoStaticDir: String get() = when (lang) {
+        AppLanguage.CHINESE -> "静态文件目录"
+        AppLanguage.ENGLISH -> "Static Files Directory"
+        AppLanguage.ARABIC -> "دليل الملفات الثابتة"
+    }
+    val pyDjangoAllowedHosts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "提示：ALLOWED_HOSTS 已自动设置为 ['*']"
+        AppLanguage.ENGLISH -> "Tip: ALLOWED_HOSTS is auto-set to ['*']"
+        AppLanguage.ARABIC -> "تلميح: تم ضبط ALLOWED_HOSTS تلقائياً على ['*']"
+    }
+    val pyFastapiConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "FastAPI 配置"
+        AppLanguage.ENGLISH -> "FastAPI Settings"
+        AppLanguage.ARABIC -> "إعدادات FastAPI"
+    }
+    val pyFastapiDocsEndpoint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "API 文档端点：/docs (Swagger) · /redoc (ReDoc)"
+        AppLanguage.ENGLISH -> "API docs endpoints: /docs (Swagger) · /redoc (ReDoc)"
+        AppLanguage.ARABIC -> "نقاط نهاية وثائق API: /docs (Swagger) · /redoc (ReDoc)"
+    }
+    val pyFastapiAsgiHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推荐使用 Uvicorn 作为 ASGI 服务器"
+        AppLanguage.ENGLISH -> "Uvicorn recommended as ASGI server"
+        AppLanguage.ARABIC -> "يوصى باستخدام Uvicorn كخادم ASGI"
+    }
+    
+    // ==================== Go 应用增强字符串 ====================
+    val goHeroTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 服务"
+        AppLanguage.ENGLISH -> "Go Service"
+        AppLanguage.ARABIC -> "خدمة Go"
+    }
+    val goHeroDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 Go Web 服务打包为独立 Android 应用"
+        AppLanguage.ENGLISH -> "Package Go Web service as standalone Android app"
+        AppLanguage.ARABIC -> "تغليف خدمة Go Web كتطبيق Android مستقل"
+    }
+    val goModuleInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 模块信息"
+        AppLanguage.ENGLISH -> "Go Module Info"
+        AppLanguage.ARABIC -> "معلومات وحدة Go"
+    }
+    val goModulePath: String get() = when (lang) {
+        AppLanguage.CHINESE -> "模块路径"
+        AppLanguage.ENGLISH -> "Module Path"
+        AppLanguage.ARABIC -> "مسار الوحدة"
+    }
+    val goVersion: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go 版本"
+        AppLanguage.ENGLISH -> "Go Version"
+        AppLanguage.ARABIC -> "إصدار Go"
+    }
+    val goDependencyCount: String get() = when (lang) {
+        AppLanguage.CHINESE -> "依赖数量"
+        AppLanguage.ENGLISH -> "Dependency Count"
+        AppLanguage.ARABIC -> "عدد التبعيات"
+    }
+    val goBinaryDetection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "二进制文件"
+        AppLanguage.ENGLISH -> "Binary Detection"
+        AppLanguage.ARABIC -> "اكتشاف الملف الثنائي"
+    }
+    val goBinaryFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到预编译二进制文件"
+        AppLanguage.ENGLISH -> "Pre-compiled binary detected"
+        AppLanguage.ARABIC -> "تم اكتشاف ملف ثنائي مسبق التجميع"
+    }
+    val goBinaryNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未检测到二进制文件，请确保项目包含 ARM64 预编译二进制"
+        AppLanguage.ENGLISH -> "No binary detected. Ensure project contains ARM64 pre-compiled binary."
+        AppLanguage.ARABIC -> "لم يتم اكتشاف ملف ثنائي. تأكد من أن المشروع يحتوي على ملف ثنائي ARM64."
+    }
+    val goBinarySize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件大小"
+        AppLanguage.ENGLISH -> "File Size"
+        AppLanguage.ARABIC -> "حجم الملف"
+    }
+    val goTargetArch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "目标架构"
+        AppLanguage.ENGLISH -> "Target Architecture"
+        AppLanguage.ARABIC -> "البنية المستهدفة"
+    }
+    val goStaticFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "静态文件目录"
+        AppLanguage.ENGLISH -> "Static Files Directory"
+        AppLanguage.ARABIC -> "دليل الملفات الثابتة"
+    }
+    val goStaticFilesHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Web 静态文件服务路径"
+        AppLanguage.ENGLISH -> "Web static file serving path"
+        AppLanguage.ARABIC -> "مسار خدمة الملفات الثابتة على الويب"
+    }
+    val goHealthCheck: String get() = when (lang) {
+        AppLanguage.CHINESE -> "健康检查"
+        AppLanguage.ENGLISH -> "Health Check"
+        AppLanguage.ARABIC -> "فحص السلامة"
+    }
+    val goHealthCheckEndpoint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "健康检查端点"
+        AppLanguage.ENGLISH -> "Health Check Endpoint"
+        AppLanguage.ARABIC -> "نقطة نهاية فحص السلامة"
+    }
+    val goDirectDeps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "直接依赖"
+        AppLanguage.ENGLISH -> "Direct Dependencies"
+        AppLanguage.ARABIC -> "التبعيات المباشرة"
+    }
+    
+    // ==================== DocsSite 增强字符串 ====================
+    val docsHeroTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文档站点"
+        AppLanguage.ENGLISH -> "Documentation Site"
+        AppLanguage.ARABIC -> "موقع التوثيق"
+    }
+    val docsHeroDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将静态文档站点打包为独立 Android 应用"
+        AppLanguage.ENGLISH -> "Package static documentation site as standalone Android app"
+        AppLanguage.ARABIC -> "تغليف موقع التوثيق الثابت كتطبيق Android مستقل"
+    }
+    val docsStructure: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文档结构"
+        AppLanguage.ENGLISH -> "Document Structure"
+        AppLanguage.ARABIC -> "هيكل التوثيق"
+    }
+    val docsSearchEngine: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索引擎"
+        AppLanguage.ENGLISH -> "Search Engine"
+        AppLanguage.ARABIC -> "محرك البحث"
+    }
+    val docsSearchLocal: String get() = when (lang) {
+        AppLanguage.CHINESE -> "本地搜索"
+        AppLanguage.ENGLISH -> "Local Search"
+        AppLanguage.ARABIC -> "البحث المحلي"
+    }
+    val docsSearchLocalDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用内置的全文搜索索引"
+        AppLanguage.ENGLISH -> "Use built-in full-text search index"
+        AppLanguage.ARABIC -> "استخدام فهرس البحث المحلي المدمج"
+    }
+    val docsSearchAlgolia: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Algolia DocSearch"
+        AppLanguage.ENGLISH -> "Algolia DocSearch"
+        AppLanguage.ARABIC -> "Algolia DocSearch"
+    }
+    val docsSearchAlgoliaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "需要网络连接和 API Key"
+        AppLanguage.ENGLISH -> "Requires internet and API Key"
+        AppLanguage.ARABIC -> "يتطلب اتصال بالإنترنت ومفتاح API"
+    }
+    val docsSearchDisabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "禁用搜索"
+        AppLanguage.ENGLISH -> "Disable Search"
+        AppLanguage.ARABIC -> "تعطيل البحث"
+    }
+    val docsThemeConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "主题配置"
+        AppLanguage.ENGLISH -> "Theme Configuration"
+        AppLanguage.ARABIC -> "إعدادات السمة"
+    }
+    val docsThemeLight: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浅色"
+        AppLanguage.ENGLISH -> "Light"
+        AppLanguage.ARABIC -> "فاتح"
+    }
+    val docsThemeDark: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深色"
+        AppLanguage.ENGLISH -> "Dark"
+        AppLanguage.ARABIC -> "داكن"
+    }
+    val docsThemeAuto: String get() = when (lang) {
+        AppLanguage.CHINESE -> "跟随系统"
+        AppLanguage.ENGLISH -> "Auto"
+        AppLanguage.ARABIC -> "تلقائي"
+    }
+    val docsBasePath: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基础路径"
+        AppLanguage.ENGLISH -> "Base Path"
+        AppLanguage.ARABIC -> "المسار الأساسي"
+    }
+    val docsPwaConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "离线访问 (PWA)"
+        AppLanguage.ENGLISH -> "Offline Access (PWA)"
+        AppLanguage.ARABIC -> "الوصول دون اتصال (PWA)"
+    }
+    val docsPwaHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启用 Service Worker 实现离线浏览"
+        AppLanguage.ENGLISH -> "Enable Service Worker for offline browsing"
+        AppLanguage.ARABIC -> "تمكين Service Worker للتصفح دون اتصال"
+    }
+    val docsPages: String get() = when (lang) {
+        AppLanguage.CHINESE -> "个页面"
+        AppLanguage.ENGLISH -> " pages"
+        AppLanguage.ARABIC -> " صفحات"
+    }
+    val docsConfigFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "配置文件"
+        AppLanguage.ENGLISH -> "Config File"
+        AppLanguage.ARABIC -> "ملف الإعداد"
+    }
+    
+    // ==================== Node.js 增强字符串 ====================
+    val njsHeroTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js 应用"
+        AppLanguage.ENGLISH -> "Node.js Application"
+        AppLanguage.ARABIC -> "تطبيق Node.js"
+    }
+    val njsHeroDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 Node.js 项目打包为独立 Android 应用"
+        AppLanguage.ENGLISH -> "Package Node.js project as standalone Android app"
+        AppLanguage.ARABIC -> "تغليف مشروع Node.js كتطبيق Android مستقل"
+    }
+    val njsScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "NPM 脚本"
+        AppLanguage.ENGLISH -> "NPM Scripts"
+        AppLanguage.ARABIC -> "نصوص NPM"
+    }
+    val njsStartupScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动脚本"
+        AppLanguage.ENGLISH -> "Startup Script"
+        AppLanguage.ARABIC -> "نص بدء التشغيل"
+    }
+    val njsDependencies: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目依赖"
+        AppLanguage.ENGLISH -> "Project Dependencies"
+        AppLanguage.ARABIC -> "تبعيات المشروع"
+    }
+    val njsDevDependencies: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开发依赖"
+        AppLanguage.ENGLISH -> "Dev Dependencies"
+        AppLanguage.ARABIC -> "تبعيات التطوير"
+    }
+    val njsTypeScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "TypeScript 支持"
+        AppLanguage.ENGLISH -> "TypeScript Support"
+        AppLanguage.ARABIC -> "دعم TypeScript"
+    }
+    val njsPackageManager: String get() = when (lang) {
+        AppLanguage.CHINESE -> "包管理器"
+        AppLanguage.ENGLISH -> "Package Manager"
+        AppLanguage.ARABIC -> "مدير الحزم"
+    }
+    val njsDetectedPort: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到端口"
+        AppLanguage.ENGLISH -> "Detected Port"
+        AppLanguage.ARABIC -> "المنفذ المكتشف"
+    }
+    val njsPortOverride: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义端口"
+        AppLanguage.ENGLISH -> "Custom Port"
+        AppLanguage.ARABIC -> "منفذ مخصص"
+    }
+    val njsProjectInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "项目信息"
+        AppLanguage.ENGLISH -> "Project Info"
+        AppLanguage.ARABIC -> "معلومات المشروع"
+    }
+    
+    // ==================== WordPress 增强字符串 ====================
+    val wpHeroTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 应用"
+        AppLanguage.ENGLISH -> "WordPress Application"
+        AppLanguage.ARABIC -> "تطبيق WordPress"
+    }
+    val wpHeroDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行离线 WordPress 站点，无需服务器"
+        AppLanguage.ENGLISH -> "Run offline WordPress site, no server needed"
+        AppLanguage.ARABIC -> "تشغيل موقع WordPress دون اتصال، بدون خادم"
+    }
+    val wpThemePanel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "主题管理"
+        AppLanguage.ENGLISH -> "Theme Management"
+        AppLanguage.ARABIC -> "إدارة السمات"
+    }
+    val wpActiveTheme: String get() = when (lang) {
+        AppLanguage.CHINESE -> "当前主题"
+        AppLanguage.ENGLISH -> "Active Theme"
+        AppLanguage.ARABIC -> "السمة النشطة"
+    }
+    val wpInstalledThemes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已安装主题"
+        AppLanguage.ENGLISH -> "Installed Themes"
+        AppLanguage.ARABIC -> "السمات المثبتة"
+    }
+    val wpPluginPanel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "插件管理"
+        AppLanguage.ENGLISH -> "Plugin Management"
+        AppLanguage.ARABIC -> "إدارة الإضافات"
+    }
+    val wpInstalledPlugins: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已安装插件"
+        AppLanguage.ENGLISH -> "Installed Plugins"
+        AppLanguage.ARABIC -> "الإضافات المثبتة"
+    }
+    val wpAdminConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理员配置"
+        AppLanguage.ENGLISH -> "Admin Configuration"
+        AppLanguage.ARABIC -> "إعدادات المسؤول"
+    }
+    val wpAdminEmail: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理员邮箱"
+        AppLanguage.ENGLISH -> "Admin Email"
+        AppLanguage.ARABIC -> "بريد المسؤول"
+    }
+    val wpAdminPassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理员密码"
+        AppLanguage.ENGLISH -> "Admin Password"
+        AppLanguage.ARABIC -> "كلمة مرور المسؤول"
+    }
+    val wpPermalink: String get() = when (lang) {
+        AppLanguage.CHINESE -> "固定链接结构"
+        AppLanguage.ENGLISH -> "Permalink Structure"
+        AppLanguage.ARABIC -> "هيكل الروابط الدائمة"
+    }
+    val wpPermalinkPlain: String get() = when (lang) {
+        AppLanguage.CHINESE -> "朴素 (?p=123)"
+        AppLanguage.ENGLISH -> "Plain (?p=123)"
+        AppLanguage.ARABIC -> "عادي (?p=123)"
+    }
+    val wpPermalinkPostName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文章名 (/post-name/)"
+        AppLanguage.ENGLISH -> "Post name (/post-name/)"
+        AppLanguage.ARABIC -> "اسم المنشور (/post-name/)"
+    }
+    val wpPermalinkNumeric: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数字型 (/archives/123)"
+        AppLanguage.ENGLISH -> "Numeric (/archives/123)"
+        AppLanguage.ARABIC -> "رقمي (/archives/123)"
+    }
+    val wpDbInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据库信息"
+        AppLanguage.ENGLISH -> "Database Info"
+        AppLanguage.ARABIC -> "معلومات قاعدة البيانات"
+    }
+    val wpDbType: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据库类型：SQLite（离线）"
+        AppLanguage.ENGLISH -> "Database type: SQLite (offline)"
+        AppLanguage.ARABIC -> "نوع قاعدة البيانات: SQLite (غير متصل)"
+    }
+    val wpSiteLanguage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "站点语言"
+        AppLanguage.ENGLISH -> "Site Language"
+        AppLanguage.ARABIC -> "لغة الموقع"
+    }
+    val wpVersionInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 版本"
+        AppLanguage.ENGLISH -> "WordPress Version"
+        AppLanguage.ARABIC -> "إصدار WordPress"
+    }
+    val wpNoPlugins: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无已安装插件"
+        AppLanguage.ENGLISH -> "No plugins installed"
+        AppLanguage.ARABIC -> "لا توجد إضافات مثبتة"
+    }
+    val wpNoThemes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用默认主题"
+        AppLanguage.ENGLISH -> "Using default theme"
+        AppLanguage.ARABIC -> "استخدام السمة الافتراضية"
+    }
+    
+    // ==================== Media 应用增强字符串 ====================
+    val mediaImageInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片信息"
+        AppLanguage.ENGLISH -> "Image Info"
+        AppLanguage.ARABIC -> "معلومات الصورة"
+    }
+    val mediaVideoInfo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "视频信息"
+        AppLanguage.ENGLISH -> "Video Info"
+        AppLanguage.ARABIC -> "معلومات الفيديو"
+    }
+    val mediaDimensions: String get() = when (lang) {
+        AppLanguage.CHINESE -> "尺寸"
+        AppLanguage.ENGLISH -> "Dimensions"
+        AppLanguage.ARABIC -> "الأبعاد"
+    }
+    val mediaFileSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件大小"
+        AppLanguage.ENGLISH -> "File Size"
+        AppLanguage.ARABIC -> "حجم الملف"
+    }
+    val mediaFormat: String get() = when (lang) {
+        AppLanguage.CHINESE -> "格式"
+        AppLanguage.ENGLISH -> "Format"
+        AppLanguage.ARABIC -> "التنسيق"
+    }
+    val mediaDuration: String get() = when (lang) {
+        AppLanguage.CHINESE -> "时长"
+        AppLanguage.ENGLISH -> "Duration"
+        AppLanguage.ARABIC -> "المدة"
+    }
+    val mediaResolution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分辨率"
+        AppLanguage.ENGLISH -> "Resolution"
+        AppLanguage.ARABIC -> "الدقة"
+    }
+    val mediaPlaybackSpeed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "播放速度"
+        AppLanguage.ENGLISH -> "Playback Speed"
+        AppLanguage.ARABIC -> "سرعة التشغيل"
+    }
+    val mediaBackgroundColor: String get() = when (lang) {
+        AppLanguage.CHINESE -> "背景颜色"
+        AppLanguage.ENGLISH -> "Background Color"
+        AppLanguage.ARABIC -> "لون الخلفية"
+    }
+    val mediaScreenLock: String get() = when (lang) {
+        AppLanguage.CHINESE -> "屏幕常亮"
+        AppLanguage.ENGLISH -> "Keep Screen On"
+        AppLanguage.ARABIC -> "إبقاء الشاشة مضاءة"
+    }
+    val mediaScreenLockHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示媒体时防止屏幕自动关闭"
+        AppLanguage.ENGLISH -> "Prevent screen from turning off during media display"
+        AppLanguage.ARABIC -> "منع إيقاف الشاشة أثناء عرض الوسائط"
+    }
+    val mediaGestureConfig: String get() = when (lang) {
+        AppLanguage.CHINESE -> "手势设置"
+        AppLanguage.ENGLISH -> "Gesture Settings"
+        AppLanguage.ARABIC -> "إعدادات الإيماءات"
+    }
+    val mediaSwipeDismiss: String get() = when (lang) {
+        AppLanguage.CHINESE -> "滑动退出"
+        AppLanguage.ENGLISH -> "Swipe to Dismiss"
+        AppLanguage.ARABIC -> "اسحب للإغلاق"
+    }
+    val mediaSwipeDismissHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "上下滑动关闭媒体"
+        AppLanguage.ENGLISH -> "Swipe up/down to close media"
+        AppLanguage.ARABIC -> "اسحب لأعلى/لأسفل لإغلاق الوسائط"
+    }
+    val mediaDoubleTapZoom: String get() = when (lang) {
+        AppLanguage.CHINESE -> "双击缩放"
+        AppLanguage.ENGLISH -> "Double-tap to Zoom"
+        AppLanguage.ARABIC -> "انقر مرتين للتكبير"
+    }
+    val mediaDoubleTapZoomHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "双击放大/缩小图片"
+        AppLanguage.ENGLISH -> "Double-tap to zoom in/out"
+        AppLanguage.ARABIC -> "انقر مرتين للتكبير/التصغير"
+    }
+    val mediaBrightness: String get() = when (lang) {
+        AppLanguage.CHINESE -> "亮度"
+        AppLanguage.ENGLISH -> "Brightness"
+        AppLanguage.ARABIC -> "السطوع"
+    }
+    val mediaContrast: String get() = when (lang) {
+        AppLanguage.CHINESE -> "对比度"
+        AppLanguage.ENGLISH -> "Contrast"
+        AppLanguage.ARABIC -> "التباين"
+    }
+    val mediaSaturation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "饱和度"
+        AppLanguage.ENGLISH -> "Saturation"
+        AppLanguage.ARABIC -> "التشبع"
+    }
+    val mediaImageAdjust: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片调整"
+        AppLanguage.ENGLISH -> "Image Adjustments"
+        AppLanguage.ARABIC -> "تعديلات الصورة"
+    }
+    val mediaImageAdjustHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "调整图片显示效果"
+        AppLanguage.ENGLISH -> "Adjust image display effects"
+        AppLanguage.ARABIC -> "ضبط تأثيرات عرض الصورة"
+    }
+    val mediaReset: String get() = when (lang) {
+        AppLanguage.CHINESE -> "重置"
+        AppLanguage.ENGLISH -> "Reset"
+        AppLanguage.ARABIC -> "إعادة تعيين"
+    }
+    
+    // ==================== PHP 示例项目 ====================
+    val samplePhpSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快速体验 PHP 项目导入"
+        AppLanguage.ENGLISH -> "Quick experience PHP project import"
+        AppLanguage.ARABIC -> "تجربة سريعة لاستيراد مشروع PHP"
+    }
+    val samplePhpLaravelName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Laravel 博客"
+        AppLanguage.ENGLISH -> "Laravel Blog"
+        AppLanguage.ARABIC -> "مدونة Laravel"
+    }
+    val samplePhpLaravelDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Laravel 框架博客示例，展示路由与 Blade 模板引擎"
+        AppLanguage.ENGLISH -> "Laravel blog demo with routing and Blade template engine"
+        AppLanguage.ARABIC -> "عرض مدونة Laravel مع التوجيه ومحرك قوالب Blade"
+    }
+    val samplePhpSlimName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Slim REST API"
+        AppLanguage.ENGLISH -> "Slim REST API"
+        AppLanguage.ARABIC -> "Slim REST API"
+    }
+    val samplePhpSlimDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Slim 微框架 RESTful 接口示例，轻量高效"
+        AppLanguage.ENGLISH -> "Slim micro-framework RESTful API demo, lightweight and fast"
+        AppLanguage.ARABIC -> "عرض API RESTful بإطار Slim الخفيف والسريع"
+    }
+    val samplePhpVanillaName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "原生 PHP 应用"
+        AppLanguage.ENGLISH -> "Vanilla PHP App"
+        AppLanguage.ARABIC -> "تطبيق PHP أصلي"
+    }
+    val samplePhpVanillaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无框架原生 PHP 开发示例，展示基本 Web 功能"
+        AppLanguage.ENGLISH -> "No-framework PHP demo showcasing basic web features"
+        AppLanguage.ARABIC -> "عرض PHP بدون إطار عمل يعرض ميزات الويب الأساسية"
+    }
+    val sampleTagMvc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "MVC"
+        AppLanguage.ENGLISH -> "MVC"
+        AppLanguage.ARABIC -> "MVC"
+    }
+    val sampleTagRest: String get() = when (lang) {
+        AppLanguage.CHINESE -> "REST"
+        AppLanguage.ENGLISH -> "REST"
+        AppLanguage.ARABIC -> "REST"
+    }
+    val sampleTagLightweight: String get() = when (lang) {
+        AppLanguage.CHINESE -> "轻量级"
+        AppLanguage.ENGLISH -> "Lightweight"
+        AppLanguage.ARABIC -> "خفيف الوزن"
+    }
+    val sampleTagNoFramework: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无框架"
+        AppLanguage.ENGLISH -> "No Framework"
+        AppLanguage.ARABIC -> "بدون إطار"
+    }
+    
+    // ==================== Python 示例项目 ====================
+    val samplePythonSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快速体验 Python 项目导入"
+        AppLanguage.ENGLISH -> "Quick experience Python project import"
+        AppLanguage.ARABIC -> "تجربة سريعة لاستيراد مشروع Python"
+    }
+    val samplePythonFlaskName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Flask 仪表盘"
+        AppLanguage.ENGLISH -> "Flask Dashboard"
+        AppLanguage.ARABIC -> "لوحة تحكم Flask"
+    }
+    val samplePythonFlaskDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Flask 框架数据仪表盘示例，展示 Jinja2 模板渲染"
+        AppLanguage.ENGLISH -> "Flask dashboard demo with Jinja2 template rendering"
+        AppLanguage.ARABIC -> "عرض لوحة تحكم Flask مع عرض قوالب Jinja2"
+    }
+    val samplePythonFastapiName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "FastAPI 书店"
+        AppLanguage.ENGLISH -> "FastAPI Bookstore"
+        AppLanguage.ARABIC -> "مكتبة FastAPI"
+    }
+    val samplePythonFastapiDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "FastAPI 书店 REST API 示例，自动生成 OpenAPI 文档"
+        AppLanguage.ENGLISH -> "FastAPI bookstore REST API with auto-generated OpenAPI docs"
+        AppLanguage.ARABIC -> "API مكتبة FastAPI مع توثيق OpenAPI تلقائي"
+    }
+    val samplePythonDjangoName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Django 站点"
+        AppLanguage.ENGLISH -> "Django Site"
+        AppLanguage.ARABIC -> "موقع Django"
+    }
+    val samplePythonDjangoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Django 全栈站点示例，展示 ORM 与管理后台"
+        AppLanguage.ENGLISH -> "Django full-stack site demo with ORM and admin panel"
+        AppLanguage.ARABIC -> "عرض موقع Django كامل مع ORM ولوحة الإدارة"
+    }
+    val sampleTagWsgi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WSGI"
+        AppLanguage.ENGLISH -> "WSGI"
+        AppLanguage.ARABIC -> "WSGI"
+    }
+    val sampleTagAsgi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ASGI"
+        AppLanguage.ENGLISH -> "ASGI"
+        AppLanguage.ARABIC -> "ASGI"
+    }
+    val sampleTagOpenapi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "OpenAPI"
+        AppLanguage.ENGLISH -> "OpenAPI"
+        AppLanguage.ARABIC -> "OpenAPI"
+    }
+    val sampleTagOrm: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ORM"
+        AppLanguage.ENGLISH -> "ORM"
+        AppLanguage.ARABIC -> "ORM"
+    }
+    val sampleTagAdmin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "管理后台"
+        AppLanguage.ENGLISH -> "Admin Panel"
+        AppLanguage.ARABIC -> "لوحة الإدارة"
+    }
+    
+    // ==================== Go 示例项目 ====================
+    val sampleGoSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快速体验 Go 项目导入"
+        AppLanguage.ENGLISH -> "Quick experience Go project import"
+        AppLanguage.ARABIC -> "تجربة سريعة لاستيراد مشروع Go"
+    }
+    val sampleGoGinName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Gin REST API"
+        AppLanguage.ENGLISH -> "Gin REST API"
+        AppLanguage.ARABIC -> "Gin REST API"
+    }
+    val sampleGoGinDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Gin 框架 RESTful 接口示例，中间件与路由组"
+        AppLanguage.ENGLISH -> "Gin RESTful API demo with middleware and route groups"
+        AppLanguage.ARABIC -> "عرض Gin REST API مع الوسيط ومجموعات التوجيه"
+    }
+    val sampleGoFiberName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Fiber Web 应用"
+        AppLanguage.ENGLISH -> "Fiber Web App"
+        AppLanguage.ARABIC -> "تطبيق Fiber Web"
+    }
+    val sampleGoFiberDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Fiber 框架 Web 应用示例，Express 风格高性能路由"
+        AppLanguage.ENGLISH -> "Fiber web app demo with Express-style high-performance routing"
+        AppLanguage.ARABIC -> "عرض Fiber بأسلوب Express مع توجيه عالي الأداء"
+    }
+    val sampleGoEchoName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Echo 服务器"
+        AppLanguage.ENGLISH -> "Echo Server"
+        AppLanguage.ARABIC -> "خادم Echo"
+    }
+    val sampleGoEchoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Echo 框架服务器示例，极简 API 与自动绑定"
+        AppLanguage.ENGLISH -> "Echo server demo with minimal API and auto-binding"
+        AppLanguage.ARABIC -> "عرض خادم Echo مع API بسيط وربط تلقائي"
+    }
+    val sampleTagMiddleware: String get() = when (lang) {
+        AppLanguage.CHINESE -> "中间件"
+        AppLanguage.ENGLISH -> "Middleware"
+        AppLanguage.ARABIC -> "وسيط"
+    }
+    val sampleTagHighPerf: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高性能"
+        AppLanguage.ENGLISH -> "High Perf"
+        AppLanguage.ARABIC -> "أداء عالي"
+    }
+    val sampleTagMinimalApi: String get() = when (lang) {
+        AppLanguage.CHINESE -> "极简 API"
+        AppLanguage.ENGLISH -> "Minimal API"
+        AppLanguage.ARABIC -> "API بسيط"
+    }
+    
+    // ==================== Node.js 示例项目 ====================
+    val sampleNodeSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快速体验 Node.js 项目导入"
+        AppLanguage.ENGLISH -> "Quick experience Node.js project import"
+        AppLanguage.ARABIC -> "تجربة سريعة لاستيراد مشروع Node.js"
+    }
+    val sampleNodeExpressName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "待办事项应用"
+        AppLanguage.ENGLISH -> "Todo App"
+        AppLanguage.ARABIC -> "تطبيق المهام"
+    }
+    val sampleNodeExpressDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "完整的待办事项应用，支持添加/完成/删除任务，Material Design 风格 UI"
+        AppLanguage.ENGLISH -> "Full-featured Todo app with add/complete/delete tasks, Material Design UI"
+        AppLanguage.ARABIC -> "تطبيق مهام كامل مع إضافة/إكمال/حذف المهام، واجهة Material Design"
+    }
+    val sampleNodeFastifyName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "系统监控仪表盘"
+        AppLanguage.ENGLISH -> "System Monitor Dashboard"
+        AppLanguage.ARABIC -> "لوحة مراقبة النظام"
+    }
+    val sampleNodeFastifyDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "实时系统监控仪表盘，显示 CPU/内存/请求统计，深色主题"
+        AppLanguage.ENGLISH -> "Real-time system monitor showing CPU/memory/request stats, dark theme"
+        AppLanguage.ARABIC -> "مراقب نظام في الوقت الفعلي يعرض إحصائيات CPU/الذاكرة/الطلبات"
+    }
+    val sampleNodeKoaName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Markdown 笔记"
+        AppLanguage.ENGLISH -> "Markdown Notes"
+        AppLanguage.ARABIC -> "ملاحظات Markdown"
+    }
+    val sampleNodeKoaDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Markdown 笔记应用，支持创建/编辑/搜索笔记，实时预览"
+        AppLanguage.ENGLISH -> "Markdown notes app with create/edit/search, live preview"
+        AppLanguage.ARABIC -> "تطبيق ملاحظات Markdown مع إنشاء/تحرير/بحث، معاينة مباشرة"
+    }
+    
+    // ==================== DocsSite 示例项目 ====================
+    val sampleDocsSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快速体验文档站点导入"
+        AppLanguage.ENGLISH -> "Quick experience docs site import"
+        AppLanguage.ARABIC -> "تجربة سريعة لاستيراد موقع التوثيق"
+    }
+    val sampleDocsVitepressName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "VitePress 文档"
+        AppLanguage.ENGLISH -> "VitePress Docs"
+        AppLanguage.ARABIC -> "وثائق VitePress"
+    }
+    val sampleDocsVitepressDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "VitePress 静态文档站点，支持搜索与暗色模式"
+        AppLanguage.ENGLISH -> "VitePress static docs site with search and dark mode"
+        AppLanguage.ARABIC -> "موقع وثائق VitePress مع البحث والوضع الداكن"
+    }
+    val sampleDocsMkdocsName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "MkDocs 指南"
+        AppLanguage.ENGLISH -> "MkDocs Guide"
+        AppLanguage.ARABIC -> "دليل MkDocs"
+    }
+    val sampleDocsMkdocsDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "MkDocs Material 主题文档，Markdown 驱动"
+        AppLanguage.ENGLISH -> "MkDocs Material theme docs, Markdown-powered"
+        AppLanguage.ARABIC -> "وثائق MkDocs بسمة Material مدعومة بـ Markdown"
+    }
+    val sampleDocsHexoName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Hexo 文档博客"
+        AppLanguage.ENGLISH -> "Hexo Doc Blog"
+        AppLanguage.ARABIC -> "مدونة وثائق Hexo"
+    }
+    val sampleDocsHexoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Hexo 文档博客站点，分类与标签管理"
+        AppLanguage.ENGLISH -> "Hexo doc blog site with categories and tag management"
+        AppLanguage.ARABIC -> "مدونة وثائق Hexo مع التصنيفات وإدارة العلامات"
+    }
+    val sampleTagSearch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搜索"
+        AppLanguage.ENGLISH -> "Search"
+        AppLanguage.ARABIC -> "بحث"
+    }
+    val sampleTagDarkMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暗色模式"
+        AppLanguage.ENGLISH -> "Dark Mode"
+        AppLanguage.ARABIC -> "الوضع الداكن"
+    }
+    val sampleTagMarkdown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Markdown"
+        AppLanguage.ENGLISH -> "Markdown"
+        AppLanguage.ARABIC -> "Markdown"
+    }
+    val sampleTagCategories: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分类"
+        AppLanguage.ENGLISH -> "Categories"
+        AppLanguage.ARABIC -> "تصنيفات"
+    }
+    
+    // ==================== WordPress 示例项目 ====================
+    val sampleWpSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快速体验 WordPress 站点创建"
+        AppLanguage.ENGLISH -> "Quick experience WordPress site creation"
+        AppLanguage.ARABIC -> "تجربة سريعة لإنشاء موقع WordPress"
+    }
+    val sampleWpBlogName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 博客"
+        AppLanguage.ENGLISH -> "WordPress Blog"
+        AppLanguage.ARABIC -> "مدونة WordPress"
+    }
+    val sampleWpBlogDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "经典 WordPress 博客站点，含默认主题与文章示例"
+        AppLanguage.ENGLISH -> "Classic WordPress blog site with default theme and sample posts"
+        AppLanguage.ARABIC -> "مدونة WordPress كلاسيكية مع السمة الافتراضية ومقالات نموذجية"
+    }
+    val sampleWpWooName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WooCommerce 商店"
+        AppLanguage.ENGLISH -> "WooCommerce Store"
+        AppLanguage.ARABIC -> "متجر WooCommerce"
+    }
+    val sampleWpWooDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WooCommerce 电商站点示例，展示商品展示与购物车"
+        AppLanguage.ENGLISH -> "WooCommerce e-commerce demo with product display and cart"
+        AppLanguage.ARABIC -> "عرض WooCommerce للتجارة الإلكترونية مع عرض المنتجات وسلة التسوق"
+    }
+    val sampleWpPortfolioName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 作品集"
+        AppLanguage.ENGLISH -> "WordPress Portfolio"
+        AppLanguage.ARABIC -> "معرض أعمال WordPress"
+    }
+    val sampleWpPortfolioDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 作品集/企业站点，响应式布局与自定义页面"
+        AppLanguage.ENGLISH -> "WordPress portfolio/business site with responsive layout"
+        AppLanguage.ARABIC -> "موقع معرض أعمال WordPress بتصميم متجاوب"
+    }
+    val sampleTagBlog: String get() = when (lang) {
+        AppLanguage.CHINESE -> "博客"
+        AppLanguage.ENGLISH -> "Blog"
+        AppLanguage.ARABIC -> "مدونة"
+    }
+    val sampleTagEcommerce: String get() = when (lang) {
+        AppLanguage.CHINESE -> "电商"
+        AppLanguage.ENGLISH -> "E-Commerce"
+        AppLanguage.ARABIC -> "تجارة إلكترونية"
+    }
+    val sampleTagPortfolio: String get() = when (lang) {
+        AppLanguage.CHINESE -> "作品集"
+        AppLanguage.ENGLISH -> "Portfolio"
+        AppLanguage.ARABIC -> "معرض أعمال"
+    }
+    val sampleTagResponsive: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应式"
+        AppLanguage.ENGLISH -> "Responsive"
+        AppLanguage.ARABIC -> "متجاوب"
+    }
+    val sampleTagSqlite: String get() = when (lang) {
+        AppLanguage.CHINESE -> "SQLite"
+        AppLanguage.ENGLISH -> "SQLite"
+        AppLanguage.ARABIC -> "SQLite"
+    }
+    
+    // ==================== 油猴脚本 / Chrome 扩展导入 ====================
+    val importUserScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入油猴脚本"
+        AppLanguage.ENGLISH -> "Import Userscript"
+        AppLanguage.ARABIC -> "استيراد سكريبت المستخدم"
+    }
+    val importUserScriptHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 .user.js 及普通 .js 文件"
+        AppLanguage.ENGLISH -> "Supports .user.js and plain .js files"
+        AppLanguage.ARABIC -> "يدعم ملفات .user.js و .js العادية"
+    }
+    val importChromeExtension: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入 Chrome 扩展"
+        AppLanguage.ENGLISH -> "Import Chrome Extension"
+        AppLanguage.ARABIC -> "استيراد إضافة Chrome"
+    }
+    val importChromeExtensionHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 .crx 和 .zip 扩展包"
+        AppLanguage.ENGLISH -> "Supports .crx and .zip extension packages"
+        AppLanguage.ARABIC -> "يدعم حزم الإضافات .crx و .zip"
+    }
+    val installUserScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装油猴脚本"
+        AppLanguage.ENGLISH -> "Install Userscript"
+        AppLanguage.ARABIC -> "تثبيت سكريبت المستخدم"
+    }
+    val installChromeExtension: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装 Chrome 扩展"
+        AppLanguage.ENGLISH -> "Install Chrome Extension"
+        AppLanguage.ARABIC -> "تثبيت إضافة Chrome"
+    }
+    val install: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装"
+        AppLanguage.ENGLISH -> "Install"
+        AppLanguage.ARABIC -> "تثبيت"
+    }
+    val matchingSites: String get() = when (lang) {
+        AppLanguage.CHINESE -> "匹配网站"
+        AppLanguage.ENGLISH -> "Matching sites"
+        AppLanguage.ARABIC -> "المواقع المطابقة"
+    }
+    val requiredApis: String get() = when (lang) {
+        AppLanguage.CHINESE -> "所需 API"
+        AppLanguage.ENGLISH -> "Required APIs"
+        AppLanguage.ARABIC -> "واجهات برمجة مطلوبة"
+    }
+    val contentScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "内容脚本"
+        AppLanguage.ENGLISH -> "content scripts"
+        AppLanguage.ARABIC -> "سكريبتات المحتوى"
+    }
+    val unsupportedApis: String get() = when (lang) {
+        AppLanguage.CHINESE -> "不支持的 API"
+        AppLanguage.ENGLISH -> "Unsupported APIs"
+        AppLanguage.ARABIC -> "واجهات غير مدعومة"
+    }
+    
+    // ==================== HTML 项目优化（Linux 环境） ====================
+    val optimizeCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码优化"
+        AppLanguage.ENGLISH -> "Code Optimization"
+        AppLanguage.ARABIC -> "تحسين الكود"
+    }
+    val optimizeCodeHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用构建工具压缩 JS/CSS、编译 TypeScript，减小应用体积"
+        AppLanguage.ENGLISH -> "Minify JS/CSS, compile TypeScript to reduce app size"
+        AppLanguage.ARABIC -> "ضغط JS/CSS وتجميع TypeScript لتقليل حجم التطبيق"
+    }
+    val optimizing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化中..."
+        AppLanguage.ENGLISH -> "Optimizing..."
+        AppLanguage.ARABIC -> "جارٍ التحسين..."
+    }
+    val optimizeComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化完成"
+        AppLanguage.ENGLISH -> "Optimization complete"
+        AppLanguage.ARABIC -> "اكتمل التحسين"
+    }
+    val optimizeResultJs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "JS 文件压缩: %d 个"
+        AppLanguage.ENGLISH -> "JS files minified: %d"
+        AppLanguage.ARABIC -> "ملفات JS مضغوطة: %d"
+    }
+    val optimizeResultCss: String get() = when (lang) {
+        AppLanguage.CHINESE -> "CSS 文件压缩: %d 个"
+        AppLanguage.ENGLISH -> "CSS files minified: %d"
+        AppLanguage.ARABIC -> "ملفات CSS مضغوطة: %d"
+    }
+    val optimizeResultTs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "TypeScript 编译: %d 个"
+        AppLanguage.ENGLISH -> "TypeScript compiled: %d"
+        AppLanguage.ARABIC -> "ملفات TypeScript مجمعة: %d"
+    }
+    val optimizeResultSaved: String get() = when (lang) {
+        AppLanguage.CHINESE -> "节省空间: %s"
+        AppLanguage.ENGLISH -> "Space saved: %s"
+        AppLanguage.ARABIC -> "المساحة الموفرة: %s"
+    }
+    val optimizeFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化失败: %s"
+        AppLanguage.ENGLISH -> "Optimization failed: %s"
+        AppLanguage.ARABIC -> "فشل التحسين: %s"
+    }
+    val optimizeEsbuildReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "esbuild 就绪，将使用高性能压缩"
+        AppLanguage.ENGLISH -> "esbuild ready, high-performance minification"
+        AppLanguage.ARABIC -> "esbuild جاهز، ضغط عالي الأداء"
+    }
+    val optimizeFallback: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用内置压缩器（安装 esbuild 可获得更好效果）"
+        AppLanguage.ENGLISH -> "Using built-in minifier (install esbuild for better results)"
+        AppLanguage.ARABIC -> "استخدام الضاغط المدمج (ثبّت esbuild لنتائج أفضل)"
+    }
+    
+    // ==================== Node.js TypeScript 预编译 ====================
+    val tsPreCompile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "TypeScript 预编译"
+        AppLanguage.ENGLISH -> "TypeScript Pre-compilation"
+        AppLanguage.ARABIC -> "تجميع TypeScript المسبق"
+    }
+    val tsPreCompileHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动前使用 esbuild 将 TypeScript 编译为 JavaScript，提升运行速度"
+        AppLanguage.ENGLISH -> "Compile TypeScript to JavaScript with esbuild before launch for faster startup"
+        AppLanguage.ARABIC -> "تجميع TypeScript إلى JavaScript باستخدام esbuild قبل التشغيل لبدء أسرع"
+    }
+    val tsBundleMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "依赖打包"
+        AppLanguage.ENGLISH -> "Bundle Dependencies"
+        AppLanguage.ARABIC -> "تجميع التبعيات"
+    }
+    val tsBundleModeHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将项目和 node_modules 打包为单文件，大幅减小 APK 体积"
+        AppLanguage.ENGLISH -> "Bundle project and node_modules into a single file to reduce APK size"
+        AppLanguage.ARABIC -> "تجميع المشروع و node_modules في ملف واحد لتقليل حجم APK"
+    }
+    
+    // ==================== 性能优化 (Performance Optimization) ====================
+    val performanceOptimization: String get() = when (lang) {
+        AppLanguage.CHINESE -> "性能优化"
+        AppLanguage.ENGLISH -> "Performance Optimization"
+        AppLanguage.ARABIC -> "تحسين الأداء"
+    }
+    val performanceOptimizationDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全面优化应用性能：资源压缩、构建加速、加载提速"
+        AppLanguage.ENGLISH -> "Comprehensive app optimization: resource compression, build acceleration, loading speed"
+        AppLanguage.ARABIC -> "تحسين شامل: ضغط الموارد، تسريع البناء، سرعة التحميل"
+    }
+    val perfEnabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已启用性能优化"
+        AppLanguage.ENGLISH -> "Performance optimization enabled"
+        AppLanguage.ARABIC -> "تم تفعيل تحسين الأداء"
+    }
+    val perfDisabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未启用性能优化"
+        AppLanguage.ENGLISH -> "Performance optimization disabled"
+        AppLanguage.ARABIC -> "تحسين الأداء معطل"
+    }
+    // 资源优化
+    val perfResourceOptimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "资源优化"
+        AppLanguage.ENGLISH -> "Resource Optimization"
+        AppLanguage.ARABIC -> "تحسين الموارد"
+    }
+    val perfCompressImages: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片压缩"
+        AppLanguage.ENGLISH -> "Image Compression"
+        AppLanguage.ARABIC -> "ضغط الصور"
+    }
+    val perfCompressImagesHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "压缩 PNG/JPEG 图片，支持 WebP 转换"
+        AppLanguage.ENGLISH -> "Compress PNG/JPEG images, supports WebP conversion"
+        AppLanguage.ARABIC -> "ضغط صور PNG/JPEG، يدعم تحويل WebP"
+    }
+    val perfMinifyCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码压缩"
+        AppLanguage.ENGLISH -> "Code Minification"
+        AppLanguage.ARABIC -> "ضغط الكود"
+    }
+    val perfMinifyCodeHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "压缩 JS/CSS/SVG，移除注释和多余空白"
+        AppLanguage.ENGLISH -> "Minify JS/CSS/SVG, remove comments and whitespace"
+        AppLanguage.ARABIC -> "ضغط JS/CSS/SVG، إزالة التعليقات والمسافات"
+    }
+    val perfConvertWebP: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WebP 转换"
+        AppLanguage.ENGLISH -> "WebP Conversion"
+        AppLanguage.ARABIC -> "تحويل WebP"
+    }
+    val perfConvertWebPHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 PNG/JPEG 转为 WebP 格式，体积减少 30-50%"
+        AppLanguage.ENGLISH -> "Convert PNG/JPEG to WebP, 30-50% size reduction"
+        AppLanguage.ARABIC -> "تحويل PNG/JPEG إلى WebP، تقليل الحجم 30-50%"
+    }
+    val perfRemoveUnused: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清理无用资源"
+        AppLanguage.ENGLISH -> "Remove Unused Resources"
+        AppLanguage.ARABIC -> "إزالة الموارد غير المستخدمة"
+    }
+    val perfRemoveUnusedHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "移除模板 APK 中不需要的语言包和默认资源"
+        AppLanguage.ENGLISH -> "Remove unnecessary language packs and default resources from template"
+        AppLanguage.ARABIC -> "إزالة حزم اللغات والموارد الافتراضية غير الضرورية"
+    }
+    val perfImageQuality: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片质量"
+        AppLanguage.ENGLISH -> "Image Quality"
+        AppLanguage.ARABIC -> "جودة الصورة"
+    }
+    // 构建优化
+    val perfBuildOptimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "构建加速"
+        AppLanguage.ENGLISH -> "Build Acceleration"
+        AppLanguage.ARABIC -> "تسريع البناء"
+    }
+    val perfParallelProcessing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "并行处理"
+        AppLanguage.ENGLISH -> "Parallel Processing"
+        AppLanguage.ARABIC -> "المعالجة المتوازية"
+    }
+    val perfParallelProcessingHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "利用多核 CPU 并行处理资源文件"
+        AppLanguage.ENGLISH -> "Process resource files in parallel using multi-core CPU"
+        AppLanguage.ARABIC -> "معالجة ملفات الموارد بالتوازي باستخدام معالج متعدد النوى"
+    }
+    val perfEnableCache: String get() = when (lang) {
+        AppLanguage.CHINESE -> "智能缓存"
+        AppLanguage.ENGLISH -> "Smart Cache"
+        AppLanguage.ARABIC -> "التخزين المؤقت الذكي"
+    }
+    val perfEnableCacheHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缓存已优化的资源，避免重复处理"
+        AppLanguage.ENGLISH -> "Cache optimized resources to avoid reprocessing"
+        AppLanguage.ARABIC -> "تخزين الموارد المحسنة مؤقتاً لتجنب إعادة المعالجة"
+    }
+    // 加载优化
+    val perfLoadOptimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加载提速"
+        AppLanguage.ENGLISH -> "Loading Speed"
+        AppLanguage.ARABIC -> "سرعة التحميل"
+    }
+    val perfPreloadHints: String get() = when (lang) {
+        AppLanguage.CHINESE -> "资源预加载"
+        AppLanguage.ENGLISH -> "Resource Preloading"
+        AppLanguage.ARABIC -> "التحميل المسبق للموارد"
+    }
+    val perfPreloadHintsHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注入 preconnect/dns-prefetch 提示，加速资源下载"
+        AppLanguage.ENGLISH -> "Inject preconnect/dns-prefetch hints for faster resource loading"
+        AppLanguage.ARABIC -> "حقن تلميحات preconnect/dns-prefetch لتحميل أسرع"
+    }
+    val perfLazyLoading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片懒加载"
+        AppLanguage.ENGLISH -> "Image Lazy Loading"
+        AppLanguage.ARABIC -> "التحميل الكسول للصور"
+    }
+    val perfLazyLoadingHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "非首屏图片延迟加载，加速首屏渲染"
+        AppLanguage.ENGLISH -> "Defer off-screen images, accelerate first paint"
+        AppLanguage.ARABIC -> "تأخير صور خارج الشاشة، تسريع العرض الأول"
+    }
+    val perfOptimizeScripts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "脚本优化"
+        AppLanguage.ENGLISH -> "Script Optimization"
+        AppLanguage.ARABIC -> "تحسين البرامج النصية"
+    }
+    val perfOptimizeScriptsHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动添加 defer 属性，避免阻塞页面渲染"
+        AppLanguage.ENGLISH -> "Auto-add defer attribute, prevent render blocking"
+        AppLanguage.ARABIC -> "إضافة خاصية defer تلقائياً، منع حظر العرض"
+    }
+    // 运行时优化
+    val perfRuntimeOptimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时优化"
+        AppLanguage.ENGLISH -> "Runtime Optimization"
+        AppLanguage.ARABIC -> "تحسين وقت التشغيل"
+    }
+    val perfRuntimeScript: String get() = when (lang) {
+        AppLanguage.CHINESE -> "性能增强脚本"
+        AppLanguage.ENGLISH -> "Performance Enhancement Script"
+        AppLanguage.ARABIC -> "نص تحسين الأداء"
+    }
+    val perfRuntimeScriptHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注入滚动优化、内存管理、CDN 预连接等性能脚本"
+        AppLanguage.ENGLISH -> "Inject scroll optimization, memory management, CDN preconnect scripts"
+        AppLanguage.ARABIC -> "حقن نصوص تحسين التمرير وإدارة الذاكرة واتصال CDN المسبق"
+    }
+    // 优化结果统计
+    val perfStatsOriginalSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "原始大小"
+        AppLanguage.ENGLISH -> "Original Size"
+        AppLanguage.ARABIC -> "الحجم الأصلي"
+    }
+    val perfStatsOptimizedSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化后大小"
+        AppLanguage.ENGLISH -> "Optimized Size"
+        AppLanguage.ARABIC -> "الحجم المحسن"
+    }
+    val perfStatsSaved: String get() = when (lang) {
+        AppLanguage.CHINESE -> "节省"
+        AppLanguage.ENGLISH -> "Saved"
+        AppLanguage.ARABIC -> "تم التوفير"
+    }
+    val perfStatsImages: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片已压缩"
+        AppLanguage.ENGLISH -> "Images compressed"
+        AppLanguage.ARABIC -> "تم ضغط الصور"
+    }
+    val perfStatsCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码已压缩"
+        AppLanguage.ENGLISH -> "Code files minified"
+        AppLanguage.ARABIC -> "تم ضغط ملفات الكود"
+    }
+    val perfStatsTime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "优化耗时"
+        AppLanguage.ENGLISH -> "Optimization time"
+        AppLanguage.ARABIC -> "وقت التحسين"
+    }
+    val perfOptimizing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在优化性能..."
+        AppLanguage.ENGLISH -> "Optimizing performance..."
+        AppLanguage.ARABIC -> "جارٍ تحسين الأداء..."
+    }
+    val perfOptimizeComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "性能优化完成"
+        AppLanguage.ENGLISH -> "Performance optimization complete"
+        AppLanguage.ARABIC -> "اكتمل تحسين الأداء"
+    }
+    val featurePerfOptimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全面性能优化（资源/构建/加载/运行时）"
+        AppLanguage.ENGLISH -> "Comprehensive performance optimization (resource/build/loading/runtime)"
+        AppLanguage.ARABIC -> "تحسين شامل للأداء (الموارد/البناء/التحميل/وقت التشغيل)"
+    }
+    
+    // ==================== 软件加固 (App Hardening) ====================
+    val appHardening: String get() = when (lang) {
+        AppLanguage.CHINESE -> "软件加固"
+        AppLanguage.ENGLISH -> "App Hardening"
+        AppLanguage.ARABIC -> "تعزيز التطبيق"
+    }
+    val appHardeningDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "企业级应用加固保护，远超市面加固方案"
+        AppLanguage.ENGLISH -> "Enterprise-grade app hardening, surpassing market solutions"
+        AppLanguage.ARABIC -> "تعزيز التطبيقات على مستوى المؤسسات"
+    }
+    val hardeningEnabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已启用加固保护"
+        AppLanguage.ENGLISH -> "Hardening protection enabled"
+        AppLanguage.ARABIC -> "تم تفعيل حماية التعزيز"
+    }
+    val hardeningDisabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未启用加固"
+        AppLanguage.ENGLISH -> "Hardening disabled"
+        AppLanguage.ARABIC -> "التعزيز معطل"
+    }
+    val hardeningLevel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加固等级"
+        AppLanguage.ENGLISH -> "Hardening Level"
+        AppLanguage.ARABIC -> "مستوى التعزيز"
+    }
+    
+    // 加固等级
+    val hardeningLevelBasic: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基础"
+        AppLanguage.ENGLISH -> "Basic"
+        AppLanguage.ARABIC -> "أساسي"
+    }
+    val hardeningLevelStandard: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标准"
+        AppLanguage.ENGLISH -> "Standard"
+        AppLanguage.ARABIC -> "قياسي"
+    }
+    val hardeningLevelAdvanced: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高级"
+        AppLanguage.ENGLISH -> "Advanced"
+        AppLanguage.ARABIC -> "متقدم"
+    }
+    val hardeningLevelFortress: String get() = when (lang) {
+        AppLanguage.CHINESE -> "堡垒"
+        AppLanguage.ENGLISH -> "Fortress"
+        AppLanguage.ARABIC -> "حصن"
+    }
+    val hardeningLevelBasicDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "DEX 加密 + 反调试 + 签名校验"
+        AppLanguage.ENGLISH -> "DEX encryption + Anti-debug + Signature verify"
+        AppLanguage.ARABIC -> "تشفير DEX + مكافحة التصحيح + التحقق من التوقيع"
+    }
+    val hardeningLevelStandardDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基础 + SO 保护 + 字符串加密 + 环境检测"
+        AppLanguage.ENGLISH -> "Basic + SO protection + String encryption + Env detection"
+        AppLanguage.ARABIC -> "أساسي + حماية SO + تشفير النصوص + كشف البيئة"
+    }
+    val hardeningLevelAdvancedDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标准 + VMP + 控制流混淆 + RASP + 内存保护"
+        AppLanguage.ENGLISH -> "Standard + VMP + Control flow + RASP + Memory protection"
+        AppLanguage.ARABIC -> "قياسي + VMP + تدفق التحكم + RASP + حماية الذاكرة"
+    }
+    val hardeningLevelFortressDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全部开启，极致保护 · 理工男的浪漫"
+        AppLanguage.ENGLISH -> "All enabled, ultimate protection"
+        AppLanguage.ARABIC -> "تمكين الكل، حماية قصوى"
+    }
+    
+    // DEX 保护
+    val dexProtection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "DEX 保护"
+        AppLanguage.ENGLISH -> "DEX Protection"
+        AppLanguage.ARABIC -> "حماية DEX"
+    }
+    val dexEncryption: String get() = when (lang) {
+        AppLanguage.CHINESE -> "DEX 加密（壳保护）"
+        AppLanguage.ENGLISH -> "DEX Encryption (Packing)"
+        AppLanguage.ARABIC -> "تشفير DEX (التغليف)"
+    }
+    val dexEncryptionHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加密 classes.dex，运行时动态解密加载"
+        AppLanguage.ENGLISH -> "Encrypt classes.dex, dynamically decrypt at runtime"
+        AppLanguage.ARABIC -> "تشفير classes.dex، فك التشفير ديناميكياً في وقت التشغيل"
+    }
+    val dexSplitting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "DEX 分片加载"
+        AppLanguage.ENGLISH -> "DEX Splitting"
+        AppLanguage.ARABIC -> "تقسيم DEX"
+    }
+    val dexSplittingHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将 DEX 拆分为加密片段，按需动态重组"
+        AppLanguage.ENGLISH -> "Split DEX into encrypted fragments, reassemble on demand"
+        AppLanguage.ARABIC -> "تقسيم DEX إلى أجزاء مشفرة، إعادة التجميع عند الطلب"
+    }
+    val dexVmp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "VMP 虚拟机保护"
+        AppLanguage.ENGLISH -> "VMP (Virtual Machine Protection)"
+        AppLanguage.ARABIC -> "حماية الآلة الافتراضية VMP"
+    }
+    val dexVmpHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将关键代码转为自定义指令集，每次打包随机化"
+        AppLanguage.ENGLISH -> "Convert critical code to custom instruction set, randomized per build"
+        AppLanguage.ARABIC -> "تحويل الكود الحرج إلى مجموعة تعليمات مخصصة"
+    }
+    val dexControlFlow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "控制流平坦化"
+        AppLanguage.ENGLISH -> "Control Flow Flattening"
+        AppLanguage.ARABIC -> "تسطيح تدفق التحكم"
+    }
+    val dexControlFlowHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "打乱代码执行流程，干扰静态分析"
+        AppLanguage.ENGLISH -> "Scramble code execution flow, hinder static analysis"
+        AppLanguage.ARABIC -> "تشويش تدفق تنفيذ الكود"
+    }
+    
+    // Native SO 保护
+    val soProtection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Native SO 保护"
+        AppLanguage.ENGLISH -> "Native SO Protection"
+        AppLanguage.ARABIC -> "حماية Native SO"
+    }
+    val soEncryption: String get() = when (lang) {
+        AppLanguage.CHINESE -> "SO Section 加密"
+        AppLanguage.ENGLISH -> "SO Section Encryption"
+        AppLanguage.ARABIC -> "تشفير قسم SO"
+    }
+    val soEncryptionHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加密 .text/.rodata 等关键代码段"
+        AppLanguage.ENGLISH -> "Encrypt critical sections like .text/.rodata"
+        AppLanguage.ARABIC -> "تشفير الأقسام الحرجة مثل .text/.rodata"
+    }
+    val soElfObfuscation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ELF 头混淆"
+        AppLanguage.ENGLISH -> "ELF Header Obfuscation"
+        AppLanguage.ARABIC -> "تشويش رأس ELF"
+    }
+    val soElfObfuscationHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "干扰 IDA/Ghidra 等分析工具"
+        AppLanguage.ENGLISH -> "Disrupt IDA/Ghidra analysis tools"
+        AppLanguage.ARABIC -> "تعطيل أدوات تحليل IDA/Ghidra"
+    }
+    val soSymbolStrip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "符号剥离 + 假符号注入"
+        AppLanguage.ENGLISH -> "Symbol Strip + Fake Symbol Injection"
+        AppLanguage.ARABIC -> "إزالة الرموز + حقن رموز مزيفة"
+    }
+    val soSymbolStripHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "移除真实符号，注入蜜罐假符号误导分析"
+        AppLanguage.ENGLISH -> "Remove real symbols, inject honeypot fake symbols"
+        AppLanguage.ARABIC -> "إزالة الرموز الحقيقية، حقن رموز مزيفة"
+    }
+    val soAntiDump: String get() = when (lang) {
+        AppLanguage.CHINESE -> "反内存 Dump"
+        AppLanguage.ENGLISH -> "Anti-Memory Dump"
+        AppLanguage.ARABIC -> "مكافحة تفريغ الذاكرة"
+    }
+    val soAntiDumpHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "mprotect + inotify 多层内存保护"
+        AppLanguage.ENGLISH -> "Multi-layer memory protection with mprotect + inotify"
+        AppLanguage.ARABIC -> "حماية ذاكرة متعددة الطبقات"
+    }
+    
+    // 反逆向工程
+    val antiReverse: String get() = when (lang) {
+        AppLanguage.CHINESE -> "反逆向工程"
+        AppLanguage.ENGLISH -> "Anti-Reverse Engineering"
+        AppLanguage.ARABIC -> "مكافحة الهندسة العكسية"
+    }
+    val antiDebugMultiLayer: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多层反调试"
+        AppLanguage.ENGLISH -> "Multi-Layer Anti-Debug"
+        AppLanguage.ARABIC -> "مكافحة التصحيح متعددة الطبقات"
+    }
+    val antiDebugMultiLayerHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ptrace/时序/信号/线程 四层检测"
+        AppLanguage.ENGLISH -> "ptrace/timing/signal/thread 4-layer detection"
+        AppLanguage.ARABIC -> "كشف 4 طبقات: ptrace/التوقيت/الإشارة/الخيط"
+    }
+    val antiFridaAdvanced: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高级 Frida 检测"
+        AppLanguage.ENGLISH -> "Advanced Frida Detection"
+        AppLanguage.ARABIC -> "كشف Frida متقدم"
+    }
+    val antiFridaAdvancedHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "端口/内存/进程/线程名/特征码 五维检测"
+        AppLanguage.ENGLISH -> "Port/memory/process/thread/signature 5D detection"
+        AppLanguage.ARABIC -> "كشف 5 أبعاد: المنفذ/الذاكرة/العملية/الخيط/التوقيع"
+    }
+    val antiXposedDeep: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深度 Xposed/LSPosed 检测"
+        AppLanguage.ENGLISH -> "Deep Xposed/LSPosed Detection"
+        AppLanguage.ARABIC -> "كشف عميق لـ Xposed/LSPosed"
+    }
+    val antiXposedDeepHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "ART Hook 检测 + 堆栈帧分析"
+        AppLanguage.ENGLISH -> "ART Hook detection + Stack frame analysis"
+        AppLanguage.ARABIC -> "كشف ART Hook + تحليل إطار المكدس"
+    }
+    val antiMagiskDetect: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Magisk/Shamiko 检测"
+        AppLanguage.ENGLISH -> "Magisk/Shamiko Detection"
+        AppLanguage.ARABIC -> "كشف Magisk/Shamiko"
+    }
+    val antiMagiskDetectHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测 MagiskHide/Shamiko 隐藏行为"
+        AppLanguage.ENGLISH -> "Detect MagiskHide/Shamiko cloaking"
+        AppLanguage.ARABIC -> "كشف إخفاء MagiskHide/Shamiko"
+    }
+    val antiMemoryDump: String get() = when (lang) {
+        AppLanguage.CHINESE -> "反内存 Dump"
+        AppLanguage.ENGLISH -> "Anti-Memory Dump"
+        AppLanguage.ARABIC -> "مكافحة تفريغ الذاكرة"
+    }
+    val antiMemoryDumpHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "防止运行时内存提取"
+        AppLanguage.ENGLISH -> "Prevent runtime memory extraction"
+        AppLanguage.ARABIC -> "منع استخراج الذاكرة في وقت التشغيل"
+    }
+    val antiScreenCapture: String get() = when (lang) {
+        AppLanguage.CHINESE -> "反截屏/录屏"
+        AppLanguage.ENGLISH -> "Anti-Screenshot/Recording"
+        AppLanguage.ARABIC -> "مكافحة التقاط/تسجيل الشاشة"
+    }
+    val antiScreenCaptureHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "FLAG_SECURE 防止屏幕内容被捕获"
+        AppLanguage.ENGLISH -> "FLAG_SECURE prevents screen content capture"
+        AppLanguage.ARABIC -> "FLAG_SECURE يمنع التقاط محتوى الشاشة"
+    }
+    
+    // 环境检测
+    val environmentDetection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "环境检测"
+        AppLanguage.ENGLISH -> "Environment Detection"
+        AppLanguage.ARABIC -> "كشف البيئة"
+    }
+    val detectEmulatorAdvanced: String get() = when (lang) {
+        AppLanguage.CHINESE -> "高级模拟器检测"
+        AppLanguage.ENGLISH -> "Advanced Emulator Detection"
+        AppLanguage.ARABIC -> "كشف محاكي متقدم"
+    }
+    val detectEmulatorAdvancedHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "硬件指纹/传感器/温度 多维度检测"
+        AppLanguage.ENGLISH -> "Hardware fingerprint/sensor/temperature multi-dim detection"
+        AppLanguage.ARABIC -> "كشف متعدد الأبعاد"
+    }
+    val detectVirtualApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "虚拟化环境检测"
+        AppLanguage.ENGLISH -> "Virtual Environment Detection"
+        AppLanguage.ARABIC -> "كشف البيئة الافتراضية"
+    }
+    val detectVirtualAppHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测太极/VirtualXposed/分身/多开"
+        AppLanguage.ENGLISH -> "Detect VirtualXposed/Parallel Space/Cloners"
+        AppLanguage.ARABIC -> "كشف VirtualXposed/التطبيقات المتوازية"
+    }
+    val detectUSBDebugging: String get() = when (lang) {
+        AppLanguage.CHINESE -> "USB 调试检测"
+        AppLanguage.ENGLISH -> "USB Debugging Detection"
+        AppLanguage.ARABIC -> "كشف تصحيح USB"
+    }
+    val detectUSBDebuggingHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测 ADB 调试状态"
+        AppLanguage.ENGLISH -> "Detect ADB debugging state"
+        AppLanguage.ARABIC -> "كشف حالة تصحيح ADB"
+    }
+    val detectVPN: String get() = when (lang) {
+        AppLanguage.CHINESE -> "VPN/代理检测"
+        AppLanguage.ENGLISH -> "VPN/Proxy Detection"
+        AppLanguage.ARABIC -> "كشف VPN/البروكسي"
+    }
+    val detectVPNHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测网络代理和 VPN 连接"
+        AppLanguage.ENGLISH -> "Detect network proxy and VPN connections"
+        AppLanguage.ARABIC -> "كشف اتصالات البروكسي و VPN"
+    }
+    val detectDeveloperOptions: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开发者选项检测"
+        AppLanguage.ENGLISH -> "Developer Options Detection"
+        AppLanguage.ARABIC -> "كشف خيارات المطور"
+    }
+    val detectDeveloperOptionsHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测开发者选项是否已开启"
+        AppLanguage.ENGLISH -> "Detect if developer options are enabled"
+        AppLanguage.ARABIC -> "كشف ما إذا كانت خيارات المطور مفعلة"
+    }
+    
+    // 代码混淆
+    val codeObfuscation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码混淆"
+        AppLanguage.ENGLISH -> "Code Obfuscation"
+        AppLanguage.ARABIC -> "تشويش الكود"
+    }
+    val stringEncryption: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多层字符串加密"
+        AppLanguage.ENGLISH -> "Multi-Layer String Encryption"
+        AppLanguage.ARABIC -> "تشفير النصوص متعدد الطبقات"
+    }
+    val stringEncryptionHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AES + 自定义 Base64 + XOR 三层加密"
+        AppLanguage.ENGLISH -> "AES + Custom Base64 + XOR 3-layer encryption"
+        AppLanguage.ARABIC -> "تشفير 3 طبقات: AES + Base64 مخصص + XOR"
+    }
+    val classNameObfuscation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "类名混淆"
+        AppLanguage.ENGLISH -> "Class Name Obfuscation"
+        AppLanguage.ARABIC -> "تشويش أسماء الفئات"
+    }
+    val classNameObfuscationHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Unicode 相似字符替换，增加分析压力"
+        AppLanguage.ENGLISH -> "Unicode confusable character replacement"
+        AppLanguage.ARABIC -> "استبدال أحرف Unicode المتشابهة"
+    }
+    val callIndirection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "方法调用间接化"
+        AppLanguage.ENGLISH -> "Call Indirection"
+        AppLanguage.ARABIC -> "التوجيه غير المباشر للاستدعاءات"
+    }
+    val callIndirectionHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "反射 + 动态代理包装关键调用"
+        AppLanguage.ENGLISH -> "Reflection + Dynamic proxy for critical calls"
+        AppLanguage.ARABIC -> "الانعكاس + الوكيل الديناميكي للاستدعاءات الحرجة"
+    }
+    val opaquePredicates: String get() = when (lang) {
+        AppLanguage.CHINESE -> "不透明谓词注入"
+        AppLanguage.ENGLISH -> "Opaque Predicate Injection"
+        AppLanguage.ARABIC -> "حقن المسندات المعتمة"
+    }
+    val opaquePredicatesHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注入恒真/恒假条件 + 垃圾代码路径"
+        AppLanguage.ENGLISH -> "Inject always-true/false conditions + junk code paths"
+        AppLanguage.ARABIC -> "حقن شروط دائماً صحيحة/خاطئة + مسارات كود وهمية"
+    }
+    
+    // RASP
+    val raspProtection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时自保护 (RASP)"
+        AppLanguage.ENGLISH -> "Runtime Self-Protection (RASP)"
+        AppLanguage.ARABIC -> "الحماية الذاتية في وقت التشغيل (RASP)"
+    }
+    val dexCrcVerify: String get() = when (lang) {
+        AppLanguage.CHINESE -> "DEX CRC 自校验"
+        AppLanguage.ENGLISH -> "DEX CRC Self-Verification"
+        AppLanguage.ARABIC -> "التحقق الذاتي من DEX CRC"
+    }
+    val dexCrcVerifyHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时校验 DEX 完整性，检测热修改"
+        AppLanguage.ENGLISH -> "Verify DEX integrity at runtime, detect hot-patching"
+        AppLanguage.ARABIC -> "التحقق من سلامة DEX في وقت التشغيل"
+    }
+    val memoryIntegrity: String get() = when (lang) {
+        AppLanguage.CHINESE -> "内存完整性监控"
+        AppLanguage.ENGLISH -> "Memory Integrity Monitoring"
+        AppLanguage.ARABIC -> "مراقبة سلامة الذاكرة"
+    }
+    val memoryIntegrityHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "HMAC 标记关键数据，定期验证"
+        AppLanguage.ENGLISH -> "HMAC tag critical data, periodic verification"
+        AppLanguage.ARABIC -> "وسم HMAC للبيانات الحرجة، التحقق الدوري"
+    }
+    val jniCallValidation: String get() = when (lang) {
+        AppLanguage.CHINESE -> "JNI 调用链验证"
+        AppLanguage.ENGLISH -> "JNI Call Chain Validation"
+        AppLanguage.ARABIC -> "التحقق من سلسلة استدعاءات JNI"
+    }
+    val jniCallValidationHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "验证 JNI 调用来源合法性"
+        AppLanguage.ENGLISH -> "Validate JNI call origin legitimacy"
+        AppLanguage.ARABIC -> "التحقق من شرعية مصدر استدعاء JNI"
+    }
+    val timingCheck: String get() = when (lang) {
+        AppLanguage.CHINESE -> "时序检测"
+        AppLanguage.ENGLISH -> "Timing Check"
+        AppLanguage.ARABIC -> "فحص التوقيت"
+    }
+    val timingCheckHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多时间源交叉验证，反加速/减速"
+        AppLanguage.ENGLISH -> "Multi-source timing cross-validation, anti-speedhack"
+        AppLanguage.ARABIC -> "التحقق المتقاطع من التوقيت"
+    }
+    val stackTraceFilter: String get() = when (lang) {
+        AppLanguage.CHINESE -> "堆栈轨迹清洗"
+        AppLanguage.ENGLISH -> "Stack Trace Sanitization"
+        AppLanguage.ARABIC -> "تنظيف تتبع المكدس"
+    }
+    val stackTraceFilterHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "过滤内部实现细节，防止逻辑推断"
+        AppLanguage.ENGLISH -> "Filter internal details, prevent logic inference"
+        AppLanguage.ARABIC -> "تصفية التفاصيل الداخلية"
+    }
+    
+    // 防篡改
+    val antiTamper: String get() = when (lang) {
+        AppLanguage.CHINESE -> "防篡改"
+        AppLanguage.ENGLISH -> "Anti-Tampering"
+        AppLanguage.ARABIC -> "مكافحة العبث"
+    }
+    val multiPointSignature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多点签名验证"
+        AppLanguage.ENGLISH -> "Multi-Point Signature Verification"
+        AppLanguage.ARABIC -> "التحقق من التوقيع متعدد النقاط"
+    }
+    val multiPointSignatureHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Java + Native + 延迟 三方交叉验证"
+        AppLanguage.ENGLISH -> "Java + Native + Delayed 3-way cross-verification"
+        AppLanguage.ARABIC -> "التحقق المتقاطع ثلاثي الاتجاهات"
+    }
+    val apkChecksum: String get() = when (lang) {
+        AppLanguage.CHINESE -> "APK 校验和验证"
+        AppLanguage.ENGLISH -> "APK Checksum Validation"
+        AppLanguage.ARABIC -> "التحقق من المجموع الاختباري لـ APK"
+    }
+    val apkChecksumHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "DEX + 资源 + Manifest 完整性校验"
+        AppLanguage.ENGLISH -> "DEX + Resources + Manifest integrity check"
+        AppLanguage.ARABIC -> "فحص سلامة DEX + الموارد + Manifest"
+    }
+    val resourceIntegrity: String get() = when (lang) {
+        AppLanguage.CHINESE -> "资源文件完整性"
+        AppLanguage.ENGLISH -> "Resource File Integrity"
+        AppLanguage.ARABIC -> "سلامة ملفات الموارد"
+    }
+    val resourceIntegrityHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "校验资源文件的 SHA-256 哈希"
+        AppLanguage.ENGLISH -> "Verify SHA-256 hash of resource files"
+        AppLanguage.ARABIC -> "التحقق من تجزئة SHA-256 لملفات الموارد"
+    }
+    val certificatePinning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "证书锁定"
+        AppLanguage.ENGLISH -> "Certificate Pinning"
+        AppLanguage.ARABIC -> "تثبيت الشهادة"
+    }
+    val certificatePinningHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "防止中间人攻击，锁定服务器证书"
+        AppLanguage.ENGLISH -> "Prevent MITM attacks, pin server certificates"
+        AppLanguage.ARABIC -> "منع هجمات الوسيط، تثبيت شهادات الخادم"
+    }
+    
+    // 威胁响应
+    val threatResponse: String get() = when (lang) {
+        AppLanguage.CHINESE -> "威胁响应策略"
+        AppLanguage.ENGLISH -> "Threat Response Strategy"
+        AppLanguage.ARABIC -> "استراتيجية الاستجابة للتهديدات"
+    }
+    val threatResponseLogOnly: String get() = when (lang) {
+        AppLanguage.CHINESE -> "仅记录日志"
+        AppLanguage.ENGLISH -> "Log Only"
+        AppLanguage.ARABIC -> "تسجيل فقط"
+    }
+    val threatResponseSilentExit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "静默退出"
+        AppLanguage.ENGLISH -> "Silent Exit"
+        AppLanguage.ARABIC -> "خروج صامت"
+    }
+    val threatResponseCrashRandom: String get() = when (lang) {
+        AppLanguage.CHINESE -> "随机崩溃"
+        AppLanguage.ENGLISH -> "Random Crash"
+        AppLanguage.ARABIC -> "انهيار عشوائي"
+    }
+    val threatResponseDataWipe: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据擦除"
+        AppLanguage.ENGLISH -> "Data Wipe"
+        AppLanguage.ARABIC -> "مسح البيانات"
+    }
+    val threatResponseFakeData: String get() = when (lang) {
+        AppLanguage.CHINESE -> "假数据注入"
+        AppLanguage.ENGLISH -> "Fake Data Injection"
+        AppLanguage.ARABIC -> "حقن بيانات مزيفة"
+    }
+    val responseDelay: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应延迟"
+        AppLanguage.ENGLISH -> "Response Delay"
+        AppLanguage.ARABIC -> "تأخير الاستجابة"
+    }
+    val responseDelayHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "延迟响应更隐蔽（秒）"
+        AppLanguage.ENGLISH -> "Delayed response is more stealthy (seconds)"
+        AppLanguage.ARABIC -> "الاستجابة المتأخرة أكثر تخفياً (ثوانٍ)"
+    }
+    val enableHoneypot: String get() = when (lang) {
+        AppLanguage.CHINESE -> "蜜罐陷阱"
+        AppLanguage.ENGLISH -> "Honeypot Trap"
+        AppLanguage.ARABIC -> "فخ مصيدة العسل"
+    }
+    val enableHoneypotHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注入假数据迷惑逆向工程师"
+        AppLanguage.ENGLISH -> "Inject fake data to mislead reverse engineers"
+        AppLanguage.ARABIC -> "حقن بيانات مزيفة لتضليل المهندسين العكسيين"
+    }
+    val enableSelfDestruct: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自毁机制"
+        AppLanguage.ENGLISH -> "Self-Destruct"
+        AppLanguage.ARABIC -> "التدمير الذاتي"
+    }
+    val enableSelfDestructHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "严重威胁时清除所有敏感数据"
+        AppLanguage.ENGLISH -> "Wipe all sensitive data under severe threats"
+        AppLanguage.ARABIC -> "مسح جميع البيانات الحساسة تحت تهديدات شديدة"
+    }
+    val hardeningProtectionLayers: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保护层数"
+        AppLanguage.ENGLISH -> "Protection Layers"
+        AppLanguage.ARABIC -> "طبقات الحماية"
+    }
+    
+    // ==================== AI 编程 ====================
+    val aiCodingAssistant: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 编程助手"
+        AppLanguage.ENGLISH -> "AI Coding Assistant"
+        AppLanguage.ARABIC -> "مساعد البرمجة AI"
+    }
+    val aiCodingWelcome: String get() = when (lang) {
+        AppLanguage.CHINESE -> "AI 帮你快速生成应用代码"
+        AppLanguage.ENGLISH -> "AI helps you quickly generate app code"
+        AppLanguage.ARABIC -> "يساعدك AI على إنشاء كود التطبيق بسرعة"
+    }
+    val selectCodingType: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择应用类型"
+        AppLanguage.ENGLISH -> "Select App Type"
+        AppLanguage.ARABIC -> "اختر نوع التطبيق"
+    }
+    val codingTypeHtml: String get() = when (lang) {
+        AppLanguage.CHINESE -> "HTML"
+        AppLanguage.ENGLISH -> "HTML"
+        AppLanguage.ARABIC -> "HTML"
+    }
+    val codingTypeFrontend: String get() = when (lang) {
+        AppLanguage.CHINESE -> "前端项目"
+        AppLanguage.ENGLISH -> "Frontend"
+        AppLanguage.ARABIC -> "الواجهة الأمامية"
+    }
+    val codingTypeNodejs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Node.js"
+        AppLanguage.ENGLISH -> "Node.js"
+        AppLanguage.ARABIC -> "Node.js"
+    }
+    val codingTypeWordpress: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress"
+        AppLanguage.ENGLISH -> "WordPress"
+        AppLanguage.ARABIC -> "WordPress"
+    }
+    val codingTypePhp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP"
+        AppLanguage.ENGLISH -> "PHP"
+        AppLanguage.ARABIC -> "PHP"
+    }
+    val codingTypePython: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Python"
+        AppLanguage.ENGLISH -> "Python"
+        AppLanguage.ARABIC -> "Python"
+    }
+    val codingTypeGo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go"
+        AppLanguage.ENGLISH -> "Go"
+        AppLanguage.ARABIC -> "Go"
+    }
+    val codingTypeHtmlDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "HTML/CSS/JS 网页应用"
+        AppLanguage.ENGLISH -> "HTML/CSS/JS web apps"
+        AppLanguage.ARABIC -> "تطبيقات ويب HTML/CSS/JS"
+    }
+    val codingTypeFrontendDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "React/Vue/Next.js 前端项目"
+        AppLanguage.ENGLISH -> "React/Vue/Next.js frontend projects"
+        AppLanguage.ARABIC -> "مشاريع الواجهة الأمامية React/Vue/Next.js"
+    }
+    val codingTypeNodejsDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Express/Koa/Fastify 后端服务"
+        AppLanguage.ENGLISH -> "Express/Koa/Fastify backend services"
+        AppLanguage.ARABIC -> "خدمات خلفية Express/Koa/Fastify"
+    }
+    val codingTypeWordpressDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "WordPress 主题/插件开发"
+        AppLanguage.ENGLISH -> "WordPress theme/plugin development"
+        AppLanguage.ARABIC -> "تطوير سمات/إضافات WordPress"
+    }
+    val codingTypePhpDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 后端应用开发"
+        AppLanguage.ENGLISH -> "PHP backend app development"
+        AppLanguage.ARABIC -> "تطوير تطبيقات PHP الخلفية"
+    }
+    val codingTypePythonDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Flask/Django/FastAPI 应用"
+        AppLanguage.ENGLISH -> "Flask/Django/FastAPI apps"
+        AppLanguage.ARABIC -> "تطبيقات Flask/Django/FastAPI"
+    }
+    val codingTypeGoDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Go Web 服务/API 开发"
+        AppLanguage.ENGLISH -> "Go web service/API development"
+        AppLanguage.ARABIC -> "تطوير خدمات/واجهات Go"
+    }
+    val directoryTree: String get() = when (lang) {
+        AppLanguage.CHINESE -> "目录树"
+        AppLanguage.ENGLISH -> "Directory Tree"
+        AppLanguage.ARABIC -> "شجرة الدليل"
+    }
+    val editCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "编辑代码"
+        AppLanguage.ENGLISH -> "Edit Code"
+        AppLanguage.ARABIC -> "تحرير الكود"
+    }
+    val saveFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保存文件"
+        AppLanguage.ENGLISH -> "Save File"
+        AppLanguage.ARABIC -> "حفظ الملف"
+    }
+    val fileSaved: String get() = when (lang) {
+        AppLanguage.CHINESE -> "文件已保存"
+        AppLanguage.ENGLISH -> "File saved"
+        AppLanguage.ARABIC -> "تم حفظ الملف"
+    }
+    val exportToProject: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导出到项目"
+        AppLanguage.ENGLISH -> "Export to Project"
+        AppLanguage.ARABIC -> "تصدير إلى مشروع"
+    }
+    val previewNotSupported: String get() = when (lang) {
+        AppLanguage.CHINESE -> "该应用类型不支持直接预览"
+        AppLanguage.ENGLISH -> "Preview not supported for this app type"
+        AppLanguage.ARABIC -> "المعاينة غير مدعومة لهذا النوع"
+    }
+    val noFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂无文件"
+        AppLanguage.ENGLISH -> "No files yet"
+        AppLanguage.ARABIC -> "لا توجد ملفات بعد"
+    }
+    val exportAllFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导出所有文件"
+        AppLanguage.ENGLISH -> "Export All Files"
+        AppLanguage.ARABIC -> "تصدير جميع الملفات"
+    }
+    val downloadAllFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载所有文件"
+        AppLanguage.ENGLISH -> "Download All Files"
+        AppLanguage.ARABIC -> "تنزيل جميع الملفات"
+    }
+    val allFilter: String get() = when (lang) {
+        AppLanguage.CHINESE -> "全部"
+        AppLanguage.ENGLISH -> "All"
+        AppLanguage.ARABIC -> "الكل"
+    }
+    val tryAskingPrompts: String get() = when (lang) {
+        AppLanguage.CHINESE -> "试试这些提示"
+        AppLanguage.ENGLISH -> "Try these prompts"
+        AppLanguage.ARABIC -> "جرّب هذه الأوامر"
+    }
+    
+    // ---- AI Coding: write_file tool descriptions (per type) ----
+    val writeToolDescHtml: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。将完整代码写入指定文件。支持 HTML/CSS/JS/JSON/SVG 等文件类型。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Write complete code to the specified file. Supports HTML/CSS/JS/JSON/SVG file types."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. كتابة الكود الكامل في الملف المحدد. يدعم أنواع ملفات HTML/CSS/JS/JSON/SVG."
+    }
+    val writeToolDescFrontend: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。支持 React/Vue/Next.js 项目的所有文件类型（JSX/TSX/CSS/JSON 等）。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Supports all React/Vue/Next.js project file types (JSX/TSX/CSS/JSON, etc.)."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. يدعم جميع أنواع ملفات مشاريع React/Vue/Next.js (JSX/TSX/CSS/JSON، إلخ)."
+    }
+    val writeToolDescNodejs: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。支持 Node.js 项目文件（JS/TS/JSON/package.json 等）。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Supports Node.js project files (JS/TS/JSON/package.json, etc.)."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. يدعم ملفات مشاريع Node.js (JS/TS/JSON/package.json، إلخ)."
+    }
+    val writeToolDescWordpress: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。支持 WordPress 主题/插件文件（PHP/CSS/JS 等）。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Supports WordPress theme/plugin files (PHP/CSS/JS, etc.)."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. يدعم ملفات سمات/إضافات WordPress (PHP/CSS/JS، إلخ)."
+    }
+    val writeToolDescPhp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。支持 PHP 项目文件（PHP/HTML/CSS/JS 等）。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Supports PHP project files (PHP/HTML/CSS/JS, etc.)."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. يدعم ملفات مشاريع PHP (PHP/HTML/CSS/JS، إلخ)."
+    }
+    val writeToolDescPython: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。支持 Python 项目文件（.py/requirements.txt/HTML 模板等）。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Supports Python project files (.py/requirements.txt/HTML templates, etc.)."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. يدعم ملفات مشاريع Python (.py/requirements.txt/قوالب HTML، إلخ)."
+    }
+    val writeToolDescGo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建或覆盖文件。支持 Go 项目文件（.go/go.mod/HTML 模板等）。"
+        AppLanguage.ENGLISH -> "Create or overwrite a file. Supports Go project files (.go/go.mod/HTML templates, etc.)."
+        AppLanguage.ARABIC -> "إنشاء أو استبدال ملف. يدعم ملفات مشاريع Go (.go/go.mod/قوالب HTML، إلخ)."
+    }
+    
+    // ---- AI Coding: example prompts per type (2 per type) ----
+    val aiPromptHtml1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建一个现代个人主页，包含导航栏、英雄区、作品展示和联系方式"
+        AppLanguage.ENGLISH -> "Create a modern personal homepage with navbar, hero section, portfolio and contact info"
+        AppLanguage.ARABIC -> "إنشاء صفحة شخصية حديثة تحتوي على شريط تنقل وقسم بطل ومعرض أعمال ومعلومات اتصال"
+    }
+    val aiPromptHtml2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "做一个天气预报应用界面，支持搜索城市、显示当前天气和未来7天预报"
+        AppLanguage.ENGLISH -> "Build a weather forecast app UI with city search, current weather and 7-day forecast"
+        AppLanguage.ARABIC -> "بناء واجهة تطبيق توقعات الطقس مع بحث المدينة والطقس الحالي وتوقعات 7 أيام"
+    }
+    val aiPromptFrontend1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用 React 创建一个待办事项应用，支持添加、删除、标记完成和本地存储"
+        AppLanguage.ENGLISH -> "Create a React todo app with add, delete, mark complete and local storage support"
+        AppLanguage.ARABIC -> "إنشاء تطبيق مهام React مع إضافة وحذف وتعليم إتمام ودعم التخزين المحلي"
+    }
+    val aiPromptFrontend2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用 Vue.js 构建一个电商产品列表页面，包含筛选、排序和购物车功能"
+        AppLanguage.ENGLISH -> "Build a Vue.js e-commerce product listing page with filtering, sorting and cart"
+        AppLanguage.ARABIC -> "بناء صفحة منتجات تجارة إلكترونية Vue.js مع تصفية وترتيب وسلة شراء"
+    }
+    val aiPromptNodejs1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建一个 Express REST API 服务，包含用户注册登录、JWT认证和CRUD接口"
+        AppLanguage.ENGLISH -> "Create an Express REST API with user registration, login, JWT auth and CRUD endpoints"
+        AppLanguage.ARABIC -> "إنشاء Express REST API مع تسجيل المستخدم وتسجيل الدخول ومصادقة JWT ونقاط CRUD"
+    }
+    val aiPromptNodejs2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搭建一个 WebSocket 实时聊天服务器，支持多房间和消息广播"
+        AppLanguage.ENGLISH -> "Build a WebSocket real-time chat server with multi-room support and message broadcasting"
+        AppLanguage.ARABIC -> "بناء خادم دردشة WebSocket مع دعم غرف متعددة وبث الرسائل"
+    }
+    val aiPromptWordpress1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开发一个 WordPress 自定义主题，包含首页模板、文章列表和侧边栏小工具"
+        AppLanguage.ENGLISH -> "Develop a WordPress custom theme with homepage template, post listing and sidebar widgets"
+        AppLanguage.ARABIC -> "تطوير سمة WordPress مخصصة مع قالب صفحة رئيسية وقائمة مقالات وودجات الشريط الجانبي"
+    }
+    val aiPromptWordpress2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建一个 WordPress 插件，添加自定义文章类型和管理后台设置页面"
+        AppLanguage.ENGLISH -> "Create a WordPress plugin that adds custom post types and an admin settings page"
+        AppLanguage.ARABIC -> "إنشاء إضافة WordPress تضيف أنواع مقالات مخصصة وصفحة إعدادات المشرف"
+    }
+    val aiPromptPhp1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用 Laravel 创建一个博客系统，包含文章管理、分类标签和评论功能"
+        AppLanguage.ENGLISH -> "Create a Laravel blog system with post management, categories, tags and comments"
+        AppLanguage.ARABIC -> "إنشاء نظام مدونة Laravel مع إدارة المقالات والفئات والعلامات والتعليقات"
+    }
+    val aiPromptPhp2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搭建一个 PHP 用户管理系统，支持注册、登录、角色权限控制"
+        AppLanguage.ENGLISH -> "Build a PHP user management system with registration, login and role-based access control"
+        AppLanguage.ARABIC -> "بناء نظام إدارة مستخدمين PHP مع التسجيل وتسجيل الدخول والتحكم بالصلاحيات"
+    }
+    val aiPromptPython1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用 FastAPI 构建一个 RESTful API 服务，包含数据库模型、自动文档和认证中间件"
+        AppLanguage.ENGLISH -> "Build a FastAPI RESTful service with database models, auto-docs and auth middleware"
+        AppLanguage.ARABIC -> "بناء خدمة FastAPI RESTful مع نماذج قاعدة بيانات ووثائق تلقائية ووسيط مصادقة"
+    }
+    val aiPromptPython2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建一个 Flask Web 应用，实现文件上传、图片处理和下载功能"
+        AppLanguage.ENGLISH -> "Create a Flask web app with file upload, image processing and download functionality"
+        AppLanguage.ARABIC -> "إنشاء تطبيق Flask مع رفع الملفات ومعالجة الصور ووظيفة التنزيل"
+    }
+    val aiPromptGo1: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用 Gin 框架创建一个 RESTful API 服务，包含路由分组、中间件和数据库操作"
+        AppLanguage.ENGLISH -> "Create a Gin framework RESTful API with route groups, middleware and database operations"
+        AppLanguage.ARABIC -> "إنشاء Gin RESTful API مع مجموعات المسارات والوسيط وعمليات قاعدة البيانات"
+    }
+    val aiPromptGo2: String get() = when (lang) {
+        AppLanguage.CHINESE -> "搭建一个 Go 微服务，实现 gRPC 接口和 HTTP 网关"
+        AppLanguage.ENGLISH -> "Build a Go microservice with gRPC endpoints and HTTP gateway"
+        AppLanguage.ARABIC -> "بناء خدمة Go مصغرة مع نقاط gRPC وبوابة HTTP"
+    }
+    // ---- Style template promptHints (i18n) ----
+    val hintModernMinimal: String get() = when (lang) {
+        AppLanguage.CHINESE -> "大量留白、简洁排版、柔和阴影、圆角元素"
+        AppLanguage.ENGLISH -> "Generous whitespace, clean layout, soft shadows, rounded elements"
+        AppLanguage.ARABIC -> "مساحات بيضاء كبيرة، تخطيط نظيف، ظلال ناعمة، عناصر مستديرة"
+    }
+    val hintGlassmorphism: String get() = when (lang) {
+        AppLanguage.CHINESE -> "backdrop-filter: blur()、半透明背景、渐变色、柔和边框"
+        AppLanguage.ENGLISH -> "backdrop-filter: blur(), translucent backgrounds, gradients, soft borders"
+        AppLanguage.ARABIC -> "backdrop-filter: blur()، خلفيات شفافة، تدرجات لونية، حدود ناعمة"
+    }
+    val hintNeumorphism: String get() = when (lang) {
+        AppLanguage.CHINESE -> "双层阴影（亮/暗）、柔和背景色、圆角、凸起或凹陷效果"
+        AppLanguage.ENGLISH -> "Dual shadows (light/dark), soft background, rounded corners, raised or inset effects"
+        AppLanguage.ARABIC -> "ظلال مزدوجة (فاتح/داكن)، خلفية ناعمة، زوايا مستديرة، تأثيرات بارزة أو غائرة"
+    }
+    val hintDarkMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深色背景、亮色文字、柔和发光效果、高对比度"
+        AppLanguage.ENGLISH -> "Dark backgrounds, light text, soft glow effects, high contrast"
+        AppLanguage.ARABIC -> "خلفيات داكنة، نص فاتح، تأثيرات توهج ناعمة، تباين عالٍ"
+    }
+    val hintCyberpunk: String get() = when (lang) {
+        AppLanguage.CHINESE -> "霓虹色彩、发光效果、故障艺术、网格线条、科技感字体"
+        AppLanguage.ENGLISH -> "Neon colors, glow effects, glitch art, grid lines, tech-style fonts"
+        AppLanguage.ARABIC -> "ألوان نيون، تأثيرات توهج، فن خلل، خطوط شبكية، خطوط تقنية"
+    }
+    val hintGradient: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多彩渐变、流动感、动态背景、圆润形状"
+        AppLanguage.ENGLISH -> "Colorful gradients, fluid feel, dynamic backgrounds, rounded shapes"
+        AppLanguage.ARABIC -> "تدرجات ملونة، إحساس سائل، خلفيات ديناميكية، أشكال مستديرة"
+    }
+    val hintMinimal: String get() = when (lang) {
+        AppLanguage.CHINESE -> "黑白配色、大量空白、清晰排版、无装饰"
+        AppLanguage.ENGLISH -> "Black and white palette, generous whitespace, clear typography, no decoration"
+        AppLanguage.ARABIC -> "لوحة أبيض وأسود، مساحات بيضاء كبيرة، طباعة واضحة، بدون زخرفة"
+    }
+    val hintNature: String get() = when (lang) {
+        AppLanguage.CHINESE -> "绿色系、自然元素、圆润形状、柔和阴影"
+        AppLanguage.ENGLISH -> "Green palette, natural elements, rounded shapes, soft shadows"
+        AppLanguage.ARABIC -> "لوحة خضراء، عناصر طبيعية، أشكال مستديرة، ظلال ناعمة"
+    }
+    val hintCuteCartoon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "圆角元素、柔和阴影、可爱图标、糖果色"
+        AppLanguage.ENGLISH -> "Rounded elements, soft shadows, cute icons, candy colors"
+        AppLanguage.ARABIC -> "عناصر مستديرة، ظلال ناعمة، أيقونات لطيفة، ألوان حلوى"
+    }
+    val hintNeonGlow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发光文字、霓虹边框、暗色背景、高对比度"
+        AppLanguage.ENGLISH -> "Glowing text, neon borders, dark backgrounds, high contrast"
+        AppLanguage.ARABIC -> "نص متوهج، حدود نيون، خلفيات داكنة، تباين عالٍ"
+    }
+    
+    // ---- Style reference colorHints (i18n) ----
+    val colorsHarryPotter: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深红,金色,深棕,墨绿"
+        AppLanguage.ENGLISH -> "Deep red,Gold,Dark brown,Dark green"
+        AppLanguage.ARABIC -> "أحمر داكن,ذهبي,بني داكن,أخضر داكن"
+    }
+    val colorsGhibli: String get() = when (lang) {
+        AppLanguage.CHINESE -> "天空蓝,草绿,泥土棕,夕阳橙"
+        AppLanguage.ENGLISH -> "Sky blue,Grass green,Earth brown,Sunset orange"
+        AppLanguage.ARABIC -> "أزرق سماوي,أخضر عشبي,بني ترابي,برتقالي غروب"
+    }
+    val colorsYourName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "黄昏橙,天际蓝,星光紫,晨曦粉"
+        AppLanguage.ENGLISH -> "Twilight orange,Horizon blue,Starlight purple,Dawn pink"
+        AppLanguage.ARABIC -> "برتقالي الشفق,أزرق الأفق,بنفسجي نجمي,وردي الفجر"
+    }
+    val colorsApple: String get() = when (lang) {
+        AppLanguage.CHINESE -> "纯白,深空灰,银色,金色"
+        AppLanguage.ENGLISH -> "Pure white,Space gray,Silver,Gold"
+        AppLanguage.ARABIC -> "أبيض نقي,رمادي فضائي,فضي,ذهبي"
+    }
+    val colorsLittlePrince: String get() = when (lang) {
+        AppLanguage.CHINESE -> "星空蓝,沙漠金,玫瑰红,淡紫"
+        AppLanguage.ENGLISH -> "Starry blue,Desert gold,Rose red,Lavender"
+        AppLanguage.ARABIC -> "أزرق نجمي,ذهبي صحراوي,أحمر وردي,لافندر"
+    }
+    val colorsZelda: String get() = when (lang) {
+        AppLanguage.CHINESE -> "草原绿,天空蓝,山岩灰,篝火橙"
+        AppLanguage.ENGLISH -> "Prairie green,Sky blue,Rock gray,Campfire orange"
+        AppLanguage.ARABIC -> "أخضر السهول,أزرق السماء,رمادي الصخور,برتقالي النار"
+    }
+    val colorsArtDeco: String get() = when (lang) {
+        AppLanguage.CHINESE -> "金色,黑色,翡翠绿,深蓝"
+        AppLanguage.ENGLISH -> "Gold,Black,Emerald green,Deep blue"
+        AppLanguage.ARABIC -> "ذهبي,أسود,أخضر زمردي,أزرق عميق"
+    }
+    val colorsJapanese: String get() = when (lang) {
+        AppLanguage.CHINESE -> "靛蓝,朱红,米白,墨黑"
+        AppLanguage.ENGLISH -> "Indigo,Vermillion,Cream white,Ink black"
+        AppLanguage.ARABIC -> "نيلي,قرمزي,أبيض كريمي,أسود حبري"
+    }
+    
+    // ---- Style reference elementHints (i18n) ----
+    val elementsHarryPotter: String get() = when (lang) {
+        AppLanguage.CHINESE -> "盾徽,羽毛笔,蜡封,哥特字体"
+        AppLanguage.ENGLISH -> "Coat of arms,Quill pen,Wax seal,Gothic font"
+        AppLanguage.ARABIC -> "شعار درع,ريشة كتابة,ختم شمع,خط قوطي"
+    }
+    val elementsGhibli: String get() = when (lang) {
+        AppLanguage.CHINESE -> "云朵,绿植,小屋,柔和光影"
+        AppLanguage.ENGLISH -> "Clouds,Greenery,Cottage,Soft lighting"
+        AppLanguage.ARABIC -> "غيوم,نباتات خضراء,كوخ,إضاءة ناعمة"
+    }
+    val elementsYourName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "光斑,彗星,黄昏,细腻光影"
+        AppLanguage.ENGLISH -> "Light spots,Comet,Twilight,Delicate lighting"
+        AppLanguage.ARABIC -> "بقع ضوء,مذنب,شفق,إضاءة دقيقة"
+    }
+    val elementsApple: String get() = when (lang) {
+        AppLanguage.CHINESE -> "大量留白,精确对齐,微妙渐变,圆角"
+        AppLanguage.ENGLISH -> "Generous whitespace,Precise alignment,Subtle gradients,Rounded corners"
+        AppLanguage.ARABIC -> "مساحات بيضاء,محاذاة دقيقة,تدرجات خفيفة,زوايا مستديرة"
+    }
+    val elementsLittlePrince: String get() = when (lang) {
+        AppLanguage.CHINESE -> "星星,玫瑰,狐狸,小行星"
+        AppLanguage.ENGLISH -> "Stars,Rose,Fox,Asteroid"
+        AppLanguage.ARABIC -> "نجوم,وردة,ثعلب,كويكب"
+    }
+    val elementsZelda: String get() = when (lang) {
+        AppLanguage.CHINESE -> "希卡符文,远景山脉,卡通渲染"
+        AppLanguage.ENGLISH -> "Sheikah runes,Distant mountains,Cel-shading"
+        AppLanguage.ARABIC -> "رموز شيكا,جبال بعيدة,تظليل كرتوني"
+    }
+    val elementsArtDeco: String get() = when (lang) {
+        AppLanguage.CHINESE -> "几何图案,对称布局,扇形,金属线条"
+        AppLanguage.ENGLISH -> "Geometric patterns,Symmetrical layout,Fan shapes,Metallic lines"
+        AppLanguage.ARABIC -> "أنماط هندسية,تخطيط متماثل,أشكال مروحية,خطوط معدنية"
+    }
+    val elementsJapanese: String get() = when (lang) {
+        AppLanguage.CHINESE -> "波浪,樱花,和纹,毛笔字体"
+        AppLanguage.ENGLISH -> "Waves,Cherry blossoms,Japanese patterns,Brush font"
+        AppLanguage.ARABIC -> "موجات,أزهار الكرز,أنماط يابانية,خط فرشاة"
+    }
+    
+    val requestTimeoutRetry: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请求超时，请检查网络连接后重试"
+        AppLanguage.ENGLISH -> "Request timed out, please check network connection and retry"
+        AppLanguage.ARABIC -> "انتهت مهلة الطلب، يرجى التحقق من الاتصال بالشبكة وإعادة المحاولة"
+    }
+    val errorOccurredPrefix: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发生错误: %s"
+        AppLanguage.ENGLISH -> "Error occurred: %s"
+        AppLanguage.ARABIC -> "حدث خطأ: %s"
+    }
+    val streamResponseIncomplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "流式响应未正常完成"
+        AppLanguage.ENGLISH -> "Stream response did not complete normally"
+        AppLanguage.ARABIC -> "لم تكتمل استجابة البث بشكل طبيعي"
+    }
+    
+    // ==================== Hardcoded Chinese fix - additional i18n entries ====================
+    
+    val adSdkNotIntegrated: String get() = when (lang) {
+        AppLanguage.CHINESE -> "广告 SDK 尚未集成，当前广告配置不会生效"
+        AppLanguage.ENGLISH -> "Ad SDK not integrated, current ad config will not take effect"
+        AppLanguage.ARABIC -> "لم يتم دمج SDK الإعلانات، لن يسري تكوين الإعلانات الحالي"
+    }
+    
+    val storagePermissionRequiredForExport: String get() = when (lang) {
+        AppLanguage.CHINESE -> "需要存储权限才能导出"
+        AppLanguage.ENGLISH -> "Storage permission required to export"
+        AppLanguage.ARABIC -> "يلزم إذن التخزين للتصدير"
+    }
+    
+    val shareImage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分享图片"
+        AppLanguage.ENGLISH -> "Share Image"
+        AppLanguage.ARABIC -> "مشاركة الصورة"
+    }
+    
+    val saveFailedCannotProcessHtml: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保存失败：无法处理 HTML 文件"
+        AppLanguage.ENGLISH -> "Save failed: cannot process HTML file"
+        AppLanguage.ARABIC -> "فشل الحفظ: لا يمكن معالجة ملف HTML"
+    }
+    
+    val phpStartFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PHP 启动失败"
+        AppLanguage.ENGLISH -> "PHP start failed"
+        AppLanguage.ARABIC -> "فشل بدء PHP"
+    }
+    
+    // ---- Background run service ----
+    
+    val appRunningInBackground: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在后台运行"
+        AppLanguage.ENGLISH -> "Running in background"
+        AppLanguage.ARABIC -> "يعمل في الخلفية"
+    }
+    
+    val tapToReturnToApp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击返回应用"
+        AppLanguage.ENGLISH -> "Tap to return to app"
+        AppLanguage.ARABIC -> "اضغط للعودة إلى التطبيق"
+    }
+    
+    // ---- Dependency download notifications ----
+    
+    val runtimeDownloadChannel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时下载"
+        AppLanguage.ENGLISH -> "Runtime Download"
+        AppLanguage.ARABIC -> "تنزيل وقت التشغيل"
+    }
+    
+    val runtimeDownloadChannelDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示运行时依赖下载进度"
+        AppLanguage.ENGLISH -> "Shows runtime dependency download progress"
+        AppLanguage.ARABIC -> "يعرض تقدم تنزيل التبعيات"
+    }
+    
+    val depDownloadRemaining: String get() = when (lang) {
+        AppLanguage.CHINESE -> "剩余"
+        AppLanguage.ENGLISH -> "Remaining"
+        AppLanguage.ARABIC -> "المتبقي"
+    }
+    
+    val depDownloadStarted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开始"
+        AppLanguage.ENGLISH -> "Started"
+        AppLanguage.ARABIC -> "بدأ"
+    }
+    
+    val depDownloadPause: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂停"
+        AppLanguage.ENGLISH -> "Pause"
+        AppLanguage.ARABIC -> "إيقاف مؤقت"
+    }
+    
+    val depDownloadResume: String get() = when (lang) {
+        AppLanguage.CHINESE -> "继续"
+        AppLanguage.ENGLISH -> "Resume"
+        AppLanguage.ARABIC -> "استئناف"
+    }
+    
+    val depDownloadPaused: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已暂停"
+        AppLanguage.ENGLISH -> "Paused"
+        AppLanguage.ARABIC -> "متوقف مؤقتًا"
+    }
+    
+    val depDownloadExtracting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在解压"
+        AppLanguage.ENGLISH -> "Extracting"
+        AppLanguage.ARABIC -> "جارٍ الاستخراج"
+    }
+    
+    val depDownloadComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "运行时下载完成"
+        AppLanguage.ENGLISH -> "Runtime download complete"
+        AppLanguage.ARABIC -> "اكتمل تنزيل وقت التشغيل"
+    }
+    
+    val depDownloadAllReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "所有依赖已就绪"
+        AppLanguage.ENGLISH -> "All dependencies ready"
+        AppLanguage.ARABIC -> "جميع التبعيات جاهزة"
+    }
+    
+    // ---- Forced run countdown overlay ----
+    
+    val tapToEnterPasswordToExit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击输入密码退出"
+        AppLanguage.ENGLISH -> "Tap to enter password to exit"
+        AppLanguage.ARABIC -> "اضغط لإدخال كلمة المرور للخروج"
+    }
+    
+    val enterExitPassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "输入退出密码"
+        AppLanguage.ENGLISH -> "Enter Exit Password"
+        AppLanguage.ARABIC -> "أدخل كلمة مرور الخروج"
+    }
+    
+    val enterAdminPasswordToExit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入管理员密码以退出强制运行模式"
+        AppLanguage.ENGLISH -> "Enter admin password to exit forced run mode"
+        AppLanguage.ARABIC -> "أدخل كلمة مرور المسؤول للخروج من وضع التشغيل الإجباري"
+    }
+    
+    val passwordLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "密码"
+        AppLanguage.ENGLISH -> "Password"
+        AppLanguage.ARABIC -> "كلمة المرور"
+    }
+    
+    val enterPasswordPlaceholder: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入密码"
+        AppLanguage.ENGLISH -> "Enter password"
+        AppLanguage.ARABIC -> "أدخل كلمة المرور"
+    }
+    
+    val wrongPasswordAttemptsRemaining: String get() = when (lang) {
+        AppLanguage.CHINESE -> "密码错误，剩余 %d 次尝试"
+        AppLanguage.ENGLISH -> "Wrong password, %d attempts remaining"
+        AppLanguage.ARABIC -> "كلمة مرور خاطئة، %d محاولات متبقية"
+    }
+    
+    val tooManyAttemptsTryLater: String get() = when (lang) {
+        AppLanguage.CHINESE -> "尝试次数过多，请稍后再试"
+        AppLanguage.ENGLISH -> "Too many attempts, please try again later"
+        AppLanguage.ARABIC -> "محاولات كثيرة جدًا، يرجى المحاولة لاحقًا"
+    }
+    
+    val confirmExit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "确认退出"
+        AppLanguage.ENGLISH -> "Confirm Exit"
+        AppLanguage.ARABIC -> "تأكيد الخروج"
+    }
+    
+    // ---- Forced run permission helper ----
+    
+    val forcedRunPermissionTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "强制运行权限设置"
+        AppLanguage.ENGLISH -> "Forced Run Permission Settings"
+        AppLanguage.ARABIC -> "إعدادات أذونات التشغيل الإجباري"
+    }
+    
+    val forcedRunPermissionDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "为了确保强制运行功能有效，请授权以下权限："
+        AppLanguage.ENGLISH -> "To ensure forced run works properly, please grant the following permissions:"
+        AppLanguage.ARABIC -> "لضمان عمل التشغيل الإجباري بشكل صحيح، يرجى منح الأذونات التالية:"
+    }
+    
+    val accessibilityService: String get() = when (lang) {
+        AppLanguage.CHINESE -> "辅助功能服务"
+        AppLanguage.ENGLISH -> "Accessibility Service"
+        AppLanguage.ARABIC -> "خدمة إمكانية الوصول"
+    }
+    
+    val accessibilityServiceDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "监控窗口变化，防止用户切换应用"
+        AppLanguage.ENGLISH -> "Monitor window changes to prevent app switching"
+        AppLanguage.ARABIC -> "مراقبة تغييرات النافذة لمنع التبديل بين التطبيقات"
+    }
+    
+    val usageAccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用情况访问"
+        AppLanguage.ENGLISH -> "Usage Access"
+        AppLanguage.ARABIC -> "الوصول إلى الاستخدام"
+    }
+    
+    val usageAccessDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测当前前台应用，提供双重防护"
+        AppLanguage.ENGLISH -> "Detect foreground app for dual protection"
+        AppLanguage.ARABIC -> "اكتشاف التطبيق الأمامي للحماية المزدوجة"
+    }
+    
+    val refreshPermissionStatus: String get() = when (lang) {
+        AppLanguage.CHINESE -> "刷新权限状态"
+        AppLanguage.ENGLISH -> "Refresh Permission Status"
+        AppLanguage.ARABIC -> "تحديث حالة الأذونات"
+    }
+    
+    val grant: String get() = when (lang) {
+        AppLanguage.CHINESE -> "授权"
+        AppLanguage.ENGLISH -> "Grant"
+        AppLanguage.ARABIC -> "منح"
+    }
+    
+    val granted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已授权"
+        AppLanguage.ENGLISH -> "Granted"
+        AppLanguage.ARABIC -> "تم المنح"
+    }
+    
+    val protectionBasic: String get() = when (lang) {
+        AppLanguage.CHINESE -> "基础防护"
+        AppLanguage.ENGLISH -> "Basic Protection"
+        AppLanguage.ARABIC -> "حماية أساسية"
+    }
+    
+    val protectionBasicDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "仅拦截返回键，防护效果有限"
+        AppLanguage.ENGLISH -> "Back key interception only, limited protection"
+        AppLanguage.ARABIC -> "اعتراض مفتاح الرجوع فقط، حماية محدودة"
+    }
+    
+    val protectionStandard: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标准防护"
+        AppLanguage.ENGLISH -> "Standard Protection"
+        AppLanguage.ARABIC -> "حماية قياسية"
+    }
+    
+    val protectionStandardDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "通过辅助功能监控窗口，有效阻止应用切换"
+        AppLanguage.ENGLISH -> "Window monitoring via accessibility, effectively prevents app switching"
+        AppLanguage.ARABIC -> "مراقبة النوافذ عبر إمكانية الوصول، يمنع التبديل بين التطبيقات بفعالية"
+    }
+    
+    val protectionMaximum: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最强防护"
+        AppLanguage.ENGLISH -> "Maximum Protection"
+        AppLanguage.ARABIC -> "أقصى حماية"
+    }
+    
+    val protectionMaximumDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "辅助功能 + 后台守护服务，双重防护确保万无一失"
+        AppLanguage.ENGLISH -> "Accessibility + background guard service, dual protection for maximum security"
+        AppLanguage.ARABIC -> "إمكانية الوصول + خدمة حراسة خلفية، حماية مزدوجة لأقصى أمان"
+    }
+    
+    val permissionsReady: String get() = when (lang) {
+        AppLanguage.CHINESE -> "权限已就绪"
+        AppLanguage.ENGLISH -> "Permissions Ready"
+        AppLanguage.ARABIC -> "الأذونات جاهزة"
+    }
+    
+    val permissionsNeeded: String get() = when (lang) {
+        AppLanguage.CHINESE -> "需要授权"
+        AppLanguage.ENGLISH -> "Permissions Needed"
+        AppLanguage.ARABIC -> "الأذونات مطلوبة"
+    }
+    
+    val start: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开始"
+        AppLanguage.ENGLISH -> "Start"
+        AppLanguage.ARABIC -> "بدء"
+    }
+    
+    val skipDegradedProtection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "跳过（降级防护）"
+        AppLanguage.ENGLISH -> "Skip (degraded protection)"
+        AppLanguage.ARABIC -> "تخطي (حماية مخفضة)"
+    }
+    
+    // ---- HTML project processor warnings ----
+    
+    val htmlFileTooLarge: String get() = when (lang) {
+        AppLanguage.CHINESE -> "HTML 文件较大（%sMB），已跳过内容分析"
+        AppLanguage.ENGLISH -> "HTML file is large (%sMB), content analysis skipped"
+        AppLanguage.ARABIC -> "ملف HTML كبير (%sMB)، تم تخطي تحليل المحتوى"
+    }
+    
+    val resourceReferenceIssue: String get() = when (lang) {
+        AppLanguage.CHINESE -> "资源引用问题"
+        AppLanguage.ENGLISH -> "Resource reference issue"
+        AppLanguage.ARABIC -> "مشكلة في مرجع المورد"
+    }
+    
+    val htmlFileNotFound: String get() = when (lang) {
+        AppLanguage.CHINESE -> "HTML 文件不存在"
+        AppLanguage.ENGLISH -> "HTML file not found"
+        AppLanguage.ARABIC -> "ملف HTML غير موجود"
+    }
+    
+    val cssEncodingWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "CSS 文件编码为 %s，建议使用 UTF-8"
+        AppLanguage.ENGLISH -> "CSS file encoding is %s, UTF-8 recommended"
+        AppLanguage.ARABIC -> "ترميز ملف CSS هو %s، يوصى باستخدام UTF-8"
+    }
+    
+    val documentWriteWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用了 document.write()，可能导致页面加载问题"
+        AppLanguage.ENGLISH -> "Uses document.write(), may cause page loading issues"
+        AppLanguage.ARABIC -> "يستخدم document.write()، قد يسبب مشاكل في تحميل الصفحة"
+    }
+    
+    // ---- HTML syntax check messages (AiCodingAgent) ----
+    
+    val tagNotProperlyClosed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标签 <%s> 未正确闭合"
+        AppLanguage.ENGLISH -> "Tag <%s> not properly closed"
+        AppLanguage.ARABIC -> "الوسم <%s> لم يُغلق بشكل صحيح"
+    }
+    
+    val unexpectedClosingTag: String get() = when (lang) {
+        AppLanguage.CHINESE -> "意外的闭合标签 </%s>"
+        AppLanguage.ENGLISH -> "Unexpected closing tag </%s>"
+        AppLanguage.ARABIC -> "وسم إغلاق غير متوقع </%s>"
+    }
+    
+    val tagNotClosed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "标签 <%s> 未闭合"
+        AppLanguage.ENGLISH -> "Tag <%s> not closed"
+        AppLanguage.ARABIC -> "الوسم <%s> لم يُغلق"
+    }
+    
+    val extraClosingBrace: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余的闭合大括号 '}'"
+        AppLanguage.ENGLISH -> "Extra closing brace '}'"
+        AppLanguage.ARABIC -> "قوس إغلاق زائد '}'"
+    }
+    
+    val missingClosingBraces: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 %d 个闭合大括号 '}'"
+        AppLanguage.ENGLISH -> "Missing %d closing brace(s) '}'"
+        AppLanguage.ARABIC -> "نقص %d قوس(أقواس) إغلاق '}'"
+    }
+    
+    val extraClosingBraces: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余 %d 个闭合大括号 '}'"
+        AppLanguage.ENGLISH -> "Extra %d closing brace(s) '}'"
+        AppLanguage.ARABIC -> "زيادة %d قوس(أقواس) إغلاق '}'"
+    }
+    
+    val missingClosingParens: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 %d 个闭合小括号 ')'"
+        AppLanguage.ENGLISH -> "Missing %d closing paren(s) ')'"
+        AppLanguage.ARABIC -> "نقص %d قوس(أقواس) إغلاق ')'"
+    }
+    
+    val extraClosingParens: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余 %d 个闭合小括号 ')'"
+        AppLanguage.ENGLISH -> "Extra %d closing paren(s) ')'"
+        AppLanguage.ARABIC -> "زيادة %d قوس(أقواس) إغلاق ')'"
+    }
+    
+    val missingClosingBrackets: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缺少 %d 个闭合方括号 ']'"
+        AppLanguage.ENGLISH -> "Missing %d closing bracket(s) ']'"
+        AppLanguage.ARABIC -> "نقص %d قوس(أقواس) مربع إغلاق ']'"
+    }
+    
+    val extraClosingBrackets: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多余 %d 个闭合方括号 ']'"
+        AppLanguage.ENGLISH -> "Extra %d closing bracket(s) ']'"
+        AppLanguage.ARABIC -> "زيادة %d قوس(أقواس) مربع إغلاق ']'"
+    }
+    
+    // ---- Error page games ----
+    
+    val gameScore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "得分"
+        AppLanguage.ENGLISH -> "Score"
+        AppLanguage.ARABIC -> "النتيجة"
+    }
+    
+    val gameLives: String get() = when (lang) {
+        AppLanguage.CHINESE -> "生命"
+        AppLanguage.ENGLISH -> "Lives"
+        AppLanguage.ARABIC -> "الأرواح"
+    }
+    
+    val gameOver: String get() = when (lang) {
+        AppLanguage.CHINESE -> "游戏结束"
+        AppLanguage.ENGLISH -> "Game Over"
+        AppLanguage.ARABIC -> "انتهت اللعبة"
+    }
+    
+    val gameYouWin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "恭喜通关！"
+        AppLanguage.ENGLISH -> "You Win!"
+        AppLanguage.ARABIC -> "فزت!"
+    }
+    
+    val gameTapToRestart: String get() = when (lang) {
+        AppLanguage.CHINESE -> "点击重新开始"
+        AppLanguage.ENGLISH -> "Tap to restart"
+        AppLanguage.ARABIC -> "اضغط لإعادة البدء"
+    }
+    
+    val gameMazeComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "迷宫通关！"
+        AppLanguage.ENGLISH -> "Maze Complete!"
+        AppLanguage.ARABIC -> "اكتملت المتاهة!"
+    }
+    
+    val gameSteps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "步数"
+        AppLanguage.ENGLISH -> "Steps"
+        AppLanguage.ARABIC -> "الخطوات"
+    }
+    
+    val gameCollected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "收集"
+        AppLanguage.ENGLISH -> "Collected"
+        AppLanguage.ARABIC -> "تم جمع"
+    }
+    
+    val gameCollectedStars: String get() = when (lang) {
+        AppLanguage.CHINESE -> "收集了 %d 颗星星"
+        AppLanguage.ENGLISH -> "Collected %d stars"
+        AppLanguage.ARABIC -> "تم جمع %d نجوم"
+    }
+    
+    val gameTouchToPaint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "触摸屏幕，随心落墨"
+        AppLanguage.ENGLISH -> "Touch to paint freely"
+        AppLanguage.ARABIC -> "المس للرسم بحرية"
+    }
+    
+    val gameZen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "— 禅 —"
+        AppLanguage.ENGLISH -> "— Zen —"
+        AppLanguage.ARABIC -> "— زن —"
+    }
+    
+    // ---- Download engine errors ----
+    
+    val downloadFailedHttp: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载失败: HTTP %d"
+        AppLanguage.ENGLISH -> "Download failed: HTTP %d"
+        AppLanguage.ARABIC -> "فشل التنزيل: HTTP %d"
+    }
+    
+    val downloadReturnedEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载返回空内容"
+        AppLanguage.ENGLISH -> "Download returned empty content"
+        AppLanguage.ARABIC -> "التنزيل أرجع محتوى فارغ"
+    }
+    
+    val downloadNameFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载 %s 失败: %s"
+        AppLanguage.ENGLISH -> "Download %s failed: %s"
+        AppLanguage.ARABIC -> "فشل تنزيل %s: %s"
+    }
+    
+    val sizeUnknown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未知"
+        AppLanguage.ENGLISH -> "Unknown"
+        AppLanguage.ARABIC -> "غير معروف"
+    }
+    
+    // ---- MainViewModel ----
+    
+    val saveFailedNoHtmlInZip: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保存失败：ZIP 中未找到 HTML 文件"
+        AppLanguage.ENGLISH -> "Save failed: no HTML file found in ZIP"
+        AppLanguage.ARABIC -> "فشل الحفظ: لم يتم العثور على ملف HTML في ZIP"
+    }
+    
+    // ---- HtmlProjectProcessor suggestions ----
+    
+    val suggestUseRelativePath: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议使用相对路径，如 './style.css' 而非 '/style.css'"
+        AppLanguage.ENGLISH -> "Use relative paths, e.g. './style.css' instead of '/style.css'"
+        AppLanguage.ARABIC -> "استخدم مسارات نسبية، مثل './style.css' بدلاً من '/style.css'"
+    }
+    
+    val suggestEnsureFileImported: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请确保引用的文件 '%s' 已导入"
+        AppLanguage.ENGLISH -> "Ensure the referenced file '%s' has been imported"
+        AppLanguage.ARABIC -> "تأكد من استيراد الملف المُشار إليه '%s'"
+    }
+    
+    val suggestSaveAsUtf8: String get() = when (lang) {
+        AppLanguage.CHINESE -> "将文件另存为 UTF-8 编码可避免乱码问题"
+        AppLanguage.ENGLISH -> "Save the file as UTF-8 encoding to avoid character encoding issues"
+        AppLanguage.ARABIC -> "احفظ الملف بترميز UTF-8 لتجنب مشاكل الترميز"
+    }
+    
+    val suggestExternalFilesDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测到 HTML 中引用了外部 CSS/JS 文件，请确保已导入对应文件"
+        AppLanguage.ENGLISH -> "External CSS/JS files referenced in HTML detected, please ensure they have been imported"
+        AppLanguage.ARABIC -> "تم اكتشاف ملفات CSS/JS خارجية مُشار إليها في HTML، يرجى التأكد من استيرادها"
+    }
+    
+    val suggestUseRelativePathsForAll: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议将所有资源路径改为相对路径，以确保在应用中正常加载"
+        AppLanguage.ENGLISH -> "Use relative paths for all resources to ensure proper loading in the app"
+        AppLanguage.ARABIC -> "استخدم مسارات نسبية لجميع الموارد لضمان التحميل الصحيح في التطبيق"
+    }
+    
+    val absolutePathWarning: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用了绝对路径，可能导致资源无法加载"
+        AppLanguage.ENGLISH -> "Absolute path used, resource may fail to load"
+        AppLanguage.ARABIC -> "تم استخدام مسار مطلق، قد يفشل تحميل المورد"
+    }
+    
+    val referencedFileNotExist: String get() = when (lang) {
+        AppLanguage.CHINESE -> "引用的文件不存在"
+        AppLanguage.ENGLISH -> "Referenced file does not exist"
+        AppLanguage.ARABIC -> "الملف المُشار إليه غير موجود"
+    }
+    
+    val suggestUseDomMethods: String get() = when (lang) {
+        AppLanguage.CHINESE -> "建议使用 DOM 操作方法替代 document.write()"
+        AppLanguage.ENGLISH -> "Use DOM manipulation methods instead of document.write()"
+        AppLanguage.ARABIC -> "استخدم طرق معالجة DOM بدلاً من document.write()"
+    }
+    
+    val possiblyUnclosedBraces: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可能存在未闭合的大括号"
+        AppLanguage.ENGLISH -> "Possibly unclosed braces detected"
+        AppLanguage.ARABIC -> "تم اكتشاف أقواس ربما غير مغلقة"
+    }
+    
+    val suggestCheckBracesPaired: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请检查 JS 代码中的大括号是否正确配对"
+        AppLanguage.ENGLISH -> "Check that braces in JS code are properly paired"
+        AppLanguage.ARABIC -> "تحقق من أن الأقواس في كود JS مقترنة بشكل صحيح"
+    }
+    
+    // ---- DownloadNotificationManager ----
+    
+    val notifDownloadChannel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载"
+        AppLanguage.ENGLISH -> "Downloads"
+        AppLanguage.ARABIC -> "التنزيلات"
+    }
+    
+    val notifDownloadChannelDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "显示文件下载进度和完成通知"
+        AppLanguage.ENGLISH -> "Show file download progress and completion notifications"
+        AppLanguage.ARABIC -> "عرض تقدم تنزيل الملفات وإشعارات الاكتمال"
+    }
+    
+    val notifDownloadComplete: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载完成"
+        AppLanguage.ENGLISH -> "Download complete"
+        AppLanguage.ARABIC -> "اكتمل التنزيل"
+    }
+    
+    val notifDownloadFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载失败"
+        AppLanguage.ENGLISH -> "Download failed"
+        AppLanguage.ARABIC -> "فشل التنزيل"
+    }
+    
+    val notifSaving: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保存中"
+        AppLanguage.ENGLISH -> "Saving"
+        AppLanguage.ARABIC -> "جاري الحفظ"
+    }
+    
+    val notifDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载中"
+        AppLanguage.ENGLISH -> "Downloading"
+        AppLanguage.ARABIC -> "جاري التنزيل"
+    }
+    
+    val notifSaveCompleted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保存完成"
+        AppLanguage.ENGLISH -> "Save completed"
+        AppLanguage.ARABIC -> "اكتمل الحفظ"
+    }
+    
+    val notifSavedToGallery: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%s 已保存到相册"
+        AppLanguage.ENGLISH -> "%s saved to gallery"
+        AppLanguage.ARABIC -> "تم حفظ %s في المعرض"
+    }
+    
+    val notifSaveFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "保存失败"
+        AppLanguage.ENGLISH -> "Save failed"
+        AppLanguage.ARABIC -> "فشل الحفظ"
+    }
+    
+    val notifView: String get() = when (lang) {
+        AppLanguage.CHINESE -> "查看"
+        AppLanguage.ENGLISH -> "View"
+        AppLanguage.ARABIC -> "عرض"
+    }
+    
+    val notifShare: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分享"
+        AppLanguage.ENGLISH -> "Share"
+        AppLanguage.ARABIC -> "مشاركة"
+    }
+    
+    val notifOpen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "打开"
+        AppLanguage.ENGLISH -> "Open"
+        AppLanguage.ARABIC -> "فتح"
+    }
+    
+    val notifShareType: String get() = when (lang) {
+        AppLanguage.CHINESE -> "分享 %s"
+        AppLanguage.ENGLISH -> "Share %s"
+        AppLanguage.ARABIC -> "مشاركة %s"
+    }
+    
+    val mediaTypeImage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图片"
+        AppLanguage.ENGLISH -> "Image"
+        AppLanguage.ARABIC -> "صورة"
+    }
+    
+    val mediaTypeVideo: String get() = when (lang) {
+        AppLanguage.CHINESE -> "视频"
+        AppLanguage.ENGLISH -> "Video"
+        AppLanguage.ARABIC -> "فيديو"
+    }
+    
+    // ---- MainViewModel ----
+    
+    val failedSaveIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "图标保存失败，请重试"
+        AppLanguage.ENGLISH -> "Failed to save icon, please retry"
+        AppLanguage.ARABIC -> "فشل حفظ الأيقونة، يرجى المحاولة مرة أخرى"
+    }
+    
+    val failedSaveSplash: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动画面保存失败，请重试"
+        AppLanguage.ENGLISH -> "Failed to save splash, please retry"
+        AppLanguage.ARABIC -> "فشل حفظ شاشة البداية، يرجى المحاولة مرة أخرى"
+    }
+    
+    val appSavedSuccessfully: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用保存成功"
+        AppLanguage.ENGLISH -> "App saved successfully"
+        AppLanguage.ARABIC -> "تم حفظ التطبيق بنجاح"
+    }
+    
+    val appDeleted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用已删除"
+        AppLanguage.ENGLISH -> "App deleted"
+        AppLanguage.ARABIC -> "تم حذف التطبيق"
+    }
+    
+    val deleteFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除失败"
+        AppLanguage.ENGLISH -> "Delete failed"
+        AppLanguage.ARABIC -> "فشل الحذف"
+    }
+    
+    val pleaseEnterAppName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入应用名称"
+        AppLanguage.ENGLISH -> "Please enter app name"
+        AppLanguage.ARABIC -> "يرجى إدخال اسم التطبيق"
+    }
+    
+    val pleaseEnterWebsiteUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入网站 URL"
+        AppLanguage.ENGLISH -> "Please enter website URL"
+        AppLanguage.ARABIC -> "يرجى إدخال عنوان URL للموقع"
+    }
+    
+    val pleaseEnterValidUrl: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请输入有效的 URL"
+        AppLanguage.ENGLISH -> "Please enter a valid URL"
+        AppLanguage.ARABIC -> "يرجى إدخال عنوان URL صالح"
+    }
+    
+    val insecureHttpBlocked: String get() = when (lang) {
+        AppLanguage.CHINESE -> "不安全的 HTTP URL 已被阻止，请使用 HTTPS"
+        AppLanguage.ENGLISH -> "Insecure HTTP URLs are blocked. Please use HTTPS"
+        AppLanguage.ARABIC -> "تم حظر عناوين HTTP غير الآمنة. يرجى استخدام HTTPS"
+    }
+    
+    val pleaseSelectHtmlFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请选择 HTML 文件"
+        AppLanguage.ENGLISH -> "Please select HTML file"
+        AppLanguage.ARABIC -> "يرجى اختيار ملف HTML"
+    }
+    
+    val mediaFilePathEmpty: String get() = when (lang) {
+        AppLanguage.CHINESE -> "媒体文件路径不能为空"
+        AppLanguage.ENGLISH -> "Media file path cannot be empty"
+        AppLanguage.ARABIC -> "مسار ملف الوسائط لا يمكن أن يكون فارغاً"
+    }
+    
+    val failedSaveMediaFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "媒体文件保存失败"
+        AppLanguage.ENGLISH -> "Failed to save media file"
+        AppLanguage.ARABIC -> "فشل حفظ ملف الوسائط"
+    }
+    
+    val appCreatedSuccessfully: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%s 应用创建成功"
+        AppLanguage.ENGLISH -> "%s app created successfully"
+        AppLanguage.ARABIC -> "تم إنشاء تطبيق %s بنجاح"
+    }
+    
+    val creationFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建失败: %s"
+        AppLanguage.ENGLISH -> "Creation failed: %s"
+        AppLanguage.ARABIC -> "فشل الإنشاء: %s"
+    }
+    
+    val pleaseAddMediaFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请至少添加一个媒体文件"
+        AppLanguage.ENGLISH -> "Please add at least one media file"
+        AppLanguage.ARABIC -> "يرجى إضافة ملف وسائط واحد على الأقل"
+    }
+    
+    val appUpdatedSuccessfully: String get() = when (lang) {
+        AppLanguage.CHINESE -> "%s 应用更新成功"
+        AppLanguage.ENGLISH -> "%s app updated successfully"
+        AppLanguage.ARABIC -> "تم تحديث تطبيق %s بنجاح"
+    }
+    
+    val updateFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更新失败: %s"
+        AppLanguage.ENGLISH -> "Update failed: %s"
+        AppLanguage.ARABIC -> "فشل التحديث: %s"
+    }
+    
+    val failedCreateCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "创建分类失败: %s"
+        AppLanguage.ENGLISH -> "Failed to create category: %s"
+        AppLanguage.ARABIC -> "فشل إنشاء الفئة: %s"
+    }
+    
+    val failedUpdateCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更新分类失败: %s"
+        AppLanguage.ENGLISH -> "Failed to update category: %s"
+        AppLanguage.ARABIC -> "فشل تحديث الفئة: %s"
+    }
+    
+    val failedDeleteCategory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "删除分类失败: %s"
+        AppLanguage.ENGLISH -> "Failed to delete category: %s"
+        AppLanguage.ARABIC -> "فشل حذف الفئة: %s"
+    }
+    
+    val moveFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "移动失败: %s"
+        AppLanguage.ENGLISH -> "Move failed: %s"
+        AppLanguage.ARABIC -> "فشل النقل: %s"
+    }
+    
+    // ---- Accessibility contentDescription ----
+    
+    val cdBack: String get() = when (lang) {
+        AppLanguage.CHINESE -> "返回"
+        AppLanguage.ENGLISH -> "Back"
+        AppLanguage.ARABIC -> "رجوع"
+    }
+    
+    val cdForward: String get() = when (lang) {
+        AppLanguage.CHINESE -> "前进"
+        AppLanguage.ENGLISH -> "Forward"
+        AppLanguage.ARABIC -> "للأمام"
+    }
+    
+    val cdRefresh: String get() = when (lang) {
+        AppLanguage.CHINESE -> "刷新"
+        AppLanguage.ENGLISH -> "Refresh"
+        AppLanguage.ARABIC -> "تحديث"
+    }
+    
+    val cdHome: String get() = when (lang) {
+        AppLanguage.CHINESE -> "主页"
+        AppLanguage.ENGLISH -> "Home"
+        AppLanguage.ARABIC -> "الصفحة الرئيسية"
+    }
+    
+    val cdPause: String get() = when (lang) {
+        AppLanguage.CHINESE -> "暂停"
+        AppLanguage.ENGLISH -> "Pause"
+        AppLanguage.ARABIC -> "إيقاف مؤقت"
+    }
+    
+    val cdPlay: String get() = when (lang) {
+        AppLanguage.CHINESE -> "播放"
+        AppLanguage.ENGLISH -> "Play"
+        AppLanguage.ARABIC -> "تشغيل"
+    }
+    
+    val cdPrevious: String get() = when (lang) {
+        AppLanguage.CHINESE -> "上一个"
+        AppLanguage.ENGLISH -> "Previous"
+        AppLanguage.ARABIC -> "السابق"
+    }
+    
+    val cdNext: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下一个"
+        AppLanguage.ENGLISH -> "Next"
+        AppLanguage.ARABIC -> "التالي"
+    }
+    
+    val cdSeekBack: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快退"
+        AppLanguage.ENGLISH -> "Seek Back"
+        AppLanguage.ARABIC -> "ترجيع"
+    }
+    
+    val cdSeekForward: String get() = when (lang) {
+        AppLanguage.CHINESE -> "快进"
+        AppLanguage.ENGLISH -> "Seek Forward"
+        AppLanguage.ARABIC -> "تقديم"
+    }
+    
+    val cdSplashScreen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "启动画面"
+        AppLanguage.ENGLISH -> "Splash screen"
+        AppLanguage.ARABIC -> "شاشة البداية"
+    }
+    
+    val cdMediaContent: String get() = when (lang) {
+        AppLanguage.CHINESE -> "媒体内容"
+        AppLanguage.ENGLISH -> "Media content"
+        AppLanguage.ARABIC -> "محتوى الوسائط"
+    }
+    
+    val cdCover: String get() = when (lang) {
+        AppLanguage.CHINESE -> "封面"
+        AppLanguage.ENGLISH -> "Cover"
+        AppLanguage.ARABIC -> "غلاف"
+    }
+    
+    val cdPreview: String get() = when (lang) {
+        AppLanguage.CHINESE -> "预览"
+        AppLanguage.ENGLISH -> "Preview"
+        AppLanguage.ARABIC -> "معاينة"
+    }
+    
+    val cdCopy: String get() = when (lang) {
+        AppLanguage.CHINESE -> "复制"
+        AppLanguage.ENGLISH -> "Copy"
+        AppLanguage.ARABIC -> "نسخ"
+    }
+    
+    val cdMore: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更多"
+        AppLanguage.ENGLISH -> "More"
+        AppLanguage.ARABIC -> "المزيد"
+    }
+    
+    val cdClose: String get() = when (lang) {
+        AppLanguage.CHINESE -> "关闭"
+        AppLanguage.ENGLISH -> "Close"
+        AppLanguage.ARABIC -> "إغلاق"
+    }
+    
+    val cdRemove: String get() = when (lang) {
+        AppLanguage.CHINESE -> "移除"
+        AppLanguage.ENGLISH -> "Remove"
+        AppLanguage.ARABIC -> "إزالة"
+    }
+    
+    val cdRetry: String get() = when (lang) {
+        AppLanguage.CHINESE -> "重试"
+        AppLanguage.ENGLISH -> "Retry"
+        AppLanguage.ARABIC -> "إعادة المحاولة"
+    }
+    
+    val cdCollapse: String get() = when (lang) {
+        AppLanguage.CHINESE -> "折叠"
+        AppLanguage.ENGLISH -> "Collapse"
+        AppLanguage.ARABIC -> "طي"
+    }
+    
+    val cdExpand: String get() = when (lang) {
+        AppLanguage.CHINESE -> "展开"
+        AppLanguage.ENGLISH -> "Expand"
+        AppLanguage.ARABIC -> "توسيع"
+    }
+    
+    val hideRawResponse: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏原始响应"
+        AppLanguage.ENGLISH -> "Hide raw response"
+        AppLanguage.ARABIC -> "إخفاء الاستجابة الأصلية"
+    }
+    
+    val viewRawResponse: String get() = when (lang) {
+        AppLanguage.CHINESE -> "查看原始响应"
+        AppLanguage.ENGLISH -> "View raw response"
+        AppLanguage.ARABIC -> "عرض الاستجابة الأصلية"
+    }
+    
+    // ---- BrowserKernelScreen Shields ----
+    
+    val shieldsPrivacyProtection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Shields 隐私保护"
+        AppLanguage.ENGLISH -> "Shields Privacy Protection"
+        AppLanguage.ARABIC -> "حماية الخصوصية Shields"
+    }
+    
+    val shieldsPrivacySubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "拦截广告、跟踪器、Cookie 弹窗，自动升级 HTTPS"
+        AppLanguage.ENGLISH -> "Block ads, trackers, cookie popups, auto-upgrade HTTPS"
+        AppLanguage.ARABIC -> "حظر الإعلانات والمتتبعات ونوافذ الكوكيز، ترقية HTTPS تلقائياً"
+    }
+    
+    val shieldsMasterSwitch: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Shields 总开关"
+        AppLanguage.ENGLISH -> "Shields Master Switch"
+        AppLanguage.ARABIC -> "المفتاح الرئيسي لـ Shields"
+    }
+    
+    val shieldsEnabledWithRules: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已启用 · 拦截规则 %d 条"
+        AppLanguage.ENGLISH -> "Enabled · %d blocking rules"
+        AppLanguage.ARABIC -> "مفعّل · %d قاعدة حظر"
+    }
+    
+    val shieldsDisabled: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已关闭"
+        AppLanguage.ENGLISH -> "Disabled"
+        AppLanguage.ARABIC -> "معطّل"
+    }
+    
+    val shieldsStatAds: String get() = when (lang) {
+        AppLanguage.CHINESE -> "广告"
+        AppLanguage.ENGLISH -> "Ads"
+        AppLanguage.ARABIC -> "إعلانات"
+    }
+    
+    val shieldsStatTrackers: String get() = when (lang) {
+        AppLanguage.CHINESE -> "跟踪器"
+        AppLanguage.ENGLISH -> "Trackers"
+        AppLanguage.ARABIC -> "متتبعات"
+    }
+    
+    val shieldsCollapseSettings: String get() = when (lang) {
+        AppLanguage.CHINESE -> "收起详细设置"
+        AppLanguage.ENGLISH -> "Collapse settings"
+        AppLanguage.ARABIC -> "طي الإعدادات"
+    }
+    
+    val shieldsExpandSettings: String get() = when (lang) {
+        AppLanguage.CHINESE -> "展开详细设置"
+        AppLanguage.ENGLISH -> "Expand settings"
+        AppLanguage.ARABIC -> "توسيع الإعدادات"
+    }
+    
+    val shieldsHttpsUpgradeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动将 HTTP 请求升级为加密连接"
+        AppLanguage.ENGLISH -> "Automatically upgrade HTTP requests to encrypted connections"
+        AppLanguage.ARABIC -> "ترقية طلبات HTTP تلقائياً إلى اتصالات مشفرة"
+    }
+    
+    val shieldsTrackerBlocking: String get() = when (lang) {
+        AppLanguage.CHINESE -> "跟踪器拦截"
+        AppLanguage.ENGLISH -> "Tracker Blocking"
+        AppLanguage.ARABIC -> "حظر المتتبعات"
+    }
+    
+    val shieldsTrackerBlockingDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "拦截数据分析、社交追踪、指纹采集、加密挖矿"
+        AppLanguage.ENGLISH -> "Block analytics, social tracking, fingerprinting, crypto mining"
+        AppLanguage.ARABIC -> "حظر التحليلات والتتبع الاجتماعي وبصمات الأجهزة والتعدين"
+    }
+    
+    val shieldsCookiePopup: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Cookie 弹窗自动关闭"
+        AppLanguage.ENGLISH -> "Auto-dismiss Cookie Popups"
+        AppLanguage.ARABIC -> "إغلاق نوافذ الكوكيز تلقائياً"
+    }
+    
+    val shieldsCookiePopupDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自动点击\u201c拒绝\u201d或隐藏 Cookie 同意弹窗"
+        AppLanguage.ENGLISH -> "Auto-click \"reject\" or hide cookie consent popups"
+        AppLanguage.ARABIC -> "النقر تلقائياً على \"رفض\" أو إخفاء نوافذ موافقة الكوكيز"
+    }
+    
+    val shieldsGpcDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发送 GPC/DNT 信号，告知网站不同意数据共享"
+        AppLanguage.ENGLISH -> "Send GPC/DNT signals to tell websites not to share data"
+        AppLanguage.ARABIC -> "إرسال إشارات GPC/DNT لإبلاغ المواقع بعدم مشاركة البيانات"
+    }
+    
+    val shieldsReaderMode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "阅读模式 (SpeedReader)"
+        AppLanguage.ENGLISH -> "Reader Mode (SpeedReader)"
+        AppLanguage.ARABIC -> "وضع القراءة (SpeedReader)"
+    }
+    
+    val shieldsReaderModeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "提取正文、去广告，极简阅读体验"
+        AppLanguage.ENGLISH -> "Extract content, remove ads, minimal reading experience"
+        AppLanguage.ARABIC -> "استخراج المحتوى وإزالة الإعلانات، تجربة قراءة بسيطة"
+    }
+    
+    val shieldsThirdPartyCookiePolicy: String get() = when (lang) {
+        AppLanguage.CHINESE -> "第三方 Cookie 策略"
+        AppLanguage.ENGLISH -> "Third-party Cookie Policy"
+        AppLanguage.ARABIC -> "سياسة ملفات تعريف الارتباط للجهات الخارجية"
+    }
+    
+    val shieldsReferrerPolicy: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Referrer 策略"
+        AppLanguage.ENGLISH -> "Referrer Policy"
+        AppLanguage.ARABIC -> "سياسة المُحيل"
+    }
+    
+    val verifyingFile: String get() = when (lang) {
+        AppLanguage.CHINESE -> "验证中: %s"
+        AppLanguage.ENGLISH -> "Verifying: %s"
+        AppLanguage.ARABIC -> "جاري التحقق: %s"
+    }
+    
+    // ==================== PWA 离线支持 (PWA Offline Support) ====================
+    val pwaOfflineTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PWA 离线支持"
+        AppLanguage.ENGLISH -> "PWA Offline Support"
+        AppLanguage.ARABIC -> "دعم PWA بدون اتصال"
+    }
+    val pwaOfflineSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "注入 Service Worker 缓存层，支持离线浏览已访问页面"
+        AppLanguage.ENGLISH -> "Inject Service Worker cache layer for offline browsing of visited pages"
+        AppLanguage.ARABIC -> "حقن طبقة تخزين Service Worker للتصفح بدون اتصال"
+    }
+    val pwaOfflineStrategyLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缓存策略"
+        AppLanguage.ENGLISH -> "Cache Strategy"
+        AppLanguage.ARABIC -> "استراتيجية التخزين المؤقت"
+    }
+    val pwaStrategyNetworkFirst: String get() = when (lang) {
+        AppLanguage.CHINESE -> "网络优先（推荐）— 优先使用最新内容，离线时用缓存"
+        AppLanguage.ENGLISH -> "Network First (Recommended) — Use latest content, fallback to cache offline"
+        AppLanguage.ARABIC -> "الشبكة أولاً (موصى به) — استخدام أحدث المحتويات"
+    }
+    val pwaStrategyCacheFirst: String get() = when (lang) {
+        AppLanguage.CHINESE -> "缓存优先 — 最快速度加载，内容可能过时"
+        AppLanguage.ENGLISH -> "Cache First — Fastest loading, content may be stale"
+        AppLanguage.ARABIC -> "التخزين المؤقت أولاً — أسرع تحميل، قد يكون المحتوى قديماً"
+    }
+    val pwaStrategyStaleWhileRevalidate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "先缓存后更新 — 立即显示缓存，后台静默更新"
+        AppLanguage.ENGLISH -> "Stale While Revalidate — Show cache instantly, update in background"
+        AppLanguage.ARABIC -> "عرض التخزين المؤقت فوراً مع التحديث في الخلفية"
+    }
+    
+    // ==================== 在线音乐搜索 (新增) ====================
+    val playbackFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "播放失败"
+        AppLanguage.ENGLISH -> "Playback failed"
+        AppLanguage.ARABIC -> "فشل التشغيل"
+    }
+    val playbackFailedWithCode: String get() = when (lang) {
+        AppLanguage.CHINESE -> "播放失败 (错误码: %d)"
+        AppLanguage.ENGLISH -> "Playback failed (error: %d)"
+        AppLanguage.ARABIC -> "فشل التشغيل (خطأ: %d)"
+    }
+    val loadingTimeout: String get() = when (lang) {
+        AppLanguage.CHINESE -> "加载超时，请重试"
+        AppLanguage.ENGLISH -> "Loading timeout, please retry"
+        AppLanguage.ARABIC -> "انتهت المهلة، يرجى المحاولة مرة أخرى"
+    }
+
+    val musicChannelLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "音乐渠道"
+        AppLanguage.ENGLISH -> "Music channel"
+        AppLanguage.ARABIC -> "قناة الموسيقى"
+    }
+    val gettingMusicDetails: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在获取音乐详情..."
+        AppLanguage.ENGLISH -> "Getting music details..."
+        AppLanguage.ARABIC -> "جاري الحصول على تفاصيل الموسيقى..."
+    }
+    val getPlayUrlFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "获取播放链接失败"
+        AppLanguage.ENGLISH -> "Failed to get play URL"
+        AppLanguage.ARABIC -> "فشل الحصول على رابط التشغيل"
+    }
+    val getPlayUrlSuccess: String get() = when (lang) {
+        AppLanguage.CHINESE -> "播放链接获取成功"
+        AppLanguage.ENGLISH -> "Play URL obtained"
+        AppLanguage.ARABIC -> "تم الحصول على رابط التشغيل"
+    }
+    val startDownloadMusic: String get() = when (lang) {
+        AppLanguage.CHINESE -> "开始下载音乐文件..."
+        AppLanguage.ENGLISH -> "Downloading music file..."
+        AppLanguage.ARABIC -> "جاري تنزيل ملف الموسيقى..."
+    }
+    val musicDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "音乐文件下载中..."
+        AppLanguage.ENGLISH -> "Downloading music..."
+        AppLanguage.ARABIC -> "جاري تنزيل الموسيقى..."
+    }
+    val downloadingCoverImage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在下载封面图片..."
+        AppLanguage.ENGLISH -> "Downloading cover image..."
+        AppLanguage.ARABIC -> "جاري تنزيل صورة الغلاف..."
+    }
+    val coverDownloading: String get() = when (lang) {
+        AppLanguage.CHINESE -> "封面下载中..."
+        AppLanguage.ENGLISH -> "Cover downloading..."
+        AppLanguage.ARABIC -> "جاري تنزيل الغلاف..."
+    }
+    val finishing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在完成..."
+        AppLanguage.ENGLISH -> "Finishing..."
+        AppLanguage.ARABIC -> "جاري الانتهاء..."
+    }
+    val downloadCompleteSaved: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载完成！文件已保存"
+        AppLanguage.ENGLISH -> "Download complete! File saved"
+        AppLanguage.ARABIC -> "اكتمل التنزيل! تم حفظ الملف"
+    }
+    val coverImageSaved: String get() = when (lang) {
+        AppLanguage.CHINESE -> "封面图片已保存"
+        AppLanguage.ENGLISH -> "Cover image saved"
+        AppLanguage.ARABIC -> "تم حفظ صورة الغلاف"
+    }
+    val downloadError: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载出错"
+        AppLanguage.ENGLISH -> "Download error"
+        AppLanguage.ARABIC -> "خطأ في التنزيل"
+    }
+    val downloadLog: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载日志"
+        AppLanguage.ENGLISH -> "Download Log"
+        AppLanguage.ARABIC -> "سجل التنزيل"
+    }
+    val searchingText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在搜索..."
+        AppLanguage.ENGLISH -> "Searching..."
+        AppLanguage.ARABIC -> "جاري البحث..."
+    }
+    val clearText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "清除"
+        AppLanguage.ENGLISH -> "Clear"
+        AppLanguage.ARABIC -> "مسح"
+    }
+    val collapseText: String get() = when (lang) {
+        AppLanguage.CHINESE -> "收起"
+        AppLanguage.ENGLISH -> "Collapse"
+        AppLanguage.ARABIC -> "طي"
     }
 }
 
@@ -18005,3 +26233,4 @@ fun InitializeLanguage() {
         }
     }
 }
+

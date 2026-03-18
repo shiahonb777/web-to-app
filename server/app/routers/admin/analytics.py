@@ -85,8 +85,8 @@ def analytics_trends(
         # ── Pro subscribers trend (daily) ──
         pro_rows = db.query(
             func.date(User.pro_since).label("day"),
-            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly"]), 1))).label("pro_cnt"),
-            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly"]), 1))).label("ultra_cnt"),
+            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly", "pro_lifetime", "lifetime"]), 1))).label("pro_cnt"),
+            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly", "ultra_lifetime"]), 1))).label("ultra_cnt"),
         ).filter(
             User.pro_since >= since, User.is_pro == True
         ).group_by(func.date(User.pro_since)).all()
@@ -125,8 +125,8 @@ def analytics_trends(
         # ── Pro subscribers trend (monthly) ──
         pro_rows = db.query(
             func.date_format(User.pro_since, '%Y-%m').label("month"),
-            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly"]), 1))).label("pro_cnt"),
-            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly"]), 1))).label("ultra_cnt"),
+            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly", "pro_lifetime", "lifetime"]), 1))).label("pro_cnt"),
+            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly", "ultra_lifetime"]), 1))).label("ultra_cnt"),
         ).filter(
             User.pro_since >= since, User.is_pro == True
         ).group_by(func.date_format(User.pro_since, '%Y-%m')).all()
@@ -160,8 +160,8 @@ def analytics_trends(
         # ── Pro subscribers trend (yearly) ──
         pro_rows = db.query(
             extract("year", User.pro_since).label("yr"),
-            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly"]), 1))).label("pro_cnt"),
-            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly"]), 1))).label("ultra_cnt"),
+            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly", "pro_lifetime", "lifetime"]), 1))).label("pro_cnt"),
+            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly", "ultra_lifetime"]), 1))).label("ultra_cnt"),
         ).filter(User.is_pro == True, User.pro_since.isnot(None)).group_by(extract("year", User.pro_since)).all()
         pro_dict = {str(int(r.yr)): r.pro_cnt for r in pro_rows}
         ultra_dict = {str(int(r.yr)): r.ultra_cnt for r in pro_rows}
@@ -192,8 +192,8 @@ def analytics_trends(
         # ── Cumulative Pro / Ultra subscribers ──
         pro_rows = db.query(
             func.date_format(User.pro_since, '%Y-%m').label("month"),
-            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly"]), 1))).label("pro_cnt"),
-            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly"]), 1))).label("ultra_cnt"),
+            func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly", "pro_lifetime", "lifetime"]), 1))).label("pro_cnt"),
+            func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly", "ultra_lifetime"]), 1))).label("ultra_cnt"),
         ).filter(
             User.is_pro == True, User.pro_since.isnot(None)
         ).group_by(func.date_format(User.pro_since, '%Y-%m')).order_by(
@@ -216,8 +216,8 @@ def analytics_trends(
     # ── Current totals for summary cards ──
     totals = db.query(
         func.count(User.id).label("total_users"),
-        func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly"]), 1))).label("pro_count"),
-        func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly"]), 1))).label("ultra_count"),
+        func.count(case((User.pro_plan.in_(["pro_monthly", "pro_yearly", "pro_lifetime", "lifetime"]), 1))).label("pro_count"),
+        func.count(case((User.pro_plan.in_(["ultra_monthly", "ultra_yearly", "ultra_lifetime"]), 1))).label("ultra_count"),
     ).filter(User.is_pro == True).first()
 
     store_totals = db.query(

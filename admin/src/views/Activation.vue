@@ -20,7 +20,7 @@
           <select v-model="genForm.plan_type" class="select">
             <option :value="genForm.tier + '_monthly'">月度 (30天)</option>
             <option :value="genForm.tier + '_yearly'">年度 (365天)</option>
-            <option value="lifetime">终身</option>
+            <option :value="genForm.tier + '_lifetime'">终身</option>
           </select>
         </div>
         <div class="form-group">
@@ -89,11 +89,13 @@
           <option value="monthly">月度 (旧)</option>
           <option value="pro_monthly">Pro 月度</option>
           <option value="pro_yearly">Pro 年度</option>
+          <option value="pro_lifetime">Pro 终身</option>
           <option value="ultra_monthly">Ultra 月度</option>
           <option value="ultra_yearly">Ultra 年度</option>
+          <option value="ultra_lifetime">Ultra 终身</option>
           <option value="quarterly">季度 (旧)</option>
           <option value="yearly">年度 (旧)</option>
-          <option value="lifetime">终身</option>
+          <option value="lifetime">终身 (旧)</option>
         </select>
       </div>
 
@@ -142,7 +144,11 @@ const genForm = ref({ tier: 'pro', plan_type: 'pro_monthly', count: 10, batch_no
 // 切换会员层级时自动更新 plan_type
 watch(() => genForm.value.tier, (newTier, oldTier) => {
   const current = genForm.value.plan_type
-  if (current === 'lifetime') return // 终身不需要切换
+  if (current.endsWith('_lifetime')) {
+    genForm.value.plan_type = newTier + '_lifetime'
+    return
+  }
+  if (current === 'lifetime') return // 旧终身不需要切换
   // 将旧 tier 前缀替换为新 tier 前缀
   if (current.startsWith(oldTier + '_')) {
     genForm.value.plan_type = current.replace(oldTier + '_', newTier + '_')

@@ -140,9 +140,11 @@
                 <option value="free">Free</option>
                 <option value="pro_monthly">Pro 月付 $3</option>
                 <option value="pro_yearly">Pro 年付 $28.80</option>
+                <option value="pro_lifetime">Pro 终身 $99</option>
                 <option value="ultra_monthly">Ultra 月付 $9</option>
                 <option value="ultra_yearly">Ultra 年付 $86.40</option>
-                <option value="lifetime">终身</option>
+                <option value="ultra_lifetime">Ultra 终身 $199</option>
+                <option value="lifetime">终身(旧)</option>
               </select>
             </div>
             <div class="form-group">
@@ -230,7 +232,7 @@ async function saveUser() {
 
 function togglePw(u) { u._showPw = !u._showPw }
 
-function planName(p) { return { free:'Free', pro_monthly:'Pro 月', pro_yearly:'Pro 年', ultra_monthly:'Ultra 月', ultra_yearly:'Ultra 年', lifetime:'终身' }[p] || p }
+function planName(p) { return { free:'Free', pro_monthly:'Pro 月', pro_yearly:'Pro 年', pro_lifetime:'Pro 终身', ultra_monthly:'Ultra 月', ultra_yearly:'Ultra 年', ultra_lifetime:'Ultra 终身', lifetime:'终身(旧)' }[p] || p }
 function planColor(p) { if (p?.startsWith('ultra')) return 'badge-warning'; if (p?.startsWith('pro') || p === 'lifetime') return 'badge-info'; return 'badge-secondary' }
 function pLimit(u) { if (u.custom_project_limit) return u.custom_project_limit; if (u.pro_plan?.startsWith('ultra')) return 50; if (u.pro_plan?.startsWith('pro') || u.pro_plan === 'lifetime') return 10; return 0 }
 
