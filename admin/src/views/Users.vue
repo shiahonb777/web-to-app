@@ -160,7 +160,6 @@
               </div>
             </div>
             <div class="flex gap-16 mt-8">
-              <label class="toggle-label"><input type="checkbox" v-model="editForm.is_pro" class="toggle" /> {{ membershipLabel }}</label>
               <label class="toggle-label"><input type="checkbox" v-model="editForm.is_active" class="toggle" /> 账号正常</label>
             </div>
             <button class="btn btn-primary btn-sm mt-16" @click="saveUser" :disabled="saving" style="width:100%">保存修改</button>
