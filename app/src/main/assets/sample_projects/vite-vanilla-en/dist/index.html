@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite Weather App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="weather-card">
+            <div class="header">
+                <h1>🌤️ Weather Forecast</h1>
+                <p class="subtitle">Vite + Vanilla JS Demo</p>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="cityInput" placeholder="Enter city name..." value="New York">
+                <button id="searchBtn">Search</button>
+            </div>
+            
+            <div class="weather-display">
+                <div class="city-name" id="cityName">New York</div>
+                <div class="temperature" id="temperature">23°</div>
+                <div class="weather-icon" id="weatherIcon">☀️</div>
+                <div class="description" id="description">Sunny</div>
+                
+                <div class="details">
+                    <div class="detail-item">
+                        <span class="label">Humidity</span>
+                        <span class="value" id="humidity">45%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Wind</span>
+                        <span class="value" id="wind">12 km/h</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Feels Like</span>
+                        <span class="value" id="feelsLike">25°</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="forecast">
+                <div class="forecast-item">
+                    <span class="day">Mon</span>
+                    <span class="icon">🌤️</span>
+                    <span class="temp">24°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">Tue</span>
+                    <span class="icon">⛅</span>
+                    <span class="temp">22°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">Wed</span>
+                    <span class="icon">🌧️</span>
+                    <span class="temp">18°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">Thu</span>
+                    <span class="icon">☀️</span>
+                    <span class="temp">26°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">Fri</span>
+                    <span class="icon">🌤️</span>
+                    <span class="temp">25°</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

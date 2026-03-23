@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Todo App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="root">
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⚛️</div>
+            <h2 style="color: #61dafb; margin-bottom: 10px;">React Todo</h2>
+            <p style="color: #666;">正在加载 React...</p>
+            <div style="margin-top: 20px; width: 50px; height: 50px; border: 3px solid #f3f3f3; border-top: 3px solid #61dafb; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto;"></div>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    </div>
+    
+    <script>
+        // 动态加载脚本
+        function loadScript(src, onLoad, onError) {
+            console.log('[React Demo] Loading script: ' + src);
+            var script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                console.log('[React Demo] Script loaded: ' + src);
+                if (onLoad) onLoad();
+            };
+            script.onerror = function(e) {
+                console.error('[React Demo] Failed to load script: ' + src, e);
+                if (onError) onError(e);
+            };
+            document.head.appendChild(script);
+        }
+        
+        function showError(message) {
+            document.getElementById('root').innerHTML = 
+                '<div style="text-align: center; padding: 40px;">' +
+                '<div style="font-size: 48px; margin-bottom: 20px;">❌</div>' +
+                '<h2 style="color: #e74c3c; margin-bottom: 10px;">加载失败</h2>' +
+                '<p style="color: #666; margin-bottom: 20px;">' + message + '</p>' +
+                '<p style="color: #999; font-size: 14px;">请检查网络连接后重试</p>' +
+                '<button onclick="location.reload()" style="margin-top: 20px; padding: 10px 30px; background: #61dafb; color: #282c34; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">重新加载</button>' +
+                '</div>';
+        }
+        
+        // 依次加载 React, ReactDOM, main.js
+        loadScript('https://unpkg.com/react@18/umd/react.production.min.js', function() {
+            loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', function() {
+                loadScript('main.js', function() {
+                    console.log('[React Demo] All scripts loaded');
+                }, function() {
+                    showError('应用脚本加载失败');
+                });
+            }, function() {
+                showError('ReactDOM 加载失败，请检查网络连接');
+            });
+        }, function() {
+            showError('React 加载失败，请检查网络连接');
+        });
+    </script>
+</body>
+</html>

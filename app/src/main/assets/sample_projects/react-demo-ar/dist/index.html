@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق مهام React</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="root">
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⚛️</div>
+            <h2 style="color: #61dafb; margin-bottom: 10px;">قائمة المهام</h2>
+            <p style="color: #666;">جاري تحميل React...</p>
+            <div style="margin-top: 20px; width: 50px; height: 50px; border: 3px solid #f3f3f3; border-top: 3px solid #61dafb; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto;"></div>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    </div>
+    
+    <script>
+        // تحميل السكريبتات ديناميكياً
+        function loadScript(src, onLoad, onError) {
+            console.log('[React Demo] Loading script: ' + src);
+            var script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                console.log('[React Demo] Script loaded: ' + src);
+                if (onLoad) onLoad();
+            };
+            script.onerror = function(e) {
+                console.error('[React Demo] Failed to load script: ' + src, e);
+                if (onError) onError(e);
+            };
+            document.head.appendChild(script);
+        }
+        
+        function showError(message) {
+            document.getElementById('root').innerHTML = 
+                '<div style="text-align: center; padding: 40px;">' +
+                '<div style="font-size: 48px; margin-bottom: 20px;">❌</div>' +
+                '<h2 style="color: #e74c3c; margin-bottom: 10px;">فشل التحميل</h2>' +
+                '<p style="color: #666; margin-bottom: 20px;">' + message + '</p>' +
+                '<p style="color: #999; font-size: 14px;">يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى</p>' +
+                '<button onclick="location.reload()" style="margin-top: 20px; padding: 10px 30px; background: #61dafb; color: #282c34; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">إعادة تحميل</button>' +
+                '</div>';
+        }
+        
+        // تحميل React, ReactDOM, main.js بالتتابع
+        loadScript('https://unpkg.com/react@18/umd/react.production.min.js', function() {
+            loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', function() {
+                loadScript('main.js', function() {
+                    console.log('[React Demo] All scripts loaded');
+                }, function() {
+                    showError('فشل تحميل سكريبت التطبيق');
+                });
+            }, function() {
+                showError('فشل تحميل ReactDOM، يرجى التحقق من الاتصال');
+            });
+        }, function() {
+            showError('فشل تحميل React، يرجى التحقق من الاتصال');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_description">Convert any website to standalone App</string>
+
+    <!-- Main Interface -->
+    <string name="title_my_apps">My Apps</string>
+    <string name="title_create_app">Create App</string>
+    <string name="title_settings">Settings</string>
+
+    <!-- Create App Form -->
+    <string name="label_app_name">App Name</string>
+    <string name="label_url">Website URL</string>
+    <string name="label_icon">App Icon</string>
+    <string name="label_activation">Activation Settings</string>
+    <string name="label_ads">Ad Settings</string>
+    <string name="label_announcement">Announcement Settings</string>
+    <string name="label_ad_block">Ad Blocking</string>
+
+    <!-- Activation Code -->
+    <string name="enable_activation">Enable Activation Code</string>
+    <string name="activation_codes">Activation Code List</string>
+    <string name="add_activation_code">Add Activation Code</string>
+    <string name="activation_required">Activation code required to use</string>
+    <string name="enter_activation_code">Please enter activation code</string>
+    <string name="invalid_activation_code">Invalid activation code</string>
+    <string name="activation_success">Activation successful</string>
+
+    <!-- Ads -->
+    <string name="enable_ads">Enable Ads</string>
+    <string name="ad_type">Ad Type</string>
+    <string name="ad_banner">Banner Ad</string>
+    <string name="ad_interstitial">Interstitial Ad</string>
+    <string name="ad_splash">Splash Ad</string>
+    <string name="ad_unit_id">Ad Unit ID</string>
+
+    <!-- Announcement -->
+    <string name="enable_announcement">Enable Announcement</string>
+    <string name="announcement_title">Announcement Title</string>
+    <string name="announcement_content">Announcement Content</string>
+    <string name="announcement_url">Announcement Link</string>
+    <string name="show_once">Show Once Only</string>
+
+    <!-- Ad Blocking -->
+    <string name="enable_ad_block">Enable Ad Blocking</string>
+    <string name="ad_block_rules">Blocking Rules</string>
+    <string name="custom_rules">Custom Rules</string>
+
+    <!-- Action Buttons -->
+    <string name="btn_create">Create App</string>
+    <string name="btn_preview">Preview</string>
+    <string name="btn_export">Export APK</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_edit">Edit</string>
+    <string name="btn_launch">Launch</string>
+    <string name="btn_shortcut">Create Shortcut</string>
+    <string name="btn_select_icon">Select Icon</string>
+
+    <!-- Messages -->
+    <string name="msg_app_created">App created successfully</string>
+    <string name="msg_app_deleted">App deleted</string>
+    <string name="msg_shortcut_created">Shortcut created</string>
+    <string name="msg_url_invalid">Please enter a valid URL</string>
+    <string name="msg_name_required">Please enter app name</string>
+    <string name="msg_export_success">APK exported successfully</string>
+    <string name="msg_export_failed">APK export failed</string>
+    <string name="msg_loading">Loading...</string>
+    <string name="msg_no_apps">No apps yet, tap + to create</string>
+
+    <!-- WebView -->
+    <string name="webview_error">Page load failed</string>
+    <string name="webview_retry">Retry</string>
+    <string name="webview_back">Back</string>
+    <string name="webview_forward">Forward</string>
+    <string name="webview_refresh">Refresh</string>
+    <string name="webview_share">Share</string>
+    <string name="webview_open_browser">Open in Browser</string>
+
+    <!-- Language -->
+    <string name="language_settings">Language</string>
+    <string name="language_chinese">Chinese</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">Arabic</string>
+    <string name="language_changed">Language changed, please restart app</string>
+
+    <!-- Menu Items -->
+    <string name="menu_ai_html_coding">AI HTML Coding</string>
+    <string name="menu_theme_settings">Theme Settings</string>
+    <string name="menu_ai_settings">AI Settings</string>
+    <string name="menu_app_modifier">App Modifier</string>
+    <string name="menu_extension_modules">Extension Modules</string>
+    <string name="menu_about">About</string>
+    <string name="menu_search">Search</string>
+    <string name="menu_more">More</string>
+    <string name="menu_linux_environment">Linux Environment</string>
+
+    <!-- Extension Modules -->
+    <string name="extension_module">Extension Module</string>
+    <string name="create_module">Create Module</string>
+    <string name="edit_module">Edit Module</string>
+    <string name="delete_module">Delete Module</string>
+    <string name="module_name">Module Name</string>
+    <string name="module_description">Module Description</string>
+    <string name="module_enabled">Enabled</string>
+    <string name="module_disabled">Disabled</string>
+    <string name="ai_module_developer">AI Module Developer</string>
+
+    <!-- AI Features -->
+    <string name="ai_generating">AI Generating...</string>
+    <string name="ai_analyzing">Analyzing requirements...</string>
+    <string name="ai_planning">Planning development steps...</string>
+    <string name="ai_coding">Generating code...</string>
+    <string name="ai_checking">Checking syntax...</string>
+    <string name="ai_fixing">Auto fixing errors...</string>
+    <string name="ai_scanning">Security scanning...</string>
+    <string name="ai_completed">Generation completed</string>
+    <string name="ai_error">AI error</string>
+
+    <!-- Create App Types -->
+    <string name="create_web_app">Web App</string>
+    <string name="create_media_app">Media App</string>
+    <string name="create_html_app">HTML App</string>
+
+    <!-- Translation -->
+    <string name="auto_translate">Auto Translate</string>
+    <string name="translate_to">Translate to</string>
+    <string name="translate_enabled">Translation enabled</string>
+
+    <!-- Common -->
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="warning">Warning</string>
+    <string name="info">Info</string>
+    <string name="close">Close</string>
+    <string name="open">Open</string>
+    <string name="copy">Copy</string>
+    <string name="paste">Paste</string>
+    <string name="share">Share</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="import_text">Import</string>
+    <string name="export_text">Export</string>
+
+    <!-- Icon Library -->
+    <string name="icon_library">Icon Library</string>
+
+    <!-- Extension Module Card -->
+    <string name="save_as_scheme">Save as Scheme</string>
+    <string name="clear_all">Clear</string>
+    <string name="select_modules">Select Modules</string>
+    <string name="select_extension_modules">Select Extension Modules</string>
+    <string name="done_with_count">Done (%d)</string>
+    <string name="search_modules_hint">Search module name, description or tags...</string>
+    <string name="test_module">Test Module</string>
+    <string name="start_test">Start Test</string>
+    <string name="add_this_module">Add This Module</string>
+    <string name="all_schemes">All Schemes</string>
+    <string name="module_schemes">Module Schemes</string>
+    <string name="scheme_name">Scheme Name</string>
+    <string name="input_scheme_name">Enter scheme name</string>
+    <string name="description_optional">Description (optional)</string>
+    <string name="brief_description_hint">Brief description of scheme purpose</string>
+    <string name="select_icon">Select Icon</string>
+
+    <!-- Announcement Template -->
+    <string name="preview_announcement_effect">Preview Announcement Effect</string>
+
+    <!-- Lyrics Alignment -->
+    <string name="next_step_time_align">Next: Time Alignment</string>
+    <string name="tap_to_mark">Tap to Mark</string>
+    <string name="previous_step">Previous</string>
+    <string name="next_step">Next</string>
+    <string name="go_back_to_modify">Go Back to Modify</string>
+    <string name="save_lrc">Save LRC</string>
+
+    <!-- Data Backup -->
+    <string name="export_data">Export Data</string>
+    <string name="import_data">Import Data</string>
+
+    <!-- Auto Start -->
+    <string name="launch_time">Launch Time</string>
+    <string name="select_launch_time">Select Launch Time</string>
+
+    <!-- HTML Coding -->
+    <string name="download_file">Download</string>
+    <string name="export_all">Export All</string>
+    <string name="thinking">Thinking</string>
+    <string name="thinking_dots">Thinking...</string>
+    <string name="describe_html_page">Describe the HTML page you want...</string>
+    <string name="add_new_rule">Add new rule...</string>
+
+    <!-- Isolation Config -->
+    <string name="country_region">Country/Region</string>
+    <string name="country_region_hint">e.g.: Japan, Korea, UK...</string>
+
+    <!-- Code Snippets -->
+    <string name="search_code_snippets">Search code snippets...</string>
+
+    <!-- Module Editor -->
+    <string name="module_name_required">Module Name *</string>
+    <string name="input_module_name">Enter module name</string>
+    <string name="description">Description</string>
+    <string name="brief_module_description">Brief description of module function</string>
+    <string name="tags">Tags</string>
+    <string name="tags_hint">Comma separated, e.g.: ads, block, tools</string>
+    <string name="author">Author</string>
+    <string name="your_name">Your name</string>
+    <string name="key_name_required">Key Name *</string>
+    <string name="key_name_hint">e.g.: fontSize</string>
+    <string name="display_name_required">Display Name *</string>
+    <string name="display_name_hint">e.g.: Font Size</string>
+    <string name="config_description">Description</string>
+    <string name="config_description_hint">Description text for config item</string>
+    <string name="config_type">Type</string>
+    <string name="default_value">Default Value</string>
+
+    <!-- AI Settings -->
+    <string name="provider">Provider</string>
+    <string name="model_id">Model ID</string>
+    <string name="model_id_hint">e.g.: gpt-4o-mini</string>
+    <string name="alias_optional">Alias (optional)</string>
+    <string name="alias">Alias</string>
+
+    <!-- Create App -->
+    <string name="activation_code">Activation Code</string>
+    <string name="input_activation_code_hint">Enter activation code</string>
+    <string name="show_once_only">Show Once Only</string>
+    <string name="custom_package_name">Custom Package Name</string>
+    <string name="version_name">Version Name</string>
+    <string name="version_code">Version Code</string>
+    <string name="select_theme">Select Theme</string>
+    <string name="translate_target_language">Translation Target Language</string>
+    <string name="ad_block_rule_hint">e.g.: ads.example.com</string>
+
+    <!-- Common -->
+    <string name="done">Done</string>
+    <string name="save">Save</string>
+    <string name="add">Add</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="please_select_text_model">Please select a text model first</string>
+    <string name="new_update">New Update Available</string>
+    <string name="update_now">Update Now</string>
+    <string name="latest_version">Already latest version</string>
+    <string name="network_error">Network Error</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading...</string>
+    <string name="no_data">No data</string>
+    <string name="copied">Copied</string>
+    <string name="saved">Saved</string>
+    <string name="operation_success">Operation successful</string>
+    <string name="operation_failed">Operation failed</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="please_wait">Please wait...</string>
+    <string name="processing">Processing...</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="select_file">Select File</string>
+    <string name="select_folder">Select Folder</string>
+    <string name="file_not_found">File not found</string>
+    <string name="invalid_format">Invalid format</string>
+    <string name="permission_denied">Permission denied</string>
+    <string name="storage_permission_required">Storage permission required</string>
+    <string name="grant_permission">Grant Permission</string>
+
+    <!-- Build Environment -->
+    <string name="build_environment">Build Environment</string>
+    <string name="env_ready">Environment Ready</string>
+    <string name="env_not_installed">Available</string>
+    <string name="env_downloading">Downloading</string>
+    <string name="env_installing">Installing</string>
+    <string name="can_build_frontend">Can build frontend projects</string>
+    <string name="built_in_packager_ready">Built-in packager ready</string>
+    <string name="install_advanced_build_tool">Install Advanced Build Tool (esbuild)</string>
+    <string name="optional_esbuild_hint">Optional: Install esbuild for better build performance</string>
+    <string name="build_tools">Build Tools</string>
+    <string name="built_in_packager">Built-in Packager</string>
+    <string name="pure_kotlin_impl">Pure Kotlin implementation, no external dependencies</string>
+    <string name="high_perf_build_tool">High-performance build tool</string>
+    <string name="installed">Installed</string>
+    <string name="not_installed">Not Installed</string>
+    <string name="ready">Ready</string>
+    <string name="storage_usage">Storage Usage</string>
+    <string name="cache">Cache</string>
+    <string name="supported_features">Supported Features</string>
+    <string name="tech_description">Technical Description</string>
+    <string name="reset_environment">Reset Environment</string>
+    <string name="reset_env_confirm">This will delete downloaded build tools. Are you sure?</string>
+    <string name="clear_cache_title">Clear Cache</string>
+    <string name="clear_cache_confirm">This will clear build cache and temporary files.</string>
+    <string name="clean">Clean</string>
+
+    <!-- Frontend Project -->
+    <string name="select_project">Select Project</string>
+    <string name="select_project_folder">Select Project Folder</string>
+    <string name="select_project_hint">Select project root or build output directory (dist/build)</string>
+    <string name="project_analysis">Project Analysis</string>
+    <string name="framework">Framework</string>
+    <string name="version">Version</string>
+    <string name="package_manager">Package Manager</string>
+    <string name="dependency_count">Dependency Count</string>
+    <string name="output_dir">Output Directory</string>
+    <string name="app_config">App Config</string>
+    <string name="import_project">Import Project</string>
+    <string name="build_project">Build Project</string>
+    <string name="scanning_project">Scanning project...</string>
+    <string name="importing">Importing</string>
+    <string name="checking_env">Checking environment...</string>
+    <string name="copying_project_files">Copying project files</string>
+    <string name="installing_deps">Installing dependencies</string>
+    <string name="building">Building</string>
+    <string name="processing_output">Processing build output...</string>
+    <string name="completed">Completed</string>
+    <string name="failed">Failed</string>
+    <string name="total_files">%d files total</string>
+    <string name="logs">Logs</string>
+    <string name="import_logs">Import Logs</string>
+    <string name="import_frontend_project">Import Frontend Project</string>
+    <string name="support_vue_react_vite">Supports built Vue, React, Vite projects</string>
+    <string name="usage_steps">📋 Usage Steps</string>
+    <string name="usage_steps_content">1. Build project on computer: npm run build\n2. Copy build output (dist/build) to phone\n3. Select project folder to import</string>
+    <string name="built_in_engine_ready">Built-in build engine ready. Supports importing built projects or simple builds with esbuild. Complex projects are recommended to be built on computer.</string>
+
+    <!-- Media App -->
+    <string name="create_media_app_title">Create Media App</string>
+    <string name="select_media_type">Select Media Type</string>
+    <string name="image">Image</string>
+    <string name="video">Video</string>
+    <string name="select_image">Select Image</string>
+    <string name="select_video">Select Video</string>
+    <string name="click_to_select_image">Click to select image</string>
+    <string name="click_to_select_video">Click to select video</string>
+    <string name="video_selected">Video selected</string>
+    <string name="fill_screen">Fill Screen</string>
+    <string name="fill_screen_hint">Auto crop to fill entire screen</string>
+    <string name="landscape_mode">Landscape Mode</string>
+    <string name="landscape_mode_hint">Display content in landscape mode</string>
+    <string name="enable_audio">Enable Audio</string>
+    <string name="enable_audio_hint">Include sound when playing video</string>
+    <string name="loop_play">Loop Play</string>
+    <string name="loop_play_hint">Auto replay when video ends</string>
+    <string name="auto_play">Auto Play</string>
+    <string name="auto_play_hint">Auto start playing when app opens</string>
+    <string name="media_app_hint">The created app will %s, suitable for digital photo frames, advertising displays, or video wallpapers.</string>
+    <string name="fullscreen_display_image">display your selected image in fullscreen</string>
+    <string name="fullscreen_play_video">play your selected video in fullscreen</string>
+
+    <!-- HTML App -->
+    <string name="create_html_app_title">Create HTML App</string>
+    <string name="select_files">Select Files</string>
+    <string name="select_files_hint">Select HTML, CSS, JS files separately (CSS and JS are optional)</string>
+    <string name="html_file">HTML File</string>
+    <string name="css_file">CSS Style File</string>
+    <string name="js_file">JavaScript Script</string>
+    <string name="enable_javascript">Enable JavaScript</string>
+    <string name="enable_js_hint">Allow JavaScript code execution in HTML</string>
+    <string name="enable_local_storage">Enable Local Storage</string>
+    <string name="enable_local_storage_hint">Allow using localStorage to save data</string>
+    <string name="landscape_mode_label">Landscape Mode</string>
+    <string name="landscape_mode_hint_html">Display app content in landscape orientation</string>
+    <string name="project_issues_detected">Project issues detected</string>
+    <string name="errors_count">%d errors</string>
+    <string name="warnings_count">%d warnings</string>
+    <string name="auto_fix_hint">App will auto-fix path issues and inline CSS/JS, but please review details</string>
+    <string name="view_analysis_result">View Analysis Result</string>
+    <string name="html_app_tip">Tip: HTML file is required, CSS and JS files are optional. If your HTML references CSS or JS, please select the corresponding files.</string>
+    <string name="feature_tip">💡 Features like activation code and background music can be added via \'Edit\' in project management after creation.</string>
+    <string name="about_file_reference">About File References</string>
+    <string name="file_reference_hint">• App will auto-inline CSS and JS into HTML\n• Absolute paths (like /css/style.css) will be auto-converted\n• Relative paths (like ./style.css) are recommended</string>
+    <string name="project_analysis_result">Project Analysis Result</string>
+    <string name="file_info">File Info</string>
+    <string name="detected_issues">Detected Issues</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="auto_process_hint">App will auto-process: path fixing, CSS/JS inlining, encoding conversion, viewport adaptation</string>
+    <string name="got_it">Got it</string>
+
+    <!-- Create App Screen -->
+    <string name="edit_app">Edit App</string>
+    <string name="input_app_name">Enter app display name</string>
+    <string name="activation_code_verify">Activation Code Verification</string>
+    <string name="activation_code_hint">When enabled, users need to enter correct activation code to use the app</string>
+    <string name="popup_announcement">Popup Announcement</string>
+    <string name="announcement_title_label">Announcement Title</string>
+    <string name="announcement_content_label">Announcement Content</string>
+    <string name="link_url">Link URL (optional)</string>
+    <string name="link_button_text">Link Button Text</string>
+    <string name="view_details">View Details</string>
+    <string name="display_frequency">Display Frequency</string>
+    <string name="every_launch">Every Launch</string>
+    <string name="show_emoji">Show Emoji</string>
+    <string name="enable_animation">Enable Animation</string>
+    <string name="ad_blocking">Ad Blocking</string>
+    <string name="enable_ad_block_label">Enable Ad Blocking</string>
+    <string name="desktop_mode">Desktop Mode</string>
+    <string name="fullscreen_mode">Fullscreen Mode</string>
+    <string name="splash_screen">Splash Screen</string>
+    <string name="background_music">Background Music</string>
+    <string name="auto_translate_label">Auto Translate</string>
+    <string name="webview_advanced_settings">WebView Advanced Settings</string>
+    <string name="html_app">HTML App</string>
+    <string name="entry_file">Entry File</string>
+    <string name="total_files_count">%d files total</string>
+    <string name="image_app">Image App</string>
+    <string name="video_app">Video App</string>
+    <string name="unknown_file">Unknown File</string>
+
+    <!-- Extension Module Screen -->
+    <string name="search_modules">Search modules...</string>
+    <string name="all">All</string>
+    <string name="total_modules">%d modules total</string>
+    <string name="enabled_modules">%d enabled</string>
+    <string name="built_in">Built-in</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="copy_share_code">Copy Share Code</string>
+    <string name="share_code_copied">Share code copied</string>
+    <string name="no_modules_found">No matching modules found</string>
+    <string name="no_modules_yet">No modules yet</string>
+    <string name="create_first_module">Create first module</string>
+    <string name="import_module">Import Module</string>
+    <string name="import_from_file">Import from File</string>
+    <string name="select_wtamod_file">Select .wtamod or .wtapkg file</string>
+    <string name="import_from_share_code">Import from Share Code</string>
+    <string name="paste_share_code">Paste shared module code</string>
+    <string name="share_code">Share Code</string>
+    <string name="paste_share_code_hint">Paste share code...</string>
+    <string name="paste_from_clipboard">Paste from Clipboard</string>
+    <string name="only_on_matching_urls">Only works on %d matching URL rules</string>
+    <string name="requires_sensitive_permissions">Requires sensitive permissions</string>
+    <string name="ai_develop">AI Develop</string>
+    <string name="manual_create">Manual Create</string>
+    <string name="create_module_label">Create Module</string>
+    <string name="ai_module_developer_label">AI Module Developer</string>
+
+    <!-- Theme Settings -->
+    <string name="theme_settings_title">Theme Settings</string>
+    <string name="enhanced_mode">Enhanced</string>
+    <string name="theme">Theme</string>
+    <string name="appearance">Appearance</string>
+    <string name="effects">Effects</string>
+    <string name="ui_mode">UI Mode</string>
+    <string name="select_ui_style">Select UI visual style</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="follow_system">Follow System</string>
+    <string name="follow_system_hint">Auto switch based on system settings</string>
+    <string name="light_mode">Light Mode</string>
+    <string name="light_mode_hint">Always use light theme</string>
+    <string name="dark_mode_hint">Always use dark theme</string>
+    <string name="preview_effect">Preview Effect</string>
+    <string name="button">Button</string>
+    <string name="enhanced_mode_enabled">Enhanced mode enabled</string>
+    <string name="enjoy_immersive_experience">Enjoy immersive visual experience of %s</string>
+    <string name="enable_animations">Enable Animations</string>
+    <string name="enable_animations_hint">Enable UI transition animations and interaction feedback</string>
+    <string name="particle_effects">Particle Effects</string>
+    <string name="particle_effects_hint">Show theme-specific background particle animations</string>
+    <string name="particle_effects_enhanced_hint">Immersive background effects in enhanced mode</string>
+    <string name="haptic_feedback">Haptic Feedback</string>
+    <string name="haptic_feedback_hint">Provide vibration feedback on interaction</string>
+    <string name="sound_feedback">Sound Feedback</string>
+    <string name="sound_feedback_hint">Play sound effects on interaction (enhanced mode)</string>
+    <string name="animation_speed">Animation Speed</string>
+    <string name="current_theme_anim_style">Current Theme Animation Style</string>
+    <string name="interaction_style">Interaction Style</string>
+    <string name="glow">Glow</string>
+    <string name="particles">Particles</string>
+
+    <!-- About Screen -->
+    <string name="about">About</string>
+    <string name="independent_developer">Independent Developer · AI Enthusiast</string>
+    <string name="check_update">Check Update</string>
+    <string name="checking">Checking...</string>
+    <string name="downloading">Downloading...</string>
+    <string name="current_version">Current Version</string>
+    <string name="about_this_app">About This App</string>
+    <string name="about_app_description">WebToApp is a tool I independently developed that can quickly convert websites, images, and videos into standalone Android apps.\n\nIf you have any questions, suggestions, or ideas, feel free to contact me!</string>
+    <string name="social_media">Social Media</string>
+    <string name="exchange_group">Community Group</string>
+    <string name="video_tutorial">Video Tutorial</string>
+    <string name="open_source_repo">Open Source Repo</string>
+    <string name="join_exchange_group">Join Community</string>
+    <string name="learn_progress_together">Learn together, get latest news 🚀</string>
+    <string name="exchange_learning">Exchange learning, update news</string>
+    <string name="international_group">International user group</string>
+    <string name="contact_author">Contact Author</string>
+    <string name="feedback_cooperation">Feedback, cooperation, feature suggestions 💬</string>
+    <string name="feedback_cooperation_short">Feedback, cooperation</string>
+    <string name="email_contact">Email Contact</string>
+    <string name="international_email">International Email</string>
+    <string name="update_later">Update Later</string>
+    <string name="download_complete">Download complete, installing...</string>
+    <string name="check_update_failed">Check update failed</string>
+
+    <!-- AI Status -->
+    <string name="ai_generating_status">AI Generating...</string>
+    <string name="ai_analyzing_status">Analyzing requirements...</string>
+    <string name="ai_completed_status">Generation completed</string>
+    <string name="ai_planning_status">Planning development...</string>
+    <string name="ai_coding_status">Generating code...</string>
+
+    <!-- Encryption -->
+    <string name="encryption_settings">Encryption Settings</string>
+    <string name="enable_encryption">Enable Encryption</string>
+    <string name="encryption_hint">Encrypt app resources for protection</string>
+    <string name="encryption_level">Encryption Level</string>
+    <string name="basic_encryption">Basic</string>
+    <string name="standard_encryption">Standard</string>
+    <string name="advanced_encryption">Advanced</string>
+
+    <!-- Isolation -->
+    <string name="isolation_settings">Isolation Settings</string>
+    <string name="enable_isolation">Enable Isolation</string>
+    <string name="isolation_hint">Create isolated browser environment</string>
+    <string name="fingerprint_spoofing">Fingerprint Spoofing</string>
+    <string name="user_agent_spoofing">User Agent Spoofing</string>
+    <string name="ip_spoofing">IP Spoofing</string>
+    <string name="storage_isolation">Storage Isolation</string>
+    <string name="regenerate_on_launch">Regenerate on Launch</string>
+    
+    <!-- Help -->
+    <string name="help">Help</string>
+    <string name="usage_help">Usage Help</string>
+    <string name="i_understand">I Understand</string>
+    <string name="select_module_category">Select Module Category</string>
+    <string name="auto_detect">Auto Detect</string>
+    <string name="auto_detect_category_hint">Let AI automatically select category based on requirements</string>
+    
+    <!-- AI Module Development Help -->
+    <string name="help_how_to_use">How to Use</string>
+    <string name="help_how_to_use_content">Describe the functionality you want in natural language in the input box, and AI will automatically analyze the requirements and generate the corresponding extension module code.</string>
+    <string name="help_requirement_tips">Requirement Description Tips</string>
+    <string name="help_requirement_tips_content">• Describe specific functionality effects\n• Specify target website or page type\n• Refer to example requirements for guidance</string>
+    <string name="help_model_selection">Model Selection</string>
+    <string name="help_model_selection_content">You can choose different AI models to generate code. Different models may have different effects and speeds.</string>
+    <string name="help_category_selection">Category Selection</string>
+    <string name="help_category_selection_content">You can manually select module category or let AI auto-detect. Manual selection can make generated code more precise.</string>
+    <string name="help_auto_check">Auto Check</string>
+    <string name="help_auto_check_content">AI will automatically perform syntax checking and security scanning to ensure generated code runs properly without security risks.</string>
+    <string name="help_code_edit">Code Editing</string>
+    <string name="help_code_edit_content">Generated code can be directly edited and modified. The modified version will be used when saving.</string>
+    <string name="help_save_module">Save Module</string>
+    <string name="help_save_module_content">After generation is complete, click \'Save\' to add it to your module library for use when creating apps.</string>
+    
+    <!-- Additional UI Strings -->
+    <string name="project_template_export">Project Template Export</string>
+    <string name="encoding_and_size">Encoding: %1$s | Size: %2$s</string>
+    <string name="file_label">File: %s</string>
+    <string name="click_to_select_file">Click to select file</string>
+    <string name="clear_file">Clear</string>
+    <string name="share_module">Share Module</string>
+    <string name="selected_image">Selected Image</string>
+    <string name="select_ui_style_hint">Select UI visual style</string>
+    <string name="auto_switch_by_system">Auto switch based on system settings</string>
+    <string name="always_use_light_theme">Always use light theme</string>
+    <string name="always_use_dark_theme">Always use dark theme</string>
+    <string name="interaction_style_label">Interaction Style: %s</string>
+    <string name="click_button_to_experience">Click button below to experience</string>
+    <string name="animation_disabled">Animation disabled</string>
+    <string name="hold_to_experience">Hold to experience</string>
+    <string name="primary_color">Primary</string>
+    <string name="secondary_color">Secondary</string>
+    <string name="accent_color">Accent</string>
+    <string name="animation_style">Animation Style</string>
+    <string name="interaction_method">Interaction Method</string>
+    <string name="corner_radius">Corner Radius</string>
+    <string name="glow_effect">Glow Effect</string>
+    <string name="particle_effect">Particle Effect</string>
+    <string name="glassmorphism">Glassmorphism</string>
+    <string name="version_name_label">Version Name</string>
+    <string name="version_code_label">Version Code</string>
+    <string name="static_website">Static Website</string>
+    <string name="video_file_not_exist">Video file does not exist</string>
+    <string name="video_preview">Video Preview</string>
+    <string name="selected_duration">Selected: %.1f seconds</string>
+    <string name="total_duration_label">Total duration: %.1f seconds</string>
+    <string name="trim_range_hint">Trim range (drag to select playback segment)</string>
+    <string name="bgm_title">Background Music</string>
+    <string name="bgm_description">Add background music to app, supports loop or sequential playback</string>
+    <string name="selected_music_count">%d music selected</string>
+    <string name="loop_playback">Loop Playback</string>
+    <string name="sequential_playback">Sequential Playback</string>
+    <string name="shuffle_playback">Shuffle Playback</string>
+    <string name="volume_percent">Volume: %d%%</string>
+    <string name="select_music">Select Music</string>
+    <string name="modify_config">Modify Config</string>
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+    <string name="sample_projects">Sample Projects</string>
+    <string name="quick_experience_frontend">Quick experience frontend project import</string>
+    <string name="quick_experience">Quick Experience</string>
+    <string name="run">Run</string>
+    <string name="cannot_parse_image">Cannot parse image</string>
+    <string name="cannot_open_image">Cannot open image</string>
+    <string name="load_image_failed">Failed to load image: %s</string>
+    <string name="original_image">Original Image</string>
+    <string name="extension_module_title">Extension Modules</string>
+    <string name="no_module_selected">No module selected</string>
+    <string name="modules_selected">%d modules selected</string>
+    <string name="add_module">Add Module</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="status_bar_background">Status Bar Background</string>
+    <string name="theme_features">Theme Features</string>
+    <string name="url_to_shortcut_basic">URL to shortcut basic functionality</string>
+    <string name="activation_code_announcement_ad_block">Activation code, announcement, ad blocking</string>
+
+    <!-- Multi Desktop Icons / Disguise -->
+    <string name="disguise_multi_icon_title">Multi Desktop Icons</string>
+    <string name="disguise_icon_count_format">%d icons</string>
+    <string name="disguise_not_enabled">Not enabled</string>
+    <string name="disguise_enable_multi_icon">Enable Multi Icons</string>
+    <string name="disguise_enable_multi_icon_desc">Show multiple app icons on desktop after installation</string>
+    <string name="disguise_icon_count_title">Desktop Icon Count</string>
+    <string name="disguise_icon_count_desc">Set the number of icons to display on desktop (each icon can launch the app)</string>
+    <string name="disguise_count_label">Count</string>
+    <string name="disguise_count_hint">Recommended 2-10</string>
+    <string name="disguise_hide_main_icon">Hide Main Icon</string>
+    <string name="disguise_hide_main_icon_desc">Keep only alias icons, hide main Activity icon</string>
+    <string name="disguise_multi_icon_tip">Multi-icon feature uses Android native activity-alias mechanism, automatically showing multiple desktop icons after installation, no extra permissions required.</string>
+</resources>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق الطقس</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="weather-card">
+            <div class="header">
+                <h1>🌤️ توقعات الطقس</h1>
+                <p class="subtitle">Vite + Vanilla JS تجريبي</p>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="cityInput" placeholder="أدخل اسم المدينة..." value="دبي">
+                <button id="searchBtn">بحث</button>
+            </div>
+            
+            <div class="weather-display">
+                <div class="city-name" id="cityName">دبي</div>
+                <div class="temperature" id="temperature">28°</div>
+                <div class="weather-icon" id="weatherIcon">☀️</div>
+                <div class="description" id="description">مشمس</div>
+                
+                <div class="details">
+                    <div class="detail-item">
+                        <span class="label">الرطوبة</span>
+                        <span class="value" id="humidity">45%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">الرياح</span>
+                        <span class="value" id="wind">12 كم/س</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">الإحساس</span>
+                        <span class="value" id="feelsLike">30°</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="forecast">
+                <div class="forecast-item">
+                    <span class="day">الإثنين</span>
+                    <span class="icon">🌤️</span>
+                    <span class="temp">29°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">الثلاثاء</span>
+                    <span class="icon">⛅</span>
+                    <span class="temp">27°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">الأربعاء</span>
+                    <span class="icon">🌧️</span>
+                    <span class="temp">25°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">الخميس</span>
+                    <span class="icon">☀️</span>
+                    <span class="temp">30°</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="day">الجمعة</span>
+                    <span class="icon">🌤️</span>
+                    <span class="temp">28°</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

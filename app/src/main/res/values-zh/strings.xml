@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 
+    使用固定长度占位符，确保有足够字节空间支持长自定义名称
+    重要：使用 Unicode 不间断空格 (\u00A0) 代替普通空格，防止 AAPT2 trim
+    总长度：8(WebToApp) + 88(填充) = 96 字节，支持约 30 个中文字符
+    -->
+    <string name="app_description">将任意网站转换为独立App</string>
+
+    <!-- 主界面 -->
+    <string name="title_my_apps">我的应用</string>
+    <string name="title_create_app">创建应用</string>
+    <string name="title_settings">设置</string>
+
+    <!-- 创建App表单 -->
+    <string name="label_app_name">应用名称</string>
+    <string name="label_url">网站地址</string>
+    <string name="label_icon">应用图标</string>
+    <string name="label_activation">激活码设置</string>
+    <string name="label_ads">广告设置</string>
+    <string name="label_announcement">公告设置</string>
+    <string name="label_ad_block">广告拦截</string>
+
+    <!-- 激活码 -->
+    <string name="enable_activation">启用激活码</string>
+    <string name="activation_codes">激活码列表</string>
+    <string name="add_activation_code">添加激活码</string>
+    <string name="activation_required">需要输入激活码才能使用</string>
+    <string name="enter_activation_code">请输入激活码</string>
+    <string name="invalid_activation_code">激活码无效</string>
+    <string name="activation_success">激活成功</string>
+
+    <!-- 广告 -->
+    <string name="enable_ads">启用广告</string>
+    <string name="ad_type">广告类型</string>
+    <string name="ad_banner">横幅广告</string>
+    <string name="ad_interstitial">插屏广告</string>
+    <string name="ad_splash">开屏广告</string>
+    <string name="ad_unit_id">广告单元ID</string>
+
+    <!-- 公告 -->
+    <string name="enable_announcement">启用公告</string>
+    <string name="announcement_title">公告标题</string>
+    <string name="announcement_content">公告内容</string>
+    <string name="announcement_url">公告链接</string>
+    <string name="show_once">仅显示一次</string>
+
+    <!-- 广告拦截 -->
+    <string name="enable_ad_block">启用广告拦截</string>
+    <string name="ad_block_rules">拦截规则</string>
+    <string name="custom_rules">自定义规则</string>
+
+    <!-- 操作按钮 -->
+    <string name="btn_create">创建应用</string>
+    <string name="btn_preview">预览</string>
+    <string name="btn_export">导出APK</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_delete">删除</string>
+    <string name="btn_edit">编辑</string>
+    <string name="btn_launch">启动</string>
+    <string name="btn_shortcut">创建快捷方式</string>
+    <string name="btn_select_icon">选择图标</string>
+
+    <!-- 提示消息 -->
+    <string name="msg_app_created">应用创建成功</string>
+    <string name="msg_app_deleted">应用已删除</string>
+    <string name="msg_shortcut_created">快捷方式已创建</string>
+    <string name="msg_url_invalid">请输入有效的网址</string>
+    <string name="msg_name_required">请输入应用名称</string>
+    <string name="msg_export_success">APK导出成功</string>
+    <string name="msg_export_failed">APK导出失败</string>
+    <string name="msg_loading">加载中...</string>
+    <string name="msg_no_apps">暂无应用，点击+创建</string>
+
+    <!-- WebView -->
+    <string name="webview_error">页面加载失败</string>
+    <string name="webview_retry">重试</string>
+    <string name="webview_back">返回</string>
+    <string name="webview_forward">前进</string>
+    <string name="webview_refresh">刷新</string>
+    <string name="webview_share">分享</string>
+    <string name="webview_open_browser">在浏览器中打开</string>
+
+    <!-- 语言 -->
+    <string name="language_settings">语言</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_english">英文</string>
+    <string name="language_arabic">阿拉伯语</string>
+    <string name="language_changed">语言已更改，请重启应用</string>
+
+    <!-- 菜单项 -->
+    <string name="menu_ai_html_coding">AI HTML编程</string>
+    <string name="menu_theme_settings">主题设置</string>
+    <string name="menu_ai_settings">AI 设置</string>
+    <string name="menu_app_modifier">应用修改器</string>
+    <string name="menu_extension_modules">扩展模块</string>
+    <string name="menu_about">关于</string>
+    <string name="menu_search">搜索</string>
+    <string name="menu_more">更多</string>
+    <string name="menu_linux_environment">Linux 环境</string>
+
+    <!-- 扩展模块 -->
+    <string name="extension_module">扩展模块</string>
+    <string name="create_module">创建模块</string>
+    <string name="edit_module">编辑模块</string>
+    <string name="delete_module">删除模块</string>
+    <string name="module_name">模块名称</string>
+    <string name="module_description">模块描述</string>
+    <string name="module_enabled">已启用</string>
+    <string name="module_disabled">已禁用</string>
+    <string name="ai_module_developer">AI 模块开发</string>
+
+    <!-- AI 功能 -->
+    <string name="ai_generating">AI 生成中...</string>
+    <string name="ai_analyzing">正在分析需求...</string>
+    <string name="ai_planning">制定开发计划...</string>
+    <string name="ai_coding">生成代码中...</string>
+    <string name="ai_checking">检查语法中...</string>
+    <string name="ai_fixing">自动修复错误...</string>
+    <string name="ai_scanning">安全扫描中...</string>
+    <string name="ai_completed">生成完成</string>
+    <string name="ai_error">AI 错误</string>
+
+    <!-- 创建应用类型 -->
+    <string name="create_web_app">网页应用</string>
+    <string name="create_media_app">媒体应用</string>
+    <string name="create_html_app">HTML应用</string>
+
+    <!-- 翻译 -->
+    <string name="auto_translate">自动翻译</string>
+    <string name="translate_to">翻译为</string>
+    <string name="translate_enabled">翻译已启用</string>
+
+    <!-- 通用 -->
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+    <string name="ok">确定</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="error">错误</string>
+    <string name="success">成功</string>
+    <string name="warning">警告</string>
+    <string name="info">信息</string>
+    <string name="close">关闭</string>
+    <string name="open">打开</string>
+    <string name="copy">复制</string>
+    <string name="paste">粘贴</string>
+    <string name="share">分享</string>
+    <string name="download">下载</string>
+    <string name="upload">上传</string>
+    <string name="import_text">导入</string>
+    <string name="export_text">导出</string>
+    
+    <!-- 帮助 -->
+    <string name="help">帮助</string>
+    <string name="usage_help">使用帮助</string>
+    <string name="i_understand">我知道了</string>
+    <string name="select_module_category">选择模块分类</string>
+    <string name="auto_detect">自动识别</string>
+    <string name="auto_detect_category_hint">让 AI 根据需求自动选择分类</string>
+    
+    <!-- AI 模块开发帮助 -->
+    <string name="help_how_to_use">如何使用</string>
+    <string name="help_how_to_use_content">在输入框中用自然语言描述你想要的功能，AI 会自动分析需求并生成对应的扩展模块代码。</string>
+    <string name="help_requirement_tips">需求描述技巧</string>
+    <string name="help_requirement_tips_content">• 描述具体的功能效果\n• 说明目标网站或页面类型\n• 可以参考示例需求的写法</string>
+    <string name="help_model_selection">模型选择</string>
+    <string name="help_model_selection_content">可以选择不同的 AI 模型来生成代码。不同模型可能有不同的效果和速度。</string>
+    <string name="help_category_selection">分类选择</string>
+    <string name="help_category_selection_content">可以手动选择模块分类，也可以让 AI 自动识别。手动选择可以让生成的代码更精准。</string>
+    <string name="help_auto_check">自动检查</string>
+    <string name="help_auto_check_content">AI 会自动进行语法检查和安全扫描，确保生成的代码可以正常运行且没有安全隐患。</string>
+    <string name="help_code_edit">代码编辑</string>
+    <string name="help_code_edit_content">生成的代码可以直接编辑修改，保存时会使用修改后的版本。</string>
+    <string name="help_save_module">保存模块</string>
+    <string name="help_save_module_content">生成完成后，点击「保存」将其添加到你的模块库中，之后可以在创建应用时使用。</string>
+    
+    <!-- 补充 UI 字符串 -->
+    <string name="project_template_export">项目模板导出</string>
+    <string name="encoding_and_size">编码: %1$s | 大小: %2$s</string>
+    <string name="file_label">文件: %s</string>
+    <string name="click_to_select_file">点击选择文件</string>
+    <string name="clear_file">清除</string>
+    <string name="share_module">分享模块</string>
+    <string name="selected_image">选中的图片</string>
+    <string name="select_ui_style_hint">选择界面视觉风格</string>
+    <string name="auto_switch_by_system">根据系统设置自动切换</string>
+    <string name="always_use_light_theme">始终使用浅色主题</string>
+    <string name="always_use_dark_theme">始终使用深色主题</string>
+    <string name="interaction_style_label">交互风格: %s</string>
+    <string name="click_button_to_experience">点击下方按钮体验效果</string>
+    <string name="animation_disabled">动画已禁用</string>
+    <string name="hold_to_experience">按住体验</string>
+    <string name="primary_color">主色</string>
+    <string name="secondary_color">次色</string>
+    <string name="accent_color">强调</string>
+    <string name="animation_style">动画风格</string>
+    <string name="interaction_method">交互方式</string>
+    <string name="corner_radius">圆角大小</string>
+    <string name="glow_effect">发光效果</string>
+    <string name="particle_effect">粒子效果</string>
+    <string name="glassmorphism">玻璃拟态</string>
+    <string name="version_name_label">版本名</string>
+    <string name="version_code_label">版本号</string>
+    <string name="static_website">静态网站</string>
+    <string name="video_file_not_exist">视频文件不存在</string>
+    <string name="video_preview">视频预览</string>
+    <string name="selected_duration">已选择: %.1f 秒</string>
+    <string name="total_duration_label">总时长: %.1f 秒</string>
+    <string name="trim_range_hint">裁剪范围（拖动选择播放片段）</string>
+    <string name="bgm_title">背景音乐</string>
+    <string name="bgm_description">为应用添加背景音乐，支持循环或顺序播放</string>
+    <string name="selected_music_count">已选 %d 首音乐</string>
+    <string name="loop_playback">循环播放</string>
+    <string name="sequential_playback">顺序播放</string>
+    <string name="shuffle_playback">随机播放</string>
+    <string name="volume_percent">音量: %d%%</string>
+    <string name="select_music">选择音乐</string>
+    <string name="modify_config">修改配置</string>
+    <string name="day_mon">一</string>
+    <string name="day_tue">二</string>
+    <string name="day_wed">三</string>
+    <string name="day_thu">四</string>
+    <string name="day_fri">五</string>
+    <string name="day_sat">六</string>
+    <string name="day_sun">日</string>
+    <string name="sample_projects">示例项目</string>
+    <string name="quick_experience_frontend">快速体验前端项目导入</string>
+    <string name="quick_experience">快速体验</string>
+    <string name="run">运行</string>
+    <string name="cannot_parse_image">无法解析图片</string>
+    <string name="cannot_open_image">无法打开图片</string>
+    <string name="load_image_failed">加载图片失败: %s</string>
+    <string name="original_image">原始图片</string>
+    <string name="extension_module_title">扩展模块</string>
+    <string name="no_module_selected">未选择模块</string>
+    <string name="modules_selected">已选择 %d 个模块</string>
+    <string name="add_module">添加模块</string>
+    <string name="collapse">收起</string>
+    <string name="expand">展开</string>
+    <string name="status_bar_background">状态栏背景</string>
+    <string name="theme_features">主题特性</string>
+    <string name="url_to_shortcut_basic">URL转快捷方式基本功能</string>
+    <string name="activation_code_announcement_ad_block">激活码、公告、广告拦截</string>
+
+    <!-- 图标库 -->
+    <string name="icon_library">图标库</string>
+
+    <!-- 扩展模块卡片 -->
+    <string name="save_as_scheme">保存为方案</string>
+    <string name="clear_all">清空</string>
+    <string name="select_modules">选择模块</string>
+    <string name="select_extension_modules">选择扩展模块</string>
+    <string name="done_with_count">完成 (%d)</string>
+    <string name="search_modules_hint">搜索模块名称、描述或标签...</string>
+    <string name="test_module">测试模块</string>
+    <string name="start_test">开始测试</string>
+    <string name="add_this_module">添加此模块</string>
+    <string name="all_schemes">所有方案</string>
+    <string name="module_schemes">模块方案</string>
+    <string name="scheme_name">方案名称</string>
+    <string name="input_scheme_name">输入方案名称</string>
+    <string name="description_optional">描述（可选）</string>
+    <string name="brief_description_hint">简要描述方案用途</string>
+    <string name="select_icon">选择图标</string>
+
+    <!-- 公告模板 -->
+    <string name="preview_announcement_effect">预览公告效果</string>
+
+    <!-- 歌词对齐 -->
+    <string name="next_step_time_align">下一步：时间对齐</string>
+    <string name="tap_to_mark">打点</string>
+    <string name="previous_step">上一步</string>
+    <string name="next_step">下一步</string>
+    <string name="go_back_to_modify">返回修改</string>
+    <string name="save_lrc">保存 LRC</string>
+
+    <!-- 数据备份 -->
+    <string name="export_data">导出数据</string>
+    <string name="import_data">导入数据</string>
+
+    <!-- 自动启动 -->
+    <string name="launch_time">启动时间</string>
+    <string name="select_launch_time">选择启动时间</string>
+
+    <!-- HTML编程 -->
+    <string name="download_file">下载</string>
+    <string name="export_all">导出全部</string>
+    <string name="thinking">思考中</string>
+    <string name="thinking_dots">思考中...</string>
+    <string name="describe_html_page">描述你想要的HTML页面...</string>
+    <string name="add_new_rule">添加新规则...</string>
+
+    <!-- 隔离配置 -->
+    <string name="country_region">国家/地区</string>
+    <string name="country_region_hint">例如：日本、韩国、英国...</string>
+
+    <!-- 代码片段 -->
+    <string name="search_code_snippets">搜索代码片段...</string>
+
+    <!-- 模块编辑器 -->
+    <string name="module_name_required">模块名称 *</string>
+    <string name="input_module_name">输入模块名称</string>
+    <string name="description">描述</string>
+    <string name="brief_module_description">简要描述模块功能</string>
+    <string name="tags">标签</string>
+    <string name="tags_hint">逗号分隔，例如：广告、拦截、工具</string>
+    <string name="author">作者</string>
+    <string name="your_name">你的名字</string>
+    <string name="key_name_required">键名 *</string>
+    <string name="key_name_hint">例如：fontSize</string>
+    <string name="display_name_required">显示名称 *</string>
+    <string name="display_name_hint">例如：字体大小</string>
+    <string name="config_description">描述</string>
+    <string name="config_description_hint">配置项的描述文字</string>
+    <string name="config_type">类型</string>
+    <string name="default_value">默认值</string>
+
+    <!-- AI 设置 -->
+    <string name="provider">供应商</string>
+    <string name="model_id">模型ID</string>
+    <string name="model_id_hint">例如：gpt-4o-mini</string>
+    <string name="alias_optional">别名（可选）</string>
+    <string name="alias">别名</string>
+
+    <!-- 创建应用 -->
+    <string name="activation_code">激活码</string>
+    <string name="input_activation_code_hint">输入激活码</string>
+    <string name="show_once_only">仅显示一次</string>
+    <string name="custom_package_name">自定义包名</string>
+    <string name="version_name">版本名</string>
+    <string name="version_code">版本号</string>
+    <string name="select_theme">选择主题</string>
+    <string name="translate_target_language">翻译目标语言</string>
+    <string name="ad_block_rule_hint">例如：ads.example.com</string>
+
+    <!-- 通用 -->
+    <string name="done">完成</string>
+    <string name="save">保存</string>
+    <string name="add">添加</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    <string name="please_select_text_model">请先选择文本模型</string>
+    <string name="new_update">有新版本可用</string>
+    <string name="update_now">立即更新</string>
+    <string name="latest_version">已是最新版本</string>
+    <string name="network_error">网络错误</string>
+    <string name="retry">重试</string>
+    <string name="loading">加载中...</string>
+    <string name="no_data">暂无数据</string>
+    <string name="copied">已复制</string>
+    <string name="saved">已保存</string>
+    <string name="operation_success">操作成功</string>
+    <string name="operation_failed">操作失败</string>
+    <string name="unknown_error">未知错误</string>
+    <string name="please_wait">请稍候...</string>
+    <string name="processing">处理中...</string>
+    <string name="enabled">已启用</string>
+    <string name="disabled">已禁用</string>
+    <string name="on">开</string>
+    <string name="off">关</string>
+    <string name="select_file">选择文件</string>
+    <string name="select_folder">选择文件夹</string>
+    <string name="file_not_found">文件未找到</string>
+    <string name="invalid_format">格式无效</string>
+    <string name="permission_denied">权限被拒绝</string>
+    <string name="storage_permission_required">需要存储权限</string>
+    <string name="grant_permission">授予权限</string>
+
+    <!-- 构建环境 -->
+    <string name="build_environment">构建环境</string>
+    <string name="env_ready">环境就绪</string>
+    <string name="env_not_installed">可用</string>
+    <string name="env_downloading">下载中</string>
+    <string name="env_installing">安装中</string>
+    <string name="can_build_frontend">可以构建前端项目</string>
+    <string name="built_in_packager_ready">内置打包器已就绪</string>
+    <string name="install_advanced_build_tool">安装高级构建工具 (esbuild)</string>
+    <string name="optional_esbuild_hint">可选：安装 esbuild 可获得更好的构建性能</string>
+    <string name="build_tools">构建工具</string>
+    <string name="built_in_packager">内置打包器</string>
+    <string name="pure_kotlin_impl">纯 Kotlin 实现，无需外部依赖</string>
+    <string name="high_perf_build_tool">高性能构建工具</string>
+    <string name="installed">已安装</string>
+    <string name="not_installed">未安装</string>
+    <string name="ready">已就绪</string>
+    <string name="storage_usage">存储使用</string>
+    <string name="cache">缓存</string>
+    <string name="supported_features">支持的功能</string>
+    <string name="tech_description">技术说明</string>
+    <string name="reset_environment">重置环境</string>
+    <string name="reset_env_confirm">这将删除已下载的构建工具。确定要继续吗？</string>
+    <string name="clear_cache_title">清理缓存</string>
+    <string name="clear_cache_confirm">这将清理构建缓存和临时文件。</string>
+    <string name="clean">清理</string>
+
+    <!-- 前端项目 -->
+    <string name="select_project">选择项目</string>
+    <string name="select_project_folder">选择项目文件夹</string>
+    <string name="select_project_hint">选择项目根目录或构建输出目录（dist/build）</string>
+    <string name="project_analysis">项目分析</string>
+    <string name="framework">框架</string>
+    <string name="version">版本</string>
+    <string name="package_manager">包管理器</string>
+    <string name="dependency_count">依赖数量</string>
+    <string name="output_dir">输出目录</string>
+    <string name="app_config">应用配置</string>
+    <string name="import_project">导入项目</string>
+    <string name="build_project">构建项目</string>
+    <string name="scanning_project">扫描项目中...</string>
+    <string name="importing">导入中</string>
+    <string name="checking_env">检查环境...</string>
+    <string name="copying_project_files">复制项目文件</string>
+    <string name="installing_deps">安装依赖</string>
+    <string name="building">构建中</string>
+    <string name="processing_output">处理构建产物...</string>
+    <string name="completed">完成</string>
+    <string name="failed">失败</string>
+    <string name="total_files">共 %d 个文件</string>
+    <string name="logs">日志</string>
+    <string name="import_logs">导入日志</string>
+    <string name="import_frontend_project">导入前端项目</string>
+    <string name="support_vue_react_vite">支持 Vue、React、Vite 等已构建的项目</string>
+    <string name="usage_steps">📋 使用步骤</string>
+    <string name="usage_steps_content">1. 在电脑上构建项目：npm run build\n2. 将构建输出（dist/build）复制到手机\n3. 选择项目文件夹导入</string>
+    <string name="built_in_engine_ready">内置构建引擎已就绪。支持导入已构建的项目，或使用 esbuild 进行简单构建。推荐在电脑上完成复杂项目的构建。</string>
+
+    <!-- 媒体应用 -->
+    <string name="create_media_app_title">创建媒体应用</string>
+    <string name="select_media_type">选择媒体类型</string>
+    <string name="image">图片</string>
+    <string name="video">视频</string>
+    <string name="select_image">选择图片</string>
+    <string name="select_video">选择视频</string>
+    <string name="click_to_select_image">点击选择图片</string>
+    <string name="click_to_select_video">点击选择视频</string>
+    <string name="video_selected">视频已选择</string>
+    <string name="fill_screen">铺满屏幕</string>
+    <string name="fill_screen_hint">自动裁剪以填满整个屏幕</string>
+    <string name="landscape_mode">横屏显示</string>
+    <string name="landscape_mode_hint">以横屏模式显示内容</string>
+    <string name="enable_audio">启用音频</string>
+    <string name="enable_audio_hint">播放视频时包含声音</string>
+    <string name="loop_play">循环播放</string>
+    <string name="loop_play_hint">视频结束后自动重新播放</string>
+    <string name="auto_play">自动播放</string>
+    <string name="auto_play_hint">打开应用时自动开始播放</string>
+    <string name="media_app_hint">创建的应用将%s，适合用作数字相框、广告展示或视频壁纸。</string>
+    <string name="fullscreen_display_image">全屏显示您选择的图片</string>
+    <string name="fullscreen_play_video">全屏播放您选择的视频</string>
+
+    <!-- HTML应用 -->
+    <string name="create_html_app_title">创建HTML应用</string>
+    <string name="select_files">选择文件</string>
+    <string name="select_files_hint">分别选择HTML、CSS、JS文件（CSS和JS为可选）</string>
+    <string name="html_file">HTML 文件</string>
+    <string name="css_file">CSS 样式文件</string>
+    <string name="js_file">JavaScript 脚本</string>
+    <string name="enable_javascript">启用 JavaScript</string>
+    <string name="enable_js_hint">允许HTML中的JavaScript代码执行</string>
+    <string name="enable_local_storage">启用本地存储</string>
+    <string name="enable_local_storage_hint">允许使用 localStorage 保存数据</string>
+    <string name="landscape_mode_label">横屏模式</string>
+    <string name="landscape_mode_hint_html">以横屏方向显示应用内容</string>
+    <string name="project_issues_detected">检测到项目问题</string>
+    <string name="errors_count">%d 个错误</string>
+    <string name="warnings_count">%d 个警告</string>
+    <string name="auto_fix_hint">应用会自动修复路径问题并内联CSS/JS，但建议查看详情确认</string>
+    <string name="view_analysis_result">查看分析结果</string>
+    <string name="html_app_tip">提示：HTML文件为必选，CSS和JS文件为可选。如果你的HTML文件中引用了CSS或JS，请分别选择对应的文件。</string>
+    <string name="feature_tip">💡 激活码验证、背景音乐等功能可在创建项目后，通过项目管理界面点击「编辑」进行添加和配置。</string>
+    <string name="about_file_reference">关于文件引用</string>
+    <string name="file_reference_hint">• 应用会自动将CSS和JS内联到HTML中\n• 绝对路径（如 /css/style.css）会自动转换\n• 建议使用相对路径（如 ./style.css）</string>
+    <string name="project_analysis_result">项目分析结果</string>
+    <string name="file_info">文件信息</string>
+    <string name="detected_issues">检测到的问题</string>
+    <string name="suggestions">建议</string>
+    <string name="auto_process_hint">应用会自动处理：路径修复、CSS/JS内联、编码转换、viewport适配</string>
+    <string name="got_it">知道了</string>
+
+    <!-- 创建应用页面 -->
+    <string name="edit_app">编辑应用</string>
+    <string name="input_app_name">输入应用显示名称</string>
+    <string name="activation_code_verify">激活码验证</string>
+    <string name="activation_code_hint">启用后，用户需要输入正确的激活码才能使用应用</string>
+    <string name="popup_announcement">弹窗公告</string>
+    <string name="announcement_title_label">公告标题</string>
+    <string name="announcement_content_label">公告内容</string>
+    <string name="link_url">链接地址（可选）</string>
+    <string name="link_button_text">链接按钮文字</string>
+    <string name="view_details">查看详情</string>
+    <string name="display_frequency">显示频率</string>
+    <string name="every_launch">每次启动</string>
+    <string name="show_emoji">显示表情</string>
+    <string name="enable_animation">启用动画</string>
+    <string name="ad_blocking">广告拦截</string>
+    <string name="enable_ad_block_label">启用广告拦截</string>
+    <string name="desktop_mode">访问电脑版</string>
+    <string name="fullscreen_mode">全屏模式</string>
+    <string name="splash_screen">启动画面</string>
+    <string name="background_music">背景音乐</string>
+    <string name="auto_translate_label">网页自动翻译</string>
+    <string name="webview_advanced_settings">WebView高级设置</string>
+    <string name="html_app">HTML 应用</string>
+    <string name="entry_file">入口文件</string>
+    <string name="total_files_count">共 %d 个文件</string>
+    <string name="image_app">图片应用</string>
+    <string name="video_app">视频应用</string>
+    <string name="unknown_file">未知文件</string>
+
+    <!-- 扩展模块页面 -->
+    <string name="search_modules">搜索模块...</string>
+    <string name="all">全部</string>
+    <string name="total_modules">共 %d 个模块</string>
+    <string name="enabled_modules">已启用 %d 个</string>
+    <string name="built_in">内置</string>
+    <string name="duplicate">复制</string>
+    <string name="copy_share_code">复制分享码</string>
+    <string name="share_code_copied">分享码已复制</string>
+    <string name="no_modules_found">没有找到匹配的模块</string>
+    <string name="no_modules_yet">暂无模块</string>
+    <string name="create_first_module">创建第一个模块</string>
+    <string name="import_module">导入模块</string>
+    <string name="import_from_file">从文件导入</string>
+    <string name="select_wtamod_file">选择 .wtamod 或 .wtapkg 文件</string>
+    <string name="import_from_share_code">从分享码导入</string>
+    <string name="paste_share_code">粘贴他人分享的模块代码</string>
+    <string name="share_code">分享码</string>
+    <string name="paste_share_code_hint">粘贴分享码...</string>
+    <string name="paste_from_clipboard">从剪贴板粘贴</string>
+    <string name="only_on_matching_urls">仅在 %d 个匹配规则的网站生效</string>
+    <string name="requires_sensitive_permissions">需要敏感权限</string>
+    <string name="ai_develop">AI 开发</string>
+    <string name="manual_create">手动创建</string>
+    <string name="create_module_label">创建模块</string>
+    <string name="ai_module_developer_label">AI 模块开发</string>
+
+    <!-- 主题设置页面 -->
+    <string name="theme_settings_title">主题设置</string>
+    <string name="enhanced_mode">强化版</string>
+    <string name="theme">主题</string>
+    <string name="appearance">外观</string>
+    <string name="effects">效果</string>
+    <string name="ui_mode">UI 模式</string>
+    <string name="select_ui_style">选择界面视觉风格</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="follow_system">跟随系统</string>
+    <string name="follow_system_hint">根据系统设置自动切换</string>
+    <string name="light_mode">浅色模式</string>
+    <string name="light_mode_hint">始终使用浅色主题</string>
+    <string name="dark_mode_hint">始终使用深色主题</string>
+    <string name="preview_effect">预览效果</string>
+    <string name="button">按钮</string>
+    <string name="enhanced_mode_enabled">强化模式已启用</string>
+    <string name="enjoy_immersive_experience">享受 %s 的沉浸式视觉体验</string>
+    <string name="enable_animations">启用动画</string>
+    <string name="enable_animations_hint">开启界面过渡动画和交互反馈</string>
+    <string name="particle_effects">粒子效果</string>
+    <string name="particle_effects_hint">显示主题特有的背景粒子动画</string>
+    <string name="particle_effects_enhanced_hint">强化模式下的沉浸式背景效果</string>
+    <string name="haptic_feedback">触觉反馈</string>
+    <string name="haptic_feedback_hint">交互时提供震动反馈</string>
+    <string name="sound_feedback">音效反馈</string>
+    <string name="sound_feedback_hint">交互时播放音效（强化模式）</string>
+    <string name="animation_speed">动画速度</string>
+    <string name="current_theme_anim_style">当前主题动画风格</string>
+    <string name="interaction_style">交互风格</string>
+    <string name="glow">发光</string>
+    <string name="particles">粒子</string>
+
+    <!-- 关于页面 -->
+    <string name="about">关于</string>
+    <string name="independent_developer">独立开发者 · AI 爱好者</string>
+    <string name="check_update">检查更新</string>
+    <string name="checking">正在检查...</string>
+    <string name="downloading">正在下载...</string>
+    <string name="current_version">当前版本</string>
+    <string name="about_this_app">关于这个应用</string>
+    <string name="about_app_description">WebToApp 是我独立开发的一款工具，可以将网站、图片、视频快速转换成独立的 Android 应用。\n\n如果你有任何问题、建议或想法，欢迎随时联系我！</string>
+    <string name="social_media">社交媒体</string>
+    <string name="exchange_group">交流群</string>
+    <string name="video_tutorial">视频教程</string>
+    <string name="open_source_repo">开源仓库</string>
+    <string name="join_exchange_group">加入交流群</string>
+    <string name="learn_progress_together">一起学习进步，获取最新消息 🚀</string>
+    <string name="exchange_learning">交流学习、更新消息</string>
+    <string name="international_group">国际用户交流群</string>
+    <string name="contact_author">联系作者</string>
+    <string name="feedback_cooperation">问题反馈、合作咨询、功能建议 💬</string>
+    <string name="feedback_cooperation_short">问题反馈、合作咨询</string>
+    <string name="email_contact">邮件联系</string>
+    <string name="international_email">国际邮件</string>
+    <string name="update_later">稍后更新</string>
+    <string name="download_complete">下载完成，正在安装...</string>
+    <string name="check_update_failed">检查更新失败</string>
+
+    <!-- AI 状态 -->
+    <string name="ai_generating_status">AI 生成中...</string>
+    <string name="ai_analyzing_status">正在分析需求...</string>
+    <string name="ai_completed_status">生成完成</string>
+    <string name="ai_planning_status">制定开发计划...</string>
+    <string name="ai_coding_status">生成代码中...</string>
+
+    <!-- 加密 -->
+    <string name="encryption_settings">加密设置</string>
+    <string name="enable_encryption">启用加密</string>
+    <string name="encryption_hint">加密应用资源以保护</string>
+
+    <!-- 强制运行/辅助功能 -->
+    <string name="accessibility_service_description">强制运行防护服务。启用后，当应用处于强制运行模式时，会阻止用户切换到其他应用，确保专注使用。此服务仅在您主动开启强制运行功能时生效。</string>
+    <string name="forced_run_service_name">专注模式守护</string>
+    <string name="forced_run_active">专注模式运行中</string>
+    <string name="forced_run_remaining">剩余时间: %s</string>
+    <string name="cannot_exit_forced_run">专注模式下无法退出</string>
+    <string name="emergency_exit">紧急退出</string>
+    <string name="enter_emergency_password">请输入紧急退出密码</string>
+    <string name="password_incorrect">密码错误</string>
+    <string name="accessibility_not_enabled">请先启用辅助功能服务</string>
+    <string name="usage_access_not_enabled">请先授权使用情况访问权限</string>
+    <string name="open_settings">打开设置</string>
+    <string name="forced_run_protection_level">防护级别</string>
+    <string name="protection_level_basic">基础（仅拦截返回键）</string>
+    <string name="protection_level_standard">标准（需要辅助功能）</string>
+    <string name="protection_level_maximum">最强（需要辅助功能+使用情况访问）</string>
+    <string name="encryption_level">加密级别</string>
+    <string name="basic_encryption">基础</string>
+    <string name="standard_encryption">标准</string>
+    <string name="advanced_encryption">高级</string>
+
+    <!-- 隔离 -->
+    <string name="isolation_settings">隔离设置</string>
+    <string name="enable_isolation">启用隔离</string>
+    <string name="isolation_hint">创建隔离的浏览器环境</string>
+    <string name="fingerprint_spoofing">指纹伪装</string>
+    <string name="user_agent_spoofing">User Agent 伪装</string>
+    <string name="ip_spoofing">IP 伪装</string>
+    <string name="storage_isolation">存储隔离</string>
+    <string name="regenerate_on_launch">启动时重新生成</string>
+
+    <!-- 多桌面图标/伪装功能 -->
+    <string name="disguise_multi_icon_title">多桌面图标</string>
+    <string name="disguise_icon_count_format">%d 个图标</string>
+    <string name="disguise_not_enabled">未启用</string>
+    <string name="disguise_enable_multi_icon">启用多图标</string>
+    <string name="disguise_enable_multi_icon_desc">安装后在桌面显示多个应用图标</string>
+    <string name="disguise_icon_count_title">桌面图标数量</string>
+    <string name="disguise_icon_count_desc">设置安装后在桌面显示的图标数量（每个图标都可启动应用）</string>
+    <string name="disguise_count_label">数量</string>
+    <string name="disguise_count_hint">建议 2-10 个</string>
+    <string name="disguise_hide_main_icon">隐藏主图标</string>
+    <string name="disguise_hide_main_icon_desc">仅保留别名图标，隐藏主 Activity 的图标</string>
+    <string name="disguise_multi_icon_tip">多图标功能通过 Android 原生的 activity-alias 机制实现，安装后自动显示多个桌面图标，无需任何额外权限。</string>
+</resources>

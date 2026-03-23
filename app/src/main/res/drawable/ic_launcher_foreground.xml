@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 背景圆形 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"/>
+
+    <!-- 地球/网络图标 -->
+    <path
+        android:fillColor="#6750A4"
+        android:pathData="M54,34c-11.05,0 -20,8.95 -20,20s8.95,20 20,20s20,-8.95 20,-20S65.05,34 54,34zM52,71.93c-7.17,-0.88 -12.76,-6.47 -13.64,-13.64L52,58.29v13.64zM52,55.71l-14.93,0c0.32,-2.69 1.41,-5.15 3.03,-7.18l11.9,4.77v2.41zM52,50.47l-10.36,-4.15c1.72,-1.82 3.9,-3.22 6.36,-4.06v8.21zM56,37.06c7.17,0.88 12.76,6.47 13.64,13.64H56V37.06zM56,53.29h14.93c-0.32,2.69 -1.41,5.15 -3.03,7.18L56,55.71v-2.42zM56,58.29l10.36,4.15c-1.72,1.82 -3.9,3.22 -6.36,4.06v-8.21z"/>
+
+    <!-- 箭头/转换图标 -->
+    <path
+        android:fillColor="#6750A4"
+        android:pathData="M74,48l8,6l-8,6v-4h-6v-4h6z"/>
+
+</vector>
