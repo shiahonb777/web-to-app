@@ -254,7 +254,7 @@ object FaviconFetcher {
     private fun getBaseUrl(url: String): String {
         return try {
             val uri = URI(url)
-            "${uri.scheme}://${uri.host}"
+            "${uri.scheme}://${uri.authority}"
         } catch (e: Exception) {
             url.substringBefore("/", url).let {
                 if (it.contains("://")) it.substringBefore("/", it)
