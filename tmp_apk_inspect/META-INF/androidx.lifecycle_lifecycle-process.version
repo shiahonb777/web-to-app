@@ -1,0 +1,1 @@
+task ':lifecycle:lifecycle-process:writeVersionFile' property 'version'

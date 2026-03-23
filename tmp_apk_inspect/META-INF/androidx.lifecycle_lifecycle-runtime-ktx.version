@@ -1,0 +1,1 @@
+task ':lifecycle:lifecycle-runtime-ktx:writeVersionFile' property 'version'
