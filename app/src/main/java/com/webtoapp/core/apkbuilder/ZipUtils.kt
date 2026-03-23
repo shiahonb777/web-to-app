@@ -135,14 +135,16 @@ object ZipUtils {
      * Used by AppCloner where STORED entries must remain STORED.
      */
     fun copyEntryPreserveMethod(zipIn: ZipFile, zipOut: ZipOutputStream, entry: ZipEntry) {
-        val newEntry = ZipEntry(entry.name)
+        val data = zipIn.getInputStream(entry).readBytes()
         if (entry.method == ZipEntry.STORED) {
-            newEntry.method = ZipEntry.STORED
-            newEntry.size = entry.size
-            newEntry.crc = entry.crc
+            // For resources.arsc, use writeEntryStored which handles 4-byte alignment
+            if (entry.name == "resources.arsc") {
+                writeEntryStored(zipOut, entry.name, data)
+            } else {
+                writeEntryStoredSimple(zipOut, entry.name, data)
+            }
+        } else {
+            writeEntryDeflated(zipOut, entry.name, data)
         }
-        zipOut.putNextEntry(newEntry)
-        zipIn.getInputStream(entry).copyTo(zipOut)
-        zipOut.closeEntry()
     }
 }

@@ -47,12 +47,18 @@
 }
 -dontwarn kotlin.**
 
-# Kotlin Coroutines
+# Kotlin Coroutines — MUST keep Android Main dispatcher (loaded via ServiceLoader reflection)
+# Without these rules, R8 strips AndroidDispatcherFactory → Dispatchers.Main crashes at runtime
+-keep class kotlinx.coroutines.android.AndroidDispatcherFactory { *; }
+-keep class kotlinx.coroutines.android.AndroidExceptionPreHandler { *; }
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
+# Keep ServiceLoader service configuration files
+-keep class kotlinx.coroutines.CoroutineExceptionHandler
+-keep class kotlinx.coroutines.internal.MainDispatcherFactory
 
 # ===== Gson 序列化 =====
 -keepattributes Signature

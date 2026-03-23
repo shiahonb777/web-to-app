@@ -931,7 +931,13 @@ class JarSigner(private val context: Context) {
                     writeZipEntry(zos, "META-INF/CERT.SF", signatureFile)
                     writeZipEntry(zos, "META-INF/CERT.RSA", pkcs7Signature)
                     
+                    // Write resources.arsc FIRST with STORED + 4-byte alignment (Android R+ requirement)
+                    entries["resources.arsc"]?.let { content ->
+                        ZipUtils.writeEntryStored(zos, "resources.arsc", content)
+                    }
+                    
                     entries.forEach { (name, content) ->
+                        if (name == "resources.arsc") return@forEach // already written above
                         val entry = ZipEntry(name)
                         zos.putNextEntry(entry)
                         zos.write(content)
