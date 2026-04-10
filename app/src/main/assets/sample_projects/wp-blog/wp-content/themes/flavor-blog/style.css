@@ -1,0 +1,62 @@
+/*
+Theme Name: Flavor Blog
+Theme URI: https://example.com/flavor-blog
+Author: WebToApp 示例
+Description: 一个简洁优雅的博客主题，适合个人写作与分享。
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.4
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+Text Domain: flavor-blog
+*/
+
+body {
+    font-family: -apple-system, "Noto Sans SC", sans-serif;
+    color: #333;
+    line-height: 1.8;
+    margin: 0;
+    background: #f9fafb;
+}
+
+.site-header {
+    background: linear-gradient(135deg, #21759b 0%, #0073aa 100%);
+    color: #fff;
+    padding: 2rem;
+    text-align: center;
+}
+
+.site-header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.site-header p {
+    margin: 0.5rem 0 0;
+    opacity: 0.85;
+}
+
+.posts-container {
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.post-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.post-card h2 {
+    margin: 0 0 0.5rem;
+    color: #21759b;
+}
+
+.post-meta {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 0.8rem;
+}

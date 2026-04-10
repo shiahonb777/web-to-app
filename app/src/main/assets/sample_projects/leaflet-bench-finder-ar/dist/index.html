@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مستكشف المقاعد</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg: #0f172a;
+            --card: rgba(15, 23, 42, 0.92);
+            --card-border: rgba(16, 185, 129, 0.15);
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .leaflet-control-zoom a {
+            background: var(--card) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--card-border) !important;
+            backdrop-filter: blur(20px);
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: var(--primary-dark) !important;
+            color: white !important;
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(15, 23, 42, 0.7) !important;
+            color: var(--text2) !important;
+            font-size: 9px !important;
+        }
+
+        .leaflet-control-attribution a {
+            color: var(--primary) !important;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 70%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .top-bar>* {
+            pointer-events: auto;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .app-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), #34d399);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .app-subtitle {
+            font-size: 11px;
+            color: var(--text2);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            background: var(--card);
+            animation: fadeInDown 0.5s ease;
+        }
+
+        .status-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-pill.searching .dot {
+            background: var(--warning);
+        }
+
+        .status-pill.error .dot {
+            background: var(--danger);
+            animation: none;
+        }
+
+        .bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 0 12px 16px;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .bottom-sheet.hidden {
+            transform: translateY(calc(100% + 20px));
+        }
+
+        .bottom-sheet>* {
+            pointer-events: auto;
+        }
+
+        .info-card {
+            background: var(--card);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .info-card .handle {
+            width: 36px;
+            height: 4px;
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+            margin: 0 auto 14px;
+        }
+
+        .bench-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .bench-icon-box {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .bench-name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .bench-detail {
+            font-size: 12px;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text2);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, var(--primary), #34d399);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .nav-btn.secondary {
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: none;
+            color: var(--text2);
+            margin-top: 8px;
+        }
+
+        .locate-btn {
+            position: fixed;
+            left: 16px;
+            bottom: 200px;
+            z-index: 1000;
+            width: 48px;
+            height: 48px;
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .locate-btn:active {
+            transform: scale(0.9);
+        }
+
+        .locate-btn.locating {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-overlay.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(16, 185, 129, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--text2);
+            animation: fadeInDown 0.5s ease 0.3s backwards;
+        }
+
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+
+        .marker-pin {
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .marker-pin.bench {
+            background: linear-gradient(135deg, var(--primary), #34d399);
+        }
+
+        .marker-pin.user {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+
+        .marker-pin.nearest {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            animation: marker-bounce 0.6s ease;
+        }
+
+        .marker-pin span {
+            transform: rotate(45deg);
+            font-size: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes marker-bounce {
+            0% {
+                transform: rotate(-45deg) scale(0);
+            }
+
+            60% {
+                transform: rotate(-45deg) scale(1.2);
+            }
+
+            100% {
+                transform: rotate(-45deg) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="app-logo" style="width:64px;height:64px;font-size:32px;border-radius:18px;">🪑</div>
+        <div
+            style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            مستكشف المقاعد</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">جاري تحميل الخريطة...</div>
+    </div>
+    <div id="map"></div>
+    <div class="top-bar">
+        <div class="app-header">
+            <div class="app-logo">🪑</div>
+            <div>
+                <div class="app-title">مستكشف المقاعد</div>
+                <div class="app-subtitle">ابحث عن أقرب مقعد للراحة</div>
+            </div>
+        </div>
+        <div class="status-pill searching" id="statusPill">
+            <div class="dot"></div>
+            <span id="statusText">جاري تحديد الموقع...</span>
+        </div>
+    </div>
+    <div class="locate-btn" id="locateBtn" onclick="locateMe()">📍</div>
+    <div class="bottom-sheet hidden" id="bottomSheet">
+        <div class="info-card">
+            <div class="handle"></div>
+            <div class="bench-info">
+                <div class="bench-icon-box">🪑</div>
+                <div>
+                    <div class="bench-name" id="benchName">أقرب مقعد</div>
+                    <div class="bench-detail" id="benchDetail">جاري البحث...</div>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-val" id="statDist">--</div>
+                    <div class="stat-label">المسافة</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-val" id="statTime">--</div>
+                    <div class="stat-label">المشي</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-val" id="statTotal">--</div>
+                    <div class="stat-label">القريبة</div>
+                </div>
+            </div>
+            <button class="nav-btn" id="navBtn" onclick="navigateToNearest()">🧭 بدء الملاحة</button>
+            <button class="nav-btn secondary" onclick="searchNearby()">🔄 بحث مرة أخرى</button>
+        </div>
+    </div>
+    <script>
+        let map, userMarker, routeLine, benchMarkers = [];
+        let userLat, userLng, nearestBench = null, allBenches = [];
+        function initMap() {
+            map = L.map('map', { center: [48.8566, 2.3522], zoom: 15, zoomControl: false, attributionControl: true });
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19 }).addTo(map);
+            L.control.zoom({ position: 'topleft' }).addTo(map);
+            setTimeout(() => { document.getElementById('loadingOverlay').classList.add('hide'); }, 1000);
+            locateMe();
+        }
+        function locateMe() {
+            const btn = document.getElementById('locateBtn'); btn.classList.add('locating');
+            updateStatus('searching', 'جاري تحديد الموقع...');
+            if (!navigator.geolocation) { updateStatus('error', 'تحديد الموقع غير مدعوم'); btn.classList.remove('locating'); onLocationFound(48.8584, 2.2945); return; }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { btn.classList.remove('locating'); onLocationFound(pos.coords.latitude, pos.coords.longitude); },
+                () => { btn.classList.remove('locating'); updateStatus('error', 'فشل تحديد الموقع'); onLocationFound(48.8584, 2.2945); },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        }
+        function onLocationFound(lat, lng) {
+            userLat = lat; userLng = lng; map.setView([lat, lng], 16);
+            if (userMarker) map.removeLayer(userMarker);
+            userMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin user"><span>📱</span></div>', iconSize: [36, 36], iconAnchor: [18, 36] }) }).addTo(map).bindPopup('<b>📱 موقعي</b>');
+            L.circle([lat, lng], { radius: 50, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.08, weight: 1, opacity: 0.3 }).addTo(map);
+            searchNearby();
+        }
+        function searchNearby() {
+            if (!userLat || !userLng) { locateMe(); return; }
+            updateStatus('searching', 'جاري البحث عن مقاعد...');
+            document.getElementById('bottomSheet').classList.add('hidden');
+            benchMarkers.forEach(m => map.removeLayer(m)); benchMarkers = [];
+            if (routeLine) map.removeLayer(routeLine);
+            const query = `[out:json][timeout:15];(node["amenity"="bench"](around:500,${userLat},${userLng});node["leisure"="picnic_table"](around:500,${userLat},${userLng}););out body;`;
+            fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query))
+                .then(r => r.json()).then(d => { allBenches = d.elements || []; if (!allBenches.length) allBenches = genBenches(userLat, userLng); displayBenches(allBenches); })
+                .catch(() => { allBenches = genBenches(userLat, userLng); displayBenches(allBenches); });
+        }
+        function genBenches(lat, lng) {
+            const n = ['مقعد الحديقة', 'مقعد الشارع', 'مقعد الحديقة العامة', 'مقعد البحيرة', 'مقعد الساحة', 'مقعد الظل', 'مقعد المسار', 'مقعد المنظر', 'مقعد المجتمع', 'مقعد النهر'];
+            const b = []; for (let i = 0; i < 10 + Math.floor(Math.random() * 6); i++) {
+                const a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 450;
+                b.push({ lat: lat + (d / 111320) * Math.cos(a), lon: lng + (d / (111320 * Math.cos(lat * Math.PI / 180))) * Math.sin(a), tags: { name: n[i % n.length], amenity: 'bench', material: ['خشب', 'معدن', 'حجر', 'خرسانة'][Math.floor(Math.random() * 4)], backrest: Math.random() > 0.3 ? 'yes' : 'no' } });
+            } return b;
+        }
+        function displayBenches(benches) {
+            if (!benches.length) { updateStatus('error', 'لم يتم العثور على مقاعد'); return; }
+            let nearest = null, minDist = Infinity;
+            benches.forEach((b, i) => {
+                const dist = getDist(userLat, userLng, b.lat, b.lon);
+                if (dist < minDist) { minDist = dist; nearest = { ...b, distance: dist, index: i }; }
+                benchMarkers.push(L.marker([b.lat, b.lon], { icon: L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin bench"><span>🪑</span></div>', iconSize: [36, 36], iconAnchor: [18, 36] }) }).addTo(map).bindPopup('<b>🪑 ' + (b.tags?.name || 'مقعد') + '</b><br>📏 ' + fmtDist(dist)));
+            });
+            if (nearest) {
+                nearestBench = nearest;
+                if (benchMarkers[nearest.index]) map.removeLayer(benchMarkers[nearest.index]);
+                benchMarkers[nearest.index] = L.marker([nearest.lat, nearest.lon], { icon: L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin nearest"><span>⭐</span></div>', iconSize: [40, 40], iconAnchor: [20, 40] }) }).addTo(map).bindPopup('<b>⭐ أقرب مقعد</b><br>' + fmtDist(nearest.distance)).openPopup();
+                drawRoute(userLat, userLng, nearest.lat, nearest.lon);
+                document.getElementById('benchName').textContent = nearest.tags?.name || 'مقعد عام';
+                document.getElementById('benchDetail').textContent = 'المادة: ' + (nearest.tags?.material || 'غير معروف');
+                document.getElementById('statDist').textContent = fmtDist(nearest.distance);
+                document.getElementById('statTime').textContent = fmtTime(nearest.distance);
+                document.getElementById('statTotal').textContent = benches.length;
+                document.getElementById('bottomSheet').classList.remove('hidden');
+                updateStatus('', 'تم العثور على ' + benches.length + ' مقعد');
+                map.fitBounds(L.latLngBounds([userLat, userLng], [nearest.lat, nearest.lon]).pad(0.3));
+            }
+        }
+        function drawRoute(fLat, fLng, tLat, tLng) {
+            if (routeLine) map.removeLayer(routeLine);
+            fetch(`https://router.project-osrm.org/route/v1/foot/${fLng},${fLat};${tLng},${tLat}?overview=full&geometries=geojson`)
+                .then(r => r.json()).then(d => {
+                    if (d.routes?.length) {
+                        const c = d.routes[0].geometry.coordinates.map(p => [p[1], p[0]]);
+                        L.polyline(c, { color: '#064e3b', weight: 8, opacity: 0.4, lineCap: 'round' }).addTo(map);
+                        routeLine = L.polyline(c, { color: '#10b981', weight: 5, opacity: 0.9, lineCap: 'round', dashArray: '12, 8' }).addTo(map);
+                        if (d.routes[0].distance) document.getElementById('statDist').textContent = fmtDist(d.routes[0].distance);
+                        if (d.routes[0].duration) document.getElementById('statTime').textContent = Math.ceil(d.routes[0].duration / 60) + 'د';
+                    }
+                }).catch(() => { routeLine = L.polyline([[fLat, fLng], [tLat, tLng]], { color: '#10b981', weight: 4, opacity: 0.7, dashArray: '10,10' }).addTo(map); });
+        }
+        function navigateToNearest() { if (nearestBench) { map.setView([nearestBench.lat, nearestBench.lon], 18); benchMarkers[nearestBench.index]?.openPopup(); } }
+        function getDist(a, b, c, d) { const R = 6371000, dL = (c - a) * Math.PI / 180, dG = (d - b) * Math.PI / 180, x = Math.sin(dL / 2) ** 2 + Math.cos(a * Math.PI / 180) * Math.cos(c * Math.PI / 180) * Math.sin(dG / 2) ** 2; return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)); }
+        function fmtDist(m) { return m < 1000 ? Math.round(m) + 'م' : (m / 1000).toFixed(1) + 'كم'; }
+        function fmtTime(m) { const min = Math.ceil(m / 80); return min < 1 ? '<1د' : min + 'د'; }
+        function updateStatus(t, x) { document.getElementById('statusPill').className = 'status-pill' + (t ? ' ' + t : ''); document.getElementById('statusText').textContent = x; }
+        initMap();
+    </script>
+</body>
+
+</html>

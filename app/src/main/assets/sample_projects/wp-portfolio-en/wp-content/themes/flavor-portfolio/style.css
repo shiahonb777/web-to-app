@@ -1,0 +1,77 @@
+/*
+Theme Name: Flavor Portfolio
+Theme URI: https://example.com/flavor-portfolio
+Author: WebToApp Sample
+Description: A responsive portfolio/business theme for showcasing projects and services.
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.4
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+Text Domain: flavor-portfolio
+*/
+
+* { box-sizing: border-box; }
+body {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    color: #333;
+    margin: 0;
+    background: #fff;
+}
+
+.hero {
+    background: linear-gradient(135deg, #0073aa 0%, #005177 100%);
+    color: #fff;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.hero h1 { margin: 0; font-size: 2.5rem; }
+.hero p { margin: 1rem 0 0; opacity: 0.9; font-size: 1.1rem; }
+
+.portfolio-grid {
+    max-width: 1000px;
+    margin: 3rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.portfolio-item {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+
+.portfolio-item:hover { transform: translateY(-4px); }
+
+.portfolio-thumb {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+}
+
+.portfolio-info { padding: 1.2rem; }
+.portfolio-info h3 { margin: 0 0 0.4rem; }
+.portfolio-info p { color: #666; font-size: 0.9rem; margin: 0; }
+
+.portfolio-tag {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.2rem 0.6rem;
+    background: #0073aa15;
+    color: #0073aa;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.about-section {
+    max-width: 720px;
+    margin: 3rem auto;
+    padding: 2rem;
+    text-align: center;
+}
