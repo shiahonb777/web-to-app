@@ -1,0 +1,36 @@
+<svg width="200" height="160" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆角矩形 -->
+  <rect x="20" y="40" width="160" height="112" rx="20" fill="#ffffff" stroke="#D9E3F0" stroke-width="8"/>
+  
+  <!-- 猫耳朵 - 调整外耳外侧宽度 -->
+  <!-- 左耳外部 - 调整控制点和终点 -->
+  <path d="M 75 36 L 40 36 Q 64.5 -15 75 36" fill="#333333"/>
+  <!-- 左耳内部 - 降低高度 -->
+  <path d="M 75 36 L 59 36 Q 64.5 -10 75 36" fill="#555555"/>
+  
+  <!-- 右耳外部保持不变 -->
+  <path d="M 125 36 L 160 36 Q 135.5 -15 125 36" fill="#333333"/>
+  <!-- 右耳内部 - 降低高度 -->
+  <path d="M 125 36 L 141 36 Q 135.5 -10 125 36" fill="#555555"/>
+  
+  <!-- 眼睛 -->
+  <rect x="45" y="70" width="40" height="12" rx="6" fill="#333333" transform="rotate(-15 85 76)"/>
+  <rect x="115" y="70" width="40" height="12" rx="6" fill="#333333" transform="rotate(15 115 76)"/>
+  
+  <!-- 眼睛之后，鼻子之前添加腮红 -->
+  <circle cx="65" cy="115" r="8" fill="#FFB5B5" opacity="0.6"/>
+  <circle cx="135" cy="115" r="8" fill="#FFB5B5" opacity="0.6"/>
+  
+  <!-- 嘴巴 - ^ 形状 -->
+  <path d="M 90 112 L 100 105 L 110 112" stroke="#333333" stroke-width="3" fill="none"/>
+  
+  <!-- 左侧胡须 -->
+  <path d="M 75 108 L 55 108" stroke="#333333" stroke-width="2" fill="none"/>
+  <path d="M 75 112 L 55 115" stroke="#333333" stroke-width="2" fill="none"/>
+  <path d="M 75 116 L 55 122" stroke="#333333" stroke-width="2" fill="none"/>
+  
+  <!-- 右侧胡须 - 调整角度 -->
+  <path d="M 125 108 L 145 108" stroke="#333333" stroke-width="2" fill="none"/>
+  <path d="M 125 112 L 145 115" stroke="#333333" stroke-width="2" fill="none"/>
+  <path d="M 125 116 L 145 122" stroke="#333333" stroke-width="2" fill="none"/>
+</svg>

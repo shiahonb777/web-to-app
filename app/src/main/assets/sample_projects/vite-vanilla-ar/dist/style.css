@@ -1,0 +1,182 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#app {
+    width: 100%;
+    max-width: 400px;
+}
+
+.weather-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.header h1 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 14px;
+}
+
+.search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #74ebd5;
+}
+
+.search-box button {
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.search-box button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(116, 235, 213, 0.4);
+}
+
+.weather-display {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.city-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.temperature {
+    font-size: 72px;
+    font-weight: 300;
+    color: #333;
+    line-height: 1;
+}
+
+.weather-icon {
+    font-size: 64px;
+    margin: 16px 0;
+}
+
+.description {
+    font-size: 18px;
+    color: #666;
+    text-transform: capitalize;
+}
+
+.details {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #eee;
+}
+
+.detail-item {
+    text-align: center;
+}
+
+.detail-item .label {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+}
+
+.detail-item .value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.forecast {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 24px;
+    border-top: 1px solid #eee;
+}
+
+.forecast-item {
+    text-align: center;
+    padding: 12px 8px;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.forecast-item:hover {
+    background: #f5f5f5;
+}
+
+.forecast-item .day {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.forecast-item .icon {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.forecast-item .temp {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.weather-display {
+    animation: fadeIn 0.5s ease-out;
+}

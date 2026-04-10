@@ -1,0 +1,10 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "description": "Todo App - Zero dependency task management with Material Design UI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

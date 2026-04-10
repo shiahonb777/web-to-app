@@ -1,0 +1,9 @@
+{
+  "name": "demo/slim-api",
+  "description": "عرض Slim REST API",
+  "require": {
+    "php": "^8.0",
+    "slim/slim": "^4.12",
+    "slim/psr7": "^1.6"
+  }
+}

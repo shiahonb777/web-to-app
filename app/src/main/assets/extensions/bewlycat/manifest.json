@@ -1,0 +1,93 @@
+{
+  "manifest_version": 3,
+  "name": "BewlyCat",
+  "version": "1.5.7",
+  "description": "Just make a few small changes to your Bilibili homepage.",
+  "homepage_url": "https://github.com/keleus/BewlyCat",
+  "background": {
+    "service_worker": "./dist/background/index.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "assets/icon-512.png",
+    "48": "assets/icon-512.png",
+    "128": "assets/icon-512.png"
+  },
+  "permissions": [
+    "storage",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://*.bilibili.com/*",
+    "*://*.hdslb.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.bilibili.com/*",
+        "*://search.bilibili.com/*",
+        "*://t.bilibili.com/*",
+        "*://space.bilibili.com/*",
+        "*://message.bilibili.com/*",
+        "*://member.bilibili.com/*",
+        "*://account.bilibili.com/*",
+        "*://www.hdslb.com/*",
+        "*://passport.bilibili.com/*",
+        "*://music.bilibili.com/*"
+      ],
+      "js": [
+        "./dist/contentScripts/index.global.js"
+      ],
+      "css": [
+        "./dist/contentScripts/style.css"
+      ],
+      "run_at": "document_start",
+      "match_about_blank": true,
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "*://www.bilibili.com/*",
+        "*://search.bilibili.com/*",
+        "*://t.bilibili.com/*",
+        "*://space.bilibili.com/*",
+        "*://message.bilibili.com/*",
+        "*://member.bilibili.com/*",
+        "*://account.bilibili.com/*",
+        "*://www.hdslb.com/*",
+        "*://passport.bilibili.com/*",
+        "*://music.bilibili.com/*"
+      ],
+      "js": [
+        "./dist/contentScripts/inject.global.js"
+      ],
+      "run_at": "document_start",
+      "match_about_blank": true,
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dist/contentScripts/style.css",
+        "assets/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "assets/rules.json"
+      }
+    ]
+  }
+}

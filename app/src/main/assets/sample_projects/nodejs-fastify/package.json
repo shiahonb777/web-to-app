@@ -1,0 +1,12 @@
+{
+  "name": "system-dashboard",
+  "version": "1.0.0",
+  "description": "实时系统监控仪表盘 - 零依赖，使用 Node.js 内置 http 模块",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "keywords": ["dashboard", "monitor", "nodejs", "zero-dependency"],
+  "author": "WebToApp"
+}
