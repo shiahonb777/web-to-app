@@ -311,13 +311,14 @@ fun ShellScreen(
         com.webtoapp.core.webview.WebViewManager(context, adBlocker)
     }
 
-    // Yes否隐藏工具栏（全屏模式）
-    val hideToolbar = config.webViewConfig.hideToolbar
+    // Immersive fullscreen (hides system bars) - controlled by hideToolbar config
+    // Toolbar is always hidden in shell mode (no browser chrome)
+    val useImmersiveFullscreen = config.webViewConfig.hideToolbar
     // 下拉刷新开关
     val swipeRefreshEnabled = config.webViewConfig.swipeRefreshEnabled
 
-    LaunchedEffect(hideToolbar) {
-        onFullscreenModeChanged(hideToolbar)
+    LaunchedEffect(useImmersiveFullscreen) {
+        onFullscreenModeChanged(useImmersiveFullscreen)
     }
     
     // 关闭启动画面的回调（提前定义）
@@ -338,7 +339,7 @@ fun ShellScreen(
     ShellScaffoldLayout(
         config = config,
         appType = appType,
-        hideToolbar = hideToolbar,
+        useImmersiveFullscreen = useImmersiveFullscreen,
         isLoading = isLoading,
         loadProgress = loadProgress,
         pageTitle = pageTitle,
@@ -444,9 +445,9 @@ fun ShellScreen(
         )
     }
     
-    // Status bar背景覆盖层（在全屏模式下显示状态栏时）
+    // Status bar背景覆盖层（在沉浸式全屏模式下显示状态栏时）
     // 放在 Box 内部最上层，覆盖在所有内容之上，使用 align 固定在顶部
-    if (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) {
+    if (useImmersiveFullscreen && config.webViewConfig.showStatusBarInFullscreen) {
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = statusBarBackgroundType,
