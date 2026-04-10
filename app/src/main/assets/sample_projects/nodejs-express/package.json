@@ -1,0 +1,12 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "description": "待办事项应用 - 零依赖 Todo App，使用 Node.js 内置 http 模块",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "keywords": ["todo", "nodejs", "zero-dependency"],
+  "author": "WebToApp"
+}

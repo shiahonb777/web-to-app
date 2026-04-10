@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bench Explorer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg: #0f172a;
+            --card: rgba(15, 23, 42, 0.92);
+            --card-border: rgba(16, 185, 129, 0.15);
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .leaflet-control-zoom a {
+            background: var(--card) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--card-border) !important;
+            backdrop-filter: blur(20px);
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: var(--primary-dark) !important;
+            color: white !important;
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(15, 23, 42, 0.7) !important;
+            color: var(--text2) !important;
+            font-size: 9px !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .leaflet-control-attribution a {
+            color: var(--primary) !important;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 70%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .top-bar>* {
+            pointer-events: auto;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .app-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), #34d399);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .app-subtitle {
+            font-size: 11px;
+            color: var(--text2);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            background: var(--card);
+            animation: fadeInDown 0.5s ease;
+        }
+
+        .status-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-pill.searching .dot {
+            background: var(--warning);
+        }
+
+        .status-pill.error .dot {
+            background: var(--danger);
+            animation: none;
+        }
+
+        .bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 0 12px 16px;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .bottom-sheet.hidden {
+            transform: translateY(calc(100% + 20px));
+        }
+
+        .bottom-sheet>* {
+            pointer-events: auto;
+        }
+
+        .info-card {
+            background: var(--card);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .info-card .handle {
+            width: 36px;
+            height: 4px;
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+            margin: 0 auto 14px;
+        }
+
+        .bench-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .bench-icon-box {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .bench-name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .bench-detail {
+            font-size: 12px;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text2);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, var(--primary), #34d399);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .nav-btn.secondary {
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: none;
+            color: var(--text2);
+            margin-top: 8px;
+        }
+
+        .locate-btn {
+            position: fixed;
+            right: 16px;
+            bottom: 200px;
+            z-index: 1000;
+            width: 48px;
+            height: 48px;
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .locate-btn:active {
+            transform: scale(0.9);
+        }
+
+        .locate-btn.locating {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-overlay.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(16, 185, 129, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--text2);
+            animation: fadeInDown 0.5s ease 0.3s backwards;
+        }
+
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+
+        .marker-pin {
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .marker-pin.bench {
+            background: linear-gradient(135deg, var(--primary), #34d399);
+        }
+
+        .marker-pin.user {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+
+        .marker-pin.nearest {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            animation: marker-bounce 0.6s ease;
+        }
+
+        .marker-pin span {
+            transform: rotate(45deg);
+            font-size: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes marker-bounce {
+            0% {
+                transform: rotate(-45deg) scale(0);
+            }
+
+            60% {
+                transform: rotate(-45deg) scale(1.2);
+            }
+
+            100% {
+                transform: rotate(-45deg) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="app-logo" style="width:64px;height:64px;font-size:32px;border-radius:18px;">🪑</div>
+        <div
+            style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            Bench Explorer</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading map...</div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="top-bar">
+        <div class="app-header">
+            <div class="app-logo">🪑</div>
+            <div>
+                <div class="app-title">Bench Explorer</div>
+                <div class="app-subtitle">Find the nearest bench to rest</div>
+            </div>
+        </div>
+        <div class="status-pill searching" id="statusPill">
+            <div class="dot"></div>
+            <span id="statusText">Getting location...</span>
+        </div>
+    </div>
+
+    <div class="locate-btn" id="locateBtn" onclick="locateMe()">📍</div>
+
+    <div class="bottom-sheet hidden" id="bottomSheet">
+        <div class="info-card">
+            <div class="handle"></div>
+            <div class="bench-info">
+                <div class="bench-icon-box">🪑</div>
+                <div>
+                    <div class="bench-name" id="benchName">Nearest Bench</div>
+                    <div class="bench-detail" id="benchDetail">Searching...</div>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-val" id="statDist">--</div>
+                    <div class="stat-label">Distance</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-val" id="statTime">--</div>
+                    <div class="stat-label">Walk</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-val" id="statTotal">--</div>
+                    <div class="stat-label">Nearby</div>
+                </div>
+            </div>
+            <button class="nav-btn" id="navBtn" onclick="navigateToNearest()">
+                🧭 Start Navigation
+            </button>
+            <button class="nav-btn secondary" onclick="searchNearby()">
+                🔄 Search Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let map, userMarker, routeLine, benchMarkers = [];
+        let userLat, userLng;
+        let nearestBench = null;
+        let allBenches = [];
+
+        function initMap() {
+            map = L.map('map', {
+                center: [48.8566, 2.3522],
+                zoom: 15,
+                zoomControl: false,
+                attributionControl: true
+            });
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+            L.control.zoom({ position: 'topright' }).addTo(map);
+            setTimeout(() => { document.getElementById('loadingOverlay').classList.add('hide'); }, 1000);
+            locateMe();
+        }
+
+        function locateMe() {
+            const btn = document.getElementById('locateBtn');
+            btn.classList.add('locating');
+            updateStatus('searching', 'Getting location...');
+            if (!navigator.geolocation) {
+                updateStatus('error', 'Geolocation not supported');
+                btn.classList.remove('locating');
+                onLocationFound(48.8584, 2.2945);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { btn.classList.remove('locating'); onLocationFound(pos.coords.latitude, pos.coords.longitude); },
+                (err) => { btn.classList.remove('locating'); updateStatus('error', 'Location failed, using default'); onLocationFound(48.8584, 2.2945); },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        }
+
+        function onLocationFound(lat, lng) {
+            userLat = lat; userLng = lng;
+            map.setView([lat, lng], 16);
+            if (userMarker) map.removeLayer(userMarker);
+            const userIcon = L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin user"><span>📱</span></div>', iconSize: [36, 36], iconAnchor: [18, 36] });
+            userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map).bindPopup('<b>📱 My Location</b><br>Lat: ' + lat.toFixed(6) + '<br>Lng: ' + lng.toFixed(6));
+            L.circle([lat, lng], { radius: 50, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.08, weight: 1, opacity: 0.3 }).addTo(map);
+            searchNearby();
+        }
+
+        function searchNearby() {
+            if (!userLat || !userLng) { locateMe(); return; }
+            updateStatus('searching', 'Searching for benches...');
+            document.getElementById('bottomSheet').classList.add('hidden');
+            benchMarkers.forEach(m => map.removeLayer(m));
+            benchMarkers = [];
+            if (routeLine) map.removeLayer(routeLine);
+            const query = `[out:json][timeout:15];(node["amenity"="bench"](around:500,${userLat},${userLng});node["leisure"="picnic_table"](around:500,${userLat},${userLng}););out body;`;
+            fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query))
+                .then(res => res.json())
+                .then(data => {
+                    allBenches = data.elements || [];
+                    if (allBenches.length === 0) { allBenches = generateSimulatedBenches(userLat, userLng); updateStatus('', 'Using simulated bench data'); }
+                    displayBenches(allBenches);
+                })
+                .catch(err => { allBenches = generateSimulatedBenches(userLat, userLng); displayBenches(allBenches); });
+        }
+
+        function generateSimulatedBenches(lat, lng) {
+            const names = ['Park Bench', 'Street Seat', 'Garden Bench', 'Lakeside Seat', 'Plaza Bench', 'Shaded Bench', 'Trail Rest', 'Viewpoint Seat', 'Community Bench', 'Riverside Bench', 'Campus Bench', 'Mall Bench'];
+            const benches = [];
+            const count = 8 + Math.floor(Math.random() * 8);
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * 450;
+                const dLat = (dist / 111320) * Math.cos(angle);
+                const dLng = (dist / (111320 * Math.cos(lat * Math.PI / 180))) * Math.sin(angle);
+                benches.push({ lat: lat + dLat, lon: lng + dLng, tags: { name: names[i % names.length], amenity: 'bench', material: ['wood', 'metal', 'stone', 'concrete'][Math.floor(Math.random() * 4)], backrest: Math.random() > 0.3 ? 'yes' : 'no', seats: (2 + Math.floor(Math.random() * 4)).toString() } });
+            }
+            return benches;
+        }
+
+        function displayBenches(benches) {
+            if (benches.length === 0) { updateStatus('error', 'No benches found nearby'); return; }
+            let nearest = null, minDist = Infinity;
+            benches.forEach((bench, idx) => {
+                const bLat = bench.lat, bLng = bench.lon;
+                const dist = getDistance(userLat, userLng, bLat, bLng);
+                if (dist < minDist) { minDist = dist; nearest = { ...bench, distance: dist, index: idx }; }
+                const benchIcon = L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin bench"><span>🪑</span></div>', iconSize: [36, 36], iconAnchor: [18, 36] });
+                const name = bench.tags?.name || 'Public Bench';
+                const material = bench.tags?.material || 'Unknown';
+                const backrest = bench.tags?.backrest === 'yes' ? 'Yes' : 'No';
+                const marker = L.marker([bLat, bLng], { icon: benchIcon }).addTo(map).bindPopup('<b>🪑 ' + name + '</b><br>📏 Distance: ' + formatDistance(dist) + '<br>🪵 Material: ' + material + '<br>🔙 Backrest: ' + backrest);
+                benchMarkers.push(marker);
+            });
+            if (nearest) {
+                nearestBench = nearest;
+                const nearestIcon = L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin nearest"><span>⭐</span></div>', iconSize: [40, 40], iconAnchor: [20, 40] });
+                if (benchMarkers[nearest.index]) map.removeLayer(benchMarkers[nearest.index]);
+                const nearestMarker = L.marker([nearest.lat, nearest.lon], { icon: nearestIcon }).addTo(map).bindPopup('<b>⭐ Nearest Bench</b><br>Distance: ' + formatDistance(nearest.distance)).openPopup();
+                benchMarkers[nearest.index] = nearestMarker;
+                drawRoute(userLat, userLng, nearest.lat, nearest.lon);
+                document.getElementById('benchName').textContent = nearest.tags?.name || 'Public Bench';
+                document.getElementById('benchDetail').textContent = 'Material: ' + (nearest.tags?.material || 'Unknown') + ' · Backrest: ' + (nearest.tags?.backrest === 'yes' ? 'Yes' : 'No');
+                document.getElementById('statDist').textContent = formatDistance(nearest.distance);
+                document.getElementById('statTime').textContent = formatWalkTime(nearest.distance);
+                document.getElementById('statTotal').textContent = benches.length;
+                document.getElementById('bottomSheet').classList.remove('hidden');
+                updateStatus('', 'Found ' + benches.length + ' benches');
+                map.fitBounds(L.latLngBounds([userLat, userLng], [nearest.lat, nearest.lon]).pad(0.3));
+            }
+        }
+
+        function drawRoute(fromLat, fromLng, toLat, toLng) {
+            if (routeLine) map.removeLayer(routeLine);
+            fetch(`https://router.project-osrm.org/route/v1/foot/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                        L.polyline(coords, { color: '#064e3b', weight: 8, opacity: 0.4, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+                        routeLine = L.polyline(coords, { color: '#10b981', weight: 5, opacity: 0.9, lineCap: 'round', lineJoin: 'round', dashArray: '12, 8' }).addTo(map);
+                        const route = data.routes[0];
+                        if (route.distance && route.duration) {
+                            document.getElementById('statDist').textContent = formatDistance(route.distance);
+                            document.getElementById('statTime').textContent = Math.ceil(route.duration / 60) + 'min';
+                        }
+                    }
+                })
+                .catch(() => { routeLine = L.polyline([[fromLat, fromLng], [toLat, toLng]], { color: '#10b981', weight: 4, opacity: 0.7, dashArray: '10, 10' }).addTo(map); });
+        }
+
+        function navigateToNearest() {
+            if (!nearestBench) return;
+            map.setView([nearestBench.lat, nearestBench.lon], 18);
+            benchMarkers[nearestBench.index]?.openPopup();
+        }
+
+        function getDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371000, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+        function formatDistance(m) { return m < 1000 ? Math.round(m) + 'm' : (m / 1000).toFixed(1) + 'km'; }
+        function formatWalkTime(m) { const min = Math.ceil(m / 80); return min < 1 ? '<1min' : min >= 60 ? Math.floor(min / 60) + 'h' + (min % 60) + 'min' : min + 'min'; }
+        function updateStatus(type, text) { const p = document.getElementById('statusPill'); p.className = 'status-pill' + (type ? ' ' + type : ''); document.getElementById('statusText').textContent = text; }
+        initMap();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,370 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 28,
+    "identityHash": "0fa6f56ecfc52fd1d51883e40e961237",
+    "entities": [
+      {
+        "tableName": "web_apps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `url` TEXT NOT NULL, `iconPath` TEXT, `packageName` TEXT, `appType` TEXT NOT NULL, `mediaConfig` TEXT, `galleryConfig` TEXT, `htmlConfig` TEXT, `wordpressConfig` TEXT, `nodejsConfig` TEXT, `phpAppConfig` TEXT, `pythonAppConfig` TEXT, `goAppConfig` TEXT, `activationEnabled` INTEGER NOT NULL, `activationCodes` TEXT NOT NULL, `activationCodeList` TEXT NOT NULL, `activationRequireEveryTime` INTEGER NOT NULL, `isActivated` INTEGER NOT NULL, `adsEnabled` INTEGER NOT NULL, `adConfig` TEXT, `announcementEnabled` INTEGER NOT NULL, `announcement` TEXT, `adBlockEnabled` INTEGER NOT NULL, `adBlockRules` TEXT NOT NULL, `webViewConfig` TEXT NOT NULL, `splashEnabled` INTEGER NOT NULL, `splashConfig` TEXT, `bgmEnabled` INTEGER NOT NULL, `bgmConfig` TEXT, `apkExportConfig` TEXT, `themeType` TEXT NOT NULL, `translateEnabled` INTEGER NOT NULL, `translateConfig` TEXT, `extensionModuleIds` TEXT NOT NULL, `extensionFabIcon` TEXT, `autoStartConfig` TEXT, `forcedRunConfig` TEXT, `blackTechConfig` TEXT, `disguiseConfig` TEXT, `activationDialogConfig` TEXT, `categoryId` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iconPath",
+            "columnName": "iconPath",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "appType",
+            "columnName": "appType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaConfig",
+            "columnName": "mediaConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "galleryConfig",
+            "columnName": "galleryConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "htmlConfig",
+            "columnName": "htmlConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "wordpressConfig",
+            "columnName": "wordpressConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "nodejsConfig",
+            "columnName": "nodejsConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "phpAppConfig",
+            "columnName": "phpAppConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "pythonAppConfig",
+            "columnName": "pythonAppConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "goAppConfig",
+            "columnName": "goAppConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "activationEnabled",
+            "columnName": "activationEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activationCodes",
+            "columnName": "activationCodes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activationCodeList",
+            "columnName": "activationCodeList",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activationRequireEveryTime",
+            "columnName": "activationRequireEveryTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActivated",
+            "columnName": "isActivated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adsEnabled",
+            "columnName": "adsEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adConfig",
+            "columnName": "adConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "announcementEnabled",
+            "columnName": "announcementEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "announcement",
+            "columnName": "announcement",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "adBlockEnabled",
+            "columnName": "adBlockEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adBlockRules",
+            "columnName": "adBlockRules",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "webViewConfig",
+            "columnName": "webViewConfig",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splashEnabled",
+            "columnName": "splashEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splashConfig",
+            "columnName": "splashConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bgmEnabled",
+            "columnName": "bgmEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bgmConfig",
+            "columnName": "bgmConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "apkExportConfig",
+            "columnName": "apkExportConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "themeType",
+            "columnName": "themeType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translateEnabled",
+            "columnName": "translateEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translateConfig",
+            "columnName": "translateConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "extensionModuleIds",
+            "columnName": "extensionModuleIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "extensionFabIcon",
+            "columnName": "extensionFabIcon",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "autoStartConfig",
+            "columnName": "autoStartConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forcedRunConfig",
+            "columnName": "forcedRunConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "blackTechConfig",
+            "columnName": "blackTechConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "disguiseConfig",
+            "columnName": "disguiseConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "activationDialogConfig",
+            "columnName": "activationDialogConfig",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_web_apps_updatedAt",
+            "unique": false,
+            "columnNames": [
+              "updatedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_updatedAt` ON `${TABLE_NAME}` (`updatedAt`)"
+          },
+          {
+            "name": "index_web_apps_categoryId",
+            "unique": false,
+            "columnNames": [
+              "categoryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_categoryId` ON `${TABLE_NAME}` (`categoryId`)"
+          },
+          {
+            "name": "index_web_apps_isActivated",
+            "unique": false,
+            "columnNames": [
+              "isActivated"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_isActivated` ON `${TABLE_NAME}` (`isActivated`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "app_categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT NOT NULL, `color` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "icon",
+            "columnName": "icon",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0fa6f56ecfc52fd1d51883e40e961237')"
+    ]
+  }
+}

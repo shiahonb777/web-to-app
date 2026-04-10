@@ -1,0 +1,10 @@
+{
+  "name": "system-dashboard",
+  "version": "1.0.0",
+  "description": "System Monitor Dashboard - Zero dependency, uses Node.js built-in http module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

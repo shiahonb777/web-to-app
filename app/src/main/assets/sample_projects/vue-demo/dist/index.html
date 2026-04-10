@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Vue 笔记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0a0a1a;
+            --card: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.07);
+            --text: #f0f0ff;
+            --text2: rgba(240, 240, 255, 0.55);
+            --text3: rgba(240, 240, 255, 0.3);
+            --vue: #42b883;
+            --radius: 14px
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -40%;
+            left: -40%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(ellipse at 50% 30%, rgba(66, 184, 131, 0.05) 0%, transparent 55%);
+            pointer-events: none
+        }
+
+        .c {
+            max-width: 460px;
+            margin: 0 auto;
+            padding: 0 14px 32px;
+            position: relative;
+            z-index: 1
+        }
+
+        .hdr {
+            text-align: center;
+            padding: 32px 0 24px
+        }
+
+        .hdr-icon {
+            font-size: 40px;
+            margin-bottom: 8px
+        }
+
+        .hdr h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #42b883, #35495e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hdr p {
+            font-size: 12px;
+            color: var(--text2);
+            margin-top: 4px
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px
+        }
+
+        .input-row input,
+        .input-row textarea {
+            flex: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+            resize: none
+        }
+
+        .input-row input:focus,
+        .input-row textarea:focus {
+            border-color: var(--vue)
+        }
+
+        .input-row input::placeholder,
+        .input-row textarea::placeholder {
+            color: var(--text3)
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #42b883, #35a672);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 0 18px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer
+        }
+
+        .save-btn:active {
+            transform: scale(.93)
+        }
+
+        .tags {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding: 2px 0
+        }
+
+        .tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all .2s
+        }
+
+        .tag.active {
+            background: rgba(66, 184, 131, 0.1);
+            color: var(--vue);
+            border-color: rgba(66, 184, 131, 0.2)
+        }
+
+        .notes {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .note {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: all .2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden
+        }
+
+        .note:active {
+            transform: scale(.98)
+        }
+
+        .note::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%
+        }
+
+        .note:nth-child(1)::before {
+            background: var(--vue)
+        }
+
+        .note:nth-child(2)::before {
+            background: #8b5cf6
+        }
+
+        .note:nth-child(3)::before {
+            background: #f59e0b
+        }
+
+        .note:nth-child(4)::before {
+            background: #06b6d4
+        }
+
+        .note:nth-child(5)::before {
+            background: #ec4899
+        }
+
+        .note-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .note-body {
+            font-size: 12px;
+            color: var(--text2);
+            line-height: 1.5;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .note-tag {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(66, 184, 131, 0.1);
+            color: var(--vue)
+        }
+
+        .note-time {
+            font-size: 10px;
+            color: var(--text3)
+        }
+
+        .note-del {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--text3)
+        }
+
+        .ft {
+            text-align: center;
+            padding: 16px;
+            margin-top: 4px
+        }
+
+        .ft-b {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(66, 184, 131, 0.04);
+            border: 1px solid rgba(66, 184, 131, 0.08)
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .note {
+            animation: fadeIn .4s ease backwards
+        }
+    </style>
+</head>
+
+<body>
+    <div class="c">
+        <div class="hdr">
+            <div class="hdr-icon">🟢</div>
+            <h1>Vue Notes</h1>
+            <p>基于 Vue 3 Composition API 的笔记应用</p>
+        </div>
+        <div class="input-row"><input type="text" id="title" placeholder="笔记标题..."></div>
+        <div class="input-row"><textarea id="body" rows="2" placeholder="笔记内容..."></textarea><button class="save-btn"
+                onclick="addNote()">保存</button></div>
+        <div class="tags" id="tags"></div>
+        <div class="notes" id="notes"></div>
+        <div class="ft">
+            <div class="ft-b">🟢 Vue 3 · Composition API · WebToApp</div>
+        </div>
+    </div>
+    <script>
+        var notes = [
+            { id: 1, title: 'Vue 3 响应式系统', body: '使用 ref 和 reactive 创建响应式数据，computed 计算属性自动追踪依赖变化。', tag: 'Vue', time: '刚刚' },
+            { id: 2, title: 'Composition API 模式', body: 'setup 函数是组件入口，可以使用 onMounted、watch 等生命周期钩子。', tag: 'API', time: '2分钟前' },
+            { id: 3, title: '状态管理 Pinia', body: 'Pinia 是 Vue 3 推荐的状态管理库，支持 TypeScript，模块化设计。', tag: '状态', time: '1小时前' },
+            { id: 4, title: '暗色主题实现', body: '使用 CSS 变量实现主题切换，配合 prefers-color-scheme 媒体查询。', tag: 'CSS', time: '3小时前' },
+            { id: 5, title: '组件通信方式', body: 'Props、Emits、Provide/Inject、Slots 等多种组件间通信方式。', tag: '组件', time: '昨天' }
+        ], filter = '全部', nextId = 6;
+        var allTags = ['全部', 'Vue', 'API', '状态', 'CSS', '组件'];
+        function render() {
+            var f = filter === '全部' ? notes : notes.filter(function (n) { return n.tag === filter });
+            document.getElementById('tags').innerHTML = allTags.map(function (t) { return '<div class="tag' + (t === filter ? ' active' : '') + '" onclick="setFilter(\'' + t + '\')">' + t + '</div>' }).join('');
+            if (f.length === 0) { document.getElementById('notes').innerHTML = '<div class="empty">📝 暂无笔记</div>'; return; }
+            document.getElementById('notes').innerHTML = f.map(function (n, i) { return '<div class="note" style="animation-delay:' + (i * 0.06) + 's"><button class="note-del" onclick="delNote(' + n.id + ')">×</button><div class="note-title">' + n.title + '</div><div class="note-body">' + n.body + '</div><div class="note-meta"><span class="note-tag">' + n.tag + '</span><span class="note-time">' + n.time + '</span></div></div>' }).join('');
+        }
+        function addNote() { var t = document.getElementById('title').value.trim(), b = document.getElementById('body').value.trim(); if (!t) return; notes.unshift({ id: nextId++, title: t, body: b || '无内容', tag: '新建', time: '刚刚' }); document.getElementById('title').value = ''; document.getElementById('body').value = ''; if (allTags.indexOf('新建') < 0) allTags.push('新建'); render(); }
+        function delNote(id) { notes = notes.filter(function (n) { return n.id !== id }); render(); }
+        function setFilter(f) { filter = f; render(); }
+        render();
+    </script>
+</body>
+
+</html>

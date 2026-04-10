@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Hexo 文档</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.07);--text:#f0f0ff;--text2:rgba(240,240,255,0.55);--text3:rgba(240,240,255,0.3);--blue:#0ea5e9;--radius:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;top:-40%;left:-40%;width:180%;height:180%;background:radial-gradient(ellipse at 50% 20%,rgba(14,165,233,0.06) 0%,transparent 55%);pointer-events:none}
+.c{max-width:460px;margin:0 auto;padding:0 14px 32px;position:relative;z-index:1}
+.hero{text-align:center;padding:40px 0 32px}
+.hero-icon{font-size:48px;margin-bottom:12px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.hero h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#0ea5e9,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hero p{font-size:14px;color:var(--text2);line-height:1.6;max-width:320px;margin:0 auto}
+.badge-row{display:flex;justify-content:center;gap:8px;margin-top:16px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--card);border:1px solid var(--border);color:var(--text2)}
+.badge.active{background:rgba(14,165,233,0.1);color:var(--blue);border-color:rgba(14,165,233,0.2)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;backdrop-filter:blur(16px);transition:all .2s;cursor:pointer}
+.card:active{transform:scale(.97);background:rgba(255,255,255,0.06)}
+.card-icon{font-size:24px;margin-bottom:10px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.card-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+.section-h{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.step:last-child{border:none}
+.step-num{width:28px;height:28px;border-radius:8px;background:rgba(14,165,233,0.1);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.step-info{flex:1}
+.step-title{font-size:13px;font-weight:600;margin-bottom:2px}
+.step-desc{font-size:11px;color:var(--text2)}
+.code{background:rgba(0,0,0,0.4);border-radius:8px;padding:12px 14px;font-family:'SF Mono',Monaco,monospace;font-size:12px;color:#38bdf8;margin:8px 0;overflow-x:auto}
+.nav-list a{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03);text-decoration:none;color:var(--text);transition:all .2s}
+.nav-list a:last-child{border:none}
+.nav-list a:active{opacity:.7}
+.nav-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.nav-text{font-size:13px;font-weight:600}
+.nav-arrow{margin-left:auto;color:var(--text3);font-size:14px}
+.ft{text-align:center;padding:16px}
+.ft-b{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--text3);padding:5px 12px;border-radius:20px;background:rgba(14,165,233,0.04);border:1px solid rgba(14,165,233,0.08)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.card,.section{animation:fadeIn .5s ease backwards}
+.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.15s}.card:nth-child(3){animation-delay:.2s}.card:nth-child(4){animation-delay:.25s}
+</style>
+</head>
+<body>
+<div class="c">
+<div class="hero">
+    <div class="hero-icon">📖</div>
+    <h1>Hexo 文档</h1>
+    <p>快速、简洁且高效的博客框架，基于 Node.js 构建</p>
+    <div class="badge-row">
+        <span class="badge active">v7.0</span>
+        <span class="badge">Node.js</span>
+        <span class="badge">Markdown</span>
+        <span class="badge">开源</span>
+    </div>
+</div>
+<div class="cards">
+    <div class="card"><div class="card-icon">🚀</div><div class="card-title">快速入门</div><div class="card-desc">几分钟内创建你的第一个博客</div></div>
+    <div class="card"><div class="card-icon">🔧</div><div class="card-title">配置</div><div class="card-desc">自定义网站的每个细节</div></div>
+    <div class="card"><div class="card-icon">🎨</div><div class="card-title">主题</div><div class="card-desc">数百个精美主题可选</div></div>
+    <div class="card"><div class="card-icon">🔌</div><div class="card-title">插件</div><div class="card-desc">丰富的插件生态系统</div></div>
+</div>
+<div class="section" style="animation-delay:.3s">
+    <div class="section-h">⚡ 快速开始</div>
+    <div class="step"><div class="step-num">1</div><div class="step-info"><div class="step-title">安装 Hexo</div><div class="code">npm install -g hexo-cli</div></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-info"><div class="step-title">初始化项目</div><div class="code">hexo init my-blog && cd my-blog</div></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-info"><div class="step-title">启动服务</div><div class="code">hexo server</div></div></div>
+</div>
+<div class="section" style="animation-delay:.35s">
+    <div class="section-h">📚 文档导航</div>
+    <div class="nav-list">
+        <a href="#"><div class="nav-icon" style="background:rgba(14,165,233,0.1)">📝</div><span class="nav-text">写作</span><span class="nav-arrow">→</span></a>
+        <a href="#"><div class="nav-icon" style="background:rgba(139,92,246,0.1)">🏷️</div><span class="nav-text">标签与分类</span><span class="nav-arrow">→</span></a>
+        <a href="#"><div class="nav-icon" style="background:rgba(16,185,129,0.1)">🌐</div><span class="nav-text">部署</span><span class="nav-arrow">→</span></a>
+        <a href="#"><div class="nav-icon" style="background:rgba(245,158,11,0.1)">⚙️</div><span class="nav-text">高级配置</span><span class="nav-arrow">→</span></a>
+        <a href="#"><div class="nav-icon" style="background:rgba(236,72,153,0.1)">❓</div><span class="nav-text">常见问题</span><span class="nav-arrow">→</span></a>
+    </div>
+</div>
+<div class="ft"><div class="ft-b">📖 Hexo 文档 · 由 WebToApp 提供</div></div>
+</div>
+</body>
+</html>

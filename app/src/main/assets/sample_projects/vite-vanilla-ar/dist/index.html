@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>تطبيق الطقس</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0a0a1a;
+            --card: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.07);
+            --text: #f0f0ff;
+            --text2: rgba(240, 240, 255, 0.55);
+            --text3: rgba(240, 240, 255, 0.3);
+            --amber: #f59e0b;
+            --radius: 14px
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            direction: rtl
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -40%;
+            left: -40%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(ellipse at 50% 20%, rgba(245, 158, 11, 0.06) 0%, transparent 55%);
+            pointer-events: none
+        }
+
+        .c {
+            max-width: 460px;
+            margin: 0 auto;
+            padding: 0 14px 32px;
+            position: relative;
+            z-index: 1
+        }
+
+        .hero {
+            text-align: center;
+            padding: 32px 0 24px
+        }
+
+        .weather-icon {
+            font-size: 72px;
+            margin-bottom: 4px;
+            animation: float 3s ease-in-out infinite
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-10px)
+            }
+        }
+
+        .temp {
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: -3px;
+            background: linear-gradient(180deg, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .city {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 4px
+        }
+
+        .desc {
+            font-size: 13px;
+            color: var(--text2);
+            margin-top: 2px
+        }
+
+        .search {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px
+        }
+
+        .search input {
+            flex: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none
+        }
+
+        .search button {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: #0a0a1a;
+            border: none;
+            border-radius: 10px;
+            padding: 0 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .detail {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            text-align: center
+        }
+
+        .detail-icon {
+            font-size: 20px;
+            margin-bottom: 4px
+        }
+
+        .detail-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--amber)
+        }
+
+        .detail-label {
+            font-size: 10px;
+            color: var(--text2);
+            margin-top: 2px
+        }
+
+        .forecast {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px
+        }
+
+        .forecast-h {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between
+        }
+
+        .forecast-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 16px;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--amber)
+        }
+
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03)
+        }
+
+        .forecast-row:last-child {
+            border: none
+        }
+
+        .forecast-day {
+            font-size: 13px;
+            font-weight: 600;
+            width: 60px
+        }
+
+        .forecast-icon {
+            font-size: 20px;
+            flex: 1;
+            text-align: center
+        }
+
+        .forecast-temp {
+            font-size: 14px;
+            font-weight: 700;
+            width: 80px;
+            text-align: left
+        }
+
+        .forecast-temp span {
+            color: var(--text3);
+            font-weight: 500
+        }
+
+        .hourly {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            overflow-x: auto;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            direction: ltr
+        }
+
+        .hour {
+            text-align: center;
+            min-width: 50px
+        }
+
+        .hour-time {
+            font-size: 11px;
+            color: var(--text2);
+            margin-bottom: 4px
+        }
+
+        .hour-icon {
+            font-size: 20px;
+            margin-bottom: 4px
+        }
+
+        .hour-temp {
+            font-size: 14px;
+            font-weight: 700
+        }
+
+        .ft {
+            text-align: center;
+            padding: 12px
+        }
+
+        .ft-b {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(245, 158, 11, 0.04);
+            border: 1px solid rgba(245, 158, 11, 0.08)
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .detail,
+        .forecast,
+        .hourly {
+            animation: fadeIn .5s ease backwards
+        }
+    </style>
+</head>
+
+<body>
+    <div class="c">
+        <div class="hero">
+            <div class="weather-icon" id="wi">☀️</div>
+            <div class="temp" id="tp">32°</div>
+            <div class="city" id="cn">الرياض</div>
+            <div class="desc" id="ds">مشمس · الإحساس 35°</div>
+        </div>
+        <div class="search"><input type="text" id="si" placeholder="ابحث عن مدينة..." value="الرياض"><button
+                onclick="searchCity()">بحث</button></div>
+        <div class="details">
+            <div class="detail">
+                <div class="detail-icon">💧</div>
+                <div class="detail-val" id="hm">20%</div>
+                <div class="detail-label">الرطوبة</div>
+            </div>
+            <div class="detail">
+                <div class="detail-icon">💨</div>
+                <div class="detail-val" id="wd">15km/h</div>
+                <div class="detail-label">الرياح</div>
+            </div>
+            <div class="detail">
+                <div class="detail-icon">🌡️</div>
+                <div class="detail-val" id="fl">35°</div>
+                <div class="detail-label">الإحساس</div>
+            </div>
+        </div>
+        <div class="hourly" id="hourly"></div>
+        <div class="forecast">
+            <div class="forecast-h"><span>توقعات 7 أيام</span><span class="forecast-badge">📅 توقعات</span></div>
+            <div id="fc"></div>
+        </div>
+        <div class="ft">
+            <div class="ft-b">🌤️ Vite Weather · WebToApp</div>
+        </div>
+    </div>
+    <script>
+        var cities = { 'الرياض': { icon: '☀️', temp: 32, desc: 'مشمس', humidity: 20, wind: 15, feels: 35 }, 'دبي': { icon: '☀️', temp: 35, desc: 'صافي', humidity: 30, wind: 12, feels: 38 }, 'القاهرة': { icon: '🌤️', temp: 28, desc: 'غائم جزئيا', humidity: 45, wind: 10, feels: 30 }, 'بيروت': { icon: '⛅', temp: 22, desc: 'غائم', humidity: 60, wind: 18, feels: 24 } };
+        var icons = ['☀️', '⛅', '🌤️', '🌧️', '☀️', '⛅', '🌥️'], dayNames = ['إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
+        function searchCity() { var name = document.getElementById('si').value.trim(); var d = cities[name] || { icon: '🌤️', temp: 25 + Math.floor(Math.random() * 15), desc: 'صافي', humidity: 20 + Math.floor(Math.random() * 40), wind: 5 + Math.floor(Math.random() * 20), feels: 28 + Math.floor(Math.random() * 10) }; document.getElementById('wi').textContent = d.icon; document.getElementById('tp').textContent = d.temp + '°'; document.getElementById('cn').textContent = name; document.getElementById('ds').textContent = d.desc + ' · الإحساس ' + d.feels + '°'; document.getElementById('hm').textContent = d.humidity + '%'; document.getElementById('wd').textContent = d.wind + 'km/h'; document.getElementById('fl').textContent = d.feels + '°'; var h = ''; for (var i = 0; i < 8; i++) { var hr = (new Date().getHours() + i) % 24; h += '<div class="hour"><div class="hour-time">' + (hr < 10 ? '0' : '') + hr + ':00</div><div class="hour-icon">' + icons[i % icons.length] + '</div><div class="hour-temp">' + (d.temp + Math.floor(Math.random() * 6 - 3)) + '°</div></div>'; } document.getElementById('hourly').innerHTML = h; var fc = '', td = new Date().getDay(); for (var i = 0; i < 7; i++) { var hi = d.temp + Math.floor(Math.random() * 4) + 2, lo = d.temp - Math.floor(Math.random() * 4) - 1; fc += '<div class="forecast-row"><span class="forecast-day">' + (i === 0 ? 'اليوم' : dayNames[(td + i) % 7]) + '</span><span class="forecast-icon">' + icons[i] + '</span><span class="forecast-temp">' + hi + '° <span>/ ' + lo + '°</span></span></div>'; } document.getElementById('fc').innerHTML = fc; }
+        searchCity();
+    </script>
+</body>
+
+</html>

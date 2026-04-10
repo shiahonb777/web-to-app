@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>React Todo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0a0a1a;
+            --card: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.07);
+            --text: #f0f0ff;
+            --text2: rgba(240, 240, 255, 0.55);
+            --text3: rgba(240, 240, 255, 0.3);
+            --react: #61dafb;
+            --radius: 14px
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -40%;
+            left: -40%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(ellipse at 50% 30%, rgba(97, 218, 251, 0.05) 0%, transparent 55%);
+            pointer-events: none
+        }
+
+        .c {
+            max-width: 460px;
+            margin: 0 auto;
+            padding: 0 14px 32px;
+            position: relative;
+            z-index: 1
+        }
+
+        .hdr {
+            text-align: center;
+            padding: 32px 0 24px
+        }
+
+        .hdr-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+            animation: spin 8s linear infinite
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg)
+            }
+
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .hdr h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #61dafb, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hdr p {
+            font-size: 12px;
+            color: var(--text2);
+            margin-top: 4px
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            text-align: center
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--react)
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-top: 2px
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px
+        }
+
+        .input-row input {
+            flex: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none
+        }
+
+        .input-row input:focus {
+            border-color: var(--react)
+        }
+
+        .input-row input::placeholder {
+            color: var(--text3)
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #61dafb, #38bdf8);
+            color: #0a0a1a;
+            border: none;
+            border-radius: 10px;
+            padding: 0 18px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer
+        }
+
+        .add-btn:active {
+            transform: scale(.93)
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px
+        }
+
+        .filter {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer
+        }
+
+        .filter.active {
+            background: rgba(97, 218, 251, 0.1);
+            color: var(--react);
+            border-color: rgba(97, 218, 251, 0.2)
+        }
+
+        .todo-list {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden
+        }
+
+        .todo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer
+        }
+
+        .todo:last-child {
+            border: none
+        }
+
+        .todo.done .todo-text {
+            text-decoration: line-through;
+            opacity: .4
+        }
+
+        .check {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0
+        }
+
+        .todo.done .check {
+            background: var(--react);
+            border-color: var(--react);
+            color: #0a0a1a
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500
+        }
+
+        .todo-tag {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(97, 218, 251, 0.1);
+            color: var(--react)
+        }
+
+        .del-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            color: #ef4444;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .empty {
+            text-align: center;
+            padding: 32px;
+            color: var(--text3)
+        }
+
+        .ft {
+            text-align: center;
+            padding: 16px
+        }
+
+        .ft-b {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(97, 218, 251, 0.04);
+            border: 1px solid rgba(97, 218, 251, 0.08)
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .stat,
+        .todo {
+            animation: fadeIn .4s ease backwards
+        }
+    </style>
+</head>
+
+<body>
+    <div class="c">
+        <div class="hdr">
+            <div class="hdr-icon">⚛️</div>
+            <h1>React Todo</h1>
+            <p>Modern task manager built with React 18</p>
+        </div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-val" id="total">5</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="active">3</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="completed">2</div>
+                <div class="stat-label">Done</div>
+            </div>
+        </div>
+        <div class="input-row"><input type="text" id="inp" placeholder="Add a task..."
+                onkeydown="if(event.key==='Enter')addTodo()"><button class="add-btn" onclick="addTodo()">+</button>
+        </div>
+        <div class="filter-row">
+            <div class="filter active" onclick="setFilter('all',this)">All</div>
+            <div class="filter" onclick="setFilter('active',this)">Active</div>
+            <div class="filter" onclick="setFilter('done',this)">Done</div>
+        </div>
+        <div class="todo-list" id="list"></div>
+        <div class="ft">
+            <div class="ft-b">⚛️ React 18 · Frontend Demo · WebToApp</div>
+        </div>
+    </div>
+    <script>
+        var todos = [{ id: 1, text: 'Learn React Hooks', done: true, tag: 'Learn' }, { id: 2, text: 'Build Todo Component', done: true, tag: 'Dev' }, { id: 3, text: 'Add Dark Theme', done: false, tag: 'Design' }, { id: 4, text: 'Implement Persistence', done: false, tag: 'Feature' }, { id: 5, text: 'Write Unit Tests', done: false, tag: 'Test' }], filter = 'all', nextId = 6;
+        function render() { var f = todos.filter(function (t) { return filter === 'all' ? true : filter === 'active' ? !t.done : t.done }); var list = document.getElementById('list'); if (f.length === 0) { list.innerHTML = '<div class="empty">🎉 No tasks</div>'; } else { list.innerHTML = f.map(function (t, i) { return '<div class="todo' + (t.done ? ' done' : '') + '" style="animation-delay:' + (i * 0.05) + 's"><div class="check" onclick="toggle(' + t.id + ')">' + (t.done ? '✓' : '') + '</div><div class="todo-text" onclick="toggle(' + t.id + ')">' + t.text + '</div><span class="todo-tag">' + t.tag + '</span><button class="del-btn" onclick="del(' + t.id + ')">×</button></div>' }).join(''); } document.getElementById('total').textContent = todos.length; document.getElementById('active').textContent = todos.filter(function (t) { return !t.done }).length; document.getElementById('completed').textContent = todos.filter(function (t) { return t.done }).length; }
+        function addTodo() { var v = document.getElementById('inp').value.trim(); if (!v) return; todos.unshift({ id: nextId++, text: v, done: false, tag: 'New' }); document.getElementById('inp').value = ''; render(); }
+        function toggle(id) { todos.forEach(function (t) { if (t.id === id) t.done = !t.done }); render(); }
+        function del(id) { todos = todos.filter(function (t) { return t.id !== id }); render(); }
+        function setFilter(f, el) { filter = f; document.querySelectorAll('.filter').forEach(function (e) { e.classList.remove('active') }); el.classList.add('active'); render(); }
+        render();
+    </script>
+</body>
+
+</html>

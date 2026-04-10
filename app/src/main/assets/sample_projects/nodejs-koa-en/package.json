@@ -1,0 +1,10 @@
+{
+  "name": "notes-app",
+  "version": "1.0.0",
+  "description": "Markdown Notes App - Zero dependency, uses Node.js built-in http module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
