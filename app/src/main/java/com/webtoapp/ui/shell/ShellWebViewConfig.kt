@@ -34,6 +34,7 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         customUserAgent = config.webViewConfig.customUserAgent,
         openExternalLinks = config.webViewConfig.openExternalLinks,
         downloadEnabled = true, // 确保下载功能始终启用
+        hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar,
         hideToolbar = config.webViewConfig.hideToolbar,
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen,
         showNavigationBarInFullscreen = config.webViewConfig.showNavigationBarInFullscreen,

@@ -2728,6 +2728,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         userAgent = webViewConfig.userAgent,
         userAgentMode = webViewConfig.userAgentMode.name,
         customUserAgent = webViewConfig.customUserAgent,
+        hideBrowserToolbar = webViewConfig.hideBrowserToolbar,
         // Use user-configured hideToolbar setting, no longer force HTML/media apps to hide toolbar
         // User can choose whether to enable fullscreen mode when creating app
         hideToolbar = webViewConfig.hideToolbar,

@@ -341,6 +341,7 @@ data class WebViewConfig(
     val fullscreenEnabled: Boolean = true,
     val downloadEnabled: Boolean = true,
     val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
+    val hideBrowserToolbar: Boolean = false, // Hide browser toolbar independently (no fullscreen needed)
     val hideToolbar: Boolean = false, // Hide工具栏（全屏模式，无浏览器特征）
     val showStatusBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示状态栏
     val showNavigationBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示导航栏

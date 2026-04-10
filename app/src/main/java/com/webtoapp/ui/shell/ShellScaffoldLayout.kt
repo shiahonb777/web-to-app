@@ -33,7 +33,8 @@ import com.webtoapp.data.model.WebViewConfig
 fun BoxScope.ShellScaffoldLayout(
     config: ShellConfig,
     appType: String,
-    useImmersiveFullscreen: Boolean,
+    hideToolbar: Boolean,
+    hideBrowserToolbar: Boolean = false,
     // 状态
     isLoading: Boolean,
     loadProgress: Int,
@@ -71,8 +72,12 @@ fun BoxScope.ShellScaffoldLayout(
 ) {
     val context = LocalContext.current
 
-    // Never show browser toolbar in shell mode (exported app = no browser chrome)
-    val showToolbar = false
+    // Show toolbar: hidden if hideBrowserToolbar, or if fullscreen (unless showToolbarInFullscreen)
+    val showToolbar = when {
+        hideBrowserToolbar -> false
+        hideToolbar -> config.webViewConfig.showToolbarInFullscreen
+        else -> true
+    }
 
     // 读取键盘调整模式
     val keyboardAdjustMode = remember {
@@ -84,12 +89,13 @@ fun BoxScope.ShellScaffoldLayout(
     }
 
     Scaffold(
-        // In immersive fullscreen: handle keyboard and gesture insets specially.
-        // Otherwise: use default insets so content respects status bar and navigation bar.
+        // 根据键盘调整模式设置 contentWindowInsets
+        // RESIZE 模式且全屏：保留 IME insets 以便 Compose 响应键盘
+        // blockSystemNavigationGesture=true 且全屏：屏蔽系统导航手势（consume gesture area）
+        // 全屏且未屏蔽导航手势：使用 ScaffoldDefaults 以保留系统手势区域
         contentWindowInsets = when {
-            keyboardAdjustMode == KeyboardAdjustMode.RESIZE && useImmersiveFullscreen -> WindowInsets.ime
-            useImmersiveFullscreen && webViewConfig.blockSystemNavigationGesture -> WindowInsets(0)
-            useImmersiveFullscreen -> ScaffoldDefaults.contentWindowInsets
+            keyboardAdjustMode == KeyboardAdjustMode.RESIZE && hideToolbar -> WindowInsets.ime
+            hideToolbar && webViewConfig.blockSystemNavigationGesture -> WindowInsets(0)
             else -> ScaffoldDefaults.contentWindowInsets
         },
         modifier = Modifier,
@@ -121,17 +127,21 @@ fun BoxScope.ShellScaffoldLayout(
         val actualStatusBarPadding = if (statusBarHeightDp > 0) statusBarHeightDp.dp else systemStatusBarHeightDp
 
         val contentModifier = when {
-            useImmersiveFullscreen && config.webViewConfig.showStatusBarInFullscreen -> {
-                // Immersive fullscreen with status bar visible: content below status bar
+            hideToolbar && showToolbar -> {
+                // Fullscreen模式但显示toolbar：使用 Scaffold 的 padding（toolbar高度）
+                Modifier.fillMaxSize().padding(padding)
+            }
+            hideToolbar && config.webViewConfig.showStatusBarInFullscreen -> {
+                // Fullscreen模式但显示状态栏：内容需要在状态栏下方
+                // 使用自定义高度或系统默认高度作为顶部 padding
                 Modifier.fillMaxSize().padding(top = actualStatusBarPadding)
             }
-            useImmersiveFullscreen -> {
-                // Full immersive mode: content fills entire screen
+            hideToolbar -> {
+                // 完全全屏模式：内容铺满整个屏幕
                 Modifier.fillMaxSize()
             }
             else -> {
-                // Normal mode (toolbar hidden, system bars visible): use Scaffold padding
-                // This ensures content is properly inset below status bar and above navigation bar
+                // 非全屏模式：使用 Scaffold 的 padding
                 Modifier.fillMaxSize().padding(padding)
             }
         }
@@ -185,8 +195,8 @@ fun BoxScope.ShellScaffoldLayout(
 
             // 悬浮返回按钮（逻辑已提取到 ShellOverlays.kt）
             ShellFloatingBackButton(
-                hideToolbar = true,
-                showToolbar = false,
+                hideToolbar = hideToolbar || hideBrowserToolbar,
+                showToolbar = showToolbar,
                 canGoBack = canGoBack,
                 forcedRunActive = forcedRunActive,
                 showFloatingBackButton = config.webViewConfig.showFloatingBackButton,

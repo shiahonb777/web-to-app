@@ -838,9 +838,12 @@ data class WebViewShellConfig(
     @SerializedName("customUserAgent")
     val customUserAgent: String? = null,
 
+    @SerializedName("hideBrowserToolbar")
+    val hideBrowserToolbar: Boolean = false,
+
     @SerializedName("hideToolbar")
     val hideToolbar: Boolean = false,
-    
+
     @SerializedName("showStatusBarInFullscreen")
     val showStatusBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示状态栏
     

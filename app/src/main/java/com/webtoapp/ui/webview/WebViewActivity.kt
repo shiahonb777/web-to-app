@@ -2133,24 +2133,28 @@ fun WebViewScreen(
         }
     }
     
-    // Always hide browser toolbar in non-test mode to remove browser chrome from the app.
-    // Immersive fullscreen (hiding system bars) is controlled separately by the hideToolbar config.
-    // This decoupling allows: toolbar always hidden + system bars visible when fullscreen mode is OFF.
-    val useImmersiveFullscreen = !isTestMode && webApp?.webViewConfig?.hideToolbar == true
-    // Show the browser toolbar only in test mode
-    val showToolbarInPreview = isTestMode
+    // Fullscreen mode (immersive: hides system bars) - test mode always shows toolbar
+    val hideToolbar = !isTestMode && webApp?.webViewConfig?.hideToolbar == true
+    // Hide browser toolbar independently (no fullscreen needed, system bars stay visible)
+    val hideBrowserToolbar = !isTestMode && webApp?.webViewConfig?.hideBrowserToolbar == true
+    // Show toolbar: hidden if fullscreen (unless showToolbarInFullscreen), or if hideBrowserToolbar
+    val showToolbarInPreview = when {
+        isTestMode -> true
+        hideBrowserToolbar -> false
+        hideToolbar -> webApp?.webViewConfig?.showToolbarInFullscreen == true
+        else -> true
+    }
 
-    LaunchedEffect(useImmersiveFullscreen) {
-        onFullscreenModeChanged(useImmersiveFullscreen)
+    LaunchedEffect(hideToolbar) {
+        onFullscreenModeChanged(hideToolbar)
     }
 
     // 外层 Box 用于放置状态栏覆盖层（需要在 Scaffold 外部才能正确覆盖状态栏区域）
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
-        // In immersive fullscreen, remove all insets (content fills behind system bars).
-        // Otherwise, use default insets so content respects status bar and navigation bar.
-        contentWindowInsets = if (useImmersiveFullscreen) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
-        modifier = if (useImmersiveFullscreen) Modifier.fillMaxSize() else Modifier,
+        // 在沉浸式模式下，不添加任何内边距（除非显示toolbar）
+        contentWindowInsets = if (hideToolbar && !showToolbarInPreview) WindowInsets(0) else if (hideToolbar && showToolbarInPreview) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
+        modifier = if (hideToolbar && !showToolbarInPreview) Modifier.fillMaxSize() else if (hideToolbar) Modifier.fillMaxSize() else Modifier,
         topBar = {
             if (showToolbarInPreview) {
                 TopAppBar(
@@ -2301,17 +2305,21 @@ fun WebViewScreen(
         val actualStatusBarPadding = if (statusBarHeightDp > 0) statusBarHeightDp.dp else systemStatusBarHeightDp
         
         val contentModifier = when {
-            useImmersiveFullscreen && webApp?.webViewConfig?.showStatusBarInFullscreen == true -> {
-                // Immersive fullscreen with status bar visible: content below status bar
+            hideToolbar && showToolbarInPreview -> {
+                // Fullscreen模式但显示toolbar：使用 Scaffold 的 padding（toolbar高度）
+                Modifier.fillMaxSize().padding(padding)
+            }
+            hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true -> {
+                // Fullscreen模式但显示状态栏：内容需要在状态栏下方
+                // 使用自定义高度或系统默认高度作为顶部 padding
                 Modifier.fillMaxSize().padding(top = actualStatusBarPadding)
             }
-            useImmersiveFullscreen -> {
-                // Full immersive mode: content fills entire screen
+            hideToolbar -> {
+                // 完全全屏模式：内容铺满整个屏幕
                 Modifier.fillMaxSize()
             }
             else -> {
-                // Normal mode (toolbar hidden, system bars visible): use Scaffold padding
-                // This ensures content is properly inset below status bar and above navigation bar
+                // 非全屏模式：使用 Scaffold 的 padding
                 Modifier.fillMaxSize().padding(padding)
             }
         }
@@ -2561,9 +2569,9 @@ fun WebViewScreen(
                 )
             }
 
-            // Floating back button when toolbar is hidden and user can go back
+            // Floating back button when toolbar is hidden (fullscreen or hideBrowserToolbar)
             // Auto-fades: visible for 3s then fades to low opacity, resets on tap
-            if (!showToolbarInPreview && canGoBack) {
+            if ((hideToolbar || hideBrowserToolbar) && !showToolbarInPreview && canGoBack) {
                 var fabAlpha by remember { mutableFloatStateOf(0.9f) }
                 var fadeKey by remember { mutableIntStateOf(0) }
                 
@@ -2641,9 +2649,9 @@ fun WebViewScreen(
         }
     }
     
-    // Status bar背景覆盖层（在沉浸式全屏模式下显示状态栏时）
+    // Status bar背景覆盖层（在全屏模式下显示状态栏时）
     // 放在 Scaffold 外部，才能正确覆盖在状态栏区域
-    if (useImmersiveFullscreen && webApp?.webViewConfig?.showStatusBarInFullscreen == true) {
+    if (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) {
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = statusBarBackgroundType,

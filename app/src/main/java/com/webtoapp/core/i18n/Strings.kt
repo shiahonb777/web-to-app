@@ -5294,6 +5294,18 @@ object Strings {
         AppLanguage.ARABIC -> "عرض زر عودة عائم في الزاوية العلوية اليسرى في وضع ملء الشاشة. قم بتعطيله إذا تعارض مع واجهة صفحة الويب"
     }
 
+    val hideBrowserToolbarLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏浏览器工具栏"
+        AppLanguage.ENGLISH -> "Hide Browser Toolbar"
+        AppLanguage.ARABIC -> "إخفاء شريط أدوات المتصفح"
+    }
+
+    val hideBrowserToolbarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏顶部导航工具栏，让应用看起来更像原生应用。无需启用全屏模式，状态栏和导航栏保持正常显示"
+        AppLanguage.ENGLISH -> "Hide the top navigation toolbar for a native app look. No need to enable fullscreen mode — status bar and navigation bar remain visible"
+        AppLanguage.ARABIC -> "إخفاء شريط أدوات التنقل العلوي لمظهر تطبيق أصلي. لا حاجة لتفعيل وضع ملء الشاشة — يبقى شريط الحالة وشريط التنقل مرئيين"
+    }
+
     val blockSystemNavigationGestureLabel: String get() = when (lang) {
         AppLanguage.CHINESE -> "屏蔽系统导航手势"
         AppLanguage.ENGLISH -> "Block System Navigation Gesture"

@@ -748,6 +748,13 @@ fun WebViewConfigCard(
                         icon = Icons.Outlined.Visibility
                     ) {
                         SettingsSwitch(
+                            title = Strings.hideBrowserToolbarLabel,
+                            subtitle = Strings.hideBrowserToolbarHint,
+                            checked = config.hideBrowserToolbar,
+                            onCheckedChange = { onConfigChange(config.copy(hideBrowserToolbar = it)) }
+                        )
+
+                        SettingsSwitch(
                             title = Strings.zoomSetting,
                             subtitle = Strings.zoomSettingHint,
                             checked = config.zoomEnabled,
