@@ -226,8 +226,8 @@ fun ShellScreen(
                 activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
             "AUTO" -> {
-                // ★ 自动旋转：跟随重力感应，平板设备友好
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                // ★ Auto rotation: respects the system auto-rotate setting
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
             }
             else -> {
                 if (TvUtils.isTv(context)) {

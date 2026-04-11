@@ -813,7 +813,7 @@ fun WebViewScreen(
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
                 com.webtoapp.data.model.OrientationMode.AUTO -> {
-                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                 }
                 com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
                     if (!com.webtoapp.util.TvUtils.isTv(context)) {
@@ -919,8 +919,8 @@ fun WebViewScreen(
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                     }
                     com.webtoapp.data.model.OrientationMode.AUTO -> {
-                        // ★ 自动旋转：跟随重力感应，平板设备友好
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                        // ★ Auto rotation: respects the system auto-rotate setting
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                     }
                     com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
                         if (com.webtoapp.util.TvUtils.isTv(context)) {
