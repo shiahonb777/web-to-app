@@ -446,9 +446,11 @@ fun ShellScreen(
         )
     }
     
-    // Status bar背景覆盖层（在全屏模式下显示状态栏时）
-    // 放在 Box 内部最上层，覆盖在所有内容之上，使用 align 固定在顶部
-    if (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) {
+    // Status bar背景覆盖层
+    // Show overlay when: fullscreen with status bar visible, OR non-fullscreen with custom status bar config
+    val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
+    val showStatusBarOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) || (!hideToolbar && hasCustomStatusBar)
+    if (showStatusBarOverlay) {
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = statusBarBackgroundType,
