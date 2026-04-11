@@ -2650,9 +2650,11 @@ fun WebViewScreen(
         }
     }
     
-    // Status bar背景覆盖层（在全屏模式下显示状态栏时）
-    // 放在 Scaffold 外部，才能正确覆盖在状态栏区域
-    if (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) {
+    // Status bar背景覆盖层
+    // Show overlay when: fullscreen with status bar visible, OR non-fullscreen with custom status bar config
+    val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
+    val showStatusBarOverlay = (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) || (!hideToolbar && hasCustomStatusBar)
+    if (showStatusBarOverlay) {
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = statusBarBackgroundType,
