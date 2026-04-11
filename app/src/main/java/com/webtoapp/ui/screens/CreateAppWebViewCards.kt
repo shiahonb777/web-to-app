@@ -1406,6 +1406,42 @@ fun UserAgentCard(
 }
 
 /**
+ * Status Bar Style Config card — standalone, works without fullscreen mode
+ */
+@Composable
+fun StatusBarStyleCard(
+    webViewConfig: WebViewConfig,
+    onWebViewConfigChange: (WebViewConfig) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            CollapsibleCardHeader(
+                icon = Icons.Outlined.Tune,
+                title = Strings.statusBarStyleConfigLabel,
+                checked = expanded,
+                onCheckedChange = { expanded = it }
+            )
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = CardExpandTransition,
+                exit = CardCollapseTransition
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    StatusBarConfigCard(
+                        config = webViewConfig,
+                        onConfigChange = onWebViewConfigChange
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
  * 全屏模式卡片
  */
 @Composable
@@ -1414,15 +1450,11 @@ fun FullscreenModeCard(
     showStatusBar: Boolean = false,
     showNavigationBar: Boolean = false,
     showToolbar: Boolean = false,
-    webViewConfig: WebViewConfig = WebViewConfig(),
     onEnabledChange: (Boolean) -> Unit,
     onShowStatusBarChange: (Boolean) -> Unit = {},
     onShowNavigationBarChange: (Boolean) -> Unit = {},
     onShowToolbarChange: (Boolean) -> Unit = {},
-    onWebViewConfigChange: (WebViewConfig) -> Unit = {}
 ) {
-    var statusBarConfigExpanded by remember { mutableStateOf(false) }
-    
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
@@ -1515,70 +1547,6 @@ fun FullscreenModeCard(
                     )
                 }
                 
-                // Status bar配置（仅在显示状态栏时可用）
-                if (showStatusBar) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Status bar配置展开/收起
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { statusBarConfigExpanded = !statusBarConfigExpanded },
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Tune,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = Strings.statusBarStyleConfigLabel,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                            val statusBarArrowRotation by animateFloatAsState(
-                                targetValue = if (statusBarConfigExpanded) 180f else 0f,
-                                animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
-                                label = "statusBarArrow"
-                            )
-                            Icon(
-                                Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.graphicsLayer { rotationZ = statusBarArrowRotation }
-                            )
-                        }
-                    }
-                    
-                    // Status bar配置内容
-                    AnimatedVisibility(
-                        visible = statusBarConfigExpanded,
-                        enter = CardExpandTransition,
-                        exit = CardCollapseTransition
-                    ) {
-                        Column {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            StatusBarConfigCard(
-                                config = webViewConfig,
-                                onConfigChange = onWebViewConfigChange
-                            )
-                        }
-                    }
-                }
               }
             }
         }
