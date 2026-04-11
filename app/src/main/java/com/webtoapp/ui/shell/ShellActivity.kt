@@ -13,6 +13,7 @@ import android.view.WindowManager
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
@@ -68,6 +69,8 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarBackgroundImageDark: String? = null
     private var statusBarBackgroundAlphaDark: Float = 1.0f
     private var forceHideSystemUi: Boolean = false
+    // 当前深色主题状态（从 Compose 同步，用于 onWindowFocusChanged 等 Activity 级别回调）
+    private var currentIsDarkTheme: Boolean = false
     private var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
     private var forcedRunConfig: ForcedRunConfig? = null
     private val forcedRunManager by lazy { ForcedRunManager.getInstance(this) }
@@ -82,8 +85,13 @@ class ShellActivity : AppCompatActivity() {
         isDarkTheme: Boolean
     ) = WindowHelper.applyStatusBarColor(this, colorMode, customColor, darkIcons, isDarkTheme)
 
-    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean? = null, isDarkTheme: Boolean = false) {
+    private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean? = null, isDarkTheme: Boolean = currentIsDarkTheme) {
         val shouldHideNavBar = hideNavBar ?: !showNavigationBarInFullscreen
+        // 使用深色/浅色模式对应的状态栏配置
+        val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
+        val effectiveCustomColor = if (isDarkTheme) statusBarCustomColorDark else statusBarCustomColor
+        val effectiveDarkIcons = if (isDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
+        val effectiveBgType = if (isDarkTheme) statusBarBackgroundTypeDark else statusBarBackgroundType
         WindowHelper.applyImmersiveFullscreen(
             activity = this,
             enabled = enabled,
@@ -91,10 +99,10 @@ class ShellActivity : AppCompatActivity() {
             isDarkTheme = isDarkTheme,
             showStatusBar = showStatusBarInFullscreen,
             forceHideSystemUi = forceHideSystemUi,
-            statusBarColorMode = statusBarColorMode,
-            statusBarCustomColor = statusBarCustomColor,
-            statusBarDarkIcons = statusBarDarkIcons,
-            statusBarBgType = statusBarBackgroundType,
+            statusBarColorMode = effectiveColorMode,
+            statusBarCustomColor = effectiveCustomColor,
+            statusBarDarkIcons = effectiveDarkIcons,
+            statusBarBgType = effectiveBgType,
             keyboardAdjustMode = keyboardAdjustMode,
             tag = "ShellActivity"
         )
@@ -219,17 +227,13 @@ class ShellActivity : AppCompatActivity() {
         // Initialize日志系统（尽早初始化以捕获崩溃）
         ShellActivityInit.initLogger(this)
         
-        // Enable边到边显示（手动配置，不使用 enableEdgeToEdge() 因为它会
-        // 安装一个持续覆盖 isAppearanceLightStatusBars 的监听器，
-        // 阻止我们自定义状态栏图标颜色）
+        // Enable边到边显示（让内容延伸到系统栏区域）
         try {
-            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "edge-to-edge 手动配置成功")
+            enableEdgeToEdge()
+            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "enableEdgeToEdge 成功")
         } catch (e: Exception) {
-            AppLogger.w("ShellActivity", "edge-to-edge setup failed", e)
-            com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "edge-to-edge 配置失败", e)
+            AppLogger.w("ShellActivity", "enableEdgeToEdge failed", e)
+            com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "enableEdgeToEdge 失败", e)
         }
         
         super.onCreate(savedInstanceState)
@@ -304,12 +308,23 @@ class ShellActivity : AppCompatActivity() {
             KeyboardAdjustMode.RESIZE
         }
 
+        // 计算初始深色主题状态（供 applyImmersiveFullscreen 和 onWindowFocusChanged 使用）
+        currentIsDarkTheme = when (config.darkMode.uppercase()) {
+            "LIGHT" -> false
+            "DARK" -> true
+            else -> {
+                // SYSTEM: 根据系统设置判断
+                val uiMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                uiMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            }
+        }
+
         // 根据配置决定是否启用沉浸式全屏模式
         // hideToolbar=true 时启用沉浸式（隐藏状态栏），否则显示状态栏
         immersiveFullscreenEnabled = config.webViewConfig.hideToolbar
         try {
-            applyImmersiveFullscreen(immersiveFullscreenEnabled)
-            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "沉浸式全屏模式: $immersiveFullscreenEnabled")
+            applyImmersiveFullscreen(immersiveFullscreenEnabled, isDarkTheme = currentIsDarkTheme)
+            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "沉浸式全屏模式: $immersiveFullscreenEnabled, isDark=$currentIsDarkTheme")
         } catch (e: Exception) {
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "应用沉浸式全屏失败", e)
         }
@@ -403,7 +418,12 @@ class ShellActivity : AppCompatActivity() {
             ) {
                 // Get当前主题状态
                 val isDarkTheme = com.webtoapp.ui.theme.LocalIsDarkTheme.current
-                
+
+                // 同步深色主题状态到 Activity 级别（供 onWindowFocusChanged 使用）
+                SideEffect {
+                    currentIsDarkTheme = isDarkTheme
+                }
+
                 // 当主题变化时更新状态栏颜色（根据深色/浅色模式选择对应配置）
                 LaunchedEffect(isDarkTheme, statusBarColorMode, statusBarColorModeDark) {
                     if (!immersiveFullscreenEnabled) {
@@ -493,7 +513,15 @@ class ShellActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            applyImmersiveFullscreen(customView != null || immersiveFullscreenEnabled || forceHideSystemUi)
+            if (customView != null || immersiveFullscreenEnabled || forceHideSystemUi) {
+                applyImmersiveFullscreen(true, isDarkTheme = currentIsDarkTheme)
+            } else {
+                // 非全屏模式：重新应用状态栏颜色（使用正确的深色/浅色模式值）
+                val effectiveColorMode = if (currentIsDarkTheme) statusBarColorModeDark else statusBarColorMode
+                val effectiveCustomColor = if (currentIsDarkTheme) statusBarCustomColorDark else statusBarCustomColor
+                val effectiveDarkIcons = if (currentIsDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
+                applyStatusBarColor(effectiveColorMode, effectiveCustomColor, effectiveDarkIcons, currentIsDarkTheme)
+            }
         }
     }
 

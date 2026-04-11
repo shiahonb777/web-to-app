@@ -451,9 +451,7 @@ fun ShellScreen(
     val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
     val showStatusBarOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) || (!hideToolbar && hasCustomStatusBar)
     if (showStatusBarOverlay) {
-        // Force status bar icon color to match overlay background on every recomposition
-        // SideEffect (not LaunchedEffect) because enableEdgeToEdge and Material3 DayNight
-        // continuously override isAppearanceLightStatusBars on window focus changes
+        // Force status bar icon color to match overlay background
         val isLightOverlayBackground = remember(statusBarBackgroundColor) {
             if (statusBarBackgroundColor != null) {
                 try {
@@ -464,10 +462,31 @@ fun ShellScreen(
                 } catch (e: Exception) { false }
             } else false
         }
+        // Use native WindowInsetsController API (bypasses compat layer issues)
         SideEffect {
             val activity = context as? android.app.Activity ?: return@SideEffect
-            val controller = androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-            controller.isAppearanceLightStatusBars = isLightOverlayBackground
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                val controller = activity.window.insetsController
+                if (isLightOverlayBackground) {
+                    controller?.setSystemBarsAppearance(
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    )
+                } else {
+                    controller?.setSystemBarsAppearance(
+                        0,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    )
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                val flags = activity.window.decorView.systemUiVisibility
+                activity.window.decorView.systemUiVisibility = if (isLightOverlayBackground) {
+                    flags or android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                } else {
+                    flags and android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                }
+            }
         }
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
