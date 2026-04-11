@@ -142,6 +142,7 @@ class ApkTemplate(private val context: Context) {
                 "swipeRefreshEnabled": ${config.swipeRefreshEnabled},
                 "fullscreenEnabled": ${config.fullscreenEnabled},
                 "hideToolbar": ${config.hideToolbar},
+                "hideBrowserToolbar": ${config.hideBrowserToolbar},
                 "showStatusBarInFullscreen": ${config.showStatusBarInFullscreen},
                 "showNavigationBarInFullscreen": ${config.showNavigationBarInFullscreen},
                 "showToolbarInFullscreen": ${config.showToolbarInFullscreen},
@@ -526,6 +527,7 @@ data class ApkConfig(
     val userAgentMode: String = "DEFAULT", // User-Agent 模式: DEFAULT, CHROME_MOBILE, CHROME_DESKTOP, SAFARI_MOBILE, SAFARI_DESKTOP, FIREFOX_MOBILE, FIREFOX_DESKTOP, EDGE_MOBILE, EDGE_DESKTOP, CUSTOM
     val customUserAgent: String? = null, // Custom User-Agent（仅 CUSTOM 模式使用）
     val hideToolbar: Boolean = false,
+    val hideBrowserToolbar: Boolean = false,
     val showStatusBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示状态栏
     val showNavigationBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示导航栏
     val showToolbarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示顶部导航栏

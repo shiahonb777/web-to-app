@@ -10405,7 +10405,19 @@ object Strings {
         AppLanguage.ENGLISH -> "Allow video fullscreen playback"
         AppLanguage.ARABIC -> "السماح بتشغيل الفيديو بملء الشاشة"
     }
-    
+
+    val hideBrowserToolbarLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏浏览器工具栏"
+        AppLanguage.ENGLISH -> "Hide Browser Toolbar"
+        AppLanguage.ARABIC -> "إخفاء شريط أدوات المتصفح"
+    }
+
+    val hideBrowserToolbarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏顶部浏览器导航栏（独立于全屏模式）"
+        AppLanguage.ENGLISH -> "Hide the top browser navigation bar (independent of fullscreen mode)"
+        AppLanguage.ARABIC -> "إخفاء شريط التنقل العلوي للمتصفح (مستقل عن وضع ملء الشاشة)"
+    }
+
     val externalLinksSetting: String get() = when (lang) {
         AppLanguage.CHINESE -> "外部链接"
         AppLanguage.ENGLISH -> "External Links"

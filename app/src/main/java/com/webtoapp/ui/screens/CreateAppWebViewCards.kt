@@ -761,6 +761,13 @@ fun WebViewConfigCard(
                             onCheckedChange = { onConfigChange(config.copy(fullscreenEnabled = it)) }
                         )
 
+                        SettingsSwitch(
+                            title = Strings.hideBrowserToolbarLabel,
+                            subtitle = Strings.hideBrowserToolbarHint,
+                            checked = config.hideBrowserToolbar,
+                            onCheckedChange = { onConfigChange(config.copy(hideBrowserToolbar = it)) }
+                        )
+
                         // 视口适配模式 (inline)
                         ViewportModeSelector(config = config, onConfigChange = onConfigChange)
                     }

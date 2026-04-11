@@ -840,6 +840,9 @@ data class WebViewShellConfig(
 
     @SerializedName("hideToolbar")
     val hideToolbar: Boolean = false,
+
+    @SerializedName("hideBrowserToolbar")
+    val hideBrowserToolbar: Boolean = false,
     
     @SerializedName("showStatusBarInFullscreen")
     val showStatusBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示状态栏

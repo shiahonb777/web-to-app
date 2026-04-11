@@ -813,7 +813,8 @@ fun WebViewScreen(
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
                 com.webtoapp.data.model.OrientationMode.AUTO -> {
-                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                    // Auto rotation: respects the system auto-rotate setting
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                 }
                 com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
                     if (!com.webtoapp.util.TvUtils.isTv(context)) {
@@ -919,8 +920,8 @@ fun WebViewScreen(
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                     }
                     com.webtoapp.data.model.OrientationMode.AUTO -> {
-                        // ★ 自动旋转：跟随重力感应，平板设备友好
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                        // Auto rotation: respects the system auto-rotate setting
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                     }
                     com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
                         if (com.webtoapp.util.TvUtils.isTv(context)) {
@@ -2135,8 +2136,14 @@ fun WebViewScreen(
     
     // Yes否隐藏工具栏（全屏模式）- 测试模式下始终显示工具栏
     val hideToolbar = !isTestMode && webApp?.webViewConfig?.hideToolbar == true
+    val hideBrowserToolbar = !isTestMode && webApp?.webViewConfig?.hideBrowserToolbar == true
     // 是否在全屏模式下显示顶部导航栏
-    val showToolbarInPreview = !hideToolbar || webApp?.webViewConfig?.showToolbarInFullscreen == true
+    val showToolbarInPreview = when {
+        isTestMode -> true
+        hideBrowserToolbar -> false
+        hideToolbar -> webApp?.webViewConfig?.showToolbarInFullscreen == true
+        else -> true
+    }
     
     LaunchedEffect(hideToolbar) {
         onFullscreenModeChanged(hideToolbar)
@@ -2565,7 +2572,7 @@ fun WebViewScreen(
             // 全屏模式下的悬浮返回按钮（当工具栏隐藏且可以后退时显示）
             // 如果用户选择了显示toolbar则不需要悬浮按钮
             // 自动淡出：显示后 3 秒开始淡化，点击时重置透明度
-            if (hideToolbar && !showToolbarInPreview && canGoBack) {
+            if ((hideToolbar || hideBrowserToolbar) && !showToolbarInPreview && canGoBack) {
                 var fabAlpha by remember { mutableFloatStateOf(0.9f) }
                 var fadeKey by remember { mutableIntStateOf(0) }
                 

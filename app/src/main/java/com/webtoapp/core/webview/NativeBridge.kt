@@ -622,7 +622,8 @@ if (NativeBridge.isFullscreen()) {
                 activity.requestedOrientation = when (orientation.lowercase()) {
                     "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                     "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    "auto", "sensor" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                    "auto" -> ActivityInfo.SCREEN_ORIENTATION_USER
+                    "sensor" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
                     "reverse_landscape" -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
                     "reverse_portrait" -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
                     else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -681,7 +682,7 @@ if (NativeBridge.isFullscreen()) {
         scope.launch(Dispatchers.Main) {
             try {
                 val activity = context as? Activity ?: return@launch
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                 AppLogger.d("NativeBridge", "屏幕方向已解锁")
             } catch (e: Exception) {
                 AppLogger.e("NativeBridge", "解锁屏幕方向失败", e)

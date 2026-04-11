@@ -34,6 +34,7 @@ fun BoxScope.ShellScaffoldLayout(
     config: ShellConfig,
     appType: String,
     hideToolbar: Boolean,
+    hideBrowserToolbar: Boolean = false,
     // 状态
     isLoading: Boolean,
     loadProgress: Int,
@@ -72,7 +73,11 @@ fun BoxScope.ShellScaffoldLayout(
     val context = LocalContext.current
 
     // 是否显示顶部导航栏：非全屏模式或全屏模式下用户选择显示
-    val showToolbar = !hideToolbar || config.webViewConfig.showToolbarInFullscreen
+    val showToolbar = when {
+        hideBrowserToolbar -> false
+        hideToolbar -> config.webViewConfig.showToolbarInFullscreen
+        else -> true
+    }
 
     // 读取键盘调整模式
     val keyboardAdjustMode = remember {
@@ -190,7 +195,7 @@ fun BoxScope.ShellScaffoldLayout(
 
             // 悬浮返回按钮（逻辑已提取到 ShellOverlays.kt）
             ShellFloatingBackButton(
-                hideToolbar = hideToolbar,
+                hideToolbar = hideToolbar || hideBrowserToolbar,
                 showToolbar = showToolbar,
                 canGoBack = canGoBack,
                 forcedRunActive = forcedRunActive,

@@ -226,8 +226,8 @@ fun ShellScreen(
                 activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
             "AUTO" -> {
-                // ★ 自动旋转：跟随重力感应，平板设备友好
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                // Auto rotation: respects the system auto-rotate setting
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
             }
             else -> {
                 if (TvUtils.isTv(context)) {
@@ -313,6 +313,7 @@ fun ShellScreen(
 
     // Yes否隐藏工具栏（全屏模式）
     val hideToolbar = config.webViewConfig.hideToolbar
+    val hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar
     // 下拉刷新开关
     val swipeRefreshEnabled = config.webViewConfig.swipeRefreshEnabled
 
@@ -339,6 +340,7 @@ fun ShellScreen(
         config = config,
         appType = appType,
         hideToolbar = hideToolbar,
+        hideBrowserToolbar = hideBrowserToolbar,
         isLoading = isLoading,
         loadProgress = loadProgress,
         pageTitle = pageTitle,
