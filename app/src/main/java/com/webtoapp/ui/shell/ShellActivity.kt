@@ -13,7 +13,6 @@ import android.view.WindowManager
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
@@ -220,13 +219,17 @@ class ShellActivity : AppCompatActivity() {
         // Initialize日志系统（尽早初始化以捕获崩溃）
         ShellActivityInit.initLogger(this)
         
-        // Enable边到边显示（让内容延伸到系统栏区域）
+        // Enable边到边显示（手动配置，不使用 enableEdgeToEdge() 因为它会
+        // 安装一个持续覆盖 isAppearanceLightStatusBars 的监听器，
+        // 阻止我们自定义状态栏图标颜色）
         try {
-            enableEdgeToEdge()
-            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "enableEdgeToEdge 成功")
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "edge-to-edge 手动配置成功")
         } catch (e: Exception) {
-            AppLogger.w("ShellActivity", "enableEdgeToEdge failed", e)
-            com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "enableEdgeToEdge 失败", e)
+            AppLogger.w("ShellActivity", "edge-to-edge setup failed", e)
+            com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "edge-to-edge 配置失败", e)
         }
         
         super.onCreate(savedInstanceState)
