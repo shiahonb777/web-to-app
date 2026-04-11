@@ -1417,12 +1417,40 @@ fun StatusBarStyleCard(
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            CollapsibleCardHeader(
-                icon = Icons.Outlined.Tune,
-                title = Strings.statusBarStyleConfigLabel,
-                checked = expanded,
-                onCheckedChange = { expanded = it }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { expanded = !expanded }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Tune,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = Strings.statusBarStyleConfigLabel,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                val arrowRotation by animateFloatAsState(
+                    targetValue = if (expanded) 180f else 0f,
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
+                    label = "statusBarArrow"
+                )
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.graphicsLayer { rotationZ = arrowRotation }
+                )
+            }
 
             AnimatedVisibility(
                 visible = expanded,
