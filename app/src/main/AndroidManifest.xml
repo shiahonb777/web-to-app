@@ -294,7 +294,7 @@
         <!-- 使用Shell主题，支持动态控制是否全屏 -->
         <activity
             android:name=".ui.webview.WebViewActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
             android:exported="true"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
@@ -309,9 +309,10 @@
         <!-- 使用Shell主题，支持动态控制是否全屏 -->
         <activity
             android:name=".ui.shell.ShellActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
             android:exported="false"
             android:hardwareAccelerated="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.WebToApp.Shell" />
         

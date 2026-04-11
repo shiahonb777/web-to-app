@@ -342,6 +342,7 @@ data class WebViewConfig(
     val downloadEnabled: Boolean = true,
     val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
     val hideToolbar: Boolean = false, // Hide工具栏（全屏模式，无浏览器特征）
+    val hideBrowserToolbar: Boolean = false, // Hide浏览器工具栏（独立于全屏模式）
     val showStatusBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示状态栏
     val showNavigationBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示导航栏
     val showToolbarInFullscreen: Boolean = false, // Fullscreen模式下是否显示顶部导航栏
@@ -356,6 +357,13 @@ data class WebViewConfig(
     val statusBarBackgroundImage: String? = null, // Cropped image path
     val statusBarBackgroundAlpha: Float = 1.0f, // Alpha 0.0-1.0
     val statusBarHeightDp: Int = 0, // Custom高度dp（0=系统默认）
+    // Status bar深色模式配置
+    val statusBarColorModeDark: StatusBarColorMode = StatusBarColorMode.THEME,
+    val statusBarColorDark: String? = null,
+    val statusBarDarkIconsDark: Boolean? = null,
+    val statusBarBackgroundTypeDark: StatusBarBackgroundType = StatusBarBackgroundType.COLOR,
+    val statusBarBackgroundImageDark: String? = null,
+    val statusBarBackgroundAlphaDark: Float = 1.0f,
     val longPressMenuEnabled: Boolean = true, // Yes否启用长按菜单
     val longPressMenuStyle: LongPressMenuStyle = LongPressMenuStyle.FULL, // Long press menu style
     val adBlockToggleEnabled: Boolean = false, // Allow用户在运行时切换广告拦截开关
