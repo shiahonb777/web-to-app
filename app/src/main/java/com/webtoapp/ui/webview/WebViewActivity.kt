@@ -2687,6 +2687,20 @@ fun WebViewScreen(
     val hasCustomStatusBar = effectiveStatusBarBgType != "COLOR" || effectiveStatusBarBgColor != null || statusBarHeightDp > 0
     val showStatusBarOverlay = (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) || (!hideToolbar && hasCustomStatusBar)
     if (showStatusBarOverlay) {
+        // Force status bar icon color to match overlay background
+        LaunchedEffect(effectiveStatusBarBgColor, effectiveStatusBarBgType) {
+            val activity = context as? android.app.Activity ?: return@LaunchedEffect
+            val controller = androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+            val isLightBackground = if (effectiveStatusBarBgColor != null) {
+                try {
+                    val color = android.graphics.Color.parseColor(
+                        if (effectiveStatusBarBgColor!!.startsWith("#")) effectiveStatusBarBgColor else "#$effectiveStatusBarBgColor"
+                    )
+                    com.webtoapp.ui.shared.WindowHelper.isColorLight(color)
+                } catch (e: Exception) { false }
+            } else false
+            controller.isAppearanceLightStatusBars = isLightBackground
+        }
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = effectiveStatusBarBgType,

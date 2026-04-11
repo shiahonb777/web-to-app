@@ -451,6 +451,21 @@ fun ShellScreen(
     val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
     val showStatusBarOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) || (!hideToolbar && hasCustomStatusBar)
     if (showStatusBarOverlay) {
+        // Force status bar icon color to match overlay background
+        // (enableEdgeToEdge may override our applyStatusBarColor settings)
+        LaunchedEffect(statusBarBackgroundColor, statusBarBackgroundType) {
+            val activity = context as? android.app.Activity ?: return@LaunchedEffect
+            val controller = androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+            val isLightBackground = if (statusBarBackgroundColor != null) {
+                try {
+                    val color = android.graphics.Color.parseColor(
+                        if (statusBarBackgroundColor!!.startsWith("#")) statusBarBackgroundColor else "#$statusBarBackgroundColor"
+                    )
+                    com.webtoapp.ui.shared.WindowHelper.isColorLight(color)
+                } catch (e: Exception) { false }
+            } else false
+            controller.isAppearanceLightStatusBars = isLightBackground
+        }
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = statusBarBackgroundType,
