@@ -451,12 +451,11 @@ fun ShellScreen(
     val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
     val showStatusBarOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) || (!hideToolbar && hasCustomStatusBar)
     if (showStatusBarOverlay) {
-        // Force status bar icon color to match overlay background
-        // (enableEdgeToEdge may override our applyStatusBarColor settings)
-        LaunchedEffect(statusBarBackgroundColor, statusBarBackgroundType) {
-            val activity = context as? android.app.Activity ?: return@LaunchedEffect
-            val controller = androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-            val isLightBackground = if (statusBarBackgroundColor != null) {
+        // Force status bar icon color to match overlay background on every recomposition
+        // SideEffect (not LaunchedEffect) because enableEdgeToEdge and Material3 DayNight
+        // continuously override isAppearanceLightStatusBars on window focus changes
+        val isLightOverlayBackground = remember(statusBarBackgroundColor) {
+            if (statusBarBackgroundColor != null) {
                 try {
                     val color = android.graphics.Color.parseColor(
                         if (statusBarBackgroundColor!!.startsWith("#")) statusBarBackgroundColor else "#$statusBarBackgroundColor"
@@ -464,7 +463,11 @@ fun ShellScreen(
                     com.webtoapp.ui.shared.WindowHelper.isColorLight(color)
                 } catch (e: Exception) { false }
             } else false
-            controller.isAppearanceLightStatusBars = isLightBackground
+        }
+        SideEffect {
+            val activity = context as? android.app.Activity ?: return@SideEffect
+            val controller = androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+            controller.isAppearanceLightStatusBars = isLightOverlayBackground
         }
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
