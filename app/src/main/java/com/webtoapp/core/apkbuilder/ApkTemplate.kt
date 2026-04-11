@@ -157,6 +157,12 @@ class ApkTemplate(private val context: Context) {
                 "statusBarBackgroundImage": ${if (config.statusBarBackgroundType == "IMAGE" && !config.statusBarBackgroundImage.isNullOrEmpty()) "\"statusbar_background.png\"" else "null"},
                 "statusBarBackgroundAlpha": ${config.statusBarBackgroundAlpha},
                 "statusBarHeightDp": ${config.statusBarHeightDp},
+                "statusBarColorModeDark": "${config.statusBarColorModeDark}",
+                "statusBarColorDark": ${config.statusBarColorDark?.let { "\"${escapeJson(it)}\"" } ?: "null"},
+                "statusBarDarkIconsDark": ${config.statusBarDarkIconsDark ?: "null"},
+                "statusBarBackgroundTypeDark": "${config.statusBarBackgroundTypeDark}",
+                "statusBarBackgroundImageDark": ${if (config.statusBarBackgroundTypeDark == "IMAGE" && !config.statusBarBackgroundImageDark.isNullOrEmpty()) "\"statusbar_background_dark.png\"" else "null"},
+                "statusBarBackgroundAlphaDark": ${config.statusBarBackgroundAlphaDark},
                 "longPressMenuEnabled": ${config.longPressMenuEnabled},
                 "longPressMenuStyle": "${config.longPressMenuStyle}",
                 "adBlockToggleEnabled": ${config.adBlockToggleEnabled},
@@ -543,6 +549,13 @@ data class ApkConfig(
     val statusBarBackgroundImage: String? = null, // Cropped image path
     val statusBarBackgroundAlpha: Float = 1.0f, // Alpha 0.0-1.0
     val statusBarHeightDp: Int = 0, // Custom高度dp（0=系统默认）
+    // Status bar深色模式配置
+    val statusBarColorModeDark: String = "THEME",
+    val statusBarColorDark: String? = null,
+    val statusBarDarkIconsDark: Boolean? = null,
+    val statusBarBackgroundTypeDark: String = "COLOR",
+    val statusBarBackgroundImageDark: String? = null,
+    val statusBarBackgroundAlphaDark: Float = 1.0f,
     val longPressMenuEnabled: Boolean = true, // Yes否启用长按菜单
     val longPressMenuStyle: String = "FULL", // DISABLED, SIMPLE, FULL
     val adBlockToggleEnabled: Boolean = false, // Allow用户在运行时切换广告拦截开关

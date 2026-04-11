@@ -18654,7 +18654,19 @@ object Strings {
         AppLanguage.ENGLISH -> "Status Bar Style Config"
         AppLanguage.ARABIC -> "إعدادات نمط شريط الحالة"
     }
-    
+
+    val statusBarLightModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浅色模式"
+        AppLanguage.ENGLISH -> "Light Mode"
+        AppLanguage.ARABIC -> "الوضع الفاتح"
+    }
+
+    val statusBarDarkModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深色模式"
+        AppLanguage.ENGLISH -> "Dark Mode"
+        AppLanguage.ARABIC -> "الوضع الداكن"
+    }
+
     val splashHint: String get() = when (lang) {
         AppLanguage.CHINESE -> "设置应用启动时显示的图片或视频"
         AppLanguage.ENGLISH -> "Set image or video to display when app launches"

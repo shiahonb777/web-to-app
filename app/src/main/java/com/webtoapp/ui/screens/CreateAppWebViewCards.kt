@@ -1459,10 +1459,61 @@ fun StatusBarStyleCard(
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(12.dp))
-                    StatusBarConfigCard(
-                        config = webViewConfig,
-                        onConfigChange = onWebViewConfigChange
-                    )
+
+                    // Light / Dark mode tab selector
+                    var selectedTab by remember { mutableIntStateOf(0) }
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)),
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ) {
+                        Tab(
+                            selected = selectedTab == 0,
+                            onClick = { selectedTab = 0 },
+                            text = { Text(Strings.statusBarLightModeLabel) },
+                            icon = { Icon(Icons.Outlined.LightMode, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        )
+                        Tab(
+                            selected = selectedTab == 1,
+                            onClick = { selectedTab = 1 },
+                            text = { Text(Strings.statusBarDarkModeLabel) },
+                            icon = { Icon(Icons.Outlined.DarkMode, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (selectedTab == 0) {
+                        // Light mode - use standard fields directly
+                        StatusBarConfigCard(
+                            config = webViewConfig,
+                            onConfigChange = onWebViewConfigChange
+                        )
+                    } else {
+                        // Dark mode - map dark fields to standard fields for the component
+                        val darkMappedConfig = webViewConfig.copy(
+                            statusBarColorMode = webViewConfig.statusBarColorModeDark,
+                            statusBarColor = webViewConfig.statusBarColorDark,
+                            statusBarDarkIcons = webViewConfig.statusBarDarkIconsDark,
+                            statusBarBackgroundType = webViewConfig.statusBarBackgroundTypeDark,
+                            statusBarBackgroundImage = webViewConfig.statusBarBackgroundImageDark,
+                            statusBarBackgroundAlpha = webViewConfig.statusBarBackgroundAlphaDark,
+                        )
+                        StatusBarConfigCard(
+                            config = darkMappedConfig,
+                            onConfigChange = { changedConfig ->
+                                // Map changed standard fields back to dark fields
+                                onWebViewConfigChange(webViewConfig.copy(
+                                    statusBarColorModeDark = changedConfig.statusBarColorMode,
+                                    statusBarColorDark = changedConfig.statusBarColor,
+                                    statusBarDarkIconsDark = changedConfig.statusBarDarkIcons,
+                                    statusBarBackgroundTypeDark = changedConfig.statusBarBackgroundType,
+                                    statusBarBackgroundImageDark = changedConfig.statusBarBackgroundImage,
+                                    statusBarBackgroundAlphaDark = changedConfig.statusBarBackgroundAlpha,
+                                ))
+                            }
+                        )
+                    }
                 }
             }
         }

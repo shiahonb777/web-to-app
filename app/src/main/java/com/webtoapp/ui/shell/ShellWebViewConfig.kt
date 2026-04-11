@@ -54,6 +54,13 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         statusBarBackgroundImage = config.webViewConfig.statusBarBackgroundImage,
         statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha,
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp,
+        // 状态栏深色模式配置
+        statusBarColorModeDark = try { com.webtoapp.data.model.StatusBarColorMode.valueOf(config.webViewConfig.statusBarColorModeDark) } catch (e: Exception) { com.webtoapp.data.model.StatusBarColorMode.THEME },
+        statusBarColorDark = config.webViewConfig.statusBarColorDark,
+        statusBarDarkIconsDark = config.webViewConfig.statusBarDarkIconsDark,
+        statusBarBackgroundTypeDark = try { com.webtoapp.data.model.StatusBarBackgroundType.valueOf(config.webViewConfig.statusBarBackgroundTypeDark) } catch (e: Exception) { com.webtoapp.data.model.StatusBarBackgroundType.COLOR },
+        statusBarBackgroundImageDark = config.webViewConfig.statusBarBackgroundImageDark,
+        statusBarBackgroundAlphaDark = config.webViewConfig.statusBarBackgroundAlphaDark,
         // 长按菜单配置
         longPressMenuEnabled = config.webViewConfig.longPressMenuEnabled,
         longPressMenuStyle = try { com.webtoapp.data.model.LongPressMenuStyle.valueOf(config.webViewConfig.longPressMenuStyle) } catch (e: Exception) { com.webtoapp.data.model.LongPressMenuStyle.FULL },

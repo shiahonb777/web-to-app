@@ -357,6 +357,13 @@ data class WebViewConfig(
     val statusBarBackgroundImage: String? = null, // Cropped image path
     val statusBarBackgroundAlpha: Float = 1.0f, // Alpha 0.0-1.0
     val statusBarHeightDp: Int = 0, // Custom高度dp（0=系统默认）
+    // Status bar深色模式配置
+    val statusBarColorModeDark: StatusBarColorMode = StatusBarColorMode.THEME,
+    val statusBarColorDark: String? = null,
+    val statusBarDarkIconsDark: Boolean? = null,
+    val statusBarBackgroundTypeDark: StatusBarBackgroundType = StatusBarBackgroundType.COLOR,
+    val statusBarBackgroundImageDark: String? = null,
+    val statusBarBackgroundAlphaDark: Float = 1.0f,
     val longPressMenuEnabled: Boolean = true, // Yes否启用长按菜单
     val longPressMenuStyle: LongPressMenuStyle = LongPressMenuStyle.FULL, // Long press menu style
     val adBlockToggleEnabled: Boolean = false, // Allow用户在运行时切换广告拦截开关

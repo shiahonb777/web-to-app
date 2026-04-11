@@ -882,7 +882,26 @@ data class WebViewShellConfig(
     
     @SerializedName("statusBarHeightDp")
     val statusBarHeightDp: Int = 0, // Custom高度dp（0=系统默认）
-    
+
+    // Status bar深色模式配置
+    @SerializedName("statusBarColorModeDark")
+    val statusBarColorModeDark: String = "THEME",
+
+    @SerializedName("statusBarColorDark")
+    val statusBarColorDark: String? = null,
+
+    @SerializedName("statusBarDarkIconsDark")
+    val statusBarDarkIconsDark: Boolean? = null,
+
+    @SerializedName("statusBarBackgroundTypeDark")
+    val statusBarBackgroundTypeDark: String = "COLOR",
+
+    @SerializedName("statusBarBackgroundImageDark")
+    val statusBarBackgroundImageDark: String? = null,
+
+    @SerializedName("statusBarBackgroundAlphaDark")
+    val statusBarBackgroundAlphaDark: Float = 1.0f,
+
     @SerializedName("longPressMenuEnabled")
     val longPressMenuEnabled: Boolean = true, // Yes否启用长按菜单
     

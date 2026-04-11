@@ -141,6 +141,11 @@ class WebViewActivity : AppCompatActivity() {
     private var statusBarCustomColor: String? = null
     private var statusBarDarkIcons: Boolean? = null
     private var statusBarBackgroundType: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
+    // Status bar深色模式配置缓存
+    private var statusBarColorModeDark: com.webtoapp.data.model.StatusBarColorMode = com.webtoapp.data.model.StatusBarColorMode.THEME
+    private var statusBarCustomColorDark: String? = null
+    private var statusBarDarkIconsDark: Boolean? = null
+    private var statusBarBackgroundTypeDark: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
     internal var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
 
     private fun applyStatusBarColor(
@@ -430,10 +435,13 @@ class WebViewActivity : AppCompatActivity() {
 
         setContent {
             WebToAppTheme { isDarkTheme ->
-                // 当主题变化时更新状态栏颜色
-                LaunchedEffect(isDarkTheme, statusBarColorMode) {
+                // 当主题变化时更新状态栏颜色（根据深色/浅色模式选择对应配置）
+                LaunchedEffect(isDarkTheme, statusBarColorMode, statusBarColorModeDark) {
                     if (!immersiveFullscreenEnabled) {
-                        applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                        val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
+                        val effectiveCustomColor = if (isDarkTheme) statusBarCustomColorDark else statusBarCustomColor
+                        val effectiveDarkIcons = if (isDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
+                        applyStatusBarColor(effectiveColorMode, effectiveCustomColor, effectiveDarkIcons, isDarkTheme)
                     }
                 }
                 
@@ -443,13 +451,18 @@ class WebViewActivity : AppCompatActivity() {
                     previewApp = previewApp,
                     testUrl = testUrl,
                     testModuleIds = testModuleIds,
-                    onStatusBarConfigChanged = { colorMode, customColor, darkIcons, showStatusBar, backgroundType ->
+                    onStatusBarConfigChanged = { colorMode, customColor, darkIcons, showStatusBar, backgroundType, colorModeDark, customColorDark, darkIconsDark, backgroundTypeDark ->
                         // Update state栏配置
                         statusBarColorMode = colorMode
                         statusBarCustomColor = customColor
                         statusBarDarkIcons = darkIcons
                         showStatusBarInFullscreen = showStatusBar
                         statusBarBackgroundType = backgroundType
+                        // Update深色模式状态栏配置
+                        statusBarColorModeDark = colorModeDark
+                        statusBarCustomColorDark = customColorDark
+                        statusBarDarkIconsDark = darkIconsDark
+                        statusBarBackgroundTypeDark = backgroundTypeDark
                     },
                     onWebViewCreated = { wv -> 
                         webView = wv
@@ -643,7 +656,7 @@ fun WebViewScreen(
     previewApp: com.webtoapp.data.model.WebApp? = null,
     testUrl: String? = null,
     testModuleIds: List<String>? = null,
-    onStatusBarConfigChanged: ((com.webtoapp.data.model.StatusBarColorMode, String?, Boolean?, Boolean, com.webtoapp.data.model.StatusBarBackgroundType) -> Unit)? = null,
+    onStatusBarConfigChanged: ((com.webtoapp.data.model.StatusBarColorMode, String?, Boolean?, Boolean, com.webtoapp.data.model.StatusBarBackgroundType, com.webtoapp.data.model.StatusBarColorMode, String?, Boolean?, com.webtoapp.data.model.StatusBarBackgroundType) -> Unit)? = null,
     onWebViewCreated: (WebView) -> Unit,
     onFileChooser: (ValueCallback<Array<Uri>>?, WebChromeClient.FileChooserParams?) -> Boolean,
     onShowCustomView: (View, WebChromeClient.CustomViewCallback?) -> Unit,
@@ -721,6 +734,11 @@ fun WebViewScreen(
     var statusBarBackgroundImage by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundAlpha by remember { mutableFloatStateOf(1.0f) }
     var statusBarHeightDp by remember { mutableIntStateOf(0) }
+    // Status bar深色模式背景配置
+    var statusBarBackgroundTypeDarkLocal by remember { mutableStateOf("COLOR") }
+    var statusBarBackgroundColorDark by remember { mutableStateOf<String?>(null) }
+    var statusBarBackgroundImageDark by remember { mutableStateOf<String?>(null) }
+    var statusBarBackgroundAlphaDark by remember { mutableFloatStateOf(1.0f) }
     
     // WordPress 预览状态
     var wordPressPreviewState by remember { mutableStateOf<WordPressPreviewState>(WordPressPreviewState.Idle) }
@@ -760,7 +778,11 @@ fun WebViewScreen(
                 app.webViewConfig.statusBarColor,
                 app.webViewConfig.statusBarDarkIcons,
                 app.webViewConfig.showStatusBarInFullscreen,
-                app.webViewConfig.statusBarBackgroundType
+                app.webViewConfig.statusBarBackgroundType,
+                app.webViewConfig.statusBarColorModeDark,
+                app.webViewConfig.statusBarColorDark,
+                app.webViewConfig.statusBarDarkIconsDark,
+                app.webViewConfig.statusBarBackgroundTypeDark
             )
             // Update state栏背景配置
             statusBarBackgroundType = app.webViewConfig.statusBarBackgroundType.name
@@ -768,6 +790,11 @@ fun WebViewScreen(
             statusBarBackgroundImage = app.webViewConfig.statusBarBackgroundImage
             statusBarBackgroundAlpha = app.webViewConfig.statusBarBackgroundAlpha
             statusBarHeightDp = app.webViewConfig.statusBarHeightDp
+            // Update深色模式状态栏背景配置
+            statusBarBackgroundTypeDarkLocal = app.webViewConfig.statusBarBackgroundTypeDark.name
+            statusBarBackgroundColorDark = app.webViewConfig.statusBarColorDark
+            statusBarBackgroundImageDark = app.webViewConfig.statusBarBackgroundImageDark
+            statusBarBackgroundAlphaDark = app.webViewConfig.statusBarBackgroundAlphaDark
             // Update导航栏配置和键盘调整模式
             (context as? WebViewActivity)?.let { activity ->
                 activity.showNavigationBarInFullscreen = app.webViewConfig.showNavigationBarInFullscreen
@@ -2650,17 +2677,22 @@ fun WebViewScreen(
         }
     }
     
-    // Status bar背景覆盖层
+    // Status bar背景覆盖层（根据深色/浅色模式选择对应配置）
     // Show overlay when: fullscreen with status bar visible, OR non-fullscreen with custom status bar config
-    val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
+    val isDarkThemeForOverlay = com.webtoapp.ui.theme.LocalIsDarkTheme.current
+    val effectiveStatusBarBgType = if (isDarkThemeForOverlay) statusBarBackgroundTypeDarkLocal else statusBarBackgroundType
+    val effectiveStatusBarBgColor = if (isDarkThemeForOverlay) statusBarBackgroundColorDark else statusBarBackgroundColor
+    val effectiveStatusBarBgImage = if (isDarkThemeForOverlay) statusBarBackgroundImageDark else statusBarBackgroundImage
+    val effectiveStatusBarBgAlpha = if (isDarkThemeForOverlay) statusBarBackgroundAlphaDark else statusBarBackgroundAlpha
+    val hasCustomStatusBar = effectiveStatusBarBgType != "COLOR" || effectiveStatusBarBgColor != null || statusBarHeightDp > 0
     val showStatusBarOverlay = (hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true) || (!hideToolbar && hasCustomStatusBar)
     if (showStatusBarOverlay) {
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
-            backgroundType = statusBarBackgroundType,
-            backgroundColor = statusBarBackgroundColor,
-            backgroundImagePath = statusBarBackgroundImage,
-            alpha = statusBarBackgroundAlpha,
+            backgroundType = effectiveStatusBarBgType,
+            backgroundColor = effectiveStatusBarBgColor,
+            backgroundImagePath = effectiveStatusBarBgImage,
+            alpha = effectiveStatusBarBgAlpha,
             heightDp = statusBarHeightDp,
             modifier = Modifier.align(Alignment.TopStart)
         )
