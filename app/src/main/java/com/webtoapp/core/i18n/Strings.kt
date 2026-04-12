@@ -10405,7 +10405,19 @@ object Strings {
         AppLanguage.ENGLISH -> "Allow video fullscreen playback"
         AppLanguage.ARABIC -> "السماح بتشغيل الفيديو بملء الشاشة"
     }
-    
+
+    val hideBrowserToolbarLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏浏览器工具栏"
+        AppLanguage.ENGLISH -> "Hide Browser Toolbar"
+        AppLanguage.ARABIC -> "إخفاء شريط أدوات المتصفح"
+    }
+
+    val hideBrowserToolbarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏顶部浏览器导航栏（独立于全屏模式）"
+        AppLanguage.ENGLISH -> "Hide the top browser navigation bar (independent of fullscreen mode)"
+        AppLanguage.ARABIC -> "إخفاء شريط التنقل العلوي للمتصفح (مستقل عن وضع ملء الشاشة)"
+    }
+
     val externalLinksSetting: String get() = when (lang) {
         AppLanguage.CHINESE -> "外部链接"
         AppLanguage.ENGLISH -> "External Links"
@@ -18642,7 +18654,19 @@ object Strings {
         AppLanguage.ENGLISH -> "Status Bar Style Config"
         AppLanguage.ARABIC -> "إعدادات نمط شريط الحالة"
     }
-    
+
+    val statusBarLightModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浅色模式"
+        AppLanguage.ENGLISH -> "Light Mode"
+        AppLanguage.ARABIC -> "الوضع الفاتح"
+    }
+
+    val statusBarDarkModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深色模式"
+        AppLanguage.ENGLISH -> "Dark Mode"
+        AppLanguage.ARABIC -> "الوضع الداكن"
+    }
+
     val splashHint: String get() = when (lang) {
         AppLanguage.CHINESE -> "设置应用启动时显示的图片或视频"
         AppLanguage.ENGLISH -> "Set image or video to display when app launches"

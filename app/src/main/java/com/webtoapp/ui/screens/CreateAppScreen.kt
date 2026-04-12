@@ -260,7 +260,6 @@ fun CreateAppScreen(
                 showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
                 showNavigationBar = editState.webViewConfig.showNavigationBarInFullscreen,
                 showToolbar = editState.webViewConfig.showToolbarInFullscreen,
-                webViewConfig = editState.webViewConfig,
                 onEnabledChange = {
                     viewModel.updateEditState {
                         copy(webViewConfig = webViewConfig.copy(hideToolbar = it))
@@ -281,6 +280,11 @@ fun CreateAppScreen(
                         copy(webViewConfig = webViewConfig.copy(showToolbarInFullscreen = it))
                     }
                 },
+            )
+
+            // Status Bar Style Config (standalone, works without fullscreen)
+            StatusBarStyleCard(
+                webViewConfig = editState.webViewConfig,
                 onWebViewConfigChange = { newConfig ->
                     viewModel.updateEditState {
                         copy(webViewConfig = newConfig)

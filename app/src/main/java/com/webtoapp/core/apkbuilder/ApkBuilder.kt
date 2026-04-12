@@ -2731,6 +2731,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         // Use user-configured hideToolbar setting, no longer force HTML/media apps to hide toolbar
         // User can choose whether to enable fullscreen mode when creating app
         hideToolbar = webViewConfig.hideToolbar,
+        hideBrowserToolbar = webViewConfig.hideBrowserToolbar,
         showStatusBarInFullscreen = webViewConfig.showStatusBarInFullscreen,
         showNavigationBarInFullscreen = webViewConfig.showNavigationBarInFullscreen,
         showToolbarInFullscreen = webViewConfig.showToolbarInFullscreen,
@@ -2772,6 +2773,13 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         statusBarBackgroundImage = webViewConfig.statusBarBackgroundImage,
         statusBarBackgroundAlpha = webViewConfig.statusBarBackgroundAlpha,
         statusBarHeightDp = webViewConfig.statusBarHeightDp,
+        // Status bar dark mode config
+        statusBarColorModeDark = webViewConfig.statusBarColorModeDark.name,
+        statusBarColorDark = webViewConfig.statusBarColorDark,
+        statusBarDarkIconsDark = webViewConfig.statusBarDarkIconsDark,
+        statusBarBackgroundTypeDark = webViewConfig.statusBarBackgroundTypeDark.name,
+        statusBarBackgroundImageDark = webViewConfig.statusBarBackgroundImageDark,
+        statusBarBackgroundAlphaDark = webViewConfig.statusBarBackgroundAlphaDark,
         longPressMenuEnabled = webViewConfig.longPressMenuEnabled,
         longPressMenuStyle = webViewConfig.longPressMenuStyle.name,
         adBlockToggleEnabled = webViewConfig.adBlockToggleEnabled,

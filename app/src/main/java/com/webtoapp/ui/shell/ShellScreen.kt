@@ -226,8 +226,8 @@ fun ShellScreen(
                 activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
             "AUTO" -> {
-                // ★ 自动旋转：跟随重力感应，平板设备友好
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                // Auto rotation: respects the system auto-rotate setting
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
             }
             else -> {
                 if (TvUtils.isTv(context)) {
@@ -313,6 +313,7 @@ fun ShellScreen(
 
     // Yes否隐藏工具栏（全屏模式）
     val hideToolbar = config.webViewConfig.hideToolbar
+    val hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar
     // 下拉刷新开关
     val swipeRefreshEnabled = config.webViewConfig.swipeRefreshEnabled
 
@@ -339,6 +340,7 @@ fun ShellScreen(
         config = config,
         appType = appType,
         hideToolbar = hideToolbar,
+        hideBrowserToolbar = hideBrowserToolbar,
         isLoading = isLoading,
         loadProgress = loadProgress,
         pageTitle = pageTitle,
@@ -444,9 +446,48 @@ fun ShellScreen(
         )
     }
     
-    // Status bar背景覆盖层（在全屏模式下显示状态栏时）
-    // 放在 Box 内部最上层，覆盖在所有内容之上，使用 align 固定在顶部
-    if (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) {
+    // Status bar背景覆盖层
+    // Show overlay when: fullscreen with status bar visible, OR non-fullscreen with custom status bar config
+    val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
+    val showStatusBarOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) || (!hideToolbar && hasCustomStatusBar)
+    if (showStatusBarOverlay) {
+        // Force status bar icon color to match overlay background
+        val isLightOverlayBackground = remember(statusBarBackgroundColor) {
+            if (statusBarBackgroundColor != null) {
+                try {
+                    val color = android.graphics.Color.parseColor(
+                        if (statusBarBackgroundColor!!.startsWith("#")) statusBarBackgroundColor else "#$statusBarBackgroundColor"
+                    )
+                    com.webtoapp.ui.shared.WindowHelper.isColorLight(color)
+                } catch (e: Exception) { false }
+            } else false
+        }
+        // Use native WindowInsetsController API (bypasses compat layer issues)
+        SideEffect {
+            val activity = context as? android.app.Activity ?: return@SideEffect
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                val controller = activity.window.insetsController
+                if (isLightOverlayBackground) {
+                    controller?.setSystemBarsAppearance(
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    )
+                } else {
+                    controller?.setSystemBarsAppearance(
+                        0,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    )
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                val flags = activity.window.decorView.systemUiVisibility
+                activity.window.decorView.systemUiVisibility = if (isLightOverlayBackground) {
+                    flags or android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                } else {
+                    flags and android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                }
+            }
+        }
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
             backgroundType = statusBarBackgroundType,
