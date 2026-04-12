@@ -32,38 +32,9 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         private const val HTTP_CACHE_SIZE = 10L * 1024 * 1024 // 10 MB
     }
 
-    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
-
-    // HTTP 磁盘缓存 — 减少重复网络请求（遵循 Cache-Control）
-    private val httpCache: okhttp3.Cache? = context?.let {
-        try { okhttp3.Cache(java.io.File(it.cacheDir, "http_cache"), HTTP_CACHE_SIZE) }
-        catch (_: Exception) { null }
-    }
-
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
-        .apply { httpCache?.let { cache(it) } }
-        .addInterceptor { chain ->
-            // 自动重试拦截器：仅对 GET/HEAD 幂等请求重试，最多 2 次
-            val request = chain.request()
-            val isIdempotent = request.method in listOf("GET", "HEAD")
-            var lastException: java.io.IOException? = null
-            val maxRetries = if (isIdempotent) 2 else 0
-            for (attempt in 0..maxRetries) {
-                try {
-                    return@addInterceptor chain.proceed(request)
-                } catch (e: java.io.IOException) {
-                    lastException = e
-                    if (attempt < maxRetries) {
-                        try { Thread.sleep(500L * (attempt + 1)) } catch (_: InterruptedException) {}
-                    }
-                }
-            }
-            throw lastException!!
-        }
-        .build()
+    private val apiSupport = CloudApiSupport(tokenManager, context)
+    private val jsonMediaType = apiSupport.jsonMediaType
+    private val client = apiSupport.client
 
     // ═══════════════════════════════════════════
     // 1. ACTIVATION CODE
@@ -1845,54 +1816,9 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
     // PARSE HELPERS
     // ═══════════════════════════════════════════
 
-    /** Token 刷新互斥锁 — 防止多个请求同时 401 时并行刷新导致 refresh_token 被消费多次 */
-    private val refreshMutex = Mutex()
-
     /** 带鉴权的请求模板（自动 Token 刷新，Mutex 防止竞态） */
     private suspend fun <T> authRequest(block: suspend (token: String) -> AuthResult<T>): AuthResult<T> =
-        withContext(Dispatchers.IO) {
-            try {
-                val token = tokenManager.getAccessToken()
-                    ?: return@withContext AuthResult.Error("未登录，请先登录")
-                val result = block(token)
-                // 如果 401，尝试刷新 (检查实际 HTTP 状态码而非消息文本)
-                if (result is AuthResult.Error && result.message.contains("HTTP 401")) {
-                    // 用 Mutex 保护刷新流程：同一时间只有一个协程执行刷新
-                    refreshMutex.withLock {
-                        // 双重检查：其他协程可能已经刷新成功了
-                        val currentToken = tokenManager.getAccessToken()
-                        if (currentToken != null && currentToken != token) {
-                            // Token 已被其他协程刷新，直接用新 token 重试
-                            return@withContext block(currentToken)
-                        }
-                        val refresh = tokenManager.getRefreshToken()
-                            ?: return@withContext AuthResult.Error("登录已过期，请重新登录")
-                        val refreshBody = JsonObject().apply { addProperty("refresh_token", refresh) }
-                        val refreshReq = Request.Builder()
-                            .url("$BASE_URL/api/v1/auth/refresh")
-                            .post(refreshBody.toString().toRequestBody(jsonMediaType))
-                            .build()
-                        val refreshResp = client.newCall(refreshReq).execute()
-                        if (refreshResp.isSuccessful) {
-                            val rJson = JsonParser.parseString(refreshResp.body?.string() ?: "").asJsonObject
-                            val rData = rJson.getAsJsonObject("data")
-                            val newToken = rData.get("access_token").asString
-                            tokenManager.saveTokens(
-                                newToken,
-                                rData.get("refresh_token").asString
-                            )
-                            block(newToken)
-                        } else {
-                            tokenManager.clearTokens()
-                            AuthResult.Error("登录已过期，请重新登录")
-                        }
-                    }
-                } else result
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "API request failed", e)
-                AuthResult.Error("网络连接失败: ${e.message}")
-            }
-        }
+        apiSupport.authRequest(block)
 
     private fun parseProject(obj: JsonObject): CloudProject = CloudProject(
         id = obj.get("id")?.asInt ?: 0,
@@ -2495,12 +2421,8 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    private fun parseError(body: String, statusCode: Int = 0): String = try {
-        val json = JsonParser.parseString(body).asJsonObject
-        val msg = json.get("detail")?.asString ?: json.get("message")?.asString ?: "操作失败"
-        // Keep HTTP prefix for 401 so authRequest refresh-token logic can detect it
-        if (statusCode == 401) "HTTP 401: $msg" else msg
-    } catch (_: Exception) { if (statusCode > 0) "HTTP $statusCode" else "操作失败" }
+    private fun parseError(body: String, statusCode: Int = 0): String =
+        apiSupport.parseError(body, statusCode)
 
     // ═══════════════════════════════════════════
     // 10. APP STORE
@@ -4235,6 +4157,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
 // Data Classes
 // ═══════════════════════════════════════════
 
+/*
 data class RedeemResult(val message: String, val planType: String, val daysAdded: Int)
 
 data class RedeemPreview(
@@ -4911,3 +4834,4 @@ data class RegionInfo(
     val count: Int,
     val percentage: Float
 )
+*/

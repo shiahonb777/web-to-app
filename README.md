@@ -410,282 +410,81 @@ Shows app info, changelog, and dual download buttons (GitHub international + Git
 
 ```
 app/src/main/java/com/webtoapp/
-├── WebToAppApplication.kt      # Application class
-├── core/                       # Core modules
-│   ├── activation/            # Activation code management
-│   ├── adblock/              # Ad blocking engine
-│   ├── ads/                  # Ad SDK integration
-│   ├── ai/                   # AI features
-│   │   ├── AiApiClient.kt   # Multi-provider AI API client
-│   │   ├── AiConfigManager.kt # API key/model config management
-│   │   ├── AiGenerationService.kt # AI image generation service
-│   │   └── htmlcoding/      # AI HTML coding Agent
-│   ├── announcement/         # Announcement management
-│   ├── apkbuilder/          # APK builder
-│   │   ├── ApkBuilder.kt    # Build core (streaming, encryption)
-│   │   ├── JarSigner.kt     # APK signing (apksig v1/v2/v3)
-│   │   ├── ApkTemplate.kt   # Config/template management
-│   │   ├── ArscEditor.kt    # ARSC resource editor
-│   │   ├── ArscRebuilder.kt # ARSC rebuilder
-│   │   ├── AxmlEditor.kt    # Binary XML editor
-│   │   ├── AxmlRebuilder.kt # XML rebuilder
-│   │   └── BuildLogger.kt   # Build logger
-│   ├── appmodifier/         # App modifier core
-│   ├── autostart/           # Boot auto-start/scheduled start
-│   ├── background/          # Background running service
-│   ├── backup/              # Data backup
-│   ├── bgm/                 # Background music
-│   │   ├── BgmPlayer.kt     # Player (lyrics sync)
-│   │   ├── OnlineMusicApi.kt # Online music search API
-│   │   └── OnlineMusicDownloader.kt # Music downloader
-│   ├── blacktech/           # Black tech features
-│   ├── crypto/              # Encryption system (14 files)
-│   │   ├── AssetEncryptor.kt # AES-256-GCM encryption
-│   │   ├── AssetDecryptor.kt # Runtime decryption
-│   │   ├── NativeCrypto.kt  # Native encryption
-│   │   └── RuntimeProtection.kt # Runtime protection
-│   ├── disguise/            # Browser spoofing (UA/fingerprint)
-│   ├── download/            # Dependency download engine
-│   ├── engine/              # Browser engine management
-│   │   ├── BrowserEngine.kt  # Browser engine interface
-│   │   ├── BrowserEngineCallback.kt # Engine callback
-│   │   ├── EngineManager.kt  # Engine manager
-│   │   ├── EngineType.kt     # Engine type enum
-│   │   ├── SystemWebViewEngine.kt # WebView engine
-│   │   ├── GeckoViewEngine.kt # GeckoView (Firefox) engine
-│   │   ├── download/         # Engine download
-│   │   │   ├── EngineFileManager.kt # Engine file management
-│   │   │   └── GeckoEngineDownloader.kt # GeckoView downloader
-│   │   └── shields/         # Browser shields
-│   │       ├── BrowserShields.kt # Shields controller
-│   │       ├── ShieldsConfig.kt # Shields config
-│   │       ├── ShieldsStats.kt # Shields statistics
-│   │       ├── TrackerBlocker.kt # Tracker blocking
-│   │       ├── HttpsUpgrader.kt  # HTTPS upgrader
-│   │       ├── GpcInjector.kt # GPC signal injection
-│   │       ├── CookieConsentBlocker.kt # Cookie consent blocker
-│   │       └── ReaderMode.kt # Reader mode
-│   ├── errorpage/           # Error pages
-│   ├── export/              # Project export
-│   ├── extension/           # Extension module system
-│   │   ├── ExtensionModule.kt # Module data model (23 categories/permissions/config)
-│   │   ├── ExtensionManager.kt # Module lifecycle management
-│   │   ├── BuiltInModules.kt # 10 built-in modules
-│   │   ├── BuiltInChromeExtensions.kt # Built-in Chrome extensions
-│   │   ├── ModuleTemplates.kt # 28 code templates
-│   │   ├── ModulePreset.kt   # Module presets
-│   │   ├── CodeSnippets.kt  # 21-category 200+ code snippets
-│   │   ├── ExtensionFileManager.kt # Extension file management
-│   │   ├── ExtensionPanelScript.kt # Extension panel script
-│   │   ├── ExtensionPanelBridge.kt # Panel bridge
-│   │   ├── ExtensionPopupManager.kt # Popup manager
-│   │   ├── ExtensionResourceInterceptor.kt # Resource interceptor
-│   │   ├── ExtensionStorageSync.kt # Storage sync
-│   │   ├── ChromeExtensionParser.kt # Chrome extension parser
-│   │   ├── ChromeExtensionPolyfill.kt # Chrome API polyfill
-│   │   ├── ChromeExtensionRuntime.kt # Chrome extension runtime
-│   │   ├── ChromeExtensionMobileCompat.kt # Desktop→mobile adaptation
-│   │   ├── DeclarativeNetRequestEngine.kt # Declarative net request engine
-│   │   ├── WebRequestBridge.kt # Web request bridge
-│   │   ├── GreasemonkeyBridge.kt # Greasemonkey script compat
-│   │   ├── UserScriptParser.kt # Userscript parser
-│   │   ├── UserScriptWindowScript.kt # Userscript window
-│   │   ├── AiModuleDeveloper.kt # AI module developer
-│   │   ├── QrCodeUtils.kt   # QR code utilities
-│   │   ├── DebugTestPages.kt # Debug test pages
-│   │   └── agent/           # AI Agent module development
-│   │       ├── ModuleAgentEngine.kt # Agent engine
-│   │       ├── EnhancedAgentEngine.kt # Enhanced agent
-│   │       ├── AgentContext.kt # Agent context
-│   │       ├── AgentTool.kt  # Agent tool definitions
-│   │       ├── AgentToolExecutor.kt # Tool executor
-│   │       └── AgentWorkingMemory.kt # Agent working memory
-│   ├── forcedrun/           # Forced run mode
-│   │   ├── ForcedRunManager.kt # Forced run manager
-│   │   ├── ForcedRunConfig.kt # Forced run config
-│   │   ├── ForcedRunHardwareController.kt # Hardware controller
-│   │   ├── ForcedRunAccessibilityService.kt # Accessibility service
-│   │   ├── ForcedRunGuardService.kt # Guard service
-│   │   └── ForcedRunPermissionHelper.kt # Permission helper
-│   ├── frontend/            # Frontend project handling
-│   │   ├── ProjectDetector.kt # React/Vue/Next.js detection
-│   │   ├── FrontendProjectBuilder.kt # Frontend project builder
-│   │   ├── FrontendProjectConfig.kt # Frontend project config
-│   │   └── SampleProjectManager.kt # Sample project management
-│   ├── golang/              # Go app runtime
-│   ├── hardening/           # APK hardening protection
-│   │   ├── AppHardeningEngine.kt # Hardening engine
-│   │   ├── AntiReverseEngine.kt  # Anti-reverse engineering
-│   │   ├── DexProtector.kt  # Dex protection
-│   │   ├── CodeObfuscator.kt # Code obfuscation
-│   │   ├── NativeProtector.kt # Native layer protection
-│   │   ├── EnvironmentDetector.kt # Environment detection
-│   │   └── RuntimeShield.kt # Runtime shield
-│   ├── i18n/                # Multi-language support (CN/EN/AR)
-│   ├── isolation/           # Isolated browser environment
-│   │   ├── IsolationManager.kt # Isolation manager
-│   │   ├── IsolationConfig.kt # Isolation config
-│   │   ├── IsolationScriptInjector.kt # Script injection
-│   │   └── FingerprintGenerator.kt # Fingerprint generator
-│   ├── linux/               # Linux environment one-click build
-│   ├── nodejs/              # Node.js app runtime
-│   ├── php/                 # PHP app runtime
-│   ├── port/                # Port management
-│   ├── python/              # Python app runtime
-│   ├── shell/               # Shell mode management
-│   ├── logging/             # Logging system
-│   │   └── AppLogger.kt     # Application logger
-│   ├── sample/              # Sample projects
-│   │   └── SampleProjectExtractor.kt # Sample project extractor
-│   ├── webview/             # WebView management
-│   │   ├── WebViewManager.kt # WebView core manager
-│   │   ├── LocalHttpServer.kt # Local HTTP server
-│   │   ├── LongPressHandler.kt # Long press menu handler
-│   │   ├── TranslateBridge.kt # Translation bridge
-│   │   ├── NativeBridge.kt  # Native capability bridge (28 APIs)
-│   │   └── DownloadBridge.kt # Download bridge
-│   └── wordpress/           # WordPress app runtime
-├── ui/                        # UI layer
-│   ├── MainActivity.kt      # Main Activity
-│   ├── gallery/             # Gallery player
-│   │   ├── GalleryPlayerActivity.kt # Gallery Activity
-│   │   └── GalleryPlayerScreen.kt # Gallery player screen
-│   ├── htmlpreview/         # HTML preview
-│   │   └── HtmlPreviewActivity.kt # HTML preview Activity
-│   ├── media/               # Media playback
-│   │   └── MediaAppActivity.kt # Media app Activity
-│   ├── navigation/          # Navigation
-│   │   └── AppNavigation.kt # App navigation graph
-│   ├── shell/               # Shell mode
-│   │   └── ShellActivity.kt # Shell Activity (standalone APK entry)
-│   ├── splash/              # Splash screen
-│   │   └── SplashLauncherActivity.kt # Splash screen Activity
-│   ├── viewmodel/           # ViewModel
-│   │   └── MainViewModel.kt # Main ViewModel
-│   ├── webview/             # WebView container
-│   │   └── WebViewActivity.kt # WebView Activity
-│   ├── screens/             # Screens
-│   │   ├── HomeScreen.kt    # Home (app list)
-│   │   ├── CreateAppScreen.kt # Create website app
-│   │   ├── CreateMediaAppScreen.kt # Create media app
-│   │   ├── CreateHtmlAppScreen.kt # Create HTML app
-│   │   ├── CreateFrontendAppScreen.kt # Create frontend framework app
-│   │   ├── CreateGalleryAppScreen.kt # Create gallery app
-│   │   ├── CreateNodeJsAppScreen.kt # Create Node.js app
-│   │   ├── CreatePhpAppScreen.kt # Create PHP app
-│   │   ├── CreatePythonAppScreen.kt # Create Python app
-│   │   ├── CreateGoAppScreen.kt # Create Go app
-│   │   ├── CreateWordPressAppScreen.kt # Create WordPress app
-│   │   ├── ExtensionModuleScreen.kt # Extension modules
-│   │   ├── ModuleEditorScreen.kt # Module editor
-│   │   ├── AiCodingScreen.kt # AI coding assistant
-│   │   ├── HtmlCodingScreen.kt # AI HTML coding
-│   │   ├── AiSettingsScreen.kt # AI settings
-│   │   ├── BrowserKernelScreen.kt # Browser engine management
-│   │   ├── HostsAdBlockScreen.kt # Hosts ad blocking
-│   │   ├── ThemeSettingsScreen.kt # Theme settings
-│   │   ├── LinuxEnvironmentScreen.kt # Linux environment
-│   │   ├── RuntimeDepsScreen.kt # Runtime dependency management
-│   │   ├── PortManagerScreen.kt # Port management
-│   │   ├── AppModifierScreen.kt # App modifier
-│   │   ├── WordPressSettingsScreen.kt # WordPress settings
-│   │   ├── AboutScreen.kt   # About/changelog
-│   │   └── aimodule/        # AI module dev (refactored)
-│   │       ├── AiModuleDeveloperScreen.kt
-│   │       ├── AiModuleDeveloperUiState.kt
-│   │       └── AiModuleDeveloperViewModel.kt
-│   ├── components/          # Reusable components (38 files)
-│   │   ├── announcement/    # Announcement templates
-│   │   │   ├── AnnouncementTemplates.kt # 10 announcement templates
-│   │   │   └── AnnouncementTemplateSelector.kt # Template selector
-│   │   ├── aimodule/        # AI module dev components
-│   │   │   ├── CodePreviewPanel.kt # Code preview
-│   │   │   ├── ErrorCard.kt # Error card
-│   │   │   ├── ModelSelector.kt # Model selector
-│   │   │   ├── StreamingMessageBubble.kt # Streaming message
-│   │   │   ├── ThinkingBlock.kt # Thinking block
-│   │   │   └── ToolCallCard.kt # Tool call card
-│   │   ├── htmlcoding/      # HTML coding components
-│   │   │   └── HtmlCodingComponents.kt
-│   │   ├── IconGeneratorDialog.kt # AI icon generator
-│   │   ├── IconPickerWithLibrary.kt # Icon picker
-│   │   ├── IconLibraryDialog.kt # Icon library
-│   │   ├── BgmCard.kt       # BGM config card
-│   │   ├── BgmSelector.kt   # BGM selector/online search
-│   │   ├── VideoTrimmer.kt  # Video trimmer
-│   │   ├── EncryptionConfigCard.kt # Encryption config
-│   │   ├── HardeningConfigCard.kt # APK hardening config
-│   │   ├── IsolationConfigCard.kt # Isolation config
-│   │   ├── DisguiseConfigCard.kt # Browser spoofing config
-│   │   ├── BackgroundRunConfigCard.kt # Background run config
-│   │   ├── ForcedRunConfigCard.kt # Forced run config
-│   │   ├── ForcedRunCountdownOverlay.kt # Forced run countdown
-│   │   ├── BlackTechConfigCard.kt # Black tech config
-│   │   ├── AutoStartCard.kt # Auto start config
-│   │   ├── ActivationCodeCard.kt # Activation code config
-│   │   ├── EnhancedActivationDialog.kt # Enhanced activation dialog
-│   │   ├── DataBackupCard.kt # Data backup card
-│   │   ├── StatusBarConfigCard.kt # Status bar config
-│   │   ├── StatusBarBackground.kt # Status bar background
-│   │   ├── StatusBarImageCropper.kt # Status bar image cropper
-│   │   ├── ExtensionModuleCard.kt # Extension module card
-│   │   ├── ExtensionModuleSelector.kt # Module selector
-│   │   ├── CodeSnippetSelector.kt # Code snippet selector
-│   │   ├── SampleProjectCard.kt # Sample project card
-│   │   ├── TypedSampleProjectCard.kt # Typed sample card
-│   │   ├── LongPressMenu.kt # Long press menu component
-│   │   ├── QrCodeShareDialog.kt # QR code sharing
-│   │   ├── AppNameTextField.kt # App name input
-│   │   ├── CategoryComponents.kt # Category components
-│   │   ├── ColorPickerDialog.kt # Color picker
-│   │   ├── CommonUIComponents.kt # Common UI components
-│   │   ├── EnhancedElevatedCard.kt # Enhanced card
-│   │   ├── ThemedComponents.kt # Themed components
-│   │   ├── LanguageSelector.kt # Language selector
-│   │   ├── LrcEditorDialog.kt # LRC lyrics editor
-│   │   └── ManualLrcAligner.kt # Manual lyrics aligner
-│   ├── data/                # Data layer
-│   │   ├── model/           # Data models
-│   │   │   ├── WebApp.kt    # App entity (11 AppTypes)
-│   │   │   ├── AppCategory.kt # App category
-│   │   │   └── AiConfig.kt  # AI config
-│   │   ├── dao/             # DAO
-│   │   │   ├── WebAppDao.kt # App DAO
-│   │   │   └── AppCategoryDao.kt # Category DAO
-│   │   ├── database/        # Database
-│   │   │   └── AppDatabase.kt # Room database
-│   │   ├── repository/      # Repository
-│   │   │   ├── WebAppRepository.kt # App repository
-│   │   │   └── AppCategoryRepository.kt # Category repository
-│   │   └── converter/       # Type converters
-│   │       └── Converters.kt # Room TypeConverter
-│   └── theme/               # Theme system
-│       ├── Theme.kt         # Theme definition
-│       ├── AppThemes.kt     # App theme collection
-│       ├── ThemeAnimations.kt # Theme animations
-│       └── ThemeManager.kt  # Theme manager
-└── util/                      # Utilities (21 files)
-    ├── Extensions.kt        # Kotlin extensions
-    ├── HtmlProjectProcessor.kt # HTML project processing
-    ├── ZipProjectImporter.kt # ZIP project import
-    ├── MediaSaver.kt        # Media saving
-    ├── MediaStorage.kt      # Media storage
-    ├── FaviconFetcher.kt    # Favicon fetcher
-    ├── IconStorage.kt       # Icon storage
-    ├── IconLibraryStorage.kt # Icon library storage
-    ├── CacheManager.kt      # Cache management
-    ├── DownloadHelper.kt    # Download helper
-    ├── DownloadNotificationManager.kt # Download notifications
-    ├── AppUpdateChecker.kt  # App update checker
-    ├── OfflineManager.kt    # Offline management
-    ├── GsonProvider.kt      # Gson provider
-    ├── UrlSafety.kt         # URL safety check
-    ├── BgmStorage.kt        # BGM storage
-    ├── HtmlStorage.kt       # HTML storage
-    ├── SplashStorage.kt     # Splash screen storage
-    ├── ProcessCompat.kt     # Process compat
-    ├── ThreadLocalCompat.kt # ThreadLocal compat
-    └── TvUtils.kt           # TV adaptation utilities
+├── WebToAppApplication.kt        # Application class
+├── core/                         # Core runtime and business modules
+│   ├── activation/ adblock/ ads/ ai/ announcement/
+│   ├── appmodifier/ auth/ autostart/ background/
+│   ├── backup/ bgm/ billing/ blacktech/ common/
+│   ├── crypto/ disguise/ download/ engine/ errorpage/
+│   ├── export/ extension/ floatingwindow/ forcedrun/
+│   ├── frontend/ golang/ hardening/ i18n/ isolation/
+│   ├── kernel/ linux/ logging/ network/ nodejs/
+│   ├── perf/ php/ port/ pwa/ python/ sample/
+│   ├── shell/ stats/ usecase/ wordpress/
+│   ├── apkbuilder/
+│   │   ├── ApkAnalyzer.kt
+│   │   ├── ApkBuilder.kt
+│   │   ├── ApkTemplate.kt
+│   │   ├── BuildLogger.kt
+│   │   ├── NativeApkOptimizer.kt
+│   │   ├── ShellTemplateProvider.kt
+│   │   ├── assets/
+│   │   ├── config/
+│   │   ├── manifest/
+│   │   ├── packager/
+│   │   ├── signing/
+│   │   └── zip/
+│   ├── cloud/
+│   │   ├── AppDownloadManager.kt
+│   │   ├── CloudApiClient.kt
+│   │   ├── CloudRepository.kt
+│   │   ├── InstalledItemsTracker.kt
+│   │   ├── api/
+│   │   ├── internal/
+│   │   └── model/
+│   └── webview/
+│       ├── DownloadBridge.kt
+│       ├── LocalHttpServer.kt
+│       ├── LongPressHandler.kt
+│       ├── NativeBridge.kt
+│       ├── OAuthCompatEngine.kt
+│       ├── PwaOfflineSupport.kt
+│       ├── ShareBridge.kt
+│       ├── TranslateBridge.kt
+│       ├── WebViewCallbacks.kt
+│       ├── WebViewManager.kt
+│       ├── WebViewPool.kt
+│       ├── client/
+│       ├── config/
+│       ├── injection/
+│       ├── intercept/
+│       └── navigation/
+├── di/
+│   └── AppModule.kt
+├── ui/
+│   ├── MainActivity.kt
+│   ├── animation/ codepreview/ components/
+│   ├── data/ gallery/ icons/ media/ navigation/
+│   ├── shared/ shell/ splash/ theme/ viewmodel/
+│   ├── screens/
+│   │   ├── aimodule/ community/
+│   │   ├── AppStoreScreen.kt
+│   │   ├── CreateHtmlAppScreen.kt
+│   │   ├── appstore/
+│   │   │   ├── details/ downloads/
+│   │   │   └── management/ published/
+│   │   └── htmlimport/
+│   └── webview/
+│       ├── ConsolePanel.kt
+│       ├── PreviewStates.kt
+│       ├── ServerPreviewOverlays.kt
+│       ├── WebViewActivity.kt
+│       ├── WebViewLongPressMenu.kt
+│       ├── WebViewSplashOverlay.kt
+│       ├── WebViewUtils.kt
+│       └── screen/
+│           └── WebViewScreen.kt
+└── util/
 ```
 
 ## 📖 Usage Guide

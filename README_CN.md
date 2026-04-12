@@ -410,282 +410,81 @@ https://api.shiaho.sbs/s/{project_key}
 
 ```
 app/src/main/java/com/webtoapp/
-├── WebToAppApplication.kt      # Application类
-├── core/                       # 核心功能模块
-│   ├── activation/            # 激活码管理
-│   ├── adblock/              # 广告拦截引擎
-│   ├── ads/                  # 广告 SDK 集成
-│   ├── ai/                   # AI 功能
-│   │   ├── AiApiClient.kt   # 多供应商 AI API 客户端
-│   │   ├── AiConfigManager.kt # API 密钥/模型配置管理
-│   │   ├── AiGenerationService.kt # AI 图像生成服务
-│   │   └── htmlcoding/      # AI HTML 编程 Agent
-│   ├── announcement/         # 公告管理
-│   ├── apkbuilder/          # APK构建器
-│   │   ├── ApkBuilder.kt    # 构建核心（流式写入、加密）
-│   │   ├── JarSigner.kt     # APK签名（apksig v1/v2/v3）
-│   │   ├── ApkTemplate.kt   # 配置/模板管理
-│   │   ├── ArscEditor.kt    # ARSC 资源编辑
-│   │   ├── ArscRebuilder.kt # ARSC 重建
-│   │   ├── AxmlEditor.kt    # 二进制 XML 编辑
-│   │   ├── AxmlRebuilder.kt # XML 重建
-│   │   └── BuildLogger.kt   # 构建日志
-│   ├── appmodifier/         # 应用修改器核心
-│   ├── autostart/           # 开机自启动/定时启动
-│   ├── background/          # 后台运行服务
-│   ├── backup/              # 数据备份
-│   ├── bgm/                 # 背景音乐
-│   │   ├── BgmPlayer.kt     # 播放器（支持歌词同步）
-│   │   ├── OnlineMusicApi.kt # 在线音乐搜索 API
-│   │   └── OnlineMusicDownloader.kt # 音乐下载器
-│   ├── blacktech/           # 黑科技功能
-│   ├── crypto/              # 加密系统（14个文件）
-│   │   ├── AssetEncryptor.kt # AES-256-GCM 加密
-│   │   ├── AssetDecryptor.kt # 运行时解密
-│   │   ├── NativeCrypto.kt  # Native 加密
-│   │   └── RuntimeProtection.kt # 运行时保护
-│   ├── disguise/            # 浏览器伪装（UA/指纹）
-│   ├── download/            # 依赖下载引擎
-│   ├── engine/              # 浏览器内核管理
-│   │   ├── BrowserEngine.kt  # 浏览器引擎接口
-│   │   ├── BrowserEngineCallback.kt # 引擎回调
-│   │   ├── EngineManager.kt  # 内核管理器
-│   │   ├── EngineType.kt     # 引擎类型枚举
-│   │   ├── SystemWebViewEngine.kt # WebView 内核
-│   │   ├── GeckoViewEngine.kt # GeckoView (Firefox) 内核
-│   │   ├── download/         # 引擎下载
-│   │   │   ├── EngineFileManager.kt # 引擎文件管理
-│   │   │   └── GeckoEngineDownloader.kt # GeckoView 下载器
-│   │   └── shields/         # 浏览器防护
-│   │       ├── BrowserShields.kt # 防护总控
-│   │       ├── ShieldsConfig.kt # 防护配置
-│   │       ├── ShieldsStats.kt # 防护统计
-│   │       ├── TrackerBlocker.kt # 追踪器拦截
-│   │       ├── HttpsUpgrader.kt  # HTTPS 升级
-│   │       ├── GpcInjector.kt # GPC 信号注入
-│   │       ├── CookieConsentBlocker.kt # Cookie 弹窗拦截
-│   │       └── ReaderMode.kt # 阅读模式
-│   ├── errorpage/           # 错误页面
-│   ├── export/              # 项目导出
-│   ├── extension/           # 扩展模块系统
-│   │   ├── ExtensionModule.kt # 模块数据模型（23种分类/权限/配置）
-│   │   ├── ExtensionManager.kt # 模块生命周期管理
-│   │   ├── BuiltInModules.kt # 10个内置模块
-│   │   ├── BuiltInChromeExtensions.kt # 内置 Chrome 扩展
-│   │   ├── ModuleTemplates.kt # 28 代码模板
-│   │   ├── ModulePreset.kt   # 模块预设
-│   │   ├── CodeSnippets.kt  # 21分类 200+ 代码片段
-│   │   ├── ExtensionFileManager.kt # 扩展文件管理
-│   │   ├── ExtensionPanelScript.kt # 扩展面板脚本
-│   │   ├── ExtensionPanelBridge.kt # 面板桥接
-│   │   ├── ExtensionPopupManager.kt # 弹窗管理
-│   │   ├── ExtensionResourceInterceptor.kt # 资源拦截器
-│   │   ├── ExtensionStorageSync.kt # 存储同步
-│   │   ├── ChromeExtensionParser.kt # Chrome 扩展解析
-│   │   ├── ChromeExtensionPolyfill.kt # Chrome API 兼容层
-│   │   ├── ChromeExtensionRuntime.kt # Chrome 扩展运行时
-│   │   ├── ChromeExtensionMobileCompat.kt # 桌面→移动端适配
-│   │   ├── DeclarativeNetRequestEngine.kt # 声明式网络请求引擎
-│   │   ├── WebRequestBridge.kt # Web 请求桥接
-│   │   ├── GreasemonkeyBridge.kt # 油猴脚本兼容
-│   │   ├── UserScriptParser.kt # 用户脚本解析
-│   │   ├── UserScriptWindowScript.kt # 用户脚本窗口
-│   │   ├── AiModuleDeveloper.kt # AI 模块开发器
-│   │   ├── QrCodeUtils.kt   # 二维码工具
-│   │   ├── DebugTestPages.kt # 调试测试页面
-│   │   └── agent/           # AI Agent 模块开发
-│   │       ├── ModuleAgentEngine.kt # Agent 引擎
-│   │       ├── EnhancedAgentEngine.kt # 增强 Agent
-│   │       ├── AgentContext.kt # Agent 上下文
-│   │       ├── AgentTool.kt  # Agent 工具定义
-│   │       ├── AgentToolExecutor.kt # 工具执行器
-│   │       └── AgentWorkingMemory.kt # Agent 工作记忆
-│   ├── forcedrun/           # 强制运行模式
-│   │   ├── ForcedRunManager.kt # 强制运行管理器
-│   │   ├── ForcedRunConfig.kt # 强制运行配置
-│   │   ├── ForcedRunHardwareController.kt # 硬件控制
-│   │   ├── ForcedRunAccessibilityService.kt # 无障碍服务
-│   │   ├── ForcedRunGuardService.kt # 守护服务
-│   │   └── ForcedRunPermissionHelper.kt # 权限辅助
-│   ├── frontend/            # 前端项目处理
-│   │   ├── ProjectDetector.kt # React/Vue/Next.js 检测
-│   │   ├── FrontendProjectBuilder.kt # 前端项目构建
-│   │   ├── FrontendProjectConfig.kt # 前端项目配置
-│   │   └── SampleProjectManager.kt # 示例项目管理
-│   ├── golang/              # Go 应用运行时
-│   ├── hardening/           # APK 加固保护
-│   │   ├── AppHardeningEngine.kt # 加固引擎
-│   │   ├── AntiReverseEngine.kt  # 反逆向
-│   │   ├── DexProtector.kt  # Dex 保护
-│   │   ├── CodeObfuscator.kt # 代码混淆
-│   │   ├── NativeProtector.kt # 原生层保护
-│   │   ├── EnvironmentDetector.kt # 环境检测
-│   │   └── RuntimeShield.kt # 运行时防护
-│   ├── i18n/                # 多语言支持（中/英/阿拉伯语）
-│   ├── isolation/           # 独立浏览器环境
-│   │   ├── IsolationManager.kt # 隔离管理器
-│   │   ├── IsolationConfig.kt # 隔离配置
-│   │   ├── IsolationScriptInjector.kt # 脚本注入
-│   │   └── FingerprintGenerator.kt # 指纹生成器
-│   ├── linux/               # Linux 环境一键构建
-│   ├── nodejs/              # Node.js 应用运行时
-│   ├── php/                 # PHP 应用运行时
-│   ├── port/                # 端口管理
-│   ├── python/              # Python 应用运行时
-│   ├── shell/               # Shell模式管理
-│   ├── logging/             # 日志系统
-│   │   └── AppLogger.kt     # 应用日志
-│   ├── sample/              # 示例项目
-│   │   └── SampleProjectExtractor.kt # 示例项目提取
-│   ├── webview/             # WebView管理
-│   │   ├── WebViewManager.kt # WebView 核心管理器
-│   │   ├── LocalHttpServer.kt # 本地 HTTP 服务器
-│   │   ├── LongPressHandler.kt # 长按菜单处理
-│   │   ├── TranslateBridge.kt # 翻译桥接
-│   │   ├── NativeBridge.kt  # 原生能力桥接（28 API）
-│   │   └── DownloadBridge.kt # 下载桥接
-│   └── wordpress/           # WordPress 应用运行时
-├── ui/                        # UI层
-│   ├── MainActivity.kt      # 主Activity
-│   ├── gallery/             # 画廊播放器
-│   │   ├── GalleryPlayerActivity.kt # 画廊 Activity
-│   │   └── GalleryPlayerScreen.kt # 画廊播放界面
-│   ├── htmlpreview/         # HTML 预览
-│   │   └── HtmlPreviewActivity.kt # HTML 预览 Activity
-│   ├── media/               # 媒体播放
-│   │   └── MediaAppActivity.kt # 媒体应用 Activity
-│   ├── navigation/          # 导航
-│   │   └── AppNavigation.kt # 应用导航图
-│   ├── shell/               # Shell 模式
-│   │   └── ShellActivity.kt # Shell Activity（独立 APK 入口）
-│   ├── splash/              # 启动画面
-│   │   └── SplashLauncherActivity.kt # 启动画面 Activity
-│   ├── viewmodel/           # ViewModel
-│   │   └── MainViewModel.kt # 主 ViewModel
-│   ├── webview/             # WebView 容器
-│   │   └── WebViewActivity.kt # WebView Activity
-│   ├── screens/             # 页面
-│   │   ├── HomeScreen.kt    # 主页（应用列表）
-│   │   ├── CreateAppScreen.kt # 创建网站应用
-│   │   ├── CreateMediaAppScreen.kt # 创建媒体应用
-│   │   ├── CreateHtmlAppScreen.kt # 创建HTML应用
-│   │   ├── CreateFrontendAppScreen.kt # 创建前端框架应用
-│   │   ├── CreateGalleryAppScreen.kt # 创建画廊应用
-│   │   ├── CreateNodeJsAppScreen.kt # 创建 Node.js 应用
-│   │   ├── CreatePhpAppScreen.kt # 创建 PHP 应用
-│   │   ├── CreatePythonAppScreen.kt # 创建 Python 应用
-│   │   ├── CreateGoAppScreen.kt # 创建 Go 应用
-│   │   ├── CreateWordPressAppScreen.kt # 创建 WordPress 应用
-│   │   ├── ExtensionModuleScreen.kt # 扩展模块管理
-│   │   ├── ModuleEditorScreen.kt # 模块编辑器
-│   │   ├── AiCodingScreen.kt # AI 编程助手
-│   │   ├── HtmlCodingScreen.kt # AI HTML编程
-│   │   ├── AiSettingsScreen.kt # AI 设置
-│   │   ├── BrowserKernelScreen.kt # 浏览器内核管理
-│   │   ├── HostsAdBlockScreen.kt # Hosts 拦截管理
-│   │   ├── ThemeSettingsScreen.kt # 主题设置
-│   │   ├── LinuxEnvironmentScreen.kt # Linux 环境管理
-│   │   ├── RuntimeDepsScreen.kt # 运行时依赖管理
-│   │   ├── PortManagerScreen.kt # 端口管理
-│   │   ├── AppModifierScreen.kt # 应用修改器
-│   │   ├── WordPressSettingsScreen.kt # WordPress 设置
-│   │   ├── AboutScreen.kt   # 关于作者/更新日志
-│   │   └── aimodule/        # AI 模块开发（重构版）
-│   │       ├── AiModuleDeveloperScreen.kt
-│   │       ├── AiModuleDeveloperUiState.kt
-│   │       └── AiModuleDeveloperViewModel.kt
-│   ├── components/          # 可复用组件（38个文件）
-│   │   ├── announcement/    # 公告模板
-│   │   │   ├── AnnouncementTemplates.kt # 10种公告模板
-│   │   │   └── AnnouncementTemplateSelector.kt # 模板选择器
-│   │   ├── aimodule/        # AI 模块开发组件
-│   │   │   ├── CodePreviewPanel.kt # 代码预览
-│   │   │   ├── ErrorCard.kt # 错误卡片
-│   │   │   ├── ModelSelector.kt # 模型选择器
-│   │   │   ├── StreamingMessageBubble.kt # 流式消息
-│   │   │   ├── ThinkingBlock.kt # 思考块
-│   │   │   └── ToolCallCard.kt # 工具调用卡片
-│   │   ├── htmlcoding/      # HTML 编程组件
-│   │   │   └── HtmlCodingComponents.kt
-│   │   ├── IconGeneratorDialog.kt # AI图标生成
-│   │   ├── IconPickerWithLibrary.kt # 图标选择器
-│   │   ├── IconLibraryDialog.kt # 图标库
-│   │   ├── BgmCard.kt       # BGM 配置卡片
-│   │   ├── BgmSelector.kt   # BGM 选择/在线搜索
-│   │   ├── VideoTrimmer.kt  # 视频裁剪器
-│   │   ├── EncryptionConfigCard.kt # 加密配置
-│   │   ├── HardeningConfigCard.kt # APK 加固配置
-│   │   ├── IsolationConfigCard.kt # 独立环境配置
-│   │   ├── DisguiseConfigCard.kt # 浏览器伪装配置
-│   │   ├── BackgroundRunConfigCard.kt # 后台运行配置
-│   │   ├── ForcedRunConfigCard.kt # 强制运行配置
-│   │   ├── ForcedRunCountdownOverlay.kt # 强制运行倒计时
-│   │   ├── BlackTechConfigCard.kt # 黑科技配置
-│   │   ├── AutoStartCard.kt # 自启动配置
-│   │   ├── ActivationCodeCard.kt # 激活码配置
-│   │   ├── EnhancedActivationDialog.kt # 增强激活对话框
-│   │   ├── DataBackupCard.kt # 数据备份卡片
-│   │   ├── StatusBarConfigCard.kt # 状态栏配置
-│   │   ├── StatusBarBackground.kt # 状态栏背景
-│   │   ├── StatusBarImageCropper.kt # 状态栏图片裁剪
-│   │   ├── ExtensionModuleCard.kt # 扩展模块卡片
-│   │   ├── ExtensionModuleSelector.kt # 模块选择器
-│   │   ├── CodeSnippetSelector.kt # 代码片段选择器
-│   │   ├── SampleProjectCard.kt # 示例项目卡片
-│   │   ├── TypedSampleProjectCard.kt # 类型化示例卡片
-│   │   ├── LongPressMenu.kt # 长按菜单组件
-│   │   ├── QrCodeShareDialog.kt # 二维码分享
-│   │   ├── AppNameTextField.kt # 应用名输入
-│   │   ├── CategoryComponents.kt # 分类组件
-│   │   ├── ColorPickerDialog.kt # 颜色选择器
-│   │   ├── CommonUIComponents.kt # 通用 UI 组件
-│   │   ├── EnhancedElevatedCard.kt # 增强卡片
-│   │   ├── ThemedComponents.kt # 主题化组件
-│   │   ├── LanguageSelector.kt # 语言选择器
-│   │   ├── LrcEditorDialog.kt # LRC 歌词编辑
-│   │   └── ManualLrcAligner.kt # 手动歌词对齐
-│   ├── data/                # 数据层
-│   │   ├── model/           # 数据模型
-│   │   │   ├── WebApp.kt    # 应用实体（11种 AppType）
-│   │   │   ├── AppCategory.kt # 应用分类
-│   │   │   └── AiConfig.kt  # AI 配置
-│   │   ├── dao/             # DAO
-│   │   │   ├── WebAppDao.kt # 应用 DAO
-│   │   │   └── AppCategoryDao.kt # 分类 DAO
-│   │   ├── database/        # 数据库
-│   │   │   └── AppDatabase.kt # Room 数据库
-│   │   ├── repository/      # 仓库
-│   │   │   ├── WebAppRepository.kt # 应用仓库
-│   │   │   └── AppCategoryRepository.kt # 分类仓库
-│   │   └── converter/       # 类型转换器
-│   │       └── Converters.kt # Room TypeConverter
-│   └── theme/               # 主题系统
-│       ├── Theme.kt         # 主题定义
-│       ├── AppThemes.kt     # 应用主题集
-│       ├── ThemeAnimations.kt # 主题动画
-│       └── ThemeManager.kt  # 主题管理器
-└── util/                      # 工具类（21个文件）
-    ├── Extensions.kt        # Kotlin 扩展函数
-    ├── HtmlProjectProcessor.kt # HTML 项目处理
-    ├── ZipProjectImporter.kt # ZIP 项目导入
-    ├── MediaSaver.kt        # 媒体保存
-    ├── MediaStorage.kt      # 媒体存储
-    ├── FaviconFetcher.kt    # 网站图标获取
-    ├── IconStorage.kt       # 图标存储
-    ├── IconLibraryStorage.kt # 图标库存储
-    ├── CacheManager.kt      # 缓存管理
-    ├── DownloadHelper.kt    # 下载辅助
-    ├── DownloadNotificationManager.kt # 下载通知
-    ├── AppUpdateChecker.kt  # 应用更新检查
-    ├── OfflineManager.kt    # 离线管理
-    ├── GsonProvider.kt      # Gson 提供者
-    ├── UrlSafety.kt         # URL 安全检查
-    ├── BgmStorage.kt        # BGM 存储
-    ├── HtmlStorage.kt       # HTML 存储
-    ├── SplashStorage.kt     # 启动画面存储
-    ├── ProcessCompat.kt     # 进程兼容
-    ├── ThreadLocalCompat.kt # ThreadLocal 兼容
-    └── TvUtils.kt           # TV 适配工具
+├── WebToAppApplication.kt        # Application类
+├── core/                         # 核心运行时与业务模块
+│   ├── activation/ adblock/ ads/ ai/ announcement/
+│   ├── appmodifier/ auth/ autostart/ background/
+│   ├── backup/ bgm/ billing/ blacktech/ common/
+│   ├── crypto/ disguise/ download/ engine/ errorpage/
+│   ├── export/ extension/ floatingwindow/ forcedrun/
+│   ├── frontend/ golang/ hardening/ i18n/ isolation/
+│   ├── kernel/ linux/ logging/ network/ nodejs/
+│   ├── perf/ php/ port/ pwa/ python/ sample/
+│   ├── shell/ stats/ usecase/ wordpress/
+│   ├── apkbuilder/
+│   │   ├── ApkAnalyzer.kt
+│   │   ├── ApkBuilder.kt
+│   │   ├── ApkTemplate.kt
+│   │   ├── BuildLogger.kt
+│   │   ├── NativeApkOptimizer.kt
+│   │   ├── ShellTemplateProvider.kt
+│   │   ├── assets/
+│   │   ├── config/
+│   │   ├── manifest/
+│   │   ├── packager/
+│   │   ├── signing/
+│   │   └── zip/
+│   ├── cloud/
+│   │   ├── AppDownloadManager.kt
+│   │   ├── CloudApiClient.kt
+│   │   ├── CloudRepository.kt
+│   │   ├── InstalledItemsTracker.kt
+│   │   ├── api/
+│   │   ├── internal/
+│   │   └── model/
+│   └── webview/
+│       ├── DownloadBridge.kt
+│       ├── LocalHttpServer.kt
+│       ├── LongPressHandler.kt
+│       ├── NativeBridge.kt
+│       ├── OAuthCompatEngine.kt
+│       ├── PwaOfflineSupport.kt
+│       ├── ShareBridge.kt
+│       ├── TranslateBridge.kt
+│       ├── WebViewCallbacks.kt
+│       ├── WebViewManager.kt
+│       ├── WebViewPool.kt
+│       ├── client/
+│       ├── config/
+│       ├── injection/
+│       ├── intercept/
+│       └── navigation/
+├── di/
+│   └── AppModule.kt
+├── ui/
+│   ├── MainActivity.kt
+│   ├── animation/ codepreview/ components/
+│   ├── data/ gallery/ icons/ media/ navigation/
+│   ├── shared/ shell/ splash/ theme/ viewmodel/
+│   ├── screens/
+│   │   ├── aimodule/ community/
+│   │   ├── AppStoreScreen.kt
+│   │   ├── CreateHtmlAppScreen.kt
+│   │   ├── appstore/
+│   │   │   ├── details/ downloads/
+│   │   │   └── management/ published/
+│   │   └── htmlimport/
+│   └── webview/
+│       ├── ConsolePanel.kt
+│       ├── PreviewStates.kt
+│       ├── ServerPreviewOverlays.kt
+│       ├── WebViewActivity.kt
+│       ├── WebViewLongPressMenu.kt
+│       ├── WebViewSplashOverlay.kt
+│       ├── WebViewUtils.kt
+│       └── screen/
+│           └── WebViewScreen.kt
+└── util/
 ```
 
 ## 📖 使用说明
