@@ -561,8 +561,7 @@ app/src/main/java/com/webtoapp/
 │   ├── splash/              # 启动画面
 │   │   └── SplashLauncherActivity.kt # 启动画面 Activity
 │   ├── viewmodel/           # ViewModel
-│   │   ├── MainViewModel.kt # 主 ViewModel
-│   │   └── AiModuleDeveloperViewModel.kt # AI 模块开发 ViewModel
+│   │   └── MainViewModel.kt # 主 ViewModel
 │   ├── webview/             # WebView 容器
 │   │   └── WebViewActivity.kt # WebView Activity
 │   ├── screens/             # 页面
@@ -579,7 +578,6 @@ app/src/main/java/com/webtoapp/
 │   │   ├── CreateWordPressAppScreen.kt # 创建 WordPress 应用
 │   │   ├── ExtensionModuleScreen.kt # 扩展模块管理
 │   │   ├── ModuleEditorScreen.kt # 模块编辑器
-│   │   ├── AiModuleDeveloperScreen.kt # AI模块开发
 │   │   ├── AiCodingScreen.kt # AI 编程助手
 │   │   ├── HtmlCodingScreen.kt # AI HTML编程
 │   │   ├── AiSettingsScreen.kt # AI 设置
@@ -593,7 +591,7 @@ app/src/main/java/com/webtoapp/
 │   │   ├── WordPressSettingsScreen.kt # WordPress 设置
 │   │   ├── AboutScreen.kt   # 关于作者/更新日志
 │   │   └── aimodule/        # AI 模块开发（重构版）
-│   │       ├── AiModuleDeveloperScreenRefactored.kt
+│   │       ├── AiModuleDeveloperScreen.kt
 │   │       ├── AiModuleDeveloperUiState.kt
 │   │       └── AiModuleDeveloperViewModel.kt
 │   ├── components/          # 可复用组件（38个文件）

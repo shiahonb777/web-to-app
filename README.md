@@ -561,8 +561,7 @@ app/src/main/java/com/webtoapp/
 │   ├── splash/              # Splash screen
 │   │   └── SplashLauncherActivity.kt # Splash screen Activity
 │   ├── viewmodel/           # ViewModel
-│   │   ├── MainViewModel.kt # Main ViewModel
-│   │   └── AiModuleDeveloperViewModel.kt # AI module dev ViewModel
+│   │   └── MainViewModel.kt # Main ViewModel
 │   ├── webview/             # WebView container
 │   │   └── WebViewActivity.kt # WebView Activity
 │   ├── screens/             # Screens
@@ -579,7 +578,6 @@ app/src/main/java/com/webtoapp/
 │   │   ├── CreateWordPressAppScreen.kt # Create WordPress app
 │   │   ├── ExtensionModuleScreen.kt # Extension modules
 │   │   ├── ModuleEditorScreen.kt # Module editor
-│   │   ├── AiModuleDeveloperScreen.kt # AI module dev
 │   │   ├── AiCodingScreen.kt # AI coding assistant
 │   │   ├── HtmlCodingScreen.kt # AI HTML coding
 │   │   ├── AiSettingsScreen.kt # AI settings
@@ -593,7 +591,7 @@ app/src/main/java/com/webtoapp/
 │   │   ├── WordPressSettingsScreen.kt # WordPress settings
 │   │   ├── AboutScreen.kt   # About/changelog
 │   │   └── aimodule/        # AI module dev (refactored)
-│   │       ├── AiModuleDeveloperScreenRefactored.kt
+│   │       ├── AiModuleDeveloperScreen.kt
 │   │       ├── AiModuleDeveloperUiState.kt
 │   │       └── AiModuleDeveloperViewModel.kt
 │   ├── components/          # Reusable components (38 files)

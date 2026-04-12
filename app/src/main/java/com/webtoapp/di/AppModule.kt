@@ -21,7 +21,6 @@ import com.webtoapp.core.billing.BillingManager
 import com.webtoapp.data.database.AppDatabase
 import com.webtoapp.data.repository.AppCategoryRepository
 import com.webtoapp.data.repository.WebAppRepository
-import com.webtoapp.core.usecase.SaveAppUseCase
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import com.webtoapp.ui.viewmodel.CloudViewModel
@@ -86,10 +85,6 @@ val managerModule = module {
     single { BillingManager(androidContext()) }
 }
 
-val useCaseModule = module {
-    factory { SaveAppUseCase(get()) }
-}
-
 val viewModelModule = module {
     viewModel { MainViewModel(get(), get(), get()) }
     viewModel { AuthViewModel(get()) }
@@ -104,6 +99,5 @@ val appModules = listOf(
     databaseModule,
     repositoryModule,
     managerModule,
-    useCaseModule,
     viewModelModule
 )
