@@ -515,663 +515,77 @@ fun WebViewScreen(
         }
     }
 
-    // WordPress 预览流程
-    LaunchedEffect(webApp, isActivated, isActivationChecked, wpRetryTrigger) {
-        val app = webApp ?: return@LaunchedEffect
-        if (app.appType != com.webtoapp.data.model.AppType.WORDPRESS) return@LaunchedEffect
-        if (!isActivated || !isActivationChecked) return@LaunchedEffect
-        
-        wordPressPreviewState = WordPressPreviewState.CheckingDeps
-        
-        // 1. 检查/下载依赖
-        if (!WordPressDependencyManager.isAllReady(context)) {
-            wordPressPreviewState = WordPressPreviewState.Downloading
-            val success = WordPressDependencyManager.downloadAllDependencies(context)
-            if (!success) {
-                wordPressPreviewState = WordPressPreviewState.Error(Strings.wpDownloadFailed)
-                return@LaunchedEffect
-            }
-        }
-        
-        // 2. 确保项目存在
-        var projectId = app.wordpressConfig?.projectId ?: ""
-        val projectDir = if (projectId.isNotEmpty()) {
-            WordPressManager.getProjectDir(context, projectId)
-        } else null
-        
-        if (projectDir == null || !projectDir.exists() || !File(projectDir, "wp-includes/version.php").exists()) {
-            wordPressPreviewState = WordPressPreviewState.CreatingProject
-            val newId = WordPressManager.createProject(
-                context = context,
-                siteTitle = app.wordpressConfig?.siteTitle ?: "My Site",
-                adminUser = app.wordpressConfig?.adminUser ?: "admin",
-                adminEmail = app.wordpressConfig?.adminEmail ?: ""
-            )
-            if (newId == null) {
-                wordPressPreviewState = WordPressPreviewState.Error(Strings.wpProjectCreateFailed)
-                return@LaunchedEffect
-            }
-            projectId = newId
-            // 更新 App 配置中的 projectId
-            val updatedConfig = (app.wordpressConfig ?: WordPressConfig()).copy(projectId = newId)
-            repository.updateWebApp(app.copy(wordpressConfig = updatedConfig))
-            webApp = app.copy(wordpressConfig = updatedConfig)
-        }
-        
-        // 3. 启动 PHP 服务器（先确保 SQLite db.php drop-in 存在）
-        wordPressPreviewState = WordPressPreviewState.StartingServer
-        val wpDir = WordPressManager.getProjectDir(context, projectId)
-        WordPressManager.ensureDbPhpExists(context, wpDir)
-        val port = phpRuntime.startServer(wpDir.absolutePath, app.wordpressConfig?.phpPort ?: 0)
-        
-        if (port > 0) {
-            val url = "http://127.0.0.1:$port/"
-            // 自动完成 WordPress 安装（首次创建项目时数据库为空）
-            WordPressManager.autoInstallIfNeeded(
-                baseUrl = "http://127.0.0.1:$port",
-                siteTitle = app.wordpressConfig?.siteTitle?.takeIf { it.isNotBlank() } ?: "My Site",
-                adminUser = app.wordpressConfig?.adminUser?.takeIf { it.isNotBlank() } ?: "admin",
-                adminEmail = app.wordpressConfig?.adminEmail?.takeIf { it.isNotBlank() } ?: "admin@localhost.local"
-            )
-            wordPressPreviewState = WordPressPreviewState.Ready(url)
-            delay(200)  // 等待 WebView factory 完成
-            webViewRef?.loadUrl(url)
-        } else {
-            wordPressPreviewState = WordPressPreviewState.Error(Strings.wpServerError)
-        }
-    }
+    WordPressPreviewCoordinator(
+        webApp = webApp,
+        isActivated = isActivated,
+        isActivationChecked = isActivationChecked,
+        retryTrigger = wpRetryTrigger,
+        context = context,
+        repository = repository,
+        phpRuntime = phpRuntime,
+        onWebAppChanged = { webApp = it },
+        onStateChanged = { wordPressPreviewState = it },
+        loadUrl = { url -> webViewRef?.loadUrl(url) }
+    )
     
-    // WordPress: 清理 PHP 服务器
-    DisposableEffect(phpRuntime) {
-        onDispose {
-            phpRuntime.stopServer()
-        }
-    }
+    PhpAppPreviewCoordinator(
+        appId = appId,
+        webApp = webApp,
+        isActivated = isActivated,
+        isActivationChecked = isActivationChecked,
+        retryTrigger = phpAppRetryTrigger,
+        context = context,
+        phpAppRuntime = phpAppRuntime,
+        onStateChanged = { phpAppPreviewState = it },
+        loadUrl = { url -> webViewRef?.loadUrl(url) }
+    )
     
-    // PHP 应用预览流程
-    LaunchedEffect(webApp, isActivated, isActivationChecked, phpAppRetryTrigger) {
-        val app = webApp ?: return@LaunchedEffect
-        if (app.appType != com.webtoapp.data.model.AppType.PHP_APP) return@LaunchedEffect
-        if (!isActivated || !isActivationChecked) return@LaunchedEffect
-        
-        AppLogger.i("PhpAppPreview", "开始 PHP 应用预览流程, appId=$appId, phpAppConfig=${app.phpAppConfig}")
-        
-        val config = app.phpAppConfig
-        if (config == null) {
-            AppLogger.e("PhpAppPreview", "phpAppConfig 为 null，无法启动预览")
-            phpAppPreviewState = PhpAppPreviewState.Error(Strings.phpAppProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        phpAppPreviewState = PhpAppPreviewState.CheckingDeps
-        AppLogger.i("PhpAppPreview", "检查 PHP 依赖, isPhpReady=${WordPressDependencyManager.isPhpReady(context)}")
-        
-        // 1. 检查/下载 PHP 二进制依赖
-        if (!WordPressDependencyManager.isPhpReady(context)) {
-            phpAppPreviewState = PhpAppPreviewState.Downloading
-            val success = WordPressDependencyManager.downloadPhpDependency(context)
-            if (!success) {
-                phpAppPreviewState = PhpAppPreviewState.Error(Strings.phpAppDownloadFailed)
-                return@LaunchedEffect
-            }
-        }
-        
-        // 2. 检查项目目录是否存在
-        val projectId = config.projectId
-        AppLogger.i("PhpAppPreview", "projectId='$projectId', docRoot='${config.documentRoot}', entry='${config.entryFile}'")
-        if (projectId.isBlank()) {
-            AppLogger.e("PhpAppPreview", "projectId 为空")
-            phpAppPreviewState = PhpAppPreviewState.Error(Strings.phpAppProjectNotFound)
-            return@LaunchedEffect
-        }
-        val projectDir = phpAppRuntime.getProjectDir(projectId)
-        AppLogger.i("PhpAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
-        if (!projectDir.exists()) {
-            phpAppPreviewState = PhpAppPreviewState.Error(Strings.phpAppProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        // 列出项目文件（调试）
-        projectDir.listFiles()?.take(20)?.forEach { file ->
-            AppLogger.d("PhpAppPreview", "  - ${file.name} (${if (file.isDirectory) "dir" else "${file.length()} bytes"})")
-        }
-        
-        // 3. 自动检测框架和 document root（当配置不正确时自动修正）
-        var actualDocRoot = config.documentRoot
-        var actualEntryFile = config.entryFile
-        
-        // 检查入口文件是否存在，不存在则重新检测
-        var actualProjectDir = projectDir
-        val docRootDir = if (actualDocRoot.isNotBlank()) File(projectDir, actualDocRoot) else projectDir
-        if (!File(docRootDir, actualEntryFile).exists()) {
-            AppLogger.i("PhpAppPreview", "入口文件不存在，尝试自动检测框架...")
-            
-            // 先在当前目录检测
-            var detectedFramework = phpAppRuntime.detectFramework(projectDir)
-            var detectedDocRoot = phpAppRuntime.detectDocumentRoot(projectDir, detectedFramework)
-            var detectedEntry = phpAppRuntime.detectEntryFile(projectDir, detectedDocRoot)
-            
-            // 如果仍然找不到入口文件，扫描子目录（处理 ZIP 导入嵌套目录的情况）
-            val detectedDocRootDir = if (detectedDocRoot.isNotBlank()) File(projectDir, detectedDocRoot) else projectDir
-            if (!File(detectedDocRootDir, detectedEntry).exists()) {
-                AppLogger.i("PhpAppPreview", "根目录未找到入口文件，扫描子目录...")
-                val phpSubDir = projectDir.listFiles()
-                    ?.filter { it.isDirectory && it.name != "__MACOSX" && !it.name.startsWith("._") }
-                    ?.firstOrNull { sub -> sub.listFiles()?.any { it.isFile && it.extension == "php" } == true }
-                
-                if (phpSubDir != null) {
-                    AppLogger.i("PhpAppPreview", "找到 PHP 子目录: ${phpSubDir.name}")
-                    actualProjectDir = phpSubDir
-                    detectedFramework = phpAppRuntime.detectFramework(phpSubDir)
-                    detectedDocRoot = phpAppRuntime.detectDocumentRoot(phpSubDir, detectedFramework)
-                    detectedEntry = phpAppRuntime.detectEntryFile(phpSubDir, detectedDocRoot)
-                }
-            }
-            
-            AppLogger.i("PhpAppPreview", "自动检测: framework=$detectedFramework, docRoot='$detectedDocRoot', entry='$detectedEntry', projectDir=${actualProjectDir.name}")
-            actualDocRoot = detectedDocRoot
-            actualEntryFile = detectedEntry
-        }
-        
-        // 4. 启动 PHP 服务器
-        phpAppPreviewState = PhpAppPreviewState.StartingServer
-        AppLogger.i("PhpAppPreview", "启动 PHP 服务器: docRoot='$actualDocRoot', entry='$actualEntryFile'")
-        val port = phpAppRuntime.startServer(
-            projectDir = actualProjectDir.absolutePath,
-            documentRoot = actualDocRoot,
-            entryFile = actualEntryFile,
-            port = config.phpPort,
-            envVars = config.envVars
-        )
-        
-        if (port > 0) {
-            val url = "http://127.0.0.1:$port/"
-            AppLogger.i("PhpAppPreview", "PHP 服务器已启动: $url")
-            phpAppPreviewState = PhpAppPreviewState.Ready(url)
-            delay(200)  // 等待 WebView factory 完成
-            webViewRef?.loadUrl(url)
-        } else {
-            AppLogger.e("PhpAppPreview", "PHP 服务器启动失败, port=$port, serverState=${phpAppRuntime.serverState.value}")
-            val errorDetail = when (val state = phpAppRuntime.serverState.value) {
-                is PhpAppRuntime.ServerState.Error -> state.message
-                else -> Strings.phpAppServerError
-            }
-            phpAppPreviewState = PhpAppPreviewState.Error(errorDetail)
-        }
-    }
+    PythonAppPreviewCoordinator(
+        appId = appId,
+        webApp = webApp,
+        isActivated = isActivated,
+        isActivationChecked = isActivationChecked,
+        retryTrigger = pythonAppRetryTrigger,
+        pythonRuntime = pythonRuntime,
+        pythonHttpServer = pythonHttpServer,
+        onStateChanged = { pythonAppPreviewState = it },
+        loadUrl = { url -> webViewRef?.loadUrl(url) }
+    )
     
-    // PHP 应用: 清理 PHP 服务器
-    DisposableEffect(phpAppRuntime) {
-        onDispose {
-            phpAppRuntime.stopServer()
-        }
-    }
+    NodeJsAppPreviewCoordinator(
+        appId = appId,
+        webApp = webApp,
+        isActivated = isActivated,
+        isActivationChecked = isActivationChecked,
+        retryTrigger = nodeJsAppRetryTrigger,
+        nodeRuntime = nodeRuntime,
+        nodeHttpServer = nodeHttpServer,
+        onStateChanged = { nodeJsAppPreviewState = it },
+        loadUrl = { url -> webViewRef?.loadUrl(url) }
+    )
     
-    // Python 应用预览流程
-    LaunchedEffect(webApp, isActivated, isActivationChecked, pythonAppRetryTrigger) {
-        val app = webApp ?: return@LaunchedEffect
-        if (app.appType != com.webtoapp.data.model.AppType.PYTHON_APP) return@LaunchedEffect
-        if (!isActivated || !isActivationChecked) return@LaunchedEffect
-        
-        val config = app.pythonAppConfig
-        if (config == null) {
-            AppLogger.e("PythonAppPreview", "pythonAppConfig 为 null")
-            pythonAppPreviewState = PythonAppPreviewState.Error(Strings.pyProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        AppLogger.i("PythonAppPreview", "开始 Python 应用预览流程, appId=$appId, config=$config")
-        pythonAppPreviewState = PythonAppPreviewState.Starting
-        
-        // 检查项目目录
-        val projectId = config.projectId
-        AppLogger.i("PythonAppPreview", "projectId='$projectId', framework='${config.framework}', entry='${config.entryFile}'")
-        if (projectId.isBlank()) {
-            AppLogger.e("PythonAppPreview", "projectId 为空")
-            pythonAppPreviewState = PythonAppPreviewState.Error(Strings.pyProjectNotFound)
-            return@LaunchedEffect
-        }
-        val projectDir = pythonRuntime.getProjectDir(projectId)
-        AppLogger.i("PythonAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
-        if (!projectDir.exists()) {
-            pythonAppPreviewState = PythonAppPreviewState.Error(Strings.pyProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        // 列出项目文件（调试）
-        projectDir.listFiles()?.take(20)?.forEach { file ->
-            AppLogger.d("PythonAppPreview", "  - ${file.name} (${if (file.isDirectory) "dir" else "${file.length()} bytes"})")
-        }
-        
-        // 自动检测入口文件 — 处理 ZIP 导入嵌套目录的情况
-        var actualProjectDir = projectDir
-        var actualEntryFile = config.entryFile.ifBlank { "app.py" }
-        var actualFramework = config.framework.ifBlank { "raw" }
-        
-        if (!File(actualProjectDir, actualEntryFile).exists()) {
-            AppLogger.i("PythonAppPreview", "入口文件不存在: $actualEntryFile，尝试自动检测...")
-            
-            // 先在当前目录重新检测
-            val detectedFramework = pythonRuntime.detectFramework(projectDir)
-            val detectedEntry = pythonRuntime.detectEntryFile(projectDir, detectedFramework)
-            
-            if (File(projectDir, detectedEntry).exists()) {
-                AppLogger.i("PythonAppPreview", "自动检测到: framework=$detectedFramework, entry=$detectedEntry")
-                actualFramework = detectedFramework
-                actualEntryFile = detectedEntry
-            } else {
-                // 扫描子目录（处理 ZIP 导入嵌套目录: project.zip/project-name/app.py）
-                AppLogger.i("PythonAppPreview", "根目录未找到入口文件，扫描子目录...")
-                val pySubDir = projectDir.listFiles()
-                    ?.filter { it.isDirectory && it.name != "__MACOSX" && it.name != "__pycache__" && !it.name.startsWith("._") && it.name != "venv" && it.name != ".venv" && it.name != ".git" }
-                    ?.firstOrNull { sub ->
-                        sub.listFiles()?.any { it.isFile && it.extension == "py" } == true
-                    }
-                
-                if (pySubDir != null) {
-                    AppLogger.i("PythonAppPreview", "找到 Python 子目录: ${pySubDir.name}")
-                    actualProjectDir = pySubDir
-                    actualFramework = pythonRuntime.detectFramework(pySubDir)
-                    actualEntryFile = pythonRuntime.detectEntryFile(pySubDir, actualFramework)
-                    AppLogger.i("PythonAppPreview", "子目录检测: framework=$actualFramework, entry=$actualEntryFile")
-                }
-            }
-        }
-        
-        AppLogger.i("PythonAppPreview", "最终配置: projectDir=${actualProjectDir.absolutePath}, framework=$actualFramework, entry=$actualEntryFile")
-        
-        // 查找可用的静态产物目录或项目根目录
-        try {
-            val candidates = listOf("dist", "build", "public", "static", "www", "templates", "")
-            var docRoot: File? = null
-            for (dir in candidates) {
-                val candidate = if (dir.isEmpty()) actualProjectDir else File(actualProjectDir, dir)
-                val hasIndex = File(candidate, "index.html").exists()
-                AppLogger.d("PythonAppPreview", "检查候选: '$dir' -> ${candidate.absolutePath}, isDir=${candidate.isDirectory}, hasIndex=$hasIndex")
-                if (candidate.isDirectory && hasIndex) {
-                    docRoot = candidate
-                    AppLogger.i("PythonAppPreview", "找到 docRoot: ${candidate.absolutePath}")
-                    break
-                }
-            }
-            
-            if (docRoot != null) {
-                val url = pythonHttpServer.start(docRoot)
-                AppLogger.i("PythonAppPreview", "LocalHttpServer 已启动: $url")
-                pythonAppPreviewState = PythonAppPreviewState.Ready(url)
-                delay(200)
-                webViewRef?.loadUrl(url)
-            } else if (pythonRuntime.isPythonAvailable()) {
-                // Python 运行时可用 — 启动实际的 Python 服务器
-                AppLogger.i("PythonAppPreview", "Python 运行时可用，启动后端服务器")
-                pythonAppPreviewState = PythonAppPreviewState.StartingServer
-                
-                val serverPort = pythonRuntime.startServer(
-                    projectDir = actualProjectDir.absolutePath,
-                    entryFile = actualEntryFile,
-                    framework = actualFramework,
-                    port = config.serverPort,
-                    envVars = config.envVars,
-                    installDeps = config.hasPipDeps
-                )
-                
-                if (serverPort > 0) {
-                    val serverUrl = "http://127.0.0.1:$serverPort"
-                    AppLogger.i("PythonAppPreview", "Python 服务器已启动: $serverUrl")
-                    pythonAppPreviewState = PythonAppPreviewState.Ready(serverUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(serverUrl)
-                } else {
-                    AppLogger.e("PythonAppPreview", "Python 服务器启动失败，回退到预览模式")
-                    // 回退到静态预览
-                    val url = pythonHttpServer.start(actualProjectDir)
-                    File(actualProjectDir, "_preview_.html").delete()
-                    val previewHtml = pythonRuntime.generatePreviewHtml(
-                        projectDir = actualProjectDir,
-                        framework = actualFramework,
-                        entryFile = actualEntryFile
-                    )
-                    val previewFile = File(actualProjectDir, "_preview_.html")
-                    previewFile.writeText(previewHtml)
-                    val targetUrl = "$url/_preview_.html"
-                    pythonAppPreviewState = PythonAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                }
-            } else {
-                // Python 运行时不可用 — 生成静态预览页面
-                AppLogger.w("PythonAppPreview", "Python 运行时不可用，生成项目预览页面")
-                val url = pythonHttpServer.start(actualProjectDir)
-                File(actualProjectDir, "_preview_.html").delete()
-                
-                val htmlFiles = actualProjectDir.walkTopDown().filter { it.extension == "html" && it.name != "_preview_.html" }.take(1).toList()
-                if (htmlFiles.isNotEmpty()) {
-                    val relPath = htmlFiles.first().relativeTo(actualProjectDir).path
-                    val targetUrl = "$url/$relPath"
-                    pythonAppPreviewState = PythonAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                } else {
-                    val previewHtml = pythonRuntime.generatePreviewHtml(
-                        projectDir = actualProjectDir,
-                        framework = actualFramework,
-                        entryFile = actualEntryFile
-                    )
-                    val previewFile = File(actualProjectDir, "_preview_.html")
-                    previewFile.writeText(previewHtml)
-                    val targetUrl = "$url/_preview_.html"
-                    pythonAppPreviewState = PythonAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                }
-            }
-        } catch (e: Exception) {
-            AppLogger.e("PythonAppPreview", "启动预览失败", e)
-            pythonAppPreviewState = PythonAppPreviewState.Error(e.message ?: Strings.pyPreviewFailed)
-        }
-    }
-    
-    // Python 应用: 清理 HTTP 服务器和 Python 进程
-    DisposableEffect(pythonHttpServer) {
-        onDispose {
-            pythonHttpServer.stop()
-            pythonRuntime.stopServer()
-        }
-    }
-    
-    // Node.js 应用预览流程
-    LaunchedEffect(webApp, isActivated, isActivationChecked, nodeJsAppRetryTrigger) {
-        val app = webApp ?: return@LaunchedEffect
-        if (app.appType != com.webtoapp.data.model.AppType.NODEJS_APP) return@LaunchedEffect
-        if (!isActivated || !isActivationChecked) return@LaunchedEffect
-        
-        val config = app.nodejsConfig
-        if (config == null) {
-            AppLogger.e("NodeJsAppPreview", "nodejsConfig 为 null")
-            nodeJsAppPreviewState = NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        AppLogger.i("NodeJsAppPreview", "开始 Node.js 应用预览流程, appId=$appId, config=$config")
-        nodeJsAppPreviewState = NodeJsAppPreviewState.Starting
-        
-        // 检查项目目录
-        val projectId = config.projectId
-        AppLogger.i("NodeJsAppPreview", "projectId='$projectId', framework='${config.framework}', entry='${config.entryFile}'")
-        if (projectId.isBlank()) {
-            AppLogger.e("NodeJsAppPreview", "projectId 为空")
-            nodeJsAppPreviewState = NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound)
-            return@LaunchedEffect
-        }
-        val projectDir = nodeRuntime.getProjectDir(projectId)
-        AppLogger.i("NodeJsAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
-        if (!projectDir.exists()) {
-            nodeJsAppPreviewState = NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        // 列出项目文件（调试）
-        projectDir.listFiles()?.take(20)?.forEach { file ->
-            AppLogger.d("NodeJsAppPreview", "  - ${file.name} (${if (file.isDirectory) "dir" else "${file.length()} bytes"})")
-        }
-        
-        // 查找可用的静态产物目录或项目根目录
-        try {
-            val candidates = listOf("dist", "build", "public", "static", "www", "")
-            var foundDocRoot: File? = null
-            for (dir in candidates) {
-                val candidate = if (dir.isEmpty()) projectDir else File(projectDir, dir)
-                val hasIndex = File(candidate, "index.html").exists()
-                AppLogger.d("NodeJsAppPreview", "检查候选: '$dir' -> ${candidate.absolutePath}, isDir=${candidate.isDirectory}, hasIndex=$hasIndex")
-                if (candidate.isDirectory && hasIndex) {
-                    foundDocRoot = candidate
-                    AppLogger.i("NodeJsAppPreview", "找到 docRoot: ${candidate.absolutePath}")
-                    break
-                }
-            }
-            
-            val docRoot = foundDocRoot
-            if (docRoot != null) {
-                val url = nodeHttpServer.start(docRoot)
-                AppLogger.i("NodeJsAppPreview", "LocalHttpServer 已启动: $url")
-                nodeJsAppPreviewState = NodeJsAppPreviewState.Ready(url)
-                delay(200)
-                webViewRef?.loadUrl(url)
-            } else {
-                // 没有找到 index.html，尝试直接在项目根启动 HTTP 服务器
-                AppLogger.w("NodeJsAppPreview", "未找到 index.html，尝试在项目根启动 HTTP 服务器")
-                val url = nodeHttpServer.start(projectDir)
-                AppLogger.i("NodeJsAppPreview", "LocalHttpServer 在项目根启动: $url")
-                
-                // 删除旧的预览缓存，确保重新生成
-                File(projectDir, "_preview_.html").delete()
-                
-                // 检查是否有任何 HTML 文件（排除预览缓存）
-                val htmlFiles = projectDir.walkTopDown().filter { it.extension == "html" && it.name != "_preview_.html" }.take(1).toList()
-                if (htmlFiles.isNotEmpty()) {
-                    val relPath = htmlFiles.first().relativeTo(projectDir).path
-                    val targetUrl = "$url/$relPath"
-                    AppLogger.i("NodeJsAppPreview", "找到 HTML 文件: $relPath, URL=$targetUrl")
-                    nodeJsAppPreviewState = NodeJsAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                } else {
-                    // 没有静态 HTML 文件 — 生成项目预览页面（展示源码和项目信息）
-                    AppLogger.i("NodeJsAppPreview", "无静态 HTML，生成项目预览页面")
-                    val previewHtml = nodeRuntime.generatePreviewHtml(
-                        projectDir = projectDir,
-                        framework = config.framework,
-                        entryFile = config.entryFile
-                    )
-                    val previewFile = File(projectDir, "_preview_.html")
-                    previewFile.writeText(previewHtml)
-                    val targetUrl = "$url/_preview_.html"
-                    AppLogger.i("NodeJsAppPreview", "预览页面已生成: $targetUrl")
-                    nodeJsAppPreviewState = NodeJsAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                }
-            }
-        } catch (e: Exception) {
-            AppLogger.e("NodeJsAppPreview", "启动预览失败", e)
-            nodeJsAppPreviewState = NodeJsAppPreviewState.Error(e.message ?: Strings.nodePreviewFailed)
-        }
-    }
-    
-    // Node.js 应用: 清理 HTTP 服务器
-    DisposableEffect(nodeHttpServer) {
-        onDispose {
-            nodeHttpServer.stop()
-        }
-    }
-    
-    // Go 应用预览流程
-    LaunchedEffect(webApp, isActivated, isActivationChecked, goAppRetryTrigger) {
-        val app = webApp ?: return@LaunchedEffect
-        if (app.appType != com.webtoapp.data.model.AppType.GO_APP) return@LaunchedEffect
-        if (!isActivated || !isActivationChecked) return@LaunchedEffect
-        
-        val config = app.goAppConfig
-        if (config == null) {
-            AppLogger.e("GoAppPreview", "goAppConfig 为 null")
-            goAppPreviewState = GoAppPreviewState.Error(Strings.goProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        AppLogger.i("GoAppPreview", "开始 Go 应用预览流程, appId=$appId, config=$config")
-        goAppPreviewState = GoAppPreviewState.Starting
-        
-        // 检查项目目录
-        val projectId = config.projectId
-        AppLogger.i("GoAppPreview", "projectId='$projectId', framework='${config.framework}', binary='${config.binaryName}'")
-        if (projectId.isBlank()) {
-            AppLogger.e("GoAppPreview", "projectId 为空")
-            goAppPreviewState = GoAppPreviewState.Error(Strings.goProjectNotFound)
-            return@LaunchedEffect
-        }
-        val projectDir = goRuntime.getProjectDir(projectId)
-        AppLogger.i("GoAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
-        if (!projectDir.exists()) {
-            goAppPreviewState = GoAppPreviewState.Error(Strings.goProjectNotFound)
-            return@LaunchedEffect
-        }
-        
-        // 列出项目文件（调试）
-        projectDir.listFiles()?.take(20)?.forEach { file ->
-            AppLogger.d("GoAppPreview", "  - ${file.name} (${if (file.isDirectory) "dir" else "${file.length()} bytes"})")
-        }
-        
-        // 查找可用的静态产物目录或项目根目录
-        try {
-            val candidates = listOf("dist", "build", "public", "static", "web", "www", "")
-            var foundDocRoot: File? = null
-            for (dir in candidates) {
-                val candidate = if (dir.isEmpty()) projectDir else File(projectDir, dir)
-                val hasIndex = File(candidate, "index.html").exists()
-                AppLogger.d("GoAppPreview", "检查候选: '$dir' -> ${candidate.absolutePath}, isDir=${candidate.isDirectory}, hasIndex=$hasIndex")
-                if (candidate.isDirectory && hasIndex) {
-                    foundDocRoot = candidate
-                    AppLogger.i("GoAppPreview", "找到 docRoot: ${candidate.absolutePath}")
-                    break
-                }
-            }
-            
-            val docRoot = foundDocRoot
-            if (docRoot != null) {
-                val url = goHttpServer.start(docRoot)
-                AppLogger.i("GoAppPreview", "LocalHttpServer 已启动: $url")
-                goAppPreviewState = GoAppPreviewState.Ready(url)
-                delay(200)
-                webViewRef?.loadUrl(url)
-            } else if (config.binaryName.isNotBlank() && goRuntime.detectBinary(projectDir) != null) {
-                // 有预编译二进制 — 启动实际的 Go 服务器
-                AppLogger.i("GoAppPreview", "检测到 Go 二进制，启动后端服务器")
-                goAppPreviewState = GoAppPreviewState.StartingServer
-                
-                val serverPort = goRuntime.startServer(
-                    projectDir = projectDir.absolutePath,
-                    binaryName = config.binaryName,
-                    port = config.serverPort,
-                    envVars = config.envVars
-                )
-                
-                if (serverPort > 0) {
-                    val serverUrl = "http://127.0.0.1:$serverPort"
-                    AppLogger.i("GoAppPreview", "Go 服务器已启动: $serverUrl")
-                    goAppPreviewState = GoAppPreviewState.Ready(serverUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(serverUrl)
-                } else {
-                    AppLogger.e("GoAppPreview", "Go 服务器启动失败，回退到预览模式")
-                    val url = goHttpServer.start(projectDir)
-                    File(projectDir, "_preview_.html").delete()
-                    val previewHtml = goRuntime.generatePreviewHtml(
-                        projectDir = projectDir,
-                        framework = config.framework,
-                        binaryName = config.binaryName
-                    )
-                    val previewFile = File(projectDir, "_preview_.html")
-                    previewFile.writeText(previewHtml)
-                    val targetUrl = "$url/_preview_.html"
-                    goAppPreviewState = GoAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                }
-            } else {
-                // 无二进制或无法执行 — 生成静态预览页面
-                AppLogger.w("GoAppPreview", "无可执行二进制，生成项目预览页面")
-                val url = goHttpServer.start(projectDir)
-                File(projectDir, "_preview_.html").delete()
-                
-                val htmlFiles = projectDir.walkTopDown().filter { it.extension == "html" && it.name != "_preview_.html" }.take(1).toList()
-                if (htmlFiles.isNotEmpty()) {
-                    val relPath = htmlFiles.first().relativeTo(projectDir).path
-                    val targetUrl = "$url/$relPath"
-                    goAppPreviewState = GoAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                } else {
-                    val previewHtml = goRuntime.generatePreviewHtml(
-                        projectDir = projectDir,
-                        framework = config.framework,
-                        binaryName = config.binaryName
-                    )
-                    val previewFile = File(projectDir, "_preview_.html")
-                    previewFile.writeText(previewHtml)
-                    val targetUrl = "$url/_preview_.html"
-                    goAppPreviewState = GoAppPreviewState.Ready(targetUrl)
-                    delay(200)
-                    webViewRef?.loadUrl(targetUrl)
-                }
-            }
-        } catch (e: Exception) {
-            AppLogger.e("GoAppPreview", "启动预览失败", e)
-            goAppPreviewState = GoAppPreviewState.Error(e.message ?: Strings.goPreviewFailed)
-        }
-    }
-    
-    // Go 应用: 清理 HTTP 服务器和 Go 进程
-    DisposableEffect(goHttpServer) {
-        onDispose {
-            goHttpServer.stop()
-            goRuntime.stopServer()
-        }
-    }
+    GoAppPreviewCoordinator(
+        appId = appId,
+        webApp = webApp,
+        isActivated = isActivated,
+        isActivationChecked = isActivationChecked,
+        retryTrigger = goAppRetryTrigger,
+        goRuntime = goRuntime,
+        goHttpServer = goHttpServer,
+        onStateChanged = { goAppPreviewState = it },
+        loadUrl = { url -> webViewRef?.loadUrl(url) }
+    )
 
     fun scheduleStrictHostFallbackProbe(url: String?, source: String, delayMs: Long) {
-        if (!STRICT_HOST_AUTO_EXTERNAL_FALLBACK_ENABLED) return
-        if (strictHostFallbackTriggered || !shouldSkipLongPressEnhancer(url)) return
-        val expectedUrl = url
-
-        webViewRef?.postDelayed({
-            val activeWebView = webViewRef ?: return@postDelayed
-            if (strictHostFallbackTriggered) return@postDelayed
-
-            val current = activeWebView.url
-            if (expectedUrl != null && expectedUrl != current) return@postDelayed
-
-            val probeScript = """
-                (function() {
-                    try {
-                        var body = document.body;
-                        var root = document.documentElement;
-                        if (!body) return JSON.stringify({blank:true, reason:'no-body'});
-                        var text = (body.innerText || '').replace(/\s+/g, '');
-                        var textLength = text.length;
-                        var height = Math.max(body.scrollHeight || 0, root ? (root.scrollHeight || 0) : 0);
-                        var nodeCount = body.querySelectorAll('*').length;
-                        var videoCount = document.querySelectorAll('video').length;
-                        var imgCount = document.images ? document.images.length : 0;
-                        var blank = height < 900 && textLength < 80 && nodeCount < 120 && videoCount === 0 && imgCount < 5;
-                        return JSON.stringify({
-                            blank: blank,
-                            height: height,
-                            textLength: textLength,
-                            nodeCount: nodeCount,
-                            videoCount: videoCount,
-                            imgCount: imgCount
-                        });
-                    } catch (e) {
-                        return JSON.stringify({blank:false, error:String(e)});
-                    }
-                })();
-            """.trimIndent()
-
-            activeWebView.evaluateJavascript(probeScript) { raw ->
-                if (strictHostFallbackTriggered) return@evaluateJavascript
-                val decoded = decodeEvaluateJavascriptString(raw)
-                if (!shouldFallbackToExternalForStrictHost(decoded)) return@evaluateJavascript
-                strictHostFallbackTriggered = true
-                AppLogger.w("WebViewActivity", "Strict host blank-page probe ($source) triggered external fallback: $expectedUrl metrics=$decoded")
-                val fallbackUrl = expectedUrl ?: activeWebView.url.orEmpty()
-                if (fallbackUrl.isNotBlank()) {
-                    val safeUrl = normalizeExternalUrlForIntent(fallbackUrl)
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(safeUrl))
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(intent)
-                }
-            }
-        }, delayMs)
+        com.webtoapp.ui.webview.scheduleStrictHostFallbackProbe(
+            context = context,
+            url = url,
+            source = source,
+            delayMs = delayMs,
+            webViewProvider = { webViewRef },
+            isTriggered = { strictHostFallbackTriggered },
+            markTriggered = { strictHostFallbackTriggered = true }
+        )
     }
     
     // WebView回调
@@ -1318,98 +732,15 @@ fun WebViewScreen(
                 mimeType: String,
                 contentLength: Long
             ) {
-                // 使用系统下载管理器下载到 Download 文件夹
-                // Media文件会自动保存到相册
-                DownloadHelper.handleDownload(
+                handleWebViewDownload(
                     context = context,
+                    scope = scope,
                     url = url,
                     userAgent = userAgent,
                     contentDisposition = contentDisposition,
                     mimeType = mimeType,
                     contentLength = contentLength,
-                    method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER,
-                    scope = scope,
-                    onBlobDownload = { blobUrl, filename ->
-                        val safeBlobUrl = org.json.JSONObject.quote(blobUrl)
-                        val safeFilename = org.json.JSONObject.quote(filename)
-                        // 通过 WebView 执行 JS 来处理 Blob/Data URL 下载
-                        // 大文件使用分块处理避免 DOM 冻结
-                        webViewRef?.evaluateJavascript("""
-                            (function() {
-                                try {
-                                    const blobUrl = $safeBlobUrl;
-                                    const filename = $safeFilename;
-                                    const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024;
-                                    const CHUNK_SIZE = 1024 * 1024;
-                                    
-                                    function uint8ToBase64(u8) {
-                                        const S = 8192; const p = [];
-                                        for (let i = 0; i < u8.length; i += S) p.push(String.fromCharCode.apply(null, u8.subarray(i, i + S)));
-                                        return btoa(p.join(''));
-                                    }
-                                    
-                                    function processChunked(blob, fname) {
-                                        const mimeType = blob.type || 'application/octet-stream';
-                                        if (!window.AndroidDownload || !window.AndroidDownload.startChunkedDownload) {
-                                            processSmall(blob, fname); return;
-                                        }
-                                        const did = window.AndroidDownload.startChunkedDownload(fname, mimeType, blob.size);
-                                        let off = 0, ci = 0; const tc = Math.ceil(blob.size / CHUNK_SIZE);
-                                        function next() {
-                                            if (off >= blob.size) { window.AndroidDownload.finishChunkedDownload(did); return; }
-                                            blob.slice(off, off + CHUNK_SIZE).arrayBuffer().then(function(ab) {
-                                                window.AndroidDownload.appendChunk(did, uint8ToBase64(new Uint8Array(ab)), ci, tc);
-                                                off += CHUNK_SIZE; ci++;
-                                                setTimeout(next, 0);
-                                            });
-                                        }
-                                        next();
-                                    }
-                                    
-                                    function processSmall(blob, fname) {
-                                        const reader = new FileReader();
-                                        reader.onloadend = function() {
-                                            const base64Data = reader.result.split(',')[1];
-                                            const mimeType = blob.type || 'application/octet-stream';
-                                            if (window.AndroidDownload && window.AndroidDownload.saveBase64File) {
-                                                window.AndroidDownload.saveBase64File(base64Data, fname, mimeType);
-                                            }
-                                        };
-                                        reader.readAsDataURL(blob);
-                                    }
-                                    
-                                    if (blobUrl.startsWith('data:')) {
-                                        const parts = blobUrl.split(',');
-                                        const meta = parts[0];
-                                        const base64Data = parts[1];
-                                        const mimeMatch = meta.match(/data:([^;]+)/);
-                                        const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-                                        if (window.AndroidDownload && window.AndroidDownload.saveBase64File) {
-                                            window.AndroidDownload.saveBase64File(base64Data, filename, mimeType);
-                                        }
-                                    } else if (blobUrl.startsWith('blob:')) {
-                                        fetch(blobUrl)
-                                            .then(function(r) { return r.blob(); })
-                                            .then(function(blob) {
-                                                if (blob.size > LARGE_FILE_THRESHOLD) {
-                                                    processChunked(blob, filename);
-                                                } else {
-                                                    processSmall(blob, filename);
-                                                }
-                                            })
-                                            .catch(function(err) {
-                                                console.error('[DownloadHelper] Blob fetch failed:', err);
-                                                if (window.AndroidDownload && window.AndroidDownload.showToast) {
-                                                    window.AndroidDownload.showToast('${Strings.downloadFailedWithReason}' + err.message);
-                                                }
-                                            });
-                                    }
-                                } catch(e) {
-                                    console.error('[DownloadHelper] Error:', e);
-                                }
-                            })();
-                        """.trimIndent(), null)
-                    }
+                    webViewProvider = { webViewRef }
                 )
             }
             

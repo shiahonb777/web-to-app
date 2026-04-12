@@ -184,14 +184,14 @@
 
 ## 📦 Quick Start
 
+1️⃣ Clone the repository
 ```bash
-# 1️⃣ Clone the repository
 git clone https://github.com/shiahonb777/web-to-app.git
-
-# 2️⃣ Open in Android Studio
-# 3️⃣ Build and run on your device
-# 4️⃣ Start converting websites to apps!
 ```
+
+2️⃣ Open in Android Studio
+3️⃣ Build and run on your device
+4️⃣ Start converting websites to apps!
 
 > 💡 **Or download the APK directly from [Releases](https://github.com/shiahonb777/web-to-app/releases)**
 

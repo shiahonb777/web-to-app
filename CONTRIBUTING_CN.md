@@ -60,23 +60,32 @@ app/src/main/java/com/webtoapp/
 ├── ui/
 │   ├── MainActivity.kt
 │   ├── animation/ codepreview/ components/
-│   ├── data/ gallery/ icons/ media/ navigation/
+│   ├── data/ gallery/ icons/ media/
+│   ├── navigation/
+│   │   ├── AppNavigation.kt / AppNavigationGraph.kt / AppNavigationScaffold.kt
+│   │   ├── AppToolNavigation.kt / AppCreationNavigation.kt / AppPreviewNavigation.kt
+│   │   ├── AppCommunityNavigation.kt / AppAccountNavigation.kt / AppNavigationTabContent.kt
+│   │   └── AiExportCoordinator.kt / CreateHtmlRouteArgs.kt / PreviewStarter.kt
 │   ├── shared/ shell/ splash/ theme/ viewmodel/
 │   ├── screens/
-│   │   ├── aimodule/ community/
+│   │   ├── aimodule/ community/ extensionmodule/
 │   │   ├── AppStoreScreen.kt
 │   │   ├── CreateHtmlAppScreen.kt
+│   │   ├── ExtensionModuleScreen.kt
 │   │   ├── appstore/
 │   │   │   ├── details/ downloads/
 │   │   │   └── management/ published/
 │   │   └── htmlimport/
 │   └── webview/
+│       ├── WebAppPreviewCoordinator.kt
+│       ├── WebViewDownloadBridge.kt
 │       ├── ConsolePanel.kt
 │       ├── PreviewStates.kt
 │       ├── ServerPreviewOverlays.kt
 │       ├── WebViewActivity.kt
 │       ├── WebViewLongPressMenu.kt
 │       ├── WebViewSplashOverlay.kt
+│       ├── WebViewStrictHostFallback.kt
 │       ├── WebViewUtils.kt
 │       └── screen/
 │           └── WebViewScreen.kt
