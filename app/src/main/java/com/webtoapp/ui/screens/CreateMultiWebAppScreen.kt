@@ -78,6 +78,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateMultiWebAppScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     existingAppId: Long = 0L,
     onBack: () -> Unit,
     onCreated: (
@@ -126,10 +127,7 @@ fun CreateMultiWebAppScreen(
     // 编辑模式：加载已有数据
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
-            val existingApp = org.koin.java.KoinJavaComponent
-                .get<com.webtoapp.data.repository.WebAppRepository>(
-                    com.webtoapp.data.repository.WebAppRepository::class.java
-                ).getWebApp(existingAppId)
+            val existingApp = webAppRepository.getWebApp(existingAppId)
             existingApp?.let { app ->
                 appName = app.name
                 app.iconPath?.let { appIcon = android.net.Uri.parse(it) }

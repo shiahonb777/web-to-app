@@ -54,6 +54,7 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateMediaAppScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     existingAppId: Long? = null,
     onBack: () -> Unit,
     onCreated: (
@@ -72,9 +73,7 @@ fun CreateMediaAppScreen(
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
-            existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
-                .getWebAppById(existingAppId)
-                .first()
+            existingApp = webAppRepository.getWebAppById(existingAppId).first()
         }
     }
     val scrollState = rememberScrollState()
