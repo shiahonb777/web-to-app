@@ -49,6 +49,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateFrontendAppScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     onBack: () -> Unit,
     onCreated: (
         name: String,
@@ -82,9 +83,7 @@ fun CreateFrontendAppScreen(
     // Load现有应用数据（编辑模式）
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
-            existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
-                .getWebAppById(existingAppId)
-                .first()
+            existingApp = webAppRepository.getWebAppById(existingAppId).first()
             existingApp?.let { app ->
                 projectName = app.name
                 app.iconPath?.let { path -> appIcon = Uri.parse(path) }

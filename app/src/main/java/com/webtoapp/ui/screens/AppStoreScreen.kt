@@ -72,7 +72,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
-import org.koin.compose.koinInject
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
@@ -83,10 +82,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun AppStoreScreen(
     cloudViewModel: CloudViewModel,
+    apiClient: CloudApiClient,
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
+    installedTracker: com.webtoapp.core.cloud.InstalledItemsTracker,
     onInstallModule: (String) -> Unit,
     downloadManager: AppDownloadManager? = null
 ) {
-    val apiClient: CloudApiClient = koinInject()
     val scope = rememberCoroutineScope()
 
     // ── Pager 状态 ──
@@ -298,6 +299,8 @@ fun AppStoreScreen(
                 )
                 1 -> ModulesTabContent(
                     cloudViewModel = cloudViewModel,
+                    apiClient = apiClient,
+                    installedTracker = installedTracker,
                     searchQuery = searchQuery,
                     isSearchActive = isSearchActive,
                     onInstallModule = onInstallModule
@@ -324,6 +327,7 @@ fun AppStoreScreen(
     if (showPublishApp) {
         PublishAppSheet(
             apiClient = apiClient,
+            webAppRepository = webAppRepository,
             onDismiss = { showPublishApp = false },
             onPublished = {
                 showPublishApp = false
@@ -692,6 +696,8 @@ private fun AppsTabContent(
 @Composable
 private fun ModulesTabContent(
     cloudViewModel: CloudViewModel,
+    apiClient: CloudApiClient,
+    installedTracker: com.webtoapp.core.cloud.InstalledItemsTracker,
     searchQuery: String,
     isSearchActive: Boolean,
     onInstallModule: (String) -> Unit
@@ -865,6 +871,7 @@ private fun ModulesTabContent(
             items(modules, key = { it.id }) { module ->
                 ModuleStoreCard(
                     module = module,
+                    installedTracker = installedTracker,
                     onClick = { selectedStoreModule = module },
                     onInstall = { selectedStoreModule = module }
                 )
@@ -927,6 +934,8 @@ private fun ModulesTabContent(
     selectedStoreModule?.let { module ->
         ModuleStoreDetailSheet(
             module = module,
+            apiClient = apiClient,
+            installedTracker = installedTracker,
             onDismiss = { selectedStoreModule = null },
             onInstallWithCallback = { onComplete ->
                 cloudViewModel.downloadStoreModule(
@@ -954,12 +963,12 @@ private fun ModulesTabContent(
 @Composable
 private fun ModuleStoreDetailSheet(
     module: StoreModuleInfo,
+    apiClient: CloudApiClient,
+    installedTracker: com.webtoapp.core.cloud.InstalledItemsTracker,
     onDismiss: () -> Unit,
     onInstallWithCallback: (onComplete: (success: Boolean, message: String) -> Unit) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val apiClient = koinInject<com.webtoapp.core.cloud.CloudApiClient>()
-    val installedTracker = koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -1185,8 +1194,12 @@ private fun ModuleStoreDetailSheet(
 // ════════════════════════════════════════════════
 
 @Composable
-private fun ModuleStoreCard(module: StoreModuleInfo, onClick: () -> Unit, onInstall: () -> Unit) {
-    val installedTracker = koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
+private fun ModuleStoreCard(
+    module: StoreModuleInfo,
+    installedTracker: com.webtoapp.core.cloud.InstalledItemsTracker,
+    onClick: () -> Unit,
+    onInstall: () -> Unit
+) {
     val isInstalled = installedTracker.isInstalled(module.id)
     EnhancedElevatedCard(
         shape = RoundedCornerShape(18.dp),
@@ -5454,18 +5467,16 @@ private fun countryFlag(countryCode: String): String {
 @Composable
 private fun PublishAppSheet(
     apiClient: CloudApiClient,
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     onDismiss: () -> Unit,
     onPublished: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Load local projects from database
-    val db = remember { com.webtoapp.data.database.AppDatabase.getInstance(context) }
-    val allProjects by db.webAppDao().getAllWebApps().collectAsStateWithLifecycle(initialValue = emptyList())
+    val allProjects by webAppRepository.allWebApps.collectAsStateWithLifecycle(initialValue = emptyList())
 
     // Selected project
     var selectedProject by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }

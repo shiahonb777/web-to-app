@@ -99,6 +99,9 @@ import com.webtoapp.ui.components.liquidGlass
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
+    healthMonitor: com.webtoapp.core.stats.AppHealthMonitor? = null,
+    screenshotService: com.webtoapp.core.stats.WebsiteScreenshotService? = null,
+    batchImportService: com.webtoapp.core.stats.BatchImportService,
     onCreateApp: () -> Unit,
     onCreateMediaApp: () -> Unit = {},
     onCreateGalleryApp: () -> Unit = {},
@@ -460,27 +463,9 @@ fun HomeScreen(
                     val sharedApkBuilder = remember { ApkBuilder(listContext) }
                     val sharedScope = rememberCoroutineScope()
                     
-                    // 健康状态数据
-                    val healthMonitor: com.webtoapp.core.stats.AppHealthMonitor? = remember { 
-                        try { org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.AppHealthMonitor::class.java) } 
-                        catch (e: Exception) { null }
-                    }
                     val healthRecordsState = healthMonitor?.allHealthRecords?.collectAsState(initial = emptyList<com.webtoapp.core.stats.AppHealthRecord>())
                     val healthRecords: List<com.webtoapp.core.stats.AppHealthRecord> = healthRecordsState?.value ?: emptyList()
                     val healthMap = remember(healthRecords) { healthRecords.associateBy { it.appId } }
-                    
-                    // 截图服务
-                    fun resolveScreenshotService(): com.webtoapp.core.stats.WebsiteScreenshotService? {
-                        return try {
-                            org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.WebsiteScreenshotService::class.java)
-                        } catch (e: Exception) {
-                            val resolveMessage = "service resolve failed: ${e.message}"
-                            com.webtoapp.core.logging.AppLogger.w("ScreenshotFlow", resolveMessage)
-                            android.util.Log.w("ScreenshotFlow", resolveMessage, e)
-                            null
-                        }
-                    }
-                    val screenshotService: com.webtoapp.core.stats.WebsiteScreenshotService? = resolveScreenshotService()
                     val previewImageLoader = remember(listContext) {
                         ImageLoader.Builder(listContext.applicationContext)
                             .components {
@@ -716,7 +701,7 @@ fun HomeScreen(
                             isScreenshotLoading = screenshotLoadingStates[app.id] == true,
                             onCaptureScreenshot = if (previewSpec.captureUrl != null) {
                                 {
-                                    val resolvedService = screenshotService ?: resolveScreenshotService()
+                                    val resolvedService = screenshotService
                                     if (resolvedService == null) {
                                         val unavailableMessage = "manual capture aborted: service unavailable, appId=${app.id}, name=${app.name}"
                                         com.webtoapp.core.logging.AppLogger.i("ScreenshotFlow", unavailableMessage)
@@ -987,12 +972,11 @@ fun HomeScreen(
     
     // 批量导入对话框
     if (showBatchImportDialog) {
-        val importService = remember { org.koin.java.KoinJavaComponent.get<com.webtoapp.core.stats.BatchImportService>(com.webtoapp.core.stats.BatchImportService::class.java) }
         BatchImportDialog(
-            importService = importService,
+            importService = batchImportService,
             onDismiss = { showBatchImportDialog = false },
             onImport = { entries ->
-                importService.importEntries(entries)
+                batchImportService.importEntries(entries)
             }
         )
     }

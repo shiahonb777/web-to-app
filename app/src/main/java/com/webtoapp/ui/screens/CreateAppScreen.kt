@@ -62,6 +62,7 @@ private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
 @Composable
 fun CreateAppScreen(
     viewModel: MainViewModel,
+    activationManager: com.webtoapp.core.activation.ActivationManager,
     isEdit: Boolean,
     onBack: () -> Unit,
     onSaved: () -> Unit
@@ -215,6 +216,7 @@ fun CreateAppScreen(
                 activationCodes = editState.activationCodeList,
                 requireEveryTime = editState.activationRequireEveryTime,
                 dialogConfig = editState.activationDialogConfig,
+                activationManager = activationManager,
                 onEnabledChange = { viewModel.updateEditState { copy(activationEnabled = it) } },
                 onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } },
                 onRequireEveryTimeChange = { viewModel.updateEditState { copy(activationRequireEveryTime = it) } },

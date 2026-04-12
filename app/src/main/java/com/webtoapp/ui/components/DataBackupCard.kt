@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.backup.DataBackupManager
 import kotlinx.coroutines.launch
@@ -29,11 +28,12 @@ import kotlinx.coroutines.launch
  * 提供一键导出和导入所有应用数据的功能
  */
 @Composable
-fun DataBackupCard() {
+fun DataBackupCard(
+    repository: com.webtoapp.data.repository.WebAppRepository
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val backupManager = remember { DataBackupManager(context) }
-    val repository = remember { WebToAppApplication.repository }
     
     // 状态
     var isExporting by remember { mutableStateOf(false) }

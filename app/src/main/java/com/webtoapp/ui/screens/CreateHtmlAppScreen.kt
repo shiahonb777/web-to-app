@@ -65,6 +65,7 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateHtmlAppScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     existingAppId: Long? = null,  // 编辑模式时传入已有应用ID
     onBack: () -> Unit,
     onCreated: (
@@ -96,9 +97,7 @@ fun CreateHtmlAppScreen(
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
-            existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
-                .getWebAppById(existingAppId)
-                .first()
+            existingApp = webAppRepository.getWebAppById(existingAppId).first()
         }
     }
     val scrollState = rememberScrollState()
