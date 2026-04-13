@@ -1,10 +1,11 @@
-package com.webtoapp.core.webview
+package com.webtoapp.core.webview.intercept
 
 import android.content.Context
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import com.webtoapp.core.crypto.SecureAssetLoader
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.core.webview.WebViewManager
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody

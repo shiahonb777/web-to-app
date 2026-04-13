@@ -17,10 +17,6 @@ import java.util.UUID
 
 private val Context.aiCodingDataStore: DataStore<Preferences> by preferencesDataStore(name = "ai_coding")
 
-/**
- * HTML编程AI - 存储管理
- * 负责会话历史、版本控制（检查点）、文件保存
- */
 class AiCodingStorage(private val context: Context) {
 
     private val gson = com.webtoapp.util.GsonProvider.gson
@@ -30,8 +26,6 @@ class AiCodingStorage(private val context: Context) {
         private val KEY_CURRENT_SESSION_ID = stringPreferencesKey("current_session_id")
         private val KEY_CODE_LIBRARY = stringPreferencesKey("code_library")
         private val KEY_CHECKPOINTS = stringPreferencesKey("conversation_checkpoints")
-        
-        // File存储目录
         private const val AI_CODING_DIR = "AiCoding"
         private const val SESSIONS_DIR = "sessions"
         private const val PROJECTS_DIR = "projects"
@@ -39,11 +33,6 @@ class AiCodingStorage(private val context: Context) {
         private const val CODE_LIBRARY_DIR = "code_library"
     }
 
-    // ==================== 会话管理 ====================
-
-    /**
-     * 所有会话列表 Flow
-     */
     val sessionsFlow: Flow<List<AiCodingSession>> = context.aiCodingDataStore.data.map { prefs ->
         val json = prefs[KEY_SESSIONS] ?: "[]"
         try {
@@ -53,22 +42,14 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 当前会话ID Flow
-     */
     val currentSessionIdFlow: Flow<String?> = context.aiCodingDataStore.data.map { prefs ->
         prefs[KEY_CURRENT_SESSION_ID]
     }
     
-    // 项目文件管理器
     private val projectFileManager = ProjectFileManager(context)
 
-    /**
-     * 创建新会话（同时创建项目文件夹）
-     */
     suspend fun createSession(title: String = "", codingType: AiCodingType = AiCodingType.HTML): AiCodingSession {
         val sessionId = UUID.randomUUID().toString()
-        // Create项目文件夹
         val projectDir = projectFileManager.getSessionProjectDir(sessionId)
         
         val session = AiCodingSession(
@@ -87,14 +68,8 @@ class AiCodingStorage(private val context: Context) {
         return session
     }
     
-    /**
-     * 获取项目文件管理器
-     */
     fun getProjectFileManager(): ProjectFileManager = projectFileManager
 
-    /**
-     * 更新会话
-     */
     suspend fun updateSession(session: AiCodingSession) {
         context.aiCodingDataStore.edit { prefs ->
             val sessions = getSessions(prefs).toMutableList()
@@ -106,53 +81,33 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 删除会话
-     */
     suspend fun deleteSession(sessionId: String) {
         context.aiCodingDataStore.edit { prefs ->
             val sessions = getSessions(prefs).filter { it.id != sessionId }
             prefs[KEY_SESSIONS] = gson.toJson(sessions)
             
-            // 如果删除的是当前会话，清除当前会话ID
             if (prefs[KEY_CURRENT_SESSION_ID] == sessionId) {
                 prefs.remove(KEY_CURRENT_SESSION_ID)
             }
         }
         
-        // Delete会话相关文件
         deleteSessionFiles(sessionId)
     }
 
-    /**
-     * 设置当前会话
-     */
     suspend fun setCurrentSession(sessionId: String) {
         context.aiCodingDataStore.edit { prefs ->
             prefs[KEY_CURRENT_SESSION_ID] = sessionId
         }
     }
 
-    /**
-     * 获取会话
-     */
     suspend fun getSession(sessionId: String): AiCodingSession? {
         return sessionsFlow.first().find { it.id == sessionId }
     }
 
-    /**
-     * 获取当前会话
-     */
     suspend fun getCurrentSession(): AiCodingSession? {
         val currentId = currentSessionIdFlow.first() ?: return null
         return getSession(currentId)
     }
-
-    // ==================== 消息管理 ====================
-
-    /**
-     * 添加消息到会话
-     */
     suspend fun addMessage(sessionId: String, message: AiCodingMessage): AiCodingSession? {
         var updatedSession: AiCodingSession? = null
         context.aiCodingDataStore.edit { prefs ->
@@ -173,9 +128,6 @@ class AiCodingStorage(private val context: Context) {
         return updatedSession
     }
 
-    /**
-     * 更新消息（用于流式更新或编辑）
-     */
     suspend fun updateMessage(sessionId: String, message: AiCodingMessage): AiCodingSession? {
         var updatedSession: AiCodingSession? = null
         context.aiCodingDataStore.edit { prefs ->
@@ -198,10 +150,6 @@ class AiCodingStorage(private val context: Context) {
         return updatedSession
     }
 
-    /**
-     * 编辑用户消息（重编辑功能）
-     * 会创建一个检查点并回滚后续消息
-     */
     suspend fun editUserMessage(
         sessionId: String, 
         messageId: String, 
@@ -219,10 +167,8 @@ class AiCodingStorage(private val context: Context) {
                 if (messageIndex >= 0) {
                     val oldMessage = session.messages[messageIndex]
                     
-                    // Create检查点（保存编辑前的状态）
                     val checkpoint = createCheckpointFromSession(session, messageIndex, "编辑前自动保存")
                     
-                    // Update消息内容，保留原始内容
                     val editedMessage = oldMessage.copy(
                         content = newContent,
                         images = newImages,
@@ -230,10 +176,8 @@ class AiCodingStorage(private val context: Context) {
                         originalContent = oldMessage.originalContent ?: oldMessage.content
                     )
                     
-                    // Delete该消息之后的所有消息（回滚）
                     val newMessages = session.messages.subList(0, messageIndex) + editedMessage
                     
-                    // Update检查点列表
                     val newCheckpoints = session.checkpoints + checkpoint
                     
                     val updated = session.copy(
@@ -251,11 +195,6 @@ class AiCodingStorage(private val context: Context) {
         return updatedSession
     }
 
-    // ==================== 版本控制（检查点） ====================
-
-    /**
-     * 创建检查点
-     */
     suspend fun createCheckpoint(
         sessionId: String, 
         name: String,
@@ -282,9 +221,6 @@ class AiCodingStorage(private val context: Context) {
         return checkpoint
     }
 
-    /**
-     * 回滚到检查点
-     */
     suspend fun rollbackToCheckpoint(sessionId: String, checkpointId: String): AiCodingSession? {
         var updatedSession: AiCodingSession? = null
         context.aiCodingDataStore.edit { prefs ->
@@ -297,7 +233,6 @@ class AiCodingStorage(private val context: Context) {
                 if (checkpointIndex >= 0) {
                     val checkpoint = session.checkpoints[checkpointIndex]
                     
-                    // 回滚消息到检查点位置
                     val restoredMessages = session.messages.take(checkpoint.messageIndex)
                     
                     val updated = session.copy(
@@ -314,9 +249,6 @@ class AiCodingStorage(private val context: Context) {
         return updatedSession
     }
 
-    /**
-     * 删除检查点
-     */
     suspend fun deleteCheckpoint(sessionId: String, checkpointId: String) {
         context.aiCodingDataStore.edit { prefs ->
             val sessions = getSessions(prefs).toMutableList()
@@ -335,16 +267,12 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 从会话创建检查点
-     */
     private fun createCheckpointFromSession(
         session: AiCodingSession,
         messageIndex: Int,
         name: String,
         description: String = ""
     ): ProjectCheckpoint {
-        // 从消息中提取所有代码文件
         val files = mutableListOf<ProjectFile>()
         session.messages.take(messageIndex).forEach { message ->
             message.codeBlocks.forEach { block ->
@@ -357,7 +285,6 @@ class AiCodingStorage(private val context: Context) {
                     "json" -> ProjectFileType.JSON
                     else -> ProjectFileType.OTHER
                 }
-                // Update或添加文件
                 val existingIndex = files.indexOfFirst { it.name == filename }
                 if (existingIndex >= 0) {
                     files[existingIndex] = ProjectFile(filename, block.content, type)
@@ -375,38 +302,24 @@ class AiCodingStorage(private val context: Context) {
         )
     }
 
-    // ==================== 文件操作 ====================
-
-    /**
-     * 获取HTML编程根目录
-     */
     fun getAiCodingDir(): File {
         val dir = File(context.getExternalFilesDir(null), AI_CODING_DIR)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
-    /**
-     * Get project directory
-     */
     fun getProjectsDir(): File {
         val dir = File(getAiCodingDir(), PROJECTS_DIR)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
-    /**
-     * 获取图片目录
-     */
     fun getImagesDir(): File {
         val dir = File(getAiCodingDir(), IMAGES_DIR)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
-    /**
-     * 保存项目到指定目录
-     */
     fun saveProject(
         config: SaveConfig,
         files: List<ProjectFile>
@@ -425,10 +338,8 @@ class AiCodingStorage(private val context: Context) {
             files.forEach { file ->
                 val targetFile = File(targetDir, file.name)
                 
-                // Create父目录
                 targetFile.parentFile?.mkdirs()
                 
-                // Check是否覆盖
                 if (targetFile.exists() && !config.overwrite) {
                     throw Exception("文件已存在: ${file.name}")
                 }
@@ -442,9 +353,6 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 保存单个HTML文件用于预览
-     */
     fun saveForPreview(content: String, filename: String = "preview.html"): File {
         val previewDir = File(getAiCodingDir(), "preview")
         if (!previewDir.exists()) previewDir.mkdirs()
@@ -452,10 +360,8 @@ class AiCodingStorage(private val context: Context) {
         val file = File(previewDir, filename)
         file.writeText(content)
         
-        // 输出保存的文件路径和内容长度用于调试
         AppLogger.d("AiCodingStorage", "saveForPreview: path=${file.absolutePath}, contentLength=${content.length}")
         
-        // Check保存的内容中是否有 script 标签
         val scriptMatches = CodeBlockParser.findScriptTags(content)
         AppLogger.d("AiCodingStorage", "Saved HTML has ${scriptMatches.size} script tags")
         scriptMatches.forEachIndexed { index, match ->
@@ -466,9 +372,6 @@ class AiCodingStorage(private val context: Context) {
         return file
     }
 
-    /**
-     * 保存图片
-     */
     fun saveImage(imageBytes: ByteArray, filename: String? = null): File {
         val actualFilename = filename ?: "${UUID.randomUUID()}.png"
         val file = File(getImagesDir(), actualFilename)
@@ -476,9 +379,6 @@ class AiCodingStorage(private val context: Context) {
         return file
     }
 
-    /**
-     * 复制用户选择的图片到存储目录
-     */
     suspend fun copyImageToStorage(sourcePath: String): String {
         val sourceFile = File(sourcePath)
         if (!sourceFile.exists()) return sourcePath
@@ -489,9 +389,6 @@ class AiCodingStorage(private val context: Context) {
         return targetFile.absolutePath
     }
 
-    /**
-     * 删除会话相关文件
-     */
     private fun deleteSessionFiles(sessionId: String) {
         val sessionDir = File(getAiCodingDir(), "$SESSIONS_DIR/$sessionId")
         if (sessionDir.exists()) {
@@ -499,23 +396,17 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 获取可用的保存目录列表
-     */
     fun getAvailableSaveDirectories(): List<Pair<String, File>> {
         val dirs = mutableListOf<Pair<String, File>>()
         
-        // App私有目录
         dirs.add("应用目录" to getProjectsDir())
         
-        // Download目录
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)?.let {
             if (it.exists() || it.mkdirs()) {
                 dirs.add("下载目录" to it)
             }
         }
         
-        // 文档目录
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)?.let {
             if (it.exists() || it.mkdirs()) {
                 dirs.add("文档目录" to it)
@@ -525,11 +416,6 @@ class AiCodingStorage(private val context: Context) {
         return dirs
     }
 
-    // ==================== 代码库管理 ====================
-
-    /**
-     * 代码库列表 Flow
-     */
     val codeLibraryFlow: Flow<List<CodeLibraryItem>> = context.aiCodingDataStore.data.map { prefs ->
         val json = prefs[KEY_CODE_LIBRARY] ?: "[]"
         try {
@@ -539,9 +425,6 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 添加到代码库（AI输出时自动调用）
-     */
     suspend fun addToCodeLibrary(
         sessionId: String,
         messageId: String,
@@ -581,22 +464,15 @@ class AiCodingStorage(private val context: Context) {
             prefs[KEY_CODE_LIBRARY] = gson.toJson(library)
         }
         
-        // Save预览文件
         saveCodeLibraryFiles(item)
         
         return item
     }
 
-    /**
-     * 获取代码库项目
-     */
     suspend fun getCodeLibraryItem(itemId: String): CodeLibraryItem? {
         return codeLibraryFlow.first().find { it.id == itemId }
     }
 
-    /**
-     * 更新代码库项目
-     */
     suspend fun updateCodeLibraryItem(item: CodeLibraryItem) {
         context.aiCodingDataStore.edit { prefs ->
             val library = getCodeLibrary(prefs).toMutableList()
@@ -608,21 +484,14 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 删除代码库项目
-     */
     suspend fun deleteCodeLibraryItem(itemId: String) {
         context.aiCodingDataStore.edit { prefs ->
             val library = getCodeLibrary(prefs).filter { it.id != itemId }
             prefs[KEY_CODE_LIBRARY] = gson.toJson(library)
         }
-        // Delete相关文件
         deleteCodeLibraryFiles(itemId)
     }
 
-    /**
-     * 切换收藏状态
-     */
     suspend fun toggleFavorite(itemId: String) {
         context.aiCodingDataStore.edit { prefs ->
             val library = getCodeLibrary(prefs).toMutableList()
@@ -634,9 +503,6 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 导出到项目库
-     */
     fun exportToProjectLibrary(item: CodeLibraryItem, projectName: String): Result<File> {
         return saveProject(
             SaveConfig(
@@ -649,34 +515,23 @@ class AiCodingStorage(private val context: Context) {
         )
     }
 
-    /**
-     * 获取代码库目录
-     */
     fun getCodeLibraryDir(): File {
         val dir = File(getAiCodingDir(), CODE_LIBRARY_DIR)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
-    /**
-     * 保存代码库项目文件
-     */
     private fun saveCodeLibraryFiles(item: CodeLibraryItem) {
         val itemDir = File(getCodeLibraryDir(), item.id)
         if (!itemDir.exists()) itemDir.mkdirs()
         
-        // Save预览HTML
         File(itemDir, "preview.html").writeText(item.previewHtml)
         
-        // Save各个文件
         item.files.forEach { file ->
             File(itemDir, file.name).writeText(file.content)
         }
     }
 
-    /**
-     * 删除代码库项目文件
-     */
     private fun deleteCodeLibraryFiles(itemId: String) {
         val itemDir = File(getCodeLibraryDir(), itemId)
         if (itemDir.exists()) {
@@ -684,19 +539,11 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 获取代码库预览文件
-     */
     fun getCodeLibraryPreviewFile(itemId: String): File? {
         val file = File(getCodeLibraryDir(), "$itemId/preview.html")
         return if (file.exists()) file else null
     }
 
-    // ==================== 增强检查点管理 ====================
-
-    /**
-     * 检查点列表 Flow
-     */
     val checkpointsFlow: Flow<List<ConversationCheckpoint>> = context.aiCodingDataStore.data.map { prefs ->
         val json = prefs[KEY_CHECKPOINTS] ?: "[]"
         try {
@@ -706,16 +553,12 @@ class AiCodingStorage(private val context: Context) {
         }
     }
 
-    /**
-     * 创建对话检查点（每次对话后自动调用）
-     */
     suspend fun createConversationCheckpoint(
         sessionId: String,
         name: String = "自动保存"
     ): ConversationCheckpoint? {
         val session = getSession(sessionId) ?: return null
         
-        // Get当前会话关联的代码库项目ID
         val codeLibrary = codeLibraryFlow.first()
         val relatedLibraryIds = codeLibrary
             .filter { it.sessionId == sessionId }
@@ -732,7 +575,6 @@ class AiCodingStorage(private val context: Context) {
         
         context.aiCodingDataStore.edit { prefs ->
             val checkpoints = getCheckpoints(prefs).toMutableList()
-            // 同一会话只保留最近10个检查点
             val sessionCheckpoints = checkpoints.filter { it.sessionId == sessionId }
             if (sessionCheckpoints.size >= 10) {
                 val oldest = sessionCheckpoints.minByOrNull { it.timestamp }
@@ -745,23 +587,16 @@ class AiCodingStorage(private val context: Context) {
         return checkpoint
     }
 
-    /**
-     * 获取会话的检查点列表
-     */
     suspend fun getSessionCheckpoints(sessionId: String): List<ConversationCheckpoint> {
         return checkpointsFlow.first()
             .filter { it.sessionId == sessionId }
             .sortedByDescending { it.timestamp }
     }
 
-    /**
-     * 回退到检查点（完整回退：消息 + 代码库）
-     */
     suspend fun rollbackToConversationCheckpoint(checkpointId: String): AiCodingSession? {
         val checkpoints = checkpointsFlow.first()
         val checkpoint = checkpoints.find { it.id == checkpointId } ?: return null
         
-        // 回退会话消息
         context.aiCodingDataStore.edit { prefs ->
             val sessions = getSessions(prefs).toMutableList()
             val sessionIndex = sessions.indexOfFirst { it.id == checkpoint.sessionId }
@@ -775,7 +610,6 @@ class AiCodingStorage(private val context: Context) {
                 prefs[KEY_SESSIONS] = gson.toJson(sessions)
             }
             
-            // 回退代码库：删除检查点之后创建的项目
             val library = getCodeLibrary(prefs).toMutableList()
             val itemsToRemove = library.filter { item ->
                 item.sessionId == checkpoint.sessionId && 
@@ -792,17 +626,12 @@ class AiCodingStorage(private val context: Context) {
         return getSession(checkpoint.sessionId)
     }
 
-    /**
-     * 删除检查点
-     */
     suspend fun deleteConversationCheckpoint(checkpointId: String) {
         context.aiCodingDataStore.edit { prefs ->
             val checkpoints = getCheckpoints(prefs).filter { it.id != checkpointId }
             prefs[KEY_CHECKPOINTS] = gson.toJson(checkpoints)
         }
     }
-
-    // ==================== 辅助方法 ====================
 
     private fun getSessions(prefs: Preferences): List<AiCodingSession> {
         val json = prefs[KEY_SESSIONS] ?: "[]"

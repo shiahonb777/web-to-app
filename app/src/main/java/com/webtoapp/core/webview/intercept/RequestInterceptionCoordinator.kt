@@ -1,4 +1,4 @@
-package com.webtoapp.core.webview
+package com.webtoapp.core.webview.intercept
 
 import android.content.Context
 import android.net.Uri
@@ -7,6 +7,8 @@ import android.webkit.WebResourceResponse
 import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.engine.shields.BrowserShields
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.core.webview.WebViewManager
+import com.webtoapp.core.webview.WebViewUrlPolicy
 import com.webtoapp.data.model.WebViewConfig
 import java.io.ByteArrayInputStream
 
@@ -164,6 +166,8 @@ internal class RequestInterceptionCoordinator(
     }
 
     fun inferResourceType(request: WebResourceRequest): String {
+        if (request.isForMainFrame) return "main_frame"
+
         val headers = request.requestHeaders
         val accept = headers.entries.find {
             it.key.equals("Accept", ignoreCase = true)

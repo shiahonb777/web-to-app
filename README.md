@@ -407,62 +407,6 @@ Shows app info, changelog, and dual download buttons (GitHub international + Git
 
 </div>
 
-## ☁️ Cloud Layering
-
-- `app/src/main/java/com/webtoapp/core/cloud/api`
-  Domain-specific cloud APIs such as activation, backup, and notifications live here. Keep request wiring out of `CloudApiClient.kt`.
-- `app/src/main/java/com/webtoapp/core/cloud/internal`
-  Shared cloud internals such as JSON parsing, error mapping, and request helpers live here.
-- `app/src/main/java/com/webtoapp/core/cloud/model`
-  Cloud DTOs are centralized here so response models stop leaking across random files.
-
-## 🧩 Feature Screens
-
-- `app/src/main/java/com/webtoapp/ui/screens/create/webview/cards`
-  WebView creation cards are split by responsibility into `interaction`, `display`, and `system`.
-- `app/src/main/java/com/webtoapp/ui/screens/extensionmodule/editor`
-  Extension editor UI is split into `tabs` and `dialogs`, leaving `ModuleEditorScreen.kt` as a thin composition entry.
-
-## 🧩 Extension Runtime
-
-- `app/src/main/java/com/webtoapp/core/extension/snippets`
-  `CodeSnippets.kt` is now only a compatibility facade. Snippet models, grouped category builders, search, and popular-item wiring live here.
-- `app/src/main/java/com/webtoapp/core/extension/panel`
-  Extension panel icon mapping, the injected panel script, and helper script now live here so `ExtensionPanelScript.kt` no longer acts as a giant string dump.
-
-## 🗃️ Model & ViewModel
-
-- `app/src/main/java/com/webtoapp/data/model/webapp/config`
-  `WebApp.kt` now stays focused on the entity itself, while WebView/runtime/media/export/appearance config types live in dedicated files under this package. `WebAppConfigAliases.kt` keeps legacy imports working during migration.
-- `app/src/main/java/com/webtoapp/ui/viewmodel/main`
-  `MainViewModel` helpers such as save assembly, PWA import coordination, and state factories live here so the ViewModel stops acting like a 2,000-line god object.
-
-## 🧱 创建页共用层
-
-- `app/src/main/java/com/webtoapp/ui/screens/create/common`
-  放置创建流程共享的状态模型、区块抽象、保存/预览控制以及项目导入契约。此层负责统一流转 `AppFlowSpec` + `ProjectImportAnalysis`，让各创建页在收集用户输入后的行为保持一致。
-- `app/src/main/java/com/webtoapp/ui/screens/create/runtime`
-  各种运行时特定项目导入器与分析器（Node/PHP/Python/Go）。导入器扫描入口文件、依赖、环境变量、端口等信息，生成标准 `ProjectImportAnalysis` 供创建页侧快速回填表单。
-
-## 🌐 WebView 分层
-
-- `app/src/main/java/com/webtoapp/core/webview/WebViewManager.kt`
-  现在只保留协调职责：组装配置、维护会话级状态、把导航/拦截/兼容/注入/销毁分发给专职组件，不再继续包圆所有脏活。
-- `app/src/main/java/com/webtoapp/core/webview/session`
-  存放 `WebViewSessionState`，统一收口当前配置、主框架 URL、扩展运行时、诊断计数等页面会话状态。
-- `app/src/main/java/com/webtoapp/core/webview/navigation`
-  处理 URL 策略、特殊 scheme、外部浏览器/Custom Tab、新窗口分发。
-- `app/src/main/java/com/webtoapp/core/webview/intercept`
-  处理请求拦截、cleartext 回退、跨域代理、本地/加密资源加载以及 MIME 判断。
-- `app/src/main/java/com/webtoapp/core/webview/compat`
-  处理 Strict Host、OAuth 兼容、Requested-With allow-list、保守脚本模式与 scriptless 模式。
-- `app/src/main/java/com/webtoapp/core/webview/injection`
-  将普通脚本注入与扩展运行时拆开：`ScriptInjectionCoordinator` 只管常规注入，`ExtensionRuntimeCoordinator` 负责扩展运行时和面板注册。
-- `app/src/main/java/com/webtoapp/core/webview/lifecycle`
-  负责 WebView、Cookie/WebStorage、JS bridge、扩展 runtime 的销毁和清理。
-- `app/src/main/java/com/webtoapp/ui/webview/rememberWebViewManager.kt`
-  统一编辑器页和 Shell 页的 `WebViewManager` 创建入口，避免两边各自再抄一份 `remember { WebViewManager(...) }`。
-
 ## 📖 Usage Guide
 
 ### Create Website App

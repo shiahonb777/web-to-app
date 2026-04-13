@@ -55,9 +55,6 @@ private fun String.escapeForJsTemplate(): String =
         .replace("\n", "\\n")
         .replace("\r", "\\r")
 
-/**
- * 扩展模块分类
- */
 enum class ModuleCategory(val icon: String) {
     CONTENT_FILTER("block"),
     CONTENT_ENHANCE("auto_awesome"),
@@ -136,9 +133,6 @@ enum class ModuleCategory(val icon: String) {
     }
 }
 
-/**
- * 模块执行时机
- */
 enum class ModuleRunTime(val jsEvent: String) {
     DOCUMENT_START(""),
     DOCUMENT_END("DOMContentLoaded"),
@@ -163,9 +157,6 @@ enum class ModuleRunTime(val jsEvent: String) {
     }
 }
 
-/**
- * 模块触发条件
- */
 enum class ModuleTrigger {
     AUTO,
     MANUAL,
@@ -205,9 +196,6 @@ enum class ModuleTrigger {
     }
 }
 
-/**
- * 模块权限
- */
 enum class ModulePermission(val dangerous: Boolean = false) {
     DOM_ACCESS,
     DOM_OBSERVE,
@@ -310,9 +298,6 @@ enum class ModulePermission(val dangerous: Boolean = false) {
     }
 }
 
-/**
- * 模块配置项类型
- */
 enum class ConfigItemType {
     TEXT, TEXTAREA, NUMBER, BOOLEAN,
     SELECT, MULTI_SELECT, RADIO, CHECKBOX,
@@ -372,42 +357,35 @@ enum class ConfigItemType {
     }
 }
 
-/**
- * 模块配置项定义
- */
 data class ModuleConfigItem(
     @SerializedName("key")
-    val key: String,                              // Configure键名
+    val key: String,
     @SerializedName("name")
-    val name: String,                             // Show名称
+    val name: String,
     @SerializedName("description")
-    val description: String = "",                 // Configure说明
+    val description: String = "",
     @SerializedName("type")
-    val type: ConfigItemType = ConfigItemType.TEXT, // Configure类型
+    val type: ConfigItemType = ConfigItemType.TEXT,
     @SerializedName("defaultValue")
-    val defaultValue: String = "",                // Default值
+    val defaultValue: String = "",
     @SerializedName("options")
-    val options: List<String> = emptyList(),      // Options列表（SELECT/MULTI_SELECT 类型）
+    val options: List<String> = emptyList(),
     @SerializedName("required")
-    val required: Boolean = false,                // Yes否必填
+    val required: Boolean = false,
     @SerializedName("placeholder")
-    val placeholder: String = "",                 // 占位提示
+    val placeholder: String = "",
     @SerializedName("validation")
-    val validation: String? = null                // Verify正则（可选）
+    val validation: String? = null
 )
 
-/**
- * 模块 UI 类型
- * 定义模块在网页中的展示形式
- */
 enum class ModuleUiType {
-    FLOATING_BUTTON,    // 悬浮按钮（默认，点击显示面板）
-    FLOATING_TOOLBAR,   // 悬浮工具栏（多个按钮水平/垂直排列）
-    SIDEBAR,            // 侧边栏（可展开/收起的面板）
-    BOTTOM_BAR,         // 底部操作栏（固定在底部）
-    FLOATING_PANEL,     // 可拖动悬浮面板
-    MINI_BUTTON,        // 迷你悬浮按钮（更小，不显示模块数量）
-    CUSTOM;             // 完全自定义（使用 customHtml）
+    FLOATING_BUTTON,
+    FLOATING_TOOLBAR,
+    SIDEBAR,
+    BOTTOM_BAR,
+    FLOATING_PANEL,
+    MINI_BUTTON,
+    CUSTOM;
     
     fun getDisplayName(): String = when (this) {
         FLOATING_BUTTON -> Strings.uiTypeFloatingButton
@@ -440,9 +418,6 @@ enum class ModuleUiType {
     }
 }
 
-/**
- * UI 位置
- */
 enum class UiPosition {
     TOP_LEFT, TOP_CENTER, TOP_RIGHT,
     MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT,
@@ -473,12 +448,9 @@ enum class UiPosition {
     }
 }
 
-/**
- * 工具栏方向
- */
 enum class ToolbarOrientation {
-    HORIZONTAL,  // 水平排列
-    VERTICAL;    // 垂直排列
+    HORIZONTAL,
+    VERTICAL;
     
     fun getDisplayName(): String = when (this) {
         HORIZONTAL -> Strings.orientationHorizontal
@@ -486,12 +458,9 @@ enum class ToolbarOrientation {
     }
 }
 
-/**
- * 侧边栏位置
- */
 enum class SidebarPosition {
-    LEFT,   // 左侧
-    RIGHT;  // 右侧
+    LEFT,
+    RIGHT;
     
     fun getDisplayName(): String = when (this) {
         LEFT -> Strings.sidebarLeft
@@ -499,119 +468,93 @@ enum class SidebarPosition {
     }
 }
 
-/**
- * 工具栏项 - 定义工具栏中的单个按钮
- */
 data class ToolbarItem(
     @SerializedName("id")
-    val id: String = UUID.randomUUID().toString(),  // 唯一ID
+    val id: String = UUID.randomUUID().toString(),
     @SerializedName("icon")
-    val icon: String,                               // Icon（emoji）
+    val icon: String,
     @SerializedName("label")
-    val label: String = "",                         // 标签文字（可选）
+    val label: String = "",
     @SerializedName("tooltip")
-    val tooltip: String = "",                       // 悬停提示
+    val tooltip: String = "",
     @SerializedName("action")
-    val action: String,                             // 点击时执行的 JS 代码或函数名
+    val action: String,
     @SerializedName("showLabel")
-    val showLabel: Boolean = false,                 // Yes否显示标签
+    val showLabel: Boolean = false,
     @SerializedName("badge")
-    val badge: String = ""                          // 徽章文字（如数量）
+    val badge: String = ""
 )
 
-/**
- * 模块 UI 配置
- * 定义模块的 UI 样式和行为
- */
 data class ModuleUiConfig(
     @SerializedName("type")
     val type: ModuleUiType = ModuleUiType.FLOATING_BUTTON,
-    
-    // 通用配置
     @SerializedName("position")
-    val position: UiPosition = UiPosition.BOTTOM_RIGHT,  // UI 位置
+    val position: UiPosition = UiPosition.BOTTOM_RIGHT,
     @SerializedName("draggable")
-    val draggable: Boolean = false,                      // Yes否可拖动
+    val draggable: Boolean = false,
     @SerializedName("autoHide")
-    val autoHide: Boolean = false,                       // 滚动时自动隐藏
+    val autoHide: Boolean = false,
     @SerializedName("autoHideDelay")
-    val autoHideDelay: Int = 3000,                       // Auto隐藏延迟（毫秒）
+    val autoHideDelay: Int = 3000,
     @SerializedName("initiallyHidden")
-    val initiallyHidden: Boolean = false,                // 初始是否隐藏
+    val initiallyHidden: Boolean = false,
     @SerializedName("showOnlyOnMatch")
-    val showOnlyOnMatch: Boolean = true,                 // 仅在匹配 URL 时显示
-    
-    // 悬浮按钮配置
+    val showOnlyOnMatch: Boolean = true,
     @SerializedName("buttonSize")
-    val buttonSize: Int = 56,                            // 按钮大小（dp）
+    val buttonSize: Int = 56,
     @SerializedName("buttonColor")
-    val buttonColor: String = "",                        // 按钮颜色（空则使用主题色）
-    
-    // Toolbar配置
+    val buttonColor: String = "",
     @SerializedName("toolbarItems")
-    val toolbarItems: List<ToolbarItem> = emptyList(),   // Toolbar按钮列表
+    val toolbarItems: List<ToolbarItem> = emptyList(),
     @SerializedName("toolbarOrientation")
     val toolbarOrientation: ToolbarOrientation = ToolbarOrientation.HORIZONTAL,
     @SerializedName("toolbarCollapsible")
-    val toolbarCollapsible: Boolean = true,              // Yes否可折叠
+    val toolbarCollapsible: Boolean = true,
     @SerializedName("toolbarCollapsed")
-    val toolbarCollapsed: Boolean = false,               // 初始是否折叠
-    
-    // 侧边栏配置
+    val toolbarCollapsed: Boolean = false,
     @SerializedName("sidebarPosition")
     val sidebarPosition: SidebarPosition = SidebarPosition.RIGHT,
     @SerializedName("sidebarWidth")
-    val sidebarWidth: Int = 300,                         // 侧边栏宽度（px）
+    val sidebarWidth: Int = 300,
     @SerializedName("sidebarCollapsed")
-    val sidebarCollapsed: Boolean = true,                // 初始是否折叠
-    
-    // 底部栏配置
+    val sidebarCollapsed: Boolean = true,
     @SerializedName("bottomBarHeight")
-    val bottomBarHeight: Int = 56,                       // 底部栏高度（px）
+    val bottomBarHeight: Int = 56,
     @SerializedName("bottomBarTransparent")
-    val bottomBarTransparent: Boolean = false,           // Yes否半透明背景
-    
-    // 悬浮面板配置
+    val bottomBarTransparent: Boolean = false,
     @SerializedName("panelWidth")
-    val panelWidth: Int = 320,                           // 面板宽度（px）
+    val panelWidth: Int = 320,
     @SerializedName("panelHeight")
-    val panelHeight: Int = 400,                          // 面板高度（px）
+    val panelHeight: Int = 400,
     @SerializedName("panelResizable")
-    val panelResizable: Boolean = true,                  // Yes否可调整大小
+    val panelResizable: Boolean = true,
     @SerializedName("panelMinimizable")
-    val panelMinimizable: Boolean = true,                // Yes否可最小化
-    
-    // Custom HTML（仅 CUSTOM 类型）
+    val panelMinimizable: Boolean = true,
     @SerializedName("customHtml")
-    val customHtml: String = "",                         // Custom HTML 模板
+    val customHtml: String = "",
     @SerializedName("customCss")
-    val customCss: String = ""                           // Custom CSS
+    val customCss: String = ""
 ) {
     companion object {
-        /** 默认悬浮按钮配置 */
         val DEFAULT = ModuleUiConfig()
         
-        /** 视频增强工具栏预设 */
         val VIDEO_TOOLBAR = ModuleUiConfig(
             type = ModuleUiType.FLOATING_TOOLBAR,
             position = UiPosition.BOTTOM_CENTER,
             toolbarCollapsible = true
         )
         
-        /** 侧边栏预设 */
         val SIDEBAR_DEFAULT = ModuleUiConfig(
             type = ModuleUiType.SIDEBAR,
             sidebarPosition = SidebarPosition.RIGHT,
             sidebarWidth = 300
         )
         
-        /** 底部栏预设 */
         val BOTTOM_BAR_DEFAULT = ModuleUiConfig(
             type = ModuleUiType.BOTTOM_BAR,
             bottomBarHeight = 56
         )
         
-        /** 迷你按钮预设 */
         val MINI_BUTTON_DEFAULT = ModuleUiConfig(
             type = ModuleUiType.MINI_BUTTON,
             position = UiPosition.BOTTOM_RIGHT,
@@ -620,61 +563,45 @@ data class ModuleUiConfig(
     }
 }
 
-/**
- * 模块作者信息
- */
 data class ModuleAuthor(
     @SerializedName("name")
-    val name: String,                             // 作者名称
+    val name: String,
     @SerializedName("email")
-    val email: String? = null,                    // 邮箱
+    val email: String? = null,
     @SerializedName("url")
-    val url: String? = null,                      // 主页
+    val url: String? = null,
     @SerializedName("qq")
-    val qq: String? = null                        // QQ
+    val qq: String? = null
 )
 
-/**
- * 模块版本信息
- */
 data class ModuleVersion(
     @SerializedName("code")
-    val code: Int = 1,                            // Version号
+    val code: Int = 1,
     @SerializedName("name")
-    val name: String = "1.0.0",                   // Version名
+    val name: String = "1.0.0",
     @SerializedName("changelog")
-    val changelog: String = ""                    // Update日志
+    val changelog: String = ""
 )
 
-/**
- * URL 匹配规则
- */
 data class UrlMatchRule(
     @SerializedName("pattern")
-    val pattern: String,                          // 匹配模式（支持通配符和正则）
+    val pattern: String,
     @SerializedName("isRegex")
-    val isRegex: Boolean = false,                 // Yes否为正则表达式
+    val isRegex: Boolean = false,
     @SerializedName("exclude")
-    val exclude: Boolean = false                  // Yes否为排除规则
+    val exclude: Boolean = false
 )
 
 
-/**
- * 模块来源类型
- */
 enum class ModuleSourceType {
-    CUSTOM,              // 用户自建 / AI 生成
-    USERSCRIPT,          // 油猴脚本 (.user.js)
-    CHROME_EXTENSION     // Chrome 扩展 (manifest.json)
+    CUSTOM,
+    USERSCRIPT,
+    CHROME_EXTENSION
 }
 
-/**
- * 模块运行方式
- * 定义模块是否需要 UI 交互
- */
 enum class ModuleRunMode {
-    INTERACTIVE,         // 交互模式：可在管理面板中操作简单UI，也可启动独立窗口使用完整UI
-    AUTO;                // 自动模式：自动加载运行，无UI操作界面，不可交互
+    INTERACTIVE,
+    AUTO;
     
     fun getDisplayName(): String = when (this) {
         INTERACTIVE -> Strings.runModeInteractive
@@ -692,97 +619,63 @@ enum class ModuleRunMode {
     }
 }
 
-/**
- * 扩展模块 - 核心数据模型
- * 
- * 这是整个扩展系统的核心，定义了一个可复用、可分享的功能模块
- */
 data class ExtensionModule(
-    // 基本标识
     @SerializedName("id")
-    val id: String = UUID.randomUUID().toString(),  // 唯一ID
+    val id: String = UUID.randomUUID().toString(),
     @SerializedName("name")
-    val name: String,                               // Module名称
+    val name: String,
     @SerializedName("description")
-    val description: String = "",                   // Module描述
+    val description: String = "",
     @SerializedName("icon")
-    val icon: String = "package",                        // Module图标（icon ID）
-    
-    // 分类与标签
+    val icon: String = "package",
     @SerializedName("category")
-    val category: ModuleCategory = ModuleCategory.OTHER, // Module分类
+    val category: ModuleCategory = ModuleCategory.OTHER,
     @SerializedName("tags")
-    val tags: List<String> = emptyList(),           // 标签列表
-    
-    // Version与作者
+    val tags: List<String> = emptyList(),
     @SerializedName("version")
-    val version: ModuleVersion = ModuleVersion(),   // Version信息
+    val version: ModuleVersion = ModuleVersion(),
     @SerializedName("author")
-    val author: ModuleAuthor? = null,               // 作者信息
-    
-    // 代码内容
+    val author: ModuleAuthor? = null,
     @SerializedName("code")
-    val code: String = "",                          // JavaScript 代码
+    val code: String = "",
     @SerializedName("cssCode")
-    val cssCode: String = "",                       // CSS 代码（可选）
-    
-    // Execute配置
+    val cssCode: String = "",
     @SerializedName("runAt")
-    val runAt: ModuleRunTime = ModuleRunTime.DOCUMENT_END, // Execute时机
+    val runAt: ModuleRunTime = ModuleRunTime.DOCUMENT_END,
     @SerializedName("urlMatches")
-    val urlMatches: List<UrlMatchRule> = emptyList(), // URL 匹配规则（空则匹配所有）
-    
-    // Permission声明
+    val urlMatches: List<UrlMatchRule> = emptyList(),
     @SerializedName("permissions")
-    val permissions: List<ModulePermission> = emptyList(), // 所需权限
-    
-    // Configure项定义
+    val permissions: List<ModulePermission> = emptyList(),
     @SerializedName("configItems")
-    val configItems: List<ModuleConfigItem> = emptyList(), // User可配置项
+    val configItems: List<ModuleConfigItem> = emptyList(),
     @SerializedName("configValues")
-    val configValues: Map<String, String> = emptyMap(),    // User配置值
-    
-    // 依赖关系
+    val configValues: Map<String, String> = emptyMap(),
     @SerializedName("dependencies")
-    val dependencies: List<String> = emptyList(),   // 依赖的其他模块ID
-    
-    // 状态
+    val dependencies: List<String> = emptyList(),
     @SerializedName("enabled")
-    val enabled: Boolean = true,                    // Yes否启用
+    val enabled: Boolean = true,
     @SerializedName("builtIn")
-    val builtIn: Boolean = false,                   // Yes否为内置模块
-    
-    // UI 配置
+    val builtIn: Boolean = false,
     @SerializedName("uiConfig")
-    val uiConfig: ModuleUiConfig = ModuleUiConfig.DEFAULT, // UI 类型和配置
-    
-    // 运行方式（必填）
+    val uiConfig: ModuleUiConfig = ModuleUiConfig.DEFAULT,
     @SerializedName("runMode")
-    val runMode: ModuleRunMode = ModuleRunMode.INTERACTIVE, // 运行方式：交互模式或自动模式
-    
-    // 模块来源
+    val runMode: ModuleRunMode = ModuleRunMode.INTERACTIVE,
     @SerializedName("sourceType")
     val sourceType: ModuleSourceType = ModuleSourceType.CUSTOM,
-    
-    // Chrome 扩展特有字段
     @SerializedName("chromeExtId")
-    val chromeExtId: String = "",                        // Chrome 扩展标识符（用于 storage 命名空间隔离和 runtime.id）
+    val chromeExtId: String = "",
     @SerializedName("world")
-    val world: String = "ISOLATED",                      // 内容脚本执行世界: "ISOLATED" 或 "MAIN"
+    val world: String = "ISOLATED",
     @SerializedName("backgroundScript")
-    val backgroundScript: String = "",                   // Background script 相对路径（如 "background/index.js"）
-    
-    // 油猴脚本特有字段
+    val backgroundScript: String = "",
     @SerializedName("gmGrants")
-    val gmGrants: List<String> = emptyList(),          // @grant 声明的 GM_* API 列表
+    val gmGrants: List<String> = emptyList(),
     @SerializedName("requireUrls")
-    val requireUrls: List<String> = emptyList(),        // @require 外部依赖 URL
+    val requireUrls: List<String> = emptyList(),
     @SerializedName("resources")
-    val resources: Map<String, String> = emptyMap(),    // @resource 命名资源 (name -> url)
+    val resources: Map<String, String> = emptyMap(),
     @SerializedName("noframes")
-    val noframes: Boolean = false,                      // @noframes 仅主框架执行
-    
-    // 元数据
+    val noframes: Boolean = false,
     @SerializedName("createdAt")
     val createdAt: Long = System.currentTimeMillis(),
     @SerializedName("updatedAt")
@@ -790,14 +683,9 @@ data class ExtensionModule(
 ) {
     companion object {
         private val gson get() = GsonProvider.gson
-        
-        // 分享码前缀标识
-        private const val SHARE_CODE_PREFIX_V1 = "WTA1:"  // Compression版
-        private const val SHARE_CODE_PREFIX_V0 = ""       // 旧版（无前缀）
-        
-        /**
-         * 从 JSON 字符串解析模块
-         */
+        private const val SHARE_CODE_PREFIX_V1 = "WTA1:"
+        private const val SHARE_CODE_PREFIX_V0 = ""
+
         fun fromJson(json: String): ExtensionModule? {
             return try {
                 gson.fromJson(json, ExtensionModule::class.java)
@@ -806,14 +694,9 @@ data class ExtensionModule(
             }
         }
         
-        /**
-         * 从分享码解析模块
-         * 支持新版压缩格式和旧版未压缩格式
-         */
         fun fromShareCode(shareCode: String): ExtensionModule? {
             return try {
                 val json = when {
-                    // V1: 压缩版（GZIP + Base64）
                     shareCode.startsWith(SHARE_CODE_PREFIX_V1) -> {
                         val compressed = android.util.Base64.decode(
                             shareCode.removePrefix(SHARE_CODE_PREFIX_V1), 
@@ -821,7 +704,6 @@ data class ExtensionModule(
                         )
                         decompressGzip(compressed)
                     }
-                    // V0: 旧版未压缩（纯 Base64）
                     else -> {
                         String(android.util.Base64.decode(shareCode, android.util.Base64.DEFAULT))
                     }
@@ -832,18 +714,12 @@ data class ExtensionModule(
             }
         }
         
-        /**
-         * GZIP 解压缩
-         */
         private fun decompressGzip(compressed: ByteArray): String {
             java.util.zip.GZIPInputStream(java.io.ByteArrayInputStream(compressed)).use { gzip ->
                 return gzip.bufferedReader().readText()
             }
         }
         
-        /**
-         * GZIP 压缩
-         */
         private fun compressGzip(data: String): ByteArray {
             val bos = java.io.ByteArrayOutputStream()
             java.util.zip.GZIPOutputStream(bos).use { gzip ->
@@ -853,45 +729,29 @@ data class ExtensionModule(
         }
     }
     
-    /**
-     * 转换为 JSON 字符串
-     */
     fun toJson(): String = gson.toJson(this)
     
-    /**
-     * 生成分享码（压缩版）
-     * 使用 GZIP 压缩后 Base64 编码，通常可缩短 50-70%
-     */
     fun toShareCode(): String {
         val compressed = compressGzip(toJson())
         return SHARE_CODE_PREFIX_V1 + android.util.Base64.encodeToString(compressed, android.util.Base64.NO_WRAP)
     }
     
-    /**
-     * 生成旧版分享码（未压缩，用于兼容性）
-     */
     fun toShareCodeLegacy(): String {
         return android.util.Base64.encodeToString(toJson().toByteArray(), android.util.Base64.NO_WRAP)
     }
     
-    /**
-     * 检查 URL 是否匹配此模块
-     */
     fun matchesUrl(url: String): Boolean {
         if (urlMatches.isEmpty()) return true
         
         val includeRules = urlMatches.filter { !it.exclude }
         val excludeRules = urlMatches.filter { it.exclude }
         
-        // 先检查排除规则
         for (rule in excludeRules) {
             if (matchRule(url, rule)) return false
         }
         
-        // 如果没有包含规则，默认匹配
         if (includeRules.isEmpty()) return true
         
-        // Check包含规则
         return includeRules.any { matchRule(url, it) }
     }
     
@@ -948,7 +808,6 @@ data class ExtensionModule(
         }
     }
     
-    // Cache generated executable code per module instance (data class is immutable)
     @Transient
     @Volatile
     private var _cachedExecutableCode: String? = null
@@ -1078,8 +937,6 @@ data class ExtensionModule(
         
         if (name.isBlank()) errors.add(Strings.validateNameEmpty)
         if (code.isBlank() && cssCode.isBlank()) errors.add(Strings.validateCodeEmpty)
-        
-        // Verify配置项
         configItems.forEach { item ->
             if (item.required && configValues[item.key].isNullOrBlank()) {
                 errors.add(Strings.validateConfigRequired.replace("%s", item.name))
@@ -1090,20 +947,17 @@ data class ExtensionModule(
     }
 }
 
-/**
- * 模块包 - 用于导出/导入多个模块
- */
 data class ModulePackage(
     @SerializedName("name")
-    val name: String,                               // Package name称
+    val name: String,
     @SerializedName("description")
-    val description: String = "",                   // 包描述
+    val description: String = "",
     @SerializedName("author")
-    val author: ModuleAuthor? = null,               // 作者
+    val author: ModuleAuthor? = null,
     @SerializedName("modules")
-    val modules: List<ExtensionModule>,             // Module列表
+    val modules: List<ExtensionModule>,
     @SerializedName("version")
-    val version: String = "1.0.0",                  // 包版本
+    val version: String = "1.0.0",
     @SerializedName("createdAt")
     val createdAt: Long = System.currentTimeMillis()
 ) {
@@ -1122,14 +976,7 @@ data class ModulePackage(
     fun toJson(): String = gson.toJson(this)
 }
 
-/**
- * 模块分类分组 - 用于 UI 展示
- */
 object ModuleCategoryGroups {
-    
-    /**
-     * 分类分组定义
-     */
     val groups = listOf(
         CategoryGroup(
             name = Strings.categoryGroupContent,
@@ -1209,27 +1056,17 @@ object ModuleCategoryGroups {
             )
         )
     )
-    
-    /**
-     * 获取分类所属的分组
-     */
     fun getGroupForCategory(category: ModuleCategory): CategoryGroup? {
         return groups.find { it.categories.contains(category) }
     }
 }
 
-/**
- * 分类分组
- */
 data class CategoryGroup(
     val name: String,
     val icon: String,
     val categories: List<ModuleCategory>
 )
 
-/**
- * 权限分组 - 用于 UI 展示
- */
 object ModulePermissionGroups {
     
     val groups = listOf(
@@ -1307,22 +1144,12 @@ object ModulePermissionGroups {
     )
 }
 
-/**
- * 权限分组
- */
 data class PermissionGroup(
     val name: String,
     val permissions: List<ModulePermission>
 )
 
-/**
- * 常用模块预设 - 快速创建常见类型模块
- */
 object ModulePresets {
-    
-    /**
-     * 创建元素屏蔽模块
-     */
     fun createElementBlocker(
         name: String,
         selectors: List<String>,
@@ -1349,9 +1176,6 @@ object ModulePresets {
         )
     }
     
-    /**
-     * 创建样式注入模块
-     */
     fun createStyleInjector(
         name: String,
         cssCode: String,
@@ -1369,9 +1193,6 @@ object ModulePresets {
         )
     }
     
-    /**
-     * 创建自动点击模块
-     */
     fun createAutoClicker(
         name: String,
         selector: String,
@@ -1395,9 +1216,6 @@ object ModulePresets {
         )
     }
     
-    /**
-     * 创建悬浮按钮模块
-     */
     fun createFloatingButton(
         name: String,
         buttonText: String,

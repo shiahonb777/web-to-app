@@ -11,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.webtoapp.core.adblock.AdBlocker
-import com.webtoapp.core.crypto.SecureAssetLoader
 import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.extension.ExtensionPanelScript
 import com.webtoapp.core.extension.ModuleRunTime
@@ -23,7 +22,8 @@ import com.webtoapp.core.engine.shields.BrowserShields
 import com.webtoapp.core.engine.shields.ThirdPartyCookiePolicy
 import com.webtoapp.core.errorpage.ErrorPageManager
 import com.webtoapp.core.errorpage.ErrorPageMode
-import java.io.ByteArrayInputStream
+import com.webtoapp.core.webview.intercept.RequestInterceptionCoordinator
+import com.webtoapp.core.webview.intercept.ResourceFallbackLoader
 import java.net.URL
 import okhttp3.OkHttpClient
 import okhttp3.ConnectionSpec
@@ -1345,38 +1345,6 @@ class WebViewManager(
     }
 
     /**
-     * Only apply network-level blocking to third-party sub-resource requests.
-     * This avoids breaking first-party scripts/styles for strict websites.
-     */
-    private fun isThirdPartySubResourceRequest(request: WebResourceRequest): Boolean {
-        if (request.isForMainFrame) return false
-
-        val requestHost = extractHostFromUrl(request.url?.toString()) ?: return false
-        if (requestHost in LOCAL_CLEARTEXT_HOSTS) return false
-
-        // IMPORTANT: shouldInterceptRequest may run on WebView background thread.
-        // Never call WebView APIs (e.g. view.url) here; use cached main-frame URL + headers.
-        val topLevelHost = extractHostFromUrl(currentMainFrameUrl)
-            ?: extractHostFromUrl(request.requestHeaders["Referer"])
-            ?: extractHostFromUrl(request.requestHeaders["referer"])
-            ?: return false
-
-        return !isSameSiteHost(requestHost, topLevelHost)
-    }
-
-    /**
-     * Check if a URL is a request to a well-known map tile server.
-     * These must never be blocked by ad/tracker filters as they are essential
-     * for map libraries like Leaflet, Mapbox, Google Maps, etc.
-     */
-    private fun isMapTileRequest(url: String): Boolean {
-        val host = extractHostFromUrl(url) ?: return false
-        return MAP_TILE_HOST_SUFFIXES.any { suffix ->
-            host == suffix || host.endsWith(".$suffix")
-        }
-    }
-
-    /**
      * For remote sites, prefer conservative compatibility/shields JS injection.
      * These pages are often sensitive to prototype monkey-patching.
      */
@@ -1391,14 +1359,6 @@ class WebViewManager(
     private fun shouldUseScriptlessMode(pageUrl: String?): Boolean {
         return strictHostRuntimePolicy.shouldUseScriptlessMode(pageUrl)
     }
-
-    /**
-     * Check if a URL is an OAuth / sign-in page that may block embedded WebViews.
-     * Delegates to OAuthCompatEngine which covers 16+ providers.
-     *
-     * @deprecated Use OAuthCompatEngine.isOAuthUrl() directly
-     */
-    private fun isGoogleOAuthUrl(url: String): Boolean = OAuthCompatEngine.isOAuthUrl(url)
 
     /**
      * Open a URL in the system browser (Chrome, default browser, etc.).
@@ -1424,47 +1384,6 @@ class WebViewManager(
         specialUrlHandler.openInCustomTab(url)
     }
 
-    private fun shouldBypassAggressiveNetworkHooks(request: WebResourceRequest, requestUrl: String): Boolean {
-        if (request.isForMainFrame) {
-            return shouldUseScriptlessMode(requestUrl)
-        }
-
-        val topLevelUrl = currentMainFrameUrl
-            ?: request.requestHeaders["Referer"]
-            ?: request.requestHeaders["referer"]
-            ?: return false
-
-        return shouldUseScriptlessMode(topLevelUrl)
-    }
-
-    private fun isSameSiteHost(hostA: String, hostB: String): Boolean {
-        if (hostA == hostB) return true
-        if (hostA.endsWith(".$hostB") || hostB.endsWith(".$hostA")) return true
-
-        val rootA = getRegistrableDomain(hostA) ?: return false
-        val rootB = getRegistrableDomain(hostB) ?: return false
-        return rootA == rootB
-    }
-
-    // 预编译的 IP 地址正则 — 避免每次调用 getRegistrableDomain 都重新编译
-    private val IP_ADDRESS_REGEX = Regex("^\\d+\\.\\d+\\.\\d+\\.\\d+$")
-
-    private fun getRegistrableDomain(host: String): String? {
-        val normalized = host.lowercase().trim('.')
-        if (normalized.isBlank()) return null
-        if (IP_ADDRESS_REGEX.matches(normalized)) return normalized
-
-        val parts = normalized.split('.')
-        if (parts.size <= 2) return normalized
-
-        val suffix2 = parts.takeLast(2).joinToString(".")
-        return if (suffix2 in COMMON_SECOND_LEVEL_TLDS && parts.size >= 3) {
-            parts.takeLast(3).joinToString(".")
-        } else {
-            parts.takeLast(2).joinToString(".")
-        }
-    }
-
     /**
      * C 级 URL host 提取 (零分配)
      * shouldInterceptRequest 每次子资源请求调用 ~3 次
@@ -1475,90 +1394,6 @@ class WebViewManager(
         // C 级零分配提取 → 回退到 Uri.parse
         return com.webtoapp.core.perf.NativePerfEngine.extractHost(target)?.lowercase()
             ?: runCatching { Uri.parse(target).host?.lowercase() }.getOrNull()
-    }
-
-    /**
-     * Cleartext proxy — fetches HTTP resources that are blocked by Android's
-     * network security config (ERR_CLEARTEXT_NOT_PERMITTED).
-     *
-     * Use case: m3u8 video streams, HTTP sub-resources (images, scripts) loaded
-     * from HTTPS pages, where the app's cleartextTrafficPermitted="false" policy
-     * would otherwise block them.
-     *
-     * @param request Original WebResourceRequest (must be HTTP)
-     * @return WebResourceResponse with the fetched content, or null on error
-     */
-    private fun fetchCleartextResource(request: WebResourceRequest): WebResourceResponse? {
-        return resourceFallbackLoader.fetchCleartextResource(request)
-    }
-
-    /**
-     * Fetch resource with Cross-Origin Isolation headers
-     * Required for SharedArrayBuffer / FFmpeg.wasm support
-     * 
-     * @param request Original WebResourceRequest
-     * @return WebResourceResponse with COOP/COEP headers, or null on error
-     */
-    private fun fetchWithCrossOriginHeaders(request: WebResourceRequest): WebResourceResponse? {
-        return resourceFallbackLoader.fetchWithCrossOriginHeaders(request)
-    }
-    
-    /**
-     * Load encrypted asset resource
-     * If encrypted, decrypt and return; otherwise return original
-     * 
-     * @param assetPath asset path (without file:///android_asset/ prefix)
-     * @return WebResourceResponse or null (let system handle)
-     */
-    private fun loadEncryptedAsset(assetPath: String): WebResourceResponse? {
-        return resourceFallbackLoader.loadEncryptedAsset(assetPath)
-    }
-    
-    /**
-     * Get MIME type by file extension
-     */
-    private fun getMimeType(path: String): String {
-        return resourceFallbackLoader.getMimeType(path)
-    }
-    
-    /**
-     * Check if MIME type is text
-     */
-    private fun isTextMimeType(mimeType: String): Boolean {
-        return resourceFallbackLoader.isTextMimeType(mimeType)
-    }
-
-    /**
-     * Infer resource type from WebResourceRequest for extension webRequest/DNR filtering.
-     * Maps Accept header and URL extension to Chrome resource type strings.
-     */
-    private fun inferResourceType(request: WebResourceRequest): String {
-        // Main frame
-        if (request.isForMainFrame) return "main_frame"
-
-        // Check Accept header
-        val accept = request.requestHeaders?.entries?.firstOrNull {
-            it.key.equals("Accept", ignoreCase = true)
-        }?.value ?: ""
-
-        if (accept.contains("text/html")) return "sub_frame"
-        if (accept.contains("text/css")) return "stylesheet"
-        if (accept.contains("image/")) return "image"
-        if (accept.contains("font/") || accept.contains("application/font")) return "font"
-
-        // Check URL extension
-        val url = request.url?.toString() ?: ""
-        val ext = url.substringBefore('?').substringBefore('#').substringAfterLast('.', "").lowercase()
-        return when (ext) {
-            "js", "mjs" -> "script"
-            "css" -> "stylesheet"
-            "png", "jpg", "jpeg", "gif", "webp", "svg", "ico" -> "image"
-            "woff", "woff2", "ttf", "otf", "eot" -> "font"
-            "html", "htm" -> "sub_frame"
-            "json", "xml" -> "xmlhttprequest"
-            "mp3", "wav", "ogg", "mp4", "webm" -> "media"
-            else -> "other"
-        }
     }
 
     /**
