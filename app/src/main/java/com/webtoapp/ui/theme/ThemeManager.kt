@@ -37,15 +37,6 @@ class ThemeManager(private val context: Context) {
         private val KEY_ENABLE_HAPTICS = booleanPreferencesKey("enable_haptics")
         private val KEY_ENABLE_SOUND = booleanPreferencesKey("enable_sound")
         private val KEY_ANIMATION_SPEED = stringPreferencesKey("animation_speed")
-        
-        @Volatile
-        private var instance: ThemeManager? = null
-        
-        fun getInstance(context: Context): ThemeManager {
-            return instance ?: synchronized(this) {
-                instance ?: ThemeManager(context.applicationContext).also { instance = it }
-            }
-        }
     }
     
     /**

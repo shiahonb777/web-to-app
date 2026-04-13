@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.shell.ShellRuntimeServices
 import java.util.Calendar
 
 /**
@@ -50,7 +50,7 @@ class ScheduledStartReceiver : BroadcastReceiver() {
 
             // 检测运行模式
             val isShellMode = try {
-                WebToAppApplication.shellMode.isShellMode()
+                ShellRuntimeServices.shellMode.isShellMode()
             } catch (e: Exception) {
                 false
             }
@@ -84,7 +84,7 @@ class ScheduledStartReceiver : BroadcastReceiver() {
      */
     private fun handleShellMode(context: Context, dayOfWeek: Int) {
         val config = try {
-            WebToAppApplication.shellMode.getConfig()
+            ShellRuntimeServices.shellMode.getConfig()
         } catch (e: Exception) {
             AppLogger.e(TAG, "获取 Shell 配置失败", e)
             return

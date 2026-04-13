@@ -25,23 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.webtoapp.core.activation.ActivationManager
-import com.webtoapp.core.billing.BillingManager
-import com.webtoapp.core.cloud.CloudApiClient
-import com.webtoapp.core.cloud.InstalledItemsTracker
-import com.webtoapp.core.stats.AppHealthMonitor
-import com.webtoapp.core.stats.AppStatsRepository
-import com.webtoapp.core.stats.BatchImportService
-import com.webtoapp.core.stats.WebsiteScreenshotService
-import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.ui.components.LiquidTabBar
 import com.webtoapp.ui.components.LiquidTabItem
 import com.webtoapp.ui.components.themedBackground
 import com.webtoapp.ui.viewmodel.AuthViewModel
-import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.viewmodel.MainViewModel
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 internal fun AppNavigationScaffold(
@@ -49,46 +37,6 @@ internal fun AppNavigationScaffold(
     authViewModel: AuthViewModel,
 ) {
     val navController = rememberNavController()
-    val webAppRepository: WebAppRepository = koinInject()
-    val statsRepository: AppStatsRepository = koinInject()
-    val healthMonitor: AppHealthMonitor = koinInject()
-    val screenshotService: WebsiteScreenshotService = koinInject()
-    val batchImportService: BatchImportService = koinInject()
-    val activationManager: ActivationManager = koinInject()
-    val billingManager: BillingManager = koinInject()
-    val apiClient: CloudApiClient = koinInject()
-    val installedItemsTracker: InstalledItemsTracker = koinInject()
-    val cloudViewModel: CloudViewModel = koinViewModel()
-
-    val graphDependencies = remember(
-        viewModel,
-        authViewModel,
-        webAppRepository,
-        statsRepository,
-        healthMonitor,
-        screenshotService,
-        batchImportService,
-        activationManager,
-        billingManager,
-        apiClient,
-        installedItemsTracker,
-        cloudViewModel,
-    ) {
-        AppNavigationGraphDependencies(
-            viewModel = viewModel,
-            authViewModel = authViewModel,
-            webAppRepository = webAppRepository,
-            statsRepository = statsRepository,
-            healthMonitor = healthMonitor,
-            screenshotService = screenshotService,
-            batchImportService = batchImportService,
-            activationManager = activationManager,
-            billingManager = billingManager,
-            apiClient = apiClient,
-            installedItemsTracker = installedItemsTracker,
-            cloudViewModel = cloudViewModel,
-        )
-    }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -144,9 +92,6 @@ internal fun AppNavigationScaffold(
                 HomeTabContent(
                     navController = navController,
                     viewModel = viewModel,
-                    healthMonitor = healthMonitor,
-                    screenshotService = screenshotService,
-                    batchImportService = batchImportService,
                 )
             }
 
@@ -155,13 +100,7 @@ internal fun AppNavigationScaffold(
                 selectedTab = selectedTab,
                 isOnDetailScreen = isOnDetailScreen,
             ) {
-                AppStoreTabContent(
-                    navController = navController,
-                    webAppRepository = webAppRepository,
-                    apiClient = apiClient,
-                    installedItemsTracker = installedItemsTracker,
-                    cloudViewModel = cloudViewModel,
-                )
+                AppStoreTabContent()
             }
 
             NavigationTabContainer(
@@ -197,7 +136,8 @@ internal fun AppNavigationScaffold(
 
             AppNavigationGraph(
                 navController = navController,
-                dependencies = graphDependencies,
+                viewModel = viewModel,
+                authViewModel = authViewModel,
             )
         }
     }

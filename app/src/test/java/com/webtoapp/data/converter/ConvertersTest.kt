@@ -1,4 +1,4 @@
-package com.webtoapp.ui.data.converter
+package com.webtoapp.data.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonParser

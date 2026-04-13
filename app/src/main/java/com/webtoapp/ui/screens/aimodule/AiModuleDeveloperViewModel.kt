@@ -33,13 +33,13 @@ private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataS
  * Requirements: 2.1, 4.8, 8.6
  */
 class AiModuleDeveloperViewModel(
-    private val application: Application
+    private val application: Application,
+    private val extensionManager: ExtensionManager,
 ) : ViewModel() {
     
     // 依赖
     private val aiConfigManager = AiConfigManager(application)
     private val agentEngine = EnhancedAgentEngine(application)
-    private val extensionManager = ExtensionManager.getInstance(application)
     private val gson = com.webtoapp.util.GsonProvider.gson
     
     // DataStore keys for session persistence
@@ -691,7 +691,9 @@ class AiModuleDeveloperViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(AiModuleDeveloperViewModel::class.java)) {
-                return AiModuleDeveloperViewModel(appContext) as T
+                val extensionManager: ExtensionManager =
+                    org.koin.java.KoinJavaComponent.get(ExtensionManager::class.java)
+                return AiModuleDeveloperViewModel(appContext, extensionManager) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

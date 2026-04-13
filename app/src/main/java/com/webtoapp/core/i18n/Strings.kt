@@ -5,6 +5,8 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import com.webtoapp.R
+import com.webtoapp.core.extension.ExtensionManager
+import org.koin.compose.koinInject
 
 /**
  * 多语言字符串管理器
@@ -27,7 +29,7 @@ object Strings {
 
     fun attachContext(baseContext: Context, language: AppLanguage = lang) {
         localizedContext = try {
-            LanguageManager.getInstance(baseContext).applyLanguage(baseContext, language)
+            LanguageManager(baseContext.applicationContext).applyLanguage(baseContext, language)
         } catch (_: Exception) {
             baseContext
         }
@@ -31028,7 +31030,8 @@ object Strings {
 @Composable
 fun InitializeLanguage() {
     val context = LocalContext.current
-    val languageManager = remember { LanguageManager.getInstance(context) }
+    val languageManager: LanguageManager = koinInject()
+    val extensionManager: ExtensionManager = koinInject()
     val language by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
     
     LaunchedEffect(language) {
@@ -31036,7 +31039,7 @@ fun InitializeLanguage() {
         Strings.setLanguage(language)
         // 重新加载内置模块以更新多语言文本
         try {
-            com.webtoapp.core.extension.ExtensionManager.getInstance(context).reloadBuiltInModules()
+            extensionManager.reloadBuiltInModules()
         } catch (e: Exception) {
             // Ignore if ExtensionManager not initialized yet
         }

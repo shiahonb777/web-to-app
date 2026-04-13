@@ -45,6 +45,7 @@ class EnhancedAgentEngine(private val context: Context) {
     private val aiConfigManager = AiConfigManager(context)
     private val aiClient = AiApiClient(context)
     private val toolExecutor = AgentToolExecutor(context)
+    private val languageManager by lazy { LanguageManager(context.applicationContext) }
     
     // 工作记忆
     val workingMemory = AgentWorkingMemory()
@@ -161,7 +162,7 @@ class EnhancedAgentEngine(private val context: Context) {
             
             // 流完成，处理生成的内容
             val responseText = contentBuilder.toString()
-            processGeneratedContentIterative(responseText, apiKey, selectedModel, category)
+            processGeneratedContentIterative(responseText, apiKey, selectedModel)
                 .collect { agentEvent -> emit(agentEvent) }
             
         } catch (e: CancellationException) {
@@ -186,8 +187,7 @@ class EnhancedAgentEngine(private val context: Context) {
     private fun processGeneratedContentIterative(
         responseText: String,
         apiKey: ApiKeyConfig,
-        savedModel: SavedModel,
-        category: ModuleCategory?
+        savedModel: SavedModel
     ): Flow<AgentStreamEvent> = flow {
         // Parse生成的模块
         val parsedModule = parseGeneratedModule(responseText)
@@ -322,7 +322,6 @@ class EnhancedAgentEngine(private val context: Context) {
         attemptNumber: Int
     ): GeneratedModuleData? {
         // Get当前语言
-        val languageManager = LanguageManager.getInstance(context)
         val currentLanguage = languageManager.getCurrentLanguage()
         
         val errorMessages = syntaxResult.errors.joinToString("\n") { error ->
@@ -474,7 +473,6 @@ $errorSummary$moreErrors
      */
     private suspend fun buildSystemPrompt(category: ModuleCategory?, existingCode: String?): String {
         // Get当前语言
-        val languageManager = LanguageManager.getInstance(context)
         val currentLanguage = languageManager.getCurrentLanguage()
         
         val categoryHint = category?.let {
@@ -546,7 +544,6 @@ $it
         val messages = mutableListOf<Map<String, String>>()
         
         // Get当前语言
-        val languageManager = LanguageManager.getInstance(context)
         val currentLanguage = languageManager.getCurrentLanguage()
         
         // System消息

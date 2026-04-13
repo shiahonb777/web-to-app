@@ -45,6 +45,7 @@ import java.io.ByteArrayOutputStream
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import org.koin.compose.koinInject
 
 // 预设图标数据（id 与 ExtensionPanelScript.ICON_SVG_MAP 的 key 对应）
 private data class FabPresetIcon(val id: String, val icon: ImageVector)
@@ -97,7 +98,7 @@ fun ExtensionModuleCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val userModules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
@@ -112,7 +113,7 @@ fun ExtensionModuleCard(
     var showTestDialog by remember { mutableStateOf(false) }
     
     // 方案管理器
-    val presetManager = remember { ModulePresetManager.getInstance(context) }
+    val presetManager: ModulePresetManager = koinInject()
     var showPresetSelector by remember { mutableStateOf(false) }
     var showSavePresetDialog by remember { mutableStateOf(false) }
     

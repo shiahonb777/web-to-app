@@ -28,22 +28,12 @@ import com.webtoapp.data.model.ModelCapability
  *   }
  * }
  */
-class LiteLLMModelRegistry private constructor() {
-    
-    companion object {
-        @Volatile
-        private var instance: LiteLLMModelRegistry? = null
-        
-        fun getInstance(context: Context): LiteLLMModelRegistry {
-            return instance ?: synchronized(this) {
-                instance ?: LiteLLMModelRegistry().also { registry ->
-                    registry.loadFromAssets(context)
-                    instance = registry
-                }
-            }
-        }
+class LiteLLMModelRegistry(context: Context) {
+
+    init {
+        loadFromAssets(context.applicationContext)
     }
-    
+
     // modelKey -> ModelInfo
     private val models = mutableMapOf<String, ModelInfo>()
     

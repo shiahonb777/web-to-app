@@ -33,10 +33,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.view.WindowCompat
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.i18n.LanguageManager
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.core.shell.ShellModeManager
 import com.webtoapp.ui.components.FirstLaunchLanguageScreen
 import com.webtoapp.ui.navigation.AppNavigation
 import com.webtoapp.ui.shell.ShellActivity
@@ -44,11 +44,15 @@ import com.webtoapp.ui.theme.CircularRevealOverlay
 import com.webtoapp.ui.theme.LocalThemeRevealState
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.ui.theme.rememberThemeRevealState
+import org.koin.android.ext.android.inject
+import org.koin.compose.koinInject
 
 /**
  * 主Activity - 应用入口
  */
 class MainActivity : ComponentActivity() {
+
+    private val shellModeManager: ShellModeManager by inject()
 
     // 首次启动语言选择状态
     private var showLanguageSelection by mutableStateOf(true)
@@ -72,8 +76,7 @@ class MainActivity : ComponentActivity() {
         
         // Check是否为 Shell 模式（添加异常保护）
         val isShell = try {
-            val shellManager = WebToAppApplication.shellMode
-            val result = shellManager.isShellMode()
+            val result = shellModeManager.isShellMode()
             AppLogger.d("MainActivity", "Shell mode check: isShellMode=$result")
             result
         } catch (e: Exception) {
@@ -136,8 +139,7 @@ class MainActivity : ComponentActivity() {
                     windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
                 }
                 
-                val context = LocalContext.current
-                val languageManager = remember { LanguageManager.getInstance(context) }
+                val languageManager: LanguageManager = koinInject()
                 val hasSelectedLanguage by languageManager.hasSelectedLanguageFlow.collectAsState(initial = true)
                 
                 // 提供 ThemeRevealState 给子组件（HomeScreen 的切换按钮）

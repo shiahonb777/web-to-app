@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +22,7 @@ import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.LanguageManager
 import com.webtoapp.util.isRunningOnTv
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 /**
  * 语言选择按钮（用于 TopAppBar）
@@ -31,8 +31,7 @@ import kotlinx.coroutines.launch
 fun LanguageSelectorButton(
     onLanguageChanged: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val languageManager = remember { LanguageManager.getInstance(context) }
+    val languageManager: LanguageManager = koinInject()
     val scope = rememberCoroutineScope()
     
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
@@ -181,8 +180,7 @@ private fun LanguageOption(
 fun FirstLaunchLanguageScreen(
     onLanguageSelected: () -> Unit
 ) {
-    val context = LocalContext.current
-    val languageManager = remember { LanguageManager.getInstance(context) }
+    val languageManager: LanguageManager = koinInject()
     val scope = rememberCoroutineScope()
     
     var selectedLanguage by remember { mutableStateOf<AppLanguage?>(null) }
@@ -377,8 +375,7 @@ private fun FirstLaunchLanguageOption(
 fun LanguageSettingsCard(
     onLanguageChanged: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val languageManager = remember { LanguageManager.getInstance(context) }
+    val languageManager: LanguageManager = koinInject()
     val scope = rememberCoroutineScope()
     
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
@@ -423,7 +420,7 @@ fun LanguageSettingsCard(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 )
                 
                 ExposedDropdownMenu(

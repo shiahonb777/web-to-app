@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
+import org.koin.compose.koinInject
 
 /**
  * 浏览器内核设置界面
@@ -70,7 +71,7 @@ fun BrowserKernelScreen(
     var installedBrowsers by remember { mutableStateOf<List<BrowserInfo>>(emptyList()) }
     
     // 引擎管理
-    val engineManager = remember { EngineManager.getInstance(context) }
+    val engineManager: EngineManager = koinInject()
     val geckoDownloader = remember { GeckoEngineDownloader(context, engineManager.fileManager) }
     val downloadState by geckoDownloader.downloadState.collectAsStateWithLifecycle()
     var geckoStatus by remember { mutableStateOf(engineManager.getEngineStatus(EngineType.GECKOVIEW)) }
@@ -78,7 +79,7 @@ fun BrowserKernelScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     
     // Shields 隐私保护
-    val shields = remember { BrowserShields.getInstance(context) }
+    val shields: BrowserShields = koinInject()
     val shieldsConfig by shields.config.collectAsStateWithLifecycle()
     val sessionStats by shields.stats.sessionStats.collectAsStateWithLifecycle()
     var shieldsExpanded by remember { mutableStateOf(false) }

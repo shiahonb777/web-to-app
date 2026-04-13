@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,6 +22,7 @@ import com.webtoapp.core.extension.*
 import com.webtoapp.core.i18n.Strings
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import org.koin.compose.koinInject
 
 /**
  * Extension module selector卡片
@@ -35,8 +35,7 @@ fun ExtensionModuleSelectorCard(
     onSelectionChange: (Set<String>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val modules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
@@ -391,8 +390,7 @@ fun QuickModuleSelector(
     onSelectionChange: (Set<String>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
     // 只显示常用的内置模块

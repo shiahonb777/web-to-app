@@ -20,8 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.ForcedRunCountdownOverlay
 import com.webtoapp.ui.components.VirtualNavigationBar
@@ -251,7 +251,7 @@ fun BoxScope.ShellAdBlockToggle(
     webViewRef: WebView?
 ) {
     val context = LocalContext.current
-    val adBlocker = WebToAppApplication.adBlock
+    val adBlocker = ShellRuntimeServices.adBlock
 
     if (config.adBlockEnabled && config.webViewConfig.adBlockToggleEnabled) {
         var adBlockCurrentlyEnabled by remember { mutableStateOf(config.adBlockEnabled) }

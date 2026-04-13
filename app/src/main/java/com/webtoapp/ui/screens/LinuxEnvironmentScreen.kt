@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
@@ -30,19 +29,18 @@ import com.webtoapp.core.linux.*
 import com.webtoapp.ui.theme.LocalAppTheme
 import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LinuxEnvironmentScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val theme = LocalAppTheme.current
     
     // Get主题主色调
     val themeAccentColor = MaterialTheme.colorScheme.primary
     
-    val envManager = remember { LinuxEnvironmentManager.getInstance(context) }
+    val envManager: LinuxEnvironmentManager = koinInject()
     val envState by envManager.state.collectAsStateWithLifecycle()
     val installProgress by envManager.installProgress.collectAsStateWithLifecycle()
     
@@ -322,8 +320,7 @@ private fun BuildToolsCard(info: EnvironmentInfo, themeColor: Color) {
                 name = Strings.builtInPackager, 
                 status = Strings.ready, 
                 description = Strings.pureKotlinImpl, 
-                color = themeColor, 
-                isAvailable = true,
+                color = themeColor,
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -333,8 +330,7 @@ private fun BuildToolsCard(info: EnvironmentInfo, themeColor: Color) {
                 name = "esbuild",
                 status = if (info.esbuildAvailable) Strings.installed else Strings.notInstalled,
                 description = Strings.highPerfBuildTool,
-                color = if (info.esbuildAvailable) themeColor else Color(0xFF9E9E9E),
-                isAvailable = info.esbuildAvailable
+                color = if (info.esbuildAvailable) themeColor else Color(0xFF9E9E9E)
             )
         }
     }
@@ -346,8 +342,7 @@ private fun ToolRow(
     name: String,
     status: String,
     description: String,
-    color: Color,
-    isAvailable: Boolean
+    color: Color
 ) {
     val theme = LocalAppTheme.current
     Row(

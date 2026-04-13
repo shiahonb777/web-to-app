@@ -2,9 +2,7 @@ package com.webtoapp.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.webtoapp.core.cloud.AppDownloadManager
@@ -28,15 +26,18 @@ import com.webtoapp.ui.viewmodel.AuthViewModel
 import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 internal fun HomeTabContent(
     navController: NavHostController,
     viewModel: MainViewModel,
-    healthMonitor: AppHealthMonitor,
-    screenshotService: WebsiteScreenshotService,
-    batchImportService: BatchImportService,
 ) {
+    val healthMonitor: AppHealthMonitor = koinInject()
+    val screenshotService: WebsiteScreenshotService = koinInject()
+    val batchImportService: BatchImportService = koinInject()
+
     fun navigateToCreate(appType: AppType, prepare: (() -> Unit)? = null) {
         prepare?.invoke()
         navController.navigate(AppFlowSpec.from(appType).createRoute)
@@ -84,15 +85,14 @@ internal fun HomeTabContent(
 
 @Composable
 internal fun AppStoreTabContent(
-    navController: NavHostController,
-    webAppRepository: WebAppRepository,
-    apiClient: CloudApiClient,
-    installedItemsTracker: InstalledItemsTracker,
-    cloudViewModel: CloudViewModel,
 ) {
-    val context = LocalContext.current
+    val webAppRepository: WebAppRepository = koinInject()
+    val apiClient: CloudApiClient = koinInject()
+    val installedItemsTracker: InstalledItemsTracker = koinInject()
+    val downloadManager: AppDownloadManager = koinInject()
+    val extensionManager: ExtensionManager = koinInject()
+    val cloudViewModel: CloudViewModel = koinViewModel()
     val coroutineScope = rememberCoroutineScope()
-    val downloadManager = remember { AppDownloadManager.getInstance(context) }
 
     AppStoreScreen(
         cloudViewModel = cloudViewModel,
@@ -101,7 +101,7 @@ internal fun AppStoreTabContent(
         installedTracker = installedItemsTracker,
         onInstallModule = { shareCode ->
             coroutineScope.launch {
-                ExtensionManager.getInstance(context).importFromShareCode(shareCode)
+                extensionManager.importFromShareCode(shareCode)
             }
         },
         downloadManager = downloadManager

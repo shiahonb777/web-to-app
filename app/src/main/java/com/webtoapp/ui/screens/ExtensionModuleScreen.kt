@@ -61,6 +61,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import com.webtoapp.R
+import org.koin.compose.koinInject
 
 /**
  * 扩展模块管理页面
@@ -75,7 +76,7 @@ fun ExtensionModuleScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     
     val modules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()

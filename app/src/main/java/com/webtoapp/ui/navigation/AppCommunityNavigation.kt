@@ -16,6 +16,7 @@ import com.webtoapp.ui.screens.community.UserProfileScreen
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 internal fun NavGraphBuilder.addCommunityRoutes(
     navController: NavHostController,
@@ -26,7 +27,7 @@ internal fun NavGraphBuilder.addCommunityRoutes(
     ) { backStackEntry ->
         val moduleId = backStackEntry.arguments?.getInt("moduleId") ?: 0
         val communityViewModel: CommunityViewModel = koinViewModel()
-        val context = LocalContext.current
+        val extensionManager: ExtensionManager = koinInject()
         val coroutineScope = rememberCoroutineScope()
         ModuleDetailScreen(
             moduleId = moduleId,
@@ -35,7 +36,7 @@ internal fun NavGraphBuilder.addCommunityRoutes(
             onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) },
             onInstallModule = { shareCode ->
                 coroutineScope.launch {
-                    ExtensionManager.getInstance(context).importFromShareCode(shareCode)
+                    extensionManager.importFromShareCode(shareCode)
                 }
                 navController.popBackStack()
             }

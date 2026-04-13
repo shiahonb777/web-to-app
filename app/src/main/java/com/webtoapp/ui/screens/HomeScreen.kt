@@ -78,6 +78,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import org.koin.compose.koinInject
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
@@ -288,7 +289,7 @@ fun HomeScreen(
                 actions = {
                     // 深/浅色模式切换按钮（带圆形揭示动画）
                     val context = LocalContext.current
-                    val themeManager = remember { ThemeManager.getInstance(context) }
+                    val themeManager: ThemeManager = koinInject()
                     val darkModeState by themeManager.darkModeFlow.collectAsStateWithLifecycle()
                     val isDarkNow = darkModeState == ThemeManager.DarkModeSettings.DARK
                     

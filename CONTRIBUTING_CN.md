@@ -16,7 +16,7 @@ app/src/main/java/com/webtoapp/
 │   ├── frontend/ golang/ hardening/ i18n/ isolation/
 │   ├── kernel/ linux/ logging/ network/ nodejs/
 │   ├── perf/ php/ port/ pwa/ python/ sample/
-│   ├── shell/ stats/ usecase/ wordpress/
+│   ├── shell/ startup/ stats/ usecase/ wordpress/
 │   ├── apkbuilder/
 │   │   ├── ApkAnalyzer.kt
 │   │   ├── ApkBuilder.kt
@@ -50,22 +50,21 @@ app/src/main/java/com/webtoapp/
 │       ├── WebViewCallbacks.kt
 │       ├── WebViewManager.kt
 │       ├── WebViewPool.kt
-│       ├── client/
-│       ├── config/
-│       ├── injection/
-│       ├── intercept/
-│       └── navigation/
+│       ├── client/ compat/
+│       ├── config/ injection/ intercept/
+│       └── lifecycle/ navigation/ session/
 ├── di/
 │   └── AppModule.kt
 ├── ui/
 │   ├── MainActivity.kt
 │   ├── animation/ codepreview/ components/
-│   ├── data/ gallery/ icons/ media/
+│   ├── gallery/ icons/ media/
 │   ├── navigation/
 │   │   ├── AppNavigation.kt / AppNavigationGraph.kt / AppNavigationScaffold.kt
+│   │   ├── AppFlowSpec.kt / AppNavigationEffects.kt / AppNavigationRoutes.kt
 │   │   ├── AppToolNavigation.kt / AppCreationNavigation.kt / AppPreviewNavigation.kt
 │   │   ├── AppCommunityNavigation.kt / AppAccountNavigation.kt / AppNavigationTabContent.kt
-│   │   └── AiExportCoordinator.kt / CreateHtmlRouteArgs.kt / PreviewStarter.kt
+│   │   └── AppNavigationGraphDependencies.kt / AiExportCoordinator.kt / CreateHtmlRouteArgs.kt / PreviewStarter.kt
 │   ├── shared/ shell/ splash/ theme/ viewmodel/
 │   ├── screens/
 │   │   ├── aimodule/ community/ extensionmodule/
@@ -81,6 +80,7 @@ app/src/main/java/com/webtoapp/
 │       ├── WebViewDownloadBridge.kt
 │       ├── ConsolePanel.kt
 │       ├── PreviewStates.kt
+│       ├── rememberWebViewManager.kt
 │       ├── ServerPreviewOverlays.kt
 │       ├── WebViewActivity.kt
 │       ├── WebViewLongPressMenu.kt

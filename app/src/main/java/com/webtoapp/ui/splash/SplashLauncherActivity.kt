@@ -35,9 +35,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.webtoapp.core.activation.ActivationManager
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.util.normalizeExternalIntentUrl
 import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 import java.io.File
 
 /**
@@ -119,7 +121,6 @@ class SplashLauncherActivity : AppCompatActivity() {
         setContent {
             WebToAppTheme { _ ->
                 SplashLauncherScreen(
-                    targetPackage = targetPackage,
                     hasValidSplash = hasValidSplash,
                     splashType = splashType,
                     splashPath = splashPath,
@@ -165,7 +166,6 @@ class SplashLauncherActivity : AppCompatActivity() {
  */
 @Composable
 fun SplashLauncherScreen(
-    targetPackage: String,
     hasValidSplash: Boolean,
     splashType: String,
     splashPath: String?,
@@ -188,8 +188,7 @@ fun SplashLauncherScreen(
     onLaunchTarget: () -> Unit
 ) {
     val context = LocalContext.current
-    val activation = com.webtoapp.WebToAppApplication.activation
-    val scope = rememberCoroutineScope()
+    val activation: ActivationManager = koinInject()
     
     // Activation状态 - 如果配置为每次都需要验证，则始终显示激活对话框
     var isActivated by remember { mutableStateOf(!activationEnabled) }

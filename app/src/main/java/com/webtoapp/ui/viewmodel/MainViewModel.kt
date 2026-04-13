@@ -41,7 +41,8 @@ import java.net.URL
 class MainViewModel(
     application: Application,
     private val repository: WebAppRepository,
-    private val categoryRepository: AppCategoryRepository
+    private val categoryRepository: AppCategoryRepository,
+    private val themeManager: ThemeManager,
 ) : AndroidViewModel(application) {
 
     // All apps list
@@ -453,7 +454,6 @@ class MainViewModel(
                 val translateConfig = if (state.translateEnabled) state.translateConfig else null
 
                 // Get current theme type from ThemeManager
-                val themeManager = ThemeManager.getInstance(getApplication())
                 val currentThemeType = themeManager.themeTypeFlow.first().name
 
                 // Build extension module ID list
@@ -826,7 +826,6 @@ class MainViewModel(
      * Get the current theme type name from ThemeManager.
      */
     private suspend fun getCurrentThemeType(): String {
-        val themeManager = ThemeManager.getInstance(getApplication())
         return themeManager.themeTypeFlow.first().name
     }
 
