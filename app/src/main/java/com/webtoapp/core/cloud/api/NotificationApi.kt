@@ -1,6 +1,9 @@
-package com.webtoapp.core.cloud
+package com.webtoapp.core.cloud.api
 
 import com.google.gson.JsonParser
+import com.webtoapp.core.cloud.CloudApiClient
+import com.webtoapp.core.cloud.internal.CloudApiSupport
+import com.webtoapp.core.cloud.model.NotificationItem
 import com.webtoapp.core.auth.AuthResult
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody

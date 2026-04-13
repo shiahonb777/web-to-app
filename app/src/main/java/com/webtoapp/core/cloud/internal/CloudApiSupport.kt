@@ -1,8 +1,9 @@
-package com.webtoapp.core.cloud
+package com.webtoapp.core.cloud.internal
 
 import android.content.Context
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.webtoapp.core.cloud.CloudApiClient
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.auth.TokenManager
 import com.webtoapp.core.logging.AppLogger

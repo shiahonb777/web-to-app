@@ -1,4 +1,4 @@
-package com.webtoapp.core.cloud
+package com.webtoapp.core.cloud.model
 
 data class RedeemResult(val message: String, val planType: String, val daysAdded: Int)
 

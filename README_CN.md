@@ -424,6 +424,38 @@ git clone https://github.com/shiahonb777/web-to-app.git
    - **快捷方式**：创建使用新图标的桌面快捷方式
    - **克隆安装**：生成新 APK 并安装为独立应用
 
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 语言 | Kotlin 1.9+ |
+| UI | Jetpack Compose + Material 3 |
+| 架构 | MVVM + Repository |
+| 数据 | Room + DataStore |
+| 网络 | OkHttp |
+| 原生 | CMake C++17 / NDK |
+
+## 结构速记
+
+- `app/src/main/java/com/webtoapp/core/cloud/api`
+  云服务分域 API 放这里，例如激活、备份、通知。`CloudApiClient.kt` 只保留门面协调，不要再继续塞请求细节。
+- `app/src/main/java/com/webtoapp/core/cloud/internal`
+  云服务共享内部实现放这里，例如请求辅助、错误映射、JSON 解析。
+- `app/src/main/java/com/webtoapp/core/cloud/model`
+  云端 DTO 统一收口到这里，别再让响应模型散落在巨型文件里。
+- `app/src/main/java/com/webtoapp/core/extension/snippets`
+  `CodeSnippets.kt` 现在只是兼容门面，代码片段分类、搜索和热门逻辑已经拆到这里，后续新增片段继续按职责落子文件。
+- `app/src/main/java/com/webtoapp/core/extension/panel`
+  扩展面板的图标映射、主注入脚本、辅助脚本已经拆到这里，`ExtensionPanelScript.kt` 只保留旧入口。
+- `app/src/main/java/com/webtoapp/data/model/webapp/config`
+  `WebApp.kt` 只保留实体本身，WebView、运行时、媒体、导出、外观行为配置都拆到这里，老引用先由 `WebAppConfigAliases.kt` 兼容兜底。
+- `app/src/main/java/com/webtoapp/ui/screens/create/webview/cards`
+  创建页 WebView 卡片已按 `interaction / display / system` 拆开，功能专属卡片放这里。
+- `app/src/main/java/com/webtoapp/ui/screens/extensionmodule/editor`
+  扩展模块编辑页已按 `tabs / dialogs` 拆开，`ModuleEditorScreen.kt` 只负责页面装配。
+- `app/src/main/java/com/webtoapp/ui/viewmodel/main`
+  `MainViewModel` 的保存拼装、PWA 导入、状态工厂 helper 放这里，别再把保存/导入/状态重建全糊回一个 ViewModel 文件。
+
 ## 编译说明
 
 ### 环境要求

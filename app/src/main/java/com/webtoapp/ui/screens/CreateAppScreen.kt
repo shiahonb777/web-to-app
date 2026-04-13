@@ -52,12 +52,7 @@ import com.webtoapp.core.pwa.PwaAnalysisResult
 import com.webtoapp.core.pwa.PwaAnalysisState
 import com.webtoapp.core.pwa.PwaDataSource
 
-// Pre-compiled regex for package name validation (avoid allocation during recomposition)
 private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
-
-/**
- * 创建/编辑应用页面
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAppScreen(
@@ -72,7 +67,6 @@ fun CreateAppScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
-    // Handle保存结果
     LaunchedEffect(uiState) {
         if (uiState is UiState.Success) {
             onSaved()
@@ -80,7 +74,6 @@ fun CreateAppScreen(
         }
     }
 
-    // Image选择器 - 选择后复制到私有目录实现持久化
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -89,7 +82,6 @@ fun CreateAppScreen(
         }
     }
 
-    // Start画面图片选择器
     val splashImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -98,7 +90,6 @@ fun CreateAppScreen(
         }
     }
 
-    // Start画面视频选择器
     val splashVideoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -123,7 +114,6 @@ fun CreateAppScreen(
                     }
                 },
                 actions = {
-                    // 缓存式预览按钮 — 先保存再用正式路径打开
                     IconButton(
                         onClick = {
                             if (isPreviewSaving) return@IconButton
@@ -191,7 +181,6 @@ fun CreateAppScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 基本信息卡片
                 BasicInfoCard(
                     editState = editState,
                     onNameChange = { viewModel.updateEditState { copy(name = it) } },
@@ -202,7 +191,6 @@ fun CreateAppScreen(
                     }
                 )
 
-                // PWA 自动感知（仅 WEB 类型显示）
                 if (editState.appType == AppType.WEB) {
                     PwaAnalysisSection(
                         viewModel = viewModel,
@@ -210,7 +198,6 @@ fun CreateAppScreen(
                     )
                 }
 
-            // Activation码设置
             ActivationCodeCard(
                 enabled = editState.activationEnabled,
                 activationCodes = editState.activationCodeList,
@@ -223,7 +210,6 @@ fun CreateAppScreen(
                 onDialogConfigChange = { viewModel.updateEditState { copy(activationDialogConfig = it) } }
             )
 
-            // Announcement设置
             AnnouncementCard(
                 editState = editState,
                 onEnabledChange = { viewModel.updateEditState { copy(announcementEnabled = it) } },
@@ -234,7 +220,6 @@ fun CreateAppScreen(
                 LegacyAdCapabilityWarningCard()
             }
 
-            // Ad拦截设置
             AdBlockCard(
                 editState = editState,
                 onEnabledChange = { viewModel.updateEditState { copy(adBlockEnabled = it) } },
@@ -246,7 +231,6 @@ fun CreateAppScreen(
                 }
             )
 
-            // 扩展模块设置
             com.webtoapp.ui.components.ExtensionModuleCard(
                 enabled = editState.extensionModuleEnabled,
                 selectedModuleIds = editState.extensionModuleIds,
@@ -256,7 +240,6 @@ fun CreateAppScreen(
                 onFabIconChange = { viewModel.updateEditState { copy(extensionFabIcon = it) } }
             )
 
-            // Fullscreen模式
             FullscreenModeCard(
                 enabled = editState.webViewConfig.hideToolbar,
                 showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
@@ -284,7 +267,6 @@ fun CreateAppScreen(
                 },
             )
 
-            // Status Bar Style Config (standalone, works without fullscreen)
             StatusBarStyleCard(
                 webViewConfig = editState.webViewConfig,
                 onWebViewConfigChange = { newConfig ->
@@ -294,7 +276,6 @@ fun CreateAppScreen(
                 }
             )
 
-            // 屏幕方向模式
             LandscapeModeCard(
                 enabled = editState.webViewConfig.landscapeMode,
                 onEnabledChange = {
@@ -317,7 +298,6 @@ fun CreateAppScreen(
                 }
             )
             
-            // 保持屏幕常亮
             KeepScreenOnCard(
                 screenAwakeMode = editState.webViewConfig.screenAwakeMode,
                 onScreenAwakeModeChange = { mode ->
@@ -342,7 +322,6 @@ fun CreateAppScreen(
                 }
             )
             
-            // 悬浮小窗模式
             FloatingWindowConfigCard(
                 config = editState.webViewConfig.floatingWindowConfig,
                 onConfigChange = { newConfig ->
@@ -352,7 +331,6 @@ fun CreateAppScreen(
                 }
             )
 
-            // Start画面
             SplashScreenCard(
                 editState = editState,
                 onEnabledChange = { viewModel.updateEditState { copy(splashEnabled = it) } },
@@ -395,7 +373,6 @@ fun CreateAppScreen(
                 onClearMedia = { viewModel.clearSplashMedia() }
             )
 
-            // Background music
             BgmCard(
                 enabled = editState.bgmEnabled,
                 config = editState.bgmConfig,
@@ -403,7 +380,6 @@ fun CreateAppScreen(
                 onConfigChange = { viewModel.updateEditState { copy(bgmConfig = it) } }
             )
 
-            // Web page自动翻译
             TranslateCard(
                 enabled = editState.translateEnabled,
                 config = editState.translateConfig,
@@ -411,31 +387,26 @@ fun CreateAppScreen(
                 onConfigChange = { viewModel.updateEditState { copy(translateConfig = it) } }
             )
             
-            // 自启动设置
             AutoStartCard(
                 config = editState.autoStartConfig,
                 onConfigChange = { viewModel.updateEditState { copy(autoStartConfig = it) } }
             )
             
-            // 强制运行设置
             com.webtoapp.ui.components.ForcedRunConfigCard(
                 config = editState.forcedRunConfig,
                 onConfigChange = { viewModel.updateEditState { copy(forcedRunConfig = it) } }
             )
             
-            // 黑科技功能设置（独立模块）
             com.webtoapp.ui.components.BlackTechConfigCard(
                 config = editState.blackTechConfig,
                 onConfigChange = { viewModel.updateEditState { copy(blackTechConfig = it) } }
             )
             
-            // App伪装设置（独立模块）
             com.webtoapp.ui.components.DisguiseConfigCard(
                 config = editState.disguiseConfig,
                 onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
             )
 
-            // 设备伪装（独立一级功能）
             DeviceDisguiseCard(
                 config = editState.deviceDisguiseConfig,
                 onConfigChange = { newConfig ->
@@ -445,7 +416,6 @@ fun CreateAppScreen(
                 }
             )
 
-            // 长按菜单设置
             LongPressMenuCard(
                 style = editState.webViewConfig.longPressMenuStyle,
                 onStyleChange = { 
@@ -458,7 +428,6 @@ fun CreateAppScreen(
                 }
             )
 
-            // WebView高级设置
             WebViewConfigCard(
                 config = editState.webViewConfig,
                 onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } },
@@ -466,7 +435,6 @@ fun CreateAppScreen(
                 onApkExportConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } }
             )
 
-            // Error提示
             if (uiState is UiState.Error) {
                 EnhancedElevatedCard(
                     colors = CardDefaults.cardColors(

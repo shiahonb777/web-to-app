@@ -37,12 +37,7 @@ import com.webtoapp.util.AppConstants
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
-// Pre-compiled regex for package name validation (avoid allocation during recomposition)
 private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
-
-/**
- * APK 导出配置区域
- */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ApkExportSection(
@@ -79,7 +74,6 @@ fun ApkExportSection(
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
         )
         
-        // Custom包名
         val packageName = config.customPackageName ?: ""
         val isPackageNameInvalid = packageName.isNotBlank() && 
             !packageName.matches(PACKAGE_NAME_REGEX)
@@ -117,7 +111,6 @@ fun ApkExportSection(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // Version名和版本号
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -167,7 +160,6 @@ fun ApkExportSection(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // APK 架构选择
         Text(
             text = Strings.apkArchitecture,
             style = MaterialTheme.typography.labelLarge,
@@ -202,7 +194,6 @@ fun ApkExportSection(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 性能优化
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -240,7 +231,6 @@ fun ApkExportSection(
             exit = CardCollapseTransition
         ) {
             Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
-                // 资源优化
                 Text(
                     text = Strings.perfResourceOptimize,
                     style = MaterialTheme.typography.labelMedium,
@@ -282,7 +272,6 @@ fun ApkExportSection(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 构建优化
                 Text(
                     text = Strings.perfBuildOptimize,
                     style = MaterialTheme.typography.labelMedium,
@@ -308,7 +297,6 @@ fun ApkExportSection(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 加载优化
                 Text(
                     text = Strings.perfLoadOptimize,
                     style = MaterialTheme.typography.labelMedium,
@@ -342,7 +330,6 @@ fun ApkExportSection(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 运行时优化
                 Text(
                     text = Strings.perfRuntimeOptimize,
                     style = MaterialTheme.typography.labelMedium,
@@ -364,16 +351,12 @@ fun ApkExportSection(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 自定义签名配置
         CustomSigningSection()
         
     }
 }
 
 
-/**
- * 自定义签名配置区域
- */
 @Composable
 fun CustomSigningSection() {
     val context = LocalContext.current
@@ -383,7 +366,6 @@ fun CustomSigningSection() {
     var signerType by remember { mutableStateOf(signer.getSignerType()) }
     var certInfo by remember { mutableStateOf(signer.getCertificateInfo()) }
     
-    // 密码输入对话框状态
     var showImportPasswordDialog by remember { mutableStateOf(false) }
     var showExportPasswordDialog by remember { mutableStateOf(false) }
     var showRemoveConfirmDialog by remember { mutableStateOf(false) }
@@ -393,7 +375,6 @@ fun CustomSigningSection() {
     var importError by remember { mutableStateOf<String?>(null) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     
-    // 文件选择器
     val keystorePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -405,7 +386,6 @@ fun CustomSigningSection() {
         }
     }
     
-    // 导出文件创建器
     val keystoreExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/x-pkcs12")
     ) { uri: Uri? ->
@@ -417,7 +397,6 @@ fun CustomSigningSection() {
     }
     
     Column {
-        // 标题行
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -442,7 +421,6 @@ fun CustomSigningSection() {
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
         )
         
-        // 当前签名状态
         Surface(
             color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f),
             shape = RoundedCornerShape(8.dp)
@@ -491,7 +469,6 @@ fun CustomSigningSection() {
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // 提示信息
         Surface(
             color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
             shape = RoundedCornerShape(8.dp)
@@ -525,12 +502,10 @@ fun CustomSigningSection() {
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // 操作按钮
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 导入按钮
             PremiumOutlinedButton(
                 onClick = {
                     keystorePickerLauncher.launch(arrayOf("*/*"))
@@ -547,7 +522,6 @@ fun CustomSigningSection() {
                 Text(Strings.importKeystore, style = MaterialTheme.typography.labelMedium)
             }
             
-            // 导出按钮
             PremiumOutlinedButton(
                 onClick = {
                     keystoreExportLauncher.launch("webtoapp_signing.p12")
@@ -565,7 +539,6 @@ fun CustomSigningSection() {
             }
         }
         
-        // 删除自定义证书按钮（仅在使用自定义证书时显示）
         if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM) {
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(
@@ -585,7 +558,6 @@ fun CustomSigningSection() {
             }
         }
         
-        // Snackbar 消息
         snackbarMessage?.let { msg ->
             Spacer(modifier = Modifier.height(8.dp))
             Surface(
@@ -606,7 +578,6 @@ fun CustomSigningSection() {
         }
     }
     
-    // 导入密码输入对话框
     if (showImportPasswordDialog) {
         AlertDialog(
             onDismissRequest = { 
@@ -659,7 +630,6 @@ fun CustomSigningSection() {
                         val uri = pendingKeystoreUri ?: return@TextButton
                         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                             try {
-                                // 从 URI 复制到临时文件
                                 val tempFile = java.io.File(context.cacheDir, "import_keystore_temp")
                                 context.contentResolver.openInputStream(uri)?.use { input ->
                                     tempFile.outputStream().use { output ->
@@ -708,7 +678,6 @@ fun CustomSigningSection() {
         )
     }
     
-    // 导出密码输入对话框
     if (showExportPasswordDialog) {
         AlertDialog(
             onDismissRequest = { 
@@ -796,7 +765,6 @@ fun CustomSigningSection() {
         )
     }
     
-    // 删除确认对话框
     if (showRemoveConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showRemoveConfirmDialog = false },

@@ -2,7 +2,6 @@ package com.webtoapp.ui.viewmodel
 
 import android.app.Application
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,12 +30,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
-import java.net.HttpURLConnection
-import java.net.URL
-
-/**
- * Main screen ViewModel
- */
+import com.webtoapp.ui.viewmodel.main.AppCrudActions
+import com.webtoapp.ui.viewmodel.main.PwaImportCoordinator
+import com.webtoapp.ui.viewmodel.main.StateFactory
 @OptIn(FlowPreview::class)
 class MainViewModel(
     application: Application,
@@ -44,48 +40,29 @@ class MainViewModel(
     private val categoryRepository: AppCategoryRepository,
     private val themeManager: ThemeManager,
 ) : AndroidViewModel(application) {
-
-    // All apps list
     val webApps: StateFlow<List<WebApp>> = repository.allWebApps
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    
-    // All categories list
     val categories: StateFlow<List<AppCategory>> = categoryRepository.allCategories
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    
-    // Currently selected category ID (null = all, -1 = uncategorized)
     private val _selectedCategoryId = MutableStateFlow<Long?>(null)
     val selectedCategoryId: StateFlow<Long?> = _selectedCategoryId.asStateFlow()
-
-    // Currently editing app
     private val _currentApp = MutableStateFlow<WebApp?>(null)
     val currentApp: StateFlow<WebApp?> = _currentApp.asStateFlow()
-
-    // Edit state
     private val _editState = MutableStateFlow(EditState())
     val editState: StateFlow<EditState> = _editState.asStateFlow()
-
-    // UI state
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-
-    // Search
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    
-    // PWA Analysis
     private val _pwaAnalysisState = MutableStateFlow<PwaAnalysisState>(PwaAnalysisState.Idle)
     val pwaAnalysisState: StateFlow<PwaAnalysisState> = _pwaAnalysisState.asStateFlow()
-    
-    /**
-     * Clean up resources when ViewModel is destroyed
-     */
+    private val stateFactory = StateFactory()
+    private val appCrudActions = AppCrudActions()
+    private val pwaImportCoordinator = PwaImportCoordinator()
     override fun onCleared() {
         super.onCleared()
-        // Cleanup Bitmap resources in edit state
         _editState.value.iconBitmap?.recycle()
-        // Reset state
-        _editState.value = EditState()
+        _editState.value = stateFactory.newState()
         _currentApp.value = null
     }
 
@@ -95,15 +72,11 @@ class MainViewModel(
         selectedCategoryId
     ) { apps, query, categoryId ->
         var filtered = apps
-        
-        // Category filter
         filtered = when (categoryId) {
-            null -> filtered // All
-            -1L -> filtered.filter { it.categoryId == null } // Uncategorized
-            else -> filtered.filter { it.categoryId == categoryId } // Specified category
+            null -> filtered
+            -1L -> filtered.filter { it.categoryId == null }
+            else -> filtered.filter { it.categoryId == categoryId }
         }
-        
-        // Search filter
         if (query.isNotBlank()) {
             filtered = filtered.filter {
                 it.name.contains(query, ignoreCase = true) ||
@@ -113,78 +86,20 @@ class MainViewModel(
         
         filtered
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    /**
-     * Create new app
-     */
     fun createNewApp() {
-        _editState.value = EditState()
+        _editState.value = stateFactory.newState()
         _currentApp.value = null
-        _uiState.value = UiState.Idle  // Reset UI state, avoid showing old error messages
+        _uiState.value = UiState.Idle
     }
-
-    /**
-     * Edit existing app
-     */
     fun editApp(webApp: WebApp) {
         _currentApp.value = webApp
-        _uiState.value = UiState.Idle  // Reset UI state, avoid showing old error messages
+        _uiState.value = UiState.Idle
         
-        _editState.value = EditState(
-            name = webApp.name,
-            url = webApp.url,
-            iconUri = webApp.iconPath?.let { Uri.parse(it) },
-            savedIconPath = webApp.iconPath,  // Keep existing local path
-            appType = webApp.appType,  // Keep app type
-            mediaConfig = webApp.mediaConfig,  // Keep media config
-            htmlConfig = webApp.htmlConfig,  // Keep HTML config
-            activationEnabled = webApp.activationEnabled,
-            activationCodes = webApp.activationCodes,
-            activationCodeList = webApp.activationCodeList,
-            activationRequireEveryTime = webApp.activationRequireEveryTime,
-            activationDialogConfig = webApp.activationDialogConfig ?: com.webtoapp.data.model.ActivationDialogConfig(),
-            adsEnabled = webApp.adsEnabled,
-            adConfig = webApp.adConfig ?: AdConfig(),
-            announcementEnabled = webApp.announcementEnabled,
-            announcement = webApp.announcement ?: Announcement(),
-            adBlockEnabled = webApp.adBlockEnabled,
-            adBlockRules = webApp.adBlockRules,
-            webViewConfig = webApp.webViewConfig,
-            splashEnabled = webApp.splashEnabled,
-            splashConfig = webApp.splashConfig ?: SplashConfig(),
-            splashMediaUri = webApp.splashConfig?.mediaPath?.let { Uri.parse(it) },
-            savedSplashPath = webApp.splashConfig?.mediaPath,
-            bgmEnabled = webApp.bgmEnabled,
-            bgmConfig = webApp.bgmConfig ?: BgmConfig(),
-            apkExportConfig = webApp.apkExportConfig ?: ApkExportConfig(),
-            themeType = webApp.themeType,
-            translateEnabled = webApp.translateEnabled,
-            translateConfig = webApp.translateConfig ?: TranslateConfig(),
-            extensionModuleEnabled = webApp.extensionModuleIds.isNotEmpty(),
-            extensionModuleIds = webApp.extensionModuleIds.toSet(),
-            extensionFabIcon = webApp.extensionFabIcon ?: "",
-            autoStartConfig = webApp.autoStartConfig,
-            forcedRunConfig = webApp.forcedRunConfig,
-            blackTechConfig = webApp.blackTechConfig,
-            disguiseConfig = webApp.disguiseConfig,
-            deviceDisguiseConfig = webApp.deviceDisguiseConfig ?: com.webtoapp.core.disguise.DeviceDisguiseConfig()
-        )
+        _editState.value = stateFactory.fromWebApp(webApp)
     }
-
-    /**
-     * Update edit state
-     */
     fun updateEditState(update: EditState.() -> EditState) {
         _editState.value = _editState.value.update()
     }
-
-    // ═══════════════════════════════════════════
-    //  PWA 自动感知
-    // ═══════════════════════════════════════════
-
-    /**
-     * 分析网站的 PWA 配置
-     */
     fun analyzePwa(url: String) {
         if (url.isBlank()) return
         viewModelScope.launch {
@@ -204,155 +119,31 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * 应用 PWA 分析结果到 EditState
-     */
     fun applyPwaResult(result: PwaAnalysisResult) {
         viewModelScope.launch {
-            // 1. 填充名称
-            result.suggestedName?.let { name ->
-                if (name.isNotBlank() && _editState.value.name.isBlank()) {
-                    updateEditState { copy(name = name) }
-                }
-            }
-
-            // 2. 下载并设置图标
+            _editState.value = pwaImportCoordinator.applyResult(_editState.value, result)
             result.suggestedIconUrl?.let { iconUrl ->
                 try {
                     val savedPath = withContext(Dispatchers.IO) {
-                        downloadAndSaveIcon(iconUrl)
+                        pwaImportCoordinator.downloadIcon(getApplication(), iconUrl)
                     }
                     if (savedPath != null) {
-                        updateEditState { copy(savedIconPath = savedPath, iconUri = null) }
+                        _editState.value = _editState.value.copy(savedIconPath = savedPath, iconUri = null)
                         AppLogger.i("MainViewModel", "PWA icon downloaded: $savedPath")
                     }
                 } catch (e: Exception) {
                     AppLogger.w("MainViewModel", "Failed to download PWA icon: ${e.message}")
                 }
             }
-
-            // 3. 主题色 → 状态栏颜色
-            result.suggestedThemeColor?.let { color ->
-                updateEditState {
-                    copy(
-                        webViewConfig = webViewConfig.copy(
-                            statusBarColorMode = StatusBarColorMode.CUSTOM,
-                            statusBarColor = color
-                        )
-                    )
-                }
-            }
-
-            // 4. 屏幕方向
-            result.suggestedOrientation?.let { orientation ->
-                val mode = when (orientation.lowercase()) {
-                    "portrait", "portrait-primary", "portrait-secondary" -> OrientationMode.PORTRAIT
-                    "landscape", "landscape-primary", "landscape-secondary" -> OrientationMode.LANDSCAPE
-                    "any", "natural" -> OrientationMode.AUTO
-                    else -> null
-                }
-                mode?.let {
-                    updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(orientationMode = it))
-                    }
-                }
-            }
-
-            // 5. 显示模式 → 全屏/隐藏工具栏
-            result.suggestedDisplay?.let { display ->
-                when (display.lowercase()) {
-                    "fullscreen" -> updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(
-                            hideToolbar = true,
-                            fullscreenEnabled = true
-                        ))
-                    }
-                    "standalone" -> updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(hideToolbar = true))
-                    }
-                    "minimal-ui" -> { /* keep default */ }
-                    "browser" -> { /* keep default */ }
-                }
-            }
-
-            // 6. PWA 离线支持 → 如果来源是 manifest，自动启用
-            if (result.source == PwaDataSource.MANIFEST) {
-                updateEditState {
-                    copy(webViewConfig = webViewConfig.copy(pwaOfflineEnabled = true))
-                }
-            }
-
-            // 7. Deep Link → 自动推断域名
-            val hosts = PwaAnalyzer.suggestDeepLinkHosts(result, _editState.value.url)
-            if (hosts.isNotEmpty()) {
-                updateEditState {
-                    copy(apkExportConfig = apkExportConfig.copy(
-                        deepLinkEnabled = true,
-                        customDeepLinkHosts = hosts
-                    ))
-                }
-            }
-
-            // 8. start_url → 替换 URL（如与用户输入不同）
-            result.startUrl?.let { startUrl ->
-                val currentUrl = _editState.value.url.trim()
-                if (startUrl != currentUrl && startUrl.isNotBlank()) {
-                    // 只在 start_url 是当前域名下的 URL 时替换
-                    val currentHost = PwaAnalyzer.extractHost(currentUrl)
-                    val startHost = PwaAnalyzer.extractHost(startUrl)
-                    if (currentHost == startHost) {
-                        updateEditState { copy(url = startUrl) }
-                    }
-                }
-            }
         }
     }
-
-    /**
-     * 重置 PWA 分析状态
-     */
     fun resetPwaState() {
         _pwaAnalysisState.value = PwaAnalysisState.Idle
     }
-
-    /**
-     * 下载图标并保存到私有目录
-     */
-    private fun downloadAndSaveIcon(iconUrl: String): String? {
-        return try {
-            val conn = URL(iconUrl).openConnection() as HttpURLConnection
-            conn.connectTimeout = 10_000
-            conn.readTimeout = 15_000
-            conn.instanceFollowRedirects = true
-            conn.setRequestProperty("User-Agent",
-                "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
-            try {
-                if (conn.responseCode !in 200..299) return null
-                val bitmap = BitmapFactory.decodeStream(conn.inputStream) ?: return null
-                IconStorage.saveIconFromBitmap(getApplication(), bitmap)
-            } finally {
-                conn.disconnect()
-            }
-        } catch (e: Exception) {
-            AppLogger.e("MainViewModel", "Icon download failed: ${e.message}")
-            null
-        }
-    }
-
-    /**
-     * Handle selected icon URI - copy to private directory for persistence
-     */
     fun handleIconSelected(uri: Uri) {
         viewModelScope.launch {
-            val oldPath = _editState.value.savedIconPath
             val savedPath = withContext(Dispatchers.IO) {
-                val path = IconStorage.saveIconFromUri(getApplication(), uri)
-                // Delete old icon in the same IO block to avoid extra dispatch
-                if (path != null && oldPath != null && oldPath != path) {
-                    IconStorage.deleteIcon(oldPath)
-                }
-                path
+                pwaImportCoordinator.saveIconFromUri(getApplication(), _editState.value, uri)
             }
             if (savedPath != null) {
                 _editState.value = _editState.value.copy(
@@ -364,36 +155,23 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * Handle selected splash media - copy to private directory for persistence
-     */
     fun handleSplashMediaSelected(uri: Uri, isVideo: Boolean) {
         viewModelScope.launch {
-            val oldPath = _editState.value.savedSplashPath
-            val savedPath = withContext(Dispatchers.IO) {
-                val path = SplashStorage.saveMediaFromUri(getApplication(), uri, isVideo)
-                if (path != null && oldPath != null && oldPath != path) {
-                    SplashStorage.deleteMedia(oldPath)
-                }
-                path
+            val savedResult = withContext(Dispatchers.IO) {
+                pwaImportCoordinator.saveSplashFromUri(getApplication(), _editState.value, uri, isVideo)
             }
-            if (savedPath != null) {
-                val newType = if (isVideo) SplashType.VIDEO else SplashType.IMAGE
+            if (savedResult != null) {
+                val (path, type) = savedResult
                 _editState.value = _editState.value.copy(
-                    splashMediaUri = Uri.parse(savedPath),
-                    savedSplashPath = savedPath,
-                    splashConfig = _editState.value.splashConfig.copy(type = newType)
+                    splashMediaUri = Uri.parse(path),
+                    savedSplashPath = path,
+                    splashConfig = _editState.value.splashConfig.copy(type = type)
                 )
             } else {
                 _uiState.value = UiState.Error(Strings.failedSaveSplash)
             }
         }
     }
-
-    /**
-     * Clear splash media
-     */
     fun clearSplashMedia() {
         viewModelScope.launch {
             val oldPath = _editState.value.savedSplashPath
@@ -402,147 +180,27 @@ class MainViewModel(
                     SplashStorage.deleteMedia(oldPath)
                 }
             }
-            _editState.value = _editState.value.copy(
-                splashMediaUri = null,
-                savedSplashPath = null
-            )
+            _editState.value = pwaImportCoordinator.clearSplashMedia(_editState.value)
         }
     }
-
-    /**
-     * Save app
-     */
     fun saveApp() {
         viewModelScope.launch {
             val state = _editState.value
-
-            // Verify
             if (!validateInput(state)) return@launch
 
             _uiState.value = UiState.Loading
 
             try {
-                // Use persistent local path
                 val iconPath = state.savedIconPath ?: state.iconUri?.toString()
-                
-                // Build splash config
-                val splashConfig = if (state.splashEnabled && state.savedSplashPath != null) {
-                    state.splashConfig.copy(mediaPath = state.savedSplashPath)
-                } else {
-                    null
-                }
-                
-                // Build BGM config
-                val bgmConfig = if (state.bgmEnabled && state.bgmConfig.playlist.isNotEmpty()) {
-                    state.bgmConfig
-                } else {
-                    null
-                }
-
-                // Build APK export config (only save when has custom values)
-                val apkExportConfig = state.apkExportConfig.let { config ->
-                    if (config.customPackageName.isNullOrBlank() && 
-                        config.customVersionName.isNullOrBlank() && 
-                        config.customVersionCode == null) {
-                        null
-                    } else {
-                        config
-                    }
-                }
-
-                // Build translate config
-                val translateConfig = if (state.translateEnabled) state.translateConfig else null
-
-                // Get current theme type from ThemeManager
                 val currentThemeType = themeManager.themeTypeFlow.first().name
-
-                // Build extension module ID list
-                // 直接保存用户选择的模块 ID，不依赖 extensionModuleEnabled 开关
-                // 加载时 extensionModuleEnabled 会根据列表是否为空自动推断
-                val extensionModuleIds = state.extensionModuleIds.toList()
-                
-                // Convert new format activation codes to string list (for compatibility)
-                // Only include legacy (non-JSON) entries from activationCodes to avoid duplication
-                val legacyCodeStrings = state.activationCodes.filter { !it.trimStart().startsWith("{") }
-                val activationCodeStrings = state.activationCodeList.map { it.toJson() } + legacyCodeStrings
-                
-                val webApp = _currentApp.value?.copy(
-                    name = state.name,
-                    url = normalizeUrl(state.url, state.appType, state.allowHttp),
-                    iconPath = iconPath,
-                    appType = state.appType,  // Keep app type
-                    mediaConfig = state.mediaConfig,  // Keep media config
-                    htmlConfig = state.htmlConfig,  // Keep HTML config
-                    activationEnabled = state.activationEnabled,
-                    activationCodes = activationCodeStrings,
-                    activationCodeList = state.activationCodeList,
-                    activationRequireEveryTime = state.activationRequireEveryTime,
-                    activationDialogConfig = state.activationDialogConfig.let {
-                        if (it.title.isBlank() && it.subtitle.isBlank() && it.inputLabel.isBlank() && it.buttonText.isBlank()) null else it
-                    },
-                    adsEnabled = state.adsEnabled,
-                    adConfig = state.adConfig,
-                    announcementEnabled = state.announcementEnabled,
-                    announcement = state.announcement,
-                    adBlockEnabled = state.adBlockEnabled,
-                    adBlockRules = state.adBlockRules,
-                    webViewConfig = state.webViewConfig,
-                    splashEnabled = state.splashEnabled,
-                    splashConfig = splashConfig,
-                    bgmEnabled = state.bgmEnabled,
-                    bgmConfig = bgmConfig,
-                    apkExportConfig = apkExportConfig,
+                val webApp = appCrudActions.buildWebAppForSave(
+                    state = state,
+                    currentApp = _currentApp.value,
+                    selectedCategoryId = _selectedCategoryId.value,
+                    normalizedUrl = ::normalizeUrl,
                     themeType = currentThemeType,
-                    translateEnabled = state.translateEnabled,
-                    translateConfig = translateConfig,
-                    extensionModuleIds = extensionModuleIds,
-                    extensionFabIcon = state.extensionFabIcon.ifBlank { null },
-                    autoStartConfig = state.autoStartConfig,
-                    forcedRunConfig = state.forcedRunConfig,
-                    blackTechConfig = state.blackTechConfig,
-                    disguiseConfig = state.disguiseConfig,
-                    deviceDisguiseConfig = state.deviceDisguiseConfig
-                ) ?: run {
-                    // If a specific category is selected (not all, not uncategorized), auto-categorize to it
-                    val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
-                    
-                    WebApp(
-                        name = state.name,
-                        url = normalizeUrl(state.url, AppType.WEB, state.allowHttp),
-                        iconPath = iconPath,
-                        appType = AppType.WEB,  // Default type
-                        activationEnabled = state.activationEnabled,
-                        activationCodes = activationCodeStrings,
-                        activationCodeList = state.activationCodeList,
-                        activationRequireEveryTime = state.activationRequireEveryTime,
-                        activationDialogConfig = state.activationDialogConfig.let {
-                            if (it.title.isBlank() && it.subtitle.isBlank() && it.inputLabel.isBlank() && it.buttonText.isBlank()) null else it
-                        },
-                        adsEnabled = state.adsEnabled,
-                        adConfig = state.adConfig,
-                        announcementEnabled = state.announcementEnabled,
-                        announcement = state.announcement,
-                        adBlockEnabled = state.adBlockEnabled,
-                        adBlockRules = state.adBlockRules,
-                        webViewConfig = state.webViewConfig,
-                        splashEnabled = state.splashEnabled,
-                        splashConfig = splashConfig,
-                        bgmEnabled = state.bgmEnabled,
-                        bgmConfig = bgmConfig,
-                        apkExportConfig = apkExportConfig,
-                        themeType = currentThemeType,
-                        translateEnabled = state.translateEnabled,
-                        translateConfig = translateConfig,
-                        extensionModuleIds = extensionModuleIds,
-                        extensionFabIcon = state.extensionFabIcon.ifBlank { null },
-                        autoStartConfig = state.autoStartConfig,
-                        forcedRunConfig = state.forcedRunConfig,
-                        blackTechConfig = state.blackTechConfig,
-                        disguiseConfig = state.disguiseConfig,
-                        deviceDisguiseConfig = state.deviceDisguiseConfig,
-                        categoryId = categoryId
-                    )
-                }
+                    iconPath = iconPath
+                )
 
                 if (_currentApp.value != null) {
                     repository.updateWebApp(webApp)
@@ -557,10 +215,6 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * Delete app
-     */
     fun deleteApp(webApp: WebApp) {
         viewModelScope.launch {
             try {
@@ -571,174 +225,52 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * Search
-     */
     fun search(query: String) {
         _searchQuery.value = query
     }
-
-    /**
-     * Reset UI state
-     */
     fun resetUiState() {
         _uiState.value = UiState.Idle
     }
-
-    /**
-     * Reset edit state
-     */
     private fun resetEditState() {
-        _editState.value = EditState()
+        _editState.value = stateFactory.newState()
         _currentApp.value = null
     }
-
-    /**
-     * 缓存式预览 — 先保存再打开
-     *
-     * 将当前编辑状态完整保存到数据库（与 saveApp() 完全一致的逻辑），
-     * 然后返回保存后的 appId，由 UI 层通过 WebViewActivity.start() 打开。
-     * 这样预览效果与用户真实打开完全一致，包括激活码、启动画面、BGM、公告等。
-     *
-     * @return 保存后的 appId，或 null 表示保存失败
-     */
     suspend fun saveAndPreview(): Long? {
         val state = _editState.value
-        
-        // 基本校验（宽松版：只检查最基本的 URL/名称）
         if (state.name.isBlank() && state.url.isBlank()) return null
-        
+
         return try {
             val iconPath = state.savedIconPath ?: state.iconUri?.toString()
-            
-            val splashConfig = if (state.splashEnabled && state.savedSplashPath != null) {
-                state.splashConfig.copy(mediaPath = state.savedSplashPath)
-            } else null
-            
-            val bgmConfig = if (state.bgmEnabled && state.bgmConfig.playlist.isNotEmpty()) {
-                state.bgmConfig
-            } else null
-            
-            val apkExportConfig = state.apkExportConfig.let { config ->
-                if (config.customPackageName.isNullOrBlank() && 
-                    config.customVersionName.isNullOrBlank() && 
-                    config.customVersionCode == null) null else config
-            }
-            
-            val translateConfig = if (state.translateEnabled) state.translateConfig else null
-            val currentThemeType = getCurrentThemeType()
-            val extensionModuleIds = state.extensionModuleIds.toList()
-            
-            val legacyCodeStrings = state.activationCodes.filter { !it.trimStart().startsWith("{") }
-            val activationCodeStrings = state.activationCodeList.map { it.toJson() } + legacyCodeStrings
-            
-            val webApp = _currentApp.value?.copy(
-                name = state.name.ifBlank { "Preview" },
-                url = normalizeUrl(state.url, state.appType, state.allowHttp),
-                iconPath = iconPath,
-                appType = state.appType,
-                mediaConfig = state.mediaConfig,
-                htmlConfig = state.htmlConfig,
-                activationEnabled = state.activationEnabled,
-                activationCodes = activationCodeStrings,
-                activationCodeList = state.activationCodeList,
-                activationRequireEveryTime = state.activationRequireEveryTime,
-                activationDialogConfig = state.activationDialogConfig.let {
-                    if (it.title.isBlank() && it.subtitle.isBlank() && it.inputLabel.isBlank() && it.buttonText.isBlank()) null else it
-                },
-                adsEnabled = state.adsEnabled,
-                adConfig = state.adConfig,
-                announcementEnabled = state.announcementEnabled,
-                announcement = state.announcement,
-                adBlockEnabled = state.adBlockEnabled,
-                adBlockRules = state.adBlockRules,
-                webViewConfig = state.webViewConfig,
-                splashEnabled = state.splashEnabled,
-                splashConfig = splashConfig,
-                bgmEnabled = state.bgmEnabled,
-                bgmConfig = bgmConfig,
-                apkExportConfig = apkExportConfig,
+            val currentThemeType = themeManager.themeTypeFlow.first().name
+            val webApp = appCrudActions.buildWebAppForSave(
+                state = state.copy(name = state.name.ifBlank { "Preview" }),
+                currentApp = _currentApp.value,
+                selectedCategoryId = _selectedCategoryId.value,
+                normalizedUrl = ::normalizeUrl,
                 themeType = currentThemeType,
-                translateEnabled = state.translateEnabled,
-                translateConfig = translateConfig,
-                extensionModuleIds = extensionModuleIds,
-                extensionFabIcon = state.extensionFabIcon.ifBlank { null },
-                autoStartConfig = state.autoStartConfig,
-                forcedRunConfig = state.forcedRunConfig,
-                blackTechConfig = state.blackTechConfig,
-                disguiseConfig = state.disguiseConfig,
-                deviceDisguiseConfig = state.deviceDisguiseConfig
-            ) ?: run {
-                val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
-                WebApp(
-                    name = state.name.ifBlank { "Preview" },
-                    url = normalizeUrl(state.url, state.appType, state.allowHttp),
-                    iconPath = iconPath,
-                    appType = state.appType,
-                    activationEnabled = state.activationEnabled,
-                    activationCodes = activationCodeStrings,
-                    activationCodeList = state.activationCodeList,
-                    activationRequireEveryTime = state.activationRequireEveryTime,
-                    activationDialogConfig = state.activationDialogConfig.let {
-                        if (it.title.isBlank() && it.subtitle.isBlank() && it.inputLabel.isBlank() && it.buttonText.isBlank()) null else it
-                    },
-                    adsEnabled = state.adsEnabled,
-                    adConfig = state.adConfig,
-                    announcementEnabled = state.announcementEnabled,
-                    announcement = state.announcement,
-                    adBlockEnabled = state.adBlockEnabled,
-                    adBlockRules = state.adBlockRules,
-                    webViewConfig = state.webViewConfig,
-                    splashEnabled = state.splashEnabled,
-                    splashConfig = splashConfig,
-                    bgmEnabled = state.bgmEnabled,
-                    bgmConfig = bgmConfig,
-                    apkExportConfig = apkExportConfig,
-                    themeType = currentThemeType,
-                    translateEnabled = state.translateEnabled,
-                    translateConfig = translateConfig,
-                    extensionModuleIds = extensionModuleIds,
-                    extensionFabIcon = state.extensionFabIcon.ifBlank { null },
-                    autoStartConfig = state.autoStartConfig,
-                    forcedRunConfig = state.forcedRunConfig,
-                    blackTechConfig = state.blackTechConfig,
-                    disguiseConfig = state.disguiseConfig,
-                    deviceDisguiseConfig = state.deviceDisguiseConfig,
-                    categoryId = categoryId
-                )
-            }
-            
-            val savedAppId: Long
+                iconPath = iconPath
+            )
+
             if (_currentApp.value != null) {
-                // 已有应用 → 更新
                 repository.updateWebApp(webApp)
-                savedAppId = webApp.id
                 _currentApp.value = webApp
+                webApp.id
             } else {
-                // 新建应用 → 插入，然后将 ViewModel 切换到编辑模式
-                savedAppId = repository.createWebApp(webApp)
-                val savedApp = webApp.copy(id = savedAppId)
-                _currentApp.value = savedApp
+                val savedId = repository.createWebApp(webApp)
+                _currentApp.value = webApp.copy(id = savedId)
+                savedId
             }
-            
-            savedAppId
         } catch (e: Exception) {
             AppLogger.e("MainViewModel", "saveAndPreview failed", e)
             null
         }
     }
-
-    /**
-     * Validate input
-     */
     private fun validateInput(state: EditState): Boolean {
         return when {
             state.name.isBlank() -> {
                 _uiState.value = UiState.Error(Strings.pleaseEnterAppName)
                 false
             }
-            // Only WEB type needs URL validation
             state.appType == AppType.WEB && state.url.isBlank() -> {
                 _uiState.value = UiState.Error(Strings.pleaseEnterWebsiteUrl)
                 false
@@ -747,17 +279,14 @@ class MainViewModel(
                 _uiState.value = UiState.Error(Strings.pleaseEnterValidUrl)
                 false
             }
-            // WEB type with insecure HTTP URL needs user confirmation
             state.appType == AppType.WEB && isInsecureRemoteHttpUrl(state.url) && !state.allowHttp -> {
                 _uiState.value = UiState.Error(Strings.insecureHttpWarning)
                 false
             }
-            // HTML type needs HTML files
             state.appType == AppType.HTML && (state.htmlConfig?.files?.isEmpty() != false) -> {
                 _uiState.value = UiState.Error(Strings.pleaseSelectHtmlFile)
                 false
             }
-            // IMAGE/VIDEO type needs media file path
             (state.appType == AppType.IMAGE || state.appType == AppType.VIDEO) && state.url.isBlank() -> {
                 _uiState.value = UiState.Error(Strings.mediaFilePathEmpty)
                 false
@@ -765,24 +294,15 @@ class MainViewModel(
             else -> true
         }
     }
-
-    /**
-     * Validate URL
-     * Allow user input URL with or without protocol
-     * Supports: domains, localhost, IP addresses
-     */
     private fun isValidUrl(url: String): Boolean {
         val trimmed = url.trim()
         if (trimmed.isBlank()) return false
         return try {
-            // If has protocol, parse and validate directly
             if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
                 val uri = Uri.parse(trimmed)
                 !uri.host.isNullOrBlank()
             } else {
-                // No protocol, check if valid host format
-                // Accept: domains (with dot), localhost, IP addresses
-                val host = trimmed.split("/").first() // Remove path if any
+                val host = trimmed.split("/").first()
                 host.isNotBlank() && !host.contains(" ") &&
                     (host.contains(".") || host == "localhost" || isIpAddress(host))
             }
@@ -790,10 +310,6 @@ class MainViewModel(
             false
         }
     }
-
-    /**
-     * Check if string is a valid IP address
-     */
     private fun isIpAddress(host: String): Boolean {
         val parts = host.split(".")
         if (parts.size != 4) return false
@@ -801,17 +317,9 @@ class MainViewModel(
             part.toIntOrNull()?.let { it in 0..255 } ?: false
         }
     }
-    
-    /**
-     * Normalize URL
-     * Do not auto-complete protocol, keep user original input
-     * Respect user's HTTP choice (don't auto-upgrade to HTTPS if user allows HTTP)
-     */
     private fun normalizeUrl(url: String, appType: AppType, allowHttp: Boolean = false): String {
         val trimmed = url.trim()
         if (appType != AppType.WEB) return trimmed
-
-        // If user explicitly allows HTTP, don't auto-upgrade to HTTPS
         return if (allowHttp && trimmed.startsWith("http://", ignoreCase = true)) {
             trimmed
         } else {
@@ -819,20 +327,9 @@ class MainViewModel(
             upgradeRemoteHttpToHttps(withScheme)
         }
     }
-    
-    // ==================== Common App Save/Update Helpers ====================
-
-    /**
-     * Get the current theme type name from ThemeManager.
-     */
     private suspend fun getCurrentThemeType(): String {
         return themeManager.themeTypeFlow.first().name
     }
-
-    /**
-     * Save icon from URI to persistent storage, returning the saved path.
-     * Returns null if iconUri is null.
-     */
     private suspend fun saveIconIfPresent(iconUri: Uri?): String? {
         return iconUri?.let { uri ->
             withContext(Dispatchers.IO) {
@@ -840,16 +337,6 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * Common create-app flow: wraps Loading/Success/Error state management,
-     * theme resolution, icon saving, category assignment, and DB insert.
-     *
-     * @param typeName Display name for success/error messages (e.g. "Media", "Node.js")
-     * @param iconUri  Optional icon URI to save
-     * @param buildApp Lambda that receives (savedIconPath, currentThemeType, categoryId)
-     *                 and returns the WebApp to insert. Return null to abort.
-     */
     private fun createApp(
         typeName: String,
         iconUri: Uri?,
@@ -863,7 +350,7 @@ class MainViewModel(
                 val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
 
                 val webApp = buildApp(savedIconPath, currentThemeType, categoryId)
-                    ?: return@launch  // builder signalled abort (already set uiState)
+                    ?: return@launch
 
                 withContext(Dispatchers.IO) { repository.createWebApp(webApp) }
                 _uiState.value = UiState.Success(Strings.appCreatedSuccessfully.replaceFirst("%s", typeName))
@@ -873,16 +360,6 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * Common update-app flow: wraps Loading/Success/Error state management,
-     * existing-app lookup, icon saving, and DB update.
-     *
-     * @param appId    ID of the existing app to update
-     * @param typeName Display name for success/error messages
-     * @param iconUri  Optional new icon URI (null = keep existing)
-     * @param applyUpdate Lambda that receives (existingApp, savedIconPath) and returns the updated WebApp.
-     */
     private fun updateApp(
         appId: Long,
         typeName: String,
@@ -907,10 +384,6 @@ class MainViewModel(
             }
         }
     }
-
-    /**
-     * Save media app (image/video to APP)
-     */
     fun saveMediaApp(
         name: String,
         appType: AppType,
@@ -943,10 +416,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save media gallery app (multiple images/videos)
-     */
     fun saveGalleryApp(
         name: String,
         galleryConfig: GalleryConfig?,
@@ -974,8 +443,6 @@ class MainViewModel(
             )
         }
     }
-    
-    // HTML processing delegated to HtmlProjectHelper
     private suspend fun processAndSaveHtmlFiles(
         context: Context,
         files: List<HtmlFile>,
@@ -987,12 +454,6 @@ class MainViewModel(
         outputPath: String,
         projectId: String
     ): List<HtmlFile> = HtmlProjectHelper.copyBuildOutputToStorage(context, outputPath, projectId)
-
-    /**
-     * Save HTML app (local HTML+CSS+JS to APP)
-     * 
-     * Important: Inline CSS and JS into HTML files to ensure proper loading in WebView
-     */
     fun saveHtmlApp(
         name: String,
         htmlConfig: HtmlConfig?,
@@ -1029,13 +490,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save ZIP-imported HTML app
-     * 
-     * Unlike saveHtmlApp, this preserves the full directory structure (no CSS/JS inlining)
-     * because ZIP projects may contain complex relative path references between files.
-     */
     fun saveZipHtmlApp(
         name: String,
         extractedDir: String,
@@ -1055,8 +509,6 @@ class MainViewModel(
             _uiState.value = UiState.Error(Strings.saveFailedNoHtmlInZip)
             return@createApp null
         }
-
-        // Cleanup ZIP temp files
         withContext(Dispatchers.IO) { com.webtoapp.util.ZipProjectImporter.cleanupTempFiles(context) }
         AppLogger.d("MainViewModel", "ZIP HTML app saved: projectId=$projectId, files=${savedFiles.size}, entry=$entryFile")
 
@@ -1082,12 +534,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save frontend project app (Vue/React/Node.js etc)
-     * 
-     * Save built static files as HTML app
-     */
     fun saveFrontendApp(
         name: String,
         outputPath: String,
@@ -1118,10 +564,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save WordPress app
-     */
     fun saveWordPressApp(
         name: String,
         wordpressConfig: WordPressConfig,
@@ -1143,10 +585,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save Node.js app
-     */
     fun saveNodeJsApp(
         name: String,
         nodejsConfig: NodeJsConfig,
@@ -1168,10 +606,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Update Node.js app
-     */
     fun updateNodeJsApp(
         appId: Long,
         name: String,
@@ -1186,10 +620,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Save PHP app
-     */
     fun savePhpApp(
         name: String,
         phpAppConfig: PhpAppConfig,
@@ -1206,10 +636,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save Python app
-     */
     fun savePythonApp(
         name: String,
         pythonAppConfig: PythonAppConfig,
@@ -1226,10 +652,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Save Go app
-     */
     fun saveGoApp(
         name: String,
         goAppConfig: GoAppConfig,
@@ -1246,10 +668,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Update PHP app
-     */
     fun updatePhpApp(
         appId: Long,
         name: String,
@@ -1264,10 +682,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Update Python app
-     */
     fun updatePythonApp(
         appId: Long,
         name: String,
@@ -1282,10 +696,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Update Go app
-     */
     fun updateGoApp(
         appId: Long,
         name: String,
@@ -1300,10 +710,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Save Multi-Web aggregator app
-     */
     fun saveMultiWebApp(
         name: String,
         multiWebConfig: MultiWebConfig,
@@ -1320,10 +726,6 @@ class MainViewModel(
             categoryId = categoryId
         )
     }
-    
-    /**
-     * Update Multi-Web aggregator app
-     */
     fun updateMultiWebApp(
         appId: Long,
         name: String,
@@ -1339,10 +741,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Update frontend project app
-     */
     fun updateFrontendApp(
         appId: Long,
         name: String,
@@ -1351,7 +749,6 @@ class MainViewModel(
         framework: String
     ) = updateApp(appId, "Frontend", iconUri) { existingApp, savedIconPath ->
         val context = getApplication<Application>()
-        // If there is new build output, copy files using shared helper
         val htmlConfig = if (!outputPath.isNullOrEmpty()) {
             val projectId = existingApp.htmlConfig?.projectId ?: HtmlStorage.generateProjectId()
             val savedFiles = copyBuildOutputToStorage(context, outputPath, projectId)
@@ -1372,10 +769,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Update media app (image/video)
-     */
     fun updateMediaApp(
         appId: Long,
         name: String,
@@ -1387,8 +780,6 @@ class MainViewModel(
     ) = updateApp(appId, "Media", iconUri) { existingApp, savedIconPath ->
         val context = getApplication<Application>()
         val isVideo = appType == AppType.VIDEO
-
-        // Save media file (if new media)
         val savedMediaPath = mediaUri?.let { uri ->
             withContext(Dispatchers.IO) { MediaStorage.saveMedia(context, uri, isVideo) }
         } ?: existingApp.url
@@ -1402,10 +793,6 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    /**
-     * Update media gallery app
-     */
     fun updateGalleryApp(
         appId: Long,
         name: String,
@@ -1426,13 +813,6 @@ class MainViewModel(
             )
         }
     }
-    
-    /**
-     * Update HTML app
-     * 
-     * Important: When HTML files are changed, need to re-process and save them
-     * like saveHtmlApp does, otherwise the temp files will be deleted and cause 404
-     */
     fun updateHtmlApp(
         appId: Long,
         name: String,
@@ -1441,21 +821,13 @@ class MainViewModel(
         themeType: String = "AURORA"
     ) = updateApp(appId, "HTML", iconUri) { existingApp, savedIconPath ->
         val context = getApplication<Application>()
-
-        // Check if HTML files have changed
         val finalHtmlConfig = if (htmlConfig != null && htmlConfig != existingApp.htmlConfig) {
             AppLogger.d("MainViewModel", "HTML files changed, re-processing...")
-
-            // Delete old project files if exists
             existingApp.htmlConfig?.projectId?.let { oldProjectId ->
                 withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, oldProjectId) }
             }
-
-            // Process and save using shared helper
             val projectId = HtmlStorage.generateProjectId()
             val savedHtmlFiles = processAndSaveHtmlFiles(context, htmlConfig.files, projectId)
-
-            // Check if any HTML files were saved
             if (savedHtmlFiles.none { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }) {
                 AppLogger.e("MainViewModel", "No HTML files were saved successfully in update")
                 withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, projectId) }
@@ -1475,20 +847,9 @@ class MainViewModel(
             updatedAt = System.currentTimeMillis()
         )
     }
-    
-    // ==================== Category Management ====================
-    
-    /**
-     * Select category
-     * @param categoryId null = all, -1 = uncategorized, other = specified category ID
-     */
     fun selectCategory(categoryId: Long?) {
         _selectedCategoryId.value = categoryId
     }
-    
-    /**
-     * Create category
-     */
     fun createCategory(name: String, icon: String = "folder", color: String = "#6200EE") {
         viewModelScope.launch {
             try {
@@ -1504,10 +865,6 @@ class MainViewModel(
             }
         }
     }
-    
-    /**
-     * Update category
-     */
     fun updateCategory(category: AppCategory) {
         viewModelScope.launch {
             try {
@@ -1517,19 +874,11 @@ class MainViewModel(
             }
         }
     }
-    
-    /**
-     * Delete category
-     * After deletion, apps under this category will become uncategorized
-     */
     fun deleteCategory(category: AppCategory) {
         viewModelScope.launch {
             try {
-                // Batch clear categoryId in one SQL statement (avoids N+1 queries)
                 repository.clearCategoryId(category.id)
-                // Delete category
                 categoryRepository.deleteCategory(category)
-                // If current selection is this category, switch to all
                 if (_selectedCategoryId.value == category.id) {
                     _selectedCategoryId.value = null
                 }
@@ -1538,10 +887,6 @@ class MainViewModel(
             }
         }
     }
-    
-    /**
-     * Change app category
-     */
     fun moveAppToCategory(webApp: WebApp, categoryId: Long?) {
         viewModelScope.launch {
             try {
@@ -1552,96 +897,48 @@ class MainViewModel(
         }
     }
 }
-
-/**
- * Edit state
- */
 @androidx.compose.runtime.Stable
 data class EditState(
     val name: String = "",
     val url: String = "",
-    val iconUri: Uri? = null,           // For UI display
-    val savedIconPath: String? = null,  // Persistent local file path
+    val iconUri: Uri? = null,
+    val savedIconPath: String? = null,
     val iconBitmap: Bitmap? = null,
-
-    // App type (to distinguish WEB/HTML/IMAGE/VIDEO)
     val appType: AppType = AppType.WEB,
-
-    // Media app config (IMAGE/VIDEO type)
     val mediaConfig: MediaConfig? = null,
-
-    // HTML app config (HTML type)
     val htmlConfig: HtmlConfig? = null,
-
-    // HTTP 允许（用户确认了解风险）
     val allowHttp: Boolean = false,
-
-    // Activation code
     val activationEnabled: Boolean = false,
-    val activationCodes: List<String> = emptyList(),  // Old format (for compatibility)
-    val activationCodeList: List<com.webtoapp.core.activation.ActivationCode> = emptyList(),  // New format
-    val activationRequireEveryTime: Boolean = false,  // Whether to require verification every time
+    val activationCodes: List<String> = emptyList(),
+    val activationCodeList: List<com.webtoapp.core.activation.ActivationCode> = emptyList(),
+    val activationRequireEveryTime: Boolean = false,
     val activationDialogConfig: com.webtoapp.data.model.ActivationDialogConfig = com.webtoapp.data.model.ActivationDialogConfig(),
-
-    // Ad
     val adsEnabled: Boolean = false,
     val adConfig: AdConfig = AdConfig(),
-
-    // Announcement
     val announcementEnabled: Boolean = false,
     val announcement: Announcement = Announcement(),
-
-    // Ad blocking
     val adBlockEnabled: Boolean = false,
     val adBlockRules: List<String> = emptyList(),
-
-    // WebView config
     val webViewConfig: WebViewConfig = WebViewConfig(),
-
-    // Splash screen
     val splashEnabled: Boolean = false,
     val splashConfig: SplashConfig = SplashConfig(),
-    val splashMediaUri: Uri? = null,        // For UI display
-    val savedSplashPath: String? = null,    // Persistent local file path
-    
-    // Background music
+    val splashMediaUri: Uri? = null,
+    val savedSplashPath: String? = null,
     val bgmEnabled: Boolean = false,
     val bgmConfig: BgmConfig = BgmConfig(),
-    
-    // APK export config (only effective when packaging APK)
     val apkExportConfig: ApkExportConfig = ApkExportConfig(),
-    
-    // Theme config (for exported app UI style)
     val themeType: String = "AURORA",
-    
-    // Web page auto-translate config
     val translateEnabled: Boolean = false,
     val translateConfig: TranslateConfig = TranslateConfig(),
-    
-    // Extension modules
     val extensionModuleEnabled: Boolean = false,
     val extensionModuleIds: Set<String> = emptySet(),
     val extensionFabIcon: String = "",
-    
-    // Auto-start config
     val autoStartConfig: AutoStartConfig? = null,
-    
-    // Forced run config
     val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
-    
-    // Black tech feature config (independent module)
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
-    
-    // App disguise config (independent module)
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
-    
-    // Device disguise config (device type/brand/model UA spoofing)
     val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig = com.webtoapp.core.disguise.DeviceDisguiseConfig()
 )
-
-/**
- * UI state
- */
 sealed class UiState {
     data object Idle : UiState()
     data object Loading : UiState()

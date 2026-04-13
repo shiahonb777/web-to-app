@@ -407,6 +407,36 @@ Shows app info, changelog, and dual download buttons (GitHub international + Git
 
 </div>
 
+## ☁️ Cloud Layering
+
+- `app/src/main/java/com/webtoapp/core/cloud/api`
+  Domain-specific cloud APIs such as activation, backup, and notifications live here. Keep request wiring out of `CloudApiClient.kt`.
+- `app/src/main/java/com/webtoapp/core/cloud/internal`
+  Shared cloud internals such as JSON parsing, error mapping, and request helpers live here.
+- `app/src/main/java/com/webtoapp/core/cloud/model`
+  Cloud DTOs are centralized here so response models stop leaking across random files.
+
+## 🧩 Feature Screens
+
+- `app/src/main/java/com/webtoapp/ui/screens/create/webview/cards`
+  WebView creation cards are split by responsibility into `interaction`, `display`, and `system`.
+- `app/src/main/java/com/webtoapp/ui/screens/extensionmodule/editor`
+  Extension editor UI is split into `tabs` and `dialogs`, leaving `ModuleEditorScreen.kt` as a thin composition entry.
+
+## 🧩 Extension Runtime
+
+- `app/src/main/java/com/webtoapp/core/extension/snippets`
+  `CodeSnippets.kt` is now only a compatibility facade. Snippet models, grouped category builders, search, and popular-item wiring live here.
+- `app/src/main/java/com/webtoapp/core/extension/panel`
+  Extension panel icon mapping, the injected panel script, and helper script now live here so `ExtensionPanelScript.kt` no longer acts as a giant string dump.
+
+## 🗃️ Model & ViewModel
+
+- `app/src/main/java/com/webtoapp/data/model/webapp/config`
+  `WebApp.kt` now stays focused on the entity itself, while WebView/runtime/media/export/appearance config types live in dedicated files under this package. `WebAppConfigAliases.kt` keeps legacy imports working during migration.
+- `app/src/main/java/com/webtoapp/ui/viewmodel/main`
+  `MainViewModel` helpers such as save assembly, PWA import coordination, and state factories live here so the ViewModel stops acting like a 2,000-line god object.
+
 ## 🧱 创建页共用层
 
 - `app/src/main/java/com/webtoapp/ui/screens/create/common`

@@ -93,9 +93,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import com.webtoapp.ui.components.liquidGlass
 
-/**
- * Home screen - 应用列表
- */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -124,14 +121,12 @@ fun HomeScreen(
     onOpenExtensionModules: () -> Unit = {},
     onOpenLinuxEnvironment: () -> Unit = {},
 ) {
-    // Initialize多语言
     InitializeLanguage()
     
     val apps by viewModel.filteredApps.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
-    // 分类相关状态
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     var showCategoryEditor by remember { mutableStateOf(false) }
@@ -147,7 +142,6 @@ fun HomeScreen(
     var showFabMenu by remember { mutableStateOf(false) }
     var showBatchImportDialog by remember { mutableStateOf(false) }
 
-    // Scope 和 Snackbar
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState) {
@@ -191,7 +185,6 @@ fun HomeScreen(
             TopAppBar(
                 title = {
                     if (isSearchActive) {
-                        // Search框 - 限制宽度
                         PremiumTextField(
                             value = searchQuery,
                             onValueChange = { viewModel.search(it) },
@@ -217,7 +210,6 @@ fun HomeScreen(
                         val currentFullText = typewriterTexts[textIndex]
                         val displayText = currentFullText.substring(0, charIndex.coerceAtMost(currentFullText.length))
                         
-                        // 光标闪烁
                         var cursorVisible by remember { mutableStateOf(true) }
                         LaunchedEffect(Unit) {
                             while (true) {
@@ -226,9 +218,7 @@ fun HomeScreen(
                             }
                         }
                         
-                        // 打字机主循环
                         LaunchedEffect(loopTick) {
-                            // 逐字打出 (100ms/字)
                             charIndex = 0
                             val fullText = typewriterTexts[textIndex]
                             for (i in 1..fullText.length) {
@@ -236,25 +226,20 @@ fun HomeScreen(
                                 charIndex = i
                             }
                             
-                            // 打完停留 2 秒
                             delay(2000)
                             
-                            // 如果用户点击了暂停，等待 3 秒
                             if (userPaused) {
                                 delay(3000)
                                 userPaused = false
                             }
                             
-                            // 逐字删除 (50ms/字)
                             for (i in fullText.length - 1 downTo 0) {
                                 delay(50)
                                 charIndex = i
                             }
                             
-                            // 删除完停留 0.4 秒
                             delay(400)
                             
-                            // 切换到下一段
                             textIndex = (textIndex + 1) % typewriterTexts.size
                             loopTick++
                         }
@@ -273,7 +258,6 @@ fun HomeScreen(
                                     )
                                 )
                             )
-                            // 橙色闪烁光标
                             if (cursorVisible) {
                                 Spacer(modifier = Modifier.width(1.dp))
                                 Box(
@@ -287,18 +271,15 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // 深/浅色模式切换按钮（带圆形揭示动画）
                     val context = LocalContext.current
                     val themeManager: ThemeManager = koinInject()
                     val darkModeState by themeManager.darkModeFlow.collectAsStateWithLifecycle()
                     val isDarkNow = darkModeState == ThemeManager.DarkModeSettings.DARK
                     
-                    // 获取圆形揭示动画状态
                     val revealState = LocalThemeRevealState.current
                     val view = LocalView.current
                     val activity = context as? android.app.Activity
                     
-                    // 记录按钮在屏幕上的中心坐标
                     var buttonCenter by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
                     
                     IconButton(
@@ -306,15 +287,12 @@ fun HomeScreen(
                             val switchToDark = !isDarkNow
                             
                             if (revealState != null) {
-                                // ★ 可打断：不再检查 isAnimating
-                                // 如果动画进行中，triggerReveal 会自动取消旧动画、重新截图、重新开始
                                 revealState.triggerReveal(
                                     center = buttonCenter,
                                     switchToDark = switchToDark,
                                     view = view,
                                     window = activity?.window
                                 ) {
-                                    // 截图完成后切换主题
                                     scope.launch {
                                         val newMode = if (switchToDark) {
                                             ThemeManager.DarkModeSettings.DARK
@@ -325,7 +303,6 @@ fun HomeScreen(
                                     }
                                 }
                             } else {
-                                // Fallback: 无动画直接切换
                                 scope.launch {
                                     val newMode = if (switchToDark) {
                                         ThemeManager.DarkModeSettings.DARK
@@ -356,18 +333,14 @@ fun HomeScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
-                    // 语言选择按钮
                     LanguageSelectorButton(
                         onLanguageChanged = {
-                            // 语言更改后会自动触发重组
                             scope.launch {
                                 snackbarHostState.showSnackbar(Strings.msgLanguageChanged)
                             }
                         }
                     )
                     
-                    // Search按钮
                     IconButton(
                         onClick = {
                             isSearchActive = !isSearchActive
@@ -393,7 +366,6 @@ fun HomeScreen(
 
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
-                // 弹簧滑入动画
                 var isVisible by remember { mutableStateOf(false) }
                 LaunchedEffect(Unit) { isVisible = true }
                 
@@ -430,7 +402,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // 分类标签栏
             CategoryTabRow(
                 categories = categories,
                 selectedCategoryId = selectedCategoryId,
@@ -452,13 +423,11 @@ fun HomeScreen(
                     .weight(weight = 1f, fill = true)
             ) {
                 if (apps.isEmpty()) {
-                    // Empty状态
                     EmptyState(
                         modifier = Modifier.align(Alignment.Center),
                         onCreateApp = onCreateApp
                     )
                 } else {
-                    // App列表
                     val listContext = LocalContext.current
                     val sharedExporter = remember { com.webtoapp.core.export.AppExporter(listContext) }
                     val sharedApkBuilder = remember { ApkBuilder(listContext) }
@@ -474,8 +443,6 @@ fun HomeScreen(
                             }
                             .build()
                     }
-                    
-                    // 截图版本跟踪（用于强制 Coil 重新加载图片）
                     val screenshotVersions = remember { mutableStateMapOf<Long, Int>() }
                     val screenshotLoadingStates = remember { mutableStateMapOf<Long, Boolean>() }
                     val previewSpecs by produceState(
@@ -487,8 +454,6 @@ fun HomeScreen(
                             apps.associate { it.id to resolveAppPreviewSpec(listContext.applicationContext, it) }
                         }
                     }
-                    
-                    // 仅首次加载：串行为没有缓存截图的应用截一次，之后由用户手动点击刷新
                     LaunchedEffect(apps, screenshotService, previewSpecs) {
                         val initMessage = "init effect: service=${screenshotService != null}, apps=${apps.size}"
                         com.webtoapp.core.logging.AppLogger.i(
@@ -557,16 +522,14 @@ fun HomeScreen(
                         val scope = sharedScope
                         val previewSpec = previewSpecs[app.id] ?: AppPreviewSpec()
 
-                        // 交错入场动画
                         StaggeredAnimatedItem(index = index) {
                         
-                        // 滑动删除
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { value ->
                                 if (value == SwipeToDismissBoxValue.EndToStart) {
                                     selectedApp = app
                                     showDeleteDialog = true
-                                    false  // 不真正移除，让对话框确认
+                                    false
                                 } else false
                             }
                         )
@@ -574,7 +537,6 @@ fun HomeScreen(
                         SwipeToDismissBox(
                             state = dismissState,
                             backgroundContent = {
-                                // 删除背景
                                 val dismissProgress = dismissState.progress
                                 val bgAlpha by animateFloatAsState(
                                     targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) 1f else 0f,
@@ -661,7 +623,6 @@ fun HomeScreen(
                                     val result = apkBuilder.buildApk(app) { _, _ -> }
                                     when (result) {
                                         is BuildResult.Success -> {
-                                            // 使用 FileProvider 分享 APK
                                             try {
                                                 val apkUri = androidx.core.content.FileProvider.getUriForFile(
                                                     listContext,
@@ -743,11 +704,9 @@ fun HomeScreen(
                             } else null,
                             modifier = Modifier.animateItemPlacement()
                         )
-                        } // SwipeToDismissBox
-                        } // StaggeredAnimatedItem
+                        }
+                        }
                     }
-
-                    // 底部间距
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -755,13 +714,11 @@ fun HomeScreen(
                 }
             }
 
-                    // ========== Create App Bottom Bar ==========
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        // Expanded create menu
                         AnimatedVisibility(
                             visible = showFabMenu,
                             enter = expandVertically(
@@ -842,7 +799,6 @@ fun HomeScreen(
                             }
                         }
 
-                        // Main create button
                         val fabRotation by animateFloatAsState(
                             targetValue = if (showFabMenu) 135f else 0f,
                             animationSpec = spring(
@@ -877,10 +833,8 @@ fun HomeScreen(
                             )
                         }
                     }
-            } // Column
+            }
     }
-
-    // Build APK 对话框
     if (showBuildDialog && buildingApp != null) {
         BuildApkDialog(
             webApp = buildingApp!!,
@@ -897,8 +851,6 @@ fun HomeScreen(
             }
         )
     }
-
-    // Delete确认对话框
     if (showDeleteDialog && selectedApp != null) {
         AnimatedAlertDialog(
             onDismissRequest = {
@@ -931,8 +883,6 @@ fun HomeScreen(
             }
         )
     }
-    
-    // 分类编辑对话框
     if (showCategoryEditor) {
         CategoryEditorDialog(
             category = editingCategory,
@@ -953,8 +903,6 @@ fun HomeScreen(
             }
         )
     }
-    
-    // 移动到分类对话框
     if (showMoveToCategoryDialog && appToMove != null) {
         MoveToCategoryDialog(
             app = appToMove!!,
@@ -970,8 +918,6 @@ fun HomeScreen(
             }
         )
     }
-    
-    // 批量导入对话框
     if (showBatchImportDialog) {
         BatchImportDialog(
             importService = batchImportService,
@@ -982,9 +928,6 @@ fun HomeScreen(
         )
     }
 }
-/**
- * 侧边栏菜单项
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SidebarMenuItem(
@@ -1067,9 +1010,6 @@ private fun SidebarMenuItem(
     }
 }
 
-/**
- * 应用卡片
- */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AppCard(
@@ -1077,7 +1017,7 @@ fun AppCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onEdit: () -> Unit,
-    onEditCore: () -> Unit = {},  // Class型专用编辑（核心配置）
+    onEditCore: () -> Unit = {},
     onDelete: () -> Unit,
     onCreateShortcut: () -> Unit = {},
     onExport: () -> Unit = {},
@@ -1106,7 +1046,6 @@ fun AppCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon + 健康状态指示灯
             Box {
             Surface(
                 modifier = Modifier.size(56.dp),
@@ -1150,7 +1089,6 @@ fun AppCard(
                     )
                 }
             }
-            // 健康状态指示灯（仅 WEB 类型且有状态时显示）
             if (healthStatus != null && healthStatus != com.webtoapp.core.stats.HealthStatus.UNKNOWN) {
                 val dotColor = when (healthStatus) {
                     com.webtoapp.core.stats.HealthStatus.ONLINE -> AppColors.Success
@@ -1170,11 +1108,9 @@ fun AppCard(
                         .background(dotColor)
                 )
             }
-            } // Box
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
-
-            // Info
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
                     text = app.name,
@@ -1195,13 +1131,11 @@ fun AppCard(
                             app.htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
                         }
                         com.webtoapp.data.model.AppType.FRONTEND -> {
-                            // 显示入口文件或项目目录
                             app.htmlConfig?.entryFile?.takeIf { it.isNotBlank() }
                                 ?: app.htmlConfig?.projectDir?.let { java.io.File(it).name }
                                 ?: "index.html"
                         }
                         com.webtoapp.data.model.AppType.GALLERY -> {
-                            // 显示媒体数量统计
                             val config = app.galleryConfig
                             if (config != null && config.items.isNotEmpty()) {
                                 val imageCount = config.items.count { it.type == com.webtoapp.data.model.GalleryItemType.IMAGE }
@@ -1223,10 +1157,7 @@ fun AppCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-
-                // 功能标签
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    // App类型标签
                     AppTypeChip(appType = app.appType)
                     if (app.activationEnabled) {
                         FeatureChip(icon = Icons.Outlined.Key, label = Strings.activationCodeVerify)
@@ -1239,8 +1170,6 @@ fun AppCard(
                     }
                 }
             }
-
-            // 网页快照缩略图（仅 WEB 类型显示，无截图时显示占位符）
             Spacer(modifier = Modifier.width(8.dp))
             Surface(
                 modifier = Modifier
@@ -1330,8 +1259,6 @@ fun AppCard(
                     }
                 }
             }
-
-            // 菜单
             Box {
                 IconButton(onClick = { expanded = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
@@ -1341,9 +1268,7 @@ fun AppCard(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    // Web page应用的"Edit"已包含所有配置，不需要单独的"编辑核心配置"
                     if (app.appType == com.webtoapp.data.model.AppType.WEB) {
-                        // Web page应用：只显示一个"Edit"按钮
                         DropdownMenuItem(
                             text = { Text(Strings.btnEdit) },
                             onClick = {
@@ -1353,7 +1278,6 @@ fun AppCard(
                             leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                         )
                     } else {
-                        // 其他类型：显示"编辑核心配置"和"编辑通用配置"
                         DropdownMenuItem(
                             text = { Text(Strings.editCoreConfig) },
                             onClick = {
@@ -1433,9 +1357,6 @@ fun AppCard(
     }
 }
 
-/**
- * 功能标签
- */
 @Composable
 fun FeatureChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -1465,9 +1386,6 @@ fun FeatureChip(
     }
 }
 
-/**
- * 应用类型标签
- */
 @Composable
 fun AppTypeChip(appType: com.webtoapp.data.model.AppType) {
     val (icon, label, containerColor) = when (appType) {
@@ -1572,9 +1490,6 @@ fun AppTypeChip(appType: com.webtoapp.data.model.AppType) {
     }
 }
 
-/**
- * 空状态
- */
 @Composable
 fun EmptyState(
     modifier: Modifier = Modifier,
@@ -1613,9 +1528,6 @@ fun EmptyState(
     }
 }
 
-/**
- * 构建 APK 对话框
- */
 @Composable
 fun BuildApkDialog(
     webApp: WebApp,
@@ -1630,31 +1542,21 @@ fun BuildApkDialog(
     var progress by remember { mutableIntStateOf(0) }
     var progressText by remember { mutableStateOf(Strings.preparing) }
     var analysisReport by remember { mutableStateOf<com.webtoapp.core.apkbuilder.ApkAnalyzer.AnalysisReport?>(null) }
-    
-    // Encryption配置状态
     var encryptionConfig by remember { 
         mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig()) 
     }
-    
-    // 软件加固配置状态
     var hardeningConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.hardeningConfig ?: com.webtoapp.data.model.AppHardeningConfig())
     }
-    
-    // 独立环境/多开配置状态
     var isolationConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.isolationConfig ?: com.webtoapp.core.isolation.IsolationConfig())
     }
-    
-    // 后台运行配置状态
     var backgroundRunEnabled by remember {
         mutableStateOf(webApp.apkExportConfig?.backgroundRunEnabled ?: false)
     }
     var backgroundRunConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.backgroundRunConfig ?: com.webtoapp.data.model.BackgroundRunExportConfig())
     }
-    
-    // 浏览器引擎配置状态
     var selectedEngineType by remember {
         mutableStateOf(webApp.apkExportConfig?.engineType ?: "SYSTEM_WEBVIEW")
     }
@@ -1671,7 +1573,6 @@ fun BuildApkDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                // App信息
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -1712,34 +1613,24 @@ fun BuildApkDialog(
                 }
                 
                 HorizontalDivider()
-                
-                // Encryption配置
                 com.webtoapp.ui.components.EncryptionConfigCard(
                     config = encryptionConfig,
                     onConfigChange = { encryptionConfig = it }
                 )
-                
-                // 软件加固配置
                 com.webtoapp.ui.components.HardeningConfigCard(
                     config = hardeningConfig,
                     onConfigChange = { hardeningConfig = it }
                 )
-                
-                // 独立环境/多开配置
                 com.webtoapp.ui.components.IsolationConfigCard(
                     config = isolationConfig,
                     onConfigChange = { isolationConfig = it }
                 )
-                
-                // 后台运行配置
                 com.webtoapp.ui.components.BackgroundRunConfigCard(
                     enabled = backgroundRunEnabled,
                     config = backgroundRunConfig,
                     onEnabledChange = { backgroundRunEnabled = it },
                     onConfigChange = { backgroundRunConfig = it }
                 )
-                
-                // 浏览器引擎选择
                 if (webApp.appType == com.webtoapp.data.model.AppType.WEB) {
                     EngineSelectionCard(
                         selectedEngine = selectedEngineType,
@@ -1760,12 +1651,8 @@ fun BuildApkDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
-                // 进度
                 if (isBuilding) {
                     Spacer(Modifier.height(12.dp))
-                    
-                    // 动画进度环
                     val animatedProgress by animateFloatAsState(
                         targetValue = progress / 100f,
                         animationSpec = spring(
@@ -1774,8 +1661,6 @@ fun BuildApkDialog(
                         ),
                         label = "buildProgress"
                     )
-                    
-                    // 脉冲发光
                     var pulseAlpha by remember { mutableFloatStateOf(0.6f) }
                     LaunchedEffect(Unit) {
                         while (true) {
@@ -1793,7 +1678,6 @@ fun BuildApkDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // 圆形进度
                         Box(contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(
                                 progress = { animatedProgress },
@@ -1824,12 +1708,8 @@ fun BuildApkDialog(
                         }
                     }
                 }
-                
-                // APK 分析报告
                 analysisReport?.let { report ->
                     HorizontalDivider()
-                    
-                    // 标题 + 总大小
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1848,8 +1728,6 @@ fun BuildApkDialog(
                     }
                     
                     Spacer(Modifier.height(4.dp))
-                    
-                    // 分类体积条
                     report.categories.forEach { cat ->
                         val catColor = try {
                             androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(cat.category.color))
@@ -1877,7 +1755,6 @@ fun BuildApkDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        // Progress bar
                         LinearProgressIndicator(
                             progress = { (cat.percentage / 100f).coerceIn(0f, 1f) },
                             modifier = Modifier
@@ -1890,8 +1767,6 @@ fun BuildApkDialog(
                         )
                         Spacer(Modifier.height(2.dp))
                     }
-                    
-                    // 优化建议
                     if (report.optimizationHints.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         Text(
@@ -1933,7 +1808,6 @@ fun BuildApkDialog(
                     onClick = {
                         isBuilding = true
                         scope.launch {
-                            // 将加密配置、隔离配置和后台运行配置应用到 WebApp
                             val webAppWithConfig = webApp.copy(
                                 apkExportConfig = (webApp.apkExportConfig ?: com.webtoapp.data.model.ApkExportConfig()).copy(
                                     encryptionConfig = encryptionConfig,
@@ -1952,7 +1826,6 @@ fun BuildApkDialog(
                                 is BuildResult.Success -> {
                                     analysisReport = result.analysisReport
                                     isBuilding = false
-                                    // 直接安装
                                     apkBuilder.installApk(result.apkFile)
                                     if (result.analysisReport == null) {
                                         onResult("APK 构建成功，正在启动安装...")
@@ -1983,9 +1856,6 @@ fun BuildApkDialog(
     )
 }
 
-/**
- * 浏览器引擎选择卡片（用于构建对话框）
- */
 @Composable
 fun EngineSelectionCard(
     selectedEngine: String,
@@ -2002,8 +1872,6 @@ fun EngineSelectionCard(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
-        // System WebView
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -2026,8 +1894,6 @@ fun EngineSelectionCard(
                 )
             }
         }
-        
-        // GeckoView
         Row(
             modifier = Modifier
                 .fillMaxWidth()

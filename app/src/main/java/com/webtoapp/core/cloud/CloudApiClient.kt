@@ -3,6 +3,12 @@ package com.webtoapp.core.cloud
 import android.os.Build
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.webtoapp.core.cloud.api.ActivationApi
+import com.webtoapp.core.cloud.api.BackupApi
+import com.webtoapp.core.cloud.api.NotificationApi
+import com.webtoapp.core.cloud.api.ProjectApi
+import com.webtoapp.core.cloud.internal.CloudApiSupport
+import com.webtoapp.core.cloud.internal.CloudJsonParser
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.auth.TokenManager
 import com.webtoapp.core.logging.AppLogger
@@ -29,179 +35,27 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
     companion object {
         const val BASE_URL = "https://api.shiaho.sbs"
         private const val TAG = "CloudApiClient"
-        private const val HTTP_CACHE_SIZE = 10L * 1024 * 1024 // 10 MB
     }
 
     private val apiSupport = CloudApiSupport(tokenManager, context)
     private val jsonMediaType = apiSupport.jsonMediaType
     private val client = apiSupport.client
+    private val parser = CloudJsonParser()
+    private val activationApi = ActivationApi(apiSupport)
+    private val backupApi = BackupApi(apiSupport)
+    private val notificationApi = NotificationApi(apiSupport)
+    private val projectApi = ProjectApi(apiSupport, parser)
 
-    // ═══════════════════════════════════════════
-    // 1. ACTIVATION CODE
-    // ═══════════════════════════════════════════
+    suspend fun redeemCode(code: String): AuthResult<RedeemResult> = activationApi.redeemCode(code)
 
-    /** 兑换激活码 */
-    suspend fun redeemCode(code: String): AuthResult<RedeemResult> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("code", code)
-            addProperty("device_id", tokenManager.getDeviceId())
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/activation/redeem")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
+    suspend fun previewRedeemCode(code: String): AuthResult<RedeemPreview> = activationApi.previewRedeemCode(code)
 
-        val response = client.newCall(request).execute()
-        val statusCode = response.code
-        val responseBody = response.body?.string() ?: ""
+    suspend fun getActivationHistory(): AuthResult<List<ActivationRecord>> = activationApi.getActivationHistory()
 
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val msg = json.get("message")?.asString ?: "兑换成功"
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(RedeemResult(
-                message = msg,
-                planType = data?.get("plan_type")?.asString ?: "",
-                daysAdded = data?.get("duration_days")?.asInt ?: 0
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    suspend fun getDevices(): AuthResult<List<DeviceInfo>> = activationApi.getDevices()
 
-    /** 预览兑换激活码的效果（不会真正兑换） */
-    suspend fun previewRedeemCode(code: String): AuthResult<RedeemPreview> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("code", code)
-            addProperty("device_id", tokenManager.getDeviceId())
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/activation/preview")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
+    suspend fun removeDevice(deviceId: Int): AuthResult<String> = activationApi.removeDevice(deviceId)
 
-        val response = client.newCall(request).execute()
-        val statusCode = response.code
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(RedeemPreview(
-                currentTier = data?.get("current_tier")?.asString ?: "free",
-                currentPlan = data?.get("current_plan")?.asString ?: "free",
-                currentExpiresAt = data?.get("current_expires_at")?.asString,
-                currentIsLifetime = data?.get("current_is_lifetime")?.asBoolean ?: false,
-                newTier = data?.get("new_tier")?.asString ?: "",
-                newPlan = data?.get("new_plan")?.asString ?: "",
-                newExpiresAt = data?.get("new_expires_at")?.asString,
-                newIsLifetime = data?.get("new_is_lifetime")?.asBoolean ?: false,
-                isUpgrade = data?.get("is_upgrade")?.asBoolean ?: false,
-                codeTier = data?.get("code_tier")?.asString ?: "",
-                codePlanType = data?.get("code_plan_type")?.asString ?: "",
-                durationDays = data?.get("duration_days")?.asInt ?: 0,
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 获取兑换历史 */
-    suspend fun getActivationHistory(): AuthResult<List<ActivationRecord>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/activation/history")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            val list = dataArr.map { el ->
-                val obj = el.asJsonObject
-                ActivationRecord(
-                    id = obj.get("id")?.asInt ?: 0,
-                    type = obj.get("type")?.asString ?: "",
-                    planType = obj.get("plan_type")?.asString ?: "",
-                    proStart = obj.get("pro_start")?.asString,
-                    proEnd = obj.get("pro_end")?.asString,
-                    note = obj.get("note")?.asString,
-                    createdAt = obj.get("created_at")?.asString
-                )
-            }
-            AuthResult.Success(list)
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    // ═══════════════════════════════════════════
-    // 2. DEVICE MANAGEMENT
-    // ═══════════════════════════════════════════
-
-    /** 获取设备列表 */
-    suspend fun getDevices(): AuthResult<List<DeviceInfo>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/user/devices")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            val list = dataArr.map { el ->
-                val obj = el.asJsonObject
-                DeviceInfo(
-                    id = obj.get("id")?.asInt ?: 0,
-                    deviceId = obj.get("device_id")?.asString ?: "",
-                    deviceName = obj.get("device_name")?.asString ?: "",
-                    deviceOs = obj.get("device_os")?.asString ?: "",
-                    appVersion = obj.get("app_version")?.asString,
-                    ipAddress = obj.get("ip_address")?.asString,
-                    country = obj.get("country")?.asString,
-                    lastActiveAt = obj.get("last_active_at")?.asString,
-                    isCurrent = obj.get("device_id")?.asString == tokenManager.getDeviceId()
-                )
-            }
-            AuthResult.Success(list)
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 解绑设备 */
-    suspend fun removeDevice(deviceId: Int): AuthResult<String> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/user/devices/$deviceId")
-            .header("Authorization", "Bearer $it")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            AuthResult.Success(json.get("message")?.asString ?: "设备已解绑")
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    // ═══════════════════════════════════════════
-    // 3. ANNOUNCEMENTS
-    // ═══════════════════════════════════════════
-
-    /** 获取全局公告（可选 Token） */
     suspend fun getAnnouncements(appVersion: String? = null): AuthResult<List<AnnouncementData>> =
         withContext(Dispatchers.IO) {
             try {
@@ -239,11 +93,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 4. APP VERSION CHECK
-    // ═══════════════════════════════════════════
-
-    /** 检查应用更新 */
     suspend fun checkAppUpdate(currentVersionCode: Int): AuthResult<AppUpdateInfo?> =
         withContext(Dispatchers.IO) {
             try {
@@ -261,7 +110,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                     if (data == null || !data.has("has_update") || !data.get("has_update").asBoolean) {
                         return@withContext AuthResult.Success(null)
                     }
-                    // Server wraps version info in "latest_version" sub-object
                     val latest = data.getAsJsonObject("latest_version") ?: data
                     AuthResult.Success(AppUpdateInfo(
                         hasUpdate = true,
@@ -282,11 +130,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 5. REMOTE CONFIG
-    // ═══════════════════════════════════════════
-
-    /** 获取远程配置 */
     suspend fun getRemoteConfig(): AuthResult<List<RemoteConfigItem>> =
         withContext(Dispatchers.IO) {
             try {
@@ -300,7 +143,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 if (response.isSuccessful) {
                     val json = JsonParser.parseString(responseBody).asJsonObject
                     val data = json.getAsJsonObject("data")
-                    // Server returns {configs: {key: value, ...}, updated_at: ...}
                     val configsObj = data?.getAsJsonObject("configs")
                     if (configsObj == null) return@withContext AuthResult.Success(emptyList())
                     val list = configsObj.entrySet().map { entry ->
@@ -320,101 +162,25 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 6. PROJECT MANAGEMENT
-    // ═══════════════════════════════════════════
+    suspend fun listProjects(): AuthResult<List<CloudProject>> = projectApi.listProjects()
 
-    /** 列出项目 */
-    suspend fun listProjects(): AuthResult<List<CloudProject>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
+    suspend fun createProject(
+        name: String,
+        description: String? = null,
+        githubRepo: String? = null,
+        giteeRepo: String? = null,
+    ): AuthResult<CloudProject> = projectApi.createProject(name, description, githubRepo, giteeRepo)
 
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
+    suspend fun deleteProject(projectId: Int): AuthResult<String> = projectApi.deleteProject(projectId)
 
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            AuthResult.Success(dataArr.map { parseProject(it.asJsonObject) })
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    suspend fun updateProject(
+        projectId: Int,
+        name: String? = null,
+        description: String? = null,
+        githubRepo: String? = null,
+        giteeRepo: String? = null,
+    ): AuthResult<CloudProject> = projectApi.updateProject(projectId, name, description, githubRepo, giteeRepo)
 
-    /** 创建项目 */
-    suspend fun createProject(name: String, description: String? = null,
-                              githubRepo: String? = null, giteeRepo: String? = null): AuthResult<CloudProject> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("project_name", name)
-            description?.let { addProperty("description", it) }
-            githubRepo?.let { addProperty("github_repo", it) }
-            giteeRepo?.let { addProperty("gitee_repo", it) }
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            AuthResult.Success(parseProject(json.getAsJsonObject("data")))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 删除项目 */
-    suspend fun deleteProject(projectId: Int): AuthResult<String> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId")
-            .header("Authorization", "Bearer $it")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            AuthResult.Success("项目已删除")
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 更新项目 */
-    suspend fun updateProject(projectId: Int, name: String? = null, description: String? = null,
-                              githubRepo: String? = null, giteeRepo: String? = null): AuthResult<CloudProject> = authRequest {
-        val body = JsonObject().apply {
-            name?.let { addProperty("project_name", it) }
-            description?.let { addProperty("description", it) }
-            githubRepo?.let { addProperty("github_repo", it) }
-            giteeRepo?.let { addProperty("gitee_repo", it) }
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId")
-            .header("Authorization", "Bearer $it")
-            .put(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            AuthResult.Success(parseProject(json.getAsJsonObject("data")))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 发布版本（上传 APK）*/
     suspend fun publishVersion(
         projectId: Int,
         apkFile: File,
@@ -423,80 +189,10 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         title: String? = null,
         changelog: String? = null,
         uploadTo: String = "github"
-    ): AuthResult<ProjectVersion> = authRequest {
-        val multipart = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("version_code", versionCode.toString())
-            .addFormDataPart("version_name", versionName)
-            .addFormDataPart("upload_to", uploadTo)
-            .addFormDataPart("apk_file", apkFile.name, apkFile.asRequestBody("application/vnd.android.package-archive".toMediaType()))
-        title?.let { multipart.addFormDataPart("title", it) }
-        changelog?.let { multipart.addFormDataPart("changelog", it) }
+    ): AuthResult<ProjectVersion> =
+        projectApi.publishVersion(projectId, apkFile, versionCode, versionName, title, changelog, uploadTo)
 
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/versions/publish")
-            .header("Authorization", "Bearer $it")
-            .post(multipart.build())
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(ProjectVersion(
-                id = data?.get("id")?.asInt ?: 0,
-                versionCode = data?.get("version_code")?.asInt ?: versionCode,
-                versionName = data?.get("version_name")?.asString ?: versionName,
-                title = data?.get("title")?.asString,
-                changelog = data?.get("changelog")?.asString,
-                downloadUrlGithub = data?.get("download_url_github")?.asString,
-                downloadUrlGitee = data?.get("download_url_gitee")?.asString,
-                isForceUpdate = data?.get("is_force_update")?.asBoolean ?: false,
-                createdAt = data?.get("created_at")?.asString
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 列出版本 */
-    suspend fun listVersions(projectId: Int): AuthResult<List<ProjectVersion>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/versions")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            AuthResult.Success(dataArr.map { el ->
-                val obj = el.asJsonObject
-                ProjectVersion(
-                    id = obj.get("id")?.asInt ?: 0,
-                    versionCode = obj.get("version_code")?.asInt ?: 0,
-                    versionName = obj.get("version_name")?.asString ?: "",
-                    title = obj.get("title")?.asString,
-                    changelog = obj.get("changelog")?.asString,
-                    downloadUrlGithub = obj.get("download_url_github")?.asString,
-                    downloadUrlGitee = obj.get("download_url_gitee")?.asString,
-                    isForceUpdate = obj.get("is_force_update")?.asBoolean ?: false,
-                    createdAt = obj.get("created_at")?.asString
-                )
-            })
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    // ═══════════════════════════════════════════
-    // DIRECT UPLOAD (Client → GitHub)
-    // ═══════════════════════════════════════════
+    suspend fun listVersions(projectId: Int): AuthResult<List<ProjectVersion>> = projectApi.listVersions(projectId)
 
     /**
      * Step 1: Request a short-lived upload token from our server.
@@ -574,7 +270,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 }
             }
 
-            // Use a longer-timeout client for large file uploads (share connection pool via newBuilder)
             val uploadClient = client.newBuilder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(5, TimeUnit.MINUTES)
@@ -664,13 +359,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         contentType: String = "image/png",
         onProgress: (Float) -> Unit = {}
     ): AuthResult<String> = authRequest {
-        // Step 1: Get upload token from our server
         val tokenBody = okhttp3.FormBody.Builder()
             .add("file_name", file.name)
             .add("content_type", contentType)
             .build()
 
-        // Use JSON body
         val jsonBody = """{"file_name":"${file.name}","content_type":"$contentType"}"""
         val tokenRequest = Request.Builder()
             .url("$BASE_URL/api/v1/assets/upload-token")
@@ -692,7 +385,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         val fileName = tokenData.get("file_name").asString
         val ct = tokenData.get("content_type").asString
 
-        // Step 2: Upload file directly to GitHub
         val fileBody = object : okhttp3.RequestBody() {
             override fun contentType() = ct.toMediaType()
             override fun contentLength() = file.length()
@@ -730,7 +422,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取分析数据 */
     suspend fun getAnalytics(projectId: Int, days: Int = 7): AuthResult<AnalyticsData> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics?days=$days")
@@ -782,11 +473,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // R2 CLOUD STORAGE PUBLISH
-    // ═══════════════════════════════════════════
-
-    /** 发布版本到 R2 云存储（Cloudflare CDN 加速） */
     suspend fun publishVersionR2(
         projectId: Int, apkFile: File, versionCode: Int, versionName: String,
         title: String? = null, changelog: String? = null
@@ -832,11 +518,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // FCM PUSH NOTIFICATIONS
-    // ═══════════════════════════════════════════
-
-    /** 注册 FCM 推送 Token */
     suspend fun registerPushToken(projectId: Int, fcmToken: String, deviceId: String): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("fcm_token", fcmToken)
@@ -861,7 +542,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 发送推送通知 */
     suspend fun sendPushNotification(projectId: Int, title: String, body: String,
                                       targetType: String = "all",
                                       targetUserIds: List<Int>? = null): AuthResult<String> = authRequest {
@@ -893,11 +573,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // BACKUP DOWNLOAD
-    // ═══════════════════════════════════════════
-
-    /** 获取备份下载 URL */
     suspend fun downloadBackup(projectId: Int, backupId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/backups/$backupId/download")
@@ -918,11 +593,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // DETAILED ANALYTICS
-    // ═══════════════════════════════════════════
-
-    /** 分析概览 */
     suspend fun getAnalyticsOverview(projectId: Int): AuthResult<JsonObject> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/overview")
@@ -941,7 +611,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 趋势数据 */
     suspend fun getAnalyticsTrend(projectId: Int, days: Int = 7): AuthResult<JsonObject> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/trend?days=$days")
@@ -960,7 +629,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 地理分布 */
     suspend fun getAnalyticsGeo(projectId: Int): AuthResult<Map<String, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/geo")
@@ -981,7 +649,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 设备分布 */
     suspend fun getAnalyticsDevices(projectId: Int): AuthResult<Map<String, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/devices")
@@ -1002,7 +669,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 版本分布 */
     suspend fun getAnalyticsVersions(projectId: Int): AuthResult<Map<String, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/versions")
@@ -1023,350 +689,76 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 7. PROJECT ACTIVATION CODES
-    // ═══════════════════════════════════════════
+    suspend fun generateProjectCodes(
+        projectId: Int,
+        count: Int = 10,
+        maxUses: Int = 1,
+        prefix: String = "",
+    ): AuthResult<List<ProjectActivationCode>> = projectApi.generateProjectCodes(projectId, count, maxUses, prefix)
 
-    /** 批量生成项目激活码 */
-    suspend fun generateProjectCodes(projectId: Int, count: Int = 10, maxUses: Int = 1, prefix: String = ""): AuthResult<List<ProjectActivationCode>> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("count", count)
-            addProperty("max_uses", maxUses)
-            if (prefix.isNotBlank()) addProperty("prefix", prefix)
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/codes/generate")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
+    suspend fun listProjectCodes(
+        projectId: Int,
+        status: String? = null,
+        page: Int = 1,
+    ): AuthResult<List<ProjectActivationCode>> = projectApi.listProjectCodes(projectId, status, page)
 
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
+    suspend fun createProjectAnnouncement(
+        projectId: Int,
+        title: String,
+        content: String,
+        priority: Int = 0,
+    ): AuthResult<ProjectAnnouncement> = projectApi.createProjectAnnouncement(projectId, title, content, priority)
 
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            val codesArr = data?.getAsJsonArray("codes")
-            val codes = codesArr?.map { el ->
-                val code = el.asString
-                ProjectActivationCode(
-                    id = 0, code = code, status = "unused",
-                    maxUses = 1, usedCount = 0, deviceId = null,
-                    createdAt = "", usedAt = null
-                )
-            } ?: emptyList()
-            AuthResult.Success(codes)
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    suspend fun listProjectAnnouncements(projectId: Int): AuthResult<List<ProjectAnnouncement>> =
+        projectApi.listProjectAnnouncements(projectId)
 
-    /** 列出项目激活码 */
-    suspend fun listProjectCodes(projectId: Int, status: String? = null, page: Int = 1): AuthResult<List<ProjectActivationCode>> = authRequest {
-        val url = buildString {
-            append("$BASE_URL/api/v1/projects/$projectId/codes?page=$page")
-            status?.let { append("&status=$it") }
-        }
-        val request = Request.Builder()
-            .url(url)
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
+    suspend fun updateProjectAnnouncement(
+        projectId: Int,
+        annId: Int,
+        title: String? = null,
+        content: String? = null,
+        isActive: Boolean? = null,
+    ): AuthResult<String> = projectApi.updateProjectAnnouncement(projectId, annId, title, content, isActive)
 
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
+    suspend fun deleteProjectAnnouncement(projectId: Int, annId: Int): AuthResult<String> =
+        projectApi.deleteProjectAnnouncement(projectId, annId)
 
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            AuthResult.Success(dataArr.map { parseActivationCode(it.asJsonObject) })
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    suspend fun createProjectConfig(
+        projectId: Int,
+        key: String,
+        value: String,
+        description: String? = null,
+    ): AuthResult<ProjectConfig> = projectApi.createProjectConfig(projectId, key, value, description)
 
-    // ═══════════════════════════════════════════
-    // 8. PROJECT ANNOUNCEMENTS
-    // ═══════════════════════════════════════════
+    suspend fun listProjectConfigs(projectId: Int): AuthResult<List<ProjectConfig>> =
+        projectApi.listProjectConfigs(projectId)
 
-    /** 创建项目公告 */
-    suspend fun createProjectAnnouncement(projectId: Int, title: String, content: String, priority: Int = 0): AuthResult<ProjectAnnouncement> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("title", title)
-            addProperty("content", content)
-            addProperty("priority", priority)
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/announcements")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
+    suspend fun updateProjectConfig(
+        projectId: Int,
+        cfgId: Int,
+        value: String? = null,
+        description: String? = null,
+        isActive: Boolean? = null,
+    ): AuthResult<String> = projectApi.updateProjectConfig(projectId, cfgId, value, description, isActive)
 
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
+    suspend fun deleteProjectConfig(projectId: Int, cfgId: Int): AuthResult<String> =
+        projectApi.deleteProjectConfig(projectId, cfgId)
 
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            AuthResult.Success(parseProjectAnnouncement(json.getAsJsonObject("data")))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    suspend fun createWebhook(
+        projectId: Int,
+        webhookUrl: String,
+        events: List<String>,
+        secret: String? = null,
+    ): AuthResult<ProjectWebhook> = projectApi.createWebhook(projectId, webhookUrl, events, secret)
 
-    /** 列出项目公告 */
-    suspend fun listProjectAnnouncements(projectId: Int): AuthResult<List<ProjectAnnouncement>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/announcements")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
+    suspend fun listWebhooks(projectId: Int): AuthResult<List<ProjectWebhook>> = projectApi.listWebhooks(projectId)
 
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
+    suspend fun deleteWebhook(projectId: Int, webhookId: Int): AuthResult<String> =
+        projectApi.deleteWebhook(projectId, webhookId)
 
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            AuthResult.Success(dataArr.map { parseProjectAnnouncement(it.asJsonObject) })
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    suspend fun verifySubscription(purchaseToken: String, productId: String): AuthResult<String> =
+        activationApi.verifySubscription(purchaseToken, productId)
 
-    /** 更新项目公告 */
-    suspend fun updateProjectAnnouncement(projectId: Int, annId: Int, title: String? = null, content: String? = null, isActive: Boolean? = null): AuthResult<String> = authRequest {
-        val body = JsonObject().apply {
-            title?.let { addProperty("title", it) }
-            content?.let { addProperty("content", it) }
-            isActive?.let { addProperty("is_active", it) }
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/announcements/$annId")
-            .header("Authorization", "Bearer $it")
-            .put(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) AuthResult.Success("更新成功")
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    /** 删除项目公告 */
-    suspend fun deleteProjectAnnouncement(projectId: Int, annId: Int): AuthResult<String> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/announcements/$annId")
-            .header("Authorization", "Bearer $it")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) AuthResult.Success("删除成功")
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    // ═══════════════════════════════════════════
-    // 9. PROJECT REMOTE CONFIG
-    // ═══════════════════════════════════════════
-
-    /** 创建项目远程配置 */
-    suspend fun createProjectConfig(projectId: Int, key: String, value: String, description: String? = null): AuthResult<ProjectConfig> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("config_key", key)
-            addProperty("config_value", value)
-            description?.let { addProperty("description", it) }
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/configs")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(ProjectConfig(
-                id = data?.get("id")?.asInt ?: 0,
-                key = data?.get("config_key")?.asString ?: key,
-                value = data?.get("config_value")?.asString ?: value,
-                description = data?.get("description")?.asString,
-                isActive = data?.get("is_active")?.asBoolean ?: true
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 列出项目远程配置 */
-    suspend fun listProjectConfigs(projectId: Int): AuthResult<List<ProjectConfig>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/configs")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            AuthResult.Success(dataArr.map { el ->
-                val obj = el.asJsonObject
-                ProjectConfig(
-                    id = obj.get("id")?.asInt ?: 0,
-                    key = obj.get("config_key")?.asString ?: "",
-                    value = obj.get("config_value")?.asString ?: "",
-                    description = obj.get("description")?.asString,
-                    isActive = obj.get("is_active")?.asBoolean ?: true
-                )
-            })
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 更新项目远程配置 */
-    suspend fun updateProjectConfig(projectId: Int, cfgId: Int, value: String? = null, description: String? = null, isActive: Boolean? = null): AuthResult<String> = authRequest {
-        val body = JsonObject().apply {
-            value?.let { addProperty("config_value", it) }
-            description?.let { addProperty("description", it) }
-            isActive?.let { addProperty("is_active", it) }
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/configs/$cfgId")
-            .header("Authorization", "Bearer $it")
-            .put(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) AuthResult.Success("更新成功")
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    /** 删除项目远程配置 */
-    suspend fun deleteProjectConfig(projectId: Int, cfgId: Int): AuthResult<String> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/configs/$cfgId")
-            .header("Authorization", "Bearer $it")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) AuthResult.Success("删除成功")
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    // ═══════════════════════════════════════════
-    // 10. WEBHOOKS
-    // ═══════════════════════════════════════════
-
-    /** 创建 Webhook */
-    suspend fun createWebhook(projectId: Int, webhookUrl: String, events: List<String>, secret: String? = null): AuthResult<ProjectWebhook> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("url", webhookUrl)
-            val eventsArray = com.google.gson.JsonArray()
-            events.forEach { eventsArray.add(it) }
-            add("events", eventsArray)
-            secret?.let { addProperty("secret", it) }
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/webhooks")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(parseWebhook(data))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 列出 Webhooks */
-    suspend fun listWebhooks(projectId: Int): AuthResult<List<ProjectWebhook>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/webhooks")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArr = json.getAsJsonArray("data") ?: return@authRequest AuthResult.Success(emptyList())
-            AuthResult.Success(dataArr.map { parseWebhook(it.asJsonObject) })
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 删除 Webhook */
-    suspend fun deleteWebhook(projectId: Int, webhookId: Int): AuthResult<String> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/webhooks/$webhookId")
-            .header("Authorization", "Bearer $it")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) AuthResult.Success("Webhook 已删除")
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    // ═══════════════════════════════════════════
-    // SUBSCRIPTION VERIFICATION
-    // ═══════════════════════════════════════════
-
-    /** 验证 Google Play 购买并激活订阅 */
-    suspend fun verifySubscription(purchaseToken: String, productId: String): AuthResult<String> = authRequest {
-        val body = JsonObject().apply {
-            addProperty("purchase_token", purchaseToken)
-            addProperty("product_id", productId)
-            addProperty("platform", "android")
-        }
-
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/billing/verify")
-            .header("Authorization", "Bearer $it")
-            .post(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            AuthResult.Success(json.get("message")?.asString ?: "订阅已激活")
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    // ═══════════════════════════════════════════
-    // 17. COMMUNITY — Voting, Favorites, Comments
-    // ═══════════════════════════════════════════
-
-    /** 投票（赞/踩） */
     suspend fun voteModule(moduleId: Int, voteType: String = "up"): AuthResult<String> = authRequest {
         val body = JsonObject().apply { addProperty("vote_type", voteType) }
         val request = Request.Builder()
@@ -1383,7 +775,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 取消投票 */
     suspend fun unvoteModule(moduleId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/modules/$moduleId/vote")
@@ -1396,7 +787,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 添加收藏 */
     suspend fun addFavorite(moduleId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/modules/$moduleId/favorite")
@@ -1409,7 +799,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 取消收藏 */
     suspend fun removeFavorite(moduleId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/modules/$moduleId/favorite")
@@ -1422,7 +811,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取收藏列表 */
     suspend fun listFavorites(page: Int = 1, size: Int = 20): AuthResult<Pair<List<StoreModuleInfo>, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/favorites?page=$page&size=$size")
@@ -1440,7 +828,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 发表评论 */
     suspend fun addComment(moduleId: Int, content: String, parentId: Int? = null): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("content", content)
@@ -1456,8 +843,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success("评论已发布")
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取评论列表 */
     suspend fun listComments(moduleId: Int, page: Int = 1, size: Int = 20): AuthResult<List<ModuleComment>> {
         return try {
             val request = Request.Builder()
@@ -1488,8 +873,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 删除评论 */
     suspend fun deleteComment(commentId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/comments/$commentId")
@@ -1501,8 +884,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 举报模块 */
     suspend fun reportModule(moduleId: Int, reason: String, details: String? = null): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("module_id", moduleId)
@@ -1519,12 +900,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success("举报已提交")
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    // ═══════════════════════════════════════════
-    // 18. SOCIAL — Follow, Profiles, Feed
-    // ═══════════════════════════════════════════
-
-    /** 关注用户 */
     suspend fun followUser(userId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/users/$userId/follow")
@@ -1536,8 +911,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success("已关注")
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 取消关注 */
     suspend fun unfollowUser(userId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/users/$userId/follow")
@@ -1549,8 +922,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success("已取消关注")
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取社区主 Feed */
     suspend fun getCommunityFeed(page: Int = 1, size: Int = 20): AuthResult<List<CommunityPostItem>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/feed?page=$page&size=$size")
@@ -1565,8 +936,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(dataArr.map { parseCommunityPost(it.asJsonObject) })
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 关注动态 Feed */
     suspend fun getFollowingFeed(page: Int = 1, size: Int = 20): AuthResult<List<CommunityPostItem>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/feed/following?page=$page&size=$size")
@@ -1582,8 +951,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(postsArr.map { parseCommunityPost(it.asJsonObject) })
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 趋势/热门 Feed */
     suspend fun getTrendingFeed(page: Int = 1, size: Int = 20): AuthResult<List<CommunityPostItem>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/feed/trending?page=$page&size=$size")
@@ -1599,8 +966,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(postsArr.map { parseCommunityPost(it.asJsonObject) })
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取粉丝列表 */
     suspend fun getUserFollowers(userId: Int, page: Int = 1, size: Int = 20): AuthResult<List<CommunityUserProfile>> {
         return try {
             val request = Request.Builder()
@@ -1619,8 +984,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 获取关注列表 */
     suspend fun getUserFollowing(userId: Int, page: Int = 1, size: Int = 20): AuthResult<List<CommunityUserProfile>> {
         return try {
             val request = Request.Builder()
@@ -1639,8 +1002,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 搜索用户 */
     suspend fun searchUsers(query: String, page: Int = 1, size: Int = 20): AuthResult<List<CommunityUserProfile>> {
         return try {
             val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
@@ -1660,8 +1021,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 获取热门模块 */
     suspend fun getTrendingModules(page: Int = 1, size: Int = 20): AuthResult<List<StoreModuleInfo>> {
         return try {
             val request = Request.Builder()
@@ -1679,8 +1038,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 获取精选模块 */
     suspend fun getFeaturedModules(page: Int = 1, size: Int = 20): AuthResult<List<StoreModuleInfo>> {
         return try {
             val request = Request.Builder()
@@ -1698,8 +1055,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 获取用户主页 */
     suspend fun getUserProfile(userId: Int): AuthResult<CommunityUserProfile> =
         withContext(Dispatchers.IO) {
             try {
@@ -1733,201 +1088,32 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    // ═══════════════════════════════════════════
-    // 19. NOTIFICATIONS
-    // ═══════════════════════════════════════════
-
-    /** 获取通知列表 */
-    suspend fun listNotifications(page: Int = 1, size: Int = 20, unreadOnly: Boolean = false): AuthResult<Pair<List<NotificationItem>, Int>> = authRequest {
-        val params = "?page=$page&size=$size" + if (unreadOnly) "&unread_only=true" else ""
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/notifications$params")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            val unreadCount = data?.get("unread_count")?.asInt ?: 0
-            val notifications = data?.getAsJsonArray("notifications")?.map { n ->
-                val o = n.asJsonObject
-                NotificationItem(
-                    id = o.get("id")?.asInt ?: 0,
-                    type = o.get("type")?.asString ?: "",
-                    title = o.get("title")?.asString,
-                    content = o.get("content")?.asString,
-                    refType = o.get("ref_type")?.asString,
-                    refId = o.get("ref_id")?.asInt,
-                    actorId = o.get("actor_id")?.asInt,
-                    isRead = o.get("is_read")?.asBoolean ?: false,
-                    createdAt = o.get("created_at")?.asString
-                )
-            } ?: emptyList()
-            AuthResult.Success(Pair(notifications, unreadCount))
-        } else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    /** 获取未读通知数量 */
-    suspend fun getUnreadNotificationCount(): AuthResult<Int> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/notifications/unread-count")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val count = json.getAsJsonObject("data")?.get("unread_count")?.asInt ?: 0
-            AuthResult.Success(count)
-        } else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    /** 标记通知已读 */
-    suspend fun markNotificationRead(notificationId: Int): AuthResult<Unit> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/notifications/read/$notificationId")
-            .header("Authorization", "Bearer $it")
-            .post("".toRequestBody(jsonMediaType))
-            .build()
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) AuthResult.Success(Unit)
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    /** 标记所有通知已读 */
-    suspend fun markAllNotificationsRead(): AuthResult<Unit> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/notifications/read-all")
-            .header("Authorization", "Bearer $it")
-            .post("".toRequestBody(jsonMediaType))
-            .build()
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) AuthResult.Success(Unit)
-        else AuthResult.Error(parseError(responseBody, response.code))
-    }
-
-    // ═══════════════════════════════════════════
-    // PARSE HELPERS
-    // ═══════════════════════════════════════════
-
-    /** 带鉴权的请求模板（自动 Token 刷新，Mutex 防止竞态） */
+    suspend fun listNotifications(
+        page: Int = 1,
+        size: Int = 20,
+        unreadOnly: Boolean = false,
+    ): AuthResult<Pair<List<NotificationItem>, Int>> = notificationApi.listNotifications(page, size, unreadOnly)
+    suspend fun getUnreadNotificationCount(): AuthResult<Int> = notificationApi.getUnreadNotificationCount()
+    suspend fun markNotificationRead(notificationId: Int): AuthResult<Unit> =
+        notificationApi.markNotificationRead(notificationId)
+    suspend fun markAllNotificationsRead(): AuthResult<Unit> = notificationApi.markAllNotificationsRead()
     private suspend fun <T> authRequest(block: suspend (token: String) -> AuthResult<T>): AuthResult<T> =
         apiSupport.authRequest(block)
 
-    private fun parseProject(obj: JsonObject): CloudProject = CloudProject(
-        id = obj.get("id")?.asInt ?: 0,
-        name = obj.get("project_name")?.asString ?: obj.get("name")?.asString ?: "",
-        description = obj.get("description")?.asString,
-        projectKey = obj.get("project_key")?.asString ?: "",
-        packageName = obj.get("package_name")?.asString,
-        githubRepo = obj.get("github_repo")?.asString,
-        giteeRepo = obj.get("gitee_repo")?.asString,
-        createdAt = obj.get("created_at")?.asString,
-        isActive = obj.get("is_active")?.asBoolean ?: true,
-        totalInstalls = obj.get("total_installs")?.asInt ?: 0,
-        totalOpens = obj.get("total_opens")?.asInt ?: 0
-    )
+    private fun parseProject(obj: JsonObject): CloudProject = parser.parseProject(obj)
 
-    private fun parseActivationCode(obj: JsonObject): ProjectActivationCode = ProjectActivationCode(
-        id = obj.get("id")?.asInt ?: 0,
-        code = obj.get("code")?.asString ?: "",
-        status = obj.get("status")?.asString ?: "unused",
-        maxUses = obj.get("max_uses")?.asInt ?: 1,
-        usedCount = obj.get("used_count")?.asInt ?: 0,
-        deviceId = obj.get("device_id")?.asString,
-        createdAt = obj.get("created_at")?.asString ?: "",
-        usedAt = obj.get("used_at")?.asString
-    )
+    private fun parseActivationCode(obj: JsonObject): ProjectActivationCode = parser.parseActivationCode(obj)
 
-    private fun parseProjectAnnouncement(obj: JsonObject?): ProjectAnnouncement = ProjectAnnouncement(
-        id = obj?.get("id")?.asInt ?: 0,
-        title = obj?.get("title")?.asString ?: "",
-        content = obj?.get("content")?.asString ?: "",
-        isActive = obj?.get("is_active")?.asBoolean ?: true,
-        priority = obj?.get("priority")?.asInt ?: 0,
-        createdAt = obj?.get("created_at")?.asString ?: ""
-    )
+    private fun parseProjectAnnouncement(obj: JsonObject?): ProjectAnnouncement = parser.parseProjectAnnouncement(obj)
 
-    private fun parseWebhook(obj: JsonObject?): ProjectWebhook = ProjectWebhook(
-        id = obj?.get("id")?.asInt ?: 0,
-        url = obj?.get("url")?.asString ?: "",
-        events = obj?.getAsJsonArray("events")?.map { it.asString } ?: emptyList(),
-        secret = obj?.get("secret")?.asString,
-        isActive = obj?.get("is_active")?.asBoolean ?: true,
-        failureCount = obj?.get("failure_count")?.asInt ?: 0,
-        lastTriggeredAt = obj?.get("last_triggered_at")?.asString
-    )
-
-    // ═══════════════════════════════════════════
-    // 13. MANIFEST SYNC
-    // ═══════════════════════════════════════════
-
-    /** 上传 Manifest 到云端 */
-    suspend fun uploadManifest(projectId: Int, manifestJson: String, manifestVersion: Int): AuthResult<ManifestSyncResult> = authRequest {
-        val body = JsonObject().apply {
-            add("manifest", JsonParser.parseString(manifestJson))
-            addProperty("manifest_version", manifestVersion)
-        }
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/manifest")
-            .header("Authorization", "Bearer $it")
-            .put(body.toString().toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            val conflict = data?.get("conflict")?.asBoolean ?: false
-            AuthResult.Success(ManifestSyncResult(
-                success = !conflict,
-                manifestVersion = data?.get("manifest_version")?.asInt ?: data?.get("server_version")?.asInt ?: 0,
-                syncedAt = data?.get("synced_at")?.asString,
-                conflict = conflict
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 从云端下载 Manifest */
-    suspend fun downloadManifest(projectId: Int): AuthResult<ManifestDownloadResult> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/manifest")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            val manifestObj = data?.get("manifest")
-            AuthResult.Success(ManifestDownloadResult(
-                manifestJson = if (manifestObj != null && !manifestObj.isJsonNull) manifestObj.toString() else null,
-                manifestVersion = data?.get("manifest_version")?.asInt ?: 0,
-                syncedAt = data?.get("synced_at")?.asString
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    // ═══════════════════════════════════════════
-    // 14. MODULE STORE
-    // ═══════════════════════════════════════════
-
-    /** 浏览模块市场 */
+    private fun parseWebhook(obj: JsonObject?): ProjectWebhook = parser.parseWebhook(obj)
+    suspend fun uploadManifest(
+        projectId: Int,
+        manifestJson: String,
+        manifestVersion: Int,
+    ): AuthResult<ManifestSyncResult> = projectApi.uploadManifest(projectId, manifestJson, manifestVersion)
+    suspend fun downloadManifest(projectId: Int): AuthResult<ManifestDownloadResult> =
+        projectApi.downloadManifest(projectId)
     suspend fun listStoreModules(
         category: String? = null, search: String? = null,
         sort: String = "downloads", order: String = "desc",
@@ -1961,8 +1147,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 直接获取单个模块详情（替代 listStoreModules + 客户端过滤） */
     suspend fun getStoreModuleById(moduleId: Int): AuthResult<StoreModuleInfo> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -1985,8 +1169,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 获取当前用户发布的模块 */
     suspend fun getMyPublishedModules(page: Int = 1, size: Int = 50): AuthResult<Pair<List<StoreModuleInfo>, Int>> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken()
@@ -2014,8 +1196,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 发布模块到市场 */
     suspend fun publishModule(
         name: String, description: String, icon: String?,
         category: String?, tags: String?, versionName: String?,
@@ -2088,8 +1268,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** 从 URL 下载 gzip 压缩的模块数据并解压为 share_code 字符串 */
     private fun downloadGzipModule(url: String?): String? {
         if (url.isNullOrBlank()) return null
         return try {
@@ -2113,31 +1291,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    private fun parseStoreModule(obj: JsonObject?): StoreModuleInfo = StoreModuleInfo(
-        id = obj?.get("id")?.asInt ?: 0,
-        name = obj?.get("name")?.let { if (it.isJsonNull) "" else it.asString } ?: "",
-        description = obj?.get("description")?.let { if (it.isJsonNull) null else it.asString },
-        icon = obj?.get("icon")?.let { if (it.isJsonNull) null else it.asString },
-        category = obj?.get("category")?.let { if (it.isJsonNull) null else it.asString },
-        tags = try { obj?.getAsJsonArray("tags")?.map { it.asString } ?: emptyList() } catch (_: Exception) { emptyList() },
-        versionName = obj?.get("version_name")?.let { if (it.isJsonNull) null else it.asString },
-        downloads = obj?.get("downloads")?.asInt ?: 0,
-        rating = obj?.get("rating")?.asFloat ?: 0f,
-        ratingCount = obj?.get("rating_count")?.asInt ?: 0,
-        isFeatured = obj?.get("is_featured")?.asBoolean ?: false,
-        authorName = obj?.get("author_name")?.let { if (it.isJsonNull) "" else it.asString }
-            ?: obj?.getAsJsonObject("author")?.get("username")?.let { if (it.isJsonNull) "" else it.asString }
-            ?: "",
-        shareCode = obj?.get("share_code")?.let { if (it.isJsonNull) null else it.asString },
-        createdAt = obj?.get("created_at")?.let { if (it.isJsonNull) null else it.asString },
-        moduleType = obj?.get("module_type")?.let { if (it.isJsonNull) "extension" else it.asString } ?: "extension",
-        likeCount = obj?.get("like_count")?.asInt ?: 0,
-        isApproved = obj?.get("is_approved")?.asBoolean ?: true
-    )
-
-    // ── Module Store: Review / Like / Report ──
-
-    /** 评价模块 (需登录) */
+    private fun parseStoreModule(obj: JsonObject?): StoreModuleInfo = parser.parseStoreModule(obj)
     suspend fun reviewStoreModule(moduleId: Int, rating: Int, comment: String? = null): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply {
             addProperty("rating", rating)
@@ -2155,8 +1309,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取模块评论列表 (公开) */
     suspend fun getModuleReviews(moduleId: Int, page: Int = 1, size: Int = 20): Result<AppReviewsResponse> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2193,8 +1345,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             Result.failure(e)
         }
     }
-
-    /** 点赞/取消点赞模块 (需登录) */
     suspend fun likeStoreModule(moduleId: Int): AuthResult<LikeResponse> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$moduleId/like")
@@ -2213,8 +1363,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 查询模块是否已点赞 (需登录) */
     suspend fun getModuleLikeStatus(moduleId: Int): AuthResult<Boolean> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$moduleId/like/status")
@@ -2230,8 +1378,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(data?.get("liked")?.asBoolean ?: false)
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 举报模块 (需登录) */
     suspend fun reportStoreModule(moduleId: Int, reason: String): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply { addProperty("reason", reason) }
         val request = Request.Builder()
@@ -2245,12 +1391,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    // ═══════════════════════════════════════════
-    // 15. REMOTE SCRIPTS
-    // ═══════════════════════════════════════════
-
-    /** 列出项目远程脚本 */
     suspend fun listRemoteScripts(projectId: Int): AuthResult<List<RemoteScriptInfo>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/scripts")
@@ -2268,8 +1408,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 创建远程脚本 */
     suspend fun createRemoteScript(projectId: Int, name: String, code: String,
                                     description: String? = null, runAt: String = "document_end",
                                     urlPattern: String? = null, priority: Int = 0
@@ -2296,8 +1434,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 更新远程脚本 */
     suspend fun updateRemoteScript(projectId: Int, scriptId: Int, fields: Map<String, Any?>
     ): AuthResult<RemoteScriptInfo> = authRequest {
         val body = JsonObject()
@@ -2323,8 +1459,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 删除远程脚本 */
     suspend fun deleteRemoteScript(projectId: Int, scriptId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/scripts/$scriptId")
@@ -2340,95 +1474,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    private fun parseRemoteScript(obj: JsonObject?): RemoteScriptInfo = RemoteScriptInfo(
-        id = obj?.get("id")?.asInt ?: 0,
-        name = obj?.get("name")?.asString ?: "",
-        description = obj?.get("description")?.asString,
-        code = obj?.get("code")?.asString ?: "",
-        runAt = obj?.get("run_at")?.asString ?: "document_end",
-        urlPattern = obj?.get("url_pattern")?.asString,
-        priority = obj?.get("priority")?.asInt ?: 0,
-        isActive = obj?.get("is_active")?.asBoolean ?: true,
-        version = obj?.get("version")?.asInt ?: 1,
-        createdAt = obj?.get("created_at")?.asString,
-        updatedAt = obj?.get("updated_at")?.asString
-    )
-
-    // ═══════════════════════════════════════════
-    // 16. BACKUP
-    // ═══════════════════════════════════════════
-
-    /** 列出项目备份记录 */
-    suspend fun listBackups(projectId: Int): AuthResult<List<BackupRecord>> = authRequest {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/backups")
-            .header("Authorization", "Bearer $it")
-            .get()
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val dataArray = json.getAsJsonArray("data")
-            val backups = dataArray?.map { el ->
-                val b = el.asJsonObject
-                BackupRecord(
-                    id = b.get("id")?.asInt ?: 0,
-                    platform = b.get("platform")?.asString ?: "",
-                    status = b.get("status")?.asString ?: "",
-                    repoUrl = b.get("repo_url")?.asString,
-                    fileSize = b.get("file_size")?.asLong ?: 0,
-                    createdAt = b.get("created_at")?.asString
-                )
-            } ?: emptyList()
-            AuthResult.Success(backups)
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 创建项目备份 */
-    suspend fun createBackup(projectId: Int, platform: String, zipFile: File): AuthResult<BackupRecord> = authRequest {
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("file", zipFile.name, zipFile.asRequestBody("application/zip".toMediaType()))
-            .build()
-
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/projects/$projectId/backup?platform=$platform")
-            .header("Authorization", "Bearer $it")
-            .post(requestBody)
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(BackupRecord(
-                id = data?.get("id")?.asInt ?: 0,
-                platform = data?.get("platform")?.asString ?: platform,
-                status = data?.get("status")?.asString ?: "unknown",
-                repoUrl = data?.get("repo_url")?.asString,
-                fileSize = data?.get("file_size")?.asLong ?: 0,
-                createdAt = null
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    private fun parseRemoteScript(obj: JsonObject?): RemoteScriptInfo = parser.parseRemoteScript(obj)
+    suspend fun listBackups(projectId: Int): AuthResult<List<BackupRecord>> = backupApi.listBackups(projectId)
+    suspend fun createBackup(projectId: Int, platform: String, zipFile: File): AuthResult<BackupRecord> =
+        backupApi.createBackup(projectId, platform, zipFile)
 
     private fun parseError(body: String, statusCode: Int = 0): String =
         apiSupport.parseError(body, statusCode)
-
-    // ═══════════════════════════════════════════
-    // 10. APP STORE
-    // ═══════════════════════════════════════════
-
-    /** 浏览应用商店 (公开，无需认证) */
     suspend fun listStoreApps(
         category: String? = null, search: String? = null,
         sort: String = "downloads", order: String = "desc",
@@ -2463,8 +1515,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             Result.failure(e)
         }
     }
-
-    /** 获取应用详情 (公开) */
     suspend fun getStoreAppDetail(appId: Int): Result<AppStoreItem> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder().url("$BASE_URL/api/v1/app-store/apps/$appId").get().build()
@@ -2482,8 +1532,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             Result.failure(e)
         }
     }
-
-    /** 下载应用 (公开，计数器++) */
     suspend fun downloadStoreApp(appId: Int): Result<Map<String, String?>> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2507,8 +1555,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             Result.failure(e)
         }
     }
-
-    /** 评分应用 (需登录) */
     suspend fun reviewStoreApp(appId: Int, rating: Int, comment: String? = null): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply {
             addProperty("rating", rating)
@@ -2526,8 +1572,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 点赞/取消点赞应用 (需登录, 切换) */
     suspend fun likeStoreApp(appId: Int): AuthResult<LikeResponse> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/like")
@@ -2546,8 +1590,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 查询是否已点赞 (需登录) */
     suspend fun getLikeStatus(appId: Int): AuthResult<Boolean> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/like/status")
@@ -2563,8 +1605,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(data?.get("liked")?.asBoolean ?: false)
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取应用评论列表 (公开) */
     suspend fun getAppReviews(appId: Int, page: Int = 1, size: Int = 20): Result<AppReviewsResponse> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2606,8 +1646,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             Result.failure(e)
         }
     }
-
-    /** 举报应用 (需登录) */
     suspend fun reportStoreApp(appId: Int, reason: String, description: String? = null): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply {
             addProperty("module_id", appId)
@@ -2625,8 +1663,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取我发布的应用 (需登录) */
     suspend fun listMyApps(): AuthResult<MyAppsResponse> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/my-apps")
@@ -2650,8 +1686,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 更新商店应用信息 */
     suspend fun updateStoreApp(appId: Int, name: String, description: String, category: String): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("name", name)
@@ -2668,8 +1702,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success("应用信息已更新")
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 删除商店应用 */
     suspend fun deleteStoreApp(appId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$appId")
@@ -2681,8 +1713,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success("应用已删除")
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 发布应用到商店 (需登录) */
     suspend fun publishApp(
         name: String, description: String, category: String,
         versionName: String, versionCode: Int,
@@ -2730,8 +1760,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 删除/下架我的应用 (需登录) */
     suspend fun deleteMyApp(appId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId")
@@ -2744,8 +1772,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 下架自己发布的模块 */
     suspend fun deleteMyModule(moduleId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$moduleId")
@@ -2758,12 +1784,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    // ═══════════════════════════════════════════
-    // 10.5 应用管理 — 激活码/公告/更新/用户
-    // ═══════════════════════════════════════════
-
-    /** 获取应用激活码设置 */
     suspend fun getActivationSettings(appId: Int): AuthResult<ActivationSettings> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/activation")
@@ -2795,8 +1815,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 批量创建激活码 */
     suspend fun createActivationCodes(appId: Int, codes: List<String>, maxUses: Int = 1): AuthResult<List<ActivationCode>> = authRequest {
         val jsonBody = JsonObject().apply {
             val arr = com.google.gson.JsonArray()
@@ -2818,8 +1836,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             } ?: emptyList())
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 删除激活码 */
     suspend fun deleteActivationCode(appId: Int, codeId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/activation/codes/$codeId")
@@ -2828,8 +1844,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         val body = response.body?.string() ?: ""
         if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 更新激活码设置（启用/设备绑定等） */
     suspend fun updateActivationSettings(appId: Int, enabled: Boolean, deviceBinding: Boolean, maxDevices: Int): AuthResult<Unit> = authRequest {
         val jsonBody = JsonObject().apply {
             addProperty("enabled", enabled)
@@ -2844,8 +1858,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         val body = response.body?.string() ?: ""
         if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 获取应用公告列表 */
     suspend fun getAnnouncements(appId: Int): AuthResult<List<Announcement>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/announcements")
@@ -2869,8 +1881,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             } ?: emptyList())
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 发布公告 */
     suspend fun createAnnouncement(appId: Int, title: String, content: String, type: String, isPinned: Boolean = false): AuthResult<Announcement> = authRequest {
         val jsonBody = JsonObject().apply {
             addProperty("title", title); addProperty("content", content)
@@ -2890,8 +1900,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 删除公告 */
     suspend fun deleteAnnouncement(appId: Int, announcementId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/announcements/$announcementId")
@@ -2900,8 +1908,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         val body = response.body?.string() ?: ""
         if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 获取更新配置 */
     suspend fun getUpdateConfig(appId: Int): AuthResult<UpdateConfig> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/update-config")
@@ -2924,8 +1930,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 推送更新 */
     suspend fun pushUpdate(
         appId: Int, versionName: String, versionCode: Int,
         title: String, content: String, sourceAppId: Int?,
@@ -2955,8 +1959,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 获取应用用户列表 */
     suspend fun getAppUsers(appId: Int, page: Int = 1, limit: Int = 50): AuthResult<List<AppUser>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/users?page=$page&limit=$limit")
@@ -2982,8 +1984,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             } ?: emptyList())
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-    /** 获取用户地理分布 */
     suspend fun getUserGeoDistribution(appId: Int): AuthResult<List<GeoDistribution>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/users/geo")
@@ -3007,12 +2007,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             } ?: emptyList())
         } else AuthResult.Error(parseError(body, response.code))
     }
-
-
-    // 11. REMOTE PUSH
-    // ═══════════════════════════════════════════
-
-    /** 发送推送通知 */
     suspend fun sendPushNotification(
         projectId: Int,
         title: String,
@@ -3041,8 +2035,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取推送历史 */
     suspend fun getPushHistory(projectId: Int, page: Int = 1): Result<PushHistoryResponse> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken() ?: return@withContext Result.failure(Exception("Not logged in"))
@@ -3086,40 +2078,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    private fun parseStoreApp(obj: JsonObject): AppStoreItem = AppStoreItem(
-        id = obj.get("id")?.asInt ?: 0,
-        name = obj.get("name")?.asString ?: "",
-        icon = obj.get("icon")?.let { if (it.isJsonNull) null else it.asString },
-        category = obj.get("category")?.asString ?: "other",
-        tags = obj.getAsJsonArray("tags")?.map { it.asString } ?: emptyList(),
-        versionName = obj.get("version_name")?.asString ?: "1.0",
-        packageName = obj.get("package_name")?.let { if (it.isJsonNull) null else it.asString },
-        downloads = obj.get("downloads")?.asInt ?: 0,
-        rating = obj.get("rating")?.asFloat ?: 0f,
-        ratingCount = obj.get("rating_count")?.asInt ?: 0,
-        likeCount = obj.get("like_count")?.asInt ?: 0,
-        isFeatured = obj.get("is_featured")?.asBoolean ?: false,
-        screenshots = obj.getAsJsonArray("screenshots")?.map { it.asString } ?: emptyList(),
-        authorName = obj.get("author_name")?.asString ?: "Unknown",
-        authorId = obj.get("author_id")?.asInt ?: 0,
-        createdAt = obj.get("created_at")?.let { if (it.isJsonNull) null else it.asString },
-        description = obj.get("description")?.let { if (it.isJsonNull) null else it.asString },
-        videoUrl = obj.get("video_url")?.let { if (it.isJsonNull) null else it.asString },
-        apkUrlGithub = obj.get("apk_url_github")?.let { if (it.isJsonNull) null else it.asString },
-        apkUrlGitee = obj.get("apk_url_gitee")?.let { if (it.isJsonNull) null else it.asString },
-        contactEmail = obj.get("contact_email")?.let { if (it.isJsonNull) null else it.asString },
-        contactPhone = obj.get("contact_phone")?.let { if (it.isJsonNull) null else it.asString },
-        groupChatUrl = obj.get("group_chat_url")?.let { if (it.isJsonNull) null else it.asString },
-        paymentQrUrl = obj.get("payment_qr_url")?.let { if (it.isJsonNull) null else it.asString },
-        websiteUrl = obj.get("website_url")?.let { if (it.isJsonNull) null else it.asString },
-        privacyPolicyUrl = obj.get("privacy_policy_url")?.let { if (it.isJsonNull) null else it.asString },
-    )
-
-    // ═══════════════════════════════════════════
-    // 12. TEAM COLLABORATION
-    // ═══════════════════════════════════════════
-
-    /** 获取我的团队列表 */
+    private fun parseStoreApp(obj: JsonObject): AppStoreItem = parser.parseStoreApp(obj)
     suspend fun listTeams(): AuthResult<TeamListResponse> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/teams")
@@ -3158,8 +2117,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 创建团队 */
     suspend fun createTeam(name: String, description: String? = null): AuthResult<TeamItem> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("name", name)
@@ -3188,8 +2145,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 获取团队成员列表 */
     suspend fun getTeamMembers(teamId: Int): AuthResult<List<TeamMemberItem>> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/teams/$teamId/members")
@@ -3219,8 +2174,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 邀请成员 */
     suspend fun inviteTeamMember(teamId: Int, username: String, role: String = "viewer"): AuthResult<Unit> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("username", username)
@@ -3237,8 +2190,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 移除成员 */
     suspend fun removeTeamMember(teamId: Int, memberId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/teams/$teamId/members/$memberId")
@@ -3250,8 +2201,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 删除团队 */
     suspend fun deleteTeam(teamId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/teams/$teamId")
@@ -3263,8 +2212,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 搜索公开团队 */
     suspend fun searchTeams(query: String, page: Int = 1, size: Int = 20): AuthResult<TeamSearchResponse> = authRequest { token ->
         val url = "$BASE_URL/api/v1/teams/search?q=${java.net.URLEncoder.encode(query, "UTF-8")}&page=$page&size=$size"
         val request = Request.Builder()
@@ -3300,8 +2247,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 申请加入团队 */
     suspend fun requestJoinTeam(teamId: Int, message: String? = null): AuthResult<Unit> = authRequest { token ->
         val body = JsonObject().apply {
             message?.let { addProperty("message", it) }
@@ -3317,8 +2262,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取团队的加入申请列表 (管理员) */
     suspend fun getJoinRequests(teamId: Int, status: String = "pending"): AuthResult<List<TeamJoinRequestItem>> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/teams/$teamId/join-requests?status=$status")
@@ -3348,8 +2291,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 审核加入申请 (管理员) */
     suspend fun reviewJoinRequest(teamId: Int, requestId: Int, action: String, role: String = "viewer"): AuthResult<Unit> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("action", action)
@@ -3366,8 +2307,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取团队贡献排名 */
     suspend fun getTeamRanking(teamId: Int): AuthResult<List<TeamRankingItem>> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/teams/$teamId/ranking")
@@ -3397,12 +2336,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    // ═══════════════════════════════════════════
-    // 17c. COMMUNITY POSTS
-    // ═══════════════════════════════════════════
-
-    /** 获取社区帖子 Feed（支持匿名访问，与服务端 get_optional_user 对齐） */
     suspend fun listCommunityPosts(page: Int = 1, size: Int = 20, tag: String? = null, search: String? = null, postType: String? = null): AuthResult<CommunityFeedResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3425,8 +2358,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** 获取单个帖子详情（支持匿名访问） */
     suspend fun getCommunityPost(postId: Int): AuthResult<CommunityPostItem> =
         withContext(Dispatchers.IO) {
             try {
@@ -3442,21 +2373,17 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** 发布帖子 (Phase 1 v2: 支持多种 post_type) */
     suspend fun createCommunityPost(
         content: String,
         tags: List<String>,
         media: List<PostMediaInput> = emptyList(),
         appLinks: List<PostAppLinkInput> = emptyList(),
         postType: String = "discussion",
-        // Showcase-specific
         appName: String? = null,
         appIconUrl: String? = null,
         sourceType: String? = null,
         sourceUrl: String? = null,
         projectRecipe: String? = null,
-        // Tutorial-specific
         title: String? = null,
         difficulty: String? = null,
         steps: List<Pair<String, String?>>? = null,  // List of (content, imageUrl)
@@ -3482,13 +2409,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                     al.appDescription?.let { addProperty("app_description", it) }
                 }) }
             })
-            // Showcase fields
             appName?.let { addProperty("app_name", it) }
             appIconUrl?.let { addProperty("app_icon_url", it) }
             sourceType?.let { addProperty("source_type", it) }
             sourceUrl?.let { addProperty("source_url", it) }
             projectRecipe?.let { addProperty("project_recipe", it) }
-            // Tutorial fields
             title?.let { addProperty("title", it) }
             difficulty?.let { addProperty("difficulty", it) }
             steps?.let { stepsList ->
@@ -3511,8 +2436,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(parseCommunityPost(json.getAsJsonObject("data")))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 删除帖子 */
     suspend fun deleteCommunityPost(postId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/posts/$postId").header("Authorization", "Bearer $token").delete().build()
         val response = client.newCall(request).execute()
@@ -3520,8 +2443,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 点赞/取消点赞帖子 */
     suspend fun togglePostLike(postId: Int): AuthResult<PostLikeResult> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/posts/$postId/like").header("Authorization", "Bearer $token")
             .post("".toRequestBody(jsonMediaType)).build()
@@ -3533,8 +2454,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(PostLikeResult(liked = data?.get("liked")?.asBoolean ?: false, likeCount = data?.get("like_count")?.asInt ?: 0))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 转发帖子 */
     suspend fun sharePost(postId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/posts/$postId/share").header("Authorization", "Bearer $token")
             .post("".toRequestBody(jsonMediaType)).build()
@@ -3543,8 +2462,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 评论点赞/取消点赞 */
     suspend fun toggleCommentLike(postId: Int, commentId: Int): AuthResult<CommentLikeResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/comments/$commentId/like")
@@ -3561,8 +2478,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 帖子收藏/取消收藏 */
     suspend fun togglePostBookmark(postId: Int): AuthResult<BookmarkResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/bookmark")
@@ -3576,8 +2491,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(BookmarkResult(bookmarked = data?.get("bookmarked")?.asBoolean ?: false))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** CLI-06/12: 获取帖子评论列表（支持匿名访问、分页） */
     suspend fun listPostComments(postId: Int, page: Int = 1, size: Int = 30): AuthResult<CommentsResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3607,8 +2520,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** 添加帖子评论 */
     suspend fun addPostComment(postId: Int, content: String, parentId: Int? = null): AuthResult<PostCommentItem> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("content", content)
@@ -3623,8 +2534,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(parsePostComment(json.getAsJsonObject("data")))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 举报帖子 */
     suspend fun reportPost(postId: Int, reason: String, details: String? = null): AuthResult<Unit> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("reason", reason)
@@ -3637,8 +2546,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取用户的帖子列表（支持匿名访问） */
     suspend fun getUserPosts(userId: Int, page: Int = 1, size: Int = 20): AuthResult<CommunityFeedResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3656,8 +2563,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** P2 #11: 获取用户发布的模块列表 (使用精确端点而非 search) */
     suspend fun getUserModules(userId: Int, page: Int = 1, size: Int = 20): AuthResult<Pair<List<StoreModuleInfo>, Int>> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -3695,8 +2600,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error("Network error: ${e.message}")
         }
     }
-
-    /** P3 #13: 编辑帖子 (30 分钟内) */
     suspend fun editPost(postId: Int, content: String): AuthResult<CommunityPostItem> = authRequest { token ->
         val body = JsonObject().apply { addProperty("content", content) }
         val request = Request.Builder()
@@ -3711,8 +2614,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Success(parseCommunityPost(json.getAsJsonObject("data")))
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** CLI-01: 删除社区帖子 (仅限30分钟内自己的帖子或管理员) */
     suspend fun deletePost(postId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId")
@@ -3724,8 +2625,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** P3 #14: 删除社区帖子评论 */
     suspend fun deletePostComment(postId: Int, commentId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/comments/$commentId")
@@ -3737,8 +2636,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取用户在线活动统计 */
     suspend fun getUserActivity(userId: Int): AuthResult<UserActivityInfo> =
         withContext(Dispatchers.IO) {
             try {
@@ -3761,8 +2658,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** 发送心跳 (追踪在线时间) */
     suspend fun sendHeartbeat(): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/activity/heartbeat").header("Authorization", "Bearer $token")
             .post("".toRequestBody(jsonMediaType)).build()
@@ -3771,8 +2666,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取分类标签列表 (Phase 1 v2: categorized) */
     suspend fun getCommunityTags(): AuthResult<CommunityTagsResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3794,8 +2687,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** Phase 1 v2: 发现页 — 获取分区内容 */
     suspend fun getDiscover(): AuthResult<DiscoverResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3817,8 +2708,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络错误: ${e.message}")
             }
         }
-
-    /** Phase 1 v2: 导入配方 */
     suspend fun importRecipe(postId: Int): AuthResult<RecipeImportResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/import-recipe")
@@ -3842,106 +2731,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    private fun parseCommunityPost(obj: JsonObject): CommunityPostItem {
-        val author = obj.getAsJsonObject("author")
-        val media = obj.getAsJsonArray("media")?.map { m ->
-            val mo = m.asJsonObject
-            PostMediaItem(id = mo.get("id")?.asInt ?: 0, mediaType = mo.get("media_type")?.asString ?: "image",
-                urlGithub = mo.get("url_github")?.let { if (it.isJsonNull) null else it.asString },
-                urlGitee = mo.get("url_gitee")?.let { if (it.isJsonNull) null else it.asString },
-                thumbnailUrl = mo.get("thumbnail_url")?.let { if (it.isJsonNull) null else it.asString })
-        } ?: emptyList()
-        val tags = obj.getAsJsonArray("tags")?.map { it.asString } ?: emptyList()
-        val appLinks = obj.getAsJsonArray("app_links")?.map { al ->
-            val alo = al.asJsonObject
-            val sm = alo.getAsJsonObject("store_module")
-            PostAppLinkItem(id = alo.get("id")?.asInt ?: 0, linkType = alo.get("link_type")?.asString ?: "store",
-                storeModuleId = alo.get("store_module_id")?.let { if (it.isJsonNull) null else it.asInt },
-                appName = alo.get("app_name")?.let { if (it.isJsonNull) null else it.asString },
-                appIcon = alo.get("app_icon")?.let { if (it.isJsonNull) null else it.asString },
-                appDescription = alo.get("app_description")?.let { if (it.isJsonNull) null else it.asString },
-                storeModuleDownloads = sm?.get("downloads")?.asInt,
-                storeModuleRating = sm?.get("rating")?.asFloat,
-                storeModuleType = sm?.get("module_type")?.asString)
-        } ?: emptyList()
+    private fun parseCommunityPost(obj: JsonObject): CommunityPostItem = parser.parseCommunityPost(obj)
 
-        return CommunityPostItem(
-            id = obj.get("id")?.asInt ?: 0, content = obj.get("content")?.asString ?: "",
-            createdAt = obj.get("created_at")?.let { if (it.isJsonNull) null else it.asString },
-            likeCount = obj.get("like_count")?.asInt ?: 0, shareCount = obj.get("share_count")?.asInt ?: 0,
-            commentCount = obj.get("comment_count")?.asInt ?: 0, viewCount = obj.get("view_count")?.asInt ?: 0,
-            isLiked = obj.get("is_liked")?.asBoolean ?: false,
-            isOwnPost = obj.get("is_own_post")?.asBoolean ?: false,                // CLI-01
-            authorIsFollowing = obj.get("author_is_following")?.asBoolean ?: false,  // CLI-08
-            authorId = author?.get("id")?.asInt ?: 0, authorUsername = author?.get("username")?.asString ?: "?",
-            authorDisplayName = author?.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
-            authorAvatarUrl = author?.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
-            authorIsDeveloper = author?.get("is_developer")?.asBoolean ?: false,
-            authorTeamBadges = author?.let { parseTeamBadges(it) } ?: emptyList(),
-            tags = tags, media = media, appLinks = appLinks,
-            // Phase 1 v2 fields
-            postType = obj.get("post_type")?.asString ?: "discussion",
-            appName = obj.get("app_name")?.let { if (it.isJsonNull) null else it.asString },
-            appIconUrl = obj.get("app_icon_url")?.let { if (it.isJsonNull) null else it.asString },
-            sourceType = obj.get("source_type")?.let { if (it.isJsonNull) null else it.asString },
-            hasRecipe = obj.get("has_recipe")?.asBoolean ?: false,
-            recipeImportCount = obj.get("recipe_import_count")?.asInt ?: 0,
-            title = obj.get("title")?.let { if (it.isJsonNull) null else it.asString },
-            difficulty = obj.get("difficulty")?.let { if (it.isJsonNull) null else it.asString },
-            isResolved = obj.get("is_resolved")?.let { if (it.isJsonNull) null else it.asBoolean },
-        )
-    }
+    private fun parsePostComment(obj: JsonObject): PostCommentItem = parser.parsePostComment(obj)
 
-    private fun parsePostComment(obj: JsonObject): PostCommentItem {
-        val author = obj.getAsJsonObject("author")
-        val replies = obj.getAsJsonArray("replies")?.map { parsePostComment(it.asJsonObject) } ?: emptyList()
-        return PostCommentItem(
-            id = obj.get("id")?.asInt ?: 0, content = obj.get("content")?.asString ?: "",
-            createdAt = obj.get("created_at")?.let { if (it.isJsonNull) null else it.asString },
-            likeCount = obj.get("like_count")?.asInt ?: 0, parentId = obj.get("parent_id")?.let { if (it.isJsonNull) null else it.asInt },
-            authorId = author?.get("id")?.asInt ?: 0, authorUsername = author?.get("username")?.asString ?: "?",
-            authorDisplayName = author?.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
-            authorAvatarUrl = author?.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
-            authorIsDeveloper = author?.get("is_developer")?.asBoolean ?: false,
-            authorTeamBadges = author?.let { parseTeamBadges(it) } ?: emptyList(),
-            replies = replies)
-    }
+    private fun parseTeamBadges(authorObj: JsonObject): List<TeamBadgeInfo> = parser.parseTeamBadges(authorObj)
 
-    private fun parseTeamBadges(authorObj: JsonObject): List<TeamBadgeInfo> {
-        val arr = authorObj.getAsJsonArray("team_badges") ?: return emptyList()
-        return arr.mapNotNull { elem ->
-            val o = elem.asJsonObject
-            TeamBadgeInfo(
-                id = o.get("id")?.asInt ?: return@mapNotNull null,
-                name = o.get("name")?.asString ?: "?",
-                avatarUrl = o.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
-                role = o.get("role")?.asString ?: "viewer"
-            )
-        }
-    }
-
-    private fun parseSimpleUserProfile(obj: JsonObject): CommunityUserProfile {
-        return CommunityUserProfile(
-            id = obj.get("id")?.asInt ?: 0,
-            username = obj.get("username")?.asString ?: "",
-            displayName = obj.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
-            avatarUrl = obj.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
-            bio = obj.get("bio")?.let { if (it.isJsonNull) null else it.asString },
-            appCount = obj.get("published_apps_count")?.asInt ?: 0,
-            moduleCount = obj.get("published_modules_count")?.asInt ?: obj.get("module_count")?.asInt ?: 0,
-            followerCount = obj.get("follower_count")?.asInt ?: 0,
-            followingCount = obj.get("following_count")?.asInt ?: 0,
-            isFollowing = obj.get("is_following")?.asBoolean ?: false,
-            isDeveloper = obj.get("is_developer")?.asBoolean ?: false,
-            teamBadges = parseTeamBadges(obj)
-        )
-    }
-
-    // ═══════════════════════════════════════════
-    // 17b. MODULE-TEAM ASSOCIATION
-    // ═══════════════════════════════════════════
-
-    /** 关联模块/应用到团队 */
+    private fun parseSimpleUserProfile(obj: JsonObject): CommunityUserProfile = parser.parseSimpleUserProfile(obj)
     suspend fun associateModuleTeam(
         moduleId: Int,
         teamId: Int,
@@ -3972,8 +2768,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取模块的团队关联信息 */
     suspend fun getModuleTeam(moduleId: Int): AuthResult<ModuleTeamInfo?> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/module-team/$moduleId")
@@ -3995,8 +2789,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             AuthResult.Error(parseError(responseBody, response.code))
         }
     }
-
-    /** 移除模块的团队关联 */
     suspend fun removeModuleTeam(moduleId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/module-team/$moduleId")
@@ -4008,8 +2800,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit)
         else AuthResult.Error(parseError(responseBody, response.code))
     }
-
-    /** 获取用户的团队作品列表 (用于个人主页) */
     suspend fun getUserTeamWorks(userId: Int, page: Int = 1, size: Int = 20): AuthResult<UserTeamWorksResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -4051,787 +2841,8 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    private fun parseModuleTeamInfo(d: JsonObject): ModuleTeamInfo {
-        val contribs = d.getAsJsonArray("contributors")?.map { el ->
-            val c = el.asJsonObject
-            TeamContributorItem(
-                userId = c.get("user_id")?.asInt ?: 0,
-                username = c.get("username")?.asString ?: "?",
-                displayName = c.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
-                avatarUrl = c.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
-                contributorRole = c.get("contributor_role")?.asString ?: "member",
-                contributionPoints = c.get("contribution_points")?.asInt ?: 0,
-                description = c.get("description")?.let { if (it.isJsonNull) null else it.asString },
-            )
-        } ?: emptyList()
-        return ModuleTeamInfo(
-            teamId = d.get("team_id")?.asInt ?: 0,
-            teamName = d.get("team_name")?.let { if (it.isJsonNull) null else it.asString },
-            teamDescription = d.get("team_description")?.let { if (it.isJsonNull) null else it.asString },
-            contributors = contribs,
-        )
-    }
-
-    // ═══════════════════════════════════════════
-    // 18. CLOUD BACKUP
-    // ═══════════════════════════════════════════
-
-    /** 列出云备份 */
-    suspend fun listBackups(): AuthResult<BackupListResponse> = authRequest { token ->
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/backups")
-            .header("Authorization", "Bearer $token")
-            .get().build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            val backups = data?.getAsJsonArray("backups")?.map { el ->
-                val obj = el.asJsonObject
-                BackupItem(
-                    filename = obj.get("filename")?.asString ?: "",
-                    size = obj.get("size_str")?.asString ?: obj.get("size")?.asString ?: "0KB",
-                    sizeBytes = obj.get("size_bytes")?.asLong ?: obj.get("size")?.asLong ?: 0,
-                    downloadUrl = obj.get("download_url")?.asString,
-                    createdAt = obj.get("created_at")?.asString
-                )
-            } ?: emptyList()
-            AuthResult.Success(BackupListResponse(
-                backups = backups,
-                count = data?.get("count")?.asInt ?: 0,
-                quota = data?.get("quota")?.asInt ?: 0,
-                tier = data?.get("tier")?.asString ?: "free"
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 创建云备份 */
-    suspend fun createBackup(): AuthResult<BackupCreateResult> = authRequest { token ->
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/backups")
-            .header("Authorization", "Bearer $token")
-            .post("".toRequestBody(jsonMediaType))
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            val data = json.getAsJsonObject("data")
-            AuthResult.Success(BackupCreateResult(
-                filename = data?.get("filename")?.asString ?: "",
-                size = data?.get("size")?.asInt ?: 0,
-                downloadUrl = data?.get("download_url")?.asString,
-                projectCount = data?.get("project_count")?.asInt ?: 0,
-                moduleCount = data?.get("module_count")?.asInt ?: 0,
-                message = json.get("message")?.asString ?: "Backup created"
-            ))
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
-
-    /** 删除云备份 */
-    suspend fun deleteBackup(filename: String): AuthResult<String> = authRequest { token ->
-        val request = Request.Builder()
-            .url("$BASE_URL/api/v1/backups/$filename")
-            .header("Authorization", "Bearer $token")
-            .delete().build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        if (response.isSuccessful) {
-            val json = JsonParser.parseString(responseBody).asJsonObject
-            AuthResult.Success(json.get("message")?.asString ?: "已删除")
-        } else {
-            AuthResult.Error(parseError(responseBody, response.code))
-        }
-    }
+    private fun parseModuleTeamInfo(d: JsonObject): ModuleTeamInfo = parser.parseModuleTeamInfo(d)
+    suspend fun listBackups(): AuthResult<BackupListResponse> = backupApi.listBackups()
+    suspend fun createBackup(): AuthResult<BackupCreateResult> = backupApi.createBackup()
+    suspend fun deleteBackup(filename: String): AuthResult<String> = backupApi.deleteBackup(filename)
 }
-
-// ═══════════════════════════════════════════
-// Data Classes
-// ═══════════════════════════════════════════
-
-/*
-data class RedeemResult(val message: String, val planType: String, val daysAdded: Int)
-
-data class RedeemPreview(
-    val currentTier: String,
-    val currentPlan: String,
-    val currentExpiresAt: String?,
-    val currentIsLifetime: Boolean,
-    val newTier: String,
-    val newPlan: String,
-    val newExpiresAt: String?,
-    val newIsLifetime: Boolean,
-    val isUpgrade: Boolean,
-    val codeTier: String,
-    val codePlanType: String,
-    val durationDays: Int,
-)
-
-data class MyAppsResponse(
-    val apps: List<AppStoreItem>,
-    val count: Int,
-    val quota: Int,
-    val tier: String
-)
-
-data class ActivationRecord(
-    val id: Int, val type: String, val planType: String,
-    val proStart: String?, val proEnd: String?,
-    val note: String?, val createdAt: String?
-)
-
-data class DeviceInfo(
-    val id: Int, val deviceId: String, val deviceName: String, val deviceOs: String,
-    val appVersion: String?, val ipAddress: String?, val country: String?,
-    val lastActiveAt: String?, val isCurrent: Boolean = false
-)
-
-data class AnnouncementData(
-    val id: Int, val title: String, val content: String, val type: String,
-    val actionUrl: String?, val actionText: String?,
-    val priority: Int, val imageUrl: String?
-)
-
-data class AppUpdateInfo(
-    val hasUpdate: Boolean, val versionCode: Int, val versionName: String,
-    val title: String?, val changelog: String?, val downloadUrl: String,
-    val isForceUpdate: Boolean, val fileSize: Long?
-)
-
-data class RemoteConfigItem(val key: String, val value: String, val description: String?)
-
-data class CloudProject(
-    val id: Int, val name: String, val description: String?,
-    val projectKey: String, val packageName: String? = null,
-    val githubRepo: String?, val giteeRepo: String?,
-    val createdAt: String?, val isActive: Boolean = true,
-    val totalInstalls: Int = 0, val totalOpens: Int = 0
-)
-
-data class ProjectVersion(
-    val id: Int, val versionCode: Int, val versionName: String,
-    val title: String?, val changelog: String?,
-    val downloadUrlGithub: String?, val downloadUrlGitee: String?,
-    val isForceUpdate: Boolean = false, val createdAt: String?
-)
-
-/** Token info for client-side direct upload to GitHub */
-data class DirectUploadToken(
-    val token: String,
-    val expiresAt: String,
-    val uploadUrl: String,
-    val releaseId: Int,
-    val owner: String,
-    val repo: String,
-    val tag: String,
-    val contentType: String = "application/vnd.android.package-archive",
-)
-
-data class AnalyticsData(
-    val totalInstalls: Int, val totalOpens: Int, val totalActive: Int,
-    val totalCrashes: Int, val totalDownloads: Int = 0, val totalDevices: Int = 0,
-    val avgDailyActive: Float = 0f,
-    val dailyStats: List<DailyStat>,
-    val countryDistribution: Map<String, Int> = emptyMap(),
-    val versionDistribution: Map<String, Int> = emptyMap(),
-    val deviceDistribution: Map<String, Int> = emptyMap(),
-    val osDistribution: Map<String, Int> = emptyMap()
-)
-
-data class DailyStat(
-    val date: String, val installs: Int, val opens: Int, val active: Int,
-    val crashes: Int = 0, val downloads: Int = 0
-)
-
-data class BackupRecord(
-    val id: Int, val platform: String, val status: String,
-    val repoUrl: String?, val fileSize: Long,
-    val createdAt: String?
-)
-
-data class ManifestSyncResult(
-    val success: Boolean, val manifestVersion: Int,
-    val syncedAt: String?, val conflict: Boolean = false
-)
-
-data class ManifestDownloadResult(
-    val manifestJson: String?, val manifestVersion: Int,
-    val syncedAt: String?
-)
-
-data class PushHistoryItem(
-    val id: Int,
-    val title: String,
-    val body: String,
-    val targetType: String,
-    val sentCount: Int,
-    val createdAt: String?
-)
-
-// ─── 新增数据类（项目管理用） ───
-
-data class ProjectActivationCode(
-    val id: Int, val code: String, val status: String,
-    val maxUses: Int, val usedCount: Int, val deviceId: String?,
-    val createdAt: String, val usedAt: String?
-)
-
-data class ProjectAnnouncement(
-    val id: Int, val title: String, val content: String,
-    val isActive: Boolean, val priority: Int, val createdAt: String
-)
-
-data class ProjectConfig(
-    val id: Int, val key: String, val value: String,
-    val description: String?, val isActive: Boolean
-)
-
-data class ProjectWebhook(
-    val id: Int, val url: String, val events: List<String>,
-    val secret: String?, val isActive: Boolean,
-    val failureCount: Int, val lastTriggeredAt: String?
-)
-
-// ═══════════════════════════════════════════
-// 模块市场数据类
-// ═══════════════════════════════════════════
-
-data class StoreModuleInfo(
-    val id: Int, val name: String, val description: String?,
-    val icon: String?, val category: String?,
-    val tags: List<String>, val versionName: String?,
-    val downloads: Int, val rating: Float, val ratingCount: Int,
-    val isFeatured: Boolean, val authorName: String,
-    val shareCode: String? = null,
-    val createdAt: String?,
-    val moduleType: String = "extension",
-    val likeCount: Int = 0,
-    val isApproved: Boolean = true
-) {
-    // Compatibility aliases
-    val downloadCount: Int get() = downloads
-    val averageRating: Float get() = rating
-}
-
-data class RemoteScriptInfo(
-    val id: Int, val name: String, val description: String?,
-    val code: String, val runAt: String, val urlPattern: String?,
-    val priority: Int, val isActive: Boolean, val version: Int,
-    val createdAt: String?, val updatedAt: String?
-)
-
-// ═══════════════════════════════════════════
-// 社区交互数据类
-// ═══════════════════════════════════════════
-
-data class CommunityModuleDetail(
-    val id: Int, val name: String, val description: String?,
-    val icon: String?, val category: String?,
-    val tags: List<String>, val versionName: String?,
-    val downloads: Int, val rating: Float, val ratingCount: Int,
-    val isFeatured: Boolean, val authorName: String,
-    val authorId: Int, val shareCode: String? = null,
-    val userVote: String? = null, // "up" / "down" / null
-    val isFavorited: Boolean = false,
-    val createdAt: String?, val updatedAt: String?
-)
-
-data class ModuleComment(
-    val id: Int, val content: String, val userId: Int,
-    val userName: String, val userAvatar: String?,
-    val parentId: Int? = null,
-    val createdAt: String?, val updatedAt: String?,
-    val replies: List<ModuleComment> = emptyList()
-)
-
-data class CommunityUserProfile(
-    val id: Int, val username: String, val displayName: String?,
-    val avatarUrl: String?, val bio: String?,
-    val appCount: Int = 0, val moduleCount: Int = 0,
-    val followerCount: Int = 0,
-    val followingCount: Int = 0, val isFollowing: Boolean = false,
-    val isDeveloper: Boolean = false,
-    val teamBadges: List<TeamBadgeInfo> = emptyList(),
-    val createdAt: String? = null
-)
-
-data class TeamBadgeInfo(
-    val id: Int,
-    val name: String,
-    val avatarUrl: String? = null,
-    val role: String = "viewer"
-)
-
-data class NotificationItem(
-    val id: Int, val type: String, val title: String?,
-    val content: String?, val refType: String?,
-    val refId: Int?, val actorId: Int?,
-    val isRead: Boolean, val createdAt: String?
-)
-
-data class FeedItem(
-    val id: Int, val type: String, val actorName: String,
-    val actorAvatar: String?, val targetName: String?,
-    val targetId: Int?, val createdAt: String?
-)
-
-// ─── App Store ───
-
-data class AppStoreListResponse(
-    val total: Int, val page: Int, val size: Int,
-    val apps: List<AppStoreItem>,
-    val categories: List<String> = emptyList()
-)
-
-data class AppStoreItem(
-    val id: Int,
-    val name: String,
-    val icon: String? = null,
-    val category: String = "other",
-    val tags: List<String> = emptyList(),
-    val versionName: String = "1.0",
-    val packageName: String? = null,
-    val downloads: Int = 0,
-    val rating: Float = 0f,
-    val ratingCount: Int = 0,
-    val likeCount: Int = 0,
-    val isFeatured: Boolean = false,
-    val screenshots: List<String> = emptyList(),
-    val authorName: String = "Unknown",
-    val authorId: Int = 0,
-    val createdAt: String? = null,
-    // Full detail fields
-    val description: String? = null,
-    val videoUrl: String? = null,
-    val apkUrlGithub: String? = null,
-    val apkUrlGitee: String? = null,
-    val contactEmail: String? = null,
-    val contactPhone: String? = null,
-    val groupChatUrl: String? = null,
-    val paymentQrUrl: String? = null,
-    val websiteUrl: String? = null,
-    val privacyPolicyUrl: String? = null,
-)
-
-// ─── App Like & Reviews ───
-
-data class LikeResponse(
-    val liked: Boolean,
-    val likeCount: Int
-)
-
-data class AppReviewItem(
-    val id: Int,
-    val rating: Int,
-    val comment: String? = null,
-    val authorName: String = "Unknown",
-    val authorId: Int = 0,
-    val deviceModel: String? = null,
-    val ipAddress: String? = null,
-    val createdAt: String? = null
-)
-
-data class AppReviewsResponse(
-    val total: Int,
-    val page: Int,
-    val reviews: List<AppReviewItem>
-)
-
-// ─── Push History ───
-
-data class PushHistoryResponse(
-    val total: Int,
-    val page: Int,
-    val dailyUsed: Int,
-    val dailyLimit: Int,
-    val tier: String,
-    val records: List<PushHistoryItem>
-)
-
-
-
-// ─── Team Collaboration ───
-
-data class TeamListResponse(
-    val teams: List<TeamItem>,
-    val quotaUsed: Int = 0,
-    val quotaLimit: Int = 0,
-    val memberLimit: Int = 0,
-    val tier: String = "free"
-)
-
-data class TeamItem(
-    val id: Int,
-    val name: String,
-    val description: String? = null,
-    val ownerName: String = "?",
-    val ownerId: Int = 0,
-    val memberCount: Int = 0,
-    val pendingRequests: Int = 0,
-    val isPublic: Boolean = true,
-    val createdAt: String? = null
-)
-
-data class TeamMemberItem(
-    val id: Int,
-    val userId: Int,
-    val username: String,
-    val displayName: String? = null,
-    val avatarUrl: String? = null,
-    val role: String = "viewer",
-    val contribution: Int = 0,
-    val createdAt: String? = null
-)
-
-data class TeamSearchResponse(
-    val teams: List<TeamSearchItem>,
-    val total: Int = 0,
-    val page: Int = 1,
-)
-
-data class TeamSearchItem(
-    val id: Int,
-    val name: String,
-    val description: String? = null,
-    val ownerName: String = "?",
-    val ownerId: Int = 0,
-    val memberCount: Int = 0,
-    val isMember: Boolean = false,
-    val hasPendingRequest: Boolean = false,
-    val createdAt: String? = null
-)
-
-data class TeamJoinRequestItem(
-    val id: Int,
-    val userId: Int,
-    val username: String,
-    val displayName: String? = null,
-    val avatarUrl: String? = null,
-    val message: String? = null,
-    val status: String = "pending",
-    val createdAt: String? = null
-)
-
-data class TeamRankingItem(
-    val rank: Int,
-    val memberId: Int,
-    val userId: Int,
-    val username: String,
-    val displayName: String? = null,
-    val avatarUrl: String? = null,
-    val role: String = "viewer",
-    val contribution: Int = 0
-)
-
-// ─── Cloud Backup ───
-
-data class BackupListResponse(
-    val backups: List<BackupItem>,
-    val count: Int = 0,
-    val quota: Int = 0,
-    val tier: String = "free"
-)
-
-data class BackupItem(
-    val filename: String,
-    val size: String = "0KB",
-    val sizeBytes: Long = 0,
-    val downloadUrl: String? = null,
-    val createdAt: String? = null
-)
-
-data class BackupCreateResult(
-    val filename: String,
-    val size: Int = 0,
-    val downloadUrl: String? = null,
-    val projectCount: Int = 0,
-    val moduleCount: Int = 0,
-    val message: String = ""
-)
-
-// ─── Module-Team Association ───
-
-data class ContributorInput(
-    val userId: Int,
-    val contributorRole: String = "member",  // "lead" or "member"
-    val contributionPoints: Int = 0,
-    val description: String? = null
-)
-
-data class ModuleTeamInfo(
-    val teamId: Int,
-    val teamName: String? = null,
-    val teamDescription: String? = null,
-    val contributors: List<TeamContributorItem> = emptyList()
-)
-
-data class TeamContributorItem(
-    val userId: Int,
-    val username: String,
-    val displayName: String? = null,
-    val avatarUrl: String? = null,
-    val contributorRole: String = "member",
-    val contributionPoints: Int = 0,
-    val description: String? = null
-)
-
-data class UserTeamWorksResponse(
-    val works: List<TeamWorkItem>,
-    val total: Int = 0
-)
-
-data class TeamWorkItem(
-    val id: Int,
-    val name: String,
-    val moduleType: String = "app",
-    val icon: String? = null,
-    val downloads: Int = 0,
-    val rating: Float = 0f,
-    val authorName: String = "?",
-    val contributorRole: String = "member",
-    val contributionPoints: Int = 0,
-    val contributionDescription: String? = null,
-    val teamId: Int? = null,
-    val teamName: String? = null
-)
-
-// ═══ Community Post Data Classes ═══
-
-data class CommunityFeedResponse(val posts: List<CommunityPostItem>, val total: Int)
-
-data class CommunityPostItem(
-    val id: Int,
-    val content: String,
-    val createdAt: String? = null,
-    val likeCount: Int = 0,
-    val shareCount: Int = 0,
-    val commentCount: Int = 0,
-    val viewCount: Int = 0,
-    val isLiked: Boolean = false,
-    val isOwnPost: Boolean = false,           // CLI-01: true if current user authored this post
-    val authorIsFollowing: Boolean = false,    // CLI-08: whether viewer follows this author
-    val authorId: Int = 0,
-    val authorUsername: String = "?",
-    val authorDisplayName: String? = null,
-    val authorAvatarUrl: String? = null,
-    val authorIsDeveloper: Boolean = false,
-    val authorTeamBadges: List<TeamBadgeInfo> = emptyList(),
-    val tags: List<String> = emptyList(),
-    val media: List<PostMediaItem> = emptyList(),
-    val appLinks: List<PostAppLinkItem> = emptyList(),
-    // ── Phase 1 v2: Post type system ──
-    val postType: String = "discussion",       // showcase|tutorial|question|discussion
-    val appName: String? = null,               // Showcase: app name
-    val appIconUrl: String? = null,            // Showcase: app icon
-    val sourceType: String? = null,            // Showcase: website|html|media|frontend|server
-    val hasRecipe: Boolean = false,            // Showcase: has importable recipe?
-    val recipeImportCount: Int = 0,            // Showcase: times recipe was imported
-    val title: String? = null,                 // Tutorial/Question: title
-    val difficulty: String? = null,            // Tutorial: beginner|intermediate|advanced
-    val isResolved: Boolean? = null,           // Question: is it resolved?
-)
-
-data class PostMediaInput(
-    val mediaType: String = "image",
-    val urlGithub: String? = null,
-    val urlGitee: String? = null,
-    val thumbnailUrl: String? = null
-)
-
-data class PostMediaItem(
-    val id: Int,
-    val mediaType: String = "image",
-    val urlGithub: String? = null,
-    val urlGitee: String? = null,
-    val thumbnailUrl: String? = null
-)
-
-data class PostAppLinkInput(
-    val linkType: String = "store",
-    val storeModuleId: Int? = null,
-    val appName: String? = null,
-    val appIcon: String? = null,
-    val appDescription: String? = null
-)
-
-data class PostAppLinkItem(
-    val id: Int,
-    val linkType: String = "store",
-    val storeModuleId: Int? = null,
-    val appName: String? = null,
-    val appIcon: String? = null,
-    val appDescription: String? = null,
-    val storeModuleDownloads: Int? = null,
-    val storeModuleRating: Float? = null,
-    val storeModuleType: String? = null
-)
-
-data class PostLikeResult(val liked: Boolean, val likeCount: Int)
-data class CommentLikeResult(val liked: Boolean, val likeCount: Int)
-data class BookmarkResult(val bookmarked: Boolean)
-
-// Phase 1 v2: Discover page response
-data class DiscoverResponse(
-    val featuredShowcases: List<CommunityPostItem> = emptyList(),
-    val trending: List<CommunityPostItem> = emptyList(),
-    val latestTutorials: List<CommunityPostItem> = emptyList(),
-    val unansweredQuestions: List<CommunityPostItem> = emptyList(),
-)
-
-// Phase 1 v2: Recipe import result
-data class RecipeImportResult(
-    val recipe: String,  // Raw JSON string of the recipe
-    val appName: String? = null,
-    val appIconUrl: String? = null,
-    val sourceType: String? = null,
-    val authorId: Int = 0,
-    val authorUsername: String? = null,
-)
-
-// Phase 1 v2: Categorized tags
-data class CommunityTagsResponse(
-    val categories: Map<String, List<String>> = emptyMap(),
-    val all: List<String> = emptyList(),
-)
-
-data class PostCommentItem(
-    val id: Int,
-    val content: String,
-    val createdAt: String? = null,
-    val likeCount: Int = 0,
-    val parentId: Int? = null,
-    val authorId: Int = 0,
-    val authorUsername: String = "?",
-    val authorDisplayName: String? = null,
-    val authorAvatarUrl: String? = null,
-    val authorIsDeveloper: Boolean = false,
-    val authorTeamBadges: List<TeamBadgeInfo> = emptyList(),
-    val replies: List<PostCommentItem> = emptyList()
-)
-
-// CLI-06/12: Paginated comments response
-data class CommentsResponse(
-    val total: Int = 0,
-    val page: Int = 1,
-    val comments: List<PostCommentItem> = emptyList()
-)
-
-data class UserActivityInfo(
-    val isOnline: Boolean = false,
-    val lastSeenAt: String? = null,
-    val todaySeconds: Int = 0,
-    val monthSeconds: Int = 0,
-    val yearSeconds: Int = 0
-)
-
-// ══════════════════════════════════════════════
-// 应用管理 — 激活码、公告、更新、用户
-// ══════════════════════════════════════════════
-
-data class ActivationCode(
-    val id: Int = 0,
-    val code: String,
-    val appId: Int = 0,
-    val isUsed: Boolean = false,
-    val usedByDeviceId: String? = null,
-    val usedByUserId: String? = null,
-    val usedAt: String? = null,
-    val createdAt: String? = null,
-    val expiresAt: String? = null,
-    val maxUses: Int = 1,
-    val currentUses: Int = 0
-)
-
-data class ActivationSettings(
-    val enabled: Boolean = false,
-    val deviceBindingEnabled: Boolean = false,
-    val maxDevicesPerCode: Int = 1,
-    val codes: List<ActivationCode> = emptyList(),
-    val totalCodes: Int = 0,
-    val usedCodes: Int = 0
-)
-
-data class Announcement(
-    val id: Int = 0,
-    val appId: Int = 0,
-    val title: String = "",
-    val content: String = "",
-    val type: String = "info",      // info, warning, update, event
-    val isActive: Boolean = true,
-    val isPinned: Boolean = false,
-    val createdAt: String? = null,
-    val expiresAt: String? = null,
-    val viewCount: Int = 0
-)
-
-data class AnnouncementTemplate(
-    val id: String,
-    val name: String,
-    val icon: String,
-    val title: String,
-    val content: String,
-    val type: String
-)
-
-data class UpdateConfig(
-    val id: Int = 0,
-    val appId: Int = 0,
-    val latestVersionName: String = "",
-    val latestVersionCode: Int = 0,
-    val updateTitle: String = "",
-    val updateContent: String = "",
-    val apkUrl: String? = null,
-    val sourceAppId: Int? = null,
-    val sourceAppName: String? = null,
-    val isForceUpdate: Boolean = false,
-    val minVersionCode: Int = 0,    // 低于此版本强制更新
-    val templateId: String = "simple",
-    val isActive: Boolean = false,
-    val createdAt: String? = null,
-    val updatedAt: String? = null
-)
-
-data class UpdateTemplate(
-    val id: String,
-    val name: String,
-    val preview: String,    // 预览描述
-    val style: String       // simple, dialog, fullscreen
-)
-
-data class AppUser(
-    val id: String,         // 设备指纹 ID
-    val deviceModel: String? = null,
-    val osVersion: String? = null,
-    val appVersion: String? = null,
-    val country: String? = null,
-    val region: String? = null,
-    val city: String? = null,
-    val ipAddress: String? = null,
-    val firstSeenAt: String? = null,
-    val lastSeenAt: String? = null,
-    val activationCode: String? = null,
-    val isActive: Boolean = true
-)
-
-data class GeoDistribution(
-    val country: String,
-    val countryCode: String,
-    val count: Int,
-    val percentage: Float,
-    val regions: List<RegionInfo> = emptyList()
-)
-
-data class RegionInfo(
-    val region: String,
-    val count: Int,
-    val percentage: Float
-)
-*/
