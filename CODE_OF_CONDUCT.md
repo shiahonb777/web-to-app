@@ -46,7 +46,7 @@ To ensure legal and compliant use, users are advised to:
 
 ## 6. Intellectual Property Statement
 
-This software is released under the **MIT Open Source License**. Users may freely use, modify, and distribute it, but must retain the original copyright notice. Legal responsibilities for secondary development based on this software shall be borne by the secondary developer.
+This software is released under **The Unlicense**. This software is dedicated to the public domain, and anyone may use, modify, distribute, or sell it for any purpose. The software is provided "as is", without warranty of any kind.
 
 ## End User Agreement Confirmation
 

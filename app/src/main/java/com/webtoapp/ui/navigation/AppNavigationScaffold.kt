@@ -66,8 +66,13 @@ internal fun AppNavigationScaffold(
         webAppRepository,
         statsRepository,
         healthMonitor,
+        screenshotService,
+        batchImportService,
         activationManager,
         billingManager,
+        apiClient,
+        installedItemsTracker,
+        cloudViewModel,
     ) {
         AppNavigationGraphDependencies(
             viewModel = viewModel,
@@ -75,13 +80,17 @@ internal fun AppNavigationScaffold(
             webAppRepository = webAppRepository,
             statsRepository = statsRepository,
             healthMonitor = healthMonitor,
+            screenshotService = screenshotService,
+            batchImportService = batchImportService,
             activationManager = activationManager,
             billingManager = billingManager,
+            apiClient = apiClient,
+            installedItemsTracker = installedItemsTracker,
+            cloudViewModel = cloudViewModel,
         )
     }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isOnDetailScreen = isDetailRoute(currentRoute)
@@ -104,9 +113,6 @@ internal fun AppNavigationScaffold(
                     tabs = liquidTabs,
                     selectedIndex = selectedTab,
                     onTabSelected = { index ->
-                        if (isOnDetailScreen) {
-                            navController.popBackStack(TAB_HOST_ROUTE, inclusive = false)
-                        }
                         selectedTab = index
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -138,7 +144,6 @@ internal fun AppNavigationScaffold(
                 HomeTabContent(
                     navController = navController,
                     viewModel = viewModel,
-                    webAppRepository = webAppRepository,
                     healthMonitor = healthMonitor,
                     screenshotService = screenshotService,
                     batchImportService = batchImportService,
@@ -166,8 +171,7 @@ internal fun AppNavigationScaffold(
             ) {
                 CommunityTabContent(
                     navController = navController,
-                    selectedTab = selectedTab,
-                    isOnDetailScreen = isOnDetailScreen,
+                    isTabVisible = selectedTab == 2 && !isOnDetailScreen,
                 )
             }
 
@@ -188,9 +192,7 @@ internal fun AppNavigationScaffold(
                 selectedTab = selectedTab,
                 isOnDetailScreen = isOnDetailScreen,
             ) {
-                MoreTabContent(
-                    navController = navController,
-                )
+                MoreTabContent(navController = navController)
             }
 
             AppNavigationGraph(
@@ -214,17 +216,17 @@ private fun NavigationTabContainer(
         targetValue = if (isActive) 1f else 0f,
         animationSpec = spring(
             dampingRatio = 0.85f,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessMedium,
         ),
-        label = "tab${tabIndex}Alpha"
+        label = "tab${tabIndex}Alpha",
     )
     val offsetX by animateFloatAsState(
         targetValue = if (isActive) 0f else if (tabIndex < selectedTab) -slideOffsetPx else slideOffsetPx,
         animationSpec = spring(
             dampingRatio = 0.9f,
-            stiffness = Spring.StiffnessMediumLow
+            stiffness = Spring.StiffnessMediumLow,
         ),
-        label = "tab${tabIndex}Offset"
+        label = "tab${tabIndex}Offset",
     )
 
     Box(

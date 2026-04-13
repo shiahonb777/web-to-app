@@ -11,7 +11,7 @@
 <p>
   <a href="https://github.com/shiahonb777/web-to-app/stargazers"><img src="https://img.shields.io/github/stars/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=f4c542" alt="Stars"></a>
   <a href="https://github.com/shiahonb777/web-to-app/network/members"><img src="https://img.shields.io/github/forks/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=6cc644" alt="Forks"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-The%20Unlicense-blue?style=for-the-badge" alt="License"></a>
 </p>
 
 <p>
@@ -554,7 +554,7 @@ signingConfigs {
 
 ## License
 
-MIT License
+The Unlicense
 
 ## 联系作者
 

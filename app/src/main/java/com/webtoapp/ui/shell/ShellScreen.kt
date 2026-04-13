@@ -307,9 +307,7 @@ fun ShellScreen(
     // 转换配置（逻辑已提取到 ShellWebViewConfig.kt）
     val webViewConfig = buildWebViewConfig(config)
 
-    val webViewManager = remember { 
-        com.webtoapp.core.webview.WebViewManager(context, adBlocker)
-    }
+    val webViewManager = com.webtoapp.ui.webview.rememberWebViewManager(context, adBlocker)
 
     // Yes否隐藏工具栏（全屏模式）
     val hideToolbar = config.webViewConfig.hideToolbar

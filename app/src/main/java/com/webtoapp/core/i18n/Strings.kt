@@ -30562,9 +30562,9 @@ object Strings {
     }
 
     val legalDisclaimerContent6: String get() = when (lang) {
-        AppLanguage.CHINESE -> "本软件基于 MIT 开源协议发布，用户可自由使用、修改和分发，但需保留原始版权声明。用户基于本软件进行的二次开发，其法律责任由二次开发者自行承担。"
-        AppLanguage.ENGLISH -> "This software is released under the MIT open-source license. Users can freely use, modify, and distribute it, but must retain the original copyright notice. Users who carry out secondary development based on this software shall bear the legal liability themselves."
-        AppLanguage.ARABIC -> "تم إصدار هذا البرنامج بموجب ترخيص MIT مفتوح المصدر. يمكن للمستخدمين استخدامه وتعديله وتوزيعه بحرية، ولكن يجب الاحتفاظ بإشعار حقوق النشر الأصلي. المستخدمون الذين يقومون بتطوير ثانوي بناءً على هذا البرنامج يتحملون المسؤولية القانونية بأنفسهم."
+        AppLanguage.CHINESE -> "本软件基于 The Unlicense 发布，已明确贡献到公共领域。任何人均可为任何目的自由使用、修改、分发或出售本软件。本软件按“现状”提供，不附带任何形式的明示或默示担保。"
+        AppLanguage.ENGLISH -> "This software is released under The Unlicense and dedicated to the public domain. Anyone may use, modify, distribute, or sell it for any purpose. The software is provided \"as is\", without warranty of any kind."
+        AppLanguage.ARABIC -> "هذا البرنامج منشور بموجب The Unlicense ومُهدى إلى الملكية العامة. يحق لأي شخص استخدامه أو تعديله أو توزيعه أو بيعه لأي غرض. يتم توفير البرنامج \"كما هو\" دون أي ضمان من أي نوع."
     }
 
         val legalDisclaimerAcceptance: String get() = when (lang) {

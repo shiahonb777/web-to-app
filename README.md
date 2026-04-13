@@ -11,7 +11,7 @@
 <p>
   <a href="https://github.com/shiahonb777/web-to-app/stargazers"><img src="https://img.shields.io/github/stars/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=f4c542" alt="Stars"></a>
   <a href="https://github.com/shiahonb777/web-to-app/network/members"><img src="https://img.shields.io/github/forks/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=6cc644" alt="Forks"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-The%20Unlicense-blue?style=for-the-badge" alt="License"></a>
 </p>
 
 <p>
@@ -407,6 +407,32 @@ Shows app info, changelog, and dual download buttons (GitHub international + Git
 
 </div>
 
+## 🧱 创建页共用层
+
+- `app/src/main/java/com/webtoapp/ui/screens/create/common`
+  放置创建流程共享的状态模型、区块抽象、保存/预览控制以及项目导入契约。此层负责统一流转 `AppFlowSpec` + `ProjectImportAnalysis`，让各创建页在收集用户输入后的行为保持一致。
+- `app/src/main/java/com/webtoapp/ui/screens/create/runtime`
+  各种运行时特定项目导入器与分析器（Node/PHP/Python/Go）。导入器扫描入口文件、依赖、环境变量、端口等信息，生成标准 `ProjectImportAnalysis` 供创建页侧快速回填表单。
+
+## 🌐 WebView 分层
+
+- `app/src/main/java/com/webtoapp/core/webview/WebViewManager.kt`
+  现在只保留协调职责：组装配置、维护会话级状态、把导航/拦截/兼容/注入/销毁分发给专职组件，不再继续包圆所有脏活。
+- `app/src/main/java/com/webtoapp/core/webview/session`
+  存放 `WebViewSessionState`，统一收口当前配置、主框架 URL、扩展运行时、诊断计数等页面会话状态。
+- `app/src/main/java/com/webtoapp/core/webview/navigation`
+  处理 URL 策略、特殊 scheme、外部浏览器/Custom Tab、新窗口分发。
+- `app/src/main/java/com/webtoapp/core/webview/intercept`
+  处理请求拦截、cleartext 回退、跨域代理、本地/加密资源加载以及 MIME 判断。
+- `app/src/main/java/com/webtoapp/core/webview/compat`
+  处理 Strict Host、OAuth 兼容、Requested-With allow-list、保守脚本模式与 scriptless 模式。
+- `app/src/main/java/com/webtoapp/core/webview/injection`
+  将普通脚本注入与扩展运行时拆开：`ScriptInjectionCoordinator` 只管常规注入，`ExtensionRuntimeCoordinator` 负责扩展运行时和面板注册。
+- `app/src/main/java/com/webtoapp/core/webview/lifecycle`
+  负责 WebView、Cookie/WebStorage、JS bridge、扩展 runtime 的销毁和清理。
+- `app/src/main/java/com/webtoapp/ui/webview/rememberWebViewManager.kt`
+  统一编辑器页和 Shell 页的 `WebViewManager` 创建入口，避免两边各自再抄一份 `remember { WebViewManager(...) }`。
+
 ## 📖 Usage Guide
 
 ### Create Website App
@@ -589,7 +615,7 @@ Extension modules can call Android native functions via `window.NativeBridge`:
 
 ## 📜 License
 
-MIT License
+The Unlicense
 
 ## 📬 Contact
 

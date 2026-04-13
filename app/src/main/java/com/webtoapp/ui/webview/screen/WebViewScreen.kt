@@ -49,7 +49,6 @@ import com.webtoapp.core.bgm.BgmPlayer
 import com.webtoapp.core.webview.LocalHttpServer
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
-import com.webtoapp.core.webview.WebViewManager
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.data.model.LongPressMenuStyle
@@ -823,7 +822,7 @@ fun WebViewScreen(
         }
     }
 
-    val webViewManager = remember { WebViewManager(context, adBlocker) }
+    val webViewManager = rememberWebViewManager(context, adBlocker)
     
     // Local HTTP 服务器
     val localHttpServer = remember { LocalHttpServer.getInstance(context) }

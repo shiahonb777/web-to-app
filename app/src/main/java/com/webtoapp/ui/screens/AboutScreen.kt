@@ -1160,8 +1160,8 @@ fun AboutScreen(
                             // 6. 版权与开源
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle6,
-                                content = "This software is released under the MIT License. Users may freely use, modify, and distribute it, provided the original copyright notice is retained." +
-                                        "Any legal responsibilities arising from derivative works based on this software are borne solely by the developer of such derivative works."
+                                content = "This software is released under The Unlicense and dedicated to the public domain. Anyone may use, modify, distribute, or sell it for any purpose." +
+                                    "The software is provided \"as is\", without warranty of any kind."
                             )
                             
                             Spacer(modifier = Modifier.height(16.dp))

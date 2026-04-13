@@ -15,6 +15,7 @@ import com.webtoapp.core.stats.AppHealthMonitor
 import com.webtoapp.core.stats.BatchImportService
 import com.webtoapp.core.stats.WebsiteScreenshotService
 import com.webtoapp.data.model.AppType
+import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.ui.screens.AppStoreScreen
 import com.webtoapp.ui.screens.AuthScreen
@@ -32,60 +33,46 @@ import kotlinx.coroutines.launch
 internal fun HomeTabContent(
     navController: NavHostController,
     viewModel: MainViewModel,
-    webAppRepository: WebAppRepository,
     healthMonitor: AppHealthMonitor,
     screenshotService: WebsiteScreenshotService,
     batchImportService: BatchImportService,
 ) {
+    fun navigateToCreate(appType: AppType, prepare: (() -> Unit)? = null) {
+        prepare?.invoke()
+        navController.navigate(AppFlowSpec.from(appType).createRoute)
+    }
+
+    fun navigateToEdit(webApp: WebApp) {
+        val flow = AppFlowSpec.from(webApp.appType)
+        flow.prepareEdit(viewModel, webApp)
+        navController.navigate(flow.editRoute(webApp.id))
+    }
+
     HomeScreen(
         viewModel = viewModel,
         healthMonitor = healthMonitor,
         screenshotService = screenshotService,
         batchImportService = batchImportService,
-        onCreateApp = {
-            viewModel.createNewApp()
-            navController.navigate(Routes.CREATE_APP)
-        },
-        onCreateMediaApp = { navController.navigate(Routes.CREATE_MEDIA_APP) },
-        onCreateGalleryApp = { navController.navigate(Routes.CREATE_GALLERY_APP) },
-        onCreateHtmlApp = { navController.navigate(Routes.CREATE_HTML_APP) },
-        onCreateFrontendApp = { navController.navigate(Routes.CREATE_FRONTEND_APP) },
-        onCreateNodeJsApp = { navController.navigate(Routes.CREATE_NODEJS_APP) },
-        onCreateWordPressApp = { navController.navigate(Routes.CREATE_WORDPRESS_APP) },
-        onCreatePhpApp = { navController.navigate(Routes.CREATE_PHP_APP) },
-        onCreatePythonApp = { navController.navigate(Routes.CREATE_PYTHON_APP) },
-        onCreateGoApp = { navController.navigate(Routes.CREATE_GO_APP) },
-        onCreateMultiWebApp = { navController.navigate(Routes.CREATE_MULTI_WEB_APP) },
+        onCreateApp = { navigateToCreate(AppType.WEB, viewModel::createNewApp) },
+        onCreateMediaApp = { navigateToCreate(AppType.IMAGE) },
+        onCreateGalleryApp = { navigateToCreate(AppType.GALLERY) },
+        onCreateHtmlApp = { navigateToCreate(AppType.HTML) },
+        onCreateFrontendApp = { navigateToCreate(AppType.FRONTEND) },
+        onCreateNodeJsApp = { navigateToCreate(AppType.NODEJS_APP) },
+        onCreateWordPressApp = { navigateToCreate(AppType.WORDPRESS) },
+        onCreatePhpApp = { navigateToCreate(AppType.PHP_APP) },
+        onCreatePythonApp = { navigateToCreate(AppType.PYTHON_APP) },
+        onCreateGoApp = { navigateToCreate(AppType.GO_APP) },
+        onCreateMultiWebApp = { navigateToCreate(AppType.MULTI_WEB) },
         onEditApp = { webApp ->
             viewModel.editApp(webApp)
             navController.navigate(Routes.editApp(webApp.id))
         },
-        onEditAppCore = { webApp ->
-            when (webApp.appType) {
-                AppType.WEB -> {
-                    viewModel.editApp(webApp)
-                    navController.navigate(Routes.editWebApp(webApp.id))
-                }
-
-                AppType.IMAGE,
-                AppType.VIDEO -> navController.navigate(Routes.editMediaApp(webApp.id))
-
-                AppType.GALLERY -> navController.navigate(Routes.editGalleryApp(webApp.id))
-                AppType.HTML -> navController.navigate(Routes.editHtmlApp(webApp.id))
-                AppType.FRONTEND -> navController.navigate(Routes.editFrontendApp(webApp.id))
-                AppType.NODEJS_APP -> navController.navigate(Routes.editNodeJsApp(webApp.id))
-                AppType.WORDPRESS -> {
-                    viewModel.editApp(webApp)
-                    navController.navigate(Routes.editApp(webApp.id))
-                }
-
-                AppType.PHP_APP -> navController.navigate(Routes.editPhpApp(webApp.id))
-                AppType.PYTHON_APP -> navController.navigate(Routes.editPythonApp(webApp.id))
-                AppType.GO_APP -> navController.navigate(Routes.editGoApp(webApp.id))
-                AppType.MULTI_WEB -> navController.navigate(Routes.editMultiWebApp(webApp.id))
-            }
+        onEditAppCore = ::navigateToEdit,
+        onPreviewApp = { webApp ->
+            val flow = AppFlowSpec.from(webApp.appType)
+            navController.navigate(flow.previewRoute(webApp.id))
         },
-        onPreviewApp = { webApp -> navController.navigate(Routes.preview(webApp.id)) },
         onOpenAppModifier = { navController.navigate(Routes.APP_MODIFIER) },
         onOpenAiSettings = { navController.navigate(Routes.AI_SETTINGS) },
         onOpenAiCoding = { navController.navigate(Routes.AI_CODING) },
@@ -124,8 +111,7 @@ internal fun AppStoreTabContent(
 @Composable
 internal fun CommunityTabContent(
     navController: NavHostController,
-    selectedTab: Int,
-    isOnDetailScreen: Boolean,
+    isTabVisible: Boolean = true,
 ) {
     CommunityScreen(
         onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) },
@@ -133,7 +119,7 @@ internal fun CommunityTabContent(
         onNavigateToPost = { postId -> navController.navigate(Routes.communityPost(postId)) },
         onNavigateToNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
         onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) },
-        isTabVisible = selectedTab == 2 && !isOnDetailScreen
+        isTabVisible = isTabVisible,
     )
 }
 

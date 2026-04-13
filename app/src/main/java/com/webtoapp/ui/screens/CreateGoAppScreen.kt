@@ -27,17 +27,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
-import com.webtoapp.core.golang.GoRuntime
 import com.webtoapp.core.golang.GoSampleManager
 import com.webtoapp.data.model.GoAppConfig
 import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.ui.components.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.screens.create.common.CreateScreenState
+import com.webtoapp.ui.screens.create.common.resolveDocumentTreeDirectory
+import com.webtoapp.ui.screens.create.runtime.GoProjectImportAnalysis
+import com.webtoapp.ui.screens.create.runtime.GoProjectImporter
 
 /**
  * 创建/编辑 Go 服务应用页面
@@ -69,6 +70,7 @@ fun CreateGoAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
+    val projectImporter = remember(context) { GoProjectImporter(context) }
     
     // App 信息
     var appName by remember { mutableStateOf("") }
@@ -107,6 +109,34 @@ fun CreateGoAppScreen(
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val screenState = remember(isCreating, creationPhase, errorMessage) {
+        CreateScreenState(
+            isBusy = isCreating,
+            phase = creationPhase,
+            errorMessage = errorMessage
+        )
+    }
+
+    fun applyImportAnalysis(
+        imported: com.webtoapp.ui.screens.create.common.ImportedProject<GoProjectImportAnalysis>,
+        appNameOverride: String? = null,
+    ) {
+        val analysis = imported.analysis
+        selectedProjectDir = analysis.projectDir.absolutePath
+        detectedFramework = analysis.framework
+        binaryName = analysis.binaryName
+        binaryDetected = analysis.binaryDetected
+        binarySize = analysis.binarySize
+        staticDir = analysis.staticDir
+        envVars = analysis.envVars
+        goModulePath = analysis.modulePath
+        goVersion = analysis.goVersion
+        goDeps = analysis.dependencies
+        targetArch = analysis.targetArch
+        healthCheckEndpoint = analysis.healthCheckEndpoint
+        projectId = imported.projectId
+        appName = appNameOverride ?: analysis.suggestedAppName ?: appName
+    }
     
     // 编辑模式：加载已有数据
     LaunchedEffect(existingAppId) {
@@ -142,109 +172,15 @@ fun CreateGoAppScreen(
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
-                        val path = docId.substringAfter(":")
-                        val storageRoot = if (docId.startsWith("primary:")) {
-                            android.os.Environment.getExternalStorageDirectory().absolutePath
-                        } else {
-                            "/storage/${docId.substringBefore(":")}"
-                        }
-                        val projectPath = "$storageRoot/$path"
-                        val projectDir = File(projectPath)
-                        
-                        if (!projectDir.exists()) {
-                            errorMessage = Strings.dirNotExists
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        selectedProjectDir = projectPath
-                        
-                        val runtime = GoRuntime(context)
-                        val framework = runtime.detectFramework(projectDir)
-                        detectedFramework = framework
-                        
-                        // 检测预编译二进制
-                        val detectedBinary = runtime.detectBinary(projectDir)
-                        if (detectedBinary != null) {
-                            binaryName = detectedBinary
-                            binaryDetected = true
-                            // 获取文件大小
-                            val searchDirs = listOf(projectDir, File(projectDir, "bin"), File(projectDir, "build"))
-                            for (dir in searchDirs) {
-                                val binFile = File(dir, detectedBinary)
-                                if (binFile.exists()) {
-                                    binarySize = binFile.length()
-                                    break
-                                }
-                            }
-                        }
-                        
-                        // 检测静态文件目录
-                        val detectedStaticDir = runtime.detectStaticDir(projectDir)
-                        if (detectedStaticDir.isNotEmpty()) {
-                            staticDir = detectedStaticDir
-                        }
-                        
-                        // 增强：解析 go.mod
-                        val goMod = File(projectDir, "go.mod")
-                        if (goMod.exists()) {
-                            try {
-                                val content = goMod.readText()
-                                val lines = content.lines()
-                                
-                                // 模块路径
-                                lines.firstOrNull { it.startsWith("module ") }?.let { line ->
-                                    goModulePath = line.substringAfter("module ").trim()
-                                    if (appName.isBlank()) appName = goModulePath!!.substringAfterLast("/")
-                                }
-                                
-                                // Go 版本
-                                lines.firstOrNull { it.startsWith("go ") }?.let { line ->
-                                    goVersion = line.substringAfter("go ").trim()
-                                }
-                                
-                                // 解析直接依赖
-                                var inRequire = false
-                                val deps = mutableListOf<Pair<String, String>>()
-                                for (line in lines) {
-                                    val trimmed = line.trim()
-                                    if (trimmed == "require (") {
-                                        inRequire = true
-                                        continue
-                                    }
-                                    if (trimmed == ")") {
-                                        inRequire = false
-                                        continue
-                                    }
-                                    if (inRequire && trimmed.isNotEmpty() && !trimmed.startsWith("//")) {
-                                        if (!trimmed.contains("// indirect")) {
-                                            val parts = trimmed.split(" ", limit = 2)
-                                            if (parts.size == 2) {
-                                                deps.add(parts[0].trim() to parts[1].trim())
-                                            }
-                                        }
-                                    }
-                                    // 单行 require
-                                    if (trimmed.startsWith("require ") && !trimmed.contains("(")) {
-                                        val reqParts = trimmed.removePrefix("require ").trim().split(" ", limit = 2)
-                                        if (reqParts.size == 2) {
-                                            deps.add(reqParts[0].trim() to reqParts[1].trim())
-                                        }
-                                    }
-                                }
-                                goDeps = deps
-                            } catch (e: Exception) { android.util.Log.w("CreateGoApp", "Failed to parse go.mod", e) }
-                        }
-                        
-                        // 复制项目文件
-                        creationPhase = Strings.copyingProjectFiles
-                        val newProjectId = java.util.UUID.randomUUID().toString()
-                        runtime.createProject(newProjectId, projectDir)
-                        projectId = newProjectId
-                        creationPhase = Strings.goProjectReady
+                    val projectDir = resolveDocumentTreeDirectory(treeUri)
+                    if (!projectDir.exists()) {
+                        errorMessage = Strings.dirNotExists
+                        return@launch
                     }
+                    creationPhase = Strings.copyingProjectFiles
+                    val imported = projectImporter.importProject(projectDir)
+                    applyImportAnalysis(imported)
+                    creationPhase = Strings.goProjectReady
                 } catch (e: Exception) {
                     errorMessage = e.message ?: Strings.projectImportFailed
                 } finally {
@@ -332,26 +268,13 @@ fun CreateGoAppScreen(
                         scope.launch {
                             val result = GoSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
-                                selectedProjectDir = path
                                 isCreating = true
                                 creationPhase = Strings.frameworkDetected
                                 try {
-                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                        val projectDir = java.io.File(path)
-                                        val runtime = GoRuntime(context)
-                                        val framework = runtime.detectFramework(projectDir)
-                                        detectedFramework = framework
-                                        val detectedBinary = runtime.detectBinary(projectDir)
-                                        if (detectedBinary != null) { binaryName = detectedBinary; binaryDetected = true }
-                                        val detectedStaticDir = runtime.detectStaticDir(projectDir)
-                                        if (detectedStaticDir.isNotEmpty()) staticDir = detectedStaticDir
-                                        appName = sample.name
-                                        creationPhase = Strings.copyingProjectFiles
-                                        val newProjectId = java.util.UUID.randomUUID().toString()
-                                        runtime.createProject(newProjectId, projectDir)
-                                        projectId = newProjectId
-                                        creationPhase = Strings.goProjectReady
-                                    }
+                                    creationPhase = Strings.copyingProjectFiles
+                                    val imported = projectImporter.importProject(File(path))
+                                    applyImportAnalysis(imported, appNameOverride = sample.name)
+                                    creationPhase = Strings.goProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -542,11 +465,11 @@ fun CreateGoAppScreen(
             }
             
             // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
+            if (screenState.isBusy) {
+                RuntimeLoadingCard(screenState.phase)
             }
             
-            errorMessage?.let { error ->
+            screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             

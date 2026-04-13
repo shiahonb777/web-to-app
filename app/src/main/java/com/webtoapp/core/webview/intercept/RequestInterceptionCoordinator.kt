@@ -14,10 +14,7 @@ internal class RequestInterceptionCoordinator(
     private val context: Context,
     private val adBlocker: AdBlocker,
     private val urlPolicy: WebViewUrlPolicy,
-    private val loadEncryptedAsset: (String) -> WebResourceResponse?,
-    private val fetchWithCrossOriginHeaders: (WebResourceRequest) -> WebResourceResponse?,
-    private val fetchCleartextResource: (WebResourceRequest) -> WebResourceResponse?,
-    private val getMimeType: (String) -> String
+    private val resourceFallbackLoader: ResourceFallbackLoader
 ) {
     data class DiagSnapshot(
         val requestCount: Int,
@@ -96,23 +93,12 @@ internal class RequestInterceptionCoordinator(
         if (url.startsWith("https://localhost/__local__/")) {
             val localPath = url.removePrefix("https://localhost/__local__/")
             AppLogger.d("WebViewManager", "Loading local resource: $localPath")
-            return try {
-                val file = java.io.File(localPath)
-                if (file.exists() && file.isFile) {
-                    InterceptionResult(WebResourceResponse(getMimeType(localPath), "UTF-8", java.io.FileInputStream(file)))
-                } else {
-                    AppLogger.w("WebViewManager", "Local file not found: $localPath")
-                    InterceptionResult(null)
-                }
-            } catch (e: Exception) {
-                AppLogger.e("WebViewManager", "Error loading local resource: $localPath", e)
-                InterceptionResult(null)
-            }
+            return InterceptionResult(resourceFallbackLoader.loadLocalResource(localPath))
         }
 
         if (url.startsWith("file:///android_asset/")) {
             val assetPath = url.removePrefix("file:///android_asset/")
-            return InterceptionResult(loadEncryptedAsset(assetPath))
+            return InterceptionResult(resourceFallbackLoader.loadEncryptedAsset(assetPath))
         }
 
         val bypassAggressiveNetworkHooks = shouldBypassAggressiveNetworkHooks(request, url)
@@ -164,11 +150,11 @@ internal class RequestInterceptionCoordinator(
             isHttpOrHttps
         ) {
             android.util.Log.w("DIAG", "CROSS_ORIGIN_PROXY: ${url.take(120)}")
-            return InterceptionResult(fetchWithCrossOriginHeaders(request))
+            return InterceptionResult(resourceFallbackLoader.fetchWithCrossOriginHeaders(request))
         }
 
         if (url.startsWith("http://")) {
-            val cleartextResponse = fetchCleartextResource(request)
+            val cleartextResponse = resourceFallbackLoader.fetchCleartextResource(request)
             if (cleartextResponse != null) {
                 return InterceptionResult(cleartextResponse)
             }

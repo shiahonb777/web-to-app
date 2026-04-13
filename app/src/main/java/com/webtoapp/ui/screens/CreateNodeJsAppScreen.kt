@@ -30,18 +30,19 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.core.nodejs.NodeDependencyManager
-import com.webtoapp.core.nodejs.NodeRuntime
 import com.webtoapp.core.nodejs.NodeSampleManager
 import com.webtoapp.data.model.NodeJsBuildMode
 import com.webtoapp.data.model.NodeJsConfig
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.components.TypedSampleProjectsCard
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.screens.create.common.CreateScreenState
+import com.webtoapp.ui.screens.create.common.resolveDocumentTreeDirectory
+import com.webtoapp.ui.screens.create.runtime.NodeJsProjectImportAnalysis
+import com.webtoapp.ui.screens.create.runtime.NodeJsProjectImporter
+import java.io.File
 
 /**
  * 创建 Node.js 应用页面
@@ -73,6 +74,7 @@ fun CreateNodeJsAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
+    val projectImporter = remember(context) { NodeJsProjectImporter(context) }
     
     // App 信息
     var appName by remember { mutableStateOf("") }
@@ -124,6 +126,40 @@ fun CreateNodeJsAppScreen(
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val screenState = remember(isCreating, creationPhase, errorMessage) {
+        CreateScreenState(
+            isBusy = isCreating,
+            phase = creationPhase,
+            errorMessage = errorMessage
+        )
+    }
+
+    fun applyImportAnalysis(
+        imported: com.webtoapp.ui.screens.create.common.ImportedProject<NodeJsProjectImportAnalysis>,
+        appNameOverride: String? = null,
+    ) {
+        val analysis = imported.analysis
+        selectedProjectDir = analysis.projectDir.absolutePath
+        detectedFramework = analysis.framework
+        detectedEntryFile = analysis.entryFile
+        entryFile = analysis.entryFile ?: entryFile
+        buildMode = analysis.buildMode
+        packageManager = analysis.packageManager
+        packageName = analysis.packageName
+        packageVersion = analysis.packageVersion
+        packageDescription = analysis.packageDescription
+        npmScripts = analysis.scripts
+        selectedStartScript = analysis.selectedStartScript
+        dependencies = analysis.dependencies
+        devDependencies = analysis.devDependencies
+        hasTypeScript = analysis.hasTypeScript
+        detectedPort = analysis.detectedPort
+        customPort = analysis.detectedPort?.toString().orEmpty()
+        envVars = analysis.envVars
+        nodeEngineVersion = analysis.nodeVersion
+        projectId = imported.projectId
+        appName = appNameOverride ?: analysis.suggestedAppName ?: appName
+    }
     
     // 编辑模式：加载已有数据
     LaunchedEffect(existingAppId) {
@@ -186,190 +222,18 @@ fun CreateNodeJsAppScreen(
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        // 解析 SAF URI 到文件路径
-                        val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
-                        val path = docId.substringAfter(":")
-                        val storageRoot = if (docId.startsWith("primary:")) {
-                            android.os.Environment.getExternalStorageDirectory().absolutePath
-                        } else {
-                            "/storage/${docId.substringBefore(":")}"
-                        }
-                        val projectPath = "$storageRoot/$path"
-                        val projectDir = File(projectPath)
-                        
-                        if (!projectDir.exists() || !File(projectDir, "package.json").exists()) {
-                            errorMessage = context.getString(com.webtoapp.R.string.njs_package_json_not_found)
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        selectedProjectDir = projectPath
-                        
-                        // 检测项目信息
-                        val runtime = NodeRuntime(context)
-                        val detected = runtime.detectEntryFile(projectDir)
-                        if (detected != null) {
-                            detectedEntryFile = detected
-                            entryFile = detected
-                        }
-                        
-                        // 增强：检测包管理器
-                        packageManager = when {
-                            File(projectDir, "pnpm-lock.yaml").exists() -> "pnpm"
-                            File(projectDir, "yarn.lock").exists() -> "yarn"
-                            File(projectDir, "bun.lockb").exists() -> "bun"
-                            else -> "npm"
-                        }
-                        
-                        // 增强：检测 TypeScript
-                        hasTypeScript = File(projectDir, "tsconfig.json").exists()
-                        
-                        // 读取 package.json 获取项目名称和框架
-                        val packageJson = File(projectDir, "package.json")
-                        if (packageJson.exists()) {
-                            try {
-                                val content = packageJson.readText()
-                                val gson = com.google.gson.Gson()
-                                val json = gson.fromJson(content, com.google.gson.JsonObject::class.java)
-                                
-                                // 项目名称
-                                json.get("name")?.asString?.let { name ->
-                                    packageName = name
-                                    if (appName.isBlank()) appName = name
-                                }
-                                
-                                // 项目版本
-                                json.get("version")?.asString?.let { packageVersion = it }
-                                
-                                // 项目描述
-                                json.get("description")?.asString?.let { packageDescription = it }
-                                
-                                // 增强：NPM 脚本
-                                json.getAsJsonObject("scripts")?.let { scripts ->
-                                    val scriptMap = mutableMapOf<String, String>()
-                                    scripts.keySet().forEach { key ->
-                                        scriptMap[key] = scripts.get(key).asString
-                                    }
-                                    npmScripts = scriptMap
-                                    // 自动选择启动脚本
-                                    selectedStartScript = when {
-                                        "start" in scriptMap -> "start"
-                                        "dev" in scriptMap -> "dev"
-                                        "serve" in scriptMap -> "serve"
-                                        else -> scriptMap.keys.firstOrNull()
-                                    }
-                                }
-                                
-                                // 增强：Node 引擎版本
-                                json.getAsJsonObject("engines")?.get("node")?.asString?.let {
-                                    nodeEngineVersion = it
-                                }
-                                
-                                // 依赖
-                                val deps = json.getAsJsonObject("dependencies")
-                                val devDeps = json.getAsJsonObject("devDependencies")
-                                val allDeps = mutableSetOf<String>()
-                                
-                                // 增强：保存完整依赖映射
-                                deps?.let { d ->
-                                    val depMap = mutableMapOf<String, String>()
-                                    d.keySet().forEach { key -> depMap[key] = d.get(key).asString }
-                                    dependencies = depMap
-                                    allDeps.addAll(d.keySet())
-                                }
-                                devDeps?.let { dd ->
-                                    val devDepMap = mutableMapOf<String, String>()
-                                    dd.keySet().forEach { key -> devDepMap[key] = dd.get(key).asString }
-                                    devDependencies = devDepMap
-                                    allDeps.addAll(dd.keySet())
-                                }
-                                
-                                // 增强：TypeScript 从依赖检测
-                                if (!hasTypeScript && ("typescript" in allDeps || "ts-node" in allDeps)) {
-                                    hasTypeScript = true
-                                }
-                                
-                                detectedFramework = when {
-                                    "express" in allDeps -> "Express"
-                                    "fastify" in allDeps -> "Fastify"
-                                    "koa" in allDeps -> "Koa"
-                                    "@nestjs/core" in allDeps -> "NestJS"
-                                    "@hapi/hapi" in allDeps -> "Hapi"
-                                    "next" in allDeps -> "Next.js"
-                                    "nuxt" in allDeps -> "Nuxt.js"
-                                    else -> null
-                                }
-                                
-                                // 自动推断构建模式
-                                buildMode = when {
-                                    "next" in allDeps || "nuxt" in allDeps -> NodeJsBuildMode.FULLSTACK
-                                    "express" in allDeps || "fastify" in allDeps || "koa" in allDeps ||
-                                    "@nestjs/core" in allDeps || "@hapi/hapi" in allDeps -> NodeJsBuildMode.API_BACKEND
-                                    else -> NodeJsBuildMode.STATIC
-                                }
-                                
-                                // 增强：端口检测 - 从脚本或环境变量推断
-                                npmScripts["start"]?.let { startScript ->
-                                    val portMatch = Regex("(?:PORT=|--port[= ])(\\d{4,5})").find(startScript)
-                                    portMatch?.groupValues?.get(1)?.toIntOrNull()?.let { detectedPort = it }
-                                }
-                                if (detectedPort == null) {
-                                    // 尝试从 .env 读取
-                                    val envFile = File(projectDir, ".env")
-                                    if (envFile.exists()) {
-                                        envFile.readLines().firstOrNull { it.trimStart().startsWith("PORT=") }
-                                            ?.substringAfter("=")?.trim()?.toIntOrNull()?.let { detectedPort = it }
-                                    }
-                                }
-                                if (detectedPort == null) {
-                                    // 从入口文件尝试检测 listen 端口
-                                    val entryF = File(projectDir, entryFile)
-                                    if (entryF.exists()) {
-                                        val entryContent = entryF.readText()
-                                        val listenMatch = Regex("\\.listen\\((\\d{4,5})").find(entryContent)
-                                        listenMatch?.groupValues?.get(1)?.toIntOrNull()?.let { detectedPort = it }
-                                    }
-                                }
-                                
-                                // 检测 .env.example 获取环境变量
-                                val envExample = File(projectDir, ".env.example")
-                                if (envExample.exists()) {
-                                    envExample.readLines().forEach { line ->
-                                        val trimmed = line.trim()
-                                        if (trimmed.isNotEmpty() && !trimmed.startsWith("#") && trimmed.contains("=")) {
-                                            val key = trimmed.substringBefore("=").trim()
-                                            val value = trimmed.substringAfter("=").trim()
-                                            if (key.isNotEmpty()) {
-                                                envVars = envVars.toMutableMap().apply { put(key, value) }
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                // 解析失败不影响主流程
-                            }
-                        }
-                        
-                        // 检查 Node.js 依赖并下载
-                        if (buildMode != NodeJsBuildMode.STATIC && !NodeDependencyManager.isNodeReady(context)) {
-                            showDownloadDialog = true
-                            val success = NodeDependencyManager.downloadNodeRuntime(context)
-                            showDownloadDialog = false
-                            if (!success) {
-                                errorMessage = Strings.njsDownloadFailed
-                                isCreating = false
-                                return@withContext
-                            }
-                        }
-                        
-                        // 复制项目文件到内部存储
-                        creationPhase = "正在复制项目文件..."
-                        val newProjectId = java.util.UUID.randomUUID().toString()
-                        runtime.createProject(newProjectId, projectDir)
-                        projectId = newProjectId
-                        creationPhase = Strings.njsProjectReady
+                    val projectDir = resolveDocumentTreeDirectory(treeUri)
+                    if (!projectDir.exists() || !File(projectDir, "package.json").exists()) {
+                        errorMessage = context.getString(com.webtoapp.R.string.njs_package_json_not_found)
+                        return@launch
                     }
+
+                    creationPhase = Strings.copyingProjectFiles
+                    val imported = projectImporter.importProject(projectDir) { downloading ->
+                        showDownloadDialog = downloading
+                    }
+                    applyImportAnalysis(imported)
+                    creationPhase = Strings.njsProjectReady
                 } catch (e: Exception) {
                     errorMessage = e.message ?: "项目导入失败"
                 } finally {
@@ -606,99 +470,15 @@ fun CreateNodeJsAppScreen(
                         scope.launch {
                             val result = NodeSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
-                                selectedProjectDir = path
                                 isCreating = true
                                 creationPhase = Strings.njsProjectDetected
                                 try {
-                                    withContext(Dispatchers.IO) {
-                                        val projectDir = File(path)
-                                        val runtime = NodeRuntime(context)
-                                        
-                                        // 检测入口文件
-                                        val detected = runtime.detectEntryFile(projectDir)
-                                        if (detected != null) {
-                                            detectedEntryFile = detected
-                                            entryFile = detected
-                                        }
-                                        
-                                        // 检测包管理器
-                                        packageManager = when {
-                                            File(projectDir, "pnpm-lock.yaml").exists() -> "pnpm"
-                                            File(projectDir, "yarn.lock").exists() -> "yarn"
-                                            else -> "npm"
-                                        }
-                                        
-                                        // 读取 package.json
-                                        val packageJson = File(projectDir, "package.json")
-                                        if (packageJson.exists()) {
-                                            try {
-                                                val content = packageJson.readText()
-                                                val gson = com.google.gson.Gson()
-                                                val json = gson.fromJson(content, com.google.gson.JsonObject::class.java)
-                                                
-                                                json.get("name")?.asString?.let { name ->
-                                                    packageName = name
-                                                }
-                                                json.get("version")?.asString?.let { packageVersion = it }
-                                                json.get("description")?.asString?.let { packageDescription = it }
-                                                
-                                                // NPM 脚本
-                                                json.getAsJsonObject("scripts")?.let { scripts ->
-                                                    val scriptMap = mutableMapOf<String, String>()
-                                                    scripts.keySet().forEach { key ->
-                                                        scriptMap[key] = scripts.get(key).asString
-                                                    }
-                                                    npmScripts = scriptMap
-                                                    selectedStartScript = when {
-                                                        "start" in scriptMap -> "start"
-                                                        "dev" in scriptMap -> "dev"
-                                                        else -> scriptMap.keys.firstOrNull()
-                                                    }
-                                                }
-                                                
-                                                // 依赖
-                                                val deps = json.getAsJsonObject("dependencies")
-                                                val allDeps = mutableSetOf<String>()
-                                                deps?.let { d ->
-                                                    val depMap = mutableMapOf<String, String>()
-                                                    d.keySet().forEach { key -> depMap[key] = d.get(key).asString }
-                                                    dependencies = depMap
-                                                    allDeps.addAll(d.keySet())
-                                                }
-                                                
-                                                // 检测框架
-                                                detectedFramework = when {
-                                                    "express" in allDeps -> "Express"
-                                                    "fastify" in allDeps -> "Fastify"
-                                                    "koa" in allDeps -> "Koa"
-                                                    else -> null
-                                                }
-                                                
-                                                buildMode = NodeJsBuildMode.API_BACKEND
-                                            } catch (e: Exception) { android.util.Log.w("CreateNodeJsApp", "Failed to parse package.json", e) }
-                                        }
-                                        
-                                        appName = sample.name
-                                        
-                                        // 检查 Node.js 依赖
-                                        if (!NodeDependencyManager.isNodeReady(context)) {
-                                            showDownloadDialog = true
-                                            val success = NodeDependencyManager.downloadNodeRuntime(context)
-                                            showDownloadDialog = false
-                                            if (!success) {
-                                                errorMessage = Strings.njsDownloadFailed
-                                                isCreating = false
-                                                return@withContext
-                                            }
-                                        }
-                                        
-                                        // 复制项目文件
-                                        creationPhase = Strings.copyingProjectFiles
-                                        val newProjectId = java.util.UUID.randomUUID().toString()
-                                        runtime.createProject(newProjectId, projectDir)
-                                        projectId = newProjectId
-                                        creationPhase = Strings.njsProjectReady
+                                    creationPhase = Strings.copyingProjectFiles
+                                    val imported = projectImporter.importProject(File(path)) { downloading ->
+                                        showDownloadDialog = downloading
                                     }
+                                    applyImportAnalysis(imported, appNameOverride = sample.name)
+                                    creationPhase = Strings.njsProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -1019,12 +799,12 @@ fun CreateNodeJsAppScreen(
             }
             
             // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
+            if (screenState.isBusy) {
+                RuntimeLoadingCard(screenState.phase)
             }
             
             // 错误提示
-            errorMessage?.let { error ->
+            screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             

@@ -27,17 +27,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
-import com.webtoapp.core.python.PythonRuntime
 import com.webtoapp.core.python.PythonSampleManager
 import com.webtoapp.data.model.PythonAppConfig
 import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.ui.components.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.screens.create.common.CreateScreenState
+import com.webtoapp.ui.screens.create.common.resolveDocumentTreeDirectory
+import com.webtoapp.ui.screens.create.runtime.PythonProjectImportAnalysis
+import com.webtoapp.ui.screens.create.runtime.PythonProjectImporter
 
 /**
  * 创建/编辑 Python 应用页面
@@ -69,6 +70,7 @@ fun CreatePythonAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
+    val projectImporter = remember(context) { PythonProjectImporter(context) }
     
     // App 信息
     var appName by remember { mutableStateOf("") }
@@ -111,6 +113,36 @@ fun CreatePythonAppScreen(
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val screenState = remember(isCreating, creationPhase, errorMessage) {
+        CreateScreenState(
+            isBusy = isCreating,
+            phase = creationPhase,
+            errorMessage = errorMessage
+        )
+    }
+
+    fun applyImportAnalysis(
+        imported: com.webtoapp.ui.screens.create.common.ImportedProject<PythonProjectImportAnalysis>,
+        appNameOverride: String? = null,
+    ) {
+        val analysis = imported.analysis
+        selectedProjectDir = analysis.projectDir.absolutePath
+        detectedFramework = analysis.framework
+        entryFile = analysis.entryFile ?: entryFile
+        entryModule = analysis.entryModule
+        serverType = analysis.serverType
+        envVars = analysis.envVars
+        requirements = analysis.requirements
+        requirementsSource = analysis.requirementsSource
+        venvDetected = analysis.venvDetected
+        venvPath = analysis.venvPath
+        pythonVersion = analysis.pythonVersion
+        djangoSettingsModule = analysis.djangoSettingsModule
+        djangoStaticDir = analysis.djangoStaticDir
+        fastapiDocsEnabled = analysis.fastapiDocsEnabled
+        projectId = imported.projectId
+        appName = appNameOverride ?: analysis.suggestedAppName ?: appName
+    }
     
     // 编辑模式：加载已有数据
     LaunchedEffect(existingAppId) {
@@ -147,194 +179,15 @@ fun CreatePythonAppScreen(
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
-                        val path = docId.substringAfter(":")
-                        val storageRoot = if (docId.startsWith("primary:")) {
-                            android.os.Environment.getExternalStorageDirectory().absolutePath
-                        } else {
-                            "/storage/${docId.substringBefore(":")}"
-                        }
-                        val projectPath = "$storageRoot/$path"
-                        val projectDir = File(projectPath)
-                        
-                        if (!projectDir.exists()) {
-                            errorMessage = Strings.dirNotExists
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        selectedProjectDir = projectPath
-                        
-                        val runtime = PythonRuntime(context)
-                        val framework = runtime.detectFramework(projectDir)
-                        detectedFramework = framework
-                        
-                        val detected = runtime.detectEntryFile(projectDir, framework)
-                        entryFile = detected
-                        
-                        // 推断 server type
-                        serverType = when (framework) {
-                            "fastapi" -> "uvicorn"
-                            "django" -> "gunicorn"
-                            else -> "builtin"
-                        }
-                        
-                        // 增强：检测虚拟环境
-                        val venvDirs = listOf("venv", ".venv", "env", ".env")
-                        for (vDir in venvDirs) {
-                            val venvDir = File(projectDir, vDir)
-                            if (venvDir.isDirectory && File(venvDir, "bin/python").exists()) {
-                                venvDetected = true
-                                venvPath = vDir
-                                break
-                            }
-                            // Windows style
-                            if (venvDir.isDirectory && File(venvDir, "Scripts/python.exe").exists()) {
-                                venvDetected = true
-                                venvPath = vDir
-                                break
-                            }
-                        }
-                        
-                        // 增强：解析 requirements.txt
-                        val reqFile = File(projectDir, "requirements.txt")
-                        val pipfileFile = File(projectDir, "Pipfile")
-                        val pyprojectFile = File(projectDir, "pyproject.toml")
-                        
-                        if (reqFile.exists()) {
-                            requirementsSource = "requirements.txt"
-                            try {
-                                requirements = reqFile.readLines()
-                                    .map { it.trim() }
-                                    .filter { it.isNotEmpty() && !it.startsWith("#") && !it.startsWith("-") }
-                                    .map { line ->
-                                        val parts = line.split(Regex("[>=<~!]+"), 2)
-                                        val name = parts[0].trim()
-                                        val version = if (parts.size > 1) {
-                                            line.substring(name.length).trim()
-                                        } else ""
-                                        name to version
-                                    }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse requirements.txt", e) }
-                        } else if (pipfileFile.exists()) {
-                            requirementsSource = "Pipfile"
-                            try {
-                                val content = pipfileFile.readText()
-                                val packagesSection = content.substringAfter("[packages]", "")
-                                    .substringBefore("[", "")
-                                requirements = packagesSection.lines()
-                                    .map { it.trim() }
-                                    .filter { it.isNotEmpty() && it.contains("=") }
-                                    .map { line ->
-                                        val key = line.substringBefore("=").trim()
-                                        val value = line.substringAfter("=").trim().removeSurrounding("\"")
-                                        key to value
-                                    }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse Pipfile", e) }
-                        }
-                        
-                        // 增强：从 pyproject.toml 提取 Python 版本和项目名
-                        if (pyprojectFile.exists()) {
-                            try {
-                                val content = pyprojectFile.readText()
-                                val nameMatch = Regex("""name\s*=\s*"([^"]+)"""").find(content)
-                                nameMatch?.groupValues?.get(1)?.let { if (appName.isBlank()) appName = it }
-                                
-                                val pyVerMatch = Regex("""requires-python\s*=\s*"([^"]+)"""").find(content)
-                                pyVerMatch?.groupValues?.get(1)?.let { pythonVersion = it }
-                                
-                                // 如果没有 requirements.txt，尝试从 pyproject.toml 解析依赖
-                                if (requirements.isEmpty()) {
-                                    requirementsSource = "pyproject.toml"
-                                    val depsBlock = content.substringAfter("dependencies", "")
-                                        .substringAfter("[", "").substringBefore("]", "")
-                                    if (depsBlock.isNotBlank()) {
-                                        requirements = depsBlock.lines()
-                                            .map { it.trim().removeSurrounding("\"").removeSurrounding(",").trim() }
-                                            .filter { it.isNotEmpty() && !it.startsWith("#") }
-                                            .map { line ->
-                                                val parts = line.split(Regex("[>=<~!]+"), 2)
-                                                val name = parts[0].trim()
-                                                val version = if (parts.size > 1) line.substring(name.length).trim() else ""
-                                                name to version
-                                            }
-                                    }
-                                }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse pyproject.toml", e) }
-                        }
-                        
-                        // 读取项目名称 (setup.py fallback)
-                        val setupPy = File(projectDir, "setup.py")
-                        if (setupPy.exists() && appName.isBlank()) {
-                            try {
-                                val content = setupPy.readText()
-                                val nameMatch = Regex("""name\s*=\s*['"]([^'"]+)['"]""").find(content)
-                                nameMatch?.groupValues?.get(1)?.let { appName = it }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse setup.py", e) }
-                        }
-                        
-                        // 增强：Django 专属检测
-                        if (framework == "django") {
-                            // 检测 settings module
-                            val managePy = File(projectDir, "manage.py")
-                            if (managePy.exists()) {
-                                try {
-                                    val content = managePy.readText()
-                                    val settingsMatch = Regex("""DJANGO_SETTINGS_MODULE.*?['"]([^'"]+)['"]""").find(content)
-                                    settingsMatch?.groupValues?.get(1)?.let {
-                                        djangoSettingsModule = it
-                                        entryModule = "$it.wsgi:application"
-                                    }
-                                } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse manage.py", e) }
-                            }
-                            // 检测 wsgi.py
-                            projectDir.walk().maxDepth(2).filter { it.name == "wsgi.py" }.firstOrNull()?.let {
-                                val modulePath = it.relativeTo(projectDir).path
-                                    .removeSuffix(".py").replace(File.separator, ".")
-                                if (entryModule.isBlank()) entryModule = "$modulePath:application"
-                            }
-                        }
-                        
-                        // 增强：FastAPI 专属检测
-                        if (framework == "fastapi") {
-                            // 推断 ASGI module
-                            val mainPy = File(projectDir, entryFile)
-                            if (mainPy.exists()) {
-                                try {
-                                    val content = mainPy.readText()
-                                    val appVarMatch = Regex("""(\w+)\s*=\s*FastAPI\(""").find(content)
-                                    val appVar = appVarMatch?.groupValues?.get(1) ?: "app"
-                                    val moduleName = entryFile.removeSuffix(".py")
-                                    if (entryModule.isBlank()) entryModule = "$moduleName:$appVar"
-                                } catch (_: Exception) {
-                                    if (entryModule.isBlank()) entryModule = "main:app"
-                                }
-                            }
-                        }
-                        
-                        // 读取 .env 文件
-                        val envFile = File(projectDir, ".env")
-                        if (envFile.exists()) {
-                            envFile.readLines().forEach { line ->
-                                val trimmed = line.trim()
-                                if (trimmed.isNotEmpty() && !trimmed.startsWith("#") && trimmed.contains("=")) {
-                                    val key = trimmed.substringBefore("=").trim()
-                                    val value = trimmed.substringAfter("=").trim()
-                                    if (key.isNotEmpty()) {
-                                        envVars = envVars.toMutableMap().apply { put(key, value) }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // 复制项目文件
-                        creationPhase = Strings.copyingProjectFiles
-                        val newProjectId = java.util.UUID.randomUUID().toString()
-                        runtime.createProject(newProjectId, projectDir)
-                        projectId = newProjectId
-                        creationPhase = Strings.pyProjectReady
+                    val projectDir = resolveDocumentTreeDirectory(treeUri)
+                    if (!projectDir.exists()) {
+                        errorMessage = Strings.dirNotExists
+                        return@launch
                     }
+                    creationPhase = Strings.copyingProjectFiles
+                    val imported = projectImporter.importProject(projectDir)
+                    applyImportAnalysis(imported)
+                    creationPhase = Strings.pyProjectReady
                 } catch (e: Exception) {
                     errorMessage = e.message ?: Strings.projectImportFailed
                 } finally {
@@ -423,28 +276,13 @@ fun CreatePythonAppScreen(
                         scope.launch {
                             val result = PythonSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
-                                selectedProjectDir = path
                                 isCreating = true
                                 creationPhase = Strings.frameworkDetected
                                 try {
-                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                        val projectDir = java.io.File(path)
-                                        val runtime = PythonRuntime(context)
-                                        val framework = runtime.detectFramework(projectDir)
-                                        detectedFramework = framework
-                                        entryFile = runtime.detectEntryFile(projectDir, framework)
-                                        serverType = when (framework) {
-                                            "fastapi" -> "uvicorn"
-                                            "django" -> "gunicorn"
-                                            else -> "builtin"
-                                        }
-                                        appName = sample.name
-                                        creationPhase = Strings.copyingProjectFiles
-                                        val newProjectId = java.util.UUID.randomUUID().toString()
-                                        runtime.createProject(newProjectId, projectDir)
-                                        projectId = newProjectId
-                                        creationPhase = Strings.pyProjectReady
-                                    }
+                                    creationPhase = Strings.copyingProjectFiles
+                                    val imported = projectImporter.importProject(File(path))
+                                    applyImportAnalysis(imported, appNameOverride = sample.name)
+                                    creationPhase = Strings.pyProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -645,11 +483,11 @@ fun CreatePythonAppScreen(
             }
             
             // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
+            if (screenState.isBusy) {
+                RuntimeLoadingCard(screenState.phase)
             }
             
-            errorMessage?.let { error ->
+            screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             
