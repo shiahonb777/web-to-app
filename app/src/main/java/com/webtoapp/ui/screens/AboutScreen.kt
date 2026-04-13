@@ -60,6 +60,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     onBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -429,7 +430,7 @@ fun AboutScreen(
                 
                 // ========== 数据备份卡片 ==========
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    com.webtoapp.ui.components.DataBackupCard()
+                    com.webtoapp.ui.components.DataBackupCard(repository = webAppRepository)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))

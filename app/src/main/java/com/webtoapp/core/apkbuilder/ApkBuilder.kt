@@ -3,11 +3,6 @@ package com.webtoapp.core.apkbuilder
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import com.webtoapp.core.logging.AppLogger
@@ -16,7 +11,6 @@ import com.webtoapp.core.crypto.AssetEncryptor
 import com.webtoapp.core.crypto.EncryptedApkBuilder
 import com.webtoapp.core.crypto.EncryptionConfig
 import com.webtoapp.core.crypto.KeyManager
-import com.webtoapp.core.crypto.toHexString
 import com.webtoapp.core.shell.BgmShellItem
 import com.webtoapp.core.shell.LrcShellTheme
 import com.webtoapp.data.model.LrcData
@@ -47,27 +41,24 @@ import com.webtoapp.util.TextFileClassifier
 class ApkBuilder(private val context: Context) {
 
     companion object {
-        private val SANITIZE_FILENAME_REGEX = AppConstants.SANITIZE_FILENAME_REGEX
         private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
         private val CHARSET_REGEX = AppConstants.CHARSET_REGEX
     }
 
     private val template = ApkTemplate(context)
     private val signer = JarSigner(context)
-    private val axmlEditor = AxmlEditor()
     private val axmlRebuilder = AxmlRebuilder()
-    private val arscEditor = ArscEditor()
     private val arscRebuilder = ArscRebuilder()  // 重建 string pool，支持任意长度应用名
     private val logger = BuildLogger(context)
     private val encryptedApkBuilder = EncryptedApkBuilder(context)
     private val keyManager = KeyManager.getInstance(context)
+    private val iconAssetWriter = IconAssetWriter(template, logger)
+    private val bgmAssetWriter = BgmAssetWriter(context)
     
     // Output directory
     private val outputDir = File(context.getExternalFilesDir(null), "built_apks").apply { mkdirs() }
     private val tempDir = File(context.cacheDir, "apk_build_temp").apply { mkdirs() }
     
-    // 原始应用名（ArscRebuilder 可处理任意长度，无需预填充）
-    private val originalAppName = "WebToApp"
     private val originalPackageName = "com.webtoapp"
     
     /**
@@ -237,7 +228,7 @@ class ApkBuilder(private val context: Context) {
                 it.isNotBlank() && 
                 it.matches(PACKAGE_NAME_REGEX)
             }
-            val packageName = customPkg ?: generatePackageName(webApp.name)
+            val packageName = customPkg ?: ApkBuildNaming.generatePackageName(webApp.name)
             
             if (webApp.apkExportConfig?.customPackageName?.isNotBlank() == true && customPkg == null) {
                 logger.warn("Custom package name format invalid, using auto-generated: $packageName")
@@ -258,7 +249,7 @@ class ApkBuilder(private val context: Context) {
             logger.section("Parallel Resource Preparation")
             
             val unsignedApk = File(tempDir, "${packageName}_unsigned.apk")
-            val signedApk = File(outputDir, "${sanitizeFileName(webApp.name)}_v${config.versionName}.APK")
+            val signedApk = File(outputDir, "${ApkBuildNaming.sanitizeFileName(webApp.name)}_v${config.versionName}.APK")
             logger.logKeyValue("unsignedApkPath", unsignedApk.absolutePath)
             logger.logKeyValue("signedApkPath", signedApk.absolutePath)
             
@@ -603,7 +594,7 @@ class ApkBuilder(private val context: Context) {
     ) {
         logger.log("modifyApk started, encryption=${encryptionConfig.enabled}, abiFilter=${abiFilters.ifEmpty { "all" }}")
         val iconBitmap = iconPath?.let { template.loadBitmap(it) }
-            ?: generateDefaultIcon(config.appName, config.themeType)
+            ?: iconAssetWriter.generateDefaultIcon(config.appName, config.themeType)
         var hasConfigFile = false
         var strippedNativeLibSize = 0L // Track total stripped native lib size
         val replacedIconPaths = mutableSetOf<String>() // Track replaced icon paths
@@ -696,11 +687,11 @@ class ApkBuilder(private val context: Context) {
                         // Replace/add config file
                         entry.name == ApkTemplate.CONFIG_PATH -> {
                             hasConfigFile = true
-                            writeConfigEntry(zipOut, config, assetEncryptor, encryptionConfig)
+                            ApkConfigAssetWriter.writeConfigEntry(zipOut, template, config, assetEncryptor, encryptionConfig)
                         }
                         
                         // 替换图标 - 同时支持原始路径和 R8 混淆后的路径
-                        iconBitmap != null && (isIconEntry(entry.name) || discoveredOldIconPaths.contains(entry.name)) -> {
+                        iconBitmap != null && (ApkEntryPolicy.isIconEntry(entry.name) || discoveredOldIconPaths.contains(entry.name)) -> {
                             // 使用 createAdaptiveForegroundIcon 遵循 Android Adaptive Icon 规范：
                             // 前景层 108dp，安全区域（完整显示）为中间 72dp（66.67%），
                             // 外围 18dp 作为系统形状遮罩裁剪区域
@@ -724,7 +715,7 @@ class ApkBuilder(private val context: Context) {
                                     AppLogger.d("ApkBuilder", "Skipping architecture: ${entry.name}")
                                 }
                                 // Skip native libs not needed for this app type
-                                !isRequiredNativeLib(libName, config.appType, config.engineType) -> {
+                                !ApkEntryPolicy.isRequiredNativeLib(libName, config.appType, config.engineType) -> {
                                     val sizeKb = if (entry.size >= 0) entry.size / 1024 else entry.compressedSize / 1024
                                     AppLogger.d("ApkBuilder", "APK slim: stripped $libName (${sizeKb} KB)")
                                     logger.log("APK slim: stripped $libName (${sizeKb} KB) - not needed for ${config.appType}")
@@ -742,7 +733,7 @@ class ApkBuilder(private val context: Context) {
                         }
                         
                         // Strip editor-only assets (not needed in Shell mode)
-                        isEditorOnlyAsset(entry.name, config.appType, config.engineType) -> {
+                        ApkEntryPolicy.isEditorOnlyAsset(entry.name, config.appType, config.engineType) -> {
                             AppLogger.d("ApkBuilder", "APK slim: stripped editor asset: ${entry.name}")
                         }
                         
@@ -773,7 +764,7 @@ class ApkBuilder(private val context: Context) {
                 
                 // If original APK has no config file, add one
                 if (!hasConfigFile) {
-                    writeConfigEntry(zipOut, config, assetEncryptor, encryptionConfig)
+                    ApkConfigAssetWriter.writeConfigEntry(zipOut, template, config, assetEncryptor, encryptionConfig)
                 }
                 
                 // Write encryption metadata (if encryption enabled)
@@ -824,7 +815,7 @@ class ApkBuilder(private val context: Context) {
                 
                 // If have icon but no PNG icon files in APK, add them
                 if (iconBitmap != null && replacedIconPaths.isEmpty()) {
-                    addIconsToApk(zipOut, iconBitmap)
+                    iconAssetWriter.addIconsToApk(zipOut, iconBitmap)
                     logger.log("Added PNG mipmap icons (no existing PNG icons found in template)")
                 } else if (iconBitmap != null) {
                     logger.log("Replaced ${replacedIconPaths.size} existing PNG icon entries")
@@ -833,7 +824,7 @@ class ApkBuilder(private val context: Context) {
                 // Add foreground PNG icons for templates using adaptive icons
                 // Write unconditionally, because release APK's foreground may be compiled to different paths
                 if (iconBitmap != null) {
-                    addAdaptiveIconPngs(zipOut, iconBitmap, entryNames)
+                    iconAssetWriter.addAdaptiveIconPngs(zipOut, iconBitmap, entryNames)
                 }
                 
                 // No longer writing PNG replacements at mipmap-anydpi-v26 paths.
@@ -843,20 +834,20 @@ class ApkBuilder(private val context: Context) {
                 // Embed splash media files
                 AppLogger.d("ApkBuilder", "Splash config: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath, splashType=${config.splashType}")
                 if (config.splashEnabled && splashMediaPath != null) {
-                    addSplashMediaToAssets(zipOut, splashMediaPath, config.splashType, assetEncryptor, encryptionConfig)
+                    SplashAssetWriter.addToAssets(zipOut, splashMediaPath, config.splashType, assetEncryptor, encryptionConfig)
                 } else {
                     AppLogger.w("ApkBuilder", "Skipping splash embed: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath")
                 }
                 
                 // Embed status bar background image (if image background configured)
                 if (config.statusBarBackgroundType == "IMAGE" && !config.statusBarBackgroundImage.isNullOrEmpty()) {
-                    addStatusBarBackgroundToAssets(zipOut, config.statusBarBackgroundImage)
+                    StatusBarAssetWriter.addToAssets(zipOut, config.statusBarBackgroundImage)
                 }
                 
                 // Embed background music files (common to all types)
                 if (config.bgmEnabled && bgmPlaylistPaths.isNotEmpty()) {
                     logger.log("Embedding BGM: ${bgmPlaylistPaths.size} files")
-                    addBgmToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList, assetEncryptor, encryptionConfig)
+                    bgmAssetWriter.addToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList, assetEncryptor, encryptionConfig)
                 }
                 
                 // === Strategy pattern: app-type-specific content embedding ===
@@ -915,69 +906,6 @@ class ApkBuilder(private val context: Context) {
     }
     
     /**
-     * Check if a native library is required for the given app type and engine type.
-     * Used to strip unnecessary native libraries from generated APKs.
-     * 
-     * Size impact examples:
-     * - libphp.so: ~28MB (only for WORDPRESS/PHP_APP)
-     * - GeckoView companion libs: ~12MB total (only for GECKOVIEW engine)
-     * - libnode_bridge.so: ~11KB (only for NODEJS_APP)
-     * 
-     * For a basic WEB app, this saves ~40MB from the APK.
-     */
-    private fun isRequiredNativeLib(libName: String, appType: String, engineType: String): Boolean {
-        // Core libraries always needed
-        if (libName == "libcrypto_engine.so" || libName == "libc++_shared.so") {
-            return true
-        }
-        
-        // APK optimizer — 仅编辑器使用，Shell APK 不需要
-        // Crypto optimized — 编辑器打包时用于加速加密，Shell 使用 Java 解密回退
-        // Perf engine — 构建时生成性能 JS 并嵌入配置，Shell 不需要原生库
-        if (libName == "libapk_optimizer.so" || libName == "libcrypto_optimized.so" || libName == "libperf_engine.so" || libName == "libbrowser_kernel.so") {
-            return false
-        }
-        
-        // sys_optimizer — Shell APK 保留: 运行时进行系统级优化 (CPU亲和性, 线程优先级等)
-        
-        // Hardware control — 仅黑科技功能需要，普通 Shell 不需要
-        // 注意: 如果 WebApp 启用了黑科技功能，应该保留
-        // 但因为 isRequiredNativeLib 没有 config 上下文，保守保留
-        // (C 优化器层会做二次检查)
-        
-        // PHP binary - only for WordPress and PHP apps
-        if (libName == "libphp.so") {
-            return appType in setOf("WORDPRESS", "PHP_APP")
-        }
-        
-        // Node.js bridge and runtime - only for Node.js apps
-        if (libName == "libnode_bridge.so" || libName == "libnode.so") {
-            return appType == "NODEJS_APP"
-        }
-        
-        // Python binary and musl linker - only for Python apps
-        if (libName == "libpython3.so" || libName == "libmusl-linker.so") {
-            return appType == "PYTHON_APP"
-        }
-        
-        // GeckoView companion libraries - only when using GeckoView engine
-        val geckoViewLibs = setOf(
-            "libgkcodecs.so",
-            "libminidump_analyzer.so",
-            "libnss3.so",
-            "libfreebl3.so",
-            "libsoftokn3.so",
-            "liblgpllibs.so"
-        )
-        if (libName in geckoViewLibs) {
-            return engineType == "GECKOVIEW"
-        }
-        
-        // Unknown libraries - keep them to be safe
-        return true
-    }
-
-    /**
      * Inject GeckoView native .so files into APK
      * Reads cached .so files from EngineFileManager and writes them to lib/{abi}/ in the APK
      */
@@ -1013,116 +941,6 @@ class ApkBuilder(private val context: Context) {
             logger.logKeyValue("geckoNativeLibsInjected", totalInjected)
         } catch (e: Exception) {
             logger.error("Failed to inject GeckoView native libs", e)
-        }
-    }
-    
-    /**
-     * Add splash media file to assets directory
-     * 
-     * Important: Must use STORED (uncompressed) storage!
-     * Because AssetManager.openFd() only supports uncompressed asset files.
-     * If using DEFLATED compression, openFd() will throw FileNotFoundException.
-     * 
-     * Note: If encryption enabled, cannot use openFd(), need to decrypt to temp file first
-     */
-    private fun addSplashMediaToAssets(
-        zipOut: ZipOutputStream,
-        mediaPath: String,
-        splashType: String,
-        encryptor: AssetEncryptor? = null,
-        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
-    ) {
-        AppLogger.d("ApkBuilder", "Preparing to embed splash media: path=$mediaPath, type=$splashType, encrypt=${encryptionConfig.encryptSplash}")
-        
-        val mediaFile = File(mediaPath)
-        if (!mediaFile.exists()) {
-            AppLogger.e("ApkBuilder", "Splash media file does not exist: $mediaPath")
-            return
-        }
-        
-        if (!mediaFile.canRead()) {
-            AppLogger.e("ApkBuilder", "Splash media file cannot be read: $mediaPath")
-            return
-        }
-        
-        val fileSize = mediaFile.length()
-        if (fileSize == 0L) {
-            AppLogger.e("ApkBuilder", "Splash media file is empty: $mediaPath")
-            return
-        }
-
-        // Determine filename based on type
-        val extension = if (splashType == "VIDEO") "mp4" else "png"
-        val assetPath = "splash_media.$extension"
-        val isVideo = splashType == "VIDEO"
-
-        try {
-            // Large file threshold: 10MB, use streaming write to avoid OOM
-            val largeFileThreshold = 10 * 1024 * 1024L
-            
-            if (encryptionConfig.encryptSplash && encryptor != null) {
-                // Encrypt splash screen
-                if (isVideo && fileSize > largeFileThreshold) {
-                    AppLogger.d("ApkBuilder", "Splash large video encryption mode: ${fileSize / 1024 / 1024} MB")
-                    val encryptedData = encryptLargeFile(mediaFile, assetPath, encryptor)
-                    writeEntryDeflated(zipOut, "assets/${assetPath}.enc", encryptedData)
-                    AppLogger.d("ApkBuilder", "Splash media encrypted and embedded: assets/${assetPath}.enc (${encryptedData.size} bytes)")
-                } else {
-                    val mediaBytes = mediaFile.readBytes()
-                    val encryptedData = encryptor.encrypt(mediaBytes, assetPath)
-                    writeEntryDeflated(zipOut, "assets/${assetPath}.enc", encryptedData)
-                    AppLogger.d("ApkBuilder", "Splash media encrypted and embedded: assets/${assetPath}.enc (${encryptedData.size} bytes)")
-                }
-            } else {
-                // Non-encrypted mode
-                if (isVideo && fileSize > largeFileThreshold) {
-                    // Large video: use streaming write to avoid OOM
-                    AppLogger.d("ApkBuilder", "Splash large video streaming write mode: ${fileSize / 1024 / 1024} MB")
-                    writeEntryStoredStreaming(zipOut, "assets/$assetPath", mediaFile)
-                } else {
-                    // Small file or image: normal read
-                    val mediaBytes = mediaFile.readBytes()
-                    writeEntryStoredSimple(zipOut, "assets/$assetPath", mediaBytes)
-                    AppLogger.d("ApkBuilder", "Splash media embedded(STORED): assets/$assetPath (${mediaBytes.size} bytes)")
-                }
-            }
-        } catch (e: Exception) {
-            AppLogger.e("ApkBuilder", "Failed to embed splash media: ${e.message}", e)
-        }
-    }
-    
-    /**
-     * Add status bar background image to assets directory
-     */
-    private fun addStatusBarBackgroundToAssets(
-        zipOut: ZipOutputStream,
-        imagePath: String
-    ) {
-        AppLogger.d("ApkBuilder", "Preparing to embed status bar background: path=$imagePath")
-        
-        val imageFile = File(imagePath)
-        if (!imageFile.exists()) {
-            AppLogger.e("ApkBuilder", "Status bar background image does not exist: $imagePath")
-            return
-        }
-        
-        if (!imageFile.canRead()) {
-            AppLogger.e("ApkBuilder", "Status bar background image cannot be read: $imagePath")
-            return
-        }
-        
-        try {
-            val imageBytes = imageFile.readBytes()
-            if (imageBytes.isEmpty()) {
-                AppLogger.e("ApkBuilder", "Status bar background image is empty: $imagePath")
-                return
-            }
-            
-            // Use DEFLATED compression (image doesn't need openFd)
-            writeEntryDeflated(zipOut, "assets/statusbar_background.png", imageBytes)
-            AppLogger.d("ApkBuilder", "Status bar background embedded: assets/statusbar_background.png (${imageBytes.size} bytes)")
-        } catch (e: Exception) {
-            AppLogger.e("ApkBuilder", "Failed to embed status bar background: ${e.message}", e)
         }
     }
     
@@ -1188,7 +1006,7 @@ class ApkBuilder(private val context: Context) {
                 if (fileSize > largeFileThreshold) {
                     AppLogger.d("ApkBuilder", "Large file encryption mode: ${fileSize / 1024 / 1024} MB")
                     // Large file: chunked read and encrypt
-                    val encryptedData = encryptLargeFile(mediaFile, assetName, encryptor)
+                    val encryptedData = AssetEncryptionSupport.encryptLargeFile(mediaFile, assetName, encryptor)
                     writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
                     AppLogger.d("ApkBuilder", "Media content encrypted and embedded: assets/${assetName}.enc (${encryptedData.size} bytes)")
                 } else {
@@ -1249,7 +1067,7 @@ class ApkBuilder(private val context: Context) {
                 // Embed media file
                 if (encryptionConfig.encryptMedia && encryptor != null) {
                     if (isVideo && fileSize > largeFileThreshold) {
-                        val encryptedData = encryptLargeFile(mediaFile, assetName, encryptor)
+                        val encryptedData = AssetEncryptionSupport.encryptLargeFile(mediaFile, assetName, encryptor)
                         writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
                     } else {
                         val data = mediaFile.readBytes()
@@ -1633,105 +1451,10 @@ builtins.__import__ = _w2a_import
     }
     
     /**
-     * Encrypt large file.
-     * AES-GCM requires full plaintext for authentication tag, so true streaming
-     * is not possible. We read the file once to minimize peak memory (single copy
-     * instead of the previous double-copy via ByteArrayOutputStream).
-     */
-    private fun encryptLargeFile(file: File, assetName: String, encryptor: AssetEncryptor): ByteArray {
-        val fileSize = file.length()
-        val maxEncryptSize = 100L * 1024 * 1024 // 100MB
-        if (fileSize > maxEncryptSize) {
-            AppLogger.w("ApkBuilder", "WARNING: Encrypting very large file ($assetName, ${fileSize / 1024 / 1024}MB). " +
-                "May cause high memory usage. Consider disabling encryption for large media files.")
-        }
-        val mediaBytes = file.readBytes()
-        return encryptor.encrypt(mediaBytes, assetName)
-    }
-    
-    /**
      * Check if text file (can be compressed)
      */
     private fun isTextFile(fileName: String): Boolean {
         return TextFileClassifier.isTextFile(fileName)
-    }
-    
-    /**
-     * Add background music files to assets/bgm directory
-     * Use STORED (uncompressed) format to support AssetManager.openFd()
-     * 
-     * Note: If encryption enabled, cannot use openFd(), need to decrypt to temp file first
-     */
-    private fun addBgmToAssets(
-        zipOut: ZipOutputStream,
-        bgmPaths: List<String>,
-        lrcDataList: List<LrcData?>,
-        encryptor: AssetEncryptor? = null,
-        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
-    ) {
-        AppLogger.d("ApkBuilder", "Preparing to embed ${bgmPaths.size} BGM files, encrypt=${encryptionConfig.encryptBgm}")
-        
-        bgmPaths.forEachIndexed { index, bgmPath ->
-            try {
-                val assetName = "bgm/bgm_$index.mp3"
-                var bgmBytes: ByteArray? = null
-                
-                val bgmFile = File(bgmPath)
-                if (!bgmFile.exists()) {
-                    // Try to handle asset:/// path
-                    if (bgmPath.startsWith("asset:///")) {
-                        val assetPath = bgmPath.removePrefix("asset:///")
-                        bgmBytes = context.assets.open(assetPath).use { it.readBytes() }
-                    } else {
-                        AppLogger.e("ApkBuilder", "BGM file does not exist: $bgmPath")
-                        return@forEachIndexed
-                    }
-                } else {
-                    if (!bgmFile.canRead()) {
-                        AppLogger.e("ApkBuilder", "BGM file cannot be read: $bgmPath")
-                        return@forEachIndexed
-                    }
-                    
-                    bgmBytes = bgmFile.readBytes()
-                    if (bgmBytes.isEmpty()) {
-                        AppLogger.e("ApkBuilder", "BGM file is empty: $bgmPath")
-                        return@forEachIndexed
-                    }
-                }
-                
-                if (bgmBytes != null) {
-                    if (encryptionConfig.encryptBgm && encryptor != null) {
-                        // Encrypt BGM
-                        val encryptedData = encryptor.encrypt(bgmBytes, assetName)
-                        writeEntryDeflated(zipOut, "assets/${assetName}.enc", encryptedData)
-                        AppLogger.d("ApkBuilder", "BGM encrypted and embedded: assets/${assetName}.enc (${encryptedData.size} bytes)")
-                    } else {
-                        // Use STORED (uncompressed) format
-                        writeEntryStoredSimple(zipOut, "assets/$assetName", bgmBytes)
-                        AppLogger.d("ApkBuilder", "BGM embedded(STORED): assets/$assetName (${bgmBytes.size} bytes)")
-                    }
-                }
-                
-                // Embed lyrics file (if exists) - lyrics files are small, can be encrypted
-                val lrcData = lrcDataList.getOrNull(index)
-                if (lrcData != null && lrcData.lines.isNotEmpty()) {
-                    val lrcContent = convertLrcDataToLrcString(lrcData)
-                    val lrcAssetName = "bgm/bgm_$index.lrc"
-                    val lrcBytes = lrcContent.toByteArray(Charsets.UTF_8)
-                    
-                    if (encryptionConfig.encryptBgm && encryptor != null) {
-                        val encryptedLrc = encryptor.encrypt(lrcBytes, lrcAssetName)
-                        writeEntryDeflated(zipOut, "assets/${lrcAssetName}.enc", encryptedLrc)
-                        AppLogger.d("ApkBuilder", "LRC encrypted and embedded: assets/${lrcAssetName}.enc")
-                    } else {
-                        writeEntryDeflated(zipOut, "assets/$lrcAssetName", lrcBytes)
-                        AppLogger.d("ApkBuilder", "LRC embedded: assets/$lrcAssetName")
-                    }
-                }
-            } catch (e: Exception) {
-                AppLogger.e("ApkBuilder", "Failed to embed BGM: $bgmPath", e)
-            }
-        }
     }
     
     /**
@@ -2119,34 +1842,6 @@ builtins.__import__ = _w2a_import
     }
     
     /**
-     * Convert LrcData to standard LRC format string
-     */
-    private fun convertLrcDataToLrcString(lrcData: LrcData): String {
-        val sb = StringBuilder()
-        
-        // Add metadata
-        lrcData.title?.let { sb.appendLine("[ti:$it]") }
-        lrcData.artist?.let { sb.appendLine("[ar:$it]") }
-        lrcData.album?.let { sb.appendLine("[al:$it]") }
-        sb.appendLine()
-        
-        // Add lyrics lines
-        lrcData.lines.forEach { line ->
-            val minutes = line.startTime / 60000
-            val seconds = (line.startTime % 60000) / 1000
-            val centiseconds = (line.startTime % 1000) / 10
-            sb.appendLine("[%02d:%02d.%02d]%s".format(minutes, seconds, centiseconds, line.text))
-            
-            // If has translation, add translation line (using same timestamp)
-            line.translation?.let { translation ->
-                sb.appendLine("[%02d:%02d.%02d]%s".format(minutes, seconds, centiseconds, translation))
-            }
-        }
-        
-        return sb.toString()
-    }
-
-    /**
      * Debug helper: Use PackageManager to pre-parse built APK, check if system can read package info
      * @return Whether parsing succeeded
      */
@@ -2183,149 +1878,6 @@ builtins.__import__ = _w2a_import
     }
     
     /**
-     * Generate a default icon when no custom icon is provided.
-     * Creates a 512x512 bitmap with the app name's first character on a themed background.
-     */
-    private fun generateDefaultIcon(appName: String, themeType: String = "AURORA"): Bitmap {
-        val size = 512
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-
-        // Use theme primary color as background
-        val bgColor = getThemePrimaryColor(themeType)
-
-        // Draw rounded-rect background
-        val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
-        val radius = size * 0.22f
-        canvas.drawRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), radius, radius, bgPaint)
-
-        // Draw first character
-        val initial = appName.firstOrNull()?.uppercase() ?: "A"
-        // Choose text color: use white for most themes, dark for light-colored themes
-        val textColor = getThemeOnPrimaryColor(themeType)
-        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = textColor
-            textSize = size * 0.45f
-            typeface = Typeface.DEFAULT_BOLD
-            textAlign = Paint.Align.CENTER
-        }
-        val textX = size / 2f
-        val textY = size / 2f - (textPaint.descent() + textPaint.ascent()) / 2f
-        canvas.drawText(initial, textX, textY, textPaint)
-
-        logger.log("Generated default icon for '$appName' (initial='$initial', theme=$themeType, color=#${Integer.toHexString(bgColor)})")
-        return bitmap
-    }
-
-    /**
-     * Map theme type name to its light-mode primary color (matching AppThemes definitions).
-     */
-    private fun getThemePrimaryColor(themeType: String): Int = when (themeType) {
-        "AURORA"     -> 0xFF7B68EE.toInt()  // Medium Slate Blue
-        "CYBERPUNK"  -> 0xFFFF00FF.toInt()  // Magenta
-        "SAKURA"     -> 0xFFFFB7C5.toInt()  // Pink
-        "OCEAN"      -> 0xFF0077B6.toInt()  // Blue
-        "FOREST"     -> 0xFF2D6A4F.toInt()  // Green
-        "GALAXY"     -> 0xFF5C4D7D.toInt()  // Purple
-        "VOLCANO"    -> 0xFFD32F2F.toInt()  // Red
-        "FROST"      -> 0xFF4FC3F7.toInt()  // Light Blue
-        "SUNSET"     -> 0xFFE65100.toInt()  // Deep Orange
-        "MINIMAL"    -> 0xFF212121.toInt()  // Dark Grey
-        "NEON_TOKYO" -> 0xFFE91E63.toInt()  // Pink Red
-        "LAVENDER"   -> 0xFF7E57C2.toInt()  // Deep Purple
-        else         -> 0xFF7B68EE.toInt()  // Fallback to Aurora
-    }
-
-    /**
-     * Map theme type name to its onPrimary color for text contrast.
-     */
-    private fun getThemeOnPrimaryColor(themeType: String): Int = when (themeType) {
-        "CYBERPUNK"  -> 0xFF000000.toInt()  // Black on magenta
-        "SAKURA"     -> 0xFF4A1C2B.toInt()  // Dark on pink
-        "FROST"      -> 0xFF00344A.toInt()  // Dark on light blue
-        else         -> 0xFFFFFFFF.toInt()  // White for most themes
-    }
-
-    /**
-     * Actively add PNG icons to APK
-     * Used when original APK has no PNG icons
-     */
-    private fun addIconsToApk(zipOut: ZipOutputStream, bitmap: Bitmap) {
-        // Add all sizes of normal icons
-        ApkTemplate.ICON_PATHS.forEach { (path, size) ->
-            val iconBytes = template.scaleBitmapToPng(bitmap, size)
-            writeEntryDeflated(zipOut, path, iconBytes)
-        }
-        
-        // Add all sizes of round icons
-        ApkTemplate.ROUND_ICON_PATHS.forEach { (path, size) ->
-            val iconBytes = template.createRoundIcon(bitmap, size)
-            writeEntryDeflated(zipOut, path, iconBytes)
-        }
-    }
-
-    /**
-     * Create PNG version for adaptive icon foreground
-     * Write ic_launcher_foreground.png and ic_launcher_foreground_new.png in res/drawable directory,
-     * and work with ArscRebuilder to switch paths from .xml/.jpg to .png
-     * 
-     * Note: Following Android Adaptive Icon spec, icon is placed in safe zone (center 72dp),
-     * with 18dp margin around to avoid being clipped by shape mask making icon look enlarged
-     */
-    private fun addAdaptiveIconPngs(
-        zipOut: ZipOutputStream,
-        bitmap: Bitmap,
-        existingEntryNames: Set<String>
-    ) {
-        // Support both ic_launcher_foreground and ic_launcher_foreground_new
-        val bases = listOf(
-            "res/drawable/ic_launcher_foreground",
-            "res/drawable/ic_launcher_foreground_new",
-            "res/drawable-v24/ic_launcher_foreground",
-            "res/drawable-v24/ic_launcher_foreground_new",
-            "res/drawable-anydpi-v24/ic_launcher_foreground",
-            "res/drawable-anydpi-v24/ic_launcher_foreground_new"
-        )
-
-        // Use xxxhdpi size (432px) for high resolution, system will auto scale to other dpi
-        // 108dp * 4 (xxxhdpi) = 432px
-        val iconBytes = template.createAdaptiveForegroundIcon(bitmap, 432)
-
-        bases.forEach { base ->
-            val pngPath = "${base}.png"
-            if (!existingEntryNames.contains(pngPath)) {
-                writeEntryDeflated(zipOut, pngPath, iconBytes)
-                AppLogger.d("ApkBuilder", "Added adaptive icon foreground: $pngPath")
-            }
-        }
-    }
-
-    /**
-     * Write PNG icons at mipmap-anydpi-v26 paths, replacing the stripped adaptive icon definition XMLs.
-     * ArscRebuilder replaces ARSC icon paths to point to our known PNG paths,
-     * so we write actual PNG files at these paths for the resource references to be valid.
-     *
-     * IMPORTANT: Uses 512px size (NOT 192px) to produce a different CRC32 from the
-     * density-specific PNGs (which use 192px for xxxhdpi). If the CRC matches,
-     * NativeApkOptimizer's dedup will remove THIS file and keep the density-specific one,
-     * but ARSC only references the anydpi-v26 path — causing "Failure retrieving resources"
-     * because the file no longer exists in the ZIP.
-     */
-    private fun addAdaptiveIconReplacementPngs(zipOut: ZipOutputStream, bitmap: Bitmap) {
-        // Normal icon — 512px to avoid CRC dedup with xxxhdpi (192px)
-        val iconPng = template.scaleBitmapToPng(bitmap, 512)
-        writeEntryDeflated(zipOut, "res/mipmap-anydpi-v26/ic_launcher.png", iconPng)
-        AppLogger.d("ApkBuilder", "Added replacement icon: res/mipmap-anydpi-v26/ic_launcher.png (512px, ${iconPng.size} bytes)")
-
-        // Round icon — 512px to avoid CRC dedup
-        val roundPng = template.createRoundIcon(bitmap, 512)
-        writeEntryDeflated(zipOut, "res/mipmap-anydpi-v26/ic_launcher_round.png", roundPng)
-        AppLogger.d("ApkBuilder", "Added replacement icon: res/mipmap-anydpi-v26/ic_launcher_round.png (512px, ${roundPng.size} bytes)")
-        
-        logger.log("Added PNG icons at mipmap-anydpi-v26 paths (512px, replacing adaptive icon XMLs)")
-    }
-    
-    /**
      * Write entry (using DEFLATED compression format)
      */
     private fun writeEntryDeflated(zipOut: ZipOutputStream, name: String, data: ByteArray) {
@@ -2341,36 +1893,6 @@ builtins.__import__ = _w2a_import
     }
 
     /**
-     * Write config file entry (supports encryption)
-     */
-    private fun writeConfigEntry(
-        zipOut: ZipOutputStream, 
-        config: ApkConfig,
-        encryptor: AssetEncryptor? = null,
-        encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
-    ) {
-        val configJson = template.createConfigJson(config)
-        AppLogger.d("ApkBuilder", "Writing config file: splashEnabled=${config.splashEnabled}, splashType=${config.splashType}")
-        AppLogger.d("ApkBuilder", "Config userAgentMode=${config.userAgentMode}, customUserAgent=${config.customUserAgent}")
-        AppLogger.d("ApkBuilder", "Config JSON content: $configJson")
-        
-        if (encryptionConfig.encryptConfig && encryptor != null) {
-            // Encrypt config file
-            val encryptedData = encryptor.encryptJson(configJson, "app_config.json")
-            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH + ".enc", encryptedData)
-            // 同时写入明文配置作为解密失败时的安全降级
-            // 确保即使解密环节出问题，App 也不会变回原版 WebToApp
-            val data = configJson.toByteArray(Charsets.UTF_8)
-            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
-            AppLogger.d("ApkBuilder", "Config file encrypted (with plaintext fallback)")
-        } else {
-            // Write plaintext
-            val data = configJson.toByteArray(Charsets.UTF_8)
-            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
-        }
-    }
-
-    /**
      * Check if an asset entry is optimizable (image/JS/CSS/SVG)
      */
     private fun isOptimizableAsset(entryName: String): Boolean {
@@ -2379,213 +1901,11 @@ builtins.__import__ = _w2a_import
     }
     
     /**
-     * Check if an entry is editor-only and not needed in Shell mode APKs.
-     * Used to strip unnecessary template assets from generated APKs.
-     */
-    private fun isEditorOnlyAsset(entryName: String, appType: String, engineType: String): Boolean {
-        // Editor template files
-        if (entryName.startsWith("assets/template/")) return true
-        // Sample projects (editor-only demos)
-        if (entryName.startsWith("assets/sample_projects/")) return true
-        // AI model lists (editor AI coding feature only)
-        if (entryName.startsWith("assets/ai/")) return true
-        if (entryName == "assets/litellm_model_prices.json") return true
-        // Built-in browser extensions (editor manages these, Shell mode loads from config)
-        if (entryName.startsWith("assets/extensions/")) return true
-        // GeckoView omni.ja (12.6MB) — only needed if engine is GeckoView
-        if (entryName == "assets/omni.ja" && engineType != "GECKOVIEW") return true
-        // PHP router script — only needed for WordPress/PHP apps
-        if (entryName == "assets/php_router_server.php" && appType !in setOf("WORDPRESS", "PHP_APP")) return true
-        
-        // === 额外瘦身规则 (C 优化器协同) ===
-        
-        // Python 运行时 — 仅 Python 应用需要
-        if (entryName.startsWith("assets/python_runtime/") && appType != "PYTHON_APP") return true
-        
-        // Go 运行时 — 仅 Go 应用需要
-        if (entryName.startsWith("assets/go_runtime/") && appType != "GO_APP") return true
-        
-        // 编辑器专用文档和帮助文件
-        if (entryName.startsWith("assets/docs/")) return true
-        if (entryName.startsWith("assets/help/")) return true
-        
-        // Room 数据库 schema (仅编辑器开发调试用)
-        if (entryName.startsWith("assets/schemas/")) return true
-        
-        // 编辑器专用的大型 JSON 配置
-        if (entryName == "assets/default_config.json") return true
-        
-        // 前端构建工具配置 — 仅前端项目需要
-        if (entryName.startsWith("assets/frontend_tools/") && appType != "FRONTEND") return true
-        
-        // Node.js modules — 仅 Node.js 应用需要
-        if (entryName.startsWith("assets/nodejs_runtime/") && appType != "NODEJS_APP") return true
-        
-        return false
-    }
-    
-    /**
-     * Check if is icon entry
-     * Match multiple possible icon path formats
-     */
-    private fun isIconEntry(entryName: String): Boolean {
-        // Exact match predefined paths
-        if (ApkTemplate.ICON_PATHS.any { it.first == entryName } ||
-            ApkTemplate.ROUND_ICON_PATHS.any { it.first == entryName }) {
-            return true
-        }
-        
-        // Fuzzy match: detect all possible icon PNG files
-        // Support various path formats: mipmap-xxxhdpi-v4, mipmap-xxxhdpi, drawable-xxxhdpi etc.
-        val iconPatterns = listOf(
-            "ic_launcher.png",
-            "ic_launcher_round.png"
-            // Note: ic_launcher_foreground.png and ic_launcher_background.png are adaptive icon
-            // components, NOT standalone launcher icons. They are handled by isAdaptiveIconEntry().
-        )
-        return iconPatterns.any { pattern ->
-            entryName.endsWith(pattern) && 
-            (entryName.contains("mipmap") || entryName.contains("drawable"))
-        }
-    }
-
-    /**
-     * Check if entry is an adaptive icon foreground drawable that should be replaced
-     * with the user's custom icon.
-     * 
-     * Strategy: We keep the adaptive icon definition XMLs (mipmap-anydpi-v26/ic_launcher.xml)
-     * in the output because the ARSC references them. These XMLs reference
-     * @drawable/ic_launcher_foreground, so by replacing the foreground drawable with the
-     * user's icon, the adaptive icon system automatically displays the correct icon on Android 8+.
-     * 
-     * Matched entries (replaced with user's icon):
-     * - drawable/ic_launcher_foreground.png (PNG foreground image)
-     * - drawable/ic_launcher_foreground.xml (compiled vector foreground)
-     * - drawable/ic_launcher_foreground_new.jpg (foreground image variant)
-     * 
-     * NOT matched (kept as-is, copied via else branch):
-     * - mipmap-anydpi-v26/ic_launcher.xml (adaptive icon definition — references the foreground we replace)
-     * - mipmap-anydpi-v26/ic_launcher_round.xml (adaptive round icon definition)
-     */
-    private fun isAdaptiveIconEntry(entryName: String): Boolean {
-        // Only match foreground image files that need to be replaced with the user's icon.
-        // Note: Adaptive icon definition XMLs (mipmap-anydpi-v26/ic_launcher.xml) are now
-        // stripped separately by isAdaptiveIconDefinition() to force PNG icon fallback,
-        // because R8 obfuscation makes the foreground path unpredictable.
-        // Support all formats: XML (compiled vector), JPG, and PNG.
-        if ((entryName.contains("drawable")) &&
-            (entryName.contains("ic_launcher_foreground") || entryName.contains("ic_launcher_foreground_new")) &&
-            (entryName.endsWith(".xml") || entryName.endsWith(".jpg") || entryName.endsWith(".png"))) {
-            return true
-        }
-        return false
-    }
-
-    /**
-     * Check if entry is an adaptive icon definition XML (mipmap-anydpi-v26/ic_launcher*.xml).
-     * These have the highest resource priority on Android 8+ and override density-specific PNG icons.
-     * In release builds with R8, the foreground drawable they reference gets renamed to obfuscated
-     * paths (e.g., res/Pb.jpg), making it impossible to reliably replace via isAdaptiveIconEntry().
-     * Stripping these definition XMLs forces Android to fall back to our injected PNG icons.
-     */
-    private fun isAdaptiveIconDefinition(entryName: String): Boolean {
-        return entryName.startsWith("res/mipmap-anydpi") &&
-            (entryName.contains("ic_launcher") || entryName.contains("ic_launcher_round")) &&
-            entryName.endsWith(".xml")
-    }
-
-    /**
-     * Replace icon entry
-     * Infer icon size from dpi info in path
-     */
-    private fun replaceIconEntry(zipOut: ZipOutputStream, entryName: String, bitmap: Bitmap) {
-        // Prioritize predefined sizes
-        var size = ApkTemplate.ICON_PATHS.find { it.first == entryName }?.second
-            ?: ApkTemplate.ROUND_ICON_PATHS.find { it.first == entryName }?.second
-        
-        // If no predefined match, infer size from path
-        if (size == null) {
-            size = when {
-                entryName.contains("xxxhdpi") -> 192
-                entryName.contains("xxhdpi") -> 144
-                entryName.contains("xhdpi") -> 96
-                entryName.contains("hdpi") -> 72
-                entryName.contains("mdpi") -> 48
-                entryName.contains("ldpi") -> 36
-                else -> 96
-            }
-        }
-        
-        val iconBytes = when {
-            // Round icon
-            entryName.contains("round") -> {
-                template.createRoundIcon(bitmap, size)
-            }
-            // Adaptive icon foreground needs safe zone margin
-            entryName.contains("foreground") -> {
-                template.createAdaptiveForegroundIcon(bitmap, size)
-            }
-            // Normal icon
-            else -> {
-                template.scaleBitmapToPng(bitmap, size)
-            }
-        }
-        
-        writeEntryDeflated(zipOut, entryName, iconBytes)
-    }
-
-    /**
      * Copy ZIP entry
      * Use DEFLATED compression for compatibility
      */
     private fun copyEntry(zipIn: ZipFile, zipOut: ZipOutputStream, entry: ZipEntry) {
         ZipUtils.copyEntry(zipIn, zipOut, entry)
-    }
-
-    /**
-     * Generate package name
-     * Note: New package name length must be <= original "com.webtoapp" (12 chars)
-     * Format: com.w2a.xxxx (12 chars)
-     *
-     * Constraint: Last segment must be valid Java identifier (first char is letter or underscore),
-     * otherwise PackageManager will report invalid package name during parsing, showing "installation package corrupted".
-     */
-    private fun generatePackageName(appName: String): String {
-        // Generate 4-digit base36 identifier from app name, then normalize to valid package segment
-        val raw = appName.hashCode().let { 
-            if (it < 0) (-it).toString(36) else it.toString(36)
-        }.take(4).padStart(4, '0')
-
-        val segment = normalizePackageSegment(raw)
-
-        return "com.w2a.$segment"  // Total length: 12 chars, same as original package name
-    }
-
-    /**
-     * Normalize single segment in package name:
-     * - Convert to lowercase
-     * - If first char is digit or other illegal char, map/replace to letter, ensuring [a-zA-Z_][a-zA-Z0-9_]* rule
-     */
-    private fun normalizePackageSegment(segment: String): String {
-        if (segment.isEmpty()) return "a"
-
-        val chars = segment.lowercase().toCharArray()
-
-        chars[0] = when {
-            chars[0] in 'a'..'z' -> chars[0]
-            chars[0] in '0'..'9' -> ('a' + (chars[0] - '0'))  // 0..9 maps to a..j
-            else -> 'a'
-        }
-
-        // Remaining chars are already [0-9a-z] from base36, meeting package name requirements
-        return String(chars)
-    }
-
-    /**
-     * Sanitize file name
-     */
-    private fun sanitizeFileName(name: String): String {
-        return name.replace(SANITIZE_FILENAME_REGEX, "_").take(50)
     }
 
     /**

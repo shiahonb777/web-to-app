@@ -94,6 +94,7 @@ fun ActivationCodeCard(
     activationCodes: List<ActivationCode>,
     requireEveryTime: Boolean = false,
     dialogConfig: com.webtoapp.data.model.ActivationDialogConfig = com.webtoapp.data.model.ActivationDialogConfig(),
+    activationManager: com.webtoapp.core.activation.ActivationManager,
     onEnabledChange: (Boolean) -> Unit,
     onCodesChange: (List<ActivationCode>) -> Unit,
     onRequireEveryTimeChange: (Boolean) -> Unit = {},
@@ -360,6 +361,7 @@ fun ActivationCodeCard(
     // ── Dialogs ──
     if (showAddDialog) {
         AddActivationCodeDialog(
+            activationManager = activationManager,
             onDismiss = { showAddDialog = false },
             onConfirm = { code ->
                 onCodesChange(activationCodes + code)
@@ -370,6 +372,7 @@ fun ActivationCodeCard(
 
     if (showBatchDialog) {
         BatchGenerateDialog(
+            activationManager = activationManager,
             onDismiss = { showBatchDialog = false },
             onConfirm = { codes ->
                 onCodesChange(activationCodes + codes)
@@ -622,6 +625,7 @@ private fun EnhancedActivationCodeItem(
 
 @Composable
 private fun AddActivationCodeDialog(
+    activationManager: com.webtoapp.core.activation.ActivationManager,
     onDismiss: () -> Unit,
     onConfirm: (ActivationCode) -> Unit
 ) {
@@ -884,8 +888,6 @@ private fun AddActivationCodeDialog(
                             note = note.takeIf { it.isNotBlank() }
                         )
                     } else {
-                        val activationManager = com.webtoapp.WebToAppApplication.getInstance()
-                            .activationManager
                         activationManager.generateActivationCode(
                             type = codeType,
                             timeLimitMs = timeLimitMs,
@@ -917,6 +919,7 @@ private fun AddActivationCodeDialog(
 
 @Composable
 private fun BatchGenerateDialog(
+    activationManager: com.webtoapp.core.activation.ActivationManager,
     onDismiss: () -> Unit,
     onConfirm: (List<ActivationCode>) -> Unit
 ) {
@@ -1101,8 +1104,6 @@ private fun BatchGenerateDialog(
                         else -> null
                     }
 
-                    val activationManager = com.webtoapp.WebToAppApplication.getInstance()
-                        .activationManager
                     val codes = activationManager.generateActivationCodes(
                         count = count,
                         type = codeType,

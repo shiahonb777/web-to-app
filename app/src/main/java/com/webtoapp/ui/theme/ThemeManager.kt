@@ -165,14 +165,7 @@ class ThemeManager(private val context: Context) {
     )
     
     // ==================== 设置方法 ====================
-    
-    /**
-     * 设置主题类型（已禁用，固定使用默认主题）
-     */
-    suspend fun setThemeType(type: AppThemeType) {
-        // 已移除主题切换功能
-    }
-    
+
     /**
      * 设置暗色模式
      */

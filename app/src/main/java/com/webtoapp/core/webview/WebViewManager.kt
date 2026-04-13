@@ -41,11 +41,11 @@ class WebViewManager(
     
     companion object {
         // Desktop Chrome User-Agent — Chrome 版本从系统 WebView 动态获取
-        private var DESKTOP_USER_AGENT: String? = null
-        private const val DESKTOP_USER_AGENT_FALLBACK = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+        internal var DESKTOP_USER_AGENT: String? = null
+        internal const val DESKTOP_USER_AGENT_FALLBACK = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
         
         // MIME type lookup map (replaces when-expression for O(1) lookup)
-        private val MIME_TYPE_MAP = mapOf(
+        internal val MIME_TYPE_MAP = mapOf(
             "html" to "text/html", "htm" to "text/html",
             "css" to "text/css", "js" to "application/javascript",
             "json" to "application/json", "xml" to "application/xml",
@@ -61,14 +61,14 @@ class WebViewManager(
         )
         
         // Text MIME types for encoding detection
-        private val TEXT_MIME_TYPES = setOf(
+        internal val TEXT_MIME_TYPES = setOf(
             "text/html", "text/css", "text/plain",
             "application/javascript", "application/json",
             "application/xml", "image/svg+xml"
         )
         
         // Desktop UA modes set (avoids listOf per configureWebView call)
-        private val DESKTOP_UA_MODES = setOf(
+        internal val DESKTOP_UA_MODES = setOf(
             UserAgentMode.CHROME_DESKTOP,
             UserAgentMode.SAFARI_DESKTOP,
             UserAgentMode.FIREFOX_DESKTOP,
@@ -76,14 +76,14 @@ class WebViewManager(
         )
         
         // Headers to skip when proxying requests
-        private val SKIP_HEADERS = setOf("host", "connection")
+        internal val SKIP_HEADERS = setOf("host", "connection")
 
         // Local cleartext hosts allowed by network security config
-        private val LOCAL_CLEARTEXT_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
+        internal val LOCAL_CLEARTEXT_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
 
         // Well-known map tile server host suffixes — these must NEVER be blocked by
         // ad/tracker filters, otherwise Leaflet / Mapbox / Google Maps tile layers break.
-        private val MAP_TILE_HOST_SUFFIXES = setOf(
+        internal val MAP_TILE_HOST_SUFFIXES = setOf(
             "tile.openstreetmap.org",
             "openstreetmap.org",
             "tile.osm.org",
@@ -115,7 +115,7 @@ class WebViewManager(
 
         // Domains that are sensitive to JS monkey-patching / request interception.
         // Keep runtime modifications minimal for these hosts to avoid blank pages.
-        private val STRICT_COMPAT_HOST_SUFFIXES = setOf(
+        internal val STRICT_COMPAT_HOST_SUFFIXES = setOf(
             "douyin.com",
             "iesdouyin.com",
             "tiktok.com",
@@ -128,12 +128,12 @@ class WebViewManager(
         // See OAuthCompatEngine.kt for the full list of 16+ supported providers.
 
         // Mobile Chrome UA without "; wv" marker for strict anti-WebView sites.
-        private var STRICT_COMPAT_MOBILE_USER_AGENT: String? = null
-        private const val STRICT_COMPAT_MOBILE_UA_FALLBACK =
+        internal var STRICT_COMPAT_MOBILE_USER_AGENT: String? = null
+        internal const val STRICT_COMPAT_MOBILE_UA_FALLBACK =
             "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
 
         // Common multi-part TLD suffixes for basic registrable-domain matching
-        private val COMMON_SECOND_LEVEL_TLDS = setOf(
+        internal val COMMON_SECOND_LEVEL_TLDS = setOf(
             "co.uk", "org.uk", "gov.uk", "ac.uk",
             "com.cn", "net.cn", "org.cn", "gov.cn", "edu.cn",
             "com.hk", "com.tw",
@@ -142,7 +142,7 @@ class WebViewManager(
         )
 
         // Schemes that should never be delegated to external intents
-        private val BLOCKED_SPECIAL_SCHEMES = setOf("javascript", "data", "file", "content", "about")
+        internal val BLOCKED_SPECIAL_SCHEMES = setOf("javascript", "data", "file", "content", "about")
 
         /**
          * Viewport Fit-Screen Script — 解决 Unity WebGL / Canvas 游戏放大裁切问题
@@ -157,7 +157,7 @@ class WebViewManager(
          * 2. 检测 <canvas> 元素，如果宽度超出 viewport 则用 CSS transform 缩放至适配
          * 3. 同时处理 Unity 的 #unity-container / #unity-canvas 典型容器
          */
-        private const val VIEWPORT_FIT_SCREEN_JS = """(function(){
+        internal const val VIEWPORT_FIT_SCREEN_JS = """(function(){
             'use strict';
             if(window.__wtaViewportFitApplied)return;
             window.__wtaViewportFitApplied=true;
@@ -253,7 +253,7 @@ class WebViewManager(
          * BUILT with MODERN_TLS which supports TLS 1.2+ but includes CLEARTEXT for HTTP.
          * This is intentionally scoped to HTTP-only to minimize security surface.
          */
-        private val cleartextProxyClient: OkHttpClient by lazy {
+        internal val cleartextProxyClient: OkHttpClient by lazy {
             OkHttpClient.Builder()
                 .connectionPool(okhttp3.ConnectionPool(4, 30, java.util.concurrent.TimeUnit.SECONDS))
                 .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
@@ -278,7 +278,7 @@ class WebViewManager(
          * 通过注入 viewport meta 标签来设置自定义的视口宽度，
          * 允许用户指定 320-3840 像素范围内的任意视口宽度。
          */
-        private const val VIEWPORT_CUSTOM_JS = """(function(){
+        internal const val VIEWPORT_CUSTOM_JS = """(function(){
             'use strict';
             if(window.__wtaViewportCustomApplied)return;
             window.__wtaViewportCustomApplied=true;
@@ -303,7 +303,7 @@ class WebViewManager(
          * 方案: 通过 sessionStorage 在页面离开前保存滚动位置,
          * 返回后在 onPageFinished 延迟恢复。
          */
-        private const val SCROLL_SAVE_JS = """(function(){
+        internal const val SCROLL_SAVE_JS = """(function(){
             'use strict';
             if(window.__wtaScrollSaveInstalled)return;
             window.__wtaScrollSaveInstalled=true;
@@ -324,7 +324,7 @@ class WebViewManager(
             },{passive:true});
         })();"""
 
-        private const val SCROLL_RESTORE_JS = """(function(){
+        internal const val SCROLL_RESTORE_JS = """(function(){
             'use strict';
             var KEY='__wta_scroll_'+location.href;
             try{
@@ -364,7 +364,7 @@ class WebViewManager(
          * 3. 将响应转为 Object URL 并替换 src
          * 4. 使用 MutationObserver 监听 DOM 变化，修复动态加载的图片
          */
-        private const val IMAGE_REPAIR_JS = """
+        internal const val IMAGE_REPAIR_JS = """
             (function() {
                 'use strict';
                 if (window.__wtaImageRepairActive) return;
@@ -468,7 +468,7 @@ class WebViewManager(
         """
         
         // Payment/Social App URL Scheme list
-        private val PAYMENT_SCHEMES = setOf(
+        internal val PAYMENT_SCHEMES = setOf(
             "alipay", "alipays",           // Alipay
             "weixin", "wechat",             // WeChat
             "mqq", "mqqapi", "mqqwpa",      // QQ
@@ -498,7 +498,7 @@ class WebViewManager(
          * 同时修补 navigator.permissions.query() 让 clipboard-read/clipboard-write
          * 始终返回 'granted'，与 Chrome 行为一致。
          */
-        private const val CLIPBOARD_POLYFILL_JS = """
+        internal const val CLIPBOARD_POLYFILL_JS = """
             (function() {
                 'use strict';
                 if (typeof window.NativeBridge === 'undefined') return;
@@ -625,25 +625,54 @@ class WebViewManager(
     private val cookieFlushRunnable = Runnable {
         try { CookieManager.getInstance().flush() } catch (_: Exception) {}
     }
+
+    private val urlPolicy = WebViewUrlPolicy()
+    private val userAgentResolver = UserAgentResolver(context)
+    private val settingsConfigurator = WebViewSettingsConfigurator()
+    private val navigationHandler = WebViewNavigationHandler(context, urlPolicy)
+    private val requestInterceptionCoordinator = RequestInterceptionCoordinator(
+        context = context,
+        adBlocker = adBlocker,
+        urlPolicy = urlPolicy,
+        loadEncryptedAsset = ::loadEncryptedAsset,
+        fetchWithCrossOriginHeaders = ::fetchWithCrossOriginHeaders,
+        fetchCleartextResource = ::fetchCleartextResource,
+        getMimeType = ::getMimeType
+    )
+    private val scriptInjectionCoordinator by lazy {
+        ScriptInjectionCoordinator(
+            context = context,
+            extensionFileManager = extensionFileManager,
+            getCurrentConfig = { currentConfig },
+            getAppExtensionModuleIds = { appExtensionModuleIds },
+            getEmbeddedModules = { embeddedModules },
+            getAllowGlobalModuleFallback = { allowGlobalModuleFallback },
+            getExtensionFabIcon = { extensionFabIcon },
+            getCurrentDeviceDisguiseConfig = { currentDeviceDisguiseConfig },
+            getCachedBrowserDisguiseConfig = { cachedBrowserDisguiseConfig },
+            getCachedBrowserDisguiseJs = { cachedBrowserDisguiseJs },
+            getExtensionRuntimes = { extensionRuntimes },
+            getGmBridge = { gmBridge },
+            setGmBridge = { gmBridge = it },
+            getActiveModulesForCurrentApp = ::getActiveModulesForCurrentApp,
+            shouldUseConservativeScriptMode = urlPolicy::shouldUseConservativeScriptMode,
+            shouldUseScriptlessMode = urlPolicy::shouldUseScriptlessMode,
+            injectCompatibilityScripts = ::injectCompatibilityScripts,
+            injectAllExtensionModules = ::injectAllExtensionModules
+        )
+    }
     
     /**
      * 从系统 WebView 默认 UA 中提取 Chrome 版本号，保持 UA 与设备一致。
      * 避免硬编码过时的 Chrome/120 被网站检测为旧浏览器。
      */
     private fun ensureDynamicUserAgents() {
-        if (DESKTOP_USER_AGENT != null) return
-        try {
-            val defaultUA = WebSettings.getDefaultUserAgent(context)
-            val chromeVersion = Regex("""Chrome/(\d+\.\d+\.\d+\.\d+)""").find(defaultUA)
-                ?.groupValues?.get(1) ?: "130.0.0.0"
-            DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$chromeVersion Safari/537.36"
-            STRICT_COMPAT_MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}; ${Build.MODEL}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$chromeVersion Mobile Safari/537.36"
-            AppLogger.d("WebViewManager", "Dynamic UA initialized: Chrome/$chromeVersion")
-        } catch (e: Exception) {
-            AppLogger.w("WebViewManager", "Failed to extract Chrome version, using fallback")
-            DESKTOP_USER_AGENT = DESKTOP_USER_AGENT_FALLBACK
-            STRICT_COMPAT_MOBILE_USER_AGENT = STRICT_COMPAT_MOBILE_UA_FALLBACK
-        }
+        val resolved = userAgentResolver.ensureDynamicUserAgents(
+            desktopUserAgent = DESKTOP_USER_AGENT,
+            strictCompatMobileUserAgent = STRICT_COMPAT_MOBILE_USER_AGENT
+        )
+        DESKTOP_USER_AGENT = resolved.desktopUserAgent
+        STRICT_COMPAT_MOBILE_USER_AGENT = resolved.strictCompatMobileUserAgent
     }
     
     /**
@@ -747,154 +776,26 @@ class WebViewManager(
         cookieManager.flush()
         AppLogger.d("WebViewManager", "Cookie persistence enabled (disableShields=${config.disableShields})")
 
-        val isDesktopModeRequested = config.userAgentMode in DESKTOP_UA_MODES || config.desktopMode || (currentDeviceDisguiseConfig?.requiresDesktopViewport() == true)
+        val isDesktopModeRequested = userAgentResolver.isDesktopUaRequested(config, currentDeviceDisguiseConfig)
         // Landscape apps should keep a native-sized viewport instead of overview shrink-fit.
         // This avoids "zoomed-out letterbox" rendering in wide screens.
         val preferLandscapeEmbeddedViewport = config.landscapeMode && !isDesktopModeRequested
+        val effectiveUserAgent = resolveUserAgent(config)
+        val hasActiveChromeExt = getActiveModulesForCurrentApp().any { module ->
+            module.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
+                module.chromeExtId.isNotEmpty()
+        }
         
         webView.apply {
-            settings.apply {
-                // JavaScript
-                javaScriptEnabled = config.javaScriptEnabled
-                javaScriptCanOpenWindowsAutomatically = true
-
-                // DOM storage
-                domStorageEnabled = config.domStorageEnabled
-                databaseEnabled = true
-
-                // File access
-                allowFileAccess = config.allowFileAccess
-                allowContentAccess = config.allowContentAccess
-
-                // Cache
-                cacheMode = if (config.cacheEnabled) {
-                    WebSettings.LOAD_DEFAULT
-                } else {
-                    WebSettings.LOAD_NO_CACHE
-                }
-
-                // Zoom
-                setSupportZoom(config.zoomEnabled)
-                builtInZoomControls = config.zoomEnabled
-                displayZoomControls = false
-
-                // Viewport
-                useWideViewPort = true
-                loadWithOverviewMode = !preferLandscapeEmbeddedViewport
-
-                // ViewportMode: FIT_SCREEN — 针对 Unity/Canvas 游戏的特殊优化
-                // 强制 initial-scale=1 防止 DPI 缩放放大内容
-                if (config.viewportMode == com.webtoapp.data.model.ViewportMode.FIT_SCREEN) {
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    AppLogger.d("WebViewManager", "ViewportMode.FIT_SCREEN applied: overview fit + JS adaptation")
-                } else if (config.viewportMode == com.webtoapp.data.model.ViewportMode.DESKTOP) {
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    textZoom = 100
-                    AppLogger.d("WebViewManager", "ViewportMode.DESKTOP applied")
-                } else if (config.viewportMode == com.webtoapp.data.model.ViewportMode.CUSTOM) {
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    AppLogger.d("WebViewManager", "ViewportMode.CUSTOM applied: width=${config.customViewportWidth}")
-                }
-
-                // User Agent config
-                // Priority: userAgentMode > desktopMode (backward compatible) > userAgent (legacy field)
-                val effectiveUserAgent = resolveUserAgent(config)
-                if (effectiveUserAgent != null) {
-                    userAgentString = effectiveUserAgent
-                    AppLogger.d("WebViewManager", "User-Agent set: ${effectiveUserAgent.take(80)}...")
-                }
-
-                // Chrome extensions are designed for desktop browsers.
-                // When active Chrome extension modules exist and the user hasn't explicitly
-                // set a UA mode, automatically use desktop UA to prevent mobile redirects
-                // (e.g. www.bilibili.com → m.bilibili.com) that break extension functionality.
-                if (!isDesktopModeRequested && effectiveUserAgent == null) {
-                    val hasActiveChromeExt = getActiveModulesForCurrentApp().any { module ->
-                        module.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
-                        module.chromeExtId.isNotEmpty()
-                    }
-                    if (hasActiveChromeExt) {
-                        userAgentString = DESKTOP_USER_AGENT ?: DESKTOP_USER_AGENT_FALLBACK
-                        AppLogger.d("WebViewManager", "Desktop UA auto-enabled for active Chrome extension(s)")
-                    }
-                }
-
-                // Desktop mode viewport settings (independent of User-Agent)
-                if (isDesktopModeRequested) {
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    // Set default zoom level to fit desktop pages
-                    textZoom = 100
-                } else if (preferLandscapeEmbeddedViewport) {
-                    AppLogger.d(
-                        "WebViewManager",
-                        "Landscape viewport policy applied: disable overview shrink-fit (loadWithOverviewMode=false)"
-                    )
-                }
-
-                // Mixed content — Allow mixed content to prevent WebView from downgrading
-                // the page's Secure Context status when sub-resources load over HTTP.
-                // This is critical for WebRTC/getUserMedia() (microphone, camera) which
-                // requires a Secure Context. Without ALWAYS_ALLOW, COMPATIBILITY_MODE can
-                // silently block getUserMedia() on some sites with mixed sub-resources.
-                // Note: The app already enforces HTTPS via Shields auto-upgrade and
-                // upgradeInsecureHttpUrl(), so double-blocking at WebSettings level is
-                // unnecessary and can break media capture APIs.
-                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-
-                // Other settings
-                mediaPlaybackRequiresUserGesture = false
-                
-                // Geolocation: explicitly enable for map-based apps (Leaflet, Google Maps, etc.)
-                // While the default is true, setting explicitly ensures it's never accidentally disabled
-                @Suppress("DEPRECATION")
-                setGeolocationEnabled(true)
-                // Set geolocation database path for older Android versions (deprecated but needed for API < 24)
-                @Suppress("DEPRECATION")
-                setGeolocationDatabasePath(context.filesDir.absolutePath)
-                
-                // SECURITY: Only enable file:// cross-origin access for local HTML/FRONTEND apps
-                // that truly need it. For WEB apps loading remote URLs, this MUST be false
-                // to prevent malicious web pages from reading local files.
-                allowFileAccessFromFileURLs = config.allowFileAccessFromFileURLs
-                allowUniversalAccessFromFileURLs = config.allowUniversalAccessFromFileURLs
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    safeBrowsingEnabled = true
-                }
-            }
-
-            // Scrollbar
-            isScrollbarFadingEnabled = true
-            scrollBarStyle = WebView.SCROLLBARS_INSIDE_OVERLAY
-
-            // Hardware acceleration
-            setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
-            
-            // C 级性能优化 — WebView 底层设置 (offscreenPreRaster, 渲染优先级)
-            com.webtoapp.core.perf.NativePerfEngine.optimizeWebViewSettings(this)
-            
-            // ============ Compatibility Enhancements ============
-            
-            // Initial scale (fix CSS zoom not working in WebView)
-            if (config.initialScale > 0) {
-                setInitialScale(config.initialScale)
-                AppLogger.d("WebViewManager", "Set initial scale: ${config.initialScale}%")
-            } else if (config.viewportMode == com.webtoapp.data.model.ViewportMode.FIT_SCREEN) {
-                // FIT_SCREEN: 强制 initial scale = 1，防止 DPI 缩放放大内容
-                setInitialScale(1)
-                AppLogger.d("WebViewManager", "FIT_SCREEN: forced initial scale to 1 (override DPI scaling)")
-            } else if (config.viewportMode == com.webtoapp.data.model.ViewportMode.CUSTOM) {
-                // CUSTOM: 强制 initial scale = 1，配合自定义视口宽度
-                setInitialScale(1)
-                AppLogger.d("WebViewManager", "ViewportMode.CUSTOM: forced initial scale to 1 (custom width=${config.customViewportWidth})")
-            }
-            
-            // Support window.open / target="_blank"
-            settings.setSupportMultipleWindows(config.newWindowBehavior != NewWindowBehavior.SAME_WINDOW)
+            settingsConfigurator.apply(
+                webView = this,
+                config = config,
+                effectiveUserAgent = effectiveUserAgent,
+                isDesktopModeRequested = isDesktopModeRequested,
+                preferLandscapeEmbeddedViewport = preferLandscapeEmbeddedViewport,
+                hasActiveChromeExtension = hasActiveChromeExt,
+                desktopUserAgent = DESKTOP_USER_AGENT ?: DESKTOP_USER_AGENT_FALLBACK
+            )
 
             // WebViewClient
             webViewClient = createWebViewClient(config, callbacks)
@@ -935,16 +836,10 @@ class WebViewManager(
             addJavascriptInterface(bridge, com.webtoapp.core.extension.GreasemonkeyBridge.JS_INTERFACE_NAME)
             
             // Initialize Chrome Extension background script runtimes
-            initChromeExtensionRuntimes(webView)
+            scriptInjectionCoordinator.initChromeExtensionRuntimes(webView)
             
             // 浏览器内核伪装 — 在 UA 设置完成后清洗, 移除 wv/Version 标识
             com.webtoapp.core.kernel.BrowserKernel.configureWebView(webView)
-            
-            // ============ 键盘输入支持 ============
-            // 设置焦点属性，确保不需要触屏交互也能使用键盘
-            isFocusable = true
-            isFocusableInTouchMode = true
-            requestFocus()
         }
     }
     
@@ -954,47 +849,11 @@ class WebViewManager(
      * @return Effective User-Agent string, or null if using system default
      */
     private fun resolveUserAgent(config: WebViewConfig): String? {
-        AppLogger.d("WebViewManager", "resolveUserAgent: userAgentMode=${config.userAgentMode}, customUserAgent=${config.customUserAgent?.take(30)}, desktopMode=${config.desktopMode}")
-        
-        // 0. Top priority: DeviceDisguiseConfig (new 设备伪装 system)
-        val ddConfig = currentDeviceDisguiseConfig
-        if (ddConfig != null && ddConfig.enabled) {
-            val ua = ddConfig.generateUserAgent()
-            if (ua.isNotBlank()) {
-                AppLogger.d("WebViewManager", "resolveUserAgent: DeviceDisguise -> ${ua.take(80)}")
-                return ua
-            }
-        }
-        
-        // 1. Priority: use userAgentMode
-        when (config.userAgentMode) {
-            UserAgentMode.DEFAULT -> {
-                // Continue to check other config
-            }
-            UserAgentMode.CUSTOM -> {
-                // Custom mode: use customUserAgent
-                val ua = config.customUserAgent?.takeIf { it.isNotBlank() }
-                AppLogger.d("WebViewManager", "resolveUserAgent: CUSTOM mode -> ${ua?.take(60) ?: "null"}")
-                return ua
-            }
-            else -> {
-                // Use preset User-Agent
-                val ua = config.userAgentMode.userAgentString
-                AppLogger.d("WebViewManager", "resolveUserAgent: ${config.userAgentMode.name} mode -> ${ua?.take(60) ?: "null"}")
-                return ua
-            }
-        }
-        
-        // 2. Backward compatible: check desktopMode
-        if (config.desktopMode) {
-            AppLogger.d("WebViewManager", "resolveUserAgent: desktopMode fallback")
-            return DESKTOP_USER_AGENT ?: DESKTOP_USER_AGENT_FALLBACK
-        }
-        
-        // 3. Backward compatible: check legacy userAgent field
-        val legacyUa = config.userAgent?.takeIf { it.isNotBlank() }
-        AppLogger.d("WebViewManager", "resolveUserAgent: DEFAULT mode, legacyUA=${legacyUa?.take(60) ?: "null"}")
-        return legacyUa
+        return userAgentResolver.resolveUserAgent(
+            config = config,
+            deviceDisguiseConfig = currentDeviceDisguiseConfig,
+            desktopUserAgent = DESKTOP_USER_AGENT ?: DESKTOP_USER_AGENT_FALLBACK
+        )
     }
 
     /**
@@ -2125,161 +1984,12 @@ class WebViewManager(
      * Create WebChromeClient
      */
     private fun createWebChromeClient(config: WebViewConfig, callbacks: WebViewCallbacks): WebChromeClient {
-        return object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                super.onProgressChanged(view, newProgress)
-                callbacks.onProgressChanged(newProgress)
-            }
-
-            override fun onReceivedTitle(view: WebView?, title: String?) {
-                super.onReceivedTitle(view, title)
-                callbacks.onTitleChanged(title)
-            }
-
-            override fun onReceivedIcon(view: WebView?, icon: Bitmap?) {
-                super.onReceivedIcon(view, icon)
-                callbacks.onIconReceived(icon)
-            }
-
-            override fun onShowCustomView(view: android.view.View?, callback: CustomViewCallback?) {
-                super.onShowCustomView(view, callback)
-                callbacks.onShowCustomView(view, callback)
-            }
-
-            override fun onHideCustomView() {
-                super.onHideCustomView()
-                callbacks.onHideCustomView()
-            }
-
-            override fun onGeolocationPermissionsShowPrompt(
-                origin: String?,
-                callback: GeolocationPermissions.Callback?
-            ) {
-                callbacks.onGeolocationPermission(origin, callback)
-            }
-
-            override fun onPermissionRequest(request: PermissionRequest?) {
-                AppLogger.d("WebViewManager", "onPermissionRequest called: ${request?.resources?.joinToString()}")
-                if (request != null) {
-                    callbacks.onPermissionRequest(request)
-                } else {
-                    AppLogger.w("WebViewManager", "onPermissionRequest: request is null!")
-                }
-            }
-
-            override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-                consoleMessage?.let {
-                    val level = when (it.messageLevel()) {
-                        ConsoleMessage.MessageLevel.ERROR -> 4
-                        ConsoleMessage.MessageLevel.WARNING -> 3
-                        ConsoleMessage.MessageLevel.LOG -> 1
-                        ConsoleMessage.MessageLevel.DEBUG -> 0
-                        else -> 2
-                    }
-                    callbacks.onConsoleMessage(
-                        level,
-                        it.message() ?: "",
-                        it.sourceId() ?: "unknown",
-                        it.lineNumber()
-                    )
-                }
-                return true
-            }
-
-            // File chooser
-            override fun onShowFileChooser(
-                webView: WebView?,
-                filePathCallback: ValueCallback<Array<Uri>>?,
-                fileChooserParams: FileChooserParams?
-            ): Boolean {
-                return callbacks.onShowFileChooser(filePathCallback, fileChooserParams)
-            }
-            
-            // Handle window.open / target="_blank"
-            override fun onCreateWindow(
-                view: WebView?,
-                isDialog: Boolean,
-                isUserGesture: Boolean,
-                resultMsg: android.os.Message?
-            ): Boolean {
-                if (view == null) return false
-                
-                // Try to get clicked link URL
-                val href = view.hitTestResult.extra
-                
-                AppLogger.d("WebViewManager", "onCreateWindow: href=$href, behavior=${config.newWindowBehavior}")
-                
-                // Save reference to original WebView
-                val originalWebView = view
-                
-                return when (config.newWindowBehavior) {
-                    NewWindowBehavior.SAME_WINDOW -> {
-                        // Open in current window - extract new window URL and load
-                        val transport = resultMsg?.obj as? WebView.WebViewTransport
-                        if (transport != null) {
-                            // Create temporary WebView to get URL
-                            val tempWebView = WebView(context)
-                            tempWebView.webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(tempView: WebView?, request: WebResourceRequest?): Boolean {
-                                    val url = request?.url?.toString()
-                                    if (url != null) {
-                                        val safeUrl = normalizeHttpUrlForSecurity(url)
-                                        // Load in original WebView
-                                        originalWebView.loadUrl(safeUrl)
-                                        tempView?.destroy()
-                                    }
-                                    return true
-                                }
-                            }
-                            transport.webView = tempWebView
-                            resultMsg.sendToTarget()
-                        }
-                        true
-                    }
-                    NewWindowBehavior.EXTERNAL_BROWSER -> {
-                        // Open in external browser
-                        val transport = resultMsg?.obj as? WebView.WebViewTransport
-                        if (transport != null) {
-                            val tempWebView = WebView(context)
-                            tempWebView.webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(tempView: WebView?, request: WebResourceRequest?): Boolean {
-                                    val url = request?.url?.toString()
-                                    if (url != null) {
-                                        try {
-                                            val safeUrl = normalizeHttpUrlForSecurity(url)
-                                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse(safeUrl))
-                                            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            AppLogger.e("WebViewManager", "Cannot open external browser: $url", e)
-                                        }
-                                        tempView?.destroy()
-                                    }
-                                    return true
-                                }
-                            }
-                            transport.webView = tempWebView
-                            resultMsg.sendToTarget()
-                        }
-                        true
-                    }
-                    NewWindowBehavior.POPUP_WINDOW -> {
-                        // Popup new window - call callback to let app handle
-                        callbacks.onNewWindow(resultMsg)
-                        true
-                    }
-                    NewWindowBehavior.BLOCK -> {
-                        // Block opening
-                        false
-                    }
-                }
-            }
-            
-            override fun onCloseWindow(window: WebView?) {
-                super.onCloseWindow(window)
-                AppLogger.d("WebViewManager", "onCloseWindow")
-            }
-        }
+        return ManagedWebChromeClient(
+            context = context,
+            config = config,
+            callbacks = callbacks,
+            normalizeHttpUrlForSecurity = ::normalizeHttpUrlForSecurity
+        )
     }
     
     private fun normalizeHttpUrlForSecurity(url: String): String {

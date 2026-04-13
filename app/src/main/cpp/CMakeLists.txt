@@ -8,6 +8,11 @@ project("crypto_engine")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+function(enable_16kb_page_support target_name)
+    # 强制共享库按 16 KB ELF 页面大小对齐，避免 Android 15+ 进入兼容模式。
+    target_link_options(${target_name} PRIVATE "-Wl,-z,max-page-size=16384")
+endfunction()
+
 # 添加编译选项（crypto_engine 专用）
 # 注意：不使用全局 add_compile_options，因为 node_bridge 需要导出 JNI 符号
 
@@ -25,6 +30,7 @@ add_library(
     SHARED
     ${CRYPTO_SOURCES}
 )
+enable_16kb_page_support(crypto_engine)
 
 # crypto_engine 编译选项：隐藏符号、优化
 target_compile_options(crypto_engine PRIVATE
@@ -42,6 +48,7 @@ add_library(
     SHARED
     node_bridge.cpp
 )
+enable_16kb_page_support(node_bridge)
 
 # 查找 Android 日志库
 find_library(
@@ -68,6 +75,7 @@ add_library(
     SHARED
     crypto_optimized.c
 )
+enable_16kb_page_support(crypto_optimized)
 
 set_property(TARGET crypto_optimized PROPERTY C_STANDARD 11)
 
@@ -116,6 +124,7 @@ add_library(
     SHARED
     hardware_control.c
 )
+enable_16kb_page_support(hardware_control)
 
 # 使用 C11 标准
 set_property(TARGET hardware_control PROPERTY C_STANDARD 11)
@@ -149,6 +158,7 @@ add_library(
     SHARED
     apk_optimizer.c
 )
+enable_16kb_page_support(apk_optimizer)
 
 # 使用 C11 标准
 set_property(TARGET apk_optimizer PROPERTY C_STANDARD 11)
@@ -187,6 +197,7 @@ add_library(
     SHARED
     perf_engine.c
 )
+enable_16kb_page_support(perf_engine)
 
 set_property(TARGET perf_engine PROPERTY C_STANDARD 11)
 
@@ -217,6 +228,7 @@ add_library(
     SHARED
     sys_optimizer.c
 )
+enable_16kb_page_support(sys_optimizer)
 
 set_property(TARGET sys_optimizer PROPERTY C_STANDARD 11)
 
@@ -247,6 +259,7 @@ add_library(
     SHARED
     browser_kernel.c
 )
+enable_16kb_page_support(browser_kernel)
 
 set_property(TARGET browser_kernel PROPERTY C_STANDARD 11)
 

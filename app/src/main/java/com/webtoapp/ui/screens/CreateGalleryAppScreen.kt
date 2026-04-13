@@ -52,6 +52,7 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGalleryAppScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     existingAppId: Long? = null,  // 编辑模式时传入已有应用ID
     onBack: () -> Unit,
     onCreated: (
@@ -68,9 +69,7 @@ fun CreateGalleryAppScreen(
     var existingApp by remember { mutableStateOf<WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
-            existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
-                .getWebAppById(existingAppId)
-                .first()
+            existingApp = webAppRepository.getWebAppById(existingAppId).first()
         }
     }
     val scope = rememberCoroutineScope()
@@ -1543,6 +1542,7 @@ private fun formatFileSize(bytes: Long): String {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun CreateGalleryAppScreenV2(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     existingAppId: Long? = null,
     onBack: () -> Unit,
     onCreated: (
@@ -1560,9 +1560,7 @@ fun CreateGalleryAppScreenV2(
     var existingApp by remember { mutableStateOf<WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
-            existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
-                .getWebAppById(existingAppId)
-                .first()
+            existingApp = webAppRepository.getWebAppById(existingAppId).first()
         }
     }
 

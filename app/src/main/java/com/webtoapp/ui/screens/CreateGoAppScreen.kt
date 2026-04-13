@@ -55,6 +55,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateGoAppScreen(
+    webAppRepository: com.webtoapp.data.repository.WebAppRepository,
     existingAppId: Long = 0L,
     onBack: () -> Unit,
     onCreated: (
@@ -110,8 +111,7 @@ fun CreateGoAppScreen(
     // 编辑模式：加载已有数据
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
-            val existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
-                .getWebAppById(existingAppId).first()
+            val existingApp = webAppRepository.getWebAppById(existingAppId).first()
             existingApp?.let { app ->
                 appName = app.name
                 app.iconPath?.let { appIcon = android.net.Uri.parse(it) }

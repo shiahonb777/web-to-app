@@ -21,8 +21,12 @@ release/
 build/
 
 # Local configuration file
+.claude/
 local.properties
 gradle/config.properties
+AGENTS.md
+rule.md
+CLAUDE.md
 
 # Android Studio
 *.iml

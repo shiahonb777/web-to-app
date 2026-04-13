@@ -49,12 +49,13 @@
 - [📋 功能特性](#-功能特性)
 - [☁️ 云服务 (Pro)](#%EF%B8%8F-云服务-pro)
 - [🛠️ 技术栈](#%EF%B8%8F-技术栈)
-- [📁 项目结构](#-项目结构)
+- [📁 贡献指南](CONTRIBUTING_CN.md)
 - [📖 使用指南](#-使用指南)
 - [🔧 源码构建](#-源码构建)
 - [🧩 扩展模块系统](#-扩展模块系统)
 - [📢 公告模板系统](#-公告模板系统)
-- [📜 更新日志](#-更新日志)
+- [📜 更新日志](CHANGELOG_CN.md)
+- [🤝 法律声明](CODE_OF_CONDUCT_CN.md)
 - [📬 联系我们](#-联系我们)
 
 </details>
@@ -82,33 +83,33 @@
 | 功能 | 说明 |
 |------|------|
 | 🧩 扩展模块 | 10个内置 + 28 模板 |
-| 🤖 AI 开发 | 自然语言编程 |
-| 🎨 AI 图标 | 智能生成精美图标 |
-| 🎵 音乐搜索 | 在线 BGM + 歌词同步 |
+| 🤖 AI 开发 | 用自然语言生成模块代码 |
+| 🎨 AI 图标生成 | 自动生成美观图标 |
+| 🎵 音乐搜索 | 在线搜索 BGM 和歌词 |
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🛡️ 安全隐私
+### 🛡️ 安全与隐私
 | 功能 | 说明 |
 |------|------|
 | 🔐 APK 加密 | AES-256-GCM 保护 |
-| 🛡️ 浏览器伪装 | UA/指纹伪装 |
+| 🛡️ 浏览器伪装 | UA 与指纹伪装 |
 | 🚫 Hosts 拦截 | 域名级广告拦截 |
-| 🌍 独立环境 | 多实例隔离 |
+| 🌍 隔离环境 | 多实例隔离运行 |
 
 </td>
 <td width="50%">
 
-### ✨ 更多功能
+### ✨ 其他功能
 | 功能 | 说明 |
 |------|------|
-| 🖼️ 媒体画廊 | 内置媒体管理器 |
-| 📱 APK 架构 | 多架构支持 |
-| 📋 长按菜单 | 增强上下文菜单 |
-| 🌐 浏览器内核 | 自定义内核配置 |
+| 🖼️ 媒体库 | 内置媒体管理器 |
+| 📱 APK 架构 | 支持多架构打包 |
+| 📋 长按菜单 | 增强型上下文菜单 |
+| 🌐 浏览器内核 | 自定义 WebView 内核 |
 
 </td>
 </tr>
@@ -119,13 +120,13 @@
 | 功能 | 说明 |
 |------|------|
 | ☁️ 云项目 | 激活码、公告、版本更新、远程配置 |
-| 📤 APK 分享页 | 精美下载页，支持 GitHub/Gitee 双链接 |
-| 📊 数据分析 | 安装量、活跃用户、设备/地区/版本分布 |
-| 🔗 Webhook | 事件驱动回调，HMAC 签名验证 |
-| 💾 云备份 | 项目备份到 GitHub/Gitee 仓库 |
-| 📦 双平台分发 | 同时发布到 GitHub Releases 和 Gitee Releases |
+| 📤 APK 分享页 | 带 GitHub/Gitee 双链接的下载页 |
+| 📊 数据看板 | 安装量、活跃用户、设备/国家/版本分布 |
+| 🔗 Webhooks | 事件回调，支持 HMAC 签名校验 |
+| 💾 云备份 | 备份项目到 GitHub/Gitee 仓库 |
+| 📦 双平台发布 | 同时发布到 GitHub Releases + Gitee Releases |
 
-> 💡 **100% 开源免费。** 云服务是可选的付费功能，用于覆盖服务器成本。
+> 💡 **本地功能 100% 开源免费。** 云服务是可选付费功能，用于覆盖服务器成本。
 
 </td>
 </tr>
@@ -160,22 +161,22 @@
 <tr>
 <td>
 
-| 📱 个人用户 | 🏢 企业用户 |
-|------------|------------|
-| 网站快捷访问 | 企业内部系统 |
-| 媒体展示应用 | 产品展示应用 |
-| 网页增强工具 | 展会/商场展示终端 |
-| 隐私保护应用 | 培训教育应用 |
+| 📱 个人 | 🏢 商业 |
+|--------|--------|
+| 快速访问网站 | 企业内部系统 |
+| 媒体展示应用 | 产品演示应用 |
+| 网页增强工具 | 自助终端展示 |
+| 隐私保护 | 培训类应用 |
 
 </td>
 <td>
 
-| 👨‍💻 开发者 | 👨‍👩‍👧 家庭用户 |
-|-----------|------------|
+| 👨‍💻 开发者 | 👨‍👩‍👧 家庭 |
+|-----------|----------|
 | 前端项目打包 | 儿童学习应用 |
-| H5游戏封装 | 屏幕时间控制 |
-| Web应用测试 | 在线教育应用 |
-| 快速原型开发 | 安全浏览环境 |
+| H5 游戏打包 | 屏幕时间控制 |
+| Web 应用测试 | 教育类应用 |
+| 快速原型验证 | 安全浏览 |
 
 </td>
 </tr>
@@ -183,16 +184,17 @@
 
 ## 📦 快速开始
 
-```bash
-# 1️⃣ 克隆仓库
-git clone https://github.com/shiahonb777/web-to-app.git
 
-# 2️⃣ 用 Android Studio 打开
-# 3️⃣ 构建并运行到设备
-# 4️⃣ 开始将网站转换为应用！
+1️⃣ 克隆仓库
+```bash
+git clone https://github.com/shiahonb777/web-to-app.git
 ```
 
-> 💡 **或者直接从 [Releases](https://github.com/shiahonb777/web-to-app/releases) 下载 APK**
+2️⃣ 用 Android Studio 打开
+3️⃣ 在设备上运行并构建
+4️⃣ 开始把网站转换成应用
+
+> 💡 **也可以直接从 [Releases](https://github.com/shiahonb777/web-to-app/releases) 下载 APK。**
 
 ---
 
@@ -201,14 +203,14 @@ git clone https://github.com/shiahonb777/web-to-app.git
 <details>
 <summary><b>🌐 核心功能</b>（点击展开）</summary>
 
-- **URL转App**：输入任意网址，一键生成独立应用
-- **媒体转App**：支持图片/视频转换为独立应用
-- **HTML转App**：支持 HTML/CSS/JS 项目转换为独立应用
-- **前端框架支持**：React、Vue、Next.js、Nuxt、Svelte 等项目一键打包
-- **服务端应用转App**：支持 Node.js、PHP、Python、Go、WordPress 项目转换为独立应用
-- **画廊应用**：批量图片/视频创建画廊展示应用
-- **自定义图标**：支持从相册选择或 AI 生成自定义应用图标
-- **自定义名称**：自定义应用显示名称
+- **网址转 App**：输入任意网站地址即可生成独立应用
+- **媒体转 App**：把图片/视频转换成独立应用
+- **HTML 转 App**：把 HTML/CSS/JS 项目转换成独立应用
+- **前端框架支持**：React、Vue、Next.js、Nuxt、Svelte 一键打包
+- **服务端应用**：支持 Node.js、PHP、Python、Go、WordPress 项目
+- **图集应用**：从多张图片/视频创建展示应用
+- **自定义图标**：从相册选择或用 AI 生成
+- **自定义名称**：自由修改应用显示名
 - **自定义包名**：支持自定义 APK 包名和版本号
 
 </details>
@@ -216,174 +218,126 @@ git clone https://github.com/shiahonb777/web-to-app.git
 <details>
 <summary><b>🧩 扩展模块系统</b></summary>
 
-- **类油猴脚本**：向网页注入自定义 JavaScript/CSS 代码
-- **10个内置模块**：视频下载、B站/抖音/小红书视频提取、视频增强、网页分析、暗黑模式、隐私保护、内容增强、元素屏蔽
-- **28 代码模板**：快速创建常见功能模块
-- **模块分类**：23 种分类（内容过滤、内容增强、样式修改、主题、功能增强、自动化、导航、数据提取、数据保存、交互、无障碍、媒体、视频、图片、音频、安全、反追踪、社交、购物、阅读、翻译、开发调试、其他）
-- **URL 匹配规则**：支持通配符和正则表达式匹配
-- **配置项系统**：模块支持用户自定义配置
+- **类 Tampermonkey 脚本**：向网页注入自定义 JavaScript/CSS
+- **10 个内置模块**：视频下载、B站/抖音/小红书提取、视频增强、网页分析、深色模式、隐私保护、内容增强、元素屏蔽
+- **28 个代码模板**：快速创建常见功能模块
+- **模块分类**：23 类（内容过滤、内容增强、样式修改、主题、功能增强、自动化、导航、数据提取、数据保存、交互、无障碍、媒体、视频、图片、音频、安全、反追踪、社交、购物、阅读、翻译、开发工具、其他）
+- **URL 匹配规则**：支持通配符和正则
+- **配置系统**：模块可自定义设置
 - **权限声明**：细粒度权限控制
-- **分享码**：一键生成分享码/二维码，轻松分享模块
-- **导入导出**：支持模块文件导入导出
-- **Chrome 扩展兼容**：支持导入和运行 Chrome 浏览器扩展，自动桌面→移动端适配
-- **油猴脚本兼容**：支持导入 Greasemonkey/Tampermonkey 用户脚本
+- **分享代码**：一键生成分享码/二维码
+- **导入导出**：支持模块文件导入与导出
+- **Chrome 扩展支持**：导入并运行 Chrome 扩展，自动适配桌面到移动端
+- **Userscript 支持**：导入 Greasemonkey/Tampermonkey 脚本
 
 </details>
 
 <details>
-<summary><b>🤖 AI 模块开发 Agent</b></summary>
+<summary><b>🤖 AI 模块开发代理</b></summary>
 
-- **自然语言开发**：用自然语言描述需求，AI 自动生成模块代码
-- **语法检查**：自动检查 JavaScript/CSS 语法错误
+- **自然语言开发**：用自然语言描述需求，AI 生成模块代码
+- **语法检查**：自动检测 JavaScript/CSS 语法错误
 - **安全扫描**：检测 XSS、eval 等安全问题
-- **自动修复**：AI 自动修复检测到的错误
-- **代码片段库**：常用代码片段快速插入
-- **调试测试页面**：内置测试页面验证模块效果
+- **自动修复**：AI 自动修复已发现的问题
+- **代码片段库**：快速插入常用代码
+- **调试测试页**：内置测试页验证模块效果
 
 </details>
 
 <details>
 <summary><b>🎨 AI 功能</b></summary>
 
-- **多供应商支持**：Google Gemini、OpenAI、智谱 GLM、火山引擎、MiniMax、OpenRouter 等
-- **AI HTML 编程**：AI 辅助生成和修改 HTML/CSS/JS 代码
-- **AI 图标生成**：使用 AI 生成应用图标
-- **图标库**：收藏和管理生成的图标
-- **会话管理**：支持多会话、模板选择、样式定制
-- **实时预览**：代码生成后可直接预览效果
-- **AI 设置**：统一管理 API 密钥和模型配置
+- **多模型支持**：Google Gemini、OpenAI、GLM、Volcano、MiniMax、OpenRouter 等
+- **AI HTML 编码**：辅助生成 HTML/CSS/JS 代码
+- **AI 图标生成器**：使用 AI 生成应用图标
+- **图标库**：收集和管理生成结果
+- **会话管理**：支持多会话、模板、风格自定义
+- **实时预览**：实时查看生成代码效果
+- **AI 设置**：统一管理 API Key 和模型
 
 </details>
 
 <details>
 <summary><b>✨ 集成功能</b></summary>
 
-- **启动画面**：支持图片/视频启动动画，内置视频裁剪器
-- **背景音乐**：支持为应用添加 BGM 播放列表，可配合歌词同步显示
-- **在线音乐搜索**：在线搜索下载音乐作为 BGM，支持歌词同步
-- **激活码验证**：内置激活码机制，支持 SHA-256 加密校验
-- **弹窗公告**：启动时显示公告信息，支持链接跳转
-- **公告模板**：10 种精美公告模板（小红书、渐变、毛玻璃、霓虹等）
-- **广告拦截**：内置广告拦截引擎，自动过滤网页广告和弹窗
-- **Hosts 拦截**：自定义 hosts 文件实现域名级别拦截和过滤
-- **网页自动翻译**：网页内容自动翻译，支持中/英/日/阿拉伯语
-- **浏览器内核**：支持 WebView 和 GeckoView (Firefox) 双内核切换
-- **浏览器防护**：追踪器拦截、HTTPS 自动升级、Cookie 弹窗拦截、阅读模式
-- **浏览器伪装**：User-Agent 和浏览器指纹伪装
-- **独立浏览器环境**：每个应用独立运行环境，支持指纹伪装、多开隔离
-- **长按菜单**：增强的长按上下文菜单，支持自定义操作
-- **后台运行**：退出应用后继续在后台运行，保持任务持续执行
-- **强制运行模式**：定时强制运行、屏蔽 Home/返回键、多种黑科技功能
-- **开机自启动**：支持开机自动启动和定时自动启动
-- **APK 加密保护**：配置/代码/媒体加密、完整性校验、反调试保护
-- **广告集成**：预留广告SDK接口（横幅/插屏/开屏）
+- **启动画面**：支持图片/视频启动动画，内置视频裁剪
+- **背景音乐**：支持 BGM 播放列表和 LRC 歌词同步
+- **在线音乐搜索**：在线搜索并下载带歌词的 BGM
+- **激活码**：内置激活机制，支持 SHA-256 加密校验
+- **公告**：启动时展示公告并支持链接
+- **公告模板**：10 套精美模板（小红书、渐变、毛玻璃、霓虹等）
+- **广告拦截**：内置广告拦截引擎，过滤网页广告和弹窗
+- **Hosts 拦截**：支持自定义 hosts 文件进行域名级过滤
+- **网页自动翻译**：自动翻译网页，支持中/英/日/阿拉伯语
+- **浏览器内核**：支持 WebView 和 GeckoView 双内核切换
+- **浏览器防护**：跟踪器拦截、HTTPS 自动升级、Cookie 同意拦截、阅读模式
+- **浏览器伪装**：UA 和浏览器指纹伪装
+- **隔离浏览器环境**：每个应用独立运行环境，支持指纹伪装与多实例隔离
+- **长按菜单**：增强型长按菜单，支持自定义操作
+- **后台运行**：退出后继续后台执行任务
+- **强制运行模式**：定时强制运行，屏蔽 Home/Back，黑科技功能
+- **自启动**：支持开机自启和定时自启
+- **APK 加密**：配置/代码/媒体加密、完整性检查、反调试保护
+- **广告接入**：预留广告 SDK 接口（横幅/插页/开屏）
 
 </details>
 
 <details>
-<summary><b>📤 导出功能</b></summary>
+<summary><b>📤 导出选项</b></summary>
 
-- **桌面快捷方式**：创建桌面图标，像原生App一样启动
-- **构建APK安装包**：直接生成独立APK并安装，无需Android Studio
-- **APK 架构选择**：支持选择目标 CPU 架构（arm64-v8a、armeabi-v7a、x86、x86_64）
-- **项目模板导出**：导出完整Android Studio项目，可自行编译APK
+- **桌面快捷方式**：创建桌面图标，像原生应用一样启动
+- **构建 APK**：无需 Android Studio 也能生成独立 APK
+- **APK 架构**：可选 arm64-v8a、armeabi-v7a、x86、x86_64
+- **项目模板**：导出完整 Android Studio 项目
 
 </details>
 
 <details>
-<summary><b>🛡️ APK 加固保护</b></summary>
+<summary><b>🛡️ APK 加固</b></summary>
 
-- **加固引擎**：一键 APK 加固保护
-- **反逆向保护**：防止反编译和逆向分析
+- **加固引擎**：一键加固保护
+- **反编译防护**：阻止反编译和逆向分析
 - **Dex 保护**：Dex 文件加密保护
 - **代码混淆**：代码混淆处理
-- **Native 保护**：Native 层安全保护
-- **运行时防护**：运行时反调试、环境检测
-- **完整性校验**：防篡改完整性验证
+- **原生保护**：Native 层安全防护
+- **运行时防护**：反调试、环境检测
+- **完整性校验**：防篡改校验
 
 </details>
 
 <details>
 <summary><b>🎥 媒体应用功能</b></summary>
 
-- **图片转App**：选择图片生成全屏展示应用
-- **视频转App**：选择视频生成循环播放应用（支持大视频流式打包）
-- **媒体画廊**：内置媒体画廊，管理和浏览图片视频
-- **显示配置**：支持音频开关、循环播放、自动播放、铺满屏幕
+- **图片转 App**：全屏图片展示，支持铺满屏幕
+- **视频转 App**：支持循环、静音/音频开关、自动播放、大视频流
+- **媒体库**：内置媒体管理与浏览
+- **显示配置**：音频开关、循环、自动播放、铺满屏幕
 - **加密支持**：媒体文件支持加密保护
-- **APK打包**：媒体应用支持导出为独立APK
+- **APK 导出**：媒体应用可直接导出 APK
 
 </details>
 
 <details>
 <summary><b>🎨 主题系统</b></summary>
 
-- **多种主题**：内置多款精美主题风格
-- **深色模式**：支持跟随系统、手动切换
-- **动画效果**：可自定义动画开关和速度
-- **粒子特效**：部分主题支持粒子背景效果
+- **多种主题**：内置多套美观主题
+- **深色模式**：跟随系统或手动切换
+- **动画效果**：可调节动画样式和速度
+- **粒子效果**：部分主题支持粒子背景
 
 </details>
 
 <details>
 <summary><b>⚡ 应用修改器</b></summary>
 
-- **应用列表扫描**：自动获取设备上已安装的应用列表
-- **图标/名称修改**：自由修改任意应用的图标和显示名称
-- **克隆安装**：将修改后的应用作为新应用安装（独立包名）
-- **快捷方式启动**：创建使用新图标的快捷方式，启动原应用
+- **应用扫描**：自动扫描已安装应用
+- **图标/名称修改**：自由修改任意应用的图标和名称
+- **克隆安装**：安装带独立包名的修改版应用
+- **快捷方式启动**：创建新图标快捷方式启动原应用
 
 </details>
 
 ---
-
-## ☁️ 云服务 (Pro)
-
-> **理念**：WebToApp 100% 开源。所有本地功能永久免费。云服务是可选的付费功能——你付费购买的是服务器资源，而不是应用本身。
-
-### Pro/Ultra 用户享有
-
-Pro 和 Ultra 订阅解锁**需要服务器基础设施的云服务功能**：
-
-| 功能 | Pro | Ultra |
-|------|:---:|:-----:|
-| **云项目**（激活码、公告、版本更新、远程配置） | 最多 10 个 | 最多 50 个 |
-| **APK 分享页** — 精美下载落地页，GitHub + Gitee 双链接 | ✅ | ✅ |
-| **数据分析面板** — 安装量、活跃用户、地区/设备/系统/版本分布 | ✅ | ✅ |
-| **Webhook** — 事件驱动回调（激活码使用、版本发布、每日报告），HMAC 签名 | ✅ | ✅ |
-| **云备份** — 将项目源码推送到 GitHub/Gitee 仓库 | ✅ | ✅ |
-| **双平台 APK 分发** — 同时发布到 GitHub Releases + Gitee Releases | ✅ | ✅ |
-| **每项目激活码** | 200 | 1,000 |
-| **每项目活跃公告** | 5 | 20 |
-| **每项目保留版本** | 5 | 20 |
-| **每项目远程配置键** | 10 | 50 |
-| **FCM 推送通知** | — | ✅ |
-
-### SDK API（内置于构建的 APP）
-
-使用云项目构建的 APP 自动获得：
-
-```
-GET  /sdk/{project_key}/check-update    → OTA 更新检查
-GET  /sdk/{project_key}/announcements   → 远程公告
-GET  /sdk/{project_key}/config           → 远程配置
-POST /sdk/{project_key}/verify-code      → 激活码验证
-POST /sdk/{project_key}/stats            → 使用统计上报
-```
-
-所有 SDK 接口通过 Cloudflare CDN 缓存（5 分钟 TTL），全球快速响应。
-
-### 分享页
-
-每个云项目自动生成公开下载页：
-```
-https://api.shiaho.sbs/s/{project_key}
-```
-展示应用信息、更新日志、GitHub（国际）+ Gitee（国内）双下载按钮。
-
----
-
-## 🛠️ 技术栈
 
 <div align="center">
 
@@ -405,290 +359,6 @@ https://api.shiaho.sbs/s/{project_key}
 | 🎯 目标版本 | Android 16 (API 36) |
 
 </div>
-
-## 📁 项目结构
-
-```
-app/src/main/java/com/webtoapp/
-├── WebToAppApplication.kt      # Application类
-├── core/                       # 核心功能模块
-│   ├── activation/            # 激活码管理
-│   ├── adblock/              # 广告拦截引擎
-│   ├── ads/                  # 广告 SDK 集成
-│   ├── ai/                   # AI 功能
-│   │   ├── AiApiClient.kt   # 多供应商 AI API 客户端
-│   │   ├── AiConfigManager.kt # API 密钥/模型配置管理
-│   │   ├── AiGenerationService.kt # AI 图像生成服务
-│   │   └── htmlcoding/      # AI HTML 编程 Agent
-│   ├── announcement/         # 公告管理
-│   ├── apkbuilder/          # APK构建器
-│   │   ├── ApkBuilder.kt    # 构建核心（流式写入、加密）
-│   │   ├── JarSigner.kt     # APK签名（apksig v1/v2/v3）
-│   │   ├── ApkTemplate.kt   # 配置/模板管理
-│   │   ├── ArscEditor.kt    # ARSC 资源编辑
-│   │   ├── ArscRebuilder.kt # ARSC 重建
-│   │   ├── AxmlEditor.kt    # 二进制 XML 编辑
-│   │   ├── AxmlRebuilder.kt # XML 重建
-│   │   └── BuildLogger.kt   # 构建日志
-│   ├── appmodifier/         # 应用修改器核心
-│   ├── autostart/           # 开机自启动/定时启动
-│   ├── background/          # 后台运行服务
-│   ├── backup/              # 数据备份
-│   ├── bgm/                 # 背景音乐
-│   │   ├── BgmPlayer.kt     # 播放器（支持歌词同步）
-│   │   ├── OnlineMusicApi.kt # 在线音乐搜索 API
-│   │   └── OnlineMusicDownloader.kt # 音乐下载器
-│   ├── blacktech/           # 黑科技功能
-│   ├── crypto/              # 加密系统（14个文件）
-│   │   ├── AssetEncryptor.kt # AES-256-GCM 加密
-│   │   ├── AssetDecryptor.kt # 运行时解密
-│   │   ├── NativeCrypto.kt  # Native 加密
-│   │   └── RuntimeProtection.kt # 运行时保护
-│   ├── disguise/            # 浏览器伪装（UA/指纹）
-│   ├── download/            # 依赖下载引擎
-│   ├── engine/              # 浏览器内核管理
-│   │   ├── BrowserEngine.kt  # 浏览器引擎接口
-│   │   ├── BrowserEngineCallback.kt # 引擎回调
-│   │   ├── EngineManager.kt  # 内核管理器
-│   │   ├── EngineType.kt     # 引擎类型枚举
-│   │   ├── SystemWebViewEngine.kt # WebView 内核
-│   │   ├── GeckoViewEngine.kt # GeckoView (Firefox) 内核
-│   │   ├── download/         # 引擎下载
-│   │   │   ├── EngineFileManager.kt # 引擎文件管理
-│   │   │   └── GeckoEngineDownloader.kt # GeckoView 下载器
-│   │   └── shields/         # 浏览器防护
-│   │       ├── BrowserShields.kt # 防护总控
-│   │       ├── ShieldsConfig.kt # 防护配置
-│   │       ├── ShieldsStats.kt # 防护统计
-│   │       ├── TrackerBlocker.kt # 追踪器拦截
-│   │       ├── HttpsUpgrader.kt  # HTTPS 升级
-│   │       ├── GpcInjector.kt # GPC 信号注入
-│   │       ├── CookieConsentBlocker.kt # Cookie 弹窗拦截
-│   │       └── ReaderMode.kt # 阅读模式
-│   ├── errorpage/           # 错误页面
-│   ├── export/              # 项目导出
-│   ├── extension/           # 扩展模块系统
-│   │   ├── ExtensionModule.kt # 模块数据模型（23种分类/权限/配置）
-│   │   ├── ExtensionManager.kt # 模块生命周期管理
-│   │   ├── BuiltInModules.kt # 10个内置模块
-│   │   ├── BuiltInChromeExtensions.kt # 内置 Chrome 扩展
-│   │   ├── ModuleTemplates.kt # 28 代码模板
-│   │   ├── ModulePreset.kt   # 模块预设
-│   │   ├── CodeSnippets.kt  # 21分类 200+ 代码片段
-│   │   ├── ExtensionFileManager.kt # 扩展文件管理
-│   │   ├── ExtensionPanelScript.kt # 扩展面板脚本
-│   │   ├── ExtensionPanelBridge.kt # 面板桥接
-│   │   ├── ExtensionPopupManager.kt # 弹窗管理
-│   │   ├── ExtensionResourceInterceptor.kt # 资源拦截器
-│   │   ├── ExtensionStorageSync.kt # 存储同步
-│   │   ├── ChromeExtensionParser.kt # Chrome 扩展解析
-│   │   ├── ChromeExtensionPolyfill.kt # Chrome API 兼容层
-│   │   ├── ChromeExtensionRuntime.kt # Chrome 扩展运行时
-│   │   ├── ChromeExtensionMobileCompat.kt # 桌面→移动端适配
-│   │   ├── DeclarativeNetRequestEngine.kt # 声明式网络请求引擎
-│   │   ├── WebRequestBridge.kt # Web 请求桥接
-│   │   ├── GreasemonkeyBridge.kt # 油猴脚本兼容
-│   │   ├── UserScriptParser.kt # 用户脚本解析
-│   │   ├── UserScriptWindowScript.kt # 用户脚本窗口
-│   │   ├── AiModuleDeveloper.kt # AI 模块开发器
-│   │   ├── QrCodeUtils.kt   # 二维码工具
-│   │   ├── DebugTestPages.kt # 调试测试页面
-│   │   └── agent/           # AI Agent 模块开发
-│   │       ├── ModuleAgentEngine.kt # Agent 引擎
-│   │       ├── EnhancedAgentEngine.kt # 增强 Agent
-│   │       ├── AgentContext.kt # Agent 上下文
-│   │       ├── AgentTool.kt  # Agent 工具定义
-│   │       ├── AgentToolExecutor.kt # 工具执行器
-│   │       └── AgentWorkingMemory.kt # Agent 工作记忆
-│   ├── forcedrun/           # 强制运行模式
-│   │   ├── ForcedRunManager.kt # 强制运行管理器
-│   │   ├── ForcedRunConfig.kt # 强制运行配置
-│   │   ├── ForcedRunHardwareController.kt # 硬件控制
-│   │   ├── ForcedRunAccessibilityService.kt # 无障碍服务
-│   │   ├── ForcedRunGuardService.kt # 守护服务
-│   │   └── ForcedRunPermissionHelper.kt # 权限辅助
-│   ├── frontend/            # 前端项目处理
-│   │   ├── ProjectDetector.kt # React/Vue/Next.js 检测
-│   │   ├── FrontendProjectBuilder.kt # 前端项目构建
-│   │   ├── FrontendProjectConfig.kt # 前端项目配置
-│   │   └── SampleProjectManager.kt # 示例项目管理
-│   ├── golang/              # Go 应用运行时
-│   ├── hardening/           # APK 加固保护
-│   │   ├── AppHardeningEngine.kt # 加固引擎
-│   │   ├── AntiReverseEngine.kt  # 反逆向
-│   │   ├── DexProtector.kt  # Dex 保护
-│   │   ├── CodeObfuscator.kt # 代码混淆
-│   │   ├── NativeProtector.kt # 原生层保护
-│   │   ├── EnvironmentDetector.kt # 环境检测
-│   │   └── RuntimeShield.kt # 运行时防护
-│   ├── i18n/                # 多语言支持（中/英/阿拉伯语）
-│   ├── isolation/           # 独立浏览器环境
-│   │   ├── IsolationManager.kt # 隔离管理器
-│   │   ├── IsolationConfig.kt # 隔离配置
-│   │   ├── IsolationScriptInjector.kt # 脚本注入
-│   │   └── FingerprintGenerator.kt # 指纹生成器
-│   ├── linux/               # Linux 环境一键构建
-│   ├── nodejs/              # Node.js 应用运行时
-│   ├── php/                 # PHP 应用运行时
-│   ├── port/                # 端口管理
-│   ├── python/              # Python 应用运行时
-│   ├── shell/               # Shell模式管理
-│   ├── logging/             # 日志系统
-│   │   └── AppLogger.kt     # 应用日志
-│   ├── sample/              # 示例项目
-│   │   └── SampleProjectExtractor.kt # 示例项目提取
-│   ├── webview/             # WebView管理
-│   │   ├── WebViewManager.kt # WebView 核心管理器
-│   │   ├── LocalHttpServer.kt # 本地 HTTP 服务器
-│   │   ├── LongPressHandler.kt # 长按菜单处理
-│   │   ├── TranslateBridge.kt # 翻译桥接
-│   │   ├── NativeBridge.kt  # 原生能力桥接（28 API）
-│   │   └── DownloadBridge.kt # 下载桥接
-│   └── wordpress/           # WordPress 应用运行时
-├── ui/                        # UI层
-│   ├── MainActivity.kt      # 主Activity
-│   ├── gallery/             # 画廊播放器
-│   │   ├── GalleryPlayerActivity.kt # 画廊 Activity
-│   │   └── GalleryPlayerScreen.kt # 画廊播放界面
-│   ├── htmlpreview/         # HTML 预览
-│   │   └── HtmlPreviewActivity.kt # HTML 预览 Activity
-│   ├── media/               # 媒体播放
-│   │   └── MediaAppActivity.kt # 媒体应用 Activity
-│   ├── navigation/          # 导航
-│   │   └── AppNavigation.kt # 应用导航图
-│   ├── shell/               # Shell 模式
-│   │   └── ShellActivity.kt # Shell Activity（独立 APK 入口）
-│   ├── splash/              # 启动画面
-│   │   └── SplashLauncherActivity.kt # 启动画面 Activity
-│   ├── viewmodel/           # ViewModel
-│   │   ├── MainViewModel.kt # 主 ViewModel
-│   │   └── AiModuleDeveloperViewModel.kt # AI 模块开发 ViewModel
-│   ├── webview/             # WebView 容器
-│   │   └── WebViewActivity.kt # WebView Activity
-│   ├── screens/             # 页面
-│   │   ├── HomeScreen.kt    # 主页（应用列表）
-│   │   ├── CreateAppScreen.kt # 创建网站应用
-│   │   ├── CreateMediaAppScreen.kt # 创建媒体应用
-│   │   ├── CreateHtmlAppScreen.kt # 创建HTML应用
-│   │   ├── CreateFrontendAppScreen.kt # 创建前端框架应用
-│   │   ├── CreateGalleryAppScreen.kt # 创建画廊应用
-│   │   ├── CreateNodeJsAppScreen.kt # 创建 Node.js 应用
-│   │   ├── CreatePhpAppScreen.kt # 创建 PHP 应用
-│   │   ├── CreatePythonAppScreen.kt # 创建 Python 应用
-│   │   ├── CreateGoAppScreen.kt # 创建 Go 应用
-│   │   ├── CreateWordPressAppScreen.kt # 创建 WordPress 应用
-│   │   ├── ExtensionModuleScreen.kt # 扩展模块管理
-│   │   ├── ModuleEditorScreen.kt # 模块编辑器
-│   │   ├── AiModuleDeveloperScreen.kt # AI模块开发
-│   │   ├── AiCodingScreen.kt # AI 编程助手
-│   │   ├── HtmlCodingScreen.kt # AI HTML编程
-│   │   ├── AiSettingsScreen.kt # AI 设置
-│   │   ├── BrowserKernelScreen.kt # 浏览器内核管理
-│   │   ├── HostsAdBlockScreen.kt # Hosts 拦截管理
-│   │   ├── ThemeSettingsScreen.kt # 主题设置
-│   │   ├── LinuxEnvironmentScreen.kt # Linux 环境管理
-│   │   ├── RuntimeDepsScreen.kt # 运行时依赖管理
-│   │   ├── PortManagerScreen.kt # 端口管理
-│   │   ├── AppModifierScreen.kt # 应用修改器
-│   │   ├── WordPressSettingsScreen.kt # WordPress 设置
-│   │   ├── AboutScreen.kt   # 关于作者/更新日志
-│   │   └── aimodule/        # AI 模块开发（重构版）
-│   │       ├── AiModuleDeveloperScreenRefactored.kt
-│   │       ├── AiModuleDeveloperUiState.kt
-│   │       └── AiModuleDeveloperViewModel.kt
-│   ├── components/          # 可复用组件（38个文件）
-│   │   ├── announcement/    # 公告模板
-│   │   │   ├── AnnouncementTemplates.kt # 10种公告模板
-│   │   │   └── AnnouncementTemplateSelector.kt # 模板选择器
-│   │   ├── aimodule/        # AI 模块开发组件
-│   │   │   ├── CodePreviewPanel.kt # 代码预览
-│   │   │   ├── ErrorCard.kt # 错误卡片
-│   │   │   ├── ModelSelector.kt # 模型选择器
-│   │   │   ├── StreamingMessageBubble.kt # 流式消息
-│   │   │   ├── ThinkingBlock.kt # 思考块
-│   │   │   └── ToolCallCard.kt # 工具调用卡片
-│   │   ├── htmlcoding/      # HTML 编程组件
-│   │   │   └── HtmlCodingComponents.kt
-│   │   ├── IconGeneratorDialog.kt # AI图标生成
-│   │   ├── IconPickerWithLibrary.kt # 图标选择器
-│   │   ├── IconLibraryDialog.kt # 图标库
-│   │   ├── BgmCard.kt       # BGM 配置卡片
-│   │   ├── BgmSelector.kt   # BGM 选择/在线搜索
-│   │   ├── VideoTrimmer.kt  # 视频裁剪器
-│   │   ├── EncryptionConfigCard.kt # 加密配置
-│   │   ├── HardeningConfigCard.kt # APK 加固配置
-│   │   ├── IsolationConfigCard.kt # 独立环境配置
-│   │   ├── DisguiseConfigCard.kt # 浏览器伪装配置
-│   │   ├── BackgroundRunConfigCard.kt # 后台运行配置
-│   │   ├── ForcedRunConfigCard.kt # 强制运行配置
-│   │   ├── ForcedRunCountdownOverlay.kt # 强制运行倒计时
-│   │   ├── BlackTechConfigCard.kt # 黑科技配置
-│   │   ├── AutoStartCard.kt # 自启动配置
-│   │   ├── ActivationCodeCard.kt # 激活码配置
-│   │   ├── EnhancedActivationDialog.kt # 增强激活对话框
-│   │   ├── DataBackupCard.kt # 数据备份卡片
-│   │   ├── StatusBarConfigCard.kt # 状态栏配置
-│   │   ├── StatusBarBackground.kt # 状态栏背景
-│   │   ├── StatusBarImageCropper.kt # 状态栏图片裁剪
-│   │   ├── ExtensionModuleCard.kt # 扩展模块卡片
-│   │   ├── ExtensionModuleSelector.kt # 模块选择器
-│   │   ├── CodeSnippetSelector.kt # 代码片段选择器
-│   │   ├── SampleProjectCard.kt # 示例项目卡片
-│   │   ├── TypedSampleProjectCard.kt # 类型化示例卡片
-│   │   ├── LongPressMenu.kt # 长按菜单组件
-│   │   ├── QrCodeShareDialog.kt # 二维码分享
-│   │   ├── AppNameTextField.kt # 应用名输入
-│   │   ├── CategoryComponents.kt # 分类组件
-│   │   ├── ColorPickerDialog.kt # 颜色选择器
-│   │   ├── CommonUIComponents.kt # 通用 UI 组件
-│   │   ├── EnhancedElevatedCard.kt # 增强卡片
-│   │   ├── ThemedComponents.kt # 主题化组件
-│   │   ├── LanguageSelector.kt # 语言选择器
-│   │   ├── LrcEditorDialog.kt # LRC 歌词编辑
-│   │   └── ManualLrcAligner.kt # 手动歌词对齐
-│   ├── data/                # 数据层
-│   │   ├── model/           # 数据模型
-│   │   │   ├── WebApp.kt    # 应用实体（11种 AppType）
-│   │   │   ├── AppCategory.kt # 应用分类
-│   │   │   └── AiConfig.kt  # AI 配置
-│   │   ├── dao/             # DAO
-│   │   │   ├── WebAppDao.kt # 应用 DAO
-│   │   │   └── AppCategoryDao.kt # 分类 DAO
-│   │   ├── database/        # 数据库
-│   │   │   └── AppDatabase.kt # Room 数据库
-│   │   ├── repository/      # 仓库
-│   │   │   ├── WebAppRepository.kt # 应用仓库
-│   │   │   └── AppCategoryRepository.kt # 分类仓库
-│   │   └── converter/       # 类型转换器
-│   │       └── Converters.kt # Room TypeConverter
-│   └── theme/               # 主题系统
-│       ├── Theme.kt         # 主题定义
-│       ├── AppThemes.kt     # 应用主题集
-│       ├── ThemeAnimations.kt # 主题动画
-│       └── ThemeManager.kt  # 主题管理器
-└── util/                      # 工具类（21个文件）
-    ├── Extensions.kt        # Kotlin 扩展函数
-    ├── HtmlProjectProcessor.kt # HTML 项目处理
-    ├── ZipProjectImporter.kt # ZIP 项目导入
-    ├── MediaSaver.kt        # 媒体保存
-    ├── MediaStorage.kt      # 媒体存储
-    ├── FaviconFetcher.kt    # 网站图标获取
-    ├── IconStorage.kt       # 图标存储
-    ├── IconLibraryStorage.kt # 图标库存储
-    ├── CacheManager.kt      # 缓存管理
-    ├── DownloadHelper.kt    # 下载辅助
-    ├── DownloadNotificationManager.kt # 下载通知
-    ├── AppUpdateChecker.kt  # 应用更新检查
-    ├── OfflineManager.kt    # 离线管理
-    ├── GsonProvider.kt      # Gson 提供者
-    ├── UrlSafety.kt         # URL 安全检查
-    ├── BgmStorage.kt        # BGM 存储
-    ├── HtmlStorage.kt       # HTML 存储
-    ├── SplashStorage.kt     # 启动画面存储
-    ├── ProcessCompat.kt     # 进程兼容
-    ├── ThreadLocalCompat.kt # ThreadLocal 兼容
-    └── TvUtils.kt           # TV 适配工具
-```
 
 ## 📖 使用说明
 
@@ -847,36 +517,6 @@ signingConfigs {
 | `exitFullscreen()` | 退出全屏模式 |
 | `isFullscreen()` | 检查全屏状态 |
 
-### 模块开发示例
-```javascript
-// 示例1：自动隐藏广告
-const selectors = getConfig('selectors', '.ad-banner').split('\n');
-function hideAds() {
-    selectors.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
-            el.style.display = 'none';
-        });
-    });
-}
-hideAds();
-new MutationObserver(hideAds).observe(document.body, { childList: true, subtree: true });
-
-// 示例2：一键保存图片（使用 NativeBridge）
-document.querySelectorAll('img').forEach(img => {
-    img.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        NativeBridge.saveImageToGallery(img.src);
-        NativeBridge.vibrate(50);
-        NativeBridge.showToast('图片已保存');
-    });
-});
-
-// 示例3：分享当前页面
-function shareCurrentPage() {
-    NativeBridge.share(document.title, '分享给你一个有趣的页面', location.href);
-}
-```
-
 ## 公告模板
 
 内置 10 种精美公告弹窗模板：
@@ -916,240 +556,6 @@ function shareCurrentPage() {
 
 MIT License
 
-## 更新日志
-
-### v1.9.5
-**新功能**
-- 新增cookies持久化
-- 新增多apikey管理配置
-- 新增模型名称搜索功能
-- 新增隐藏URL预览功能
-- 新增弹窗拦截器功能
-
-**优化改进**
-- 优化自定义api端点适配
-- 优化模型名称显示
-- 优化部分内容的多语言适配
-
-**Bug 修复**
-- 修复画廊应用构建路径问题
-- 修复麦克风权限问题
-- 修复zoom属性不生效问题
-- 修复激活码语言显示问题
-- 修复前端应用和画廊应用显示文件名问题
-- 修复编辑核心配置功能部分应用类型失效问题
-- 修复键盘初始化问题
-
-### v1.9.0
-**新功能**
-- 新增浏览器内核功能：支持自定义 WebView 内核配置
-- 新增浏览器伪装功能：User-Agent 和浏览器指纹伪装
-- 新增 Hosts 拦截功能：自定义 hosts 文件实现域名级别拦截
-- 新增长按菜单功能：增强的长按上下文菜单选项
-- 新增 APK 架构功能：支持选择目标 CPU 架构（arm64-v8a、armeabi-v7a、x86、x86_64）
-- 新增媒体画廊功能：内置媒体画廊管理图片和视频
-
-**优化改进**
-- 优化扩展模块功能
-- 优化英文、阿拉伯语翻译支持
-- 强化主题交互与性能
-- 优化 API 配置测试
-
-**Bug 修复**
-- 修复应用名称大量空格问题
-- 修复弹窗公告跳转问题
-- 修复调用外部浏览器崩溃问题
-- 修复下载错误问题
-- 修复编辑模块时崩溃问题
-- 修复 AI 生成图像无效问题
-- 修复下载器与播放器协同处理问题
-
-### v1.8.5
-**新功能**
-- 新增应用分类功能
-- 新增网页应用图标获取功能
-- 新增随机应用名称功能
-- 新增多应用图标功能
-
-**优化改进**
-- 优化数据备份功能
-- 优化黑科技功能
-
-**Bug 修复**
-- 修复元素屏蔽器问题
-- 修复后台运行功能闪退问题
-- 修复多语言字符串适配问题
-
-### v1.8.0
-**新功能**
-- 多语言支持：适配中文、英文、阿拉伯语三种语言
-- 分享 APK 功能：支持分享已构建的 APK 文件
-- 元素屏蔽器扩展模块：可视化屏蔽网页元素
-- 强制运行功能：支持应用强制运行模式
-- Linux 一键构建配置：支持在 Linux 环境下一键构建前端项目
-- Vue/React/Vite 转 APK：支持前端框架项目转换为 APK
-
-**优化改进**
-- 优化主题功能
-- 优化关于页面 UI
-
-**Bug 修复**
-- 修复全屏模式中状态栏问题
-- 修复部分机型/模拟器闪退问题
-
-### v1.7.7
-**新功能**
-- 状态栏样式配置：支持自定义状态栏高度、背景颜色/图片、透明度
-- APK 加密保护：支持对配置文件和资源进行加密保护
-
-### v1.7.6
-**新功能与优化**
-- 开机自启动和定时自启动功能
-- 数据备份：一键导出/导入所有应用数据
-- 全屏模式状态栏透明叠加显示
-
-### v1.7.5
-**新功能与优化**
-- 全屏模式下可选择显示状态栏：解决不开全屏模式会出现导航栏的问题
-- 修复 HTML 项目长按文字无法复制的问题
-- 支持 Android 6.0 系统（API 23）
-
-### v1.7.4
-**Bug 修复**
-- 修复 HTML 应用不显示状态栏的问题
-- 修复部分系统应用名称显示为空的问题
-- 修复 AI 模块开发中代码块显示内容叠加的问题
-- 修复 AI HTML 编程中工具调用失败的问题
-- 优化 AI HTML 编程的提示词和模型兼容性
-
-### v1.7.3
-**新功能与优化**
-- 状态栏颜色跟随主题：默认跟随主题色彩，浅色主题用浅色背景，深色主题用深色背景
-- 支持自定义状态栏背景颜色：可选择透明、跟随主题或自定义颜色
-- 修复状态栏文字看不清的问题
-
-### v1.7.2
-**Bug 修复**
-- 修复 JS 文件选择器在部分系统上无法选择的兼容性问题
-- 修复视频全屏时未自动横屏的问题，现在会自动旋转并填充显示
-
-### v1.7.1
-**Bug 修复与新功能**
-- 修复小红书等网站图片长按无法保存的问题
-- 新增小红书图片下载器模块，支持批量下载
-- 修复 Blob 格式文件（如 JSON）导出失败的问题
-- 修复 HTML 项目导入后 CSS/JS 不生效的问题
-- 修复任务列表显示双重名称的问题
-
-### v1.7.0
-**Bug 修复与优化**
-- 修复数十个已知问题
-- 优化 AI Agent 编程架构
-
-### v1.6.0
-**新增功能**
-- 扩展模块系统：类油猴脚本的 JS/CSS 注入系统
-  - 9个功能丰富的内置模块（视频下载、平台视频提取、视频增强、网页分析、暗黑模式、隐私保护、内容增强）
-  - 30+ 代码模板，快速创建模块
-  - 20+ 模块分类，覆盖常见需求
-  - 支持 URL 匹配规则（通配符/正则）
-  - 支持用户配置项
-  - 支持分享码导入导出
-- AI 模块开发 Agent：AI 辅助开发扩展模块
-  - 自然语言描述需求，自动生成代码
-  - 自动语法检查和安全扫描
-  - 自动修复检测到的错误
-  - 代码片段库快速插入
-- AI 图标生成：使用 AI 生成应用图标
-- 图标库：收藏和管理生成的图标
-- 在线音乐搜索：在线搜索下载音乐作为 BGM
-- 公告模板系统：10 种精美公告弹窗模板
-- 网页自动翻译：网页内容自动翻译功能
-
-**优化改进**
-- 重构扩展模块架构，支持更灵活的模块开发
-- 优化 AI 功能，支持更多模型和供应商
-
-### v1.5.0
-**新增功能**
-- AI HTML 编程助手：使用 AI 辅助生成和修改 HTML 代码
-  - 支持多种文本/图像生成模型
-  - 会话管理、模板选择、样式定制
-  - 代码块解析、实时预览
-- AI 设置界面：统一管理 API 密钥和模型
-  - 支持添加多个 API Key，实时测试连接
-  - 支持自定义 Base URL，模型列表从 API 实时获取
-- HTML 应用：支持将 HTML/CSS/JS 项目转换为独立 Android 应用
-- 主题系统：全新的主题定制功能
-  - 内置多款精美主题风格，支持深色模式
-  - 可自定义动画效果开关和速度
-- 背景音乐（BGM）：为应用添加背景音乐
-  - 支持 LRC 歌词同步显示、循环播放
-
-**优化改进**
-- 主页 UI 整合 AI 编程、主题设置、AI 设置入口
-- FAB 菜单新增 HTML 应用创建入口
-
-### v1.3.0
-**新增功能**
-- 媒体应用：支持图片/视频转换为独立 App
-  - 图片转 App：全屏展示，支持铺满屏幕
-  - 视频转 App：支持循环播放、音频开关、自动播放
-  - 媒体应用支持导出为独立 APK
-- 用户脚本注入：支持自定义 JavaScript 脚本
-  - 支持多个脚本管理（启用/禁用）
-  - 支持页面加载前/后执行时机
-  - 导出 APK 完整支持脚本注入
-- 启动画面（Splash Screen）：支持设置应用启动时显示的图片或视频
-  - 支持图片启动画面，可设置显示时长
-  - 支持视频启动画面，内置视频裁剪器（时长不限）
-  - 视频启动画面支持音频开关
-  - 支持点击跳过、横屏显示、铺满屏幕
-- 视频裁剪组件：可视化选择视频片段，实时预览
-
-**优化改进**
-- 数据模型重构，支持视频裁剪配置持久化
-- Shell 模式（导出 APK）完整支持启动画面播放
-- 优化 MediaPlayer 视频播放，支持精确 seek 和自动停止
-- 主页 FAB 改为展开菜单，支持创建网页应用和媒体应用
-
-**Bug 修复**
-- 修复快捷方式图标错误使用启动图片的问题
-- 修复数据库 schema 不匹配导致的闪退问题
-
-### v1.2.3
-**Bug 修复**
-- 修复构建 APK 图标被放大裁剪的问题
-- 遵循 Android Adaptive Icon 规范处理图标
-- 提升图标清晰度（使用 xxxhdpi 432px 分辨率）
-
-### v1.2.2
-**Bug 修复**
-- 修复 Release 版本构建 APK 时自定义图标不生效的问题
-- 优化 ArscEditor 图标路径替换
-
-### v1.2.1
-**新增功能**
-- 全屏模式：隐藏工具栏，无浏览器特征
-
-### v1.2.0
-**Bug 修复**
-- 修复导出APK包名非法导致安装失败
-- 修复导出APK权限/Provider冲突问题
-
-### v1.1.0
-**新增功能**
-- 一键构建独立 APK 安装包
-- 应用修改器：修改已安装应用的图标和名称
-- 克隆安装：生成独立包名的克隆应用
-- 访问电脑版：强制桌面模式加载网页
-
-### v1.0.0
-- 初始版本发布
-- 支持 URL 转快捷方式基本功能
-- 支持激活码、公告、广告拦截
-- 支持项目模板导出
-
 ## 联系作者
 
 本应用由作者（shiaho）独立开发，有任何问题都可以找我！
@@ -1177,68 +583,3 @@ MIT License
 | **作者QQ** | 2711674184 |
 | **QQ邮箱** | 2711674184@qq.com |
 | **Gmail** | weuwo479@gmail.com |
-
----
-
-## ⚠️ 法律声明与免责条款
-
-> **重要提示**：使用本软件即表示您已阅读、理解并同意以下全部条款。
-
-### 一、软件性质与用途
-
-本软件为**开源技术研究与教育演示工具**，所有功能均基于 Android 系统公开 API 实现，旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。
-
-### 二、用户责任与义务
-
-用户应确保在**合法、正当**的场景下使用本软件，包括但不限于：
-
-- **自我管理**：用于个人专注力训练、学习时间管理
-- **企业展示**：用于展会、商场等场景的展示终端
-- **家长监护**：在未成年人知情同意下的合理使用
-- **教育研究**：用于技术学习和安全研究
-
-⛔ **严禁**将本软件用于任何侵犯他人人身自由、隐私权、财产权等合法权益的行为。
-
-### 三、高级功能特别声明
-
-本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于**技术演示性质**：
-
-1. **【知情同意原则】** 高级功能仅应在设备所有者或使用者完全知情并明确同意的情况下启用
-2. **【自主控制原则】** 所有功能均提供紧急退出机制，用户可通过密码随时终止
-3. **【技术中立原则】** 功能本身不具有违法性，其合法性取决于使用者的具体使用方式和目的
-4. **【风险自担原则】** 启用高级功能可能造成设备发热、电池消耗加快等情况，用户需自行承担相关风险
-
-### 四、免责条款
-
-1. 本软件按「**现状**」提供，开发者不对软件的适用性、可靠性、安全性作任何明示或暗示的保证
-2. 用户因违反法律法规或本声明使用本软件所产生的**一切法律责任**，由用户自行承担，与开发者无关
-3. 开发者不对因使用本软件导致的任何直接、间接、偶然、特殊或惩罚性损害承担责任
-4. 任何第三方利用本软件源代码进行的修改、分发行为，其法律责任由该第三方自行承担
-
-### 五、合规使用指引
-
-为确保合法合规使用，建议用户：
-
-- ✅ 在使用前获取设备实际使用者的书面或电子形式同意
-- ✅ 在企业场景下制定相应的使用规范和管理制度
-- ✅ 在教育场景下确保符合相关教育法规要求
-- ✅ 定期检查并遵守当地法律法规的最新要求
-
-### 六、知识产权声明
-
-本软件基于 **MIT 开源协议**发布，用户可自由使用、修改和分发，但需保留原始版权声明。用户基于本软件进行的二次开发，其法律责任由二次开发者自行承担。
-
-### 最终用户协议确认
-
-继续使用本软件即表示您：
-
-- ✓ 已年满18周岁或已获得法定监护人同意
-- ✓ 已完整阅读并理解上述所有条款
-- ✓ 同意遵守所有使用条款和当地法律法规
-- ✓ 自愿承担使用本软件可能产生的一切风险和责任
-
----
-
-*本声明自发布之日起生效，开发者保留随时修改本声明的权利。*
-
-*最后更新：2026年1月*
