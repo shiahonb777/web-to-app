@@ -53,7 +53,6 @@ object Routes {
     const val LINUX_ENVIRONMENT = "linux_environment"
 
     const val EDIT_APP = "edit_app/{appId}"
-    const val EDIT_WEB_APP = "edit_web_app/{appId}"
     const val EDIT_MEDIA_APP = "edit_media_app/{appId}"
     const val EDIT_GALLERY_APP = "edit_gallery_app/{appId}"
     const val EDIT_HTML_APP = "edit_html_app/{appId}"
@@ -103,7 +102,6 @@ object Routes {
     val TAB_ROUTES = setOf(HOME, APP_STORE, COMMUNITY, PROFILE_TAB, MORE)
 
     fun editApp(appId: Long) = "edit_app/$appId"
-    fun editWebApp(appId: Long) = "edit_web_app/$appId"
     fun editMediaApp(appId: Long) = "edit_media_app/$appId"
     fun editGalleryApp(appId: Long) = "edit_gallery_app/$appId"
     fun editHtmlApp(appId: Long) = "edit_html_app/$appId"

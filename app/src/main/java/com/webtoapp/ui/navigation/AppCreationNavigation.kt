@@ -241,19 +241,6 @@ internal fun NavGraphBuilder.addAppCreationRoutes(
     }
 
     composable(
-        route = Routes.EDIT_WEB_APP,
-        arguments = listOf(navArgument("appId") { type = NavType.LongType })
-    ) {
-        CreateAppScreen(
-            viewModel = viewModel,
-            activationManager = activationManager,
-            isEdit = true,
-            onBack = { navController.popBackStack() },
-            onSaved = { navController.popBackStack() }
-        )
-    }
-
-    composable(
         route = Routes.EDIT_MEDIA_APP,
         arguments = listOf(navArgument("appId") { type = NavType.LongType })
     ) { backStackEntry ->

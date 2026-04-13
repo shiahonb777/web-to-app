@@ -73,6 +73,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.core.extension.ExtensionManager
+import org.koin.compose.koinInject
 
 // ════════════════════════════════════════════════
 // ════════════════════════════════════════════════
@@ -92,8 +94,7 @@ internal fun DownloadManagerSheet(
     val downloadedApps by downloadManager.downloadedApps.collectAsState()
 
     // Module installation tracking
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val extensionManager = remember { com.webtoapp.core.extension.ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val allUserModules by extensionManager.modules.collectAsState()
     val scope = rememberCoroutineScope()
 

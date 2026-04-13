@@ -17,7 +17,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.theme.ShellTheme
 import com.webtoapp.ui.theme.LocalIsDarkTheme
@@ -27,6 +26,7 @@ import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.floatingwindow.FloatingWindowService
 import com.webtoapp.core.shell.CloudSdkManager
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.ui.shared.WindowHelper
 
 /**
@@ -238,7 +238,7 @@ class ShellActivity : AppCompatActivity() {
         
         super.onCreate(savedInstanceState)
 
-        val config = WebToAppApplication.shellMode.getConfig()
+        val config = ShellRuntimeServices.shellMode.getConfig()
         if (config == null) {
             AppLogger.e("ShellActivity", "配置加载失败，无法启动应用")
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "配置加载失败，无法启动应用")
@@ -531,7 +531,7 @@ class ShellActivity : AppCompatActivity() {
         if (!url.isNullOrBlank() && intent?.action == Intent.ACTION_VIEW) {
             val safeUrl = normalizeShellTargetUrlForSecurity(url)
             // 验证 Deep Link 域名白名单
-            val config = WebToAppApplication.shellMode.getConfig()
+            val config = ShellRuntimeServices.shellMode.getConfig()
             val validatedUrl = if (config?.deepLinkEnabled == true) {
                 validateDeepLinkUrl(safeUrl, config.deepLinkHosts, config.targetUrl)
             } else safeUrl

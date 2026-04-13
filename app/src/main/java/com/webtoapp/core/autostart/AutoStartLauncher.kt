@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.ui.shell.ShellActivity
 import com.webtoapp.ui.webview.WebViewActivity
 
@@ -33,7 +33,7 @@ object AutoStartLauncher {
     ) {
         val action = Runnable {
             val isShellMode = try {
-                WebToAppApplication.shellMode.isShellMode()
+                ShellRuntimeServices.shellMode.isShellMode()
             } catch (e: Exception) {
                 false
             }

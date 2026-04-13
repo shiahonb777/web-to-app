@@ -44,7 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
-import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.activation.ActivationManager
+import com.webtoapp.core.adblock.AdBlocker
+import com.webtoapp.core.announcement.AnnouncementManager
 import com.webtoapp.core.bgm.BgmPlayer
 import com.webtoapp.core.webview.LocalHttpServer
 import com.webtoapp.core.webview.LongPressHandler
@@ -71,7 +73,9 @@ import com.webtoapp.core.wordpress.WordPressManager
 import com.webtoapp.data.model.WordPressConfig
 import com.webtoapp.core.php.PhpAppRuntime
 import com.webtoapp.core.stats.AppUsageTracker
+import com.webtoapp.data.repository.WebAppRepository
 import androidx.compose.ui.text.style.TextOverflow
+import org.koin.compose.koinInject
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,10 +95,10 @@ fun WebViewScreen(
 ) {
     val context = LocalContext.current
     val activity = context as android.app.Activity
-    val repository = WebToAppApplication.repository
-    val activation = WebToAppApplication.activation
-    val announcement = WebToAppApplication.announcement
-    val adBlocker = WebToAppApplication.adBlock
+    val repository: WebAppRepository = koinInject()
+    val activation: ActivationManager = koinInject()
+    val announcement: AnnouncementManager = koinInject()
+    val adBlocker: AdBlocker = koinInject()
     
     // Yes否为测试模式
     val isTestMode = !testUrl.isNullOrBlank()
@@ -825,7 +829,7 @@ fun WebViewScreen(
     val webViewManager = rememberWebViewManager(context, adBlocker)
     
     // Local HTTP 服务器
-    val localHttpServer = remember { LocalHttpServer.getInstance(context) }
+    val localHttpServer: LocalHttpServer = koinInject()
     
     // 根据应用类型构建目标 URL
     val targetUrl = remember(directUrl, webApp, testUrl) {

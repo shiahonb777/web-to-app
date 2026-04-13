@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.webtoapp.ui.data.converter.Converters
+import com.webtoapp.data.converter.Converters
 import androidx.compose.runtime.Stable
 import com.webtoapp.util.toFileSizeString
 
@@ -1596,114 +1596,4 @@ data class AutoStartConfig(
     val bootDelay: Long = 5000L                 // 开机延迟（毫秒，1000-30000）
 )
 
-/**
- * 云 SDK 应用配置 — 关联云项目后嵌入导出的 APK
- *
- * 用户在创建/编辑应用时选择一个云项目来关联，
- * 构建 APK 时会把此配置转换为 CloudSdkConfig 写入 app_config.json，
- * 导出的 APP 启动时 CloudSdkManager 会读取配置并初始化：
- * - 更新检查 → 弹出更新对话框
- * - 公告展示 → 弹出公告对话框
- * - 远程配置 → 缓存到 SharedPreferences
- * - 激活码验证 → 在线验证
- * - 统计上报 → 设备/使用/崩溃数据
- * - FCM 推送 → 实时推送（Ultra 专属）
- */
-data class CloudAppConfig(
-    /** 是否启用云 SDK */
-    val enabled: Boolean = false,
-    /** 关联的云项目 ID */
-    val projectId: Int = 0,
-    /** 云项目 Key（UUID） */
-    val projectKey: String = "",
-    /** 云项目名称（用于 UI 显示） */
-    val projectName: String = "",
-    
-    // ─── 功能开关 ───
-    /** 启用更新检查 */
-    val updateCheckEnabled: Boolean = true,
-    /** 启用公告 */
-    val announcementEnabled: Boolean = true,
-    /** 启用远程配置 */
-    val remoteConfigEnabled: Boolean = true,
-    /** 启用在线激活码验证（替代离线激活码） */
-    val activationCodeEnabled: Boolean = false,
-    /** 启用统计上报 */
-    val statsReportEnabled: Boolean = true,
-    /** 启用 FCM 推送 */
-    val fcmPushEnabled: Boolean = false,
-    /** 启用远程脚本热更 */
-    val remoteScriptEnabled: Boolean = false,
-    /** 启用崩溃上报 */
-    val reportCrashes: Boolean = true,
-    
-    // ─── 更新配置 ───
-    /** 更新检查间隔（秒） */
-    val updateCheckInterval: Int = 3600,
-    /** 支持强制更新 */
-    val forceUpdateEnabled: Boolean = false,
-    
-    // ─── 统计配置 ───
-    /** 统计上报间隔（秒） */
-    val statsReportInterval: Int = 3600
-) {
-    /**
-     * 转换为 CloudSdkConfig（用于 APK 构建时嵌入）
-     */
-    fun toCloudSdkConfig(): com.webtoapp.core.shell.CloudSdkConfig {
-        return com.webtoapp.core.shell.CloudSdkConfig(
-            enabled = enabled && projectKey.isNotBlank(),
-            projectKey = projectKey,
-            updateCheckEnabled = updateCheckEnabled,
-            announcementEnabled = announcementEnabled,
-            remoteConfigEnabled = remoteConfigEnabled,
-            activationCodeEnabled = activationCodeEnabled,
-            statsReportEnabled = statsReportEnabled,
-            fcmPushEnabled = fcmPushEnabled,
-            remoteScriptEnabled = remoteScriptEnabled,
-            updateCheckInterval = updateCheckInterval,
-            forceUpdateEnabled = forceUpdateEnabled,
-            statsReportInterval = statsReportInterval,
-            reportCrashes = reportCrashes
-        )
-    }
-}
-
-// ═══════════════════════════════════════════
-// Manifest 序列化 / 反序列化（云端同步用）
-// ═══════════════════════════════════════════
-
-/**
- * 将 WebApp 序列化为 Manifest JSON 字符串。
- * 用于云端同步、备份、跨设备迁移。
- */
-fun WebApp.toManifestJson(): String {
-    return com.webtoapp.ui.data.converter.Converters.gson.toJson(this)
-}
-
-/**
- * Manifest 工具类
- */
-object ManifestUtils {
-    /**
-     * 从 Manifest JSON 字符串恢复 WebApp。
-     * 使用 mergeMissingDefaults 保证向前/向后兼容。
-     */
-    fun fromManifestJson(json: String, overrideId: Long? = null): WebApp? {
-        return try {
-            val parsed = com.google.gson.JsonParser.parseString(json)
-            val defaultWebApp = WebApp(name = "", url = "")
-            val defaultJson = com.webtoapp.ui.data.converter.Converters.gson.toJsonTree(defaultWebApp)
-            val merged = com.webtoapp.ui.data.converter.Converters.mergeMissingDefaults(defaultJson, parsed)
-            val restored = com.webtoapp.ui.data.converter.Converters.gson.fromJson(merged, WebApp::class.java)
-            if (overrideId != null) {
-                restored?.copy(id = overrideId, updatedAt = System.currentTimeMillis())
-            } else {
-                restored
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-}
 

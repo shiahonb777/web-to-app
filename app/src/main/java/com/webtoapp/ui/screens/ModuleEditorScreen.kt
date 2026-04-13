@@ -42,6 +42,7 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumTextField
 
 import com.webtoapp.ui.components.PremiumSwitch
+import org.koin.compose.koinInject
 /**
  * 模块编辑器页面
  */
@@ -53,7 +54,7 @@ fun ModuleEditorScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     
     // Decode moduleId in case it was URL-encoded during navigation
     val decodedModuleId = remember(moduleId) {

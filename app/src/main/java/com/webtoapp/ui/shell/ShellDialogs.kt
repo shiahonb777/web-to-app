@@ -6,10 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.forcedrun.ForcedRunPermissionDialog
 import com.webtoapp.data.model.Announcement
@@ -26,8 +26,7 @@ fun ShellActivationDialog(
     onActivated: () -> Unit
 ) {
     val context = LocalContext.current
-    val activation = WebToAppApplication.activation
-    val announcement = WebToAppApplication.announcement
+    val activation = ShellRuntimeServices.activation
 
     ActivationDialog(
         onDismiss = onDismiss,
@@ -63,7 +62,7 @@ fun ShellAnnouncementDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val announcement = WebToAppApplication.announcement
+    val announcement = ShellRuntimeServices.announcement
 
     // Build Announcement 对象
     val shellAnnouncement = Announcement(
@@ -123,10 +122,11 @@ fun ShellForcedRunPermissionDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val forcedRunConfig = config.forcedRunConfig ?: return
     val forcedRunManager = ForcedRunManager.getInstance(context)
 
     ForcedRunPermissionDialog(
-        protectionLevel = config.forcedRunConfig!!.protectionLevel,
+        protectionLevel = forcedRunConfig.protectionLevel,
         onDismiss = onDismiss,
         onContinueAnyway = {
             // User选择跳过，降级防护继续使用
@@ -140,9 +140,7 @@ fun ShellForcedRunPermissionDialog(
             // 重新启动强制运行以应用新权限
             if (forcedRunActive) {
                 forcedRunManager.stopForcedRunMode()
-                config.forcedRunConfig?.let { cfg ->
-                    forcedRunManager.startForcedRunMode(cfg, -1L)
-                }
+                forcedRunManager.startForcedRunMode(forcedRunConfig, -1L)
             }
         }
     )

@@ -976,7 +976,6 @@ class AiCodingAgent(private val context: Context) {
             
             // 调用图像生成 API
             val result = aiClient.generateImage(
-                context = context,
                 prompt = enhancedPrompt,
                 apiKey = apiKey,
                 model = imageModel,

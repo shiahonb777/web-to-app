@@ -1,4 +1,4 @@
-package com.webtoapp.ui.data.converter
+package com.webtoapp.data.converter
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson

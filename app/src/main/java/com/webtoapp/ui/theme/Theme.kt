@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import org.koin.compose.koinInject
 
 // ==================== 主题状态 ====================
 
@@ -119,7 +120,7 @@ fun WebToAppTheme(
     content: @Composable (isDarkTheme: Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    val themeManager = remember { ThemeManager.getInstance(context) }
+    val themeManager: ThemeManager = koinInject()
     
     // 收集主题设置 - StateFlow 已缓存状态，不会在重组时重置
     val themeType by themeManager.themeTypeFlow.collectAsStateWithLifecycle()

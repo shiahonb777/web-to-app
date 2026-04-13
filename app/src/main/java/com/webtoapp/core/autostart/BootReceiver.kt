@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.shell.ShellRuntimeServices
 
 /**
  * 开机 / 时间变更 广播接收器
@@ -74,14 +74,14 @@ class BootReceiver : BroadcastReceiver() {
         try {
             // ① 开机自启动
             val isShellMode = try {
-                WebToAppApplication.shellMode.isShellMode()
+                ShellRuntimeServices.shellMode.isShellMode()
             } catch (e: Exception) {
                 false
             }
 
             if (isShellMode) {
                 val config = try {
-                    WebToAppApplication.shellMode.getConfig()
+                    ShellRuntimeServices.shellMode.getConfig()
                 } catch (e: Exception) {
                     null
                 }

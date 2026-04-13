@@ -15,9 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.Announcement
@@ -54,9 +54,9 @@ fun ShellScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val activity = context as android.app.Activity
-    val activation = WebToAppApplication.activation
-    val announcement = WebToAppApplication.announcement
-    val adBlocker = WebToAppApplication.adBlock
+    val activation = ShellRuntimeServices.activation
+    val announcement = ShellRuntimeServices.announcement
+    val adBlocker = ShellRuntimeServices.adBlock
     // 强制运行状态管理（逻辑已提取到 ShellForcedRunState.kt）
     val forcedRunState = rememberForcedRunState(context)
     val forcedRunActive = forcedRunState.forcedRunActive

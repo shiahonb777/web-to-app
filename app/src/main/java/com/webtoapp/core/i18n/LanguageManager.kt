@@ -23,7 +23,7 @@ enum class AppLanguage(
 ) {
     CHINESE("zh", "Chinese", "中文", Locale.CHINESE),
     ENGLISH("en", "English", "English", Locale.ENGLISH),
-    ARABIC("ar", "Arabic", "العربية", Locale("ar"), isRtl = true);
+    ARABIC("ar", "Arabic", "العربية", Locale.forLanguageTag("ar"), isRtl = true);
     
     companion object {
         fun fromCode(code: String): AppLanguage {
@@ -44,15 +44,6 @@ class LanguageManager(private val context: Context) {
     companion object {
         private val LANGUAGE_KEY = stringPreferencesKey("app_language")
         private val LANGUAGE_SELECTED_KEY = stringPreferencesKey("language_selected")
-        
-        @Volatile
-        private var instance: LanguageManager? = null
-        
-        fun getInstance(context: Context): LanguageManager {
-            return instance ?: synchronized(this) {
-                instance ?: LanguageManager(context.applicationContext).also { instance = it }
-            }
-        }
     }
     
     /**

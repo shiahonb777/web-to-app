@@ -5,11 +5,11 @@ import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.shell.ShellRuntimeServices
 
 /**
  * ShellActivity 的 onCreate 初始化辅助
@@ -24,7 +24,7 @@ object ShellActivityInit {
      */
     fun initLogger(activity: AppCompatActivity) {
         try {
-            val tempConfig = WebToAppApplication.shellMode.getConfig()
+            val tempConfig = ShellRuntimeServices.shellMode.getConfig()
             val versionName = try {
                 activity.packageManager.getPackageInfo(activity.packageName, 0).versionName ?: "1.0.0"
             } catch (e: Exception) { "1.0.0" }

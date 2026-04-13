@@ -25,7 +25,7 @@ import java.io.IOException
 class AiApiClient(private val context: Context) {
     
     private val gson = com.webtoapp.util.GsonProvider.gson
-    private val registry by lazy { LiteLLMModelRegistry.getInstance(context) }
+    private val registry by lazy { LiteLLMModelRegistry(context.applicationContext) }
     
     /**
      * 清理 API Key，移除所有换行符和空白字符
@@ -2555,7 +2555,6 @@ val json = gson.fromJson(body, JsonObject::class.java)
      * @return 返回 base64 编码的图像数据
      */
     suspend fun generateImage(
-        context: Context,
         prompt: String,
         apiKey: ApiKeyConfig,
         model: SavedModel,

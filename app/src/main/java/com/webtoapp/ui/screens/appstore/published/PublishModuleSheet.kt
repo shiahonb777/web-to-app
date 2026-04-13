@@ -73,6 +73,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.core.extension.ExtensionManager
+import org.koin.compose.koinInject
 
 // ════════════════════════════════════════════════
 // 我的模块 Bottom Sheet
@@ -89,9 +91,8 @@ internal fun PublishModuleSheet(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = androidx.compose.ui.platform.LocalContext.current
-
     // Load local modules from ExtensionManager
-    val extensionManager = remember { com.webtoapp.core.extension.ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val localModules by extensionManager.modules.collectAsState()
 
     // Selected module

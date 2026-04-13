@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import org.koin.compose.koinInject
 
 /**
  * 创建/编辑前端项目应用页面
@@ -68,7 +69,7 @@ fun CreateFrontendAppScreen(
     val isEditMode = existingAppId != null
     
     // Linux 环境
-    val linuxEnv = remember { LinuxEnvironmentManager.getInstance(context) }
+    val linuxEnv: LinuxEnvironmentManager = koinInject()
     val linuxState by linuxEnv.state.collectAsStateWithLifecycle()
     
     // Build模式
