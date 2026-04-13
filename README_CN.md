@@ -435,6 +435,13 @@ git clone https://github.com/shiahonb777/web-to-app.git
 | 网络 | OkHttp |
 | 原生 | CMake C++17 / NDK |
 
+## 多语言结构
+
+- `app/src/main/java/com/webtoapp/core/i18n/Strings.kt`
+  现在主要保留兼容门面、语言状态和上下文绑定。
+- `app/src/main/java/com/webtoapp/core/i18n/strings`
+  文案已按职责拆成多个子文件，包括通用 UI、创建/项目流程、云端/社区、AI/AI 编码/AI 配置、模块/扩展、Shell/WebView、代码片段/商店/计费、音乐/构建/UI，以及历史兼容补丁分组。
+
 ## 编译说明
 
 ### 环境要求

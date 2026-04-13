@@ -923,6 +923,136 @@ internal object CloudStrings {
         AppLanguage.ENGLISH -> "Please enter a valid activation code"
         AppLanguage.ARABIC -> "يرجى إدخال رمز تفعيل صالح"
     }
+    // ==================== 高级数据看板 ====================
+    val analyticsOpens: String get() = when (lang) {
+        AppLanguage.CHINESE -> "打开次数"
+        AppLanguage.ENGLISH -> "Opens"
+        AppLanguage.ARABIC -> "مرات الفتح"
+    }
 
+    val analyticsActiveUsers: String get() = when (lang) {
+        AppLanguage.CHINESE -> "活跃用户"
+        AppLanguage.ENGLISH -> "Active Users"
+        AppLanguage.ARABIC -> "المستخدمون النشطون"
+    }
 
+    val analyticsInstalls: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装量"
+        AppLanguage.ENGLISH -> "Installs"
+        AppLanguage.ARABIC -> "التثبيتات"
+    }
 
+    val analyticsCrashes: String get() = when (lang) {
+        AppLanguage.CHINESE -> "崩溃"
+        AppLanguage.ENGLISH -> "Crashes"
+        AppLanguage.ARABIC -> "الأعطال"
+    }
+
+    val analyticsDevices: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设备数"
+        AppLanguage.ENGLISH -> "Devices"
+        AppLanguage.ARABIC -> "الأجهزة"
+    }
+
+    val analyticsAvgDaily: String get() = when (lang) {
+        AppLanguage.CHINESE -> "日均活跃"
+        AppLanguage.ENGLISH -> "Avg Daily"
+        AppLanguage.ARABIC -> "المتوسط اليومي"
+    }
+
+    val analyticsTrend: String get() = when (lang) {
+        AppLanguage.CHINESE -> "趋势图"
+        AppLanguage.ENGLISH -> "Trend"
+        AppLanguage.ARABIC -> "الاتجاه"
+    }
+
+    val analyticsOsDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "系统版本分布"
+        AppLanguage.ENGLISH -> "OS Distribution"
+        AppLanguage.ARABIC -> "توزيع نظام التشغيل"
+    }
+
+    val analyticsDeviceDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "设备品牌分布"
+        AppLanguage.ENGLISH -> "Device Distribution"
+        AppLanguage.ARABIC -> "توزيع الأجهزة"
+    }
+
+    val analyticsCountryDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "地区分布"
+        AppLanguage.ENGLISH -> "Country Distribution"
+        AppLanguage.ARABIC -> "التوزيع الجغرافي"
+    }
+
+    val analyticsVersionDistribution: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本分布"
+        AppLanguage.ENGLISH -> "Version Distribution"
+        AppLanguage.ARABIC -> "توزيع الإصدارات"
+    }
+
+    val analyticsDashboard: String get() = when (lang) {
+        AppLanguage.CHINESE -> "数据看板"
+        AppLanguage.ENGLISH -> "Analytics"
+        AppLanguage.ARABIC -> "لوحة البيانات"
+    }
+    // ==================== 网站健康监控 ====================
+    val healthTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "网站健康"
+        AppLanguage.ENGLISH -> "Site Health"
+        AppLanguage.ARABIC -> "صحة الموقع"
+    }
+
+    val healthOnline: String get() = when (lang) {
+        AppLanguage.CHINESE -> "在线"
+        AppLanguage.ENGLISH -> "Online"
+        AppLanguage.ARABIC -> "متصل"
+    }
+
+    val healthSlow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "慢速"
+        AppLanguage.ENGLISH -> "Slow"
+        AppLanguage.ARABIC -> "بطيء"
+    }
+
+    val healthOffline: String get() = when (lang) {
+        AppLanguage.CHINESE -> "离线"
+        AppLanguage.ENGLISH -> "Offline"
+        AppLanguage.ARABIC -> "غير متصل"
+    }
+
+    val healthUnknown: String get() = when (lang) {
+        AppLanguage.CHINESE -> "未检测"
+        AppLanguage.ENGLISH -> "Unknown"
+        AppLanguage.ARABIC -> "غير معروف"
+    }
+
+    val healthCheckNow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "立即检测"
+        AppLanguage.ENGLISH -> "Check Now"
+        AppLanguage.ARABIC -> "تحقق الآن"
+    }
+
+    val healthChecking: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检测中..."
+        AppLanguage.ENGLISH -> "Checking..."
+        AppLanguage.ARABIC -> "جارٍ التحقق..."
+    }
+
+    val healthResponseTime: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应时间"
+        AppLanguage.ENGLISH -> "Response Time"
+        AppLanguage.ARABIC -> "وقت الاستجابة"
+    }
+
+    val healthUptime24h: String get() = when (lang) {
+        AppLanguage.CHINESE -> "24h 在线率"
+        AppLanguage.ENGLISH -> "24h Uptime"
+        AppLanguage.ARABIC -> "وقت التشغيل 24 ساعة"
+    }
+
+    val healthHistory: String get() = when (lang) {
+        AppLanguage.CHINESE -> "响应时间趋势"
+        AppLanguage.ENGLISH -> "Response Time Trend"
+        AppLanguage.ARABIC -> "اتجاه وقت الاستجابة"
+    }
+}

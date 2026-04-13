@@ -407,6 +407,13 @@ Shows app info, changelog, and dual download buttons (GitHub international + Git
 
 </div>
 
+## 🌍 i18n Structure
+
+- `app/src/main/java/com/webtoapp/core/i18n/Strings.kt`
+  Keeps compatibility getters and language/context wiring only.
+- `app/src/main/java/com/webtoapp/core/i18n/strings`
+  Feature strings are split here by responsibility, including common UI, create/project flows, cloud/community, AI/AI coding/AI config, module/extension, shell/webview, snippet/store/billing, music/build/UI, and legacy compatibility buckets.
+
 ## 📖 Usage Guide
 
 ### Create Website App
