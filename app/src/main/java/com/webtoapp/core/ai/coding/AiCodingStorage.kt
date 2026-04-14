@@ -1323,7 +1323,6 @@ object CodeBlockParser {
             val match = pattern.find(cleaned)
             if (match != null) {
                 val matchedText = match.value
-                val before = cleaned
                 cleaned = cleaned.substring(match.range.last + 1).trim()
                 AppLogger.d("CodeBlockParser", "cleanCodeBlockContent [$language]: Removed filename comment '${matchedText.trim()}'")
                 AppLogger.d("CodeBlockParser", "cleanCodeBlockContent [$language]: Code now starts with: '${cleaned.take(80).replace("\n", "\\n")}'")
@@ -1364,8 +1363,8 @@ object CodeBlockParser {
             // URL // ( http://).
             result = result.replace(JS_COMMENT_NEWLINE_REGEX) { match ->
                 val comment = match.groupValues[1]
-                val code = match.groupValues[3]
-                "$comment\n$code"
+                val nextCode = match.groupValues[3]
+                "$comment\n$nextCode"
             }
             
             // Note.

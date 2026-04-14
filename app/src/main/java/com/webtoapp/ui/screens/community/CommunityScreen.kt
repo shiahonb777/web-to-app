@@ -67,7 +67,6 @@ fun CommunityScreen(
     val posts by communityViewModel.posts.collectAsState()
     val isLoading by communityViewModel.feedLoading.collectAsState()
     val isLoadingMore by communityViewModel.feedLoadingMore.collectAsState()
-    val isRefreshing by communityViewModel.feedRefreshing.collectAsState()
     val selectedTag by communityViewModel.selectedTag.collectAsState()
     val unreadCount by communityViewModel.unreadCount.collectAsState()
     val selectedTab by communityViewModel.selectedTab.collectAsState()

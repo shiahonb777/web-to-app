@@ -249,8 +249,7 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                         searchResults = searchResults,
                         isSearching = isSearching,
                         hasSearched = hasSearched,
-                        onJoin = { showJoinDialog = it },
-                        snackbarHostState = snackbarHostState
+                        onJoin = { showJoinDialog = it }
                     )
                 }
             }
@@ -469,8 +468,7 @@ private fun DiscoverTab(
     searchResults: List<TeamSearchItem>,
     isSearching: Boolean,
     hasSearched: Boolean,
-    onJoin: (TeamSearchItem) -> Unit,
-    snackbarHostState: SnackbarHostState
+    onJoin: (TeamSearchItem) -> Unit
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),

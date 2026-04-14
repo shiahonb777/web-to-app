@@ -45,7 +45,6 @@ fun StatsScreen(
     healthRecords: List<AppHealthRecord>,
     overallStats: OverallStats,
     onBack: () -> Unit,
-    onCheckHealth: (WebApp) -> Unit = {},
     onCheckAllHealth: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -99,7 +98,7 @@ fun StatsScreen(
                 
                 when (selectedTab) {
                     0 -> UsageStatsTab(apps, allStats, overallStats)
-                    1 -> HealthMonitorTab(apps, healthRecords, onCheckHealth)
+                    1 -> HealthMonitorTab(apps, healthRecords)
                 }
             }
         }
@@ -390,8 +389,7 @@ private fun UsageTimeCard(
 @Composable
 private fun HealthMonitorTab(
     apps: List<WebApp>,
-    healthRecords: List<AppHealthRecord>,
-    onCheckHealth: (WebApp) -> Unit
+    healthRecords: List<AppHealthRecord>
 ) {
     val recordMap = remember(healthRecords) { healthRecords.associateBy { it.appId } }
     val webApps = remember(apps) { apps.filter { it.appType == AppType.WEB && it.url.startsWith("http") } }
@@ -408,7 +406,7 @@ private fun HealthMonitorTab(
         // WEB app state
         items(webApps) { app ->
             val record = recordMap[app.id]
-            HealthStatusCard(app, record, onCheckHealth)
+            HealthStatusCard(app, record)
         }
         
         if (webApps.isEmpty()) {
@@ -492,8 +490,7 @@ private fun HealthStatItem(count: Int, label: String, color: Color) {
 @Composable
 private fun HealthStatusCard(
     app: WebApp,
-    record: AppHealthRecord?,
-    onCheckHealth: (WebApp) -> Unit
+    record: AppHealthRecord?
 ) {
     val statusColor = when (record?.status) {
         HealthStatus.ONLINE -> AppColors.Success

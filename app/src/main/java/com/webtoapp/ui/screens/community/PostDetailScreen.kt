@@ -34,12 +34,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import androidx.compose.foundation.text.ClickableText
 import com.webtoapp.core.cloud.CommunityUserProfile
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -528,7 +530,7 @@ fun PostDetailScreen(
                                                     "beginner" -> stringResource(com.webtoapp.R.string.community_difficulty_beginner) to Color(0xFF4CAF50)
                                                     "intermediate" -> stringResource(com.webtoapp.R.string.community_difficulty_intermediate) to Color(0xFFFF9800)
                                                     "advanced" -> stringResource(com.webtoapp.R.string.community_difficulty_advanced) to Color(0xFFE91E63)
-                                                    else -> p.difficulty!! to Color(0xFF9E9E9E)
+                                                    else -> p.difficulty to Color(0xFF9E9E9E)
                                                 }
                                                 Surface(shape = RoundedCornerShape(6.dp), color = diffColor.copy(alpha = 0.1f)) {
                                                     Text(diffLabel,
@@ -562,7 +564,7 @@ fun PostDetailScreen(
                                     if (p.title != null && p.postType in listOf("tutorial", "question")) {
                                         Spacer(Modifier.height(10.dp))
                                         Text(
-                                            p.title!!, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                            p.title, fontSize = 20.sp, fontWeight = FontWeight.Bold,
                                             lineHeight = 28.sp,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
@@ -614,7 +616,7 @@ fun PostDetailScreen(
                                                                 "media" -> stringResource(com.webtoapp.R.string.community_source_media)
                                                                 "frontend" -> stringResource(com.webtoapp.R.string.community_source_frontend)
                                                                 "server" -> stringResource(com.webtoapp.R.string.community_source_server)
-                                                                else -> p.sourceType!!
+                                                                else -> p.sourceType
                                                             }
                                                             Text(
                                                                 stringResource(com.webtoapp.R.string.community_source_format, sourceLabel),
@@ -998,9 +1000,6 @@ fun PostDetailScreen(
                                     comment = comment,
                                     onUserClick = { onNavigateToUser(comment.authorId) },
                                     onReply = { replyingTo = comment },
-                                    onLike = {
-                                        // Comment like — future feature
-                                    },
                                     onMentionClick = { username ->
                                         communityViewModel.resolveUserByUsername(username) { userId ->
                                             onNavigateToUser(userId)
@@ -1321,7 +1320,6 @@ private fun PostCommentRow(
     comment: PostCommentItem,
     onUserClick: () -> Unit,
     onReply: () -> Unit,
-    onLike: () -> Unit,
     onMentionClick: (String) -> Unit = {}
 ) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -1606,31 +1604,32 @@ fun MentionableText(
         val regex = Regex("@(\\w{2,20})")
         var lastEnd = 0
         regex.findAll(text).forEach { match ->
-            // Append text before the match
             append(text.substring(lastEnd, match.range.first))
-            // Push annotation for clickable @mention
-            pushStringAnnotation("mention", match.groupValues[1])
-            withStyle(SpanStyle(color = mentionColor, fontWeight = FontWeight.SemiBold)) {
+            val username = match.groupValues[1]
+            withLink(
+                LinkAnnotation.Url(
+                    url = "mention://$username",
+                    styles = TextLinkStyles(
+                        style = SpanStyle(color = mentionColor, fontWeight = FontWeight.SemiBold)
+                    )
+                ) {
+                    val mentionUrl = (it as LinkAnnotation.Url).url
+                    onMentionClick(mentionUrl.removePrefix("mention://"))
+                }
+            ) {
                 append(match.value)
             }
-            pop()
             lastEnd = match.range.last + 1
         }
         if (lastEnd < text.length) append(text.substring(lastEnd))
     }
 
-    ClickableText(
+    Text(
         text = annotated,
         style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = fontSize,
             lineHeight = lineHeight,
             color = color
-        ),
-        onClick = { offset ->
-            annotated.getStringAnnotations("mention", offset, offset)
-                .firstOrNull()?.let { annotation ->
-                    onMentionClick(annotation.item)
-                }
-        }
+        )
     )
 }

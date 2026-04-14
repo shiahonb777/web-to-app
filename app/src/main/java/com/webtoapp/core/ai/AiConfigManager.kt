@@ -68,8 +68,7 @@ class AiConfigManager(
         val stored = prefs[KEY_API_KEYS] ?: "[]"
         val json = decodeSensitiveJson(stored) ?: "[]"
         try {
-            val result: List<ApiKeyConfig> = gson.fromJson(json, apiKeyListType)
-            result ?: emptyList()
+            gson.fromJson<List<ApiKeyConfig>>(json, apiKeyListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse API keys JSON", e)
             emptyList()
@@ -80,8 +79,7 @@ class AiConfigManager(
     val savedModelsFlow: Flow<List<SavedModel>> = dataStore.data.map { prefs ->
         val json = prefs[KEY_SAVED_MODELS] ?: "[]"
         try {
-            val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
-            result ?: emptyList()
+            gson.fromJson<List<SavedModel>>(json, savedModelListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse saved models JSON", e)
             emptyList()
@@ -283,8 +281,7 @@ class AiConfigManager(
             return emptyList()
         }
         return try {
-            val result: List<ApiKeyConfig> = gson.fromJson(json, apiKeyListType)
-            result ?: emptyList()
+            gson.fromJson<List<ApiKeyConfig>>(json, apiKeyListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to deserialize API keys", e)
             emptyList()
@@ -294,8 +291,7 @@ class AiConfigManager(
     private fun getSavedModels(prefs: Preferences): List<SavedModel> {
         val json = prefs[KEY_SAVED_MODELS] ?: return emptyList()
         return try {
-            val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
-            result ?: emptyList()
+            gson.fromJson<List<SavedModel>>(json, savedModelListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to deserialize saved models", e)
             emptyList()

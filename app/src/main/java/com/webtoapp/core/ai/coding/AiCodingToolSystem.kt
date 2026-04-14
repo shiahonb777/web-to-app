@@ -660,7 +660,7 @@ ${agentContext.currentHtml}
                 agentContext.recordToolCall(call, result)
                 
                 // Update HTML.
-                if (result.isHtml && result.result is String) {
+                if (result.isHtml) {
                     agentContext.currentHtml = result.result
                     hasHtmlUpdate = true
                 }

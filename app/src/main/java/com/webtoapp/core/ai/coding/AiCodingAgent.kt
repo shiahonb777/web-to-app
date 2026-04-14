@@ -1260,7 +1260,6 @@ class AiCodingAgent(private val context: Context) {
             
             // Note.
             var currentToolName = ""
-            var currentToolCallId = ""
             val currentToolArgs = StringBuilder()
             val pendingToolCalls = mutableListOf<Triple<String, String, String>>()
             
@@ -1387,7 +1386,6 @@ class AiCodingAgent(private val context: Context) {
                     is ToolStreamEvent.ToolCallStart -> {
                         AppLogger.d(TAG, "Tool call started: ${event.toolName}")
                         currentToolName = event.toolName
-                        currentToolCallId = event.toolCallId
                         currentToolArgs.clear()
                         toolCallStarted = true
                         emit(HtmlAgentEvent.ToolCallStart(event.toolName, event.toolCallId))
@@ -1428,7 +1426,6 @@ class AiCodingAgent(private val context: Context) {
                         }
                         
                         currentToolName = ""
-                        currentToolCallId = ""
                         currentToolArgs.clear()
                     }
                     is ToolStreamEvent.Done -> {

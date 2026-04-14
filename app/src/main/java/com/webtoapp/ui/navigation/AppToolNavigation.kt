@@ -55,11 +55,6 @@ internal fun NavGraphBuilder.addToolRoutes(
             healthRecords = healthRecords,
             overallStats = overallStats,
             onBack = { navController.popBackStack() },
-            onCheckHealth = { app ->
-                statsScope.launch {
-                    healthMonitor.checkUrl(app.id, app.url)
-                }
-            },
             onCheckAllHealth = {
                 statsScope.launch {
                     healthMonitor.checkApps(apps)

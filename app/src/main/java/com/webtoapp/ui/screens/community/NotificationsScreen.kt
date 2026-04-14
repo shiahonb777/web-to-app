@@ -113,12 +113,6 @@ private fun SpringTab(
     onSelect: (Int) -> Unit
 ) {
     // indicator
-    val indicatorOffset by animateDpAsState(
-        targetValue = (selectedIndex * 180).dp, // Note
-        CommunityPhysics.TabIndicator,
-        label = "tabOffset"
-    )
-
     Row(Modifier.fillMaxWidth()) {
         tabs.forEachIndexed { index, label ->
             Box(

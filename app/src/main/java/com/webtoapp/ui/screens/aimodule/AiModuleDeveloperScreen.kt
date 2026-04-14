@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.foundation.text.KeyboardOptions
@@ -70,7 +71,6 @@ fun AiModuleDeveloperScreen(
     onNavigateToAiSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val clipboardManager = LocalClipboardManager.current
     
@@ -185,8 +185,7 @@ fun AiModuleDeveloperScreen(
                 // message
                 items(uiState.messages, key = { it.id }) { message ->
                     ConversationMessageItem(
-                        message = message,
-                        onToolCallExpand = { /* optional: handle callexpand */ }
+                        message = message
                     )
                 }
                 
@@ -302,8 +301,7 @@ fun AiModuleDeveloperScreen(
  */
 @Composable
 private fun ConversationMessageItem(
-    message: ConversationMessage,
-    onToolCallExpand: (ToolCallInfo) -> Unit
+    message: ConversationMessage
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -449,7 +447,7 @@ private fun InputSection(
                             SendingIndicator()
                         } else {
                             Icon(
-                                Icons.Default.Send,
+                                Icons.AutoMirrored.Filled.Send,
                                 contentDescription = AppStringsProvider.current().startDevelopment,
                                 tint = if (userInput.isNotBlank()) 
                                     MaterialTheme.colorScheme.primary 
