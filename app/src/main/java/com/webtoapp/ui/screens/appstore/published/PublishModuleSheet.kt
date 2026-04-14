@@ -883,7 +883,7 @@ internal fun PublishModuleSheet(
                                 value = selectedTeam?.name ?: "", onValueChange = {}, readOnly = true,
                                 label = { Text(AppStringsProvider.current().teamSelectTeam) }, placeholder = { Text("点击选择团队") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(), shape = RoundedCornerShape(12.dp),
                                 leadingIcon = { Icon(Icons.Outlined.Groups, null, modifier = Modifier.size(20.dp)) }
                             )
                             ExposedDropdownMenu(expanded = teamDropdownExpanded, onDismissRequest = { teamDropdownExpanded = false }) {

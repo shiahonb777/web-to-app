@@ -13,6 +13,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -291,7 +295,7 @@ fun CommunityScreen(
                                 if (trending.isNotEmpty()) {
                                     item {
                                         SectionHeader(
-                                            icon = Icons.Filled.TrendingUp,
+                                            icon = Icons.AutoMirrored.Filled.TrendingUp,
                                             title = AppStringsProvider.current().communitySectionHot,
                                             color = Color(0xFFE91E63)
                                         )
@@ -332,7 +336,7 @@ fun CommunityScreen(
                                 if (tutorials.isNotEmpty()) {
                                     item {
                                         SectionHeader(
-                                            icon = Icons.Filled.MenuBook,
+                                            icon = Icons.AutoMirrored.Filled.MenuBook,
                                             title = AppStringsProvider.current().communitySectionTutorials,
                                             color = Color(0xFF4CAF50)
                                         )
@@ -350,7 +354,7 @@ fun CommunityScreen(
                                 if (questions.isNotEmpty()) {
                                     item {
                                         SectionHeader(
-                                            icon = Icons.Filled.HelpOutline,
+                                            icon = Icons.AutoMirrored.Filled.HelpOutline,
                                             title = AppStringsProvider.current().communitySectionQuestions,
                                             color = Color(0xFFFF9800)
                                         )
@@ -873,7 +877,7 @@ private fun CreatePostSheet(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp), singleLine = true,
-                        leadingIcon = { Icon(Icons.Outlined.HelpOutline, null, Modifier.size(18.dp)) }
+                        leadingIcon = { Icon(Icons.AutoMirrored.Outlined.HelpOutline, null, Modifier.size(18.dp)) }
                     )
                     Spacer(Modifier.height(8.dp))
                 }

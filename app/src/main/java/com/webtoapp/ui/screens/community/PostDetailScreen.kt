@@ -17,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -491,12 +493,12 @@ fun PostDetailScreen(
                                                     Color(0xFF6C5CE7)
                                                 )
                                                 "tutorial" -> Triple(
-                                                    Icons.Outlined.MenuBook,
+                                                    Icons.AutoMirrored.Outlined.MenuBook,
                                                     stringResource(com.webtoapp.R.string.community_post_type_tutorial),
                                                     Color(0xFF4CAF50)
                                                 )
                                                 "question" -> Triple(
-                                                    Icons.Outlined.HelpOutline,
+                                                    Icons.AutoMirrored.Outlined.HelpOutline,
                                                     stringResource(com.webtoapp.R.string.community_post_type_question),
                                                     Color(0xFFFF9800)
                                                 )

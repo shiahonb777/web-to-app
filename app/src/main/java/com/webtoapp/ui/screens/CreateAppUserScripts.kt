@@ -299,7 +299,7 @@ fun UserScriptEditorDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = runAtExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     
                     ExposedDropdownMenu(

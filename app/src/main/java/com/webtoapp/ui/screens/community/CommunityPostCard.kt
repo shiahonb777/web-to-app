@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -114,8 +116,8 @@ internal fun PostCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 val (badgeIcon, badgeLabel, badgeColor) = when (post.postType) {
                     "showcase" -> Triple(Icons.Filled.Palette, post.appName ?: AppStringsProvider.current().communityTypeShowcase, Color(0xFF6C5CE7))
-                    "tutorial" -> Triple(Icons.Filled.MenuBook, post.title ?: AppStringsProvider.current().communityTypeTutorial, Color(0xFF4CAF50))
-                    "question" -> Triple(Icons.Filled.HelpOutline, post.title ?: AppStringsProvider.current().communityTypeQuestion, Color(0xFFFF9800))
+                    "tutorial" -> Triple(Icons.AutoMirrored.Filled.MenuBook, post.title ?: AppStringsProvider.current().communityTypeTutorial, Color(0xFF4CAF50))
+                    "question" -> Triple(Icons.AutoMirrored.Filled.HelpOutline, post.title ?: AppStringsProvider.current().communityTypeQuestion, Color(0xFFFF9800))
                     else -> Triple(Icons.Filled.ChatBubble, AppStringsProvider.current().communityTypeDiscussion, Color(0xFF9E9E9E))
                 }
                 Surface(

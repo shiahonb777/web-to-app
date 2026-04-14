@@ -702,7 +702,7 @@ fun HomeScreen(
                                     }
                                 }
                             } else null,
-                            modifier = Modifier.animateItemPlacement()
+                            modifier = Modifier.animateItem()
                         )
                         }
                         }

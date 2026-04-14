@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
@@ -38,11 +40,9 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BubbleChart
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Mouse
 import androidx.compose.material.icons.outlined.PhoneIphone
 import androidx.compose.material.icons.outlined.ViewAgenda
-import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +100,7 @@ fun LongPressMenuCard(
     )
 
     val styleOptions = listOf(
-        StyleOption(LongPressMenuStyle.FULL, AppStringsProvider.current().longPressMenuStyleFull, Icons.Outlined.ViewList, Color(0xFF6366F1)),
+        StyleOption(LongPressMenuStyle.FULL, AppStringsProvider.current().longPressMenuStyleFull, Icons.AutoMirrored.Outlined.ViewList, Color(0xFF6366F1)),
         StyleOption(LongPressMenuStyle.SIMPLE, AppStringsProvider.current().longPressMenuStyleSimple, Icons.Outlined.ViewAgenda, Color(0xFF22C55E)),
         StyleOption(LongPressMenuStyle.IOS, AppStringsProvider.current().longPressMenuStyleIos, Icons.Outlined.PhoneIphone, Color(0xFF3B82F6)),
         StyleOption(LongPressMenuStyle.FLOATING, AppStringsProvider.current().longPressMenuStyleFloating, Icons.Outlined.BubbleChart, Color(0xFFF97316)),
@@ -125,7 +125,7 @@ fun LongPressMenuCard(
                     modifier = Modifier.weight(weight = 1f, fill = true)
                 ) {
                     SystemCardFeatureIcon(
-                        icon = Icons.Outlined.ListAlt,
+                        icon = Icons.AutoMirrored.Outlined.ListAlt,
                         enabled = isEnabled
                     )
                     Spacer(modifier = Modifier.width(12.dp))

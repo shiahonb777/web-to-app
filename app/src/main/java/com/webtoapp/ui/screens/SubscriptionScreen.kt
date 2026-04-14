@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -75,9 +76,7 @@ fun SubscriptionScreen(
     val context = LocalContext.current
     val activity = context.findActivity()
     val isConnected by billingManager.isConnected.collectAsStateWithLifecycle()
-    val products by billingManager.products.collectAsStateWithLifecycle()
     val purchaseState by billingManager.purchaseState.collectAsStateWithLifecycle()
-    val currentSub by billingManager.currentSubscription.collectAsStateWithLifecycle()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
     // ensure Billing( if Application initializefailed)
@@ -723,7 +722,7 @@ private fun SubscriptionCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    Icons.Outlined.TrendingUp,
+                                    Icons.AutoMirrored.Outlined.TrendingUp,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                     tint = Color.White

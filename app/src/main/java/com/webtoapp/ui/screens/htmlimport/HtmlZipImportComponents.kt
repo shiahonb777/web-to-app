@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -233,7 +234,7 @@ internal fun ZipImportSection(
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Icon(
-                        Icons.Outlined.List,
+                        Icons.AutoMirrored.Outlined.List,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )

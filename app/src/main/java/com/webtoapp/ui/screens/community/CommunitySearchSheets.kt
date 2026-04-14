@@ -9,11 +9,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -314,8 +314,8 @@ private fun SearchPostRow(
     ) {
         val (typeIcon, typeColor) = when (post.postType) {
             "showcase" -> Icons.Filled.Palette to Color(0xFF6C5CE7)
-            "tutorial" -> Icons.Filled.MenuBook to Color(0xFF4CAF50)
-            "question" -> Icons.Filled.HelpOutline to Color(0xFFFF9800)
+            "tutorial" -> Icons.AutoMirrored.Filled.MenuBook to Color(0xFF4CAF50)
+            "question" -> Icons.AutoMirrored.Filled.HelpOutline to Color(0xFFFF9800)
             else -> Icons.Filled.ChatBubble to Color(0xFF9E9E9E)
         }
         Surface(

@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
@@ -786,7 +788,7 @@ private fun PlaybackSettingsTab(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     PlayModeOption(
-                        icon = Icons.Outlined.ArrowForward,
+                        icon = Icons.AutoMirrored.Outlined.ArrowForward,
                         label = AppStringsProvider.current().galleryModeSequential,
                         selected = playMode == GalleryPlayMode.SEQUENTIAL,
                         onClick = { onPlayModeChange(GalleryPlayMode.SEQUENTIAL) },
@@ -969,7 +971,7 @@ private fun DisplaySettingsTab(
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     ViewModeOption(
-                        icon = Icons.Outlined.ViewList,
+                        icon = Icons.AutoMirrored.Outlined.ViewList,
                         label = AppStringsProvider.current().galleryViewList,
                         selected = defaultView == GalleryViewMode.LIST,
                         onClick = { onDefaultViewChange(GalleryViewMode.LIST) },
@@ -1026,7 +1028,7 @@ private fun DisplaySettingsTab(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -1430,7 +1432,7 @@ private fun MediaItemDetailDialog(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
@@ -1791,7 +1793,7 @@ fun CreateGalleryAppScreenV2(
                                     }
                                 },
                                 onLongClick = { selectedItems = setOf(item.id) },
-                                modifier = Modifier.animateItemPlacement()
+                                modifier = Modifier.animateItem()
                             )
                         }
                         item { Spacer(modifier = Modifier.height(80.dp)) }

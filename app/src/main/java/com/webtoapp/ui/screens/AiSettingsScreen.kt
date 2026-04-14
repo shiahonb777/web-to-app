@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
@@ -611,7 +612,7 @@ private fun AddApiKeyDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -699,7 +700,7 @@ private fun AddApiKeyDialog(
                                 contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
                             ) {
                                 Icon(
-                                    Icons.Outlined.OpenInNew,
+                                    Icons.AutoMirrored.Outlined.OpenInNew,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -766,7 +767,7 @@ private fun AddApiKeyDialog(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(formatExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         )
                         ExposedDropdownMenu(
                             expanded = formatExpanded,
@@ -996,7 +997,7 @@ private fun AddModelDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(apiKeyExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = apiKeyExpanded,

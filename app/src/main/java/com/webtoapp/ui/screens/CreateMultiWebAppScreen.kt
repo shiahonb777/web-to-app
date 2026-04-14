@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -187,7 +188,7 @@ fun CreateMultiWebAppScreen(
                     }
                     // import
                     IconButton(onClick = { showBatchImport = true }) {
-                        Icon(Icons.Outlined.PlaylistAdd, null)
+                        Icon(Icons.AutoMirrored.Outlined.PlaylistAdd, null)
                     }
                     // create/save
                     TextButton(
@@ -1243,7 +1244,7 @@ private fun BatchImportDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
-            Icon(Icons.Outlined.PlaylistAdd, null, tint = brandColor, modifier = Modifier.size(32.dp))
+            Icon(Icons.AutoMirrored.Outlined.PlaylistAdd, null, tint = brandColor, modifier = Modifier.size(32.dp))
         },
         title = { Text(AppStringsProvider.current().multiWebBatchImport, fontWeight = FontWeight.Bold) },
         text = {

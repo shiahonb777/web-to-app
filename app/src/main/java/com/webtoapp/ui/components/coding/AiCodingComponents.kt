@@ -15,6 +15,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -664,7 +667,7 @@ fun SessionListItem(session: AiCodingSession, isSelected: Boolean, onClick: () -
     Surface(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).clickable(onClick = onClick), shape = RoundedCornerShape(12.dp), color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = RoundedCornerShape(8.dp), color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(36.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Chat, null, Modifier.size(20.dp), if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) }
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Outlined.Chat, null, Modifier.size(20.dp), if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) }
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(weight = 1f, fill = true)) {
@@ -939,7 +942,7 @@ fun ConfigPanel(
                 Text(AppStringsProvider.current().rules, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(12.dp))
                 var showRulesTemplates by remember { mutableStateOf(false) }
-                PremiumOutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text(AppStringsProvider.current().selectFromTemplate) }
+                PremiumOutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.AutoMirrored.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text(AppStringsProvider.current().selectFromTemplate) }
                 if (showRulesTemplates) {
                     AlertDialog(onDismissRequest = { showRulesTemplates = false }, title = { Text(AppStringsProvider.current().selectRuleTemplate) }, text = {
                         LazyColumn { items(rulesTemplates) { template -> ListItem(headlineContent = { Text(template.name) }, supportingContent = { Text(template.description) }, modifier = Modifier.clickable { onConfigChange(config.copy(rules = template.rules)); showRulesTemplates = false }) } }
@@ -1523,7 +1526,7 @@ fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
         ProjectFileType.JSON -> Icons.Outlined.DataObject to Color(0xFF292929)
         ProjectFileType.SVG -> Icons.Outlined.Image to Color(0xFFFFB13B)
         ProjectFileType.IMAGE -> Icons.Outlined.Image to AppColors.Success
-        ProjectFileType.OTHER -> Icons.Outlined.InsertDriveFile to Color(0xFF6B7280)
+        ProjectFileType.OTHER -> Icons.AutoMirrored.Outlined.InsertDriveFile to Color(0xFF6B7280)
     }
     
     Surface(

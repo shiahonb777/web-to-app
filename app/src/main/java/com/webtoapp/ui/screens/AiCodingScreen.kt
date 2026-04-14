@@ -68,15 +68,12 @@ fun AiCodingScreen(
     // manager
     val storage = remember { AiCodingStorage(context) }
     val configManager = remember { AiConfigManager(context) }
-    val apiClient = remember { AiApiClient(context) }
-    val htmlAgent = remember { AiCodingAgent(context) }
     
     // current in type
     var selectedCodingType by remember { mutableStateOf(AiCodingType.HTML) }
     
     // state
     var isLoading by remember { mutableStateOf(true) }
-    var loadError by remember { mutableStateOf<String?>(null) }
     
     val sessions by storage.sessionsFlow.collectAsState(initial = emptyList())
     val currentSessionId by storage.currentSessionIdFlow.collectAsState(initial = null)
@@ -926,7 +923,6 @@ fun AiCodingScreen(
                 AiCodingSessionDrawerContent(
                     sessions = sessions,
                     currentSessionId = currentSessionId,
-                    selectedCodingType = selectedCodingType,
                     onSessionClick = { sessionId ->
                         scope.launch {
                             storage.setCurrentSession(sessionId)
@@ -1529,7 +1525,6 @@ private fun AiCodingImageGeneratingIndicator(prompt: String) {
 private fun AiCodingSessionDrawerContent(
     sessions: List<AiCodingSession>,
     currentSessionId: String?,
-    selectedCodingType: AiCodingType,
     onSessionClick: (String) -> Unit,
     onDeleteSession: (String) -> Unit,
     onNewSession: () -> Unit,

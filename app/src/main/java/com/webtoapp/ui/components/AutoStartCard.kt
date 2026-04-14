@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -18,10 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.webtoapp.core.autostart.AutoStartManager
 import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AutoStartConfig
@@ -423,7 +424,7 @@ fun AutoStartCard(
                                         )
                                     }
                                     Icon(
-                                        Icons.Outlined.NavigateNext,
+                                        Icons.AutoMirrored.Outlined.NavigateNext,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
@@ -467,7 +468,7 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     Icon(
-                                        Icons.Outlined.NavigateNext,
+                                        Icons.AutoMirrored.Outlined.NavigateNext,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.6f)
@@ -516,7 +517,7 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     Icon(
-                                        Icons.Outlined.NavigateNext,
+                                        Icons.AutoMirrored.Outlined.NavigateNext,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)

@@ -20,11 +20,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -267,7 +267,7 @@ fun BasicInfoTab(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Outlined.Label,
+                            Icons.AutoMirrored.Outlined.Label,
                             contentDescription = null,
                             modifier = Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.secondary

@@ -59,12 +59,8 @@ fun AiHtmlCodingScreen(
     // manager
     val storage = remember { AiCodingStorage(context) }
     val configManager = remember { AiConfigManager(context) }
-    val apiClient = remember { AiApiClient(context) }
-    val htmlAgent = remember { AiCodingAgent(context) }
-    
     // state- try- catch
     var isLoading by remember { mutableStateOf(true) }
-    var loadError by remember { mutableStateOf<String?>(null) }
     
     val sessions by storage.sessionsFlow.collectAsState(initial = emptyList())
     val currentSessionId by storage.currentSessionIdFlow.collectAsState(initial = null)
@@ -165,7 +161,6 @@ fun AiHtmlCodingScreen(
     var showDrawer by remember { mutableStateOf(false) }
     var showConfigSheet by remember { mutableStateOf(false) }
     var showTemplatesSheet by remember { mutableStateOf(false) }
-    var showStylesSheet by remember { mutableStateOf(false) }
     var showTutorialSheet by remember { mutableStateOf(false) }
     var showCheckpointsSheet by remember { mutableStateOf(false) }
     var showCodeLibrarySheet by remember { mutableStateOf(false) }

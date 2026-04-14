@@ -18,6 +18,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -146,7 +148,7 @@ fun AiModuleDeveloperScreen(
                     }
                     // helpbutton
                     IconButton(onClick = { viewModel.toggleHelpDialog(true) }) {
-                        Icon(Icons.Outlined.Help, AppStringsProvider.current().help)
+                        Icon(Icons.AutoMirrored.Outlined.Help, AppStringsProvider.current().help)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -1163,7 +1165,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    Icons.Outlined.Help,
+                    Icons.AutoMirrored.Outlined.Help,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
@@ -1177,7 +1179,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
             ) {
                 item {
                     HelpSection(
-                        iconVector = Icons.Outlined.Chat,
+                        iconVector = Icons.AutoMirrored.Outlined.Chat,
                         title = AppStringsProvider.current().helpHowToUse,
                         content = AppStringsProvider.current().helpHowToUseContent
                     )

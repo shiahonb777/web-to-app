@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -109,25 +110,8 @@ fun BgmSelectorDialog(
     var showLrcEditorDialog by remember { mutableStateOf(false) }
     var lrcEditorBgm by remember { mutableStateOf<BgmItem?>(null) }
     
-    // state
-    var draggedItemIndex by remember { mutableIntStateOf(-1) }
-    var draggedOverItemIndex by remember { mutableIntStateOf(-1) }
-    
     // Snackbar hintstate
     val snackbarHostState = remember { SnackbarHostState() }
-    
-    // Refresh list
-    val refreshBgmList: () -> Unit = {
-        scope.launch {
-            withContext(Dispatchers.IO) {
-                availableBgm = BgmStorage.scanAllBgm(context)
-            }
-            // syncupdate list LRC
-            selectedPlaylist = selectedPlaylist.map { selected ->
-                availableBgm.find { it.path == selected.path } ?: selected
-            }
-        }
-    }
     
     // Load list
     LaunchedEffect(Unit) {
@@ -866,7 +850,7 @@ private fun SelectedBgmItemWithReorder(
             }
             IconButton(onClick = onEditTags, modifier = Modifier.size(32.dp)) {
                 Icon(
-                    Icons.Outlined.Label,
+                    Icons.AutoMirrored.Outlined.Label,
                     contentDescription = AppStringsProvider.current().editTags,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant

@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -1304,7 +1307,7 @@ private fun UpdateDialog(
                             )
                         }
                         Icon(
-                            Icons.Outlined.ArrowForward,
+                            Icons.AutoMirrored.Outlined.ArrowForward,
                             null,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1563,7 +1566,7 @@ private fun ContactItemWithLink(
                     }
                 ) {
                     Icon(
-                        Icons.Outlined.OpenInNew,
+                        Icons.AutoMirrored.Outlined.OpenInNew,
                         AppStringsProvider.current().openAction,
                         modifier = Modifier.size(18.dp)
                     )
@@ -1636,7 +1639,7 @@ private fun ChangeItem(emoji: String, text: String) {
         "play" to Icons.Filled.PlayArrow,
         "extension" to Icons.Outlined.Extension,
         "ai" to Icons.Outlined.SmartToy,
-        "library" to Icons.Outlined.MenuBook,
+        "library" to Icons.AutoMirrored.Outlined.MenuBook,
         "music" to Icons.Outlined.MusicNote,
         "announce" to Icons.Outlined.Campaign,
     )
@@ -1913,7 +1916,7 @@ private fun ContactCardCompact(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        Icons.Outlined.OpenInNew,
+                        Icons.AutoMirrored.Outlined.OpenInNew,
                         AppStringsProvider.current().openAction,
                         modifier = Modifier.size(16.dp)
                     )

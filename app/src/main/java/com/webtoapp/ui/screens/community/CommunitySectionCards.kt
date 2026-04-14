@@ -5,8 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Favorite
@@ -192,7 +192,7 @@ internal fun TutorialCard(
                     )
                 } else {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(Icons.Filled.MenuBook, null, Modifier.size(24.dp), tint = Color(0xFF4CAF50))
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, null, Modifier.size(24.dp), tint = Color(0xFF4CAF50))
                     }
                 }
             }
