@@ -12,10 +12,10 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 应用主题系统（极简主义配色）
+ * App theme system (minimal palette).
  */
 
-// ==================== 主题定义 ====================
+// ==================== Theme Definitions ====================
 
 enum class AppThemeType(val icon: String) {
     KIMI_NO_NAWA("Minimize");
@@ -99,115 +99,115 @@ data class ThemeShapes(
     val useSoftShadows: Boolean
 )
 
-// ==================== 主题定义 ====================
+// ==================== Theme Definitions ====================
 
 object AppThemes {
     
-    // ========== 极简主义 ==========
+    // ========== Minimalism ==========
     val KimiNoNawa = AppTheme(
         type = AppThemeType.KIMI_NO_NAWA,
         lightColors = lightColorScheme(
-            // ── 主色系：纯黑白基调 ──
-            primary = Color(0xFF1A1A1A),            // 近黑主色（比 #212121 更深更纯）
+            // Primary palette: pure black/white base
+            primary = Color(0xFF1A1A1A),            // #212121
             onPrimary = Color(0xFFFFFFFF),
-            primaryContainer = Color(0xFFF0F0F0),   // 淡灰容器
+            primaryContainer = Color(0xFFF0F0F0),   // Comment
             onPrimaryContainer = Color(0xFF1A1A1A),
             inversePrimary = Color(0xFFD0D0D0),
 
-            // ── 辅助色系 ──
-            secondary = Color(0xFF505050),           // 中灰
+            // Secondary palette
+            secondary = Color(0xFF505050),           // Comment
             onSecondary = Color(0xFFFFFFFF),
             secondaryContainer = Color(0xFFF5F5F5),
             onSecondaryContainer = Color(0xFF1A1A1A),
 
-            // ── 第三色系 ──
-            tertiary = Color(0xFF8A8A8A),            // 浅灰
+            // Tertiary palette
+            tertiary = Color(0xFF8A8A8A),            // Comment
             onTertiary = Color(0xFFFFFFFF),
             tertiaryContainer = Color(0xFFF5F5F5),
             onTertiaryContainer = Color(0xFF1A1A1A),
 
-            // ── 错误色系 ──
+            // Error palette
             error = Color(0xFFBA1A1A),
             onError = Color(0xFFFFFFFF),
             errorContainer = Color(0xFFFCE4EC),
             onErrorContainer = Color(0xFF410002),
 
-            // ── 背景 & 表面（纯白基底 + 精细灰阶层级）──
+            // Background & surface (white base + fine gray levels)
             background = Color(0xFFFFFFFF),
             onBackground = Color(0xFF1A1A1A),
             surface = Color(0xFFFFFFFF),
             onSurface = Color(0xFF1A1A1A),
-            surfaceVariant = Color(0xFFF5F5F5),      // 浅灰变体
-            onSurfaceVariant = Color(0xFF5C5C5C),    // 中灰文字
+            surfaceVariant = Color(0xFFF5F5F5),      // Comment
+            onSurfaceVariant = Color(0xFF5C5C5C),    // Comment
 
-            // ── 表面容器层级（关键！解决色彩边界模糊问题）──
+            // Surface container levels (clear visual boundaries)
             surfaceTint = Color(0xFF1A1A1A),
             surfaceBright = Color(0xFFFFFFFF),
             surfaceDim = Color(0xFFF0F0F0),
-            surfaceContainer = Color(0xFFF7F7F7),        // 最基础容器
-            surfaceContainerLow = Color(0xFFFAFAFA),     // 低层容器
-            surfaceContainerHigh = Color(0xFFF0F0F0),    // 高层容器
-            surfaceContainerHighest = Color(0xFFEAEAEA), // 最高层容器
-            surfaceContainerLowest = Color(0xFFFFFFFF),   // 最低层容器
+            surfaceContainer = Color(0xFFF7F7F7),        // Comment
+            surfaceContainerLow = Color(0xFFFAFAFA),     // Comment
+            surfaceContainerHigh = Color(0xFFF0F0F0),    // Comment
+            surfaceContainerHighest = Color(0xFFEAEAEA), // Comment
+            surfaceContainerLowest = Color(0xFFFFFFFF),   // Comment
 
-            // ── 分割线 & 轮廓 ──
-            outline = Color(0xFFD5D5D5),             // 清晰轮廓
-            outlineVariant = Color(0xFFE8E8E8),      // 浅轮廓
+            // Divider & outline
+            outline = Color(0xFFD5D5D5),             // Comment
+            outlineVariant = Color(0xFFE8E8E8),      // Comment
 
-            // ── 反转色 & 遮罩 ──
+            // Inverse colors & scrim
             inverseSurface = Color(0xFF2F2F2F),
             inverseOnSurface = Color(0xFFF0F0F0),
             scrim = Color(0xFF000000)
         ),
         darkColors = darkColorScheme(
-            // ── 主色系：纯白主色，纯黑背景 ──
-            primary = Color(0xFFEEEEEE),             // 近白主色（避免刺眼纯白）
+            // Primary palette: white primary on black background
+            primary = Color(0xFFEEEEEE),             // Comment
             onPrimary = Color(0xFF1A1A1A),
-            primaryContainer = Color(0xFF303030),    // 深灰容器
+            primaryContainer = Color(0xFF303030),    // Comment
             onPrimaryContainer = Color(0xFFE0E0E0),
             inversePrimary = Color(0xFF505050),
 
-            // ── 辅助色系 ──
-            secondary = Color(0xFFB0B0B0),           // 中灰
+            // Secondary palette
+            secondary = Color(0xFFB0B0B0),           // Comment
             onSecondary = Color(0xFF1A1A1A),
             secondaryContainer = Color(0xFF2A2A2A),
             onSecondaryContainer = Color(0xFFD8D8D8),
 
-            // ── 第三色系 ──
+            // Tertiary palette
             tertiary = Color(0xFF808080),
             onTertiary = Color(0xFF1A1A1A),
             tertiaryContainer = Color(0xFF2A2A2A),
             onTertiaryContainer = Color(0xFFD0D0D0),
 
-            // ── 错误色系 ──
+            // Error palette
             error = Color(0xFFFFB4AB),
             onError = Color(0xFF690005),
             errorContainer = Color(0xFF93000A),
             onErrorContainer = Color(0xFFFFDAD6),
 
-            // ── 背景 & 表面（纯黑基底 + 精细灰阶层级）──
-            background = Color(0xFF000000),           // 纯黑背景
+            // Background & surface (black base + fine gray levels)
+            background = Color(0xFF000000),           // Comment
             onBackground = Color(0xFFE3E3E3),
-            surface = Color(0xFF0A0A0A),              // 近黑表面
+            surface = Color(0xFF0A0A0A),              // Comment
             onSurface = Color(0xFFE3E3E3),
             surfaceVariant = Color(0xFF1E1E1E),
             onSurfaceVariant = Color(0xFFA8A8A8),
 
-            // ── 表面容器层级（关键！清晰深色层级过渡）──
+            // Surface container levels (clear dark-level transitions)
             surfaceTint = Color(0xFFEEEEEE),
             surfaceBright = Color(0xFF3A3A3A),
             surfaceDim = Color(0xFF000000),
-            surfaceContainer = Color(0xFF141414),         // 最基础容器
-            surfaceContainerLow = Color(0xFF0E0E0E),     // 低层容器
-            surfaceContainerHigh = Color(0xFF1C1C1C),    // 高层容器
-            surfaceContainerHighest = Color(0xFF262626),  // 最高层容器
-            surfaceContainerLowest = Color(0xFF050505),   // 最低层容器
+            surfaceContainer = Color(0xFF141414),         // Comment
+            surfaceContainerLow = Color(0xFF0E0E0E),     // Comment
+            surfaceContainerHigh = Color(0xFF1C1C1C),    // Comment
+            surfaceContainerHighest = Color(0xFF262626),  // Comment
+            surfaceContainerLowest = Color(0xFF050505),   // Comment
 
-            // ── 分割线 & 轮廓 ──
-            outline = Color(0xFF3A3A3A),              // 清晰暗轮廓
-            outlineVariant = Color(0xFF2A2A2A),       // 浅暗轮廓
+            // Divider & outline
+            outline = Color(0xFF3A3A3A),              // Comment
+            outlineVariant = Color(0xFF2A2A2A),       // Comment
 
-            // ── 反转色 & 遮罩 ──
+            // Inverse colors & scrim
             inverseSurface = Color(0xFFE3E3E3),
             inverseOnSurface = Color(0xFF1A1A1A),
             scrim = Color(0xFF000000)

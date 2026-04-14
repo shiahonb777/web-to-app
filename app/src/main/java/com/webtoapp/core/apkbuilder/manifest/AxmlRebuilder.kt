@@ -6,11 +6,11 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * AXML 重构器
- * 支持修改字符串池并重建整个 AXML 文件
+ * Note: brief English comment.
+ * Note: brief English comment.
  * 
- * 主要用途：将相对路径类名（如 .MainActivity）展开为绝对路径（如 com.pkg.MainActivity）
- * 这样修改包名后，组件类名仍然指向原包名下的类，避免 ClassNotFoundException
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class AxmlRebuilder {
 
@@ -44,28 +44,28 @@ class AxmlRebuilder {
         private val CLASS_NAME_REGEX = Regex("^[A-Z][a-zA-Z0-9]*$")
         
         /**
-         * 所有需要确保存在的权限列表（全面覆盖常见 Web API 和 Android 功能所需权限）
+         * Note: brief English comment.
          */
         private val ALL_REQUIRED_PERMISSIONS = listOf(
-            // 网络
+            // Note: brief English comment.
             "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE",
-            // 摄像头 & 麦克风 (WebRTC)
+            // Note: brief English comment.
             "android.permission.CAMERA",
             "android.permission.RECORD_AUDIO",
             "android.permission.MODIFY_AUDIO_SETTINGS",
-            // 存储
+            // Note: brief English comment.
             "android.permission.READ_EXTERNAL_STORAGE",
             "android.permission.WRITE_EXTERNAL_STORAGE",
             "android.permission.READ_MEDIA_IMAGES",
             "android.permission.READ_MEDIA_VIDEO",
             "android.permission.READ_MEDIA_AUDIO",
             "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-            // 位置
+            // Note: brief English comment.
             "android.permission.ACCESS_FINE_LOCATION",
             "android.permission.ACCESS_COARSE_LOCATION",
             "android.permission.ACCESS_BACKGROUND_LOCATION",
-            // 蓝牙（Web Bluetooth API / 周围设备配对）
+            // Note: brief English comment.
             "android.permission.BLUETOOTH",
             "android.permission.BLUETOOTH_ADMIN",
             "android.permission.BLUETOOTH_SCAN",
@@ -73,44 +73,44 @@ class AxmlRebuilder {
             "android.permission.BLUETOOTH_ADVERTISE",
             // NFC（Web NFC API）
             "android.permission.NFC",
-            // 附近设备 & WiFi
+            // Note: brief English comment.
             "android.permission.NEARBY_WIFI_DEVICES",
             "android.permission.ACCESS_WIFI_STATE",
             "android.permission.CHANGE_WIFI_STATE",
             "android.permission.CHANGE_NETWORK_STATE",
-            // 传感器（Sensor API / 运动检测）
+            // Note: brief English comment.
             "android.permission.BODY_SENSORS",
             "android.permission.BODY_SENSORS_BACKGROUND",
             "android.permission.ACTIVITY_RECOGNITION",
             "android.permission.HIGH_SAMPLING_RATE_SENSORS",
-            // 电话
+            // Note: brief English comment.
             "android.permission.READ_PHONE_STATE",
             "android.permission.CALL_PHONE",
             "android.permission.READ_PHONE_NUMBERS",
             "android.permission.ANSWER_PHONE_CALLS",
             "android.permission.READ_CALL_LOG",
-            // 联系人（Contact Picker API）
+            // Note: brief English comment.
             "android.permission.READ_CONTACTS",
             "android.permission.WRITE_CONTACTS",
-            // 日历
+            // Note: brief English comment.
             "android.permission.READ_CALENDAR",
             "android.permission.WRITE_CALENDAR",
             // SMS
             "android.permission.SEND_SMS",
             "android.permission.RECEIVE_SMS",
             "android.permission.READ_SMS",
-            // 生物识别
+            // Note: brief English comment.
             "android.permission.USE_BIOMETRIC",
             "android.permission.USE_FINGERPRINT",
-            // 通知
+            // Note: brief English comment.
             "android.permission.POST_NOTIFICATIONS",
-            // 悬浮窗 & 系统
+            // Note: brief English comment.
             "android.permission.SYSTEM_ALERT_WINDOW",
             "android.permission.VIBRATE",
             "android.permission.WAKE_LOCK",
             "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
             "android.permission.ACCESS_NOTIFICATION_POLICY",
-            // 前台服务类型（Android 14+）
+            // Note: brief English comment.
             "android.permission.FOREGROUND_SERVICE",
             "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
             "android.permission.FOREGROUND_SERVICE_LOCATION",
@@ -123,7 +123,7 @@ class AxmlRebuilder {
             "android.permission.FOREGROUND_SERVICE_HEALTH",
             "android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING",
             "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
-            // 其他
+            // Note: brief English comment.
             "android.permission.RECEIVE_BOOT_COMPLETED",
             "android.permission.SCHEDULE_EXACT_ALARM",
             "android.permission.USE_EXACT_ALARM",
@@ -133,14 +133,14 @@ class AxmlRebuilder {
     }
 
     /**
-     * 展开相对路径类名、修改包名，并添加 activity-alias（多桌面图标）
+     * Note: brief English comment.
      * 
-     * @param axmlData 原始 AXML 数据
-     * @param originalPackage 原始包名
-     * @param newPackage 新包名
-     * @param aliasCount 要添加的 activity-alias 数量（0 表示不添加）
-     * @param appName 应用名称（用于 alias 的 label）
-     * @return 修改后的 AXML 数据
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun expandAndModifyWithAliases(
         axmlData: ByteArray,
@@ -156,28 +156,28 @@ class AxmlRebuilder {
                 return axmlData
             }
             
-            // 步骤1：找到需要展开的相对路径类名
+            // Note: brief English comment.
             val expansions = findRelativeClassNames(parsed, originalPackage)
             AppLogger.d(TAG, "Found ${expansions.size} relative class names to expand")
             
-            // 步骤2：添加新字符串并更新引用
+            // Note: brief English comment.
             if (expansions.isNotEmpty()) {
                 expandClassNames(parsed, expansions)
             }
             
-            // 步骤3：修改包名和所有包名前缀的字符串
+            // Note: brief English comment.
             replacePackageString(parsed, originalPackage, newPackage)
             
-            // 步骤3.5：确保关键权限存在
+            // Note: brief English comment.
             ensureUsesPermissions(parsed, ALL_REQUIRED_PERMISSIONS)
             
-            // 步骤4：添加 activity-alias（多桌面图标）
+            // Note: brief English comment.
             if (aliasCount > 0) {
                 addActivityAliases(parsed, newPackage, aliasCount, appName)
                 AppLogger.d(TAG, "Added $aliasCount activity-alias entries")
             }
             
-            // 步骤5：重建 AXML
+            // Note: brief English comment.
             val result = rebuildAxml(parsed)
             
             AppLogger.d(TAG, "AXML rebuild with aliases complete: original=${axmlData.size}, new=${result.size}")
@@ -284,10 +284,10 @@ class AxmlRebuilder {
     }
     
     /**
-     * 添加 activity-alias 到 manifest
-     * 每个 alias 都指向 ShellActivity，并带有 MAIN/LAUNCHER intent-filter
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * 关键：属性名必须使用 Resource Map 中已有的索引，或者同时更新 Resource Map
+     * Note: brief English comment.
      */
     private fun addActivityAliases(
         parsed: ParsedAxml,
@@ -295,7 +295,7 @@ class AxmlRebuilder {
         aliasCount: Int,
         appName: String
     ) {
-        // 找到 </application> 的位置（END_ELEMENT with name="application"）
+        // Note: brief English comment.
         val applicationEndIndex = findApplicationEndIndex(parsed)
         if (applicationEndIndex < 0) {
             AppLogger.e(TAG, "Cannot find </application> element")
@@ -308,26 +308,26 @@ class AxmlRebuilder {
             return
         }
         
-        // 从 Resource Map 中查找属性名索引（这些属性在原始 manifest 中应该已存在）
+        // Note: brief English comment.
         val nameAttrIndex = resourceMap.indexOf(ATTR_NAME)
         val labelAttrIndex = resourceMap.indexOf(ATTR_LABEL)
         val iconAttrIndex = resourceMap.indexOf(ATTR_ICON)
         val exportedAttrIndex = resourceMap.indexOf(ATTR_EXPORTED)
         
-        // targetActivity 可能不在原始 manifest 中，需要添加到 Resource Map
+        // Note: brief English comment.
         var targetActivityAttrIndex = resourceMap.indexOf(ATTR_TARGET_ACTIVITY)
         if (targetActivityAttrIndex < 0) {
-            // 关键：Resource Map 中的索引必须与字符串池索引对应
-            // 新的 targetActivity 索引 = 当前 Resource Map 大小
+            // Note: brief English comment.
+            // Note: brief English comment.
             targetActivityAttrIndex = resourceMap.size
             
-            // 在字符串池的 targetActivityAttrIndex 位置插入（而不是 add 到末尾）
+            // Note: brief English comment.
             parsed.stringPool.strings.add(targetActivityAttrIndex, "targetActivity")
             
-            // Update所有现有 chunk 中 >= targetActivityAttrIndex 的字符串索引
+            // Note: brief English comment.
             updateStringIndicesAfterInsert(parsed, targetActivityAttrIndex)
             
-            // 扩展 Resource Map
+            // Note: brief English comment.
             val newResourceMap = resourceMap.copyOf(resourceMap.size + 1)
             newResourceMap[targetActivityAttrIndex] = ATTR_TARGET_ACTIVITY
             parsed.resourceMap = newResourceMap
@@ -341,34 +341,34 @@ class AxmlRebuilder {
         
         AppLogger.d(TAG, "Attribute indices: name=$nameAttrIndex, targetActivity=$targetActivityAttrIndex, label=$labelAttrIndex, icon=$iconAttrIndex, exported=$exportedAttrIndex")
         
-        // 找到 android namespace 字符串索引
+        // Note: brief English comment.
         val androidNsIndex = getOrAddString(parsed.stringPool, "http://schemas.android.com/apk/res/android")
         
-        // 添加元素名字符串（元素名不需要 Resource Map 映射）
+        // Note: brief English comment.
         val activityAliasNameIndex = getOrAddString(parsed.stringPool, "activity-alias")
         val intentFilterNameIndex = getOrAddString(parsed.stringPool, "intent-filter")
         val actionNameIndex = getOrAddString(parsed.stringPool, "action")
         val categoryNameIndex = getOrAddString(parsed.stringPool, "category")
         
-        // 添加值字符串（值字符串也不需要 Resource Map 映射）
+        // Note: brief English comment.
         val mainActionIndex = getOrAddString(parsed.stringPool, "android.intent.action.MAIN")
         val launcherCategoryIndex = getOrAddString(parsed.stringPool, "android.intent.category.LAUNCHER")
         
-        // ShellActivity 的完整类名
-        // 重要：必须使用原始类名，因为 DEX 文件中的类名没有被替换
-        // manifest 中的组件类名也没有被替换（参见 Skipped component class 日志）
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
         val targetActivityValue = "com.webtoapp.ui.shell.ShellActivity"
         val targetActivityValueIndex = getOrAddString(parsed.stringPool, targetActivityValue)
         AppLogger.d(TAG, "targetActivity value: $targetActivityValue (using original class name)")
         
-        // 为每个 alias 创建 chunks
-        // *** v2.0 Icon Storm 优化 ***
-        // 对于大量 alias（100+），预计算可复用的 intent-filter 子元素模板
-        // 每个 alias 产生 8 个 chunks，其中 6 个 (intent-filter 内部) 是完全相同的
-        // 只有 activity-alias START 和 END 是唯一的
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
         val newChunks = mutableListOf<Chunk>()
         
-        // 预构建可复用的 intent-filter 内部 chunks（所有 alias 共享）
+        // Note: brief English comment.
         val intentFilterStartTemplate = buildSimpleStartElement(androidNsIndex, intentFilterNameIndex, 0)
         val actionStartTemplate = buildActionOrCategoryElement(
             androidNsIndex = androidNsIndex,
@@ -387,13 +387,13 @@ class AxmlRebuilder {
         val intentFilterEndTemplate = buildEndElement(androidNsIndex, intentFilterNameIndex)
         val aliasEndTemplate = buildEndElement(androidNsIndex, activityAliasNameIndex)
         
-        // 对于大量 alias，预分配列表大小避免频繁扩容
+        // Note: brief English comment.
         if (aliasCount > 100) {
             AppLogger.d(TAG, "Icon Storm: generating $aliasCount aliases (pre-allocated buffer for ${aliasCount * 8} chunks)")
         }
         
         for (i in 1..aliasCount) {
-            // Generate alias 名称，如 ".LauncherAlias1"
+            // Note: brief English comment.
             val aliasName = ".LauncherAlias$i"
             val aliasNameValueIndex = getOrAddString(parsed.stringPool, aliasName)
             
@@ -401,7 +401,7 @@ class AxmlRebuilder {
             val aliasLabel = appName
             val aliasLabelIndex = getOrAddString(parsed.stringPool, aliasLabel)
             
-            // Build <activity-alias> START_ELEMENT (唯一的，因为 name 不同)
+            // Note: brief English comment.
             val aliasStartChunk = buildActivityAliasStartElement(
                 androidNsIndex = androidNsIndex,
                 elementNameIndex = activityAliasNameIndex,
@@ -415,7 +415,7 @@ class AxmlRebuilder {
                 exportedAttrIndex = exportedAttrIndex
             )
             
-            // 添加完整的 alias 块（共 8 个 chunks）
+            // Note: brief English comment.
             newChunks.add(aliasStartChunk)
             newChunks.add(intentFilterStartTemplate)
             newChunks.add(actionStartTemplate)
@@ -425,13 +425,13 @@ class AxmlRebuilder {
             newChunks.add(intentFilterEndTemplate)
             newChunks.add(aliasEndTemplate)
             
-            // 大量 alias 时输出进度日志
+            // Note: brief English comment.
             if (aliasCount >= 500 && i % 500 == 0) {
                 AppLogger.d(TAG, "Icon Storm progress: $i / $aliasCount aliases generated")
             }
         }
         
-        // 在 </application> 之前插入新的 chunks
+        // Note: brief English comment.
         parsed.chunks.addAll(applicationEndIndex, newChunks)
         AppLogger.d(TAG, "Inserted ${newChunks.size} chunks for $aliasCount activity-alias entries" +
             if (aliasCount >= 100) " (Icon Storm mode)" else ""
@@ -439,7 +439,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 找到 </application> END_ELEMENT 的索引
+     * Note: brief English comment.
      */
     private fun findApplicationEndIndex(parsed: ParsedAxml): Int {
         val applicationStrIndex = parsed.stringPool.strings.indexOf("application")
@@ -461,8 +461,8 @@ class AxmlRebuilder {
     }
     
     /**
-     * 添加 Deep Link intent-filter 到 ShellActivity
-     * 在 ShellActivity 的 <activity> 元素内插入 intent-filter，包含 ACTION_VIEW + BROWSABLE + DEFAULT + data(scheme+host)
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun addDeepLinkIntentFilter(parsed: ParsedAxml, hosts: List<String>) {
         if (hosts.isEmpty()) return
@@ -683,7 +683,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 获取或添加字符串到字符串池
+     * Note: brief English comment.
      */
     private fun getOrAddString(pool: StringPool, str: String): Int {
         val index = pool.strings.indexOf(str)
@@ -693,11 +693,11 @@ class AxmlRebuilder {
     }
     
     /**
-     * 构建 activity-alias 的 START_ELEMENT chunk
-     * 属性: android:label, android:icon, android:name, android:exported, android:targetActivity
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * 重要：属性必须按资源 ID 升序排列，否则 Android 框架解析时可能找不到某些属性
-     * 资源 ID 顺序：label(0x01010001) < icon(0x01010002) < name(0x01010003) < exported(0x01010010) < targetActivity(0x01010202)
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun buildActivityAliasStartElement(
         androidNsIndex: Int,
@@ -711,7 +711,7 @@ class AxmlRebuilder {
         iconAttrIndex: Int,
         exportedAttrIndex: Int
     ): Chunk {
-        // 5 个属性，每个 20 字节
+        // Note: brief English comment.
         val attrCount = 5
         val attrSize = 20
         val headerSize = 16
@@ -739,10 +739,10 @@ class AxmlRebuilder {
         buffer.putShort(0) // classIndex
         buffer.putShort(0) // styleIndex
         
-        // Properties必须按资源 ID 升序排列！
-        // Android 框架使用二分搜索查找属性，不排序会导致找不到某些属性
+        // Note: brief English comment.
+        // Note: brief English comment.
         
-        // Attribute 1: android:label (0x01010001) - 字符串
+        // Note: brief English comment.
         buffer.putInt(androidNsIndex)
         buffer.putInt(labelAttrIndex)
         buffer.putInt(labelValueIndex)
@@ -751,7 +751,7 @@ class AxmlRebuilder {
         buffer.put(0x03) // TYPE_STRING
         buffer.putInt(labelValueIndex)
         
-        // Attribute 2: android:icon (0x01010002) - 引用
+        // Note: brief English comment.
         buffer.putInt(androidNsIndex)
         buffer.putInt(iconAttrIndex)
         buffer.putInt(-1) // rawValue = -1 for reference
@@ -760,7 +760,7 @@ class AxmlRebuilder {
         buffer.put(0x01) // TYPE_REFERENCE
         buffer.putInt(0x7f0d0000) // ic_launcher 资源 ID
         
-        // Attribute 3: android:name (0x01010003) - 字符串
+        // Note: brief English comment.
         buffer.putInt(androidNsIndex) // namespace
         buffer.putInt(nameAttrIndex) // name (Resource Map 索引)
         buffer.putInt(nameValueIndex) // rawValue
@@ -769,7 +769,7 @@ class AxmlRebuilder {
         buffer.put(0x03) // valueType = TYPE_STRING
         buffer.putInt(nameValueIndex) // valueData
         
-        // Attribute 4: android:exported (0x01010010) - 布尔值 true
+        // Note: brief English comment.
         buffer.putInt(androidNsIndex)
         buffer.putInt(exportedAttrIndex)
         buffer.putInt(-1) // rawValue
@@ -778,7 +778,7 @@ class AxmlRebuilder {
         buffer.put(0x12) // TYPE_INT_BOOLEAN
         buffer.putInt(-1) // true = 0xFFFFFFFF
         
-        // Attribute 5: android:targetActivity (0x01010202) - 字符串
+        // Note: brief English comment.
         buffer.putInt(androidNsIndex)
         buffer.putInt(targetActivityAttrIndex)
         buffer.putInt(targetActivityValueIndex)
@@ -791,7 +791,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 构建简单的 START_ELEMENT (无属性或少量属性)
+     * Note: brief English comment.
      */
     private fun buildSimpleStartElement(androidNsIndex: Int, elementNameIndex: Int, attrCount: Int): Chunk {
         val attrSize = 20
@@ -818,7 +818,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 构建 action 或 category 元素 (带 android:name 属性)
+     * Note: brief English comment.
      */
     private fun buildActionOrCategoryElement(
         androidNsIndex: Int,
@@ -847,7 +847,7 @@ class AxmlRebuilder {
         buffer.putShort(0)
         buffer.putShort(0)
         
-        // android:name 属性
+        // Note: brief English comment.
         buffer.putInt(androidNsIndex)
         buffer.putInt(nameAttrIndex)
         buffer.putInt(nameValueIndex)
@@ -860,7 +860,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 构建 END_ELEMENT chunk
+     * Note: brief English comment.
      */
     private fun buildEndElement(androidNsIndex: Int, elementNameIndex: Int): Chunk {
         val headerSize = 16
@@ -880,8 +880,8 @@ class AxmlRebuilder {
     }
     
     /**
-     * 在字符串池中插入字符串后，更新所有现有 chunk 中 >= insertIndex 的字符串索引
-     * 这是因为插入会导致后续字符串索引全部 +1
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun updateStringIndicesAfterInsert(parsed: ParsedAxml, insertIndex: Int) {
         for (chunk in parsed.chunks) {
@@ -894,7 +894,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 更新 START_ELEMENT chunk 中的字符串索引
+     * Note: brief English comment.
      */
     private fun updateStartElementIndices(chunk: Chunk, insertIndex: Int) {
         val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
@@ -913,12 +913,12 @@ class AxmlRebuilder {
             buffer.putInt(nameOffset, name + 1)
         }
         
-        // 读取属性数量和起始位置
+        // Note: brief English comment.
         val attrStart = buffer.getShort(24).toInt() and 0xFFFF
         val attrSize = buffer.getShort(26).toInt() and 0xFFFF
         val attrCount = buffer.getShort(28).toInt() and 0xFFFF
         
-        // Update每个属性中的字符串索引
+        // Note: brief English comment.
         for (i in 0 until attrCount) {
             val attrOffset = 16 + attrStart + i * attrSize
             
@@ -928,8 +928,8 @@ class AxmlRebuilder {
                 buffer.putInt(attrOffset, attrNs + 1)
             }
             
-            // name at attrOffset + 4 (这是属性名，通常在 Resource Map 范围内，不需要更新)
-            // 但如果 insertIndex 小于这个索引，也需要更新
+            // Note: brief English comment.
+            // Note: brief English comment.
             val attrName = buffer.getInt(attrOffset + 4)
             if (attrName >= insertIndex) {
                 buffer.putInt(attrOffset + 4, attrName + 1)
@@ -944,7 +944,7 @@ class AxmlRebuilder {
             // valueType at attrOffset + 15
             val valueType = buffer.get(attrOffset + 15).toInt() and 0xFF
             
-            // valueData at attrOffset + 16 (如果是字符串类型)
+            // Note: brief English comment.
             if (valueType == 0x03) { // TYPE_STRING
                 val valueData = buffer.getInt(attrOffset + 16)
                 if (valueData >= insertIndex) {
@@ -955,7 +955,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 更新 END_ELEMENT chunk 中的字符串索引
+     * Note: brief English comment.
      */
     private fun updateEndElementIndices(chunk: Chunk, insertIndex: Int) {
         val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
@@ -974,7 +974,7 @@ class AxmlRebuilder {
     }
     
     /**
-     * 更新 NAMESPACE chunk 中的字符串索引
+     * Note: brief English comment.
      */
     private fun updateNamespaceIndices(chunk: Chunk, insertIndex: Int) {
         val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
@@ -993,12 +993,12 @@ class AxmlRebuilder {
     }
 
     /**
-     * 展开相对路径类名并修改包名
+     * Note: brief English comment.
      * 
-     * @param axmlData 原始 AXML 数据
-     * @param originalPackage 原始包名
-     * @param newPackage 新包名
-     * @return 修改后的 AXML 数据
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun expandAndModify(axmlData: ByteArray, originalPackage: String, newPackage: String): ByteArray {
         return try {
@@ -1008,20 +1008,20 @@ class AxmlRebuilder {
                 return axmlData
             }
             
-            // 步骤1：找到需要展开的相对路径类名
+            // Note: brief English comment.
             val expansions = findRelativeClassNames(parsed, originalPackage)
             AppLogger.d(TAG, "Found ${expansions.size} relative class names to expand")
             
-            // 步骤2：添加新字符串并更新引用（如果有相对路径）
+            // Note: brief English comment.
             if (expansions.isNotEmpty()) {
                 expandClassNames(parsed, expansions)
             }
             
-            // 步骤3：修改包名和所有包名前缀的字符串（权限、authorities 等）
-            // 即使没有相对路径类名，也需要处理权限冲突
+            // Note: brief English comment.
+            // Note: brief English comment.
             replacePackageString(parsed, originalPackage, newPackage)
             
-            // 步骤4：重建 AXML
+            // Note: brief English comment.
             val result = rebuildAxml(parsed)
             
             AppLogger.d(TAG, "AXML rebuild complete: original=${axmlData.size}, new=${result.size}")
@@ -1034,16 +1034,16 @@ class AxmlRebuilder {
     }
 
     /**
-     * 完整的 AXML 修改方法：展开类名、修改包名、修改版本号、添加 activity-alias
+     * Note: brief English comment.
      * 
-     * @param axmlData 原始 AXML 数据
-     * @param originalPackage 原始包名
-     * @param newPackage 新包名
-     * @param versionCode 新版本号
-     * @param versionName 新版本名称
-     * @param aliasCount 要添加的 activity-alias 数量（0 表示不添加）
-     * @param appName 应用名称（用于 alias 的 label）
-     * @return 修改后的 AXML 数据
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun expandAndModifyFull(
         axmlData: ByteArray, 
@@ -1062,40 +1062,40 @@ class AxmlRebuilder {
                 return axmlData
             }
             
-            // 步骤1：找到需要展开的相对路径类名
+            // Note: brief English comment.
             val expansions = findRelativeClassNames(parsed, originalPackage)
             AppLogger.d(TAG, "Found ${expansions.size} relative class names to expand")
             
-            // 步骤2：添加新字符串并更新引用
+            // Note: brief English comment.
             if (expansions.isNotEmpty()) {
                 expandClassNames(parsed, expansions)
             }
             
-            // 步骤3：修改包名和所有包名前缀的字符串
+            // Note: brief English comment.
             replacePackageString(parsed, originalPackage, newPackage)
             
-            // 步骤4：修改版本号
+            // Note: brief English comment.
             modifyVersionInfo(parsed, versionCode, versionName)
             
-            // 步骤5：移除 testOnly 标记
+            // Note: brief English comment.
             stripTestOnlyFlag(parsed)
             
-            // 步骤5.5：确保关键权限存在（避免模板缺失导致功能不可用）
+            // Note: brief English comment.
             ensureUsesPermissions(parsed, ALL_REQUIRED_PERMISSIONS)
             
-            // 步骤6：添加 activity-alias（多桌面图标）
+            // Note: brief English comment.
             if (aliasCount > 0 && appName.isNotEmpty()) {
                 addActivityAliases(parsed, newPackage, aliasCount, appName)
                 AppLogger.d(TAG, "Added $aliasCount activity-alias entries for multi-launcher-icons")
             }
             
-            // 步骤7：添加 Deep Link intent-filter（链接打开）
+            // Note: brief English comment.
             if (deepLinkHosts.isNotEmpty()) {
                 addDeepLinkIntentFilter(parsed, deepLinkHosts)
                 AppLogger.d(TAG, "Added deep link intent-filter for hosts: $deepLinkHosts")
             }
             
-            // 步骤8：重建 AXML
+            // Note: brief English comment.
             val result = rebuildAxml(parsed)
             
             AppLogger.d(TAG, "AXML full rebuild complete: original=${axmlData.size}, new=${result.size}, aliases=$aliasCount, deepLinkHosts=${deepLinkHosts.size}")
@@ -1108,14 +1108,14 @@ class AxmlRebuilder {
     }
     
     /**
-     * 展开相对路径类名、修改包名，并修改版本号
+     * Note: brief English comment.
      * 
-     * @param axmlData 原始 AXML 数据
-     * @param originalPackage 原始包名
-     * @param newPackage 新包名
-     * @param versionCode 新版本号
-     * @param versionName 新版本名称
-     * @return 修改后的 AXML 数据
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun expandAndModifyWithVersion(
         axmlData: ByteArray, 
@@ -1131,28 +1131,28 @@ class AxmlRebuilder {
                 return axmlData
             }
             
-            // 步骤1：找到需要展开的相对路径类名
+            // Note: brief English comment.
             val expansions = findRelativeClassNames(parsed, originalPackage)
             AppLogger.d(TAG, "Found ${expansions.size} relative class names to expand")
             
-            // 步骤2：添加新字符串并更新引用（如果有相对路径）
+            // Note: brief English comment.
             if (expansions.isNotEmpty()) {
                 expandClassNames(parsed, expansions)
             }
             
-            // 步骤3：修改包名和所有包名前缀的字符串（权限、authorities 等）
+            // Note: brief English comment.
             replacePackageString(parsed, originalPackage, newPackage)
             
-            // 步骤4：修改版本号
+            // Note: brief English comment.
             modifyVersionInfo(parsed, versionCode, versionName)
             
-            // 步骤5：移除 testOnly 标记，避免 INSTALL_FAILED_TEST_ONLY
+            // Note: brief English comment.
             stripTestOnlyFlag(parsed)
             
-            // 步骤5.5：确保关键权限存在
+            // Note: brief English comment.
             ensureUsesPermissions(parsed, ALL_REQUIRED_PERMISSIONS)
             
-            // 步骤6：重建 AXML
+            // Note: brief English comment.
             val result = rebuildAxml(parsed)
             
             AppLogger.d(TAG, "AXML rebuild with version complete: original=${axmlData.size}, new=${result.size}")
@@ -1165,18 +1165,18 @@ class AxmlRebuilder {
     }
 
     /**
-     * 修改版本信息（versionCode 和 versionName）
+     * Note: brief English comment.
      */
     private fun modifyVersionInfo(parsed: ParsedAxml, versionCode: Int, versionName: String) {
         val resourceMap = parsed.resourceMap ?: return
         
-        // 找到 versionCode 和 versionName 属性的资源 ID 索引
+        // Note: brief English comment.
         val versionCodeAttrIndex = resourceMap.indexOf(ATTR_VERSION_CODE)
         val versionNameAttrIndex = resourceMap.indexOf(ATTR_VERSION_NAME)
         
         AppLogger.d(TAG, "Version attr indices: versionCode=$versionCodeAttrIndex, versionName=$versionNameAttrIndex")
         
-        // Find manifest 元素（第一个 START_ELEMENT）
+        // Note: brief English comment.
         for (chunk in parsed.chunks) {
             if (chunk.type != CHUNK_START_ELEMENT) continue
             
@@ -1191,13 +1191,13 @@ class AxmlRebuilder {
             
             if (attrSize == 0 || attrCount == 0) continue
             
-            // Check是否是 manifest 元素
+            // Note: brief English comment.
             val elementNameStr = parsed.stringPool.strings.getOrNull(elementName) ?: continue
             if (elementNameStr != "manifest") continue
             
             AppLogger.d(TAG, "Found manifest element with $attrCount attributes")
             
-            // 扫描属性
+            // Note: brief English comment.
             for (i in 0 until attrCount) {
                 val attrOffset = 36 + i * attrSize
                 if (attrOffset + 20 > chunk.data.size) break
@@ -1213,7 +1213,7 @@ class AxmlRebuilder {
                 
                 when (attrName) {
                     versionCodeAttrIndex -> {
-                        // versionCode 是整数类型 (type 0x10)
+                        // Note: brief English comment.
                         if (attrValueType == 0x10) {
                             buffer.position(attrOffset + 16)
                             buffer.putInt(versionCode)
@@ -1221,9 +1221,9 @@ class AxmlRebuilder {
                         }
                     }
                     versionNameAttrIndex -> {
-                        // versionName 是字符串类型 (type 0x03)
+                        // Note: brief English comment.
                         if (attrValueType == 0x03) {
-                            // 添加或更新 versionName 字符串
+                            // Note: brief English comment.
                             var newIndex = parsed.stringPool.strings.indexOf(versionName)
                             if (newIndex < 0) {
                                 newIndex = parsed.stringPool.strings.size
@@ -1250,15 +1250,15 @@ class AxmlRebuilder {
     }
 
     /**
-     * 移除 android:testOnly 标记，避免 INSTALL_FAILED_TEST_ONLY 错误
+     * Note: brief English comment.
      * 
-     * testOnly 属性通常出现在 <application> 元素中，值类型为布尔型 (0x12)
-     * 我们将其值设置为 false (0x00000000)
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun stripTestOnlyFlag(parsed: ParsedAxml) {
         val resourceMap = parsed.resourceMap ?: return
         
-        // 找到 testOnly 属性的资源 ID 索引
+        // Note: brief English comment.
         val testOnlyAttrIndex = resourceMap.indexOf(ATTR_TEST_ONLY)
         if (testOnlyAttrIndex < 0) {
             AppLogger.d(TAG, "testOnly attribute not found in resource map, skipping")
@@ -1267,7 +1267,7 @@ class AxmlRebuilder {
         
         AppLogger.d(TAG, "Found testOnly attr index: $testOnlyAttrIndex")
         
-        // 扫描所有 START_ELEMENT chunk，查找 application 元素
+        // Note: brief English comment.
         for (chunk in parsed.chunks) {
             if (chunk.type != CHUNK_START_ELEMENT) continue
             
@@ -1282,13 +1282,13 @@ class AxmlRebuilder {
             
             if (attrSize == 0 || attrCount == 0) continue
             
-            // Check是否是 application 元素
+            // Note: brief English comment.
             val elementNameStr = parsed.stringPool.strings.getOrNull(elementName) ?: continue
             if (elementNameStr != "application") continue
             
             AppLogger.d(TAG, "Found application element with $attrCount attributes, checking for testOnly")
             
-            // 扫描属性，查找 testOnly
+            // Note: brief English comment.
             for (i in 0 until attrCount) {
                 val attrOffset = 36 + i * attrSize
                 if (attrOffset + 20 > chunk.data.size) break
@@ -1305,8 +1305,8 @@ class AxmlRebuilder {
                 if (attrName == testOnlyAttrIndex) {
                     AppLogger.d(TAG, "Found testOnly attribute at index $i, type=0x${attrValueType.toString(16)}, value=$attrValueData")
                     
-                    // testOnly 是布尔类型 (type 0x12)，将值设置为 false (0)
-                    // 也可能是整数类型 (type 0x10)
+                    // Note: brief English comment.
+                    // Note: brief English comment.
                     if (attrValueType == 0x12 || attrValueType == 0x10) {
                         buffer.position(attrOffset + 16)
                         buffer.putInt(0) // false
@@ -1318,7 +1318,7 @@ class AxmlRebuilder {
     }
 
     /**
-     * 解析 AXML 文件结构
+     * Note: brief English comment.
      */
     private fun parseAxml(data: ByteArray): ParsedAxml? {
         if (data.size < 8) return null
@@ -1371,7 +1371,7 @@ class AxmlRebuilder {
     }
 
     /**
-     * 解析字符串池
+     * Note: brief English comment.
      */
     private fun parseStringPool(data: ByteArray, offset: Int): StringPool {
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
@@ -1388,13 +1388,13 @@ class AxmlRebuilder {
         
         val isUtf8 = (flags and 0x100) != 0
         
-        // 读取字符串偏移
+        // Note: brief English comment.
         val stringOffsets = IntArray(stringCount) { buffer.int }
         
-        // 读取样式偏移
+        // Note: brief English comment.
         val styleOffsets = IntArray(styleCount) { buffer.int }
         
-        // 读取字符串
+        // Note: brief English comment.
         val stringsDataStart = offset + stringsStart
         val strings = mutableListOf<String>()
         
@@ -1408,7 +1408,7 @@ class AxmlRebuilder {
             strings.add(str)
         }
         
-        // 读取样式数据（如果有）
+        // Note: brief English comment.
         val stylesData = if (styleCount > 0 && stylesStart > 0) {
             val stylesDataStart = offset + stylesStart
             val stylesDataEnd = offset + chunkSize
@@ -1417,7 +1417,7 @@ class AxmlRebuilder {
             null
         }
         
-        // 计算原始字符串数据大小
+        // Note: brief English comment.
         val originalStringsDataSize = if (stylesStart > 0) {
             stylesStart - stringsStart
         } else {
@@ -1435,7 +1435,7 @@ class AxmlRebuilder {
     }
 
     /**
-     * 解析资源 ID 映射
+     * Note: brief English comment.
      */
     private fun parseResourceMap(data: ByteArray, offset: Int, size: Int): IntArray {
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
@@ -1445,20 +1445,20 @@ class AxmlRebuilder {
     }
 
     /**
-     * 查找需要展开的相对路径类名
+     * Note: brief English comment.
      */
     private fun findRelativeClassNames(parsed: ParsedAxml, originalPackage: String): List<ClassNameExpansion> {
         val expansions = mutableListOf<ClassNameExpansion>()
         val resourceMap = parsed.resourceMap ?: return expansions
         
-        // 找到 android:name 属性的资源 ID 索引
+        // Note: brief English comment.
         val nameAttrIndex = resourceMap.indexOf(ATTR_NAME)
         if (nameAttrIndex < 0) {
             AppLogger.d(TAG, "android:name attribute not found in resource map")
             return expansions
         }
         
-        // 扫描所有 START_ELEMENT chunk，查找 android:name 属性
+        // Note: brief English comment.
         for (chunk in parsed.chunks) {
             if (chunk.type != CHUNK_START_ELEMENT) continue
             
@@ -1473,13 +1473,13 @@ class AxmlRebuilder {
             
             if (attrSize == 0 || attrCount == 0) continue
             
-            // Check是否是组件元素（activity, service, receiver, provider, application）
+            // Note: brief English comment.
             val elementNameStr = parsed.stringPool.strings.getOrNull(elementName) ?: continue
             if (elementNameStr !in listOf("activity", "service", "receiver", "provider", "application", "activity-alias")) {
                 continue
             }
             
-            // 扫描属性
+            // Note: brief English comment.
             for (i in 0 until attrCount) {
                 val attrOffset = 36 + i * attrSize
                 if (attrOffset + 20 > chunk.data.size) break
@@ -1493,17 +1493,17 @@ class AxmlRebuilder {
                 val attrValueType = buffer.get().toInt() and 0xFF
                 val attrValueData = buffer.int
                 
-                // Check是否是 android:name 属性
+                // Note: brief English comment.
                 if (attrName != nameAttrIndex) continue
                 
-                // Check属性值类型是否是字符串（type 3）
+                // Note: brief English comment.
                 if (attrValueType != 3) continue
                 
-                // Get字符串值
+                // Note: brief English comment.
                 val stringIndex = attrValueData
                 val stringValue = parsed.stringPool.strings.getOrNull(stringIndex) ?: continue
                 
-                // Check是否是相对路径类名
+                // Note: brief English comment.
                 if (stringValue.startsWith(".") || (!stringValue.contains(".") && stringValue.isNotEmpty())) {
                     val absoluteName = if (stringValue.startsWith(".")) {
                         originalPackage + stringValue
@@ -1529,31 +1529,31 @@ class AxmlRebuilder {
     }
 
     /**
-     * 展开类名并更新引用
+     * Note: brief English comment.
      */
     private fun expandClassNames(parsed: ParsedAxml, expansions: List<ClassNameExpansion>): ParsedAxml {
         val stringPool = parsed.stringPool
         
         for (expansion in expansions) {
-            // Check展开后的字符串是否已存在
+            // Note: brief English comment.
             var newIndex = stringPool.strings.indexOf(expansion.expandedValue)
             
             if (newIndex < 0) {
-                // 添加新字符串
+                // Note: brief English comment.
                 newIndex = stringPool.strings.size
                 stringPool.strings.add(expansion.expandedValue)
                 AppLogger.d(TAG, "Added new string at index $newIndex: '${expansion.expandedValue}'")
             }
             
-            // Update chunk 中的属性引用
+            // Note: brief English comment.
             val chunk = parsed.chunks[expansion.chunkIndex]
             val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
             
-            // Update rawValue（字符串索引）
+            // Note: brief English comment.
             buffer.position(expansion.attrOffset + 8)
             buffer.putInt(newIndex)
             
-            // Update valueData（字符串索引）
+            // Note: brief English comment.
             buffer.position(expansion.attrOffset + 16)
             buffer.putInt(newIndex)
         }
@@ -1562,9 +1562,9 @@ class AxmlRebuilder {
     }
 
     /**
-     * 替换包名相关的字符串
-     * 包括：package 属性、权限名称、provider authorities 等
-     * 注意：不能替换组件类名，因为实际类仍在原包名下
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replacePackageString(parsed: ParsedAxml, oldPackage: String, newPackage: String) {
         val stringPool = parsed.stringPool
@@ -1573,24 +1573,24 @@ class AxmlRebuilder {
             val str = stringPool.strings[i]
             
             when {
-                // 1. 完全匹配的包名（package 属性）
+                // Note: brief English comment.
                 str == oldPackage -> {
                     stringPool.strings[i] = newPackage
                     AppLogger.d(TAG, "Replaced package at index $i: '$oldPackage' -> '$newPackage'")
                 }
                 
-                // 2. 以包名开头的字符串（权限、authorities 等）
-                // 但排除组件类名（Activity、Service、Provider、Receiver、Application等）
+                // Note: brief English comment.
+                // Note: brief English comment.
                 str.startsWith("$oldPackage.") -> {
-                    // Check是否是组件类名（通常以大写字母开头的类名结尾）
+                    // Note: brief English comment.
                     val suffix = str.substring(oldPackage.length + 1)
                     val isComponentClassName = isLikelyClassName(suffix)
                     
                     if (isComponentClassName) {
-                        // 组件类名不替换，保持原样
+                        // Note: brief English comment.
                         AppLogger.d(TAG, "Skipped component class at index $i: '$str'")
                     } else {
-                        // Permission、authorities等需要替换
+                        // Note: brief English comment.
                         val newStr = newPackage + str.substring(oldPackage.length)
                         stringPool.strings[i] = newStr
                         AppLogger.d(TAG, "Replaced prefixed string at index $i: '$str' -> '$newStr'")
@@ -1601,11 +1601,11 @@ class AxmlRebuilder {
     }
     
     /**
-     * 判断字符串是否看起来像组件类名
-     * 组件类名特征：包含子包路径，以大写字母开头的类名结尾
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun isLikelyClassName(suffix: String): Boolean {
-        // Check最后一个点后面的部分是否以大写字母开头（类名特征）
+        // Note: brief English comment.
         val lastDotIndex = suffix.lastIndexOf('.')
         val className = if (lastDotIndex >= 0) {
             suffix.substring(lastDotIndex + 1)
@@ -1613,15 +1613,15 @@ class AxmlRebuilder {
             suffix
         }
         
-        // Class名通常以大写字母开头
+        // Note: brief English comment.
         if (className.isNotEmpty() && className[0].isUpperCase()) {
-            // 进一步检查是否是常见的组件类型
+            // Note: brief English comment.
             val componentSuffixes = listOf(
                 "Activity", "Service", "Provider", "Receiver", 
                 "Application", "Fragment", "Adapter", "View",
                 "Manager", "Helper", "Listener", "Callback"
             )
-            // 如果以常见组件后缀结尾，或者整体看起来像类名（大写开头+驼峰命名）
+            // Note: brief English comment.
             return componentSuffixes.any { className.endsWith(it) } ||
                    className.matches(CLASS_NAME_REGEX)
         }
@@ -1630,15 +1630,15 @@ class AxmlRebuilder {
     }
 
     /**
-     * 重建 AXML 文件
+     * Note: brief English comment.
      */
     private fun rebuildAxml(parsed: ParsedAxml): ByteArray {
         val output = ByteArrayOutputStream()
         
-        // 1. 重建字符串池
+        // Note: brief English comment.
         val stringPoolData = rebuildStringPool(parsed.stringPool)
         
-        // 2. 重建资源映射
+        // Note: brief English comment.
         val resourceMap = parsed.resourceMap
         val resourceMapData = if (resourceMap != null) {
             rebuildResourceMap(resourceMap)
@@ -1646,43 +1646,43 @@ class AxmlRebuilder {
             ByteArray(0)
         }
         
-        // 3. 收集所有其他 chunks
+        // Note: brief English comment.
         val chunksData = ByteArrayOutputStream()
         for (chunk in parsed.chunks) {
             chunksData.write(chunk.data)
         }
         
-        // 4. 计算总大小
+        // Note: brief English comment.
         val totalSize = parsed.fileHeaderSize + stringPoolData.size + resourceMapData.size + chunksData.size()
         
-        // 5. 写入文件头
+        // Note: brief English comment.
         val header = ByteBuffer.allocate(parsed.fileHeaderSize).order(ByteOrder.LITTLE_ENDIAN)
         header.putShort(CHUNK_AXML_FILE.toShort())
         header.putShort(parsed.fileHeaderSize.toShort())
         header.putInt(totalSize)
         output.write(header.array())
         
-        // 6. 写入字符串池
+        // Note: brief English comment.
         output.write(stringPoolData)
         
-        // 7. 写入资源映射
+        // Note: brief English comment.
         output.write(resourceMapData)
         
-        // 8. 写入其他 chunks
+        // Note: brief English comment.
         chunksData.writeTo(output)
         
         return output.toByteArray()
     }
 
     /**
-     * 重建字符串池
+     * Note: brief English comment.
      */
     private fun rebuildStringPool(pool: StringPool): ByteArray {
         val isUtf8 = pool.isUtf8
         val stringCount = pool.strings.size
         val styleCount = pool.styleOffsets.size
         
-        // 序列化字符串数据
+        // Note: brief English comment.
         val stringsBuffer = ByteArrayOutputStream()
         val stringOffsets = IntArray(stringCount)
         
@@ -1697,17 +1697,17 @@ class AxmlRebuilder {
             }
         }
         
-        // 对齐到 4 字节
+        // Note: brief English comment.
         while (stringsBuffer.size() % 4 != 0) {
             stringsBuffer.write(0)
         }
         
         val stringsData = stringsBuffer.toByteArray()
         
-        // 计算字符串数据大小变化量，用于调整样式偏移
+        // Note: brief English comment.
         val stringsDataSizeDelta = stringsData.size - pool.originalStringsDataSize
         
-        // 计算各部分大小
+        // Note: brief English comment.
         val headerSize = 28
         val offsetsSize = (stringCount + styleCount) * 4
         val stringsStart = headerSize + offsetsSize
@@ -1719,7 +1719,7 @@ class AxmlRebuilder {
         val stylesDataSize = pool.stylesData?.size ?: 0
         val chunkSize = stringsStart + stringsData.size + stylesDataSize
         
-        // Build字符串池 chunk
+        // Note: brief English comment.
         val result = ByteBuffer.allocate(chunkSize).order(ByteOrder.LITTLE_ENDIAN)
         
         // Chunk header
@@ -1728,7 +1728,7 @@ class AxmlRebuilder {
         result.putInt(chunkSize)
         result.putInt(stringCount)
         result.putInt(styleCount)
-        // 保留原始flags，但清除SORTED_FLAG（因为我们可能添加了新字符串，顺序可能改变）
+        // Note: brief English comment.
         val newFlags = pool.flags and 0x01.inv()
         result.putInt(newFlags)
         result.putInt(stringsStart)
@@ -1739,7 +1739,7 @@ class AxmlRebuilder {
             result.putInt(offset)
         }
         
-        // Style offsets - 需要根据字符串数据大小变化进行调整
+        // Note: brief English comment.
         for (offset in pool.styleOffsets) {
             result.putInt(offset + stringsDataSizeDelta)
         }
@@ -1754,7 +1754,7 @@ class AxmlRebuilder {
     }
 
     /**
-     * 重建资源映射
+     * Note: brief English comment.
      */
     private fun rebuildResourceMap(resourceMap: IntArray): ByteArray {
         val size = 8 + resourceMap.size * 4
@@ -1769,15 +1769,15 @@ class AxmlRebuilder {
     }
 
     /**
-     * 简单的包名替换（当没有相对路径类名时使用）
+     * Note: brief English comment.
      */
     private fun simplePackageReplace(data: ByteArray, oldPackage: String, newPackage: String): ByteArray {
         val result = data.copyOf()
         
-        // UTF-8 替换
+        // Note: brief English comment.
         replacePackageBytes(result, oldPackage, newPackage, Charsets.UTF_8)
         
-        // UTF-16LE 替换
+        // Note: brief English comment.
         replacePackageBytes(result, oldPackage, newPackage, Charsets.UTF_16LE)
         
         return result
@@ -1808,7 +1808,7 @@ class AxmlRebuilder {
             }
             
             if (match) {
-                // Check是否是独立字符串
+                // Note: brief English comment.
                 val nextIndex = i + oldBytes.size
                 var isIndependent = nextIndex >= data.size
                 
@@ -1834,13 +1834,13 @@ class AxmlRebuilder {
         }
     }
 
-    // ========== 辅助方法 ==========
+    // Note: brief English comment.
 
     private fun readUtf8String(data: ByteArray, offset: Int): String {
         if (offset >= data.size) return ""
         var o = offset
         
-        // 读取字符长度（可能是 1 或 2 字节）
+        // Note: brief English comment.
         var charLen = data[o].toInt() and 0x7F
         if (data[o].toInt() and 0x80 != 0) {
             if (o + 1 >= data.size) return ""
@@ -1850,7 +1850,7 @@ class AxmlRebuilder {
             o += 1
         }
         
-        // 读取字节长度
+        // Note: brief English comment.
         var byteLen = data[o].toInt() and 0x7F
         if (data[o].toInt() and 0x80 != 0) {
             if (o + 1 >= data.size) return ""
@@ -1888,7 +1888,7 @@ class AxmlRebuilder {
         val charLen = str.length
         val byteLen = bytes.size
         
-        // 写入字符长度
+        // Note: brief English comment.
         if (charLen > 0x7F) {
             output.write(0x80 or ((charLen shr 8) and 0x7F))
             output.write(charLen and 0xFF)
@@ -1896,7 +1896,7 @@ class AxmlRebuilder {
             output.write(charLen)
         }
         
-        // 写入字节长度
+        // Note: brief English comment.
         if (byteLen > 0x7F) {
             output.write(0x80 or ((byteLen shr 8) and 0x7F))
             output.write(byteLen and 0xFF)
@@ -1904,17 +1904,17 @@ class AxmlRebuilder {
             output.write(byteLen)
         }
         
-        // 写入字符串数据
+        // Note: brief English comment.
         output.write(bytes)
         
-        // 写入 null 终止符
+        // Note: brief English comment.
         output.write(0)
     }
 
     private fun writeUtf16String(output: ByteArrayOutputStream, str: String) {
         val length = str.length
         
-        // 写入长度
+        // Note: brief English comment.
         if (length > 0x7FFF) {
             output.write(0x80 or ((length shr 24) and 0x7F))
             output.write((length shr 16) and 0xFF)
@@ -1925,16 +1925,16 @@ class AxmlRebuilder {
             output.write((length shr 8) and 0xFF)
         }
         
-        // 写入字符串数据
+        // Note: brief English comment.
         val bytes = str.toByteArray(Charsets.UTF_16LE)
         output.write(bytes)
         
-        // 写入 null 终止符（2 字节）
+        // Note: brief English comment.
         output.write(0)
         output.write(0)
     }
 
-    // ========== 数据类 ==========
+    // Note: brief English comment.
 
     private data class ParsedAxml(
         val fileHeaderSize: Int,

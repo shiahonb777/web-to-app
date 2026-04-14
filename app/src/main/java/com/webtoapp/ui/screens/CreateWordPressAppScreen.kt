@@ -45,17 +45,17 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 创建 WordPress 应用页面
+ * create WordPress app
  * 
- * 增强功能：
- * - WordPress 品牌化 Hero 区域（WP蓝渐变）
- * - 主题管理面板（检测已安装主题、当前主题）
- * - 插件列表面板（检测已安装插件）
- * - 管理员配置（邮箱、密码）
- * - 数据库信息面板（SQLite 离线模式）
- * - 固定链接结构选择器
- * - 站点语言选择
- * - WordPress 版本信息
+ * Note
+ * WordPress Hero area( WP gradient)
+ * managementpanel( , current)
+ * listpanel( )
+ * management config( , )
+ * panel( SQLite offlinemode)
+ * select
+ * select
+ * WordPress version
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -72,45 +72,45 @@ fun CreateWordPressAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // WordPress 品牌色
+    // WordPress
     val wpBlue = Color(0xFF21759B)
     val wpDarkBlue = Color(0xFF0073AA)
     val wpGray = Color(0xFF464646)
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // WordPress 配置
+    // WordPress config
     var siteTitle by remember { mutableStateOf("My Site") }
     var adminUser by remember { mutableStateOf("admin") }
     var adminEmail by remember { mutableStateOf("") }
     var landscapeMode by remember { mutableStateOf(false) }
     
-    // 增强：固定链接
+    // Note
     var permalink by remember { mutableStateOf("postname") }
     
-    // 增强：站点语言
+    // Note
     var siteLanguage by remember { mutableStateOf("zh_CN") }
     
-    // 增强：主题/插件检测（导入模式）
+    // /( importmode)
     var detectedThemes by remember { mutableStateOf<List<String>>(emptyList()) }
     var activeTheme by remember { mutableStateOf<String?>(null) }
     var detectedPlugins by remember { mutableStateOf<List<String>>(emptyList()) }
     var wpVersion by remember { mutableStateOf<String?>(null) }
     var isImportMode by remember { mutableStateOf(false) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var projectId by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
-    // 依赖下载状态
+    // downloadstate
     val downloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     var showDownloadDialog by remember { mutableStateOf(false) }
     
-    // 文件选择器
+    // fileselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -126,7 +126,7 @@ fun CreateWordPressAppScreen(
                 isImportMode = true
                 
                 try {
-                    // 检查并下载依赖
+                    // checkanddownload
                     if (!WordPressDependencyManager.isAllReady(context)) {
                         showDownloadDialog = true
                         val success = WordPressDependencyManager.downloadAllDependencies(context)
@@ -138,23 +138,23 @@ fun CreateWordPressAppScreen(
                         }
                     }
                     
-                    // 创建项目
+                    // createitem
                     creationPhase = Strings.wpCreatingProject
                     val newProjectId = WordPressManager.createProject(context, siteTitle, adminUser)
                     
                     if (newProjectId != null) {
-                        // 导入 WordPress 压缩包
+                        // import WordPress
                         val importSuccess = WordPressManager.importFullProject(context, newProjectId, zipUri)
                         if (importSuccess) {
                             projectId = newProjectId
                             creationPhase = Strings.wpProjectReady
                             
-                            // 增强：扫描导入项目的主题和插件
+                            // importitem
                             withContext(Dispatchers.IO) {
                                 try {
                                     val projectDir = WordPressManager.getProjectDir(context, newProjectId)
                                     if (projectDir != null) {
-                                        // 检测主题
+                                        // Note
                                         val themesDir = File(projectDir, "wp-content/themes")
                                         if (themesDir.exists() && themesDir.isDirectory) {
                                             detectedThemes = themesDir.listFiles()
@@ -164,7 +164,7 @@ fun CreateWordPressAppScreen(
                                             activeTheme = detectedThemes.firstOrNull { it != "index.php" }
                                         }
                                         
-                                        // 检测插件
+                                        // Note
                                         val pluginsDir = File(projectDir, "wp-content/plugins")
                                         if (pluginsDir.exists() && pluginsDir.isDirectory) {
                                             detectedPlugins = pluginsDir.listFiles()
@@ -173,7 +173,7 @@ fun CreateWordPressAppScreen(
                                                 ?: emptyList()
                                         }
                                         
-                                        // 检测 WP 版本
+                                        // WP version
                                         val versionFile = File(projectDir, "wp-includes/version.php")
                                         if (versionFile.exists()) {
                                             val content = versionFile.readText()
@@ -182,7 +182,7 @@ fun CreateWordPressAppScreen(
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    // 扫描失败不影响主流程
+                                    // failed
                                 }
                             }
                         } else {
@@ -200,7 +200,7 @@ fun CreateWordPressAppScreen(
         }
     }
     
-    // 创建全新站点
+    // create
     fun createNewSite() {
         scope.launch {
             isCreating = true
@@ -209,7 +209,7 @@ fun CreateWordPressAppScreen(
             isImportMode = false
             
             try {
-                // 检查并下载依赖
+                // checkanddownload
                 if (!WordPressDependencyManager.isAllReady(context)) {
                     showDownloadDialog = true
                     val success = WordPressDependencyManager.downloadAllDependencies(context)
@@ -221,14 +221,14 @@ fun CreateWordPressAppScreen(
                     }
                 }
                 
-                // 创建项目
+                // createitem
                 creationPhase = Strings.wpCreatingProject
                 val newProjectId = WordPressManager.createProject(context, siteTitle, adminUser)
                 
                 if (newProjectId != null) {
                     projectId = newProjectId
                     creationPhase = Strings.wpProjectReady
-                    wpVersion = "6.4"  // 内置的 WP 版本
+                    wpVersion = "6.4"  // WP version
                 } else {
                     errorMessage = Strings.wpProjectCreateFailed
                 }
@@ -240,7 +240,7 @@ fun CreateWordPressAppScreen(
         }
     }
     
-    // 判断是否可以创建
+    // create
     val canCreate = projectId != null
     
     Scaffold(
@@ -292,14 +292,14 @@ fun CreateWordPressAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. WordPress 品牌化 Hero 区域 ==========
+            // ========== 1. WordPress Hero area ==========
             WpHeroSection(
                 wpBlue = wpBlue,
                 wpVersion = wpVersion,
                 isImportMode = isImportMode && projectId != null
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (projectId == null && !isCreating) {
                 TypedSampleProjectsCard(
                     title = Strings.sampleProjects,
@@ -314,7 +314,7 @@ fun CreateWordPressAppScreen(
                                 errorMessage = null
                                 isImportMode = false
                                 try {
-                                    // 检查并下载依赖
+                                    // checkanddownload
                                     if (!WordPressDependencyManager.isAllReady(context)) {
                                         showDownloadDialog = true
                                         val success = WordPressDependencyManager.downloadAllDependencies(context)
@@ -333,7 +333,7 @@ fun CreateWordPressAppScreen(
                                         appName = sample.name
                                         wpVersion = "6.4"
                                         
-                                        // 检测示例项目中的主题
+                                        // itemin
                                         withContext(Dispatchers.IO) {
                                             try {
                                                 val sampleDir = java.io.File(path)
@@ -364,7 +364,7 @@ fun CreateWordPressAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -378,7 +378,7 @@ fun CreateWordPressAppScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 应用名称
+                    // app
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
@@ -388,7 +388,7 @@ fun CreateWordPressAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 站点标题
+                    // Note
                     PremiumTextField(
                         value = siteTitle,
                         onValueChange = { siteTitle = it },
@@ -399,7 +399,7 @@ fun CreateWordPressAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 横屏模式
+                    // mode
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -411,7 +411,7 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -450,7 +450,7 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // ========== 4. 项目创建/导入 ==========
+            // ========== 4. Project Create/Import ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -470,7 +470,7 @@ fun CreateWordPressAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 导入 WordPress 压缩包按钮
+                    // Import WordPress archive button
                     PremiumOutlinedButton(
                         onClick = { zipPickerLauncher.launch("application/zip") },
                         enabled = !isCreating,
@@ -483,7 +483,7 @@ fun CreateWordPressAppScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 分隔线
+                    // Divider
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -500,7 +500,7 @@ fun CreateWordPressAppScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 创建全新站点按钮
+                    // Create new site button
                     PremiumButton(
                         onClick = { createNewSite() },
                         enabled = !isCreating,
@@ -521,10 +521,10 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // ========== 以下卡片仅在项目创建后显示 ==========
+            // ========== Cards below appear after project creation ==========
             if (projectId != null && !isCreating) {
                 
-                // ========== 5. 管理员配置 ==========
+                // ========== 5. Admin Settings ==========
                 WpAdminConfigCard(
                     adminUser = adminUser,
                     onAdminUserChange = { adminUser = it },
@@ -533,7 +533,7 @@ fun CreateWordPressAppScreen(
                     wpBlue = wpBlue
                 )
                 
-                // ========== 6. 主题管理 ==========
+                // ========== 6. Theme Management ==========
                 WpThemeCard(
                     themes = detectedThemes,
                     activeTheme = activeTheme,
@@ -542,32 +542,32 @@ fun CreateWordPressAppScreen(
                     wpBlue = wpBlue
                 )
                 
-                // ========== 7. 插件管理 ==========
+                // ========== 7. Plugin Management ==========
                 WpPluginCard(
                     plugins = detectedPlugins,
                     isImportMode = isImportMode,
                     wpBlue = wpBlue
                 )
                 
-                // ========== 8. 固定链接结构 ==========
+                // ========== 8. Permalink Structure ==========
                 WpPermalinkCard(
                     selected = permalink,
                     onSelect = { permalink = it },
                     wpBlue = wpBlue
                 )
                 
-                // ========== 9. 站点语言 ==========
+                // ========== 9. Site Language ==========
                 WpLanguageCard(
                     selected = siteLanguage,
                     onSelect = { siteLanguage = it },
                     wpBlue = wpBlue
                 )
                 
-                // ========== 10. 数据库信息 ==========
+                // ========== 10. Database Info ==========
                 WpDbInfoCard(wpBlue = wpBlue)
             }
             
-            // 状态显示
+            // Status display
             if (isCreating) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -583,7 +583,7 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // 错误信息
+            // Error message
             errorMessage?.let { error ->
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -598,7 +598,7 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // 项目就绪状态
+            // Project ready state
             if (projectId != null && !isCreating) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -629,7 +629,7 @@ fun CreateWordPressAppScreen(
         }
     }
     
-    // 下载进度对话框
+    // Download progress dialog
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
@@ -687,10 +687,10 @@ fun CreateWordPressAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * WordPress 品牌化 Hero 区域
+ * WordPress Hero area
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -740,7 +740,7 @@ private fun WpHeroSection(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // WP 版本
+                        // WP version
                         wpVersion?.let { ver ->
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -756,7 +756,7 @@ private fun WpHeroSection(
                                 )
                             }
                         }
-                        // PHP 标签
+                        // PHP label
                         Surface(
                             shape = RoundedCornerShape(4.dp),
                             color = Color(0xFF777BB4).copy(alpha = 0.15f)
@@ -769,7 +769,7 @@ private fun WpHeroSection(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        // SQLite 标签
+                        // SQLite label
                         Surface(
                             shape = RoundedCornerShape(4.dp),
                             color = Color(0xFF003B57).copy(alpha = 0.15f)
@@ -782,7 +782,7 @@ private fun WpHeroSection(
                                 fontFamily = FontFamily.Monospace
                             )
                         }
-                        // 导入/新建标签
+                        // import/newlabel
                         if (isImportMode) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -805,7 +805,7 @@ private fun WpHeroSection(
 }
 
 /**
- * 管理员配置卡片
+ * management configcard
  */
 @Composable
 private fun WpAdminConfigCard(
@@ -880,7 +880,7 @@ private fun WpAdminConfigCard(
 }
 
 /**
- * 主题管理卡片
+ * managementcard
  */
 @Composable
 private fun WpThemeCard(
@@ -919,7 +919,7 @@ private fun WpThemeCard(
             Spacer(modifier = Modifier.height(12.dp))
             
             if (themes.isNotEmpty()) {
-                // 当前主题
+                // current
                 activeTheme?.let { theme ->
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -1016,7 +1016,7 @@ private fun WpThemeCard(
 }
 
 /**
- * 插件管理卡片
+ * managementcard
  */
 @Composable
 private fun WpPluginCard(
@@ -1121,7 +1121,7 @@ private fun WpPluginCard(
 }
 
 /**
- * 固定链接结构选择卡片
+ * selectcard
  */
 @Composable
 private fun WpPermalinkCard(
@@ -1184,7 +1184,7 @@ private fun WpPermalinkCard(
 }
 
 /**
- * 站点语言选择卡片
+ * selectcard
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1237,7 +1237,7 @@ private fun WpLanguageCard(
 }
 
 /**
- * 数据库信息卡片
+ * card
  */
 @Composable
 private fun WpDbInfoCard(wpBlue: Color) {

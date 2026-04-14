@@ -75,7 +75,7 @@ import com.webtoapp.core.stats.AppUsageTracker
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * WebView容器Activity - 用于预览和运行WebApp
+ * WebView container activity for previewing and running WebApps.
  */
 class WebViewActivity : AppCompatActivity() {
 
@@ -99,8 +99,8 @@ class WebViewActivity : AppCompatActivity() {
         }
         
         /**
-         * 启动预览模式 — 携带完整的 WebApp 配置 JSON
-         * 预览效果与保存后打开完全一致（广告拦截、UA伪装、翻译等全部生效）
+         * Launch preview mode with the full WebApp JSON.
+         * Matches the saved app experience, including ad blocking, UA spoofing, and translations.
          */
         fun startPreview(context: Context, webAppJson: String) {
             context.startActivity(Intent(context, WebViewActivity::class.java).apply {
@@ -109,7 +109,7 @@ class WebViewActivity : AppCompatActivity() {
         }
         
         /**
-         * 启动测试模式 - 用于测试扩展模块
+         * Launch test mode for exercising extension modules.
          */
         fun startForTest(context: Context, testUrl: String, moduleIds: List<String>) {
             context.startActivity(Intent(context, WebViewActivity::class.java).apply {
@@ -124,30 +124,30 @@ class WebViewActivity : AppCompatActivity() {
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     
-    // Permission请求相关
+    // Permission request handling
     private var pendingPermissionRequest: PermissionRequest? = null
     private var pendingGeolocationOrigin: String? = null
     private var pendingGeolocationCallback: GeolocationPermissions.Callback? = null
 
     private var immersiveFullscreenEnabled: Boolean = false
-    private var showStatusBarInFullscreen: Boolean = false  // Fullscreen模式下是否显示状态栏
-    internal var showNavigationBarInFullscreen: Boolean = false  // Fullscreen模式下是否显示导航栏
+    private var showStatusBarInFullscreen: Boolean = false  // Show status bar during fullscreen mode
+    internal var showNavigationBarInFullscreen: Boolean = false  // Show navigation bar during fullscreen mode
     
-    // Video全屏前的屏幕方向
+    // Screen orientation before video fullscreen
     private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     
-    // Status bar配置缓存
+    // Cached light-mode status bar configuration
     private var statusBarColorMode: com.webtoapp.data.model.StatusBarColorMode = com.webtoapp.data.model.StatusBarColorMode.THEME
     private var statusBarCustomColor: String? = null
     private var statusBarDarkIcons: Boolean? = null
     private var statusBarBackgroundType: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
-    // Status bar深色模式配置缓存
+    // Cached dark-mode status bar configuration
     private var statusBarColorModeDark: com.webtoapp.data.model.StatusBarColorMode = com.webtoapp.data.model.StatusBarColorMode.THEME
     private var statusBarCustomColorDark: String? = null
     private var statusBarDarkIconsDark: Boolean? = null
     private var statusBarBackgroundTypeDark: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
-    internal var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
-    // 当前深色主题状态（从 Compose 同步，用于 onWindowFocusChanged 等 Activity 级别回调）
+    internal var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // Keyboard adjust mode
+    // Tracks the current dark theme state for Activity-level callbacks
     private var currentIsDarkTheme: Boolean = false
 
     private fun applyStatusBarColor(
@@ -159,7 +159,7 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean? = null, isDarkTheme: Boolean = currentIsDarkTheme) {
         val shouldHideNavBar = hideNavBar ?: !showNavigationBarInFullscreen
-        // 使用深色/浅色模式对应的状态栏配置
+        // Apply the theme-specific status bar configuration
         val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
         val effectiveCustomColor = if (isDarkTheme) statusBarCustomColorDark else statusBarCustomColor
         val effectiveDarkIcons = if (isDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
@@ -179,7 +179,7 @@ class WebViewActivity : AppCompatActivity() {
         )
     }
 
-    // 相机拍照临时文件 URI
+    // file URI
     private var cameraPhotoUri: android.net.Uri? = null
     
     private val fileChooserActivityLauncher = registerForActivityResult(
@@ -209,7 +209,7 @@ class WebViewActivity : AppCompatActivity() {
         cameraPhotoUri = null
     }
     
-    // 相机权限请求（文件选择器场景）
+    // ( fileselect)
     private var pendingFileChooserParams: android.webkit.WebChromeClient.FileChooserParams? = null
     private val cameraForChooserPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -290,7 +290,7 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
     
-    // Permission请求launcher（用于摄像头、麦克风等）
+    // Permission request launcher for camera/microphone
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -305,7 +305,7 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
     
-    // 位置权限请求launcher
+    // Location permission launcher
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -315,7 +315,7 @@ class WebViewActivity : AppCompatActivity() {
         pendingGeolocationCallback = null
     }
     
-    // 通知权限请求launcher（Android 13+）
+    // Notification permission launcher (Android 13+)
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -327,7 +327,7 @@ class WebViewActivity : AppCompatActivity() {
     }
     
     /**
-     * 请求通知权限（Android 13+）
+     * Request notification permission (Android 13+).
      */
     private fun requestNotificationPermissionIfNeeded() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -343,7 +343,7 @@ class WebViewActivity : AppCompatActivity() {
     }
     
     /**
-     * 处理WebView权限请求，先请求Android系统权限
+     * Handle WebView permission requests by first obtaining Android permissions.
      */
     fun handlePermissionRequest(request: PermissionRequest) {
         val resources = request.resources
@@ -359,26 +359,26 @@ class WebViewActivity : AppCompatActivity() {
                     androidPermissions.add(android.Manifest.permission.MODIFY_AUDIO_SETTINGS)
                 }
                 PermissionRequest.RESOURCE_MIDI_SYSEX -> {
-                    // MIDI SysEx 不需要额外 Android 运行时权限，直接授权
+                    // MIDI SysEx requires no extra Android runtime permission
                 }
                 PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID -> {
-                    // Protected Media ID 不需要额外 Android 运行时权限，直接授权
+                    // Protected Media ID requires no extra Android runtime permission
                 }
             }
         }
         
         if (androidPermissions.isEmpty()) {
-            // 不需要Android权限，直接授权WebView
+            // No Android permissions needed; grant WebView immediately
             request.grant(resources)
         } else {
-            // 需要先请求Android权限
+            // Request Android permissions before granting
             pendingPermissionRequest = request
             permissionLauncher.launch(androidPermissions.toTypedArray())
         }
     }
     
     /**
-     * 处理地理位置权限请求
+     * handle
      */
     fun handleGeolocationPermission(origin: String?, callback: GeolocationPermissions.Callback?) {
         pendingGeolocationOrigin = origin
@@ -389,12 +389,12 @@ class WebViewActivity : AppCompatActivity() {
         ))
     }
 
-    // 使用追踪器
+    // Note
     private var usageTracker: AppUsageTracker? = null
     private var trackedAppId: Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Enable边到边显示（让内容延伸到系统栏区域）
+        // Enable display( content system area)
         try {
             enableEdgeToEdge()
         } catch (e: Exception) {
@@ -403,17 +403,17 @@ class WebViewActivity : AppCompatActivity() {
         
         super.onCreate(savedInstanceState)
         
-        // Request通知权限（Android 13+），用于显示下载进度和完成通知
+        // Request( Android 13+) , showdownload
         requestNotificationPermissionIfNeeded()
         
-        // Initialize时不启用沉浸式模式，等待 WebApp 配置加载后再根据 hideToolbar 决定
-        // 这样可以确保非全屏模式下状态栏正常显示
+        // Initialize mode, WebApp configload hideToolbar
+        // ensure mode status bar display
         immersiveFullscreenEnabled = false
         applyImmersiveFullscreen(immersiveFullscreenEnabled)
 
         val appId = intent.getLongExtra(EXTRA_APP_ID, -1)
         
-        // 使用统计追踪
+        // Note
         if (appId > 0) {
             trackedAppId = appId
             try {
@@ -425,11 +425,11 @@ class WebViewActivity : AppCompatActivity() {
         }
         val directUrl = intent.getStringExtra(EXTRA_URL)
         
-        // 测试模式参数
+        // mode
         val testUrl = intent.getStringExtra(EXTRA_TEST_URL)
         val testModuleIds = intent.getStringArrayListExtra(EXTRA_TEST_MODULE_IDS)
         
-        // 预览模式：从 JSON 还原完整 WebApp 配置
+        // previewmode: from JSON WebApp config
         val previewAppJson = intent.getStringExtra(EXTRA_PREVIEW_APP_JSON)
         val previewApp: com.webtoapp.data.model.WebApp? = if (!previewAppJson.isNullOrBlank()) {
             try {
@@ -442,12 +442,12 @@ class WebViewActivity : AppCompatActivity() {
 
         setContent {
             WebToAppTheme { isDarkTheme ->
-                // 同步深色主题状态到 Activity 级别（供 onWindowFocusChanged 使用）
+                // sync state Activity( onWindowFocusChanged)
                 SideEffect {
                     currentIsDarkTheme = isDarkTheme
                 }
 
-                // 当主题变化时更新状态栏颜色（根据深色/浅色模式选择对应配置）
+                // when updatestatus barcolor( / modeselect config)
                 LaunchedEffect(isDarkTheme, statusBarColorMode, statusBarColorModeDark) {
                     if (!immersiveFullscreenEnabled) {
                         val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
@@ -464,13 +464,13 @@ class WebViewActivity : AppCompatActivity() {
                     testUrl = testUrl,
                     testModuleIds = testModuleIds,
                     onStatusBarConfigChanged = { colorMode, customColor, darkIcons, showStatusBar, backgroundType, colorModeDark, customColorDark, darkIconsDark, backgroundTypeDark ->
-                        // Update state栏配置
+                        // Update state config
                         statusBarColorMode = colorMode
                         statusBarCustomColor = customColor
                         statusBarDarkIcons = darkIcons
                         showStatusBarInFullscreen = showStatusBar
                         statusBarBackgroundType = backgroundType
-                        // Update深色模式状态栏配置
+                        // Update modestatus barconfig
                         statusBarColorModeDark = colorModeDark
                         statusBarCustomColorDark = customColorDark
                         statusBarDarkIconsDark = darkIconsDark
@@ -482,10 +482,10 @@ class WebViewActivity : AppCompatActivity() {
                         // This prevents reopen-after-back pages from staying half-loaded when previous activity paused timers.
                         wv.onResume()
                         wv.resumeTimers()
-                        // 添加下载桥接（支持 Blob/Data URL 下载）
+                        // download( support Blob/Data URL download)
                         val downloadBridge = com.webtoapp.core.webview.DownloadBridge(this@WebViewActivity, lifecycleScope)
                         wv.addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
-                        // 添加原生能力桥接（供扩展模块调用）
+                        // ( modulecall)
                         val nativeBridge = com.webtoapp.core.webview.NativeBridge(this@WebViewActivity, lifecycleScope)
                         wv.addJavascriptInterface(nativeBridge, com.webtoapp.core.webview.NativeBridge.JS_INTERFACE_NAME)
                     },
@@ -510,13 +510,13 @@ class WebViewActivity : AppCompatActivity() {
             }
         }
 
-        // 返回键处理
+        // back handle
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 when {
                     customView != null -> hideCustomView()
                     else -> {
-                        // 先向 WebView 派发 ESC 按键事件，让 JS 脚本有机会处理
+                        // WebView dispatch ESC, JS handle
                         val wv = webView
                         if (wv != null) {
                             wv.evaluateJavascript("""
@@ -530,10 +530,10 @@ class WebViewActivity : AppCompatActivity() {
                                 })();
                             """.trimIndent()) { result ->
                                 if (result == "true") {
-                                    // JS 脚本调用了 preventDefault()，不执行原生返回
+                                    // JS call preventDefault( ) , execute back
                                     return@evaluateJavascript
                                 }
-                                // JS 未拦截，执行原生返回行为
+                                // JS intercept, execute back
                                 // Check if going back would land on about:blank (WebView's
                                 // initial history entry). If so, finish() instead of showing
                                 // the blank page.
@@ -602,7 +602,7 @@ class WebViewActivity : AppCompatActivity() {
             if (customView != null || immersiveFullscreenEnabled) {
                 applyImmersiveFullscreen(true, isDarkTheme = currentIsDarkTheme)
             } else {
-                // 非全屏模式：重新应用状态栏颜色（使用正确的深色/浅色模式值）
+                // mode: appstatus barcolor( / mode)
                 val effectiveColorMode = if (currentIsDarkTheme) statusBarColorModeDark else statusBarColorMode
                 val effectiveCustomColor = if (currentIsDarkTheme) statusBarCustomColorDark else statusBarCustomColor
                 val effectiveDarkIcons = if (currentIsDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
@@ -646,16 +646,16 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // 使用统计追踪
+        // Note
         if (trackedAppId > 0) usageTracker?.trackClose(trackedAppId)
         
-        // 先刷盘 Cookie 和 WebStorage，确保 localStorage/sessionStorage 持久化
+        // Cookie WebStorage, ensure localStorage/sessionStorage
         android.webkit.CookieManager.getInstance().flush()
         webView?.let { wv ->
             wv.stopLoading()
-            // 注意：不再导航到 about:blank
-            // 在 destroy 前 loadUrl("about:blank") 会导致 WebView 切换 origin，
-            // 某些 Android 版本来不及将当前页面的 localStorage 刷盘，造成 H5 游戏存档丢失
+            // about: blank
+            // destroy loadUrl( "about: blank") WebView switch origin,
+            // Android version andmapcurrent localStorage, H5
             wv.onPause()
             wv.webChromeClient = null
             (wv.parent as? ViewGroup)?.removeView(wv)

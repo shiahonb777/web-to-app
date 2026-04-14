@@ -1,4 +1,4 @@
-﻿package com.webtoapp.ui.components
+package com.webtoapp.ui.components
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

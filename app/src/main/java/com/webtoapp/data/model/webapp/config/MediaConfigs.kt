@@ -3,14 +3,14 @@ package com.webtoapp.data.model.webapp.config
 import androidx.compose.runtime.Stable
 
 data class MediaConfig(
-    val mediaPath: String,                         // Media文件路径
-    val enableAudio: Boolean = true,               // Video是否启用音频
-    val loop: Boolean = true,                      // Yes否循环播放（视频）
-    val autoPlay: Boolean = true,                  // Yes否自动播放（视频）
-    val fillScreen: Boolean = true,                // Yes否铺满屏幕
-    val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // Show方向
-    val backgroundColor: String = "#000000",       // 背景颜色
-    val keepScreenOn: Boolean = true               // 保持屏幕常亮
+    val mediaPath: String,                         // Media file path
+    val enableAudio: Boolean = true,               // Enable audio for video
+    val loop: Boolean = true,                      // Loop playback (video)
+    val autoPlay: Boolean = true,                  // Auto-play (video)
+    val fillScreen: Boolean = true,                // Fill the screen
+    val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // Display orientation
+    val backgroundColor: String = "#000000",       // Background color
+    val keepScreenOn: Boolean = true               // Keep screen awake
 )
 
 @Stable

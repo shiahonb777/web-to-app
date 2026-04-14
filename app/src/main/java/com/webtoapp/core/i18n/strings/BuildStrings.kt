@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object BuildStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 操作按钮 ====================
+    // ==================== Action Buttons ====================
     val btnCreate: String get() = when (lang) {
         AppLanguage.CHINESE -> "创建应用"
         AppLanguage.ENGLISH -> "Create App"
@@ -155,7 +155,7 @@ internal object BuildStrings {
         AppLanguage.ENGLISH -> "Let AI automatically select category based on requirements"
         AppLanguage.ARABIC -> "دع الذكاء الاصطناعي يختار الفئة تلقائيًا بناءً على المتطلبات"
     }
-    // ==================== 加密配置选项 ====================
+    // ==================== Encryption Options ====================
     val configFileEncryption: String get() = when (lang) {
         AppLanguage.CHINESE -> "配置文件"
         AppLanguage.ENGLISH -> "Config File"
@@ -293,7 +293,7 @@ internal object BuildStrings {
         AppLanguage.ENGLISH -> "PBKDF2 Iterations"
         AppLanguage.ARABIC -> "تكرارات PBKDF2"
     }
-    // ==================== 自定义签名相关字符串 ====================
+    // ==================== Custom Signature Strings ====================
     val customSigning: String get() = when (lang) {
         AppLanguage.CHINESE -> "自定义签名"
         AppLanguage.ENGLISH -> "Custom Signing"

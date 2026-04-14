@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object AiConfigStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== AI 模块开发帮助 ====================
+    // ==================== AI Module Dev Help ====================
     val helpHowToUse: String get() = when (lang) {
         AppLanguage.CHINESE -> "如何使用"
         AppLanguage.ENGLISH -> "How to Use"
@@ -173,7 +173,7 @@ internal object AiConfigStrings {
         AppLanguage.ENGLISH -> "After generation, click 'Save' to add it to your module library, then you can use it when creating apps."
         AppLanguage.ARABIC -> "بعد الإنشاء، انقر على 'حفظ' لإضافته إلى مكتبة الوحدات الخاصة بك، ثم يمكنك استخدامه عند إنشاء التطبيقات."
     }
-    // ==================== AI 配置 ====================
+    // ==================== AI Config ====================
     val textGeneration: String get() = when (lang) {
         AppLanguage.CHINESE -> "文本生成"
         AppLanguage.ENGLISH -> "Text Generation"
@@ -269,7 +269,7 @@ internal object AiConfigStrings {
         AppLanguage.ENGLISH -> "Retry"
         AppLanguage.ARABIC -> "إعادة المحاولة"
     }
-    // ==================== HTML编程AI风格参考 ====================
+    // ==================== HTML AI ====================
     val styleHarryPotter: String get() = when (lang) {
         AppLanguage.CHINESE -> "哈利波特风格"
         AppLanguage.ENGLISH -> "Harry Potter Style"
@@ -365,7 +365,7 @@ internal object AiConfigStrings {
         AppLanguage.ENGLISH -> "Japanese aesthetics, zen and whitespace"
         AppLanguage.ARABIC -> "الجماليات اليابانية، الزن والمساحات البيضاء"
     }
-    // ==================== 会话配置 ====================
+    // ==================== Session Config ====================
     val sessionConfig: String get() = when (lang) {
         AppLanguage.CHINESE -> "会话配置"
         AppLanguage.ENGLISH -> "Session Config"
@@ -455,7 +455,7 @@ internal object AiConfigStrings {
         AppLanguage.ENGLISH -> "📋 User Confirmation Statement"
         AppLanguage.ARABIC -> "📋 بيان تأكيد المستخدم"
     }
-    // ==================== AI 功能场景 ====================
+    // ==================== AI Scenarios ====================
     val featureAiCoding: String get() = when (lang) {
         AppLanguage.CHINESE -> "HTML 编程"
         AppLanguage.ENGLISH -> "HTML Coding"
@@ -539,7 +539,7 @@ internal object AiConfigStrings {
         AppLanguage.ENGLISH -> "General AI chat functionality"
         AppLanguage.ARABIC -> "وظيفة محادثة الذكاء الاصطناعي العامة"
     }
-    // ==================== 模型能力 ====================
+    // ==================== Model Capabilities ====================
     val capabilityText: String get() = when (lang) {
         AppLanguage.CHINESE -> "文本生成"
         AppLanguage.ENGLISH -> "Text Generation"

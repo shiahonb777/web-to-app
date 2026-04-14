@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 /**
- * Virtual navigation bar配置
+ * Virtual navigation barconfig
  */
 data class VirtualNavBarConfig(
     val showBackButton: Boolean = true,
@@ -44,9 +44,9 @@ data class VirtualNavBarConfig(
 )
 
 /**
- * Virtual navigation bar - 在强制运行模式下提供应用内导航
+ * Virtual navigation bar- force- runmode app
  * 
- * 包含：返回、前进、刷新、主页 按钮
+ * back, forward, refresh, home button
  */
 @Composable
 fun VirtualNavigationBar(
@@ -88,7 +88,7 @@ fun VirtualNavigationBar(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 返回按钮
+                    // backbutton
                     if (config.showBackButton) {
                         NavButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
@@ -100,7 +100,7 @@ fun VirtualNavigationBar(
                         )
                     }
                     
-                    // 前进按钮
+                    // forwardbutton
                     if (config.showForwardButton) {
                         NavButton(
                             icon = Icons.AutoMirrored.Filled.ArrowForward,
@@ -112,7 +112,7 @@ fun VirtualNavigationBar(
                         )
                     }
                     
-                    // Refresh按钮
+                    // Refreshbutton
                     if (config.showRefreshButton) {
                         NavButton(
                             icon = Icons.Filled.Refresh,
@@ -124,7 +124,7 @@ fun VirtualNavigationBar(
                         )
                     }
                     
-                    // 主页按钮
+                    // homebutton
                     if (config.showHomeButton) {
                         NavButton(
                             icon = Icons.Filled.Home,
@@ -165,7 +165,7 @@ private fun NavButton(
 }
 
 /**
- * 悬浮式虚拟导航栏 - 可拖动位置
+ * Note
  */
 @Composable
 fun FloatingVirtualNavigationBar(
@@ -179,7 +179,7 @@ fun FloatingVirtualNavigationBar(
     config: VirtualNavBarConfig = VirtualNavBarConfig(),
     modifier: Modifier = Modifier
 ) {
-    // 简化版本：固定在底部
+    // version: bottom
     VirtualNavigationBar(
         visible = visible,
         canGoBack = canGoBack,

@@ -25,9 +25,9 @@ import androidx.compose.foundation.verticalScroll
 import org.koin.compose.koinInject
 
 /**
- * Extension module selector卡片
+ * Extension module selectorcard
  * 
- * 用于在创建应用页面中选择要启用的扩展模块
+ * forcreateapp select module
  */
 @Composable
 fun ExtensionModuleSelectorCard(
@@ -49,7 +49,7 @@ fun ExtensionModuleSelectorCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +99,7 @@ fun ExtensionModuleSelectorCard(
                 }
             }
             
-            // 已选模块列表
+            // modulelist
             if (expanded && enabledModules.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider()
@@ -149,7 +149,7 @@ fun ExtensionModuleSelectorCard(
                 }
             }
             
-            // 快速提示
+            // hint
             if (enabledModules.isEmpty() && expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
@@ -178,7 +178,7 @@ fun ExtensionModuleSelectorCard(
         }
     }
     
-    // Module选择对话框
+    // Moduleselectdialog
     if (showModuleDialog) {
         ModuleSelectionDialog(
             allModules = allModules,
@@ -190,7 +190,7 @@ fun ExtensionModuleSelectorCard(
 }
 
 /**
- * 模块选择对话框
+ * moduleselectdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -203,7 +203,7 @@ fun ModuleSelectionDialog(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     
-    // 直接计算过滤后的模块列表，确保列表更新时 UI 正确响应
+    // modulelist, ensurelistupdate UI
     val filteredModules = allModules.filter { module ->
         val matchesSearch = searchQuery.isBlank() ||
             module.name.contains(searchQuery, ignoreCase = true) ||
@@ -217,7 +217,7 @@ fun ModuleSelectionDialog(
         title = { Text(Strings.selectExtensionModules) },
         text = {
             Column {
-                // Search框
+                // Search
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -230,7 +230,7 @@ fun ModuleSelectionDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 分类筛选
+                // filter
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -272,7 +272,7 @@ fun ModuleSelectionDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Module列表
+                // Modulelist
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 400.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -381,7 +381,7 @@ fun ModuleSelectionDialog(
 }
 
 /**
- * 简化版模块选择器 - 用于快速选择
+ * moduleselect- for select
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -393,7 +393,7 @@ fun QuickModuleSelector(
     val extensionManager: ExtensionManager = koinInject()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
-    // 只显示常用的内置模块
+    // display module
     val quickModules = builtInModules.take(5)
     
     Column(modifier = modifier) {

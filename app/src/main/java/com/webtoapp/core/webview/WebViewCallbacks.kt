@@ -2,9 +2,7 @@ package com.webtoapp.core.webview
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.webkit.*
-
-/**
+import android.webkit.*/**
  * WebView callback interface
  */
 interface WebViewCallbacks {

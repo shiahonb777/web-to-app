@@ -26,10 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.ai.coding.*
 import com.webtoapp.core.i18n.Strings
-import com.webtoapp.ui.components.coding.*
-
-
-// ==================== 子组件 ====================
+import com.webtoapp.ui.components.coding.* // Note
 
 @Composable
 internal fun WelcomeContent(
@@ -48,7 +45,7 @@ internal fun WelcomeContent(
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         
-        // Logo区域
+        // Logoarea
         Surface(
             modifier = Modifier.size(80.dp),
             shape = RoundedCornerShape(20.dp),
@@ -80,7 +77,7 @@ internal fun WelcomeContent(
         
         Spacer(modifier = Modifier.height(40.dp))
         
-        // 主操作按钮
+        // button
         PremiumButton(
             onClick = onNewChat,
             modifier = Modifier
@@ -95,7 +92,7 @@ internal fun WelcomeContent(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 辅助操作按钮
+        // button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -127,7 +124,7 @@ internal fun WelcomeContent(
         
         Spacer(modifier = Modifier.height(40.dp))
         
-        // 快速提示词标题
+        // hint
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -156,7 +153,7 @@ internal fun WelcomeContent(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 快速提示词卡片 - 两列网格布局
+        // hint card
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -194,7 +191,7 @@ internal fun WelcomeContent(
                             }
                         }
                     }
-                    // 如果只有一个元素，添加空白占位
+                    // if,
                     if (rowPrompts.size == 1) {
                         Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                     }
@@ -268,7 +265,7 @@ internal fun SessionDrawerContent(
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxHeight()) {
-        // 头部
+        // header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -282,7 +279,7 @@ internal fun SessionDrawerContent(
             }
         }
         
-        // 新建按钮
+        // newbutton
         FilledTonalButton(
             onClick = onNewSession,
             modifier = Modifier
@@ -297,7 +294,7 @@ internal fun SessionDrawerContent(
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
         
-        // Session列表
+        // Sessionlist
         LazyColumn(modifier = Modifier.weight(weight = 1f, fill = true)) {
             items(sessions, key = { it.id }) { session ->
                 SessionListItem(
@@ -338,7 +335,7 @@ internal fun TemplatesSheetContent(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        // 标题栏
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -349,7 +346,7 @@ internal fun TemplatesSheetContent(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            // 当前选中提示
+            // current hint
             if (selectedTemplateId != null || selectedStyleId != null) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -375,7 +372,7 @@ internal fun TemplatesSheetContent(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 分类标签
+        // label
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.Transparent,
@@ -399,7 +396,7 @@ internal fun TemplatesSheetContent(
         
         when (selectedTab) {
             0 -> {
-                // 模板网格 - 使用 LazyVerticalGrid 更好展示
+                // LazyVerticalGrid
                 Text(
                     Strings.totalTemplates.replace("%d", "${templates.size}"),
                     style = MaterialTheme.typography.labelMedium,
@@ -427,7 +424,7 @@ internal fun TemplatesSheetContent(
                 }
             }
             1 -> {
-                // 风格参考列表
+                // list
                 Text(
                     Strings.totalStyleReferences.replace("%d", "${styles.size}"),
                     style = MaterialTheme.typography.labelMedium,
@@ -472,7 +469,7 @@ internal fun TutorialSheetContent(
             .fillMaxHeight(0.85f)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // 标题栏
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -493,9 +490,9 @@ internal fun TutorialSheetContent(
         Spacer(modifier = Modifier.height(16.dp))
         
         if (selectedChapterId == null) {
-            // 章节列表
+            // list
             if (chapters.isEmpty()) {
-                // Empty状态提示
+                // Emptystatehint
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(weight = 1f, fill = true),
                     contentAlignment = Alignment.Center
@@ -559,10 +556,10 @@ internal fun TutorialSheetContent(
                 }
             }
         } else {
-            // 章节内容
+            // content
             val chapter = chapters.find { it.id == selectedChapterId }
             chapter?.let {
-                // 返回按钮
+                // backbutton
                 Surface(
                     modifier = Modifier
                         .clickable { selectedChapterId = null },
@@ -589,7 +586,7 @@ internal fun TutorialSheetContent(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 小节标签
+                // label
                 ScrollableTabRow(
                     selectedTabIndex = selectedSectionIndex,
                     edgePadding = 0.dp
@@ -605,7 +602,7 @@ internal fun TutorialSheetContent(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 内容
+                // content
                 val section = it.sections.getOrNull(selectedSectionIndex)
                 section?.let { sec ->
                     Column(
@@ -613,7 +610,7 @@ internal fun TutorialSheetContent(
                             .weight(weight = 1f, fill = true)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // 内容文本
+                        // contenttext
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -628,7 +625,7 @@ internal fun TutorialSheetContent(
                             )
                         }
                         
-                        // 代码示例
+                        // code
                         sec.codeExample?.let { code ->
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -651,7 +648,7 @@ internal fun TutorialSheetContent(
                             }
                         }
                         
-                        // 提示
+                        // hint
                         if (sec.tips.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Surface(
@@ -889,7 +886,7 @@ internal fun SaveProjectDialog(
                     result.onSuccess { savedDir ->
                         onSaved(savedDir.absolutePath)
                     }.onFailure { e ->
-                        // Error handling在调用处
+                        // Error handling call
                     }
                 },
                 enabled = projectName.isNotBlank() && files.isNotEmpty()
@@ -906,7 +903,7 @@ internal fun SaveProjectDialog(
 }
 
 /**
- * 代码库面板内容
+ * repositorypanelcontent
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -927,7 +924,7 @@ internal fun CodeLibrarySheetContent(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        // 标题栏
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -1004,7 +1001,7 @@ internal fun CodeLibrarySheetContent(
 }
 
 /**
- * 代码库项目卡片
+ * repositoryitemcard
  */
 @Composable
 private fun CodeLibraryItemCard(
@@ -1067,7 +1064,7 @@ private fun CodeLibraryItemCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // File标签
+            // Filelabel
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 item.files.take(3).forEach { file ->
                     Surface(
@@ -1093,7 +1090,7 @@ private fun CodeLibraryItemCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 操作按钮
+            // button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1153,7 +1150,7 @@ private fun CodeLibraryItemCard(
 }
 
 /**
- * 对话检查点面板内容
+ * checkpointpanelcontent
  */
 @Composable
 internal fun ConversationCheckpointsSheetContent(

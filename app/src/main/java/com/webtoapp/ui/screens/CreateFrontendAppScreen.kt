@@ -41,11 +41,11 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import org.koin.compose.koinInject
 
 /**
- * 创建/编辑前端项目应用页面
+ * create/edit itemapp
  * 
- * 支持两种模式：
- * 1. 导入已构建的 dist 目录
- * 2. 完整构建（使用内置 Linux 环境）
+ * support mode
+ * 1. import dist directory
+ * 2. ( Linux)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,30 +65,30 @@ fun CreateFrontendAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // 编辑模式
+    // editmode
     val isEditMode = existingAppId != null
     
-    // Linux 环境
+    // Linux
     val linuxEnv: LinuxEnvironmentManager = koinInject()
     val linuxState by linuxEnv.state.collectAsStateWithLifecycle()
     
-    // Build模式
+    // Buildmode
     var buildMode by remember { mutableStateOf(BuildMode.IMPORT_DIST) }
     
-    // 项目信息
+    // item
     var projectPath by remember { mutableStateOf<String?>(null) }
     var projectName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     
-    // Load现有应用数据（编辑模式）
+    // Load app( editmode)
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
             existingApp = webAppRepository.getWebAppById(existingAppId).first()
             existingApp?.let { app ->
                 projectName = app.name
                 app.iconPath?.let { path -> appIcon = Uri.parse(path) }
-                // FRONTEND 应用的文件存储在 htmlConfig 中
+                // FRONTEND app file htmlConfig
                 app.htmlConfig?.files?.firstOrNull()?.path?.let { firstFilePath ->
                     val projectDir = File(firstFilePath).parentFile?.absolutePath
                     if (projectDir != null) {
@@ -99,11 +99,11 @@ fun CreateFrontendAppScreen(
         }
     }
     
-    // 检测结果
+    // Note
     var detectionResult by remember { mutableStateOf<ProjectDetectionResult?>(null) }
     var isDetecting by remember { mutableStateOf(false) }
     
-    // Build器
+    // Build
     val importBuilder = remember { FrontendProjectBuilder(context) }
     val nodeBuilder = remember { NodeProjectBuilder(context) }
     
@@ -113,7 +113,7 @@ fun CreateFrontendAppScreen(
     val nodeBuildState by nodeBuilder.buildState.collectAsStateWithLifecycle()
     val nodeBuildLogs by nodeBuilder.buildLogs.collectAsStateWithLifecycle()
     
-    // 当前使用的状态和日志
+    // current state
     val currentBuildState = if (buildMode == BuildMode.FULL_BUILD) {
         when (val state = nodeBuildState) {
             is NodeBuildState.Idle -> BuildState.Idle
@@ -131,20 +131,20 @@ fun CreateFrontendAppScreen(
     
     val currentLogs = if (buildMode == BuildMode.FULL_BUILD) nodeBuildLogs else importLogs
     
-    // Show日志对话框
+    // Show dialog
     var showLogsDialog by remember { mutableStateOf(false) }
     
-    // Check Linux 环境
+    // Check Linux
     LaunchedEffect(Unit) {
         linuxEnv.checkEnvironment()
     }
     
-    // Icon选择器
+    // Iconselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
     
-    // File夹选择器
+    // File select
     val folderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -154,7 +154,7 @@ fun CreateFrontendAppScreen(
                 projectPath = path
                 projectName = File(path).name
                 
-                // Auto检测项目
+                // Auto item
                 scope.launch {
                     isDetecting = true
                     detectionResult = ProjectDetector.detectProject(path)
@@ -164,7 +164,7 @@ fun CreateFrontendAppScreen(
         }
     }
     
-    // 判断是否可以操作
+    // Note
     val canImport = projectPath != null && 
                    detectionResult != null && 
                    detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true &&
@@ -206,7 +206,7 @@ fun CreateFrontendAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 构建模式选择 ==========
+            // ========== modeselect ==========
             BuildModeSelector(
                 selectedMode = buildMode,
                 onModeSelected = { buildMode = it },
@@ -215,7 +215,7 @@ fun CreateFrontendAppScreen(
             )
 
 
-            // ========== 示例项目 ==========
+            // ========== item ==========
             SampleProjectsCard(
                 onSelectSample = { sample ->
                     scope.launch {
@@ -231,7 +231,7 @@ fun CreateFrontendAppScreen(
                 }
             )
 
-            // ========== 选择项目 ==========
+            // ========== selectitem ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -321,7 +321,7 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 项目检测结果 ==========
+            // ========== item ==========
             AnimatedVisibility(visible = isDetecting || detectionResult != null) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -359,7 +359,7 @@ fun CreateFrontendAppScreen(
                         if (detectionResult != null) {
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 框架信息
+                            // Note
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Code,
                                 label = Strings.frameworkLabel,
@@ -390,7 +390,7 @@ fun CreateFrontendAppScreen(
                                 )
                             }
                             
-                            // 依赖统计
+                            // Note
                             val totalDeps = detectionResult!!.dependencies.size + 
                                            detectionResult!!.devDependencies.size
                             if (totalDeps > 0) {
@@ -401,7 +401,7 @@ fun CreateFrontendAppScreen(
                                 )
                             }
                             
-                            // 输出目录
+                            // outputdirectory
                             DetectionInfoRow(
                                 icon = Icons.Outlined.FolderOpen,
                                 label = Strings.outputDirLabel,
@@ -409,7 +409,7 @@ fun CreateFrontendAppScreen(
                             )
 
                             
-                            // 问题和建议
+                            // Note
                             if (detectionResult!!.issues.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(12.dp))
                                 detectionResult!!.issues.forEach { issue ->
@@ -437,7 +437,7 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 应用配置 ==========
+            // ========== appconfig ==========
             AnimatedVisibility(visible = detectionResult != null && 
                 detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -467,7 +467,7 @@ fun CreateFrontendAppScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // App名称（带随机按钮）
+                        // App( button)
                         AppNameTextFieldSimple(
                             value = projectName,
                             onValueChange = { projectName = it }
@@ -475,7 +475,7 @@ fun CreateFrontendAppScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // App图标
+                        // Appicon
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -497,24 +497,24 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 构建状态 ==========
+            // ========== Build Status ==========
             AnimatedVisibility(visible = currentBuildState !is BuildState.Idle) {
                 BuildStatusCard(currentBuildState, currentLogs.size) {
                     showLogsDialog = true
                 }
             }
             
-            // ========== 操作按钮 ==========
+            // ========== Action Buttons ==========
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 编辑模式：显示保存按钮（仅更新名称和图标）
+            // Edit mode: show save button (name/icon only)
             if (isEditMode && currentBuildState is BuildState.Idle) {
                 PremiumButton(
                     onClick = {
-                        // 传递 null 作为 outputPath，表示不更新文件
+                        // Pass null outputPath to skip file update
                         onCreated(
                             projectName,
-                            "", // Empty字符串表示不更新文件
+                            "", // Empty string means no file update
                             appIcon,
                             existingApp?.let { FrontendFramework.UNKNOWN } ?: FrontendFramework.UNKNOWN
                         )
@@ -627,7 +627,7 @@ fun CreateFrontendAppScreen(
         }
     }
     
-    // Log对话框
+    // Log dialog
     if (showLogsDialog) {
         BuildLogsDialog(
             logs = currentLogs,
@@ -639,7 +639,7 @@ fun CreateFrontendAppScreen(
 
 
 /**
- * 构建模式选择器
+ * modeselect
  */
 @Composable
 private fun BuildModeSelector(
@@ -682,7 +682,7 @@ private fun BuildModeSelector(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 使用说明
+            // Note
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -703,7 +703,7 @@ private fun BuildModeSelector(
                 }
             }
             
-            // Built-in构建引擎说明
+            // Built- in
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(
@@ -734,7 +734,7 @@ private fun BuildModeSelector(
 }
 
 /**
- * 检测信息行
+ * Note
  */
 @Composable
 private fun DetectionInfoRow(
@@ -772,7 +772,7 @@ private fun DetectionInfoRow(
 }
 
 /**
- * 问题项
+ * Note
  */
 @Composable
 private fun IssueItem(issue: ProjectIssue) {
@@ -813,7 +813,7 @@ private fun IssueItem(issue: ProjectIssue) {
 }
 
 /**
- * 构建状态卡片
+ * statecard
  */
 @Composable
 private fun BuildStatusCard(
@@ -965,7 +965,7 @@ private fun BuildStatusCard(
 
 
 /**
- * 构建日志对话框
+ * dialog
  */
 @Composable
 private fun BuildLogsDialog(
@@ -1008,7 +1008,7 @@ private fun BuildLogsDialog(
 }
 
 /**
- * 获取框架显示名称
+ * display
  */
 private fun getFrameworkDisplayName(framework: FrontendFramework): String {
     return when (framework) {
@@ -1025,7 +1025,7 @@ private fun getFrameworkDisplayName(framework: FrontendFramework): String {
 
 
 /**
- * 获取框架颜色
+ * color
  */
 private fun getFrameworkColor(framework: FrontendFramework): Color {
     return when (framework) {
@@ -1041,7 +1041,7 @@ private fun getFrameworkColor(framework: FrontendFramework): Color {
 }
 
 /**
- * 从 Uri 获取真实路径
+ * from Uri path
  */
 private fun getPathFromUri(context: android.content.Context, uri: Uri): String? {
     return try {

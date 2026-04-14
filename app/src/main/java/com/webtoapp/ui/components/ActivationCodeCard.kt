@@ -86,7 +86,7 @@ private fun getCodeTypeTheme(type: ActivationCodeType): CodeTypeTheme = when (ty
 // ═══════════════════════════════════════════
 
 /**
- * 激活码配置卡片（增强版 - 支持多种类型 + 批量操作）
+ * activation codeconfigcard( enhanced- support type +)
  */
 @Composable
 fun ActivationCodeCard(

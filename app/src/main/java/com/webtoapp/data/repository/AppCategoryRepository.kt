@@ -5,7 +5,7 @@ import com.webtoapp.data.model.AppCategory
 import kotlinx.coroutines.flow.Flow
 
 /**
- * 应用分类数据仓库。
+ * App category repository.
  */
 class AppCategoryRepository(private val categoryDao: AppCategoryDao) {
 

@@ -42,7 +42,7 @@ import com.webtoapp.R
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 应用修改器主页面 - 应用列表
+ * app home- applist
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,21 +56,21 @@ fun AppModifierScreen(
     val appListProvider = remember { AppListProvider(context) }
     val appCloner = remember { AppCloner(context) }
     
-    // 状态
+    // state
     var apps by remember { mutableStateOf<List<InstalledAppInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     var filterType by remember { mutableStateOf(AppFilterType.USER) }
     var selectedApp by remember { mutableStateOf<InstalledAppInfo?>(null) }
     
-    // Load应用列表
+    // Loadapplist
     LaunchedEffect(filterType, searchQuery) {
         isLoading = true
         apps = appListProvider.getInstalledApps(filterType, searchQuery)
         isLoading = false
     }
     
-    // 如果选中了应用，显示修改页面
+    // if app, display
     if (selectedApp != null) {
         AppModifyFullScreen(
             app = selectedApp!!,
@@ -118,7 +118,7 @@ fun AppModifierScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Search栏
+            // Search
             PremiumTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -137,7 +137,7 @@ fun AppModifierScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
             
-            // 筛选标签
+            // filterlabel
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,7 +172,7 @@ fun AppModifierScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // App数量
+            // App
             Text(
                 text = Strings.totalFilesCount.replace("%d", apps.size.toString()),
                 style = MaterialTheme.typography.bodySmall,
@@ -182,7 +182,7 @@ fun AppModifierScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // App列表
+            // Applist
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -209,7 +209,7 @@ fun AppModifierScreen(
 }
 
 /**
- * 应用列表项
+ * applist
  */
 @Composable
 fun AppListItem(
@@ -285,7 +285,7 @@ fun AppListItem(
 }
 
 /**
- * 应用修改全屏页面（和 CreateAppScreen 类似的布局）
+ * app( CreateAppScreen)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -299,7 +299,7 @@ fun AppModifyFullScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // 基本信息状态
+    // state
     var newAppName by remember { mutableStateOf(app.appName) }
     var newIconUri by remember { mutableStateOf<Uri?>(null) }
     var newIconPath by remember { mutableStateOf<String?>(null) }
@@ -307,7 +307,7 @@ fun AppModifyFullScreen(
     var progress by remember { mutableIntStateOf(0) }
     var progressText by remember { mutableStateOf("") }
     
-    // Start画面配置状态
+    // Start configstate
     var splashEnabled by remember { mutableStateOf(false) }
     var splashType by remember { mutableStateOf("IMAGE") }
     var splashPath by remember { mutableStateOf<String?>(null) }
@@ -320,33 +320,33 @@ fun AppModifyFullScreen(
     var splashVideoDurationMs by remember { mutableLongStateOf(0L) }
     var splashEnableAudio by remember { mutableStateOf(false) }
     
-    // Activation码配置状态
+    // Activation configstate
     var activationEnabled by remember { mutableStateOf(false) }
     var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
     var activationRequireEveryTime by remember { mutableStateOf(false) }
     var newActivationCode by remember { mutableStateOf("") }
     
-    // Announcement配置状态
+    // Announcementconfigstate
     var announcementEnabled by remember { mutableStateOf(false) }
     var announcementTitle by remember { mutableStateOf("") }
     var announcementContent by remember { mutableStateOf("") }
     var announcementLink by remember { mutableStateOf("") }
     
-    // Background music配置状态
+    // Background musicconfigstate
     var bgmEnabled by remember { mutableStateOf(false) }
     var bgmConfig by remember { mutableStateOf(BgmConfig()) }
     
-    // Image选择器（相册选择）
+    // Imageselect( select)
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { 
             newIconUri = it
-            newIconPath = null // 清除图标库路径
+            newIconPath = null // clearicon path
         }
     }
     
-    // Start画面图片选择器
+    // Start select
     val splashImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -362,7 +362,7 @@ fun AppModifyFullScreen(
         }
     }
     
-    // Start画面视频选择器
+    // Start select
     val splashVideoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -381,7 +381,7 @@ fun AppModifyFullScreen(
         }
     }
     
-    // Build配置并执行操作
+    // Buildconfigandexecute
     fun buildConfig(): AppModifyConfig {
         return AppModifyConfig(
             originalApp = app,
@@ -421,7 +421,7 @@ fun AppModifyFullScreen(
                 },
                 actions = {
                     if (!isProcessing) {
-                        // 克隆安装按钮（仅当没有自定义图标时可用）
+                        // button( onlywhen icon)
                         if (newIconUri == null && newIconPath == null) {
                             TextButton(
                                 onClick = {
@@ -445,7 +445,7 @@ fun AppModifyFullScreen(
                                 Text(Strings.cloneInstall)
                             }
                         }
-                        // 快捷方式按钮
+                        // button
                         TextButton(
                             onClick = {
                                 isProcessing = true
@@ -485,7 +485,7 @@ fun AppModifyFullScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 进度条
+            // Note
             if (isProcessing) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -503,7 +503,7 @@ fun AppModifyFullScreen(
                 }
             }
             
-            // 原应用信息卡片
+            // app card
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
@@ -540,7 +540,7 @@ fun AppModifyFullScreen(
                 }
             }
             
-            // 基本信息卡片
+            // card
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -548,7 +548,7 @@ fun AppModifyFullScreen(
                 ) {
                     Text(Strings.labelBasicInfo, style = MaterialTheme.typography.titleMedium)
                     
-                    // Icon选择（带图标库功能）
+                    // Iconselect( icon)
                     IconPickerWithLibrary(
                         iconUri = newIconUri,
                         iconPath = newIconPath,
@@ -559,7 +559,7 @@ fun AppModifyFullScreen(
                         }
                     )
                     
-                    // 清除自定义图标按钮
+                    // Clear custom icon button
                     if (newIconUri != null || newIconPath != null) {
                         TextButton(
                             onClick = { 
@@ -574,7 +574,7 @@ fun AppModifyFullScreen(
                         }
                     }
                     
-                    // 新名称（带随机按钮）
+                    // New name (with random button)
                     AppNameTextFieldSimple(
                         value = newAppName,
                         onValueChange = { newAppName = it }
@@ -582,7 +582,7 @@ fun AppModifyFullScreen(
                 }
             }
             
-            // Activation码设置卡片
+            // Activation code settings card
             ActivationCard(
                 enabled = activationEnabled,
                 codes = activationCodes,
@@ -592,7 +592,7 @@ fun AppModifyFullScreen(
                 onRequireEveryTimeChange = { activationRequireEveryTime = it }
             )
             
-            // Announcement设置卡片
+            // Announcement settings card
             AnnouncementCardForModifier(
                 enabled = announcementEnabled,
                 title = announcementTitle,
@@ -604,7 +604,7 @@ fun AppModifyFullScreen(
                 onLinkChange = { announcementLink = it }
             )
             
-            // Start画面设置卡片
+            // Start screen settings card
             SplashCardForModifier(
                 enabled = splashEnabled,
                 splashType = splashType,
@@ -636,7 +636,7 @@ fun AppModifyFullScreen(
                 }
             )
             
-            // Background music卡片
+            // Background music card
             BgmCard(
                 enabled = bgmEnabled,
                 config = bgmConfig,
@@ -644,7 +644,7 @@ fun AppModifyFullScreen(
                 onConfigChange = { bgmConfig = it }
             )
             
-            // 提示信息
+            // Hint message
             WarningCard(message = Strings.cloneInstallWarning)
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -653,7 +653,7 @@ fun AppModifyFullScreen(
 }
 
 /**
- * 激活码卡片（用于修改器）
+ * activation codecard( for)
  */
 @Composable
 private fun ActivationCard(
@@ -683,7 +683,7 @@ private fun ActivationCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                // 每次启动都需要验证选项
+                // verify
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -747,7 +747,7 @@ private fun ActivationCard(
 }
 
 /**
- * 公告卡片（用于修改器）
+ * announcementcard( for)
  */
 @Composable
 private fun AnnouncementCardForModifier(
@@ -806,7 +806,7 @@ private fun AnnouncementCardForModifier(
 }
 
 /**
- * 启动画面卡片（用于修改器）
+ * animation card( for)
  */
 @Composable
 private fun SplashCardForModifier(
@@ -928,4 +928,3 @@ private fun SplashCardForModifier(
         }
     }
 }
-

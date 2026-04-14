@@ -1,21 +1,21 @@
 package com.webtoapp.core.errorpage
 
 /**
- * 网络错误页显示模式
+ * network error.
  */
 enum class ErrorPageMode {
-    /** 系统默认错误页（不拦截） */
+    /** default error system. */
     DEFAULT,
-    /** 使用内置精美风格 */
+    /** usage. */
     BUILTIN_STYLE,
-    /** 加载用户自定义 HTML */
+    /** load user. */
     CUSTOM_HTML,
-    /** 显示自定义图片或视频 */
+    /** Note. */
     CUSTOM_MEDIA
 }
 
 /**
- * 内置错误页视觉风格
+ * error.
  */
 enum class ErrorPageStyle(val displayName: String) {
     MATERIAL("Material Design"),
@@ -27,7 +27,7 @@ enum class ErrorPageStyle(val displayName: String) {
 }
 
 /**
- * 内嵌小游戏类型
+ * Note.
  */
 enum class MiniGameType(val displayName: String) {
     RANDOM("随机"),
@@ -38,25 +38,25 @@ enum class MiniGameType(val displayName: String) {
 }
 
 /**
- * 网络错误页配置
+ * config network error.
  */
 data class ErrorPageConfig(
-    /** 显示模式 */
+    /** Note. */
     val mode: ErrorPageMode = ErrorPageMode.BUILTIN_STYLE,
-    /** 内置风格（仅 BUILTIN_STYLE 模式） */
+    /** BUILTIN_STYLE. */
     val builtInStyle: ErrorPageStyle = ErrorPageStyle.MATERIAL,
-    /** 用户自定义 HTML（仅 CUSTOM_HTML 模式） */
+    /** user. */
     val customHtml: String? = null,
-    /** 自定义媒体路径（仅 CUSTOM_MEDIA 模式，图片或视频） */
+    /** path media. */
     val customMediaPath: String? = null,
-    /** 是否显示小游戏入口 */
+    /** entry. */
     val showMiniGame: Boolean = false,
-    /** 小游戏类型 */
+    /** Note. */
     val miniGameType: MiniGameType = MiniGameType.RANDOM,
-    /** 重试按钮文字（会被 i18n 覆盖，仅自定义场景使用） */
+    /** usage. */
     val retryButtonText: String = "",
-    /** 自动重试间隔秒数（0=不自动重试） */
+    /** auto. */
     val autoRetrySeconds: Int = 15,
-    /** 界面语言: CHINESE, ENGLISH, ARABIC */
+    /** locale. */
     val language: String = "CHINESE"
 )

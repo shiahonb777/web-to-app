@@ -1,10 +1,10 @@
 package com.webtoapp.data.model.webapp.config
 
 enum class NodeJsBuildMode {
-    STATIC,         // 纯静态前端（dist 目录）
-    SSR,            // 服务端渲染（Next.js/Nuxt.js）
-    API_BACKEND,    // API 后端（Express/Fastify/Koa）
-    FULLSTACK       // 全栈应用（前端 + API）
+    STATIC,         // Static frontend build, usually from dist/
+    SSR,            // Server-side rendering, such as Next.js or Nuxt.js
+    API_BACKEND,    // API backend, such as Express, Fastify, or Koa
+    FULLSTACK       // Combined frontend and API app
 }
 
 data class NodeJsConfig(

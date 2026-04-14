@@ -45,17 +45,17 @@ import com.webtoapp.ui.screens.create.runtime.NodeJsProjectImporter
 import java.io.File
 
 /**
- * 创建 Node.js 应用页面
+ * create Node. js app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Express=绿, Fastify=黑, Koa=灰, NestJS=红, Next.js=黑, Nuxt=绿）
- * - package.json 脚本面板（可选启动脚本）
- * - 依赖可视化（生产依赖 / 开发依赖分组）
- * - TypeScript 检测指示器
- * - 包管理器检测（npm/yarn/pnpm）
- * - 端口检测与自定义端口
- * - 项目信息摘要面板
- * - 框架特定提示
+ * Note
+ * Hero area( Express=, Fastify=, Koa=, NestJS=, Next. js=, Nuxt=)
+ * package. json panel( optional)
+ * Note
+ * TypeScript indicator
+ * manager( npm/yarn/pnpm)
+ * with
+ * item panel
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -76,11 +76,11 @@ fun CreateNodeJsAppScreen(
     val isEdit = existingAppId > 0L
     val projectImporter = remember(context) { NodeJsProjectImporter(context) }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // Node.js 配置
+    // Node. js config
     var buildMode by remember { mutableStateOf(NodeJsBuildMode.API_BACKEND) }
     var entryFile by remember { mutableStateOf("index.js") }
     var landscapeMode by remember { mutableStateOf(false) }
@@ -88,13 +88,13 @@ fun CreateNodeJsAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var detectedEntryFile by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：package.json 信息
+    // package. json
     var packageName by remember { mutableStateOf<String?>(null) }
     var packageVersion by remember { mutableStateOf<String?>(null) }
     var packageDescription by remember { mutableStateOf<String?>(null) }
@@ -105,24 +105,24 @@ fun CreateNodeJsAppScreen(
     var showAllDeps by remember { mutableStateOf(false) }
     var showAllDevDeps by remember { mutableStateOf(false) }
     
-    // 增强：TypeScript 检测
+    // TypeScript
     var hasTypeScript by remember { mutableStateOf(false) }
     
-    // TypeScript 预编译（Linux 环境）
+    // TypeScript( Linux)
     var enableTsPreCompile by remember { mutableStateOf(false) }
     val esbuildAvailable = remember { NativeNodeEngine.isAvailable(context) }
     
-    // 增强：包管理器检测
+    // manager
     var packageManager by remember { mutableStateOf("npm") }
     
-    // 增强：端口检测
+    // Note
     var detectedPort by remember { mutableStateOf<Int?>(null) }
     var customPort by remember { mutableStateOf("") }
     
-    // 增强：Node 版本
+    // Node version
     var nodeEngineVersion by remember { mutableStateOf<String?>(null) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -161,7 +161,7 @@ fun CreateNodeJsAppScreen(
         appName = appNameOverride ?: analysis.suggestedAppName ?: appName
     }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -189,25 +189,25 @@ fun CreateNodeJsAppScreen(
         }
     }
     
-    // 依赖下载状态
+    // downloadstate
     val downloadState by NodeDependencyManager.downloadState.collectAsStateWithLifecycle()
     var showDownloadDialog by remember { mutableStateOf(false) }
     
-    // 框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework) {
-            "Express" -> Color(0xFF259D3D) // Express 绿
-            "Fastify" -> Color(0xFF000000) // Fastify 黑
-            "Koa" -> Color(0xFF33333D) // Koa 灰黑
-            "NestJS" -> Color(0xFFE0234E) // NestJS 红
-            "Hapi" -> Color(0xFFFF7B00) // Hapi 橙
-            "Next.js" -> Color(0xFF000000) // Next.js 黑
-            "Nuxt.js" -> Color(0xFF00DC82) // Nuxt 绿
-            else -> Color(0xFF339933) // Node.js 默认绿
+            "Express" -> Color(0xFF259D3D) // Express
+            "Fastify" -> Color(0xFF000000) // Fastify
+            "Koa" -> Color(0xFF33333D) // Koa
+            "NestJS" -> Color(0xFFE0234E) // NestJS
+            "Hapi" -> Color(0xFFFF7B00) // Hapi
+            "Next.js" -> Color(0xFF000000) // Next. js
+            "Nuxt.js" -> Color(0xFF00DC82) // Nuxt
+            else -> Color(0xFF339933) // Node. js default
         }
     }
     
-    // 文件选择器
+    // fileselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -243,7 +243,7 @@ fun CreateNodeJsAppScreen(
         }
     }
     
-    // 判断是否可以创建
+    // create
     val canCreate = projectId != null
     
     Scaffold(
@@ -263,7 +263,7 @@ fun CreateNodeJsAppScreen(
                                 val finalPort = customPort.toIntOrNull() ?: detectedPort
                                 
                                 if (enableTsPreCompile && hasTypeScript && esbuildAvailable) {
-                                    // 先预编译 TypeScript 再创建
+                                    // TypeScript create
                                     isCreating = true
                                     creationPhase = Strings.tsPreCompile
                                     scope.launch {
@@ -333,7 +333,7 @@ fun CreateNodeJsAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             NodeJsHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
@@ -342,7 +342,7 @@ fun CreateNodeJsAppScreen(
                 nodeEngineVersion = nodeEngineVersion
             )
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -356,7 +356,7 @@ fun CreateNodeJsAppScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 应用名称
+                    // app
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
@@ -366,7 +366,7 @@ fun CreateNodeJsAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 横屏模式
+                    // mode
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -378,13 +378,13 @@ fun CreateNodeJsAppScreen(
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -460,7 +460,7 @@ fun CreateNodeJsAppScreen(
                 }
             }
             
-            // ========== 示例项目 ==========
+            // ========== Sample Projects ==========
             if (selectedProjectDir == null && !isCreating) {
                 TypedSampleProjectsCard(
                     title = Strings.sampleProjects,
@@ -490,10 +490,10 @@ fun CreateNodeJsAppScreen(
                 )
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. 项目信息摘要 ==========
+                // ========== 5. Project Summary ==========
                 if (packageName != null) {
                     NodeJsProjectInfoCard(
                         packageName = packageName!!,
@@ -508,7 +508,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 6. NPM 脚本面板 ==========
+                // ========== 6. NPM Scripts Panel ==========
                 if (npmScripts.isNotEmpty()) {
                     NodeJsScriptsCard(
                         scripts = npmScripts,
@@ -519,7 +519,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 7. 构建模式 ==========
+                // ========== 7. Build Mode ==========
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -572,7 +572,7 @@ fun CreateNodeJsAppScreen(
                             }
                         }
                         
-                        // 入口文件（非静态模式）
+                        // Entry file (non-static mode)
                         if (buildMode != NodeJsBuildMode.STATIC) {
                             Spacer(modifier = Modifier.height(12.dp))
                             PremiumTextField(
@@ -603,7 +603,7 @@ fun CreateNodeJsAppScreen(
                     }
                 }
                 
-                // ========== 7.5 TypeScript 预编译（Linux 环境） ==========
+                // ========== 7.5 TypeScript Precompile (Linux) ==========
                 if (hasTypeScript && esbuildAvailable) {
                     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -652,7 +652,7 @@ fun CreateNodeJsAppScreen(
                     }
                 }
                 
-                // ========== 8. 端口配置 ==========
+                // ========== 8. Port Settings ==========
                 if (buildMode != NodeJsBuildMode.STATIC) {
                     NodeJsPortCard(
                         detectedPort = detectedPort,
@@ -662,7 +662,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 9. 依赖可视化 ==========
+                // ========== 9. Dependency View ==========
                 if (dependencies.isNotEmpty() || devDependencies.isNotEmpty()) {
                     NodeJsDependenciesCard(
                         dependencies = dependencies,
@@ -675,7 +675,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 10. 环境变量 ==========
+                // ========== 10. Environment Variables ==========
                 if (buildMode != NodeJsBuildMode.STATIC) {
                     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -705,7 +705,7 @@ fun CreateNodeJsAppScreen(
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // 已有环境变量列表
+                            // Existing environment variables
                             envVars.forEach { (key, value) ->
                                 Surface(
                                     modifier = Modifier
@@ -749,7 +749,7 @@ fun CreateNodeJsAppScreen(
                                 }
                             }
                             
-                            // 添加新环境变量
+                            // Add new environment variable
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -789,7 +789,7 @@ fun CreateNodeJsAppScreen(
                     }
                 }
                 
-                // ========== 11. 框架特定提示 ==========
+                // ========== 11. Framework-specific Tips ==========
                 if (detectedFramework != null) {
                     NodeJsFrameworkTipsCard(
                         framework = detectedFramework!!,
@@ -798,12 +798,12 @@ fun CreateNodeJsAppScreen(
                 }
             }
             
-            // 状态提示
+            // Status message
             if (screenState.isBusy) {
                 RuntimeLoadingCard(screenState.phase)
             }
             
-            // 错误提示
+            // Error message
             screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
@@ -812,7 +812,7 @@ fun CreateNodeJsAppScreen(
         }
     }
     
-    // Node.js 下载对话框
+    // Node.js download dialog
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
@@ -863,10 +863,10 @@ fun CreateNodeJsAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * Node.js 框架品牌化 Hero 区域
+ * Node. js Hero area
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -919,7 +919,7 @@ private fun NodeJsHeroSection(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // Node 版本标签
+                        // Node versionlabel
                         nodeEngineVersion?.let { ver ->
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -934,7 +934,7 @@ private fun NodeJsHeroSection(
                                 )
                             }
                         }
-                        // TypeScript 标签
+                        // TypeScript label
                         if (hasTypeScript) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -949,7 +949,7 @@ private fun NodeJsHeroSection(
                                 )
                             }
                         }
-                        // 包管理器标签
+                        // managerlabel
                         val pmColor = when (packageManager) {
                             "yarn" -> Color(0xFF2C8EBB)
                             "pnpm" -> Color(0xFFF69220)
@@ -976,7 +976,7 @@ private fun NodeJsHeroSection(
 }
 
 /**
- * 项目信息摘要卡片
+ * item card
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1010,7 +1010,7 @@ private fun NodeJsProjectInfoCard(
                 color = frameworkColor.copy(alpha = 0.06f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    // 项目名 @ 版本
+                    // item @ version
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1038,7 +1038,7 @@ private fun NodeJsProjectInfoCard(
                         }
                     }
                     
-                    // 描述
+                    // Note
                     packageDescription?.let { desc ->
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
@@ -1054,18 +1054,18 @@ private fun NodeJsProjectInfoCard(
                     HorizontalDivider(color = frameworkColor.copy(alpha = 0.1f))
                     Spacer(modifier = Modifier.height(10.dp))
                     
-                    // 统计标签行
+                    // label
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // 依赖数
+                        // Note
                         NjsInfoChip(
                             icon = Icons.Outlined.Inventory2,
                             label = "${Strings.njsDependencies}: $depCount",
                             color = frameworkColor
                         )
-                        // 开发依赖数
+                        // Note
                         if (devDepCount > 0) {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Build,
@@ -1081,13 +1081,13 @@ private fun NodeJsProjectInfoCard(
                                 color = Color(0xFF3178C6)
                             )
                         }
-                        // 包管理器
+                        // manager
                         NjsInfoChip(
                             icon = Icons.Outlined.Archive,
                             label = "${Strings.njsPackageManager}: $packageManager",
                             color = MaterialTheme.colorScheme.secondary
                         )
-                        // 检测到端口
+                        // Note
                         detectedPort?.let {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Lan,
@@ -1103,7 +1103,7 @@ private fun NodeJsProjectInfoCard(
 }
 
 /**
- * 信息标签组件
+ * label
  */
 @Composable
 private fun NjsInfoChip(
@@ -1132,7 +1132,7 @@ private fun NjsInfoChip(
 }
 
 /**
- * NPM 脚本面板
+ * NPM panel
  */
 @Composable
 private fun NodeJsScriptsCard(
@@ -1204,7 +1204,7 @@ private fun NodeJsScriptsCard(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) frameworkColor else MaterialTheme.colorScheme.onSurface
                                 )
-                                // 为常用脚本加上推荐标签
+                                // label
                                 if (name == "start" || name == "dev") {
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Surface(
@@ -1237,7 +1237,7 @@ private fun NodeJsScriptsCard(
 }
 
 /**
- * 端口配置卡片
+ * configcard
  */
 @Composable
 private fun NodeJsPortCard(
@@ -1259,7 +1259,7 @@ private fun NodeJsPortCard(
             }
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 检测到的端口
+            // Note
             if (detectedPort != null) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -1292,7 +1292,7 @@ private fun NodeJsPortCard(
                 Spacer(modifier = Modifier.height(10.dp))
             }
             
-            // 自定义端口
+            // Note
             PremiumTextField(
                 value = customPort,
                 onValueChange = { newValue ->
@@ -1318,7 +1318,7 @@ private fun NodeJsPortCard(
 }
 
 /**
- * 依赖可视化卡片
+ * card
  */
 @Composable
 private fun NodeJsDependenciesCard(
@@ -1343,7 +1343,7 @@ private fun NodeJsDependenciesCard(
             }
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 生产依赖
+            // Note
             if (dependencies.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -1408,7 +1408,7 @@ private fun NodeJsDependenciesCard(
                 }
             }
             
-            // 开发依赖
+            // Note
             if (devDependencies.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -1482,7 +1482,7 @@ private fun NodeJsDependenciesCard(
 }
 
 /**
- * 框架特定提示卡片
+ * hintcard
  */
 @Composable
 private fun NodeJsFrameworkTipsCard(

@@ -149,7 +149,7 @@ internal fun MyPublishedItemsHeader(
 }
 
 /**
- * 统一统计概览行：三个等宽卡片 (下载/评分/点赞)
+ * unified: card( download/ /)
  */
 @Composable
 internal fun StatsOverviewRow(
@@ -224,13 +224,13 @@ internal fun StatCard(
 }
 
 /**
- * 统一删除确认对话框（带 loading 状态）
+ * unifieddelete dialog( loading state)
  */
 @Composable
 internal fun ItemDeleteConfirmDialog(
     itemName: String,
-    storeName: String,       // "商店" or "市场"
-    actionVerb: String,      // "下载" or Strings.installApp
+    storeName: String,       // "store" or "market"
+    actionVerb: String,      // "download" or Strings. installApp
     isDeleting: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
@@ -296,7 +296,7 @@ internal fun ItemDeleteConfirmDialog(
     )
 }
 
-/** 统一加载状态 */
+/** unifiedloadstate */
 @Composable
 internal fun PublishedItemLoadingState(message: String) {
     Box(
@@ -317,7 +317,7 @@ internal fun PublishedItemLoadingState(message: String) {
     }
 }
 
-/** 统一错误状态 */
+/** unifiederrorstate */
 @Composable
 internal fun PublishedItemErrorState(errorMsg: String?, onRetry: () -> Unit) {
     Box(
@@ -369,7 +369,7 @@ internal fun PublishedItemErrorState(errorMsg: String?, onRetry: () -> Unit) {
     }
 }
 
-/** 统一空状态 */
+/** unified state */
 @Composable
 internal fun PublishedItemEmptyState(
     icon: ImageVector,
@@ -440,7 +440,7 @@ internal fun PublishedItemEmptyState(
     }
 }
 
-/** 统一 stat pill（版本/下载量/评分/点赞） */
+/** unified stat pill( version/download / /) */
 @Composable
 internal fun StatPillVersion(text: String) {
     Surface(
@@ -477,7 +477,7 @@ internal fun StatPillWithIcon(
     }
 }
 
-/** 统一卡片信息行：版本 + 下载量 + 评分 + 点赞 */
+/** unifiedcard: version + download + + */
 @Composable
 internal fun PublishedItemStatsPills(
     versionName: String?,
@@ -512,7 +512,7 @@ internal fun PublishedItemStatsPills(
     }
 }
 
-/** 统一分类标签 */
+/** unified label */
 @Composable
 internal fun CategoryTag(label: String, color: Color) {
     Surface(
@@ -531,5 +531,5 @@ internal fun CategoryTag(label: String, color: Color) {
 
 
 // ════════════════════════════════════════════════
-// 我的应用 Bottom Sheet
+// app Bottom Sheet
 // ════════════════════════════════════════════════

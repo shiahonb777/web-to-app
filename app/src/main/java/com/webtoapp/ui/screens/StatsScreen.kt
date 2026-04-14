@@ -35,7 +35,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 使用统计仪表盘页面
+ * Note
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +79,7 @@ fun StatsScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Tab 切换
+                // Tab switch
                 TabRow(selectedTabIndex = selectedTab) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -107,7 +107,7 @@ fun StatsScreen(
 }
 
 /**
- * 使用统计 Tab
+ * Tab
  */
 @Composable
 private fun UsageStatsTab(
@@ -126,12 +126,12 @@ private fun UsageStatsTab(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 汇总卡片
+        // card
         item {
             OverallStatsCard(overallStats)
         }
         
-        // 最常使用排行
+        // Note
         item {
             Text(
                 Strings.statsMostUsed,
@@ -157,7 +157,7 @@ private fun UsageStatsTab(
             }
         }
         
-        // 使用时间排行
+        // Note
         item {
             Text(
                 Strings.statsMostTime,
@@ -188,7 +188,7 @@ private fun UsageStatsTab(
 }
 
 /**
- * 汇总统计卡片
+ * card
  */
 @Composable
 private fun OverallStatsCard(stats: OverallStats) {
@@ -258,7 +258,7 @@ private fun StatItem(
 }
 
 /**
- * 使用统计卡片（按启动次数）
+ * card( )
  */
 @Composable
 private fun UsageStatsCard(
@@ -273,7 +273,7 @@ private fun UsageStatsCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 排名
+            // Note
             Surface(
                 shape = CircleShape,
                 color = when (rank) {
@@ -296,12 +296,12 @@ private fun UsageStatsCard(
             
             Spacer(Modifier.width(12.dp))
             
-            // App 图标
+            // App icon
             AppIconSmall(app)
             
             Spacer(Modifier.width(12.dp))
             
-            // 信息
+            // Note
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
                     app.name,
@@ -317,7 +317,7 @@ private fun UsageStatsCard(
                 )
             }
             
-            // 启动次数
+            // Note
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     "${stats.launchCount}",
@@ -336,7 +336,7 @@ private fun UsageStatsCard(
 }
 
 /**
- * 使用时间卡片（带进度条）
+ * card( )
  */
 @Composable
 private fun UsageTimeCard(
@@ -385,7 +385,7 @@ private fun UsageTimeCard(
 }
 
 /**
- * 健康监控 Tab
+ * Tab
  */
 @Composable
 private fun HealthMonitorTab(
@@ -400,12 +400,12 @@ private fun HealthMonitorTab(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 健康概览
+        // Note
         item {
             HealthOverviewCard(webApps, recordMap)
         }
         
-        // 每个 WEB 应用的健康状态
+        // WEB app state
         items(webApps) { app ->
             val record = recordMap[app.id]
             HealthStatusCard(app, record, onCheckHealth)
@@ -435,7 +435,7 @@ private fun HealthMonitorTab(
 }
 
 /**
- * 健康概览卡片
+ * card
  */
 @Composable
 private fun HealthOverviewCard(
@@ -487,7 +487,7 @@ private fun HealthStatItem(count: Int, label: String, color: Color) {
 }
 
 /**
- * 单个应用健康状态卡片
+ * app statecard
  */
 @Composable
 private fun HealthStatusCard(
@@ -515,7 +515,7 @@ private fun HealthStatusCard(
                 .padding(12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // 状态指示灯
+                // state
                 Box(
                     modifier = Modifier
                         .size(10.dp)
@@ -546,7 +546,7 @@ private fun HealthStatusCard(
                     )
                 }
                 
-                // 状态标签
+                // statelabel
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = statusColor.copy(alpha = 0.12f)
@@ -561,7 +561,7 @@ private fun HealthStatusCard(
                 }
             }
             
-            // 详细信息
+            // Note
             if (record != null && record.status != HealthStatus.UNKNOWN) {
                 Spacer(Modifier.height(8.dp))
                 Row(
@@ -598,7 +598,7 @@ private fun HealthStatusCard(
 }
 
 /**
- * 空统计状态
+ * state
  */
 @Composable
 private fun EmptyStatsCard() {
@@ -628,7 +628,7 @@ private fun EmptyStatsCard() {
 }
 
 /**
- * 小型 App 图标
+ * App icon
  */
 @Composable
 private fun AppIconSmall(app: WebApp) {

@@ -75,7 +75,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
-// 我的模块 Bottom Sheet
+// module Bottom Sheet
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,7 +140,7 @@ internal fun MyModulesSheet(
         "OTHER" to Color(0xFF6B7280)
     )
 
-    // ── 删除确认（共享组件） ──
+    // delete( )
     moduleToDelete?.let { module ->
         ItemDeleteConfirmDialog(
             itemName = module.name,
@@ -169,7 +169,7 @@ internal fun MyModulesSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-            // ── Header（共享组件） ──
+            // Header( )
             MyPublishedItemsHeader(
                 title = Strings.storeMyModules,
                 isRefreshing = isRefreshing,
@@ -189,7 +189,7 @@ internal fun MyModulesSheet(
                 }
             }
 
-            // ── 统计概览（共享组件） ──
+            // Note
             if (!isLoading && myModules.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 StatsOverviewRow(
@@ -202,7 +202,7 @@ internal fun MyModulesSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── 内容状态（共享组件） ──
+            // contentstate( )
             if (isLoading) {
                 PublishedItemLoadingState("加载我的模块...")
             } else if (errorMsg != null) {
@@ -277,7 +277,7 @@ internal fun MyModulesSheet(
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f, fill = false)
                                             )
-                                            // 分类标签（共享组件）
+                                            // label( )
                                             module.category?.let { cat ->
                                                 CategoryTag(
                                                     label = moduleCategoryLabels[cat] ?: cat,
@@ -285,7 +285,7 @@ internal fun MyModulesSheet(
                                                 )
                                             }
                                         }
-                                        // 信息 pills（共享组件）
+                                        // pills( )
                                         PublishedItemStatsPills(
                                             versionName = module.versionName,
                                             downloads = module.downloads,
@@ -312,7 +312,7 @@ internal fun MyModulesSheet(
                                         }
                                     }
                                 }
-                                // 描述
+                                // Note
                                 if (!module.description.isNullOrBlank()) {
                                     Text(
                                         module.description,
@@ -334,5 +334,5 @@ internal fun MyModulesSheet(
 
 
 // ════════════════════════════════════════════════
-// 发布模块 Bottom Sheet
+// module Bottom Sheet
 // ════════════════════════════════════════════════

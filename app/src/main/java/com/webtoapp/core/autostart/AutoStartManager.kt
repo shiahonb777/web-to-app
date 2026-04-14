@@ -13,19 +13,19 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * 自启动管理器
- * 管理开机自启动和定时自启动功能
+ * Note.
+ * Note.
  *
- * 优化点（v2）：
- * 1. 使用精确闹钟（setExactAndAllowWhileIdle）替换 setRepeating，保证 Doze 模式精准触发
- * 2. 精确计算下一次启动时间（考虑 days 过滤器 + 跨周 + 多时段）
- * 3. Android 12+ SCHEDULE_EXACT_ALARM 权限检查与优雅降级
- * 4. 支持 TIME_SET / TIMEZONE_CHANGED 后自动重新调度
- * 5. 提供"下次启动时间"查询接口，供 UI 层显示
- * 6. 支持多时段配置（一天内多个启动时间点）
- * 7. 防重复调度互斥锁
- * 8. 启动记录追踪（debug）
- * 9. OEM ROM 自启动权限检测
+ * （v2）：
+ * 1. （setExactAndAllowWhileIdle） setRepeating， Doze
+ * 2. （ days + + ）
+ * 3. Android 12+ SCHEDULE_EXACT_ALARM
+ * 4. TIME_SET / TIMEZONE_CHANGED
+ * 5. ""， UI
+ * 6. （）
+ * 7.
+ * 8. （debug）
+ * 9. OEM ROM
  */
 class AutoStartManager(private val context: Context) {
 
@@ -44,36 +44,36 @@ class AutoStartManager(private val context: Context) {
         const val KEY_LAST_TRIGGER_TIME = "last_trigger_time"
         const val KEY_TRIGGER_COUNT = "trigger_count"
 
-        /** 默认开机延迟启动毫秒数 — 给系统服务初始化预留时间 */
+        /** — */
         const val DEFAULT_BOOT_DELAY_MS = 5000L
 
-        /** 最小合理开机延迟 */
+        /** Note. */
         const val MIN_BOOT_DELAY_MS = 1000L
 
-        /** 最大开机延迟（30s，避免用户等太久） */
+        /** （30s，） */
         const val MAX_BOOT_DELAY_MS = 30000L
 
-        /** 闹钟最小间隔（防止系统过于频繁唤醒，60s） */
+        /** （，60s） */
         private const val MIN_ALARM_INTERVAL_MS = 60_000L
 
-        /** 防重复调度：两次 scheduleNextAlarm 调用最小间隔（1s） */
+        /** ： scheduleNextAlarm （1s） */
         private const val SCHEDULE_DEBOUNCE_MS = 1000L
     }
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    /** 防重复调度锁 */
+    /** Note. */
     @Volatile
     private var lastScheduleTimestamp = 0L
 
     // ═══════════════════════════════════════
-    // 开机自启动
+    // Note.
     // ═══════════════════════════════════════
 
     /**
-     * 设置开机自启动
-     * @param delayMs 开机后延迟启动的毫秒数（范围：1000-30000，默认 5000）
+     * Note.
+     * @param delayMs parameter
      */
     fun setBootStart(appId: Long, enabled: Boolean, delayMs: Long = DEFAULT_BOOT_DELAY_MS) {
         val safeDelay = delayMs.coerceIn(MIN_BOOT_DELAY_MS, MAX_BOOT_DELAY_MS)
@@ -91,30 +91,30 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 获取开机自启动的应用ID
+     * ID
      */
     fun getBootStartAppId(): Long {
         return prefs.getLong(KEY_BOOT_START_APP_ID, -1L)
     }
 
     /**
-     * 获取开机启动延迟（毫秒）
+     * （）
      */
     fun getBootDelay(): Long {
         return prefs.getLong(KEY_BOOT_DELAY_MS, DEFAULT_BOOT_DELAY_MS)
     }
 
     // ═══════════════════════════════════════
-    // 定时自启动（支持多时段）
+    // （）
     // ═══════════════════════════════════════
 
     /**
-     * 设置定时自启动
-     * @param appId 应用ID
-     * @param enabled 是否启用
-     * @param time 主启动时间（HH:mm 格式，向后兼容）
-     * @param times 多时段启动时间列表（优先使用，为空时回退到 time 单时段）
-     * @param days 启动日期列表（1-7 代表周一到周日）
+     * Note.
+     * @param appId parameter
+     * @param enabled parameter
+     * @param time parameter
+     * @param times parameter
+     * @param days parameter
      */
     fun setScheduledStart(
         appId: Long,
@@ -125,7 +125,7 @@ class AutoStartManager(private val context: Context) {
     ) {
         if (enabled) {
             val effectiveTimes = times.ifEmpty { listOf(time) }
-            // 去重 + 排序
+            // +
             val normalizedTimes = effectiveTimes.map { normalizeTime(it) }.distinct().sorted()
 
             val scheduleHash = "${appId}_${normalizedTimes.joinToString(",")}_${days.sorted().joinToString(",")}"
@@ -154,7 +154,7 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 获取定时自启动配置
+     * Note.
      */
     fun getScheduledStartConfig(): ScheduledStartConfig? {
         val appId = prefs.getLong(KEY_SCHEDULED_START_APP_ID, -1L)
@@ -170,15 +170,15 @@ class AutoStartManager(private val context: Context) {
     }
 
     // ═══════════════════════════════════════
-    // 精确闹钟调度
+    // Note.
     // ═══════════════════════════════════════
 
     /**
-     * 计算下一次启动的精确时间（支持多时段 + days 过滤器 + 跨周）
+     * （ + days + ）
      *
-     * @param times 多个启动时间（HH:mm 格式）
-     * @param days 允许的星期几列表
-     * @return Calendar 对象表示下一次启动时间，如果 days 为空则返回 null
+     * @param times parameter
+     * @param days parameter
+     * @return result
      */
     fun calculateNextTriggerTime(times: List<String>, days: List<Int>): Calendar? {
         if (days.isEmpty() || times.isEmpty()) return null
@@ -199,7 +199,7 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 向后兼容：单时间点计算
+     * ：
      */
     fun calculateNextTriggerTime(time: String, days: List<Int>): Calendar? {
         return calculateNextTriggerTime(listOf(time), days)
@@ -210,7 +210,7 @@ class AutoStartManager(private val context: Context) {
         val hour = parts.getOrNull(0)?.toIntOrNull() ?: 8
         val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
 
-        // 搜索未来 8 天（当天 + 一整周），找到最近的匹配日
+        // 8 （ + ），
         for (dayOffset in 0..7) {
             val candidate = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, dayOffset)
@@ -220,12 +220,12 @@ class AutoStartManager(private val context: Context) {
                 set(Calendar.MILLISECOND, 0)
             }
 
-            // 如果是今天且已过时间（+ 安全裕度 60s），跳过
+            // （+ 60s），
             if (candidate.timeInMillis <= now.timeInMillis + MIN_ALARM_INTERVAL_MS) {
                 if (dayOffset == 0) continue
             }
 
-            // 转换 Calendar.DAY_OF_WEEK (1=周日..7=周六) → 我们的格式 (1=周一..7=周日)
+            // Calendar.DAY_OF_WEEK (1=..7=) → (1=..7=)
             val calendarDow = candidate.get(Calendar.DAY_OF_WEEK)
             val ourDow = if (calendarDow == Calendar.SUNDAY) 7 else calendarDow - 1
 
@@ -238,8 +238,8 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 格式化下次启动时间（供 UI 展示，支持 i18n）
-     * @return 如 "明天 08:00" / "周三 08:00" / null（未启用）
+     * （ UI ， i18n）
+     * @return result
      */
     fun getNextTriggerTimeDisplay(): String? {
         val config = getScheduledStartConfig() ?: return null
@@ -263,10 +263,10 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 设置下一次精确闹钟（支持多时段）
+     * （）
      */
     private fun scheduleNextAlarm(appId: Long, times: List<String>, days: List<Int>) {
-        // 防重复调度
+        // Note.
         val now = System.currentTimeMillis()
         if (now - lastScheduleTimestamp < SCHEDULE_DEBOUNCE_MS) {
             AppLogger.d(TAG, "防重复调度：距上次调度不足 ${SCHEDULE_DEBOUNCE_MS}ms，跳过")
@@ -292,10 +292,10 @@ class AutoStartManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // 根据系统版本选择最合适的调度方式
+        // Note.
         try {
             if (canScheduleExactAlarms()) {
-                // 精确闹钟 — Doze 模式下依然触发
+                // — Doze
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     nextTrigger.timeInMillis,
@@ -303,7 +303,7 @@ class AutoStartManager(private val context: Context) {
                 )
                 AppLogger.d(TAG, "精确闹钟已设置: ${formatDate(nextTrigger.time)}")
             } else {
-                // 没有精确闹钟权限，使用允许的近似方式
+                // ，
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     nextTrigger.timeInMillis,
@@ -312,7 +312,7 @@ class AutoStartManager(private val context: Context) {
                 AppLogger.w(TAG, "精确闹钟权限不可用，使用近似闹钟: ${formatDate(nextTrigger.time)}")
             }
         } catch (e: SecurityException) {
-            // Android 12+ 可能抛出 SecurityException
+            // Android 12+ SecurityException
             AppLogger.w(TAG, "设置精确闹钟被拒绝，降级为近似闹钟", e)
             try {
                 alarmManager.setAndAllowWhileIdle(
@@ -326,13 +326,13 @@ class AutoStartManager(private val context: Context) {
         }
     }
 
-    /** 向后兼容：单时段调度 */
+    /** ： */
     private fun scheduleNextAlarm(appId: Long, time: String, days: List<Int>) {
         scheduleNextAlarm(appId, listOf(time), days)
     }
 
     /**
-     * 取消定时闹钟
+     * Note.
      */
     private fun cancelAlarm() {
         val intent = Intent(context, ScheduledStartReceiver::class.java).apply {
@@ -351,10 +351,10 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 当闹钟触发后，重新调度下一次（由 ScheduledStartReceiver 调用）
+     * Reschedule the next alarm after current trigger.
      */
     fun rescheduleAfterTrigger() {
-        // 记录触发
+        // Note.
         recordTrigger()
         val config = getScheduledStartConfig() ?: return
         val effectiveTimes = config.times.ifEmpty { listOf(config.time) }
@@ -362,7 +362,7 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 重新设置闹钟（用于开机、时区变化、时间修改后恢复）
+     * Restore schedule after boot, timezone, or time changes.
      */
     fun rescheduleAlarmIfNeeded() {
         val config = getScheduledStartConfig() ?: return
@@ -371,7 +371,7 @@ class AutoStartManager(private val context: Context) {
     }
 
     // ═══════════════════════════════════════
-    // 触发记录（诊断用）
+    // Trigger records
     // ═══════════════════════════════════════
 
     private fun recordTrigger() {
@@ -383,7 +383,7 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 获取上次触发时间的可读字符串（供诊断界面展示）
+     * Get last trigger time for diagnostics.
      */
     fun getLastTriggerDisplay(): String? {
         val lastTrigger = prefs.getLong(KEY_LAST_TRIGGER_TIME, 0)
@@ -392,30 +392,30 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 获取累计触发次数
+     * Note.
      */
     fun getTriggerCount(): Long {
         return prefs.getLong(KEY_TRIGGER_COUNT, 0)
     }
 
     // ═══════════════════════════════════════
-    // 权限检查
+    // Note.
     // ═══════════════════════════════════════
 
     /**
-     * 检查是否可以设置精确闹钟
-     * Android 12 (API 31) 起需要 SCHEDULE_EXACT_ALARM 权限
+     * Note.
+     * Android 12 (API 31) SCHEDULE_EXACT_ALARM
      */
     fun canScheduleExactAlarms(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms()
         } else {
-            true // Android 11 及以下不需要特殊权限
+            true // Android 11
         }
     }
 
     /**
-     * 检查电池优化是否被忽略（即是否在白名单中）
+     * Check whether battery optimization is ignored.
      */
     fun isIgnoringBatteryOptimizations(): Boolean {
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -423,10 +423,9 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 检测当前 ROM 品牌，返回品牌特定的自启动管理 Activity Intent（如果有的话）
+     * Get OEM-specific auto-start settings intent if available.
      *
-     * 国产 ROM（小米/华为/OPPO/Vivo/一加/三星）都有自己的后台管理/自启动白名单界面，
-     * 系统闹钟和电池优化白名单往往不够，需要额外引导用户到品牌特定页面添加白名单。
+     * Some OEM ROMs require extra whitelist setup for background start.
      */
     fun getOemAutoStartIntent(): Intent? {
         val manufacturer = Build.MANUFACTURER.lowercase(Locale.ROOT)
@@ -503,7 +502,7 @@ class AutoStartManager(private val context: Context) {
     }
 
     /**
-     * 检测 OEM ROM 品牌名称（供 UI 显示）
+     * OEM ROM （ UI ）
      */
     fun getOemBrandName(): String? {
         val manufacturer = Build.MANUFACTURER.lowercase(Locale.ROOT)
@@ -520,11 +519,11 @@ class AutoStartManager(private val context: Context) {
     }
 
     // ═══════════════════════════════════════
-    // 工具方法
+    // Helper methods
     // ═══════════════════════════════════════
 
     /**
-     * 标准化时间格式为 HH:mm
+     * HH:mm
      */
     private fun normalizeTime(time: String): String {
         val parts = time.split(":")
@@ -539,8 +538,8 @@ class AutoStartManager(private val context: Context) {
 }
 
 /**
- * 定时启动配置
- * @property times 多时段启动时间列表（v2 新增，优先于 time）
+ * Note.
+ * @property times （v2 ， time）
  */
 data class ScheduledStartConfig(
     val appId: Long,

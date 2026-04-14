@@ -53,8 +53,8 @@ import androidx.compose.ui.graphics.Color
 import org.koin.compose.koinInject
 
 /**
- * 浏览器内核设置界面
- * 显示当前 WebView 信息、已安装的浏览器列表、推荐浏览器下载
+ * settings
+ * displaycurrent WebView, list, download
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,13 +64,13 @@ fun BrowserKernelScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    // WebView 信息
+    // WebView
     var webViewInfo by remember { mutableStateOf<WebViewInfo?>(null) }
     
-    // 已安装的浏览器
+    // Note
     var installedBrowsers by remember { mutableStateOf<List<BrowserInfo>>(emptyList()) }
     
-    // 引擎管理
+    // management
     val engineManager: EngineManager = koinInject()
     val geckoDownloader = remember { GeckoEngineDownloader(context, engineManager.fileManager) }
     val downloadState by geckoDownloader.downloadState.collectAsStateWithLifecycle()
@@ -78,13 +78,13 @@ fun BrowserKernelScreen(
     var geckoSize by remember { mutableLongStateOf(engineManager.getEngineSize(EngineType.GECKOVIEW)) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     
-    // Shields 隐私保护
+    // Shields
     val shields: BrowserShields = koinInject()
     val shieldsConfig by shields.config.collectAsStateWithLifecycle()
     val sessionStats by shields.stats.sessionStats.collectAsStateWithLifecycle()
     var shieldsExpanded by remember { mutableStateOf(false) }
     
-    // Load数据
+    // Load
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             webViewInfo = getWebViewInfo(context)
@@ -92,7 +92,7 @@ fun BrowserKernelScreen(
         }
     }
     
-    // 下载完成后刷新状态
+    // download refreshstate
     LaunchedEffect(downloadState) {
         if (downloadState is DownloadState.Completed) {
             geckoStatus = engineManager.getEngineStatus(EngineType.GECKOVIEW)
@@ -136,7 +136,7 @@ fun BrowserKernelScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ===== 内嵌浏览器引擎区域 =====
+            // ===== area =====
             item {
                 SectionHeader(
                     title = Strings.embeddedEngineTitle,
@@ -144,7 +144,7 @@ fun BrowserKernelScreen(
                 )
             }
             
-            // System WebView 卡片（默认，始终可用）
+            // System WebView card( default, always)
             item {
                 EngineCard(
                     name = Strings.engineSystemWebView,
@@ -157,7 +157,7 @@ fun BrowserKernelScreen(
                 )
             }
             
-            // GeckoView 引擎卡片
+            // GeckoView card
             item {
                 GeckoViewEngineCard(
                     status = geckoStatus,
@@ -181,7 +181,7 @@ fun BrowserKernelScreen(
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
             
-            // ===== Shields 隐私保护设置 =====
+            // ===== Shields settings =====
             item {
                 SectionHeader(
                     title = Strings.shieldsPrivacyProtection,
@@ -210,7 +210,7 @@ fun BrowserKernelScreen(
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
             
-            // ===== 当前 WebView 信息卡片 =====
+            // ===== current WebView card =====
             item {
                 CurrentWebViewCard(
                     webViewInfo = webViewInfo,
@@ -220,7 +220,7 @@ fun BrowserKernelScreen(
                 )
             }
             
-            // 已安装的浏览器
+            // Note
             item {
                 SectionHeader(
                     title = Strings.installedBrowsers,
@@ -273,7 +273,7 @@ fun BrowserKernelScreen(
                 }
             }
             
-            // 推荐浏览器下载
+            // download
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SectionHeader(
@@ -296,20 +296,20 @@ fun BrowserKernelScreen(
                 )
             }
             
-            // 帮助说明
+            // help
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 HelpCard()
             }
             
-            // 底部间距
+            // bottom
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
     
-    // 删除确认对话框
+    // delete dialog
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -337,7 +337,7 @@ fun BrowserKernelScreen(
 }
 
 /**
- * 当前 WebView 信息卡片
+ * current WebView card
  */
 @Composable
 private fun CurrentWebViewCard(
@@ -407,7 +407,7 @@ private fun CurrentWebViewCard(
 }
 
 /**
- * 信息行
+ * Note
  */
 @Composable
 private fun InfoRow(
@@ -435,7 +435,7 @@ private fun InfoRow(
 }
 
 /**
- * 区域标题
+ * area
  */
 @Composable
 private fun SectionHeader(
@@ -462,7 +462,7 @@ private fun SectionHeader(
 }
 
 /**
- * 通用引擎卡片
+ * card
  */
 @Composable
 private fun EngineCard(
@@ -549,7 +549,7 @@ private fun EngineCard(
 }
 
 /**
- * GeckoView 引擎卡片（带下载/删除/进度）
+ * GeckoView card( download/delete/)
  */
 @Composable
 private fun GeckoViewEngineCard(
@@ -582,7 +582,7 @@ private fun GeckoViewEngineCard(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
         
-        // 下载进度条
+        // download
         AnimatedVisibility(visible = downloadState is DownloadState.Downloading) {
             val progress = (downloadState as? DownloadState.Downloading)?.progress ?: 0f
             val message = (downloadState as? DownloadState.Downloading)?.message ?: ""
@@ -613,7 +613,7 @@ private fun GeckoViewEngineCard(
             }
         }
         
-        // 错误状态
+        // errorstate
         AnimatedVisibility(visible = downloadState is DownloadState.Error) {
             val errorMsg = (downloadState as? DownloadState.Error)?.message ?: ""
             EnhancedElevatedCard(
@@ -647,7 +647,7 @@ private fun GeckoViewEngineCard(
             Spacer(modifier = Modifier.height(4.dp))
         }
         
-        // 已下载信息
+        // download
         if (status is EngineStatus.DOWNLOADED) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -669,7 +669,7 @@ private fun GeckoViewEngineCard(
             Spacer(modifier = Modifier.height(8.dp))
         }
         
-        // 操作按钮
+        // button
         if (downloadState !is DownloadState.Downloading) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -707,7 +707,7 @@ private fun GeckoViewEngineCard(
 }
 
 /**
- * 格式化文件大小
+ * file
  */
 private fun formatFileSize(bytes: Long): String {
     return when {
@@ -718,7 +718,7 @@ private fun formatFileSize(bytes: Long): String {
 }
 
 /**
- * 已安装浏览器卡片
+ * card
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -737,7 +737,7 @@ private fun InstalledBrowserCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 浏览器图标
+            // icon
             if (browser.icon != null) {
                 Image(
                     bitmap = browser.icon.toBitmap().asImageBitmap(),
@@ -811,7 +811,7 @@ private fun InstalledBrowserCard(
 }
 
 /**
- * 推荐浏览器卡片
+ * card
  */
 @Composable
 private fun RecommendedBrowserCard(
@@ -829,7 +829,7 @@ private fun RecommendedBrowserCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 浏览器图标占位
+            // icon
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(8.dp),
@@ -877,7 +877,7 @@ private fun RecommendedBrowserCard(
                 }
             } else {
                 Row {
-                    // Play Store 下载按钮
+                    // Play Store downloadbutton
                     FilledTonalButton(
                         onClick = onDownload,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
@@ -891,7 +891,7 @@ private fun RecommendedBrowserCard(
                         Text(Strings.download, style = MaterialTheme.typography.labelMedium)
                     }
                     
-                    // Web page下载按钮（如果有下载链接）
+                    // Web pagedownloadbutton( if download)
                     if (browser.downloadUrl.isNotEmpty() && !browser.downloadUrl.startsWith("market://")) {
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
@@ -912,7 +912,7 @@ private fun RecommendedBrowserCard(
 }
 
 /**
- * 帮助卡片
+ * helpcard
  */
 @Composable
 private fun HelpCard() {
@@ -961,10 +961,10 @@ private fun HelpCard() {
     }
 }
 
-// ==================== Shields 设置卡片 ====================
+// ==================== Shields settingscard ====================
 
 /**
- * Shields 隐私保护设置卡片
+ * Shields settingscard
  */
 @Composable
 private fun ShieldsSettingsCard(
@@ -989,7 +989,7 @@ private fun ShieldsSettingsCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 头部：图标 + 标题 + 总开关
+            // header: icon + +
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -1036,7 +1036,7 @@ private fun ShieldsSettingsCard(
                 )
             }
             
-            // 会话统计概览
+            // session
             if (config.enabled && sessionStats.total > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
@@ -1058,7 +1058,7 @@ private fun ShieldsSettingsCard(
                 }
             }
             
-            // 展开/收起 详细设置
+            // expand/ settings
             if (config.enabled) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
@@ -1078,7 +1078,7 @@ private fun ShieldsSettingsCard(
                     Column {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                         
-                        // HTTPS 自动升级
+                        // HTTPS
                         ShieldToggleRow(
                             title = "HTTPS Everywhere",
                             subtitle = Strings.shieldsHttpsUpgradeDesc,
@@ -1087,7 +1087,7 @@ private fun ShieldsSettingsCard(
                             onCheckedChange = onToggleHttpsUpgrade
                         )
 
-                        // SSL 错误处理策略
+                        // SSL errorhandle
                         ShieldPolicySelector(
                             title = Strings.sslErrorPolicyTitle,
                             currentValue = config.sslErrorPolicy.displayName,
@@ -1097,7 +1097,7 @@ private fun ShieldsSettingsCard(
                             }
                         )
 
-                        // 跟踪器拦截
+                        // intercept
                         ShieldToggleRow(
                             title = Strings.shieldsTrackerBlocking,
                             subtitle = Strings.shieldsTrackerBlockingDesc,
@@ -1106,7 +1106,7 @@ private fun ShieldsSettingsCard(
                             onCheckedChange = onToggleTrackerBlocking
                         )
                         
-                        // Cookie 弹窗自动关闭
+                        // Cookie dialog close
                         ShieldToggleRow(
                             title = Strings.shieldsCookiePopup,
                             subtitle = Strings.shieldsCookiePopupDesc,
@@ -1115,7 +1115,7 @@ private fun ShieldsSettingsCard(
                             onCheckedChange = onToggleCookieConsent
                         )
                         
-                        // GPC 隐私信号
+                        // GPC
                         ShieldToggleRow(
                             title = "Global Privacy Control",
                             subtitle = Strings.shieldsGpcDesc,
@@ -1124,7 +1124,7 @@ private fun ShieldsSettingsCard(
                             onCheckedChange = onToggleGpc
                         )
                         
-                        // 阅读模式
+                        // mode
                         ShieldToggleRow(
                             title = Strings.shieldsReaderMode,
                             subtitle = Strings.shieldsReaderModeDesc,
@@ -1135,7 +1135,7 @@ private fun ShieldsSettingsCard(
                         
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         
-                        // 第三方 Cookie 策略
+                        // Cookie
                         ShieldPolicySelector(
                             title = Strings.shieldsThirdPartyCookiePolicy,
                             currentValue = config.thirdPartyCookiePolicy.displayName,
@@ -1147,7 +1147,7 @@ private fun ShieldsSettingsCard(
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Referrer 策略
+                        // Referrer
                         ShieldPolicySelector(
                             title = Strings.shieldsReferrerPolicy,
                             currentValue = config.referrerPolicy.displayName,
@@ -1164,7 +1164,7 @@ private fun ShieldsSettingsCard(
 }
 
 /**
- * Shield 单项开关行
+ * Shield
  */
 @Composable
 private fun ShieldToggleRow(
@@ -1220,7 +1220,7 @@ private fun ShieldToggleRow(
 }
 
 /**
- * Shield 策略选择器
+ * Shield select
  */
 @Composable
 private fun ShieldPolicySelector(
@@ -1286,7 +1286,7 @@ private fun ShieldPolicySelector(
 }
 
 /**
- * Shield 统计数字单元
+ * Shield
  */
 @Composable
 private fun ShieldStatItem(label: String, count: Int) {
@@ -1307,10 +1307,10 @@ private fun ShieldStatItem(label: String, count: Int) {
     }
 }
 
-// ==================== 数据类 ====================
+// Note
 
 /**
- * WebView 信息
+ * WebView
  */
 data class WebViewInfo(
     val providerName: String,
@@ -1319,7 +1319,7 @@ data class WebViewInfo(
 )
 
 /**
- * 已安装浏览器信息
+ * Note
  */
 data class BrowserInfo(
     val name: String,
@@ -1330,7 +1330,7 @@ data class BrowserInfo(
 )
 
 /**
- * 推荐浏览器
+ * Note
  */
 data class RecommendedBrowser(
     val name: String,
@@ -1341,11 +1341,11 @@ data class RecommendedBrowser(
     val brandColor: androidx.compose.ui.graphics.Color
 )
 
-// ==================== 推荐浏览器列表 ====================
+// ==================== list ====================
 
 /**
- * 获取推荐浏览器列表
- * 使用函数以便在运行时获取正确的多语言字符串
+ * list
+ * run
  */
 private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     RecommendedBrowser(
@@ -1390,10 +1390,10 @@ private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     )
 )
 
-// ==================== 工具函数 ====================
+// Note
 
 /**
- * 获取当前 WebView 信息
+ * current WebView
  */
 private fun getWebViewInfo(context: Context): WebViewInfo {
     return try {
@@ -1421,13 +1421,13 @@ private fun getDefaultWebViewInfo(): WebViewInfo {
 }
 
 /**
- * 获取已安装的浏览器列表
+ * list
  */
 private fun getInstalledBrowsers(context: Context): List<BrowserInfo> {
     val pm = context.packageManager
     val browsers = mutableListOf<BrowserInfo>()
     
-    // 查询所有可以处理 HTTP 请求的应用
+    // handle HTTP app
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"))
     val resolveInfoList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         pm.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_ALL.toLong()))
@@ -1436,7 +1436,7 @@ private fun getInstalledBrowsers(context: Context): List<BrowserInfo> {
         pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
     }
     
-    // WebView 提供者包名列表（这些浏览器可以作为 WebView 提供者）
+    // WebView list( WebView)
     val webViewProviderPackages = setOf(
         "com.android.chrome",
         "com.chrome.beta",
@@ -1452,7 +1452,7 @@ private fun getInstalledBrowsers(context: Context): List<BrowserInfo> {
     for (resolveInfo in resolveInfoList) {
         val packageName = resolveInfo.activityInfo.packageName
         
-        // 排除自身和系统应用选择器
+        // systemappselect
         if (packageName == context.packageName || 
             packageName == "android" ||
             packageName.contains("resolver") ||
@@ -1485,11 +1485,11 @@ private fun getInstalledBrowsers(context: Context): List<BrowserInfo> {
                 )
             )
         } catch (e: Exception) {
-            // 忽略无法获取信息的包
+            // Note
         }
     }
     
-    // 按名称排序，优先显示可作为 WebView 提供者的浏览器
+    // , preferdisplay WebView
     return browsers.sortedWith(
         compareByDescending<BrowserInfo> { it.canBeWebViewProvider }
             .thenBy { it.name }
@@ -1497,25 +1497,25 @@ private fun getInstalledBrowsers(context: Context): List<BrowserInfo> {
 }
 
 /**
- * 打开开发者选项
+ * open
  */
 private fun openDeveloperOptions(context: Context) {
     try {
         val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
         context.startActivity(intent)
     } catch (e: Exception) {
-        // 如果无法直接打开开发者选项，尝试打开设置
+        // if open, opensettings
         try {
             val intent = Intent(Settings.ACTION_SETTINGS)
             context.startActivity(intent)
         } catch (e2: Exception) {
-            // 忽略
+            // Note
         }
     }
 }
 
 /**
- * 打开应用
+ * openapp
  */
 private fun openApp(context: Context, packageName: String) {
     try {
@@ -1524,35 +1524,35 @@ private fun openApp(context: Context, packageName: String) {
             context.startActivity(intent)
         }
     } catch (e: Exception) {
-        // 忽略
+        // Note
     }
 }
 
 /**
- * 打开 Play Store
+ * open Play Store
  */
 private fun openPlayStore(context: Context, packageName: String) {
     try {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
         context.startActivity(intent)
     } catch (e: Exception) {
-        // 如果没有 Play Store，打开浏览器
+        // if Play Store, open
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
             context.startActivity(intent)
         } catch (e2: Exception) {
-            // 忽略
+            // Note
         }
     }
 }
 
 /**
- * 打开 URL
+ * open URL
  */
 private fun openUrl(context: Context, url: String) {
     try {
         context.openUrl(url)
     } catch (e: Exception) {
-        // 忽略
+        // Note
     }
 }

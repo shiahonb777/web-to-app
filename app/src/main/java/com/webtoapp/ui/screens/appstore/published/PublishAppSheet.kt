@@ -75,7 +75,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
-// 应用管理控制台 (Premium UI)
+// appmanagement( Premium UI)
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,7 +114,7 @@ internal fun PublishAppSheet(
     var uploadProgress by remember { mutableFloatStateOf(0f) }
     var uploadStatus by remember { mutableStateOf("") }
 
-    // ── 激活码配置 ──
+    // activation codeconfig
     var enableActivation by remember { mutableStateOf(false) }
     var enableDeviceBinding by remember { mutableStateOf(false) }
     var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -246,7 +246,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 选择应用 ──
+                // selectapp
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -532,7 +532,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 基本信息 ──
+                // Note
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -545,7 +545,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // 应用名称
+                // app
                 item {
                     OutlinedTextField(
                         value = name,
@@ -559,7 +559,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // 图标
+                // icon
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Icon preview
@@ -623,7 +623,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 分类
+                // Category
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -646,7 +646,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 版本
+                // Version
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
@@ -668,7 +668,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 包名
+                // Package name
                 item {
                     OutlinedTextField(
                         value = packageName,
@@ -681,7 +681,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // ── 描述和标签 ──
+                // ── Description and tags ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -719,7 +719,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // ── 截图 (多张) ──
+                // ── Screenshots (multiple) ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -732,7 +732,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // 已添加的截图预览
+                // Added screenshot previews
                 if (screenshotUris.isNotEmpty() || screenshotUrls.isNotEmpty()) {
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -808,7 +808,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 添加截图（从相册选择）
+                // Add screenshot (from gallery)
                 item {
                     Surface(
                         onClick = { screenshotPickerLauncher.launch("image/*") },
@@ -856,7 +856,7 @@ internal fun PublishAppSheet(
 
 
 
-                // ── 联系信息 ──
+                // ── Contact information ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -904,7 +904,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // ── 激活码配置区 ──
+                // ── Activation code settings ──
                 item {
                     EnhancedElevatedCard(
                         shape = RoundedCornerShape(16.dp),
@@ -933,7 +933,7 @@ internal fun PublishAppSheet(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
 
-                                // 设备绑定
+                                // Device binding
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -948,7 +948,7 @@ internal fun PublishAppSheet(
 
                                 HorizontalDivider()
 
-                                // 模板快速生成
+                                // Quick template generation
                                 Text("快速生成", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     listOf(
@@ -983,7 +983,7 @@ internal fun PublishAppSheet(
                                     }
                                 }
 
-                                // 自定义输入
+                                // Custom input
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1013,7 +1013,7 @@ internal fun PublishAppSheet(
                                     }
                                 }
 
-                                // 已添加的激活码列表
+                                // Added activation code list
                                 if (activationCodes.isNotEmpty()) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -1061,7 +1061,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 上传进度 ──
+                // ── Upload progress ──
                 if (isPublishing && uploadProgress > 0f) {
                     item {
                         Surface(
@@ -1126,7 +1126,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 关联团队 (可选) ──
+                // ── Linked team (optional) ──
                 if (myTeams.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -1331,7 +1331,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 发布按钮 ──
+                // ── Publish button ──
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(

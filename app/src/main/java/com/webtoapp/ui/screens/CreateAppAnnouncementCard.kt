@@ -25,8 +25,8 @@ import com.webtoapp.ui.components.announcement.AnnouncementTemplateSelector
 import com.webtoapp.ui.viewmodel.EditState
 
 /**
- * 公告设置卡片
- * 遵循项目统一 UI 规范：CollapsibleCardHeader + SettingsSwitch + PremiumTextField + PremiumFilterChip
+ * announcementsettingscard
+ * itemunified UI: CollapsibleCardHeader + SettingsSwitch + PremiumTextField +.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +37,7 @@ fun AnnouncementCard(
 ) {
     var showPreview by remember { mutableStateOf(false) }
 
-    // 预览弹窗
+    // previewdialog
     if (showPreview && (editState.announcement.title.isNotBlank() || editState.announcement.content.isNotBlank())) {
         AnnouncementDialog(
             config = AnnouncementConfig(
@@ -47,7 +47,7 @@ fun AnnouncementCard(
                 animationEnabled = editState.announcement.animationEnabled
             ),
             onDismiss = { showPreview = false },
-            onLinkClick = { /* 预览模式不处理链接 */ }
+            onLinkClick = { /* previewmode handle */ }
         )
     }
 
@@ -56,7 +56,7 @@ fun AnnouncementCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 头部：图标 + 标题 + 开关
+            // header: icon + +
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Campaign,
                 title = Strings.popupAnnouncement,
@@ -71,7 +71,7 @@ fun AnnouncementCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-                    // ── 模板选择器 ──
+                    // select
                     AnnouncementTemplateSelector(
                         selectedTemplate = AnnouncementTemplate.valueOf(
                             editState.announcement.template.name
@@ -89,7 +89,7 @@ fun AnnouncementCard(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
-                    // ── 公告标题 ──
+                    // announcement
                     PremiumTextField(
                         value = editState.announcement.title,
                         onValueChange = {
@@ -100,7 +100,7 @@ fun AnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // ── 公告内容 ──
+                    // announcementcontent
                     PremiumTextField(
                         value = editState.announcement.content,
                         onValueChange = {
@@ -121,7 +121,7 @@ fun AnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // ── 链接 URL ──
+                    // URL
                     PremiumTextField(
                         value = editState.announcement.linkUrl ?: "",
                         onValueChange = {
@@ -133,7 +133,7 @@ fun AnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // ── 链接按钮文字（仅当 URL 不为空时显示）──
+                    // button( onlywhen URL display)
                     AnimatedVisibility(
                         visible = !editState.announcement.linkUrl.isNullOrBlank()
                     ) {
@@ -153,7 +153,7 @@ fun AnnouncementCard(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
-                    // ── 显示频率 ──
+                    // display
                     Text(
                         Strings.displayFrequency,
                         style = MaterialTheme.typography.labelLarge
@@ -185,7 +185,7 @@ fun AnnouncementCard(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
-                    // ── 触发设置 ──
+                    // settings
                     Text(
                         Strings.announcementTriggerSettings,
                         style = MaterialTheme.typography.labelLarge
@@ -209,7 +209,7 @@ fun AnnouncementCard(
                         }
                     )
 
-                    // ── 定时间隔触发 ──
+                    // Note
                     var intervalExpanded by remember { mutableStateOf(false) }
                     val intervalOptions = listOf(0, 1, 3, 5, 10, 15, 30, 60)
 
@@ -293,7 +293,7 @@ fun AnnouncementCard(
                         }
                     }
 
-                    // 启动时也立即触发一次
+                    // Note
                     AnimatedVisibility(
                         visible = editState.announcement.triggerIntervalMinutes > 0
                     ) {
@@ -311,7 +311,7 @@ fun AnnouncementCard(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
-                    // ── 高级选项 ──
+                    // advanced
                     Text(
                         Strings.announcementAdvancedOptions,
                         style = MaterialTheme.typography.labelLarge
@@ -353,7 +353,7 @@ fun AnnouncementCard(
                         }
                     )
 
-                    // ── 预览按钮 ──
+                    // previewbutton
                     PremiumOutlinedButton(
                         onClick = { showPreview = true },
                         modifier = Modifier.fillMaxWidth(),

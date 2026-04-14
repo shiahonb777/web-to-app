@@ -11,21 +11,21 @@ import com.webtoapp.core.logging.AppLogger
 import org.json.JSONObject
 
 /**
- * Chrome Extension Background Script 运行时
+ * Chrome Extension Background Script when.
  *
- * 创建隐藏 WebView 运行扩展的 background script。
- * 使用 loadDataWithBaseURL 设置 origin（如 bilibili.com），使得：
- * - background script 的 fetch() 同源无 CORS 问题
- * - CookieManager 自动共享主 WebView 的 cookie（登录态）
+ * WebView extension background script.
+ * use loadDataWithBaseURL origin .
+ * - background script fetch() CORS issue.
+ * - CookieManager WebView cookie.
  *
- * 消息桥接：
- * Content script → WtaExtBridge.postMessageToBackground() → 隐藏 WebView 触发 onMessage
- * Background script → WtaExtBridge.postMessageToContent() → 主 WebView 回调 resolve
+ * .
+ * Content script WtaExtBridge.postMessageToBackground() WebView onMessage.
+ * Background script WtaExtBridge.postMessageToContent() WebView resolve.
  */
 class ChromeExtensionRuntime(
     private val context: Context,
     private val extensionId: String,
-    private val backgroundScriptPath: String, // 相对路径, e.g. "background/index.js"
+    private val backgroundScriptPath: String, // e.g. background/index.js.
     private val originUrl: String
 ) {
     companion object {
@@ -38,10 +38,10 @@ class ChromeExtensionRuntime(
     private var isInitialized = false
 
     /**
-     * 初始化 background 运行时。
-     * 必须在主线程调用。
+     * background when .
+     * in use .
      *
-     * @param mainWebView 主 WebView（content script 侧）
+     * @param mainWebView WebView.
      */
     @SuppressLint("SetJavaScriptEnabled")
     fun initialize(mainWebView: WebView) {
@@ -58,13 +58,13 @@ class ChromeExtensionRuntime(
                 }
             }
 
-            // Cookie 共享 — CookieManager 全局单例，自动共享
+            // Cookie CookieManager single .
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
-            // 注册 native bridge（background → content 方向）
+            // native bridge.
             addJavascriptInterface(BackgroundBridge(), JS_BRIDGE_NAME)
 
-            // WebViewClient：拦截 chrome-extension:// URL + 日志
+            // WebViewClientintercept chrome-extension:// URL +.
             webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(
                     view: WebView?,
@@ -94,13 +94,13 @@ class ChromeExtensionRuntime(
             }
         }
 
-        // 生成 background 模式的 polyfill
+        // background polyfill.
         val polyfill = ChromeExtensionPolyfill.generatePolyfill(
             extensionId = extensionId,
             isBackground = true
         )
 
-        // 构建 HTML shell：先注入 polyfill，再通过 <script src> 加载 background script
+        // HTML shell polyfill <script src> background script.
         val html = buildBackgroundHtml(polyfill)
         bgWebView.loadDataWithBaseURL(originUrl, html, "text/html", "UTF-8", null)
 
@@ -110,11 +110,11 @@ class ChromeExtensionRuntime(
     }
 
     /**
-     * 构建 background 页面 HTML
+     * background HTML.
      */
     private fun buildBackgroundHtml(polyfill: String): String {
-        // 使用 chrome-extension:// URL 引用 background script
-        // ExtensionResourceInterceptor 会拦截并从 assets 返回真实文件
+        // use chrome-extension:// URL use background script.
+        // ExtensionResourceInterceptor intercept and from assets.
         val scriptUrl = "chrome-extension://$extensionId/$backgroundScriptPath"
         return """<!DOCTYPE html>
 <html>
@@ -129,9 +129,9 @@ $polyfill
     }
 
     /**
-     * 将消息从 content script 投递到 background script。
-     * 由主 WebView 的 ContentExtensionBridge 调用。
-     * 可在任何线程调用（内部 post 到主线程）。
+     * from content script to background script.
+     * WebView ContentExtensionBridge use .
+     * can in use .
      */
     fun deliverToBackground(msgJson: String) {
         val bgWebView = backgroundWebView ?: return
@@ -145,9 +145,9 @@ $polyfill
     }
 
     /**
-     * 将响应从 background script 投递回 content script。
-     * 由 BackgroundBridge 调用。
-     * 可在任何线程调用（内部 post 到主线程）。
+     * from background script content script.
+     * BackgroundBridge use .
+     * can in use .
      */
     fun deliverToContent(responseJson: String) {
         val mWebView = mainWebView ?: return
@@ -161,8 +161,8 @@ $polyfill
     }
 
     /**
-     * 将消息从 background script 投递到 content script（tabs.sendMessage 方向）。
-     * 由 BackgroundBridge.sendMessageToTab() 调用。
+     * from background script to content script.
+     * BackgroundBridge.sendMessageToTab() use .
      */
     fun deliverMessageToContent(msgJson: String) {
         val mWebView = mainWebView ?: return
@@ -176,7 +176,7 @@ $polyfill
     }
 
     /**
-     * 将 Port 消息投递到 background script。
+     * Port to background script.
      */
     fun deliverPortMessageToBackground(msgJson: String) {
         val bgWebView = backgroundWebView ?: return
@@ -190,7 +190,7 @@ $polyfill
     }
 
     /**
-     * 将 Port 消息投递到 content script。
+     * Port to content script.
      */
     fun deliverPortMessageToContent(msgJson: String) {
         val mWebView = mainWebView ?: return
@@ -204,7 +204,7 @@ $polyfill
     }
 
     /**
-     * 将 Port 断开通知投递到 background script。
+     * Port to background script.
      */
     fun deliverPortDisconnectToBackground(portId: String) {
         val bgWebView = backgroundWebView ?: return
@@ -218,7 +218,7 @@ $polyfill
     }
 
     /**
-     * 将 Port 断开通知投递到 content script。
+     * Port to content script.
      */
     fun deliverPortDisconnectToContent(portId: String) {
         val mWebView = mainWebView ?: return
@@ -232,7 +232,7 @@ $polyfill
     }
 
     /**
-     * 销毁 background WebView，释放资源
+     * background WebViewRelease.
      */
     fun destroy() {
         backgroundWebView?.let { wv ->
@@ -248,9 +248,9 @@ $polyfill
     }
 
     /**
-     * Background WebView 侧的 native bridge。
-     * Background script 通过 WtaExtBridge.postMessageToContent() 发送响应。
-     * 通过 WtaExtBridge.nativeFetch() 无 CORS 限制地发起 HTTP 请求。
+     * Background WebView native bridge.
+     * Background script WtaExtBridge.postMessageToContent() .
+     * WtaExtBridge.nativeFetch() CORS HTTP request.
      */
     inner class BackgroundBridge {
         @JavascriptInterface
@@ -269,9 +269,9 @@ $polyfill
         }
 
         /**
-         * 通过 Android HttpURLConnection 发起 HTTP 请求，绕过 CORS 限制。
-         * 自动携带和保存 cookie。
-         * @return JSON 字符串 {ok, status, statusText, headers, body}
+         * Android HttpURLConnection HTTP request CORS .
+         * Save cookie.
+         * @return JSON {ok, status, statusText, headers, body}.
          */
         @JavascriptInterface
         fun nativeFetch(url: String, method: String, headersJson: String, body: String): String {
@@ -279,8 +279,8 @@ $polyfill
         }
 
         /**
-         * 获取指定 URL 的所有 cookie。
-         * @return cookie 字符串（"name1=value1; name2=value2"）
+         * Get URL cookie.
+         * @return cookie "name1=value1; name2=value2".
          */
         @JavascriptInterface
         fun getCookies(url: String): String {
@@ -288,9 +288,9 @@ $polyfill
         }
 
         /**
-         * 设置 cookie。
-         * @param url 目标 URL
-         * @param cookie cookie 字符串（如 "name=value; domain=.bilibili.com"）
+         * cookie.
+         * @param url URL.
+         * @param cookie cookie.
          */
         @JavascriptInterface
         fun setCookieValue(url: String, cookie: String) {
@@ -409,9 +409,9 @@ $polyfill
 }
 
 /**
- * 主 WebView（content script 侧）的 native bridge。
- * Content script 通过 WtaExtBridge.postMessageToBackground() 发送消息。
- * 通过 WtaExtBridge.nativeFetch() 无 CORS 限制地发起 HTTP 请求。
+ * WebView native bridge.
+ * Content script WtaExtBridge.postMessageToBackground() .
+ * WtaExtBridge.nativeFetch() CORS HTTP request.
  */
 class ContentExtensionBridge(
     private val runtimes: Map<String, ChromeExtensionRuntime>
@@ -423,7 +423,7 @@ class ContentExtensionBridge(
     }
 
     /**
-     * 通过 Android HttpURLConnection 发起 HTTP 请求，绕过 CORS。
+     * Android HttpURLConnection HTTP request CORS.
      */
     @JavascriptInterface
     fun nativeFetch(url: String, method: String, headersJson: String, body: String): String {
@@ -528,10 +528,10 @@ class ContentExtensionBridge(
 }
 
 /**
- * 通过 Android HttpURLConnection 执行 HTTP 请求，绕过 CORS 限制。
- * 自动携带和保存 CookieManager 中的 cookie。
+ * Android HttpURLConnection HTTP request CORS .
+ * Save CookieManager in cookie.
  *
- * @return JSON 字符串 {ok, status, statusText, headers, body}
+ * @return JSON {ok, status, statusText, headers, body}.
  */
 internal fun performNativeFetch(
     url: String,
@@ -547,13 +547,13 @@ internal fun performNativeFetch(
         connection.readTimeout = 30000
         connection.instanceFollowRedirects = true
 
-        // 从 CookieManager 获取 cookie
+        // from CookieManager Get cookie.
         val cookies = android.webkit.CookieManager.getInstance().getCookie(url)
         if (!cookies.isNullOrEmpty()) {
             connection.setRequestProperty("Cookie", cookies)
         }
 
-        // 自定义请求头
+        // request.
         try {
             val headers = org.json.JSONObject(headersJson)
             val iter = headers.keys()
@@ -563,7 +563,7 @@ internal fun performNativeFetch(
             }
         } catch (e: Exception) { AppLogger.w("ChromeExtRuntime", "Failed to parse custom request headers", e) }
 
-        // 默认 Referer / Origin
+        // Referer / Origin.
         if (refererOrigin != null) {
             if (connection.getRequestProperty("Referer") == null) {
                 connection.setRequestProperty("Referer", refererOrigin)
@@ -573,7 +573,7 @@ internal fun performNativeFetch(
             }
         }
 
-        // 发送请求体
+        // request.
         if (body.isNotEmpty() && method.uppercase() in listOf("POST", "PUT", "PATCH")) {
             connection.doOutput = true
             connection.outputStream.use { it.write(body.toByteArray()) }
@@ -582,7 +582,6 @@ internal fun performNativeFetch(
         val status = connection.responseCode
         val statusText = connection.responseMessage ?: ""
 
-        // 响应头
         val respHeaders = org.json.JSONObject()
         connection.headerFields?.forEach { (key, values) ->
             if (key != null && values.isNotEmpty()) {
@@ -590,13 +589,12 @@ internal fun performNativeFetch(
             }
         }
 
-        // 响应体
         val respBody = try {
             (if (status >= 400) connection.errorStream else connection.inputStream)
                 ?.bufferedReader()?.readText() ?: ""
         } catch (_: Exception) { "" }
 
-        // 保存响应中的 Set-Cookie
+        // Save in Set-Cookie.
         connection.headerFields?.get("Set-Cookie")?.forEach { cookie ->
             android.webkit.CookieManager.getInstance().setCookie(url, cookie)
         }
@@ -624,8 +622,8 @@ internal fun performNativeFetch(
 }
 
 /**
- * 从扩展的 URL 匹配规则推导 origin URL。
- * 用于 loadDataWithBaseURL 设置 background WebView 的 origin。
+ * from extension URL rules origin URL.
+ * use loadDataWithBaseURL background WebView origin.
  */
 fun deriveOriginUrl(urlMatches: List<UrlMatchRule>): String {
     val firstMatch = urlMatches.firstOrNull { !it.exclude }?.pattern ?: return "about:blank"

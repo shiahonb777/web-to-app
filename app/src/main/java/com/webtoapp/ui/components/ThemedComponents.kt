@@ -31,14 +31,14 @@ import com.webtoapp.ui.theme.*
 import androidx.compose.animation.core.Spring
 
 /**
- * 主题化组件
- * 根据当前主题应用不同的视觉效果
+ * Note
+ * current app
  */
 
-// ==================== 主题化背景修饰符 ====================
+// Note
 
 /**
- * 为 Modifier 添加主题纯色背景
+ * Modifier
  */
 @Composable
 fun Modifier.themedBackground(): Modifier {
@@ -57,12 +57,12 @@ fun Modifier.themedBackground(): Modifier {
 }
 
 /**
- * 主题背景容器 — 使用渐变背景
+ * gradient
  *
- * 用法：
+ * Note
  * ```
  * ThemedBackgroundBox(modifier = Modifier.fillMaxSize()) {
- *     // 你的页面内容
+ * // content
  * }
  * ```
  */
@@ -78,7 +78,7 @@ fun ThemedBackgroundBox(
 
 
 /**
- * 获取当前主题的卡片圆角形状
+ * current card
  */
 @Composable
 fun themedCardShape(): RoundedCornerShape {
@@ -87,7 +87,7 @@ fun themedCardShape(): RoundedCornerShape {
 }
 
 /**
- * 获取当前主题的按钮圆角形状
+ * current button
  */
 @Composable
 fun themedButtonShape(): RoundedCornerShape {
@@ -95,10 +95,10 @@ fun themedButtonShape(): RoundedCornerShape {
     return RoundedCornerShape(theme.shapes.buttonRadius)
 }
 
-// ==================== 主题化按钮 ====================
+// ==================== button ====================
 
 /**
- * 渐变按钮 - 根据主题动画风格应用不同效果
+ * gradientbutton- animation app
  */
 @Composable
 fun GradientButton(
@@ -114,7 +114,7 @@ fun GradientButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    // iOS 26 风格 spring 回弹缩放
+    // iOS 26 spring
     val scale by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled) {
             when (theme.animationStyle) {
@@ -132,7 +132,7 @@ fun GradientButton(
         label = "buttonScale"
     )
     
-    // 发光动画
+    // animation
     val glowAlpha by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled && theme.effects.enableGlow) 0.5f else 0.3f,
         animationSpec = tween(150),
@@ -185,7 +185,7 @@ fun GradientButton(
 }
 
 /**
- * 发光按钮
+ * button
  */
 @Composable
 fun GlowingButton(
@@ -232,11 +232,11 @@ fun GlowingButton(
     }
 }
 
-// ==================== 主题化卡片 ====================
+// ==================== card ====================
 
 /**
- * 玻璃拟态卡片 — iOS 26 液态玻璃风格
- * 使用 liquidGlass Modifier 实现真正的高斯模糊毛玻璃效果
+ * card- iOS 26
+ * liquidGlass Modifier
  */
 @Composable
 fun GlassmorphicCard(
@@ -267,7 +267,7 @@ fun GlassmorphicCard(
 }
 
 /**
- * 渐变边框卡片
+ * gradient card
  */
 @Composable
 fun GradientBorderCard(
@@ -300,7 +300,7 @@ fun GradientBorderCard(
 }
 
 /**
- * 悬浮卡片 — iOS 26 风格：spring 回弹缩放 + 柔和阴影
+ * card- iOS 26: spring +
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -316,7 +316,7 @@ fun FloatingCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    // iOS 26 spring 回弹
+    // iOS 26 spring
     val scale by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled) 0.96f else 1f,
         animationSpec = spring(
@@ -326,7 +326,7 @@ fun FloatingCard(
         label = "floatingScale"
     )
     
-    // 阴影随按压变化
+    // Note
     val elevation by animateFloatAsState(
         targetValue = if (isPressed) 2f else 8f,
         animationSpec = spring(
@@ -376,10 +376,10 @@ fun FloatingCard(
     }
 }
 
-// ==================== 主题化背景 ====================
+// Note
 
 /**
- * 渐变背景
+ * gradient
  */
 @Composable
 fun GradientBackground(
@@ -399,7 +399,7 @@ fun GradientBackground(
 }
 
 /**
- * 动态渐变背景
+ * gradient
  */
 @Composable
 fun AnimatedGradientBackground(
@@ -444,10 +444,10 @@ fun AnimatedGradientBackground(
     )
 }
 
-// ==================== 主题化指示器 ====================
+// ==================== indicator ====================
 
 /**
- * 主题化加载指示器
+ * loadindicator
  */
 @Composable
 fun ThemedLoadingIndicator(
@@ -475,7 +475,7 @@ fun ThemedLoadingIndicator(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // 发光效果
+        // Note
         if (theme.effects.enableGlow && animSettings.enabled) {
             Box(
                 modifier = Modifier
@@ -507,7 +507,7 @@ fun ThemedLoadingIndicator(
 }
 
 /**
- * 脉冲点指示器
+ * indicator
  */
 @Composable
 fun PulsingDotIndicator(
@@ -549,10 +549,10 @@ fun PulsingDotIndicator(
     }
 }
 
-// ==================== 主题化分隔线 ====================
+// Note
 
 /**
- * 渐变分隔线
+ * gradient
  */
 @Composable
 fun GradientDivider(
@@ -576,10 +576,10 @@ fun GradientDivider(
     )
 }
 
-// ==================== 主题化徽章 ====================
+// Note
 
 /**
- * 发光徽章
+ * Note
  */
 @Composable
 fun GlowingBadge(

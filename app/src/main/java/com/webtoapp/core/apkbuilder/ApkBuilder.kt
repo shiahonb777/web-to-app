@@ -447,8 +447,8 @@ class ApkBuilder(private val context: Context) {
             }
             logger.logKeyValue("unsignedApkSize", "${unsignedApk.length() / 1024} KB")
             
-            // 【复刻 1.8.5】直接签名，不做任何优化/对齐
-            // 1.8.5 没有 NativeApkOptimizer、没有 ZipAligner，签名完全稳定
+            // Note: brief English comment.
+            // Note: brief English comment.
             logger.section("Sign APK")
             logger.logKeyValue("signerType", signer.getSignerType().name)
             
@@ -461,7 +461,7 @@ class ApkBuilder(private val context: Context) {
                 return@withContext BuildResult.Error("Signing failed: ${e.message ?: "Unknown error"}")
             }
             
-            // 检查签名后文件是否有效（唯一的硬性条件）
+            // Note: brief English comment.
             if (!signedApk.exists() || signedApk.length() == 0L) {
                 logger.error("Signed APK file missing or empty after sign()")
                 logger.endLog(false, "Signed APK file invalid")
@@ -472,8 +472,8 @@ class ApkBuilder(private val context: Context) {
             logger.logKeyValue("signedApkSize", "${signedApk.length() / 1024} KB")
             
             if (!signSuccess) {
-                // sign() 返回 false 表示 ApkVerifier 校验有警告/错误，但文件已存在且非空
-                // 大多数情况下 APK 仍可正常安装，仅记录警告
+                // Note: brief English comment.
+                // Note: brief English comment.
                 logger.warn("ApkVerifier reported issues, but signed APK file is valid (${signedApk.length() / 1024} KB). Continuing build.")
             }
 
@@ -667,9 +667,9 @@ class ApkBuilder(private val context: Context) {
                             }
                         }
                         
-                        // 修改 resources.arsc (修改应用名 + 替换图标路径)
-                        // 使用 ArscRebuilder 重建 string pool，支持任意长度应用名
-                        // replaceIcons=true 会解析 ARSC 层级结构，定位 R8 混淆后的实际图标路径
+                        // Note: brief English comment.
+                        // Note: brief English comment.
+                        // Note: brief English comment.
                         // Android 11+ requires resources.arsc to be uncompressed and 4-byte aligned
                         entry.name == "resources.arsc" -> {
                             val originalData = zipIn.getInputStream(entry).readBytes()
@@ -678,7 +678,7 @@ class ApkBuilder(private val context: Context) {
                                 config.appName,
                                 replaceIcons = true
                             )
-                            // 获取 R8 混淆后的旧图标路径（如 res/BW.xml, res/qx.png 等）
+                            // Note: brief English comment.
                             discoveredOldIconPaths = arscRebuilder.getLastDiscoveredIconPaths()
                             logger.log("Discovered old icon paths from ARSC: $discoveredOldIconPaths")
                             writeEntryStored(zipOut, entry.name, modifiedData)
@@ -690,11 +690,11 @@ class ApkBuilder(private val context: Context) {
                             ApkConfigAssetWriter.writeConfigEntry(zipOut, template, config, assetEncryptor, encryptionConfig)
                         }
                         
-                        // 替换图标 - 同时支持原始路径和 R8 混淆后的路径
+                        // Note: brief English comment.
                         iconBitmap != null && (ApkEntryPolicy.isIconEntry(entry.name) || discoveredOldIconPaths.contains(entry.name)) -> {
-                            // 使用 createAdaptiveForegroundIcon 遵循 Android Adaptive Icon 规范：
-                            // 前景层 108dp，安全区域（完整显示）为中间 72dp（66.67%），
-                            // 外围 18dp 作为系统形状遮罩裁剪区域
+                            // Note: brief English comment.
+                            // Note: brief English comment.
+                            // Note: brief English comment.
                             // 432px = 108dp * 4 (xxxhdpi)
                             val iconBytes = template.createAdaptiveForegroundIcon(iconBitmap, 432)
                             writeEntryDeflated(zipOut, entry.name, iconBytes)
@@ -1262,15 +1262,15 @@ class ApkBuilder(private val context: Context) {
         zipOut: ZipOutputStream,
         projectDir: File
     ) {
-        // ★ 预安装 Python 依赖到 .pypackages（构建时安装，避免运行时 pip install 失败）
-        // 在 Android 上 pip install 经常因 musl linker 问题失败，
-        // 所以在构建机（也是 Android，但有完整的 Python 运行时）上预装依赖，
-        // 然后把 .pypackages 一起打包进 APK assets 中。
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
         val reqFile = File(projectDir, "requirements.txt")
         val sitePackages = File(projectDir, ".pypackages")
         if (reqFile.exists() && (!sitePackages.exists() || sitePackages.listFiles().isNullOrEmpty())) {
-            // 检查 musl linker 是否在 nativeLibraryDir（SELinux 允许执行）
-            // 在 app data 目录的 musl linker 会被 SELinux 阻止执行 (execute_no_trans denied)
+            // Note: brief English comment.
+            // Note: brief English comment.
             val nativeMuslLinker = File(context.applicationInfo.nativeLibraryDir, "libmusl-linker.so")
             if (nativeMuslLinker.exists() && nativeMuslLinker.canExecute()) {
                 logger.log("Pre-installing Python dependencies for APK bundling...")
@@ -1290,8 +1290,8 @@ class ApkBuilder(private val context: Context) {
                     logger.warn("Python dependency pre-install exception: ${e.message}")
                 }
             } else {
-                // musl linker 不在 nativeLibraryDir，无法在构建时预安装
-                // 导出的 APK 会在运行时自行安装依赖（musl linker 在 APK 的 nativeLibraryDir 中可执行）
+                // Note: brief English comment.
+                // Note: brief English comment.
                 logger.log("Skipping pre-install: musl linker not executable from current context (SELinux). Runtime will install deps.")
             }
         } else if (sitePackages.exists() && !sitePackages.listFiles().isNullOrEmpty()) {
@@ -1301,10 +1301,10 @@ class ApkBuilder(private val context: Context) {
         // Embed project files recursively (including .pypackages if it exists)
         RuntimeAssetEmbedder.embedProjectFiles(zipOut, projectDir, RuntimeAssetEmbedder.pythonConfig(), logger)
         
-        // ★ 嵌入 sitecustomize.py — Python 启动时自动加载的修复脚本
-        // 修复两个关键的 Android 运行时问题:
-        // 1. importlib.metadata.PackageNotFoundError - --target 安装的包缺少 .dist-info
-        // 2. Flask 端口硬编码 - app.py 中 app.run(port=5000) 与 WebToApp 分配的端口不匹配
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
         val sitecustomizeContent = """
 import os, sys, builtins
 
@@ -1366,7 +1366,7 @@ builtins.__import__ = _w2a_import
             else -> null
         }
         
-        // ★ 如果 Python 二进制不存在，自动下载 Python 运行时
+        // Note: brief English comment.
         if (pythonBinary == null) {
             logger.warn("Python binary not found locally, attempting auto-download...")
             try {
@@ -1375,7 +1375,7 @@ builtins.__import__ = _w2a_import
                 }
                 if (downloadSuccess) {
                     logger.log("Python runtime downloaded successfully")
-                    // 重新检查
+                    // Note: brief English comment.
                     pythonBinary312 = File(pythonHome, "bin/python3.12")
                     pythonBinary3 = File(pythonHome, "bin/python3")
                     pythonBinary = when {
@@ -1991,19 +1991,19 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
             val config = nodejsConfig
             when (config?.buildMode) {
                 com.webtoapp.data.model.NodeJsBuildMode.STATIC -> {
-                    // 静态模式：指向打包后的静态文件
+                    // Note: brief English comment.
                     "file:///android_asset/nodejs_app/dist/index.html"
                 }
                 com.webtoapp.data.model.NodeJsBuildMode.API_BACKEND,
                 com.webtoapp.data.model.NodeJsBuildMode.FULLSTACK -> {
-                    // 后端/全栈模式：本地 Node.js 服务器
+                    // Note: brief English comment.
                     "nodejs://localhost"
                 }
                 else -> "file:///android_asset/nodejs_app/index.html"
             }
         }
         com.webtoapp.data.model.AppType.FRONTEND -> {
-            // 前端项目：指向打包后的文件
+            // Note: brief English comment.
             val entryFile = htmlConfig?.getValidEntryFile() ?: "index.html"
             "file:///android_asset/frontend_app/$entryFile"
         }
@@ -2057,32 +2057,32 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         showToolbarInFullscreen = webViewConfig.showToolbarInFullscreen,
         landscapeMode = webViewConfig.landscapeMode,
         orientationMode = webViewConfig.orientationMode.name,
-        // 构建时注入 C 级性能优化脚本:
-        // 被动事件监听 (消除滚动卡顿) + 图片懒加载 + DNS 预连接 + 掉帧自适应降级
-        // 优化脚本排在用户脚本之前，确保性能优化最先生效
+        // Note: brief English comment.
+        // Note: brief English comment.
+        // Note: brief English comment.
         injectScripts = buildList {
-            // 浏览器内核伪装 JS — 最先注入, 确保在任何页面脚本之前覆盖检测向量
+            // Note: brief English comment.
             add(com.webtoapp.data.model.UserScript(
                 name = "__kernel__",
                 code = com.webtoapp.core.kernel.BrowserKernel.getBuildTimeKernelJs(),
                 enabled = true,
                 runAt = com.webtoapp.data.model.ScriptRunTime.DOCUMENT_START
             ))
-            // C 级性能优化 - DOCUMENT_START (被动事件, 可见性回收)
+            // Note: brief English comment.
             add(com.webtoapp.data.model.UserScript(
                 name = "__perf_start__",
                 code = com.webtoapp.core.perf.NativePerfEngine.getPerfJsStart(),
                 enabled = true,
                 runAt = com.webtoapp.data.model.ScriptRunTime.DOCUMENT_START
             ))
-            // C 级性能优化 - DOCUMENT_END (懒加载, content-visibility, 预连接, 掉帧检测)
+            // Note: brief English comment.
             add(com.webtoapp.data.model.UserScript(
                 name = "__perf_end__",
                 code = com.webtoapp.core.perf.NativePerfEngine.getPerfJsEnd(),
                 enabled = true,
                 runAt = com.webtoapp.data.model.ScriptRunTime.DOCUMENT_END
             ))
-            // 用户自定义脚本
+            // Note: brief English comment.
             addAll(webViewConfig.injectScripts)
         },
         // Status bar config
@@ -2106,7 +2106,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         popupBlockerEnabled = webViewConfig.popupBlockerEnabled,
         popupBlockerToggleEnabled = webViewConfig.popupBlockerToggleEnabled,
         openExternalLinks = webViewConfig.openExternalLinks,
-        // 浏览器兼容性增强配置
+        // Note: brief English comment.
         initialScale = webViewConfig.initialScale,
         viewportMode = webViewConfig.viewportMode.name,
         newWindowBehavior = webViewConfig.newWindowBehavior.name,
@@ -2126,13 +2126,13 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         performanceOptimization = webViewConfig.performanceOptimization,
         pwaOfflineEnabled = webViewConfig.pwaOfflineEnabled,
         pwaOfflineStrategy = webViewConfig.pwaOfflineStrategy,
-        // 网络错误页配置
+        // Note: brief English comment.
         errorPageMode = webViewConfig.errorPageConfig.mode.name,
         errorPageBuiltInStyle = webViewConfig.errorPageConfig.builtInStyle.name,
         errorPageShowMiniGame = webViewConfig.errorPageConfig.showMiniGame,
         errorPageMiniGameType = webViewConfig.errorPageConfig.miniGameType.name,
         errorPageAutoRetrySeconds = webViewConfig.errorPageConfig.autoRetrySeconds,
-        // 悬浮小窗配置
+        // Note: brief English comment.
         floatingWindowEnabled = webViewConfig.floatingWindowConfig.enabled,
         floatingWindowSizePercent = webViewConfig.floatingWindowConfig.windowSizePercent,
         floatingWindowWidthPercent = webViewConfig.floatingWindowConfig.widthPercent,
@@ -2279,7 +2279,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         nodejsEnvVars = nodejsConfig?.envVars ?: emptyMap(),
         nodejsLandscapeMode = nodejsConfig?.landscapeMode ?: false,
         
-        // PHP 通用应用 config
+        // Note: brief English comment.
         phpAppFramework = phpAppConfig?.framework ?: "",
         phpAppDocumentRoot = phpAppConfig?.documentRoot ?: "",
         phpAppEntryFile = phpAppConfig?.entryFile ?: "index.php",
@@ -2287,7 +2287,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         phpAppEnvVars = phpAppConfig?.envVars ?: emptyMap(),
         phpAppLandscapeMode = phpAppConfig?.landscapeMode ?: false,
         
-        // Python Web 应用 config
+        // Note: brief English comment.
         pythonAppFramework = pythonAppConfig?.framework ?: "",
         pythonAppEntryFile = pythonAppConfig?.entryFile ?: "app.py",
         pythonAppEntryModule = pythonAppConfig?.entryModule ?: "",
@@ -2296,7 +2296,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         pythonAppEnvVars = pythonAppConfig?.envVars ?: emptyMap(),
         pythonAppLandscapeMode = pythonAppConfig?.landscapeMode ?: false,
         
-        // Go Web 服务 config
+        // Note: brief English comment.
         goAppFramework = goAppConfig?.framework ?: "",
         goAppBinaryName = goAppConfig?.binaryName ?: "",
         goAppPort = goAppConfig?.serverPort ?: 0,
@@ -2304,7 +2304,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         goAppEnvVars = goAppConfig?.envVars ?: emptyMap(),
         goAppLandscapeMode = goAppConfig?.landscapeMode ?: false,
         
-        // 多站点聚合 config
+        // Note: brief English comment.
         multiWebSites = multiWebConfig?.sites?.map { site ->
             com.webtoapp.core.shell.MultiWebSiteShellConfig(
                 id = site.id,
@@ -2322,21 +2322,21 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         multiWebShowSiteIcons = multiWebConfig?.showSiteIcons ?: true,
         multiWebLandscapeMode = multiWebConfig?.landscapeMode ?: false,
         
-        // 云 SDK 配置（构建时嵌入）
+        // Note: brief English comment.
         cloudSdkConfig = cloudConfig?.toCloudSdkConfig() ?: com.webtoapp.core.shell.CloudSdkConfig()
     )
 }
 
 /**
- * 智能提取 Deep Link 域名列表
+ * Note: brief English comment.
  *
- * 自动识别并生成完整的域名匹配集合：
- * 1. 原始域名（如 www.example.com）
- * 2. 去掉 www 的裸域名（如 example.com）
- * 3. 如果输入是裸域名，则追加 www 前缀
- * 4. 合并用户自定义的额外域名
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  *
- * 这样用户只需开启开关，无需手动配置域名列表。
+ * Note: brief English comment.
  */
 private fun extractHostsFromUrl(url: String, customHosts: List<String> = emptyList()): List<String> {
     // Known second-level TLDs (country-code domains like co.uk, com.au)

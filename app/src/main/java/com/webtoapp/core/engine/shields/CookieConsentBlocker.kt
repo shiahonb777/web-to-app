@@ -1,20 +1,20 @@
 package com.webtoapp.core.engine.shields
 
 /**
- * CookieConsentBlocker — 自动关闭 Cookie 同意弹窗
+ * auto.
  *
- * 策略：
- * 1. CSS 隐藏：立即隐藏已知的 Cookie 弹窗容器
- * 2. JS 自动点击：尝试点击"拒绝全部"/"仅必要 Cookie" 按钮
- * 3. MutationObserver：持续监听动态加载的弹窗
+ * Note.
+ * CSS Cookie.
+ * auto.
+ * load.
  *
- * 覆盖 50+ 常见 Cookie 同意管理框架
+ * Cookie.
  */
 class CookieConsentBlocker {
 
     /**
-     * 生成 Cookie 弹窗拦截脚本
-     * 在 DOCUMENT_END 时注入
+     * generate script blocker.
+     * DOCUMENT_END.
      */
     fun generateScript(): String {
         return """
@@ -24,7 +24,7 @@ class CookieConsentBlocker {
                 if (window.__webtoapp_cookie_consent_blocked__) return;
                 window.__webtoapp_cookie_consent_blocked__ = true;
                 
-                // ========== Phase 1: CSS 立即隐藏 ==========
+                // Phase CSS.
                 var style = document.createElement('style');
                 style.id = 'webtoapp-cookie-consent-block';
                 style.textContent = [
@@ -110,7 +110,7 @@ class CookieConsentBlocker {
                     document.body.style.setProperty('overflow', 'auto', 'important');
                 }
                 
-                // ========== Phase 2: JS 自动点击拒绝/必要按钮 ==========
+                // auto.
                 var rejectPatterns = [
                     // English
                     /reject\s*all/i, /decline\s*all/i, /deny\s*all/i,

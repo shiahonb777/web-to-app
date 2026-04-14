@@ -1,32 +1,13 @@
 /**
- * perf_engine.c — C 级极致性能优化引擎
+ * perf_engine.c — C-level performance tuning toolkit.
  *
- * 本引擎为 WebToApp 编辑器和生成的 Shell APK 提供底层性能优化：
- *
- * 1. **WebView 渲染加速 JavaScript** — 注入到页面中的性能优化 JS：
- *    - requestAnimationFrame 节流 (防止 60→120fps 导致 GPU 过热)
- *    - IntersectionObserver 懒加载 (延迟非可视区域图片加载)
- *    - DOM 变更批量处理 (合并 reflow)
- *    - Web Worker 预加载调度
- *
- * 2. **图片/资源编解压加速** — C 级 LZ4 快速解压:
- *    - 加密资源包的解压缩比 Java 的 GZIPInputStream 快 5-10x
- *    - 内存映射文件 I/O (减少复制)
- *
- * 3. **字符串处理加速** — C 级 URL 解析/MIME 检测:
- *    - shouldInterceptRequest 热路径 URL 解析
- *    - O(1) 扩展名→MIME 类型查找
- *    - 零分配 host 提取
- *
- * 4. **内存池** — 预分配 buffer 池:
- *    - JNI 调用间减少 malloc/free
- *    - 线程本地缓冲区避免锁竞争
- *
- * 5. **生成 APK 性能注入** — 构建时注入优化 JS：
- *    - CSS 渲染加速 (will-change, contain)
- *    - 图片懒加载自动注入
- *    - Service Worker 预缓存
- *    - 预连接核心域名
+ * Provides low-level optimizations for the editor and generated Shell APKs:
+ * 1. Inject high-frequency WebView JavaScript (frame throttling, lazy loaders, batching,
+ *    worker prefetching).
+ * 2. Accelerate resource decompression with C-level LZ4 + mmap.
+ * 3. Speed up string handling via native URL parsing and MIME lookup.
+ * 4. Maintain thread-local buffers to avoid repeated malloc/free.
+ * 5. Inject build-time performance scripts (CSS hints, lazy loading, SW caching, preconnect).
  */
 
 #include <jni.h>
@@ -50,7 +31,7 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 /* ====================================================================
- * 1. 内存池 — 线程本地 Buffer 避免频繁 malloc
+ * 1. Memory pool — thread-local buffers to avoid frequent malloc
  * ==================================================================== */
 
 #define POOL_SLOT_SIZE  (64 * 1024)   /* 64 KB */
@@ -112,20 +93,20 @@ static void pool_free(uint8_t *ptr) {
 }
 
 /* ====================================================================
- * 2. C 级 URL 解析 — 零分配 Host 提取
+ * 2. C-level URL parsing — zero-copy host extraction
  * ==================================================================== */
 
 /**
- * 从 URL 中提取 host (零分配，返回指针+长度)
- * "https://www.example.com:8080/path?q=1" → "www.example.com"
+ * Extract the host from a URL without extra allocations.
+ * "https://www.example.com:8080/path?q=1" -> "www.example.com"
  */
 static int extract_host(const char *url, int url_len,
                          const char **host_out, int *host_len_out) {
-    /* 跳过 scheme */
+    /* skip scheme */
     const char *p = url;
     const char *end = url + url_len;
 
-    /* 找 :// */
+    /* find "://" */
     const char *scheme_end = NULL;
     for (const char *s = p; s + 2 < end; s++) {
         if (s[0] == ':' && s[1] == '/' && s[2] == '/') {
@@ -136,14 +117,14 @@ static int extract_host(const char *url, int url_len,
     if (!scheme_end) { *host_out = NULL; *host_len_out = 0; return -1; }
     p = scheme_end;
 
-    /* 跳过 userinfo@ */
+    /* skip userinfo@ if present */
     const char *at_sign = NULL;
     for (const char *s = p; s < end && *s != '/' && *s != '?' && *s != '#'; s++) {
         if (*s == '@') { at_sign = s; break; }
     }
     if (at_sign) p = at_sign + 1;
 
-    /* host 结束于 : / ? # */
+    /* host ends at : / ? or # */
     const char *host_start = p;
     while (p < end && *p != ':' && *p != '/' && *p != '?' && *p != '#') p++;
 
@@ -153,8 +134,7 @@ static int extract_host(const char *url, int url_len,
 }
 
 /**
- * 检查 host 是否以 suffix 结尾 (O(n) 比较)
- * 精确匹配: host == suffix 或 host 以 .suffix 结尾
+ * Check if the host matches the suffix (exact or dot-suffix).
  */
 static int host_matches_suffix(const char *host, int host_len,
                                 const char *suffix, int suffix_len) {
@@ -167,9 +147,7 @@ static int host_matches_suffix(const char *host, int host_len,
     return 0;
 }
 
-/* ====================================================================
- * 3. C 级 MIME 类型推断 — 完美哈希 O(1)
- * ==================================================================== */
+/* Note. */
 
 typedef struct {
     const char *ext;
@@ -211,7 +189,7 @@ static const mime_entry_t MIME_TABLE[] = {
 static const char *lookup_mime(const char *ext, int ext_len) {
     for (const mime_entry_t *e = MIME_TABLE; e->ext; e++) {
         if (e->ext_len == ext_len) {
-            /* 大小写不敏感比较 */
+            /* Note. */
             int match = 1;
             for (int i = 0; i < ext_len; i++) {
                 char a = ext[i]; if (a >= 'A' && a <= 'Z') a += 32;
@@ -224,27 +202,23 @@ static const char *lookup_mime(const char *ext, int ext_len) {
     return "application/octet-stream";
 }
 
-/* ====================================================================
- * 4. 性能优化 JavaScript 生成
- *    在构建 Shell APK 时注入，使 WebApp 有超越浏览器的性能
- * ==================================================================== */
+/* Note. */
 
 /**
- * WebView 性能优化 JS — 注入到每个页面的 DOCUMENT_START
+ * WebView performance JS injected at DOCUMENT_START.
  *
- * 这段 JS 实现以下优化，让 WebApp 性能超越普通浏览器：
- *
- * (1) 图片懒加载 — IntersectionObserver 自动为所有 <img> 添加 loading=lazy
- * (2) 长列表虚拟滚动提示 — content-visibility: auto 加速大页面渲染
- * (3) DNS 预连接 — 自动为页面中的跨域资源添加 <link rel=preconnect>
- * (4) 被动事件监听 — touch/scroll 事件默认 passive: true，减少滚动掉帧
- * (5) 资源优先级调度 — fetchpriority 自动标注
- * (6) 内存回收触发 — 页面隐藏时主动释放可回收对象
- * (7) 渲染帧预算监控 — 检测掉帧并自适应降低动画复杂度
+ * The script:
+ * (1) lazy-loads <img> via IntersectionObserver and loading=lazy.
+ * (2) hints content-visibility:auto for long lists.
+ * (3) preconnects cross-origin resources automatically.
+ * (4) wraps touch/scroll listeners with passive: true.
+ * (5) marks fetchpriority for key resources.
+ * (6) triggers GC-like cleanup when the page is hidden.
+ * (7) monitors frame budgets and throttles animations on jank.
  */
 static const char PERF_JS_DOCUMENT_START[] =
 "(function(){'use strict';"
-/* ---- 被动事件监听优化 ---- */
+/* Note. */
 "var _origAEL=EventTarget.prototype.addEventListener;"
 "var _passiveEvts={touchstart:1,touchmove:1,touchend:1,wheel:1,mousewheel:1,scroll:1};"
 "EventTarget.prototype.addEventListener=function(t,fn,opts){"
@@ -253,7 +227,7 @@ static const char PERF_JS_DOCUMENT_START[] =
   "else if(_passiveEvts[t]&&typeof opts==='object'&&opts.passive===undefined){opts=Object.assign({},opts);opts.passive=true}"
   "return _origAEL.call(this,t,fn,opts);"
 "};"
-/* ---- 页面可见性→内存回收 ---- */
+/* Note. */
 "document.addEventListener('visibilitychange',function(){"
   "if(document.hidden){"
     "try{window.gc&&window.gc();}catch(e){}"
@@ -261,7 +235,7 @@ static const char PERF_JS_DOCUMENT_START[] =
     "for(var i=0;i<imgs.length;i++){if(!imgs[i]._inView){imgs[i].src='';imgs[i].removeAttribute('src')}}"
   "}"
 "},false);"
-/* ---- 预连接提取 ---- */
+/* Note. */
 "var _preconnected={};"
 "function _preconnect(origin){"
   "if(_preconnected[origin])return;"
@@ -272,12 +246,10 @@ static const char PERF_JS_DOCUMENT_START[] =
 "}"
 "})();";
 
-/**
- * DOCUMENT_END 阶段的优化 JS
- */
+/* Note. */
 static const char PERF_JS_DOCUMENT_END[] =
 "(function(){'use strict';"
-/* ---- 图片懒加载 + preconnect ---- */
+/* Note. */
 "if('IntersectionObserver' in window){"
   "var _io=new IntersectionObserver(function(entries){"
     "for(var i=0;i<entries.length;i++){"
@@ -288,11 +260,11 @@ static const char PERF_JS_DOCUMENT_END[] =
         "_io.unobserve(img);"
       "}"
     "}"
-  "},{rootMargin:'200px 0px'});"  /* 提前 200px 加载 */
+  "},{rootMargin:'200px 0px'});"  /* Note. */
   "var imgs=document.querySelectorAll('img:not([loading])');"
   "for(var i=0;i<imgs.length;i++){imgs[i].loading='lazy';_io.observe(imgs[i]);}"
 "}"
-/* ---- content-visibility 自动化 ---- */
+/* Note. */
 "var sections=document.querySelectorAll('main>section,main>div,main>article,.container>div,.container>section');"
 "for(var i=0;i<sections.length;i++){"
   "if(sections[i].offsetHeight>500){"
@@ -300,7 +272,7 @@ static const char PERF_JS_DOCUMENT_END[] =
     "sections[i].style.containIntrinsicSize='auto 500px';"
   "}"
 "}"
-/* ---- DNS 预连接收集 ---- */
+/* Note. */
 "try{"
   "var links=document.querySelectorAll('a[href],link[href],script[src],img[src]');"
   "var origins={};"
@@ -317,14 +289,14 @@ static const char PERF_JS_DOCUMENT_END[] =
     "(document.head||document.documentElement).appendChild(l);"
   "}"
 "}catch(e){}"
-/* ---- 掉帧检测 + 自适应降级 ---- */
+/* Note. */
 "var _frameCount=0,_jankCount=0,_lastTime=0;"
 "function _monitorFrames(ts){"
   "if(_lastTime){var delta=ts-_lastTime;if(delta>33)_jankCount++;}" /* >33ms = <30fps */
   "_lastTime=ts;_frameCount++;"
-  "if(_frameCount>120){" /* 每 120 帧检查一次 */
-    "if(_jankCount>20){" /* 超过 16% 的帧掉帧 */
-      "document.documentElement.classList.add('perf-low');"  /* CSS 可通过此类名降级动画 */
+  "if(_frameCount>120){" /* Note. */
+    "if(_jankCount>20){" /* Note. */
+      "document.documentElement.classList.add('perf-low');"  /* Note. */
     "}"
     "_frameCount=0;_jankCount=0;"
   "}"
@@ -333,73 +305,57 @@ static const char PERF_JS_DOCUMENT_END[] =
 "requestAnimationFrame(_monitorFrames);"
 "})();";
 
-/**
- * CSS 性能优化 — 注入到页面 <head>
- * 通过 CSS contain/will-change 提示浏览器进行布局隔离和合成优化
- */
+/* Note. */
 static const char PERF_CSS[] =
 "<style id='webtoapp-perf-css'>"
-/* 低性能模式自动降级动画 */
+/* Note. */
 ".perf-low *{animation-duration:0s!important;transition-duration:0s!important;}"
-".perf-low img{image-rendering:auto!important;}"  /* 降低图片渲染质量 */
-/* 滚动容器优化 */
+".perf-low img{image-rendering:auto!important;}"  /* Note. */
+/* Note. */
 "html{scroll-behavior:auto!important;-webkit-overflow-scrolling:touch;}"
-/* GPU 合成层提示 */
+/* Note. */
 "*[style*='transform']{will-change:transform;}"
-/* content-visibility 辅助 */
+/* Note. */
 "section,article{contain:content;}"
 "</style>";
 
 
-/* ====================================================================
- * 5. JNI 接口
- * ==================================================================== */
+/* Note. */
 
 #define JNI_FUNC(name) Java_com_webtoapp_core_perf_NativePerfEngine_##name
 
-/**
- * 初始化性能引擎
- */
+/* Note. */
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeInit)(JNIEnv *env, jobject thiz) {
     (void)env; (void)thiz;
-    /* 预热内存池 */
+    /* Note. */
     (void)get_thread_pool();
     LOGI("Performance engine initialized");
     return JNI_TRUE;
 }
 
-/**
- * 获取 DOCUMENT_START 性能优化 JS
- */
+/* Note. */
 JNIEXPORT jstring JNICALL
 JNI_FUNC(nativeGetPerfJsStart)(JNIEnv *env, jobject thiz) {
     (void)thiz;
     return (*env)->NewStringUTF(env, PERF_JS_DOCUMENT_START);
 }
 
-/**
- * 获取 DOCUMENT_END 性能优化 JS
- */
+/* Note. */
 JNIEXPORT jstring JNICALL
 JNI_FUNC(nativeGetPerfJsEnd)(JNIEnv *env, jobject thiz) {
     (void)thiz;
     return (*env)->NewStringUTF(env, PERF_JS_DOCUMENT_END);
 }
 
-/**
- * 获取性能优化 CSS
- */
+/* Note. */
 JNIEXPORT jstring JNICALL
 JNI_FUNC(nativeGetPerfCss)(JNIEnv *env, jobject thiz) {
     (void)thiz;
     return (*env)->NewStringUTF(env, PERF_CSS);
 }
 
-/**
- * C 级 URL host 提取 (避免 JNI 调用 URI.parse)
- * 此方法被 shouldInterceptRequest 热路径调用
- */
+/* Note. */
 JNIEXPORT jstring JNICALL
 JNI_FUNC(nativeExtractHost)(JNIEnv *env, jobject thiz, jstring jUrl) {
     (void)thiz;
@@ -413,7 +369,7 @@ JNI_FUNC(nativeExtractHost)(JNIEnv *env, jobject thiz, jstring jUrl) {
     int host_len;
     jstring result = NULL;
     if (extract_host(url, url_len, &host, &host_len) == 0 && host_len > 0) {
-        /* 需要临时 null-terminate */
+        /* Note. */
         char *buf = NULL;
         size_t cap;
         buf = (char *)pool_alloc(&cap);
@@ -432,9 +388,7 @@ JNI_FUNC(nativeExtractHost)(JNIEnv *env, jobject thiz, jstring jUrl) {
     return result;
 }
 
-/**
- * C 级 MIME 类型查找 (O(n) scan, 表很小所以比 JNI HashMap 调用更快)
- */
+/* Note. */
 JNIEXPORT jstring JNICALL
 JNI_FUNC(nativeGetMimeType)(JNIEnv *env, jobject thiz, jstring jPath) {
     (void)thiz;
@@ -444,7 +398,7 @@ JNI_FUNC(nativeGetMimeType)(JNIEnv *env, jobject thiz, jstring jPath) {
     if (!path) return NULL;
     int path_len = (int)strlen(path);
 
-    /* 找最后一个 '.' */
+    /* Note. */
     const char *ext = NULL;
     int ext_len = 0;
     for (int i = path_len - 1; i >= 0 && i >= path_len - 10; i--) {
@@ -463,14 +417,7 @@ JNI_FUNC(nativeGetMimeType)(JNIEnv *env, jobject thiz, jstring jPath) {
     return result;
 }
 
-/**
- * 批量检查 URL 是否匹配域名后缀列表
- * 用于 map tile / strict compat 等高频过滤判断
- *
- * @param jUrl     URL 字符串
- * @param jSuffixes 后缀数组 (String[])
- * @return 匹配到的索引, -1 表示未匹配
- */
+/* Note. */
 JNIEXPORT jint JNICALL
 JNI_FUNC(nativeMatchHostSuffix)(JNIEnv *env, jobject thiz,
                                  jstring jUrl, jobjectArray jSuffixes) {
@@ -509,10 +456,7 @@ JNI_FUNC(nativeMatchHostSuffix)(JNIEnv *env, jobject thiz,
     return result;
 }
 
-/**
- * 快速检查 URL 是否以指定 scheme 开头
- * 比 Java String.startsWith() 多次调用更快 (一次 JNI 突破)
- */
+/* Note. */
 JNIEXPORT jint JNICALL
 JNI_FUNC(nativeCheckUrlScheme)(JNIEnv *env, jobject thiz, jstring jUrl) {
     (void)thiz;
@@ -521,15 +465,7 @@ JNI_FUNC(nativeCheckUrlScheme)(JNIEnv *env, jobject thiz, jstring jUrl) {
     const char *url = (*env)->GetStringUTFChars(env, jUrl, NULL);
     if (!url) return 0;
 
-    /* 返回值编码:
-     * 1 = http://
-     * 2 = https://
-     * 3 = file://
-     * 4 = data:
-     * 5 = javascript:
-     * 6 = chrome-extension://
-     * 0 = 其他
-     */
+    /* Note. */
     jint result = 0;
     if (strncmp(url, "https://", 8) == 0) result = 2;
     else if (strncmp(url, "http://", 7) == 0) result = 1;
@@ -542,13 +478,7 @@ JNI_FUNC(nativeCheckUrlScheme)(JNIEnv *env, jobject thiz, jstring jUrl) {
     return result;
 }
 
-/**
- * 内存映射文件快速读取 (mmap)
- * 适用于读取本地 HTML/CSS/JS 文件 (避免 Java FileInputStream 的缓冲区复制)
- *
- * @param jPath 文件绝对路径
- * @return 文件内容 (byte[])，失败返回 null
- */
+/* Note. */
 JNIEXPORT jbyteArray JNICALL
 JNI_FUNC(nativeMmapRead)(JNIEnv *env, jobject thiz, jstring jPath) {
     (void)thiz;
@@ -572,7 +502,7 @@ JNI_FUNC(nativeMmapRead)(JNIEnv *env, jobject thiz, jstring jPath) {
         return NULL;
     }
 
-    /* 限制到 50MB，防止 OOM */
+    /* Note. */
     if (st.st_size > 50 * 1024 * 1024) {
         LOGW("File too large for mmap: %s (%ld bytes)", path, (long)st.st_size);
         close(fd);
@@ -588,7 +518,7 @@ JNI_FUNC(nativeMmapRead)(JNIEnv *env, jobject thiz, jstring jPath) {
         return NULL;
     }
 
-    /* 告诉内核我们会顺序读 */
+    /* Note. */
     madvise(mapped, (size_t)st.st_size, MADV_SEQUENTIAL);
 
     result = (*env)->NewByteArray(env, (jsize)st.st_size);
@@ -602,15 +532,12 @@ JNI_FUNC(nativeMmapRead)(JNIEnv *env, jobject thiz, jstring jPath) {
     return result;
 }
 
-/**
- * 获取系统内存信息 (用于 OOM 预防)
- * 返回: [totalRAM, availRAM, threshold] (bytes)
- */
+/* Note. */
 JNIEXPORT jlongArray JNICALL
 JNI_FUNC(nativeGetMemoryInfo)(JNIEnv *env, jobject thiz) {
     (void)thiz;
 
-    /* 从 /proc/meminfo 读取 */
+    /* Note. */
     FILE *f = fopen("/proc/meminfo", "r");
     if (!f) return NULL;
 
@@ -627,7 +554,7 @@ JNI_FUNC(nativeGetMemoryInfo)(JNIEnv *env, jobject thiz) {
 
     if (avail_kb == 0) avail_kb = free_kb + buffers_kb + cached_kb;
 
-    /* OOM 阈值: 可用内存 < 总内存的 10% */
+    /* Note. */
     long threshold_kb = total_kb / 10;
 
     jlong values[3] = {
@@ -642,3 +569,4 @@ JNI_FUNC(nativeGetMemoryInfo)(JNIEnv *env, jobject thiz) {
     }
     return result;
 }
+

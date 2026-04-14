@@ -7,35 +7,35 @@ import java.io.File
 import java.nio.charset.Charset
 
 /**
- * HTML 项目处理器
- * 
- * 功能：
- * 1. 检测和修复 HTML 中的资源路径引用
- * 2. 将外部 CSS/JS 内联到 HTML 中
- * 3. 检测文件编码并正确读取
- * 4. 分析项目结构并提供问题诊断
+ * HTML project processor.
+ *
+ * Features:
+ * 1. Detect and fix resource path references inside HTML.
+ * 2. Inline external CSS/JS into HTML.
+ * 3. Detect file encoding and read files correctly.
+ * 4. Analyze project structure and surface issues.
  */
 object HtmlProjectProcessor {
     
     private const val TAG = "HtmlProjectProcessor"
     
-    // 分析时读取文件内容的最大大小（5MB），超过此大小跳过内容分析以防止 OOM
+    // Max text size (5MB) for analysis; skip larger files to avoid OOM
     private const val MAX_ANALYZE_FILE_SIZE = 5L * 1024 * 1024
-    
-    // 编码检测缓存
+
+    // Cache for encoding detection
     private val encodingCache = LruCache<String, String>(50)
-    
-    // 预编译的正则表达式 (object 本身已延迟初始化，无需 by lazy)
+
+    // Precompiled regex patterns (object handles lazy init)
     private val cssLinkRegex = Regex("""<link[^>]*href=["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
     private val jsScriptRegex = Regex("""<script[^>]*src=["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
     private val imgSrcRegex = Regex("""<img[^>]*src=["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
     private val absolutePathRegex = Regex("""(href|src)=["'](/[^"']+)["']""")
     private val protocolRelativeRegex = Regex("""(href|src)=["'](//[^"']+)["']""")
-    // 匹配本地 CSS 文件引用（非 http/https 开头的 .css 文件）
+    // Match local CSS references (non-http(s) .css files)
     private val localCssRegex = Regex("""<link[^>]*href=["'](?!https?://)[^"']*\.css["'][^>]*>""", RegexOption.IGNORE_CASE)
-    // 匹配本地 JS 文件引用（非 http/https 开头的 .js 文件），允许 script 标签内有内容或多行属性
-    // (?s) 让 . 匹配换行符，匹配多行 script 标签
-    // (?!https?://) 排除 http/https 开头的 CDN 引用
+    // Match local JS references (non-http(s) .js files, allowing inline content)
+    // (?s) enables dot to match newlines for multi-line script tags
+    // (?!https?://) excludes CDN references starting with http(s)
     private val localJsRegex = Regex("""(?s)<script[^>]*\bsrc=["'](?!https?://)([^"']*\.js)["'][^>]*>.*?</script>""", RegexOption.IGNORE_CASE)
     private val charsetRegex = Regex("""charset=["']?([^"'\s>]+)""", RegexOption.IGNORE_CASE)
 
@@ -52,7 +52,7 @@ object HtmlProjectProcessor {
     private val openHeadRegex = Regex("<head>", RegexOption.IGNORE_CASE)
     
     /**
-     * 项目分析结果
+     * Project analysis results.
      */
     data class ProjectAnalysis(
         val htmlFiles: List<FileInfo>,
@@ -64,7 +64,7 @@ object HtmlProjectProcessor {
     )
     
     /**
-     * 文件信息
+     * File information.
      */
     data class FileInfo(
         val name: String,
@@ -75,7 +75,7 @@ object HtmlProjectProcessor {
     )
     
     /**
-     * 资源引用
+     * Resource reference.
      */
     data class ResourceReference(
         val type: ReferenceType,
@@ -95,7 +95,7 @@ object HtmlProjectProcessor {
     }
     
     /**
-     * 项目问题
+     * Project issue.
      */
     data class ProjectIssue(
         val severity: IssueSeverity,
@@ -106,22 +106,22 @@ object HtmlProjectProcessor {
     )
     
     enum class IssueSeverity {
-        ERROR,      // 会导致功能失效
-        WARNING,    // 可能导致问题
-        INFO        // 提示信息
+        ERROR,      // Causes functionality to break
+        WARNING,    // Potential issue
+        INFO        // Informational
     }
-    
+
     enum class IssueType {
-        MISSING_FILE,           // Reference的文件不存在
-        ABSOLUTE_PATH,          // 使用了绝对路径
-        ENCODING_ISSUE,         // 编码问题
-        STRUCTURE_ISSUE,        // Directory结构问题
-        SYNTAX_ERROR,           // 语法错误
-        EXTERNAL_RESOURCE       // Reference了外部资源
+        MISSING_FILE,           // Referenced file missing
+        ABSOLUTE_PATH,          // Uses absolute paths
+        ENCODING_ISSUE,         // Encoding problem
+        STRUCTURE_ISSUE,        // Directory layout issue
+        SYNTAX_ERROR,           // Syntax error
+        EXTERNAL_RESOURCE       // References external resource
     }
     
     /**
-     * 分析 HTML 项目
+     * Analyze an HTML project.
      */
     fun analyzeProject(
         htmlFilePath: String?,
@@ -137,12 +137,12 @@ object HtmlProjectProcessor {
         val jsFiles = mutableListOf<FileInfo>()
         val otherFiles = mutableListOf<FileInfo>()
         
-        // 分析 HTML 文件
+        // Analyze HTML files
         htmlFilePath?.let { path ->
             val file = File(path)
             if (file.exists()) {
                 val encoding = detectEncoding(file)
-                // 大文件跳过内容分析，只记录基本信息
+                // Skip content analysis for large files but record metadata
                 val references = if (file.length() <= MAX_ANALYZE_FILE_SIZE) {
                     val content = readFileWithEncoding(file, encoding)
                     analyzeHtmlReferences(content, file.parentFile)
@@ -164,7 +164,7 @@ object HtmlProjectProcessor {
                     references = references
                 ))
                 
-                // Check引用问题
+        // Check reference issues
                 references.forEach { ref ->
                     if (!ref.isValid) {
                         issues.add(ProjectIssue(
@@ -188,7 +188,7 @@ object HtmlProjectProcessor {
             }
         }
         
-        // 分析 CSS 文件
+        // Analyze CSS files
         cssFilePath?.let { path ->
             val file = File(path)
             if (file.exists()) {
@@ -200,7 +200,7 @@ object HtmlProjectProcessor {
                     encoding = encoding
                 ))
                 
-                // Check编码
+        // Check encoding
                 if (encoding != "UTF-8" && encoding != null) {
                     issues.add(ProjectIssue(
                         severity = IssueSeverity.WARNING,
@@ -213,7 +213,7 @@ object HtmlProjectProcessor {
             }
         }
         
-        // 分析 JS 文件
+        // Analyze JS files
         jsFilePath?.let { path ->
             val file = File(path)
             if (file.exists()) {
@@ -226,16 +226,16 @@ object HtmlProjectProcessor {
                     encoding = encoding
                 ))
                 
-                // 大文件跳过内容分析
+        // Skip content analysis for large files
                 if (file.length() <= MAX_ANALYZE_FILE_SIZE) {
                     val content = readFileWithEncoding(file, encoding)
-                    // Check常见 JS 问题
+        // Check common JS issues in JS files
                     checkJsIssues(content, file.name, issues)
                 }
             }
         }
         
-        // Generate建议
+        // Generate suggestions
         if (htmlFiles.isNotEmpty() && cssFiles.isEmpty() && jsFiles.isEmpty()) {
             val htmlFileObj = htmlFilePath?.let { File(it) }?.takeIf { it.exists() && it.length() <= MAX_ANALYZE_FILE_SIZE }
             val htmlContent = htmlFileObj?.let { readFileWithEncoding(it, null) } ?: ""
@@ -259,13 +259,13 @@ object HtmlProjectProcessor {
     }
     
     /**
-     * 处理 HTML 内容，内联 CSS 和 JS
+     * Process HTML content by inlining CSS and JS.
      *
-     * @param htmlContent HTML 内容
-     * @param cssContent CSS 内容（可为 null 或空）
-     * @param jsContent JS 内容（可为 null 或空）
-     * @param fixPaths 是否修复路径引用
-     * @param removeLocalRefs 是否移除本地 CSS/JS 引用（默认 true，当 cssContent/jsContent 为空时不会移除对应引用）
+     * @param htmlContent HTML content
+     * @param cssContent CSS content (nullable/empty)
+     * @param jsContent JS content (nullable/empty)
+     * @param fixPaths Whether to fix path references
+     * @param removeLocalRefs Whether to remove local CSS/JS references (default true; skipped if cssContent/jsContent is empty)
      */
     fun processHtmlContent(
         htmlContent: String,
@@ -276,29 +276,29 @@ object HtmlProjectProcessor {
     ): String {
         var result = htmlContent
 
-        // 1. 修复路径引用
+        // 1. Fix path references
         if (fixPaths) {
             result = fixResourcePaths(result)
         }
 
-        // 2. 移除本地 CSS/JS 引用（只在有对应内容时移除，避免空白页）
+        // 2. Remove local CSS/JS references (only when inline content exists to avoid blank pages)
         if (removeLocalRefs) {
             result = removeLocalResourceReferences(result,
                 hasCssContent = !cssContent.isNullOrBlank(),
                 hasJsContent = !jsContent.isNullOrBlank())
         }
 
-        // 3. 内联 CSS
+        // 3. Inline CSS
         if (!cssContent.isNullOrBlank()) {
             result = inlineCss(result, cssContent)
         }
 
-        // 4. 内联 JS
+        // 4. Inline JS
         if (!jsContent.isNullOrBlank()) {
             result = inlineJs(result, jsContent)
         }
 
-        // 5. 添加 viewport meta（如果没有）
+        // 5. Add viewport meta if missing
         if (!result.contains("viewport", ignoreCase = true)) {
             result = addViewportMeta(result)
         }
@@ -307,15 +307,15 @@ object HtmlProjectProcessor {
     }
     
     /**
-     * 修复资源路径引用
+     * Fix resource path references.
      *
-     * 注意：只修复绝对路径（/ 开头）和协议相对路径（// 开头），
-     * 不修改相对路径（./ 或 ../ 开头），因为它们已经是正确的相对引用。
+     * Note: only adjust absolute paths (starting with /) and protocol-relative paths (starting with //).
+     * Relative paths (./ or ../) are already correct and should remain unchanged.
      */
     private fun fixResourcePaths(html: String): String {
         var result = html
 
-        // 修复绝对路径为相对路径
+        // Convert absolute paths to relative ones
         // /css/style.css -> ./css/style.css
         result = absolutePathRegex.replace(result) { match ->
             val attr = match.groupValues[1]
@@ -323,25 +323,25 @@ object HtmlProjectProcessor {
             """$attr=".${path}""""
         }
 
-        // 修复协议相对路径（//example.com/js/app.js -> https://example.com/js/app.js）
+        // Fix protocol-relative paths (//example.com/js/app.js -> https://example.com/js/app.js)
         result = protocolRelativeRegex.replace(result) { match ->
             val attr = match.groupValues[1]
             val path = match.groupValues[2]
             """$attr="https:$path""""
         }
 
-        // 不再修改 ../ 开头的相对路径，因为它们已经是正确的相对引用
-        // 强制改为 ./ 会破坏子目录 HTML 文件的正确引用（如 pages/about.html 引用 ../js/app.js）
+        // Do not modify ../ paths; they are already correct relative references
+        // Forcing ./ would break subdirectory references (e.g., pages/about.html referencing ../js/app.js)
 
         return result
     }
     
     /**
-     * 移除本地资源引用
-     * @param html HTML 内容
-     * @param hasCssContent 是否有 CSS 内容可内联
-     * @param hasJsContent 是否有 JS 内容可内联
-     * @return 处理后的 HTML
+     * Remove local resource references when inlining content.
+     * @param html HTML content
+     * @param hasCssContent Whether CSS content is available for inlining
+     * @param hasJsContent Whether JS content is available for inlining
+     * @return Processed HTML
      */
     private fun removeLocalResourceReferences(
         html: String,
@@ -350,12 +350,12 @@ object HtmlProjectProcessor {
     ): String {
         var result = html
 
-        // 只在有 CSS 内容时才移除 CSS link 标签，否则保留引用让用户自己处理
+        // Remove CSS <link> tags only when CSS content exists; otherwise leave references for manual handling
         if (hasCssContent) {
             result = localCssRegex.replace(result, "<!-- CSS inlined -->")
         }
 
-        // 只在有 JS 内容时才移除 JS script 标签，否则保留引用让用户自己处理
+        // Remove JS <script> tags only when JS content exists; otherwise leave references for manual handling
         if (hasJsContent) {
             result = localJsRegex.replace(result, "<!-- JS inlined -->")
         }
@@ -364,7 +364,7 @@ object HtmlProjectProcessor {
     }
     
     /**
-     * 内联 CSS
+     * Inline CSS.
      */
     private fun inlineCss(html: String, css: String): String {
         val styleTag = "<style>\n/* Inlined CSS */\n$css\n</style>"
@@ -392,7 +392,7 @@ object HtmlProjectProcessor {
     }
     
     /**
-     * 内联 JS
+     * Inline JS.
      */
     private fun inlineJs(html: String, js: String): String {
         val wrappedJs = wrapJsForSafeExecution(js)
@@ -411,13 +411,13 @@ object HtmlProjectProcessor {
     }
     
     /**
-     * 包装 JS 确保安全执行
+     * Wrap JS to ensure safe execution.
      */
     private fun wrapJsForSafeExecution(js: String): String {
         val trimmed = js.trim()
         if (trimmed.isEmpty()) return ""
         
-        // Check是否已有 DOM 加载包装
+        // Check if a DOM-ready wrapper already exists
         val hasWrapper = trimmed.contains("DOMContentLoaded", ignoreCase = true) ||
                         trimmed.contains("window.onload", ignoreCase = true) ||
                         trimmed.contains("addEventListener('load'", ignoreCase = true) ||
@@ -451,7 +451,7 @@ $trimmed
     }
     
     /**
-     * 添加 viewport meta
+     * Add viewport meta tag.
      */
     private fun addViewportMeta(html: String): String {
         val viewportMeta = """<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">"""
@@ -475,12 +475,12 @@ $trimmed
     }
     
     /**
-     * 分析 HTML 中的资源引用
+     * Analyze resource references inside HTML.
      */
     private fun analyzeHtmlReferences(html: String, baseDir: File?): List<ResourceReference> {
         val references = mutableListOf<ResourceReference>()
         
-        // CSS link 标签
+        // CSS <link> tags
         cssLinkRegex.findAll(html).forEach { match ->
             val path = match.groupValues[1]
             if (!path.startsWith("http://") && !path.startsWith("https://") && path.endsWith(".css", ignoreCase = true)) {
@@ -488,7 +488,7 @@ $trimmed
             }
         }
         
-        // JS script 标签
+        // JS <script> tags
         jsScriptRegex.findAll(html).forEach { match ->
             val path = match.groupValues[1]
             if (!path.startsWith("http://") && !path.startsWith("https://")) {
@@ -508,7 +508,7 @@ $trimmed
     }
     
     /**
-     * 分析单个资源引用
+     * Analyze a single resource reference.
      */
     private fun analyzeReference(path: String, type: ReferenceType, baseDir: File?): ResourceReference {
         val isAbsolute = path.startsWith("/")
@@ -534,12 +534,12 @@ $trimmed
     }
     
     /**
-     * 检测文件编码（带缓存）
+     * Detect file encoding (with cache).
      */
     private fun detectEncoding(file: File): String? {
         val cacheKey = file.absolutePath + "_" + file.lastModified()
         
-        // Check缓存
+        // Check cache
         encodingCache.get(cacheKey)?.let { return it }
         
         return try {
@@ -554,13 +554,13 @@ $trimmed
                 header.size >= 2 && header[0] == 0xFE.toByte() && header[1] == 0xFF.toByte() -> "UTF-16BE"
                 header.size >= 2 && header[0] == 0xFF.toByte() && header[1] == 0xFE.toByte() -> "UTF-16LE"
                 else -> {
-                    // 尝试检测 charset 声明
+                    // Try to detect charset declarations
                     val content = String(header, Charsets.ISO_8859_1)
                     charsetRegex.find(content)?.groupValues?.get(1)?.uppercase() ?: "UTF-8"
                 }
             }
             
-            // Cache结果
+            // Cache results
             encodingCache.put(cacheKey, encoding)
             encoding
         } catch (e: Exception) {
@@ -570,14 +570,14 @@ $trimmed
     }
     
     /**
-     * 清除编码缓存
+     * Clear the encoding cache.
      */
     fun clearEncodingCache() {
         encodingCache.evictAll()
     }
     
     /**
-     * 使用正确编码读取文件
+     * Read a file using the detected encoding.
      */
     fun readFileWithEncoding(file: File, encoding: String?): String {
         return try {
@@ -592,7 +592,7 @@ $trimmed
             file.readText(charset)
         } catch (e: Exception) {
             AppLogger.e(TAG, "读取文件失败: ${file.path}", e)
-            // 降级尝试
+            // Fallback attempt
             try {
                 file.readText(Charsets.UTF_8)
             } catch (e2: Exception) {
@@ -602,10 +602,10 @@ $trimmed
     }
     
     /**
-     * 检查 JS 常见问题
+     * Check common JS issues.
      */
     private fun checkJsIssues(content: String, fileName: String, issues: MutableList<ProjectIssue>) {
-        // Check是否使用了 document.write（在 WebView 中可能有问题）
+        // Check if document.write is used (can cause issues in WebView)
         if (content.contains("document.write", ignoreCase = true)) {
             issues.add(ProjectIssue(
                 severity = IssueSeverity.WARNING,
@@ -616,7 +616,7 @@ $trimmed
             ))
         }
         
-        // Check是否有语法错误的常见模式
+        // Check for common syntax error patterns
         val unclosedBraces = content.count { it == '{' } - content.count { it == '}' }
         if (unclosedBraces != 0) {
             issues.add(ProjectIssue(

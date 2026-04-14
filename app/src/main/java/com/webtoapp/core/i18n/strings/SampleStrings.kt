@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object SampleStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 测试页面 ====================
+    // ==================== Test Page ====================
     val testPageBasicHtml: String get() = when (lang) {
         AppLanguage.CHINESE -> "基础HTML页面"
         AppLanguage.ENGLISH -> "Basic HTML Page"

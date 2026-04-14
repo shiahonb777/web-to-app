@@ -77,7 +77,7 @@ import com.webtoapp.core.extension.ExtensionManager
 import org.koin.compose.koinInject
 
 // ════════════════════════════════════════════════
-// 我的模块 Bottom Sheet
+// module Bottom Sheet
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -395,7 +395,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 选择模块 ──
+                // selectmodule
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -514,7 +514,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 基本信息 ──
+                // Note
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -527,7 +527,7 @@ internal fun PublishModuleSheet(
                     )
                 }
 
-                // 模块名称
+                // module
                 item {
                     OutlinedTextField(
                         value = name,
@@ -541,7 +541,7 @@ internal fun PublishModuleSheet(
                     )
                 }
 
-                // 图标
+                // icon
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
@@ -604,7 +604,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 分类和标签 ──
+                // ── Category and tags ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -627,7 +627,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // 版本
+                // Version
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
@@ -649,7 +649,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 描述和标签 ──
+                // ── Description and tags ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -687,7 +687,7 @@ internal fun PublishModuleSheet(
                     )
                 }
 
-                // ── 截图 ──
+                // ── Screenshots ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -776,7 +776,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 手动分享码输入 (高级) ──
+                // ── Manual share code input (advanced) ──
                 if (selectedModule == null) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -855,7 +855,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 关联团队 (可选) ──
+                // ── Linked team (optional) ──
                 if (myTeams.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -952,7 +952,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 发布按钮 ──
+                // ── Publish button ──
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(

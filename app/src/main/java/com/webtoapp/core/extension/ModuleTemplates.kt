@@ -3,30 +3,27 @@ package com.webtoapp.core.extension
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 模块代码模板
- * 
- * 提供丰富的代码模板，帮助用户快速创建扩展模块
+ * template.
+ *
+ * template use extension.
  */
 object ModuleTemplates {
     
     /**
-     * 获取所有模板（按分类组织）
+     * Get template.
      */
     fun getAll(): List<ModuleTemplate> = listOf(
-        // 内容过滤类
         elementHider(),
         adBlockerPro(),
         popupBlocker(),
         cookieBannerRemover(),
         
-        // 样式修改类
         cssInjector(),
         darkModeForce(),
         fontChanger(),
         colorTheme(),
         layoutFixer(),
         
-        // 功能增强类
         autoClicker(),
         formFiller(),
         pageModifier(),
@@ -35,35 +32,33 @@ object ModuleTemplates {
         autoRefresh(),
         scrollToTop(),
         
-        // 数据提取类
+        // Extract.
         dataExtractor(),
         linkCollector(),
         imageGrabber(),
         
-        // Media处理类
+        // Media.
         videoEnhancer(),
         imageZoomer(),
         audioController(),
         
-        // Security隐私类
+        // Security.
         notificationBlocker(),
         trackingBlocker(),
         fingerprintProtector(),
         
-        // 开发调试类
         consoleLogger(),
         networkMonitor(),
         domInspector()
     )
     
     /**
-     * 按分类获取模板
+     * by Gettemplate.
      */
     fun getByCategory(category: ModuleCategory): List<ModuleTemplate> {
         return getAll().filter { it.category == category }
     }
 
-    // ==================== 内容过滤类模板 ====================
     
     private fun elementHider() = ModuleTemplate(
         id = "template-element-hider",
@@ -138,12 +133,12 @@ observer.observe(document.body, { childList: true, subtree: true });
 const blockPopups = getConfig('blockPopups', 'true') === 'true';
 const blockOverlays = getConfig('blockOverlays', 'true') === 'true';
 
-// 拦截弹窗
+// intercept.
 if (blockPopups) {
     window.open = () => { console.log('[AdBlocker] Blocked popup'); return null; };
 }
 
-// Ad选择器
+// Ad.
 const adSelectors = [
     '[class*="ad-"]', '[class*="ads-"]', '[class*="advert"]',
     '[id*="ad-"]', '[id*="ads-"]', 'ins.adsbygoogle',
@@ -192,13 +187,13 @@ ins.adsbygoogle, .adsbygoogle, [data-ad] {
         code = """
 const autoCloseDelay = parseInt(getConfig('autoClose', '500'));
 
-// 拦截通知权限
+// intercept.
 if (window.Notification) {
     Notification.requestPermission = () => Promise.resolve('denied');
     Object.defineProperty(Notification, 'permission', { get: () => 'denied' });
 }
 
-// Auto点击关闭按钮
+// Auto by.
 function closePopups() {
     const closeSelectors = [
         '[class*="close"]', '[class*="dismiss"]', '[aria-label*="Close"]',
@@ -240,7 +235,7 @@ function removeCookieBanners() {
             }
         });
     });
-    // 恢复滚动
+    // restore.
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
 }
@@ -252,7 +247,6 @@ new MutationObserver(removeCookieBanners).observe(document.body, { childList: tr
         cssCode = ""
     )
     
-    // ==================== 样式修改类模板 ====================
     
     private fun cssInjector() = ModuleTemplate(
         id = "template-css-injector",
@@ -407,7 +401,6 @@ body > * { max-width: var(--max-width, 1200px) !important; margin-left: auto !im
         """.trimIndent()
     )
     
-    // ==================== 功能增强类模板 ====================
     
     private fun autoClicker() = ModuleTemplate(
         id = "template-auto-clicker",
@@ -690,7 +683,6 @@ window.addEventListener('scroll', () => {
         cssCode = ""
     )
     
-    // ==================== 数据提取类模板 ====================
     
     private fun dataExtractor() = ModuleTemplate(
         id = "template-data-extractor",
@@ -789,7 +781,6 @@ window.__grabbedImages = images;
         cssCode = ""
     )
 
-    // ==================== 媒体处理类模板 ====================
     
     private fun videoEnhancer() = ModuleTemplate(
         id = "template-video-enhancer",
@@ -909,7 +900,6 @@ new MutationObserver(muts => {
         cssCode = ""
     )
     
-    // ==================== 安全隐私类模板 ====================
     
     private fun notificationBlocker() = ModuleTemplate(
         id = "template-notification-blocker",
@@ -936,7 +926,6 @@ console.log('[NotificationBlocker] Notifications blocked');
         category = ModuleCategory.SECURITY,
         configItems = emptyList(),
         code = """
-// 阻止常见追踪
 const trackers = ['google-analytics', 'googletagmanager', 'facebook', 'hotjar', 'mixpanel'];
 const originalFetch = window.fetch;
 window.fetch = function(url, ...args) {
@@ -947,7 +936,7 @@ window.fetch = function(url, ...args) {
     return originalFetch.apply(this, [url, ...args]);
 };
 
-// 阻止 beacon
+// beacon.
 navigator.sendBeacon = () => { console.log('[TrackingBlocker] Beacon blocked'); return false; };
         """.trimIndent(),
         cssCode = ""
@@ -961,7 +950,7 @@ navigator.sendBeacon = () => { console.log('[TrackingBlocker] Beacon blocked'); 
         category = ModuleCategory.SECURITY,
         configItems = emptyList(),
         code = """
-// Shuffle化 canvas 指纹
+// Shuffle canvas.
 const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
 HTMLCanvasElement.prototype.toDataURL = function() {
     const ctx = this.getContext('2d');
@@ -975,14 +964,13 @@ HTMLCanvasElement.prototype.toDataURL = function() {
     return originalToDataURL.apply(this, arguments);
 };
 
-// Shuffle化屏幕信息
+// Shuffle.
 Object.defineProperty(screen, 'width', { get: () => 1920 + Math.floor(Math.random() * 100) });
 Object.defineProperty(screen, 'height', { get: () => 1080 + Math.floor(Math.random() * 100) });
         """.trimIndent(),
         cssCode = ""
     )
 
-    // ==================== 开发调试类模板 ====================
     
     private fun consoleLogger() = ModuleTemplate(
         id = "template-console-logger",
@@ -1110,7 +1098,7 @@ document.addEventListener('mouseout', e => {
 }
 
 /**
- * 模块模板数据类
+ * template.
  */
 data class ModuleTemplate(
     val id: String,
@@ -1121,10 +1109,10 @@ data class ModuleTemplate(
     val configItems: List<ModuleConfigItem>,
     val code: String,
     val cssCode: String,
-    val uiConfig: ModuleUiConfig = ModuleUiConfig()  // 新增 UI 配置
+    val uiConfig: ModuleUiConfig = ModuleUiConfig()  // UI.
 ) {
     /**
-     * 转换为 ExtensionModule
+     * as ExtensionModule.
      */
     fun toModule(
         moduleName: String = name,
@@ -1141,7 +1129,7 @@ data class ModuleTemplate(
             configValues = configItems.associate { it.key to it.defaultValue },
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS),
-            uiConfig = uiConfig  // 传递 UI 配置
+            uiConfig = uiConfig  // UI.
         )
     }
 }

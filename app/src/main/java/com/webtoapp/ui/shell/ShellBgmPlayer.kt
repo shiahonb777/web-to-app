@@ -10,11 +10,11 @@ import com.webtoapp.data.model.LrcData
 import com.webtoapp.data.model.LrcLine
 import kotlinx.coroutines.delay
 
-// Composable 内 parseLrcText() 使用，避免每次函数调用重建
+// Composable parseLrcText( ) , call
 private val BGM_LRC_TIME_REGEX = Regex("""\[(\d{2}):(\d{2})\.(\d{2,3})](.*)""")
 
 /**
- * BGM 播放器状态（从 ShellActivity 提取）
+ * BGM state( from ShellActivity)
  */
 class BgmPlayerState internal constructor(
     private val _player: MutableState<MediaPlayer?>,
@@ -33,7 +33,7 @@ class BgmPlayerState internal constructor(
 }
 
 /**
- * Parse LRC 文本
+ * Parse LRC text
  */
 internal fun parseLrcText(text: String): LrcData? {
     val lines = mutableListOf<LrcLine>()
@@ -54,7 +54,7 @@ internal fun parseLrcText(text: String): LrcData? {
         }
     }
     
-    // 计算结束时间
+    // Note
     for (i in 0 until lines.size - 1) {
         lines[i] = lines[i].copy(endTime = lines[i + 1].startTime)
     }
@@ -63,15 +63,15 @@ internal fun parseLrcText(text: String): LrcData? {
 }
 
 /**
- * 创建并管理 BGM 播放器状态
- * 从 ShellActivity 的 BGM 播放器逻辑（原 lines 1430-1592）提取
+ * createandmanagement BGM state
+ * from ShellActivity BGM( lines 1430- 1592)
  */
 @Composable
 fun rememberBgmPlayerState(
     context: Context,
     config: ShellConfig
 ): BgmPlayerState {
-    // ===== 背景音乐播放器 =====
+    // Note
     val bgmPlayerState = remember { mutableStateOf<MediaPlayer?>(null) }
     var bgmPlayer by bgmPlayerState
     val currentBgmIndexState = remember { mutableIntStateOf(0) }
@@ -79,7 +79,7 @@ fun rememberBgmPlayerState(
     val isBgmPlayingState = remember { mutableStateOf(false) }
     var isBgmPlaying by isBgmPlayingState
     
-    // ===== 歌词显示 =====
+    // ===== display =====
     val currentLrcDataState = remember { mutableStateOf<LrcData?>(null) }
     var currentLrcData by currentLrcDataState
     val currentLrcLineIndexState = remember { mutableIntStateOf(-1) }
@@ -87,7 +87,7 @@ fun rememberBgmPlayerState(
     val bgmCurrentPositionState = remember { mutableLongStateOf(0L) }
     var bgmCurrentPosition by bgmCurrentPositionState
     
-    // Load当前 BGM 的 LRC 数据
+    // Loadcurrent BGM LRC
     fun loadLrcForCurrentBgm(bgmIndex: Int) {
         if (!config.bgmShowLyrics) {
             currentLrcData = null
@@ -109,11 +109,11 @@ fun rememberBgmPlayerState(
         }
     }
     
-    // Initialize并播放 BGM
+    // Initializeand BGM
     LaunchedEffect(config.bgmEnabled) {
         if (config.bgmEnabled && config.bgmPlaylist.isNotEmpty()) {
             try {
-                // Create播放器
+                // Create
                 val player = MediaPlayer()
                 val firstItem = config.bgmPlaylist.first()
                 val assetPath = firstItem.assetPath.removePrefix("assets/")
@@ -126,7 +126,7 @@ fun rememberBgmPlayerState(
                 player.isLooping = config.bgmPlayMode == "LOOP" && config.bgmPlaylist.size == 1
                 
                 player.setOnCompletionListener {
-                    // Play下一首
+                    // Play
                     val nextIndex = when (config.bgmPlayMode) {
                         "SHUFFLE" -> (0 until config.bgmPlaylist.size).random()
                         "SEQUENTIAL" -> if (currentBgmIndex + 1 < config.bgmPlaylist.size) currentBgmIndex + 1 else -1
@@ -145,7 +145,7 @@ fun rememberBgmPlayerState(
                             player.prepare()
                             player.start()
                             
-                            // Load新歌曲的歌词
+                            // Load
                             loadLrcForCurrentBgm(nextIndex)
                         } catch (e: Exception) {
                             AppLogger.e("ShellActivity", "播放下一首 BGM 失败", e)
@@ -155,7 +155,7 @@ fun rememberBgmPlayerState(
                 
                 player.prepare()
                 
-                // Auto播放
+                // Auto
                 if (config.bgmAutoPlay) {
                     player.start()
                     isBgmPlaying = true
@@ -163,7 +163,7 @@ fun rememberBgmPlayerState(
                 
                 bgmPlayer = player
                 
-                // Load第一首歌的歌词
+                // Load
                 loadLrcForCurrentBgm(0)
                 
                 AppLogger.d("ShellActivity", "BGM 播放器初始化成功: ${firstItem.name}")
@@ -173,7 +173,7 @@ fun rememberBgmPlayerState(
         }
     }
     
-    // Update歌词显示（追踪播放进度）
+    // Update display( )
     LaunchedEffect(isBgmPlaying, currentLrcData) {
         if (!isBgmPlaying || currentLrcData == null) return@LaunchedEffect
         
@@ -183,7 +183,7 @@ fun rememberBgmPlayerState(
                     if (mp.isPlaying) {
                         bgmCurrentPosition = mp.currentPosition.toLong()
                         
-                        // Find当前应显示的歌词行
+                        // Findcurrent display
                         val lrcData = currentLrcData
                         if (lrcData != null) {
                             val newIndex = lrcData.lines.indexOfLast { it.startTime <= bgmCurrentPosition }
@@ -193,14 +193,14 @@ fun rememberBgmPlayerState(
                         }
                     }
                 } catch (e: Exception) {
-                    // 忽略播放器状态异常
+                    // state
                 }
             }
             delay(100)
         }
     }
     
-    // Cleanup BGM 播放器
+    // Cleanup BGM
     DisposableEffect(Unit) {
         onDispose {
             bgmPlayer?.let {

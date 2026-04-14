@@ -16,8 +16,8 @@ import java.io.OutputStream
 import java.net.URL
 
 /**
- * 媒体文件保存工具类
- * 支持将图片和视频保存到系统相册，确保在图库 App 中可见
+ * Media save helper
+ * ， App
  */
 object MediaSaver {
     
@@ -25,7 +25,7 @@ object MediaSaver {
     private const val DEFAULT_BUFFER_SIZE = 8192
     
     /**
-     * 媒体类型
+     * Note.
      */
     enum class MediaType {
         IMAGE,
@@ -33,7 +33,7 @@ object MediaSaver {
     }
     
     /**
-     * 保存结果
+     * Note.
      */
     sealed class SaveResult {
         data class Success(val uri: Uri, val path: String) : SaveResult()
@@ -41,42 +41,42 @@ object MediaSaver {
     }
     
     /**
-     * 下载进度回调
+     * Note.
      */
     interface ProgressCallback {
         /**
-         * 进度更新
-         * @param bytesDownloaded 已下载字节数
-         * @param totalBytes 总字节数 (-1 表示未知)
-         * @param progress 进度百分比 (0-100, -1 表示未知)
+         * Note.
+         * @param bytesDownloaded parameter
+         * @param totalBytes parameter
+         * @param progress parameter
          */
         fun onProgress(bytesDownloaded: Long, totalBytes: Long, progress: Int)
         
         /**
-         * 下载开始
+         * Note.
          */
         fun onStart(totalBytes: Long) {}
         
         /**
-         * 下载完成
+         * Note.
          */
         fun onComplete() {}
         
         /**
-         * 下载失败
+         * Note.
          */
         fun onError(message: String) {}
     }
     
     /**
-     * 简化的进度回调 (仅关注进度百分比)
+     * ()
      */
     fun interface SimpleProgressCallback {
         fun onProgress(progress: Int)
     }
     
     /**
-     * 将 SimpleProgressCallback 转换为 ProgressCallback
+     * SimpleProgressCallback ProgressCallback
      */
     private fun SimpleProgressCallback.toProgressCallback(): ProgressCallback {
         return object : ProgressCallback {
@@ -87,7 +87,7 @@ object MediaSaver {
     }
     
     /**
-     * 根据 MIME 类型判断媒体类型
+     * MIME
      */
     fun getMediaType(mimeType: String?): MediaType? {
         return when {
@@ -98,7 +98,7 @@ object MediaSaver {
     }
     
     /**
-     * 根据文件扩展名判断媒体类型
+     * Note.
      */
     fun getMediaTypeByExtension(fileName: String): MediaType? {
         val extension = fileName.substringAfterLast('.', "").lowercase()
@@ -110,7 +110,7 @@ object MediaSaver {
     }
     
     /**
-     * 从 URL 下载并保存媒体文件到相册
+     * URL
      */
     suspend fun saveFromUrl(
         context: Context,
@@ -141,7 +141,7 @@ object MediaSaver {
     }
     
     /**
-     * 从 URL 下载并保存媒体文件到相册 (简化版进度回调)
+     * URL ()
      */
     suspend fun saveFromUrl(
         context: Context,
@@ -152,7 +152,7 @@ object MediaSaver {
     ): SaveResult = saveFromUrl(context, url, fileName, mimeType, onProgress.toProgressCallback())
     
     /**
-     * 从 URL 下载并保存媒体文件到相册（支持自定义 Headers 和进度回调）
+     * URL （ Headers ）
      */
     suspend fun saveFromUrlWithHeaders(
         context: Context,
@@ -168,12 +168,12 @@ object MediaSaver {
             connection.readTimeout = 30000
             connection.requestMethod = "GET"
             
-            // 添加自定义 Headers
+            // Headers
             headers.forEach { (key, value) ->
                 connection.setRequestProperty(key, value)
             }
             
-            // 添加常用 Headers
+            // Headers
             if (!headers.containsKey("User-Agent")) {
                 connection.setRequestProperty("User-Agent", 
                     "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36")
@@ -202,7 +202,7 @@ object MediaSaver {
     }
     
     /**
-     * 从本地文件保存到相册
+     * Note.
      */
     suspend fun saveFromFile(
         context: Context,
@@ -228,7 +228,7 @@ object MediaSaver {
     }
     
     /**
-     * 从字节数组保存到相册
+     * Note.
      */
     suspend fun saveFromBytes(
         context: Context,
@@ -250,7 +250,7 @@ object MediaSaver {
 
     
     /**
-     * 保存媒体文件到系统相册
+     * Note.
      */
     private fun saveToGallery(
         context: Context,
@@ -263,7 +263,7 @@ object MediaSaver {
     }
     
     /**
-     * 保存媒体文件到系统相册 (带进度回调)
+     * ()
      */
     private fun saveToGalleryWithProgress(
         context: Context,
@@ -282,7 +282,7 @@ object MediaSaver {
     }
     
     /**
-     * 带进度的流复制
+     * Note.
      */
     private fun copyWithProgress(
         inputStream: InputStream,
@@ -306,7 +306,7 @@ object MediaSaver {
                     -1
                 }
                 
-                // 只在进度变化时回调，避免频繁调用
+                // ，
                 if (progress != lastReportedProgress) {
                     progressCallback.onProgress(totalBytesRead, totalBytes, progress)
                     lastReportedProgress = progress
@@ -318,7 +318,7 @@ object MediaSaver {
     }
     
     /**
-     * Android 10+ 使用 MediaStore API 保存 (带进度回调)
+     * Android 10+ MediaStore API ()
      */
     private fun saveToGalleryQWithProgress(
         context: Context,
@@ -357,7 +357,7 @@ object MediaSaver {
                 copyWithProgress(inputStream, outputStream, totalBytes, progressCallback)
             } ?: return SaveResult.Error("Cannot write file")
             
-            // 标记文件写入完成
+            // Note.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 contentValues.clear()
                 contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -375,7 +375,7 @@ object MediaSaver {
     }
     
     /**
-     * Android 9 及以下使用传统文件 API 保存 (带进度回调)
+     * Android 9 API ()
      */
     private fun saveToGalleryLegacyWithProgress(
         context: Context,
@@ -396,7 +396,7 @@ object MediaSaver {
             appDir.mkdirs()
         }
         
-        // Handle文件名冲突
+        // Handle
         var targetFile = File(appDir, fileName)
         var counter = 1
         val nameWithoutExt = fileName.substringBeforeLast(".")
@@ -413,7 +413,7 @@ object MediaSaver {
                 copyWithProgress(inputStream, outputStream, totalBytes, progressCallback)
             }
             
-            // 通知媒体库扫描新文件
+            // Note.
             val contentUri = when (mediaType) {
                 MediaType.IMAGE -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                 MediaType.VIDEO -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
@@ -444,7 +444,7 @@ object MediaSaver {
     }
     
     /**
-     * 根据文件名猜测 MIME 类型
+     * MIME
      */
     private fun guessMimeType(fileName: String): String {
         val extension = fileName.substringAfterLast('.', "").lowercase()
@@ -471,7 +471,7 @@ object MediaSaver {
     }
     
     /**
-     * 检查是否为媒体文件（图片或视频）
+     * （）
      */
     fun isMediaFile(mimeType: String?, fileName: String? = null): Boolean {
         if (getMediaType(mimeType) != null) return true

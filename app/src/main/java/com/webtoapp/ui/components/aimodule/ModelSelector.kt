@@ -24,14 +24,14 @@ import com.webtoapp.data.model.SavedModel
 import androidx.compose.ui.graphics.Color
 
 /**
- * 模型选择器组件
+ * select
  * 
- * 用于在 AI 模块开发界面选择要使用的 AI 模型
+ * for AI module select AI
  * 
- * @param selectedModel 当前选中的模型
- * @param availableModels 可用的模型列表（已过滤支持 MODULE_DEVELOPMENT 的模型）
- * @param onModelSelected 模型选择回调
- * @param onConfigureClick 点击配置按钮的回调（跳转到 AI 设置）
+ * @param selectedModel current in
+ * @param availableModels list( support MODULE_DEVELOPMENT)
+ * @param onModelSelected select
+ * @param onConfigureClick configbutton( AI settings)
  * @param modifier Modifier
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,13 +45,13 @@ fun ModelSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     
-    // Filter支持 MODULE_DEVELOPMENT 的模型
+    // Filtersupport MODULE_DEVELOPMENT
     val filteredModels = remember(availableModels) {
         filterModelsForModuleDevelopment(availableModels)
     }
     
     Box(modifier = modifier) {
-        // Select器按钮
+        // Select button
         ModelSelectorButton(
             selectedModel = selectedModel,
             hasModels = filteredModels.isNotEmpty(),
@@ -64,7 +64,7 @@ fun ModelSelector(
             }
         )
         
-        // 下拉菜单
+        // Note
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -73,7 +73,7 @@ fun ModelSelector(
                 .heightIn(max = 400.dp)
         ) {
             if (filteredModels.isEmpty()) {
-                // Empty状态
+                // Emptystate
                 EmptyModelState(
                     onConfigureClick = {
                         expanded = false
@@ -81,7 +81,7 @@ fun ModelSelector(
                     }
                 )
             } else {
-                // 模型列表
+                // list
                 Text(
                     Strings.selectModel,
                     style = MaterialTheme.typography.labelMedium,
@@ -102,7 +102,7 @@ fun ModelSelector(
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
-                // Configure更多模型
+                // Configure
                 DropdownMenuItem(
                     text = {
                         Row(
@@ -132,7 +132,7 @@ fun ModelSelector(
 }
 
 /**
- * 模型选择器按钮
+ * select button
  */
 @Composable
 private fun ModelSelectorButton(
@@ -152,13 +152,13 @@ private fun ModelSelectorButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 供应商图标
+            // icon
             ProviderIcon(
                 provider = selectedModel?.model?.provider,
                 modifier = Modifier.size(28.dp)
             )
             
-            // 模型信息
+            // Note
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 if (selectedModel != null) {
                     Text(
@@ -193,7 +193,7 @@ private fun ModelSelectorButton(
                 }
             }
             
-            // 下拉箭头
+            // Note
             Icon(
                 Icons.Default.ArrowDropDown,
                 contentDescription = Strings.expand,
@@ -204,7 +204,7 @@ private fun ModelSelectorButton(
 }
 
 /**
- * 模型下拉项
+ * Note
  */
 @Composable
 private fun ModelDropdownItem(
@@ -219,13 +219,13 @@ private fun ModelDropdownItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 供应商图标
+                // icon
                 ProviderIcon(
                     provider = model.model.provider,
                     modifier = Modifier.size(24.dp)
                 )
                 
-                // 模型信息
+                // Note
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         model.alias ?: model.model.name,
@@ -259,7 +259,7 @@ private fun ModelDropdownItem(
                     }
                 }
                 
-                // 选中标记
+                // Note
                 if (isSelected) {
                     Icon(
                         Icons.Default.Check,
@@ -279,7 +279,7 @@ private fun ModelDropdownItem(
 }
 
 /**
- * 空状态提示
+ * statehint
  */
 @Composable
 private fun EmptyModelState(
@@ -328,7 +328,7 @@ private fun EmptyModelState(
 }
 
 /**
- * 供应商图标
+ * icon
  */
 @Composable
 fun ProviderIcon(
@@ -386,12 +386,12 @@ fun ProviderIcon(
 }
 
 /**
- * 过滤支持模块开发功能的模型
+ * supportmodule
  * 
- * 此函数用于筛选出支持 MODULE_DEVELOPMENT 功能的模型
+ * forfilter support MODULE_DEVELOPMENT
  * 
- * @param models 所有已保存的模型列表
- * @return 支持模块开发功能的模型列表
+ * @param models save list
+ * @return supportmodule list
  */
 fun filterModelsForModuleDevelopment(models: List<SavedModel>): List<SavedModel> {
     return models.filter { it.supportsFeature(AiFeature.MODULE_DEVELOPMENT) }

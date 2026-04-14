@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 强制运行倒计时覆盖层
+ * force- run
  * 
- * 显示剩余时间，并提供密码退出功能
+ * display, and
  */
 @Composable
 fun ForcedRunCountdownOverlay(
@@ -38,7 +38,7 @@ fun ForcedRunCountdownOverlay(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     
-    // 格式化剩余时间
+    // Note
     val formattedTime = remember(remainingMs) {
         val totalSeconds = (remainingMs.coerceAtLeast(0) / 1000).toInt()
         val hours = totalSeconds / 3600
@@ -74,7 +74,7 @@ fun ForcedRunCountdownOverlay(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 锁图标（可点击退出时显示不同图标）
+                // icon( display icon)
                 Icon(
                     imageVector = if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) 
                         Icons.Filled.LockOpen else Icons.Filled.Lock,
@@ -96,7 +96,7 @@ fun ForcedRunCountdownOverlay(
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                     
-                    // 提示文字
+                    // hint
                     if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) {
                         Text(
                             text = Strings.tapToEnterPasswordToExit,
@@ -110,7 +110,7 @@ fun ForcedRunCountdownOverlay(
         }
     }
     
-    // Password输入对话框
+    // Passwordinputdialog
     if (showPasswordDialog) {
         EmergencyExitPasswordDialog(
             correctPassword = emergencyPassword ?: "",
@@ -130,7 +130,7 @@ fun ForcedRunCountdownOverlay(
 }
 
 /**
- * 紧急退出密码对话框
+ * dialog
  */
 @Composable
 private fun EmergencyExitPasswordDialog(

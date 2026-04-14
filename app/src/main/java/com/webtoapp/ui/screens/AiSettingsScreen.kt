@@ -40,7 +40,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
 /**
- * AI 设置界面
+ * AI settings
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +52,7 @@ fun AiSettingsScreen(
     val configManager = remember { AiConfigManager(context) }
     val apiClient = remember { AiApiClient(context) }
     
-    // 状态
+    // state
     val apiKeys by configManager.apiKeysFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val savedModels by configManager.savedModelsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     
@@ -91,7 +91,7 @@ fun AiSettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // API Keys 区域
+            // API Keys area
             item {
                 ApiKeysSection(
                     apiKeys = apiKeys,
@@ -119,14 +119,14 @@ fun AiSettingsScreen(
                 )
             }
             
-            // Saved的模型区域
+            // Saved area
             item {
                 SavedModelsSection(
                     models = savedModels,
                     apiKeys = apiKeys,
                     onAddClick = { 
                         if (apiKeys.isNotEmpty()) {
-                            selectedApiKey = null  // 让用户在对话框中选择
+                            selectedApiKey = null  // user dialog select
                             showAddModelDialog = true
                         }
                     },
@@ -144,7 +144,7 @@ fun AiSettingsScreen(
         }
     }
     
-    // 添加 API Key 对话框
+    // API Key dialog
     if (showAddApiKeyDialog) {
         AddApiKeyDialog(
             onDismiss = { showAddApiKeyDialog = false },
@@ -166,7 +166,7 @@ fun AiSettingsScreen(
         )
     }
     
-    // 编辑 API Key 对话框
+    // edit API Key dialog
     editingApiKey?.let { key ->
         AddApiKeyDialog(
             initialConfig = key,
@@ -189,7 +189,7 @@ fun AiSettingsScreen(
         )
     }
     
-    // 添加模型对话框
+    // dialog
     if (showAddModelDialog && apiKeys.isNotEmpty()) {
         AddModelDialog(
             apiKeys = apiKeys,
@@ -217,7 +217,7 @@ fun AiSettingsScreen(
         )
     }
     
-    // 编辑模型对话框
+    // edit dialog
     editingModel?.let { model ->
         EditModelDialog(
             model = model,
@@ -240,7 +240,7 @@ fun AiSettingsScreen(
 }
 
 /**
- * API Keys 区域
+ * API Keys area
  */
 @Composable
 private fun ApiKeysSection(
@@ -284,7 +284,7 @@ private fun ApiKeysSection(
 }
 
 /**
- * API Key 项
+ * API Key
  */
 @Composable
 private fun ApiKeyItem(
@@ -332,7 +332,7 @@ private fun ApiKeyItem(
                 }
             }
             
-            // 测试按钮
+            // button
             TextButton(onClick = {
                 scope.launch {
                     testResult = Strings.testing
@@ -368,7 +368,7 @@ private fun ApiKeyItem(
 }
 
 /**
- * 已保存的模型区域
+ * save area
  */
 @Composable
 private fun SavedModelsSection(
@@ -418,7 +418,7 @@ private fun SavedModelsSection(
                     )
                 }
             } else {
-                // 创建 API Key ID 到名称的映射
+                // create API Key ID
                 val apiKeyMap = apiKeys.associateBy { it.id }
                 
                 models.forEach { model ->
@@ -437,7 +437,7 @@ private fun SavedModelsSection(
 }
 
 /**
- * 已保存的模型项
+ * save
  */
 @Composable
 private fun SavedModelItem(
@@ -486,7 +486,7 @@ private fun SavedModelItem(
                             }
                         }
                     }
-                    // 显示 API Key 名称和模型信息
+                    // display API Key
                     Text(
                         if (apiKeyName != null) 
                             "$apiKeyName · ${model.model.id}" 
@@ -526,7 +526,7 @@ private fun SavedModelItem(
                 }
             }
             
-            // 能力标签
+            // label
             if (model.capabilities.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -546,7 +546,7 @@ private fun SavedModelItem(
                 }
             }
             
-            // Show支持的功能场景
+            // Showsupport
             val supportedFeatures = model.getSupportedFeatures()
             if (supportedFeatures.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -563,7 +563,7 @@ private fun SavedModelItem(
 }
 
 /**
- * 添加 API Key 对话框
+ * API Key dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -597,7 +597,7 @@ private fun AddApiKeyDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 供应商选择
+                // select
                 var expanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -628,7 +628,7 @@ private fun AddApiKeyDialog(
                         )
                         categoryOrder.forEach { category ->
                             val providers = groupedProviders[category] ?: return@forEach
-                            // 分类标题
+                            // Note
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -658,7 +658,7 @@ private fun AddApiKeyDialog(
                     }
                 }
                 
-                // 供应商详情卡片
+                // card
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.small,
@@ -675,7 +675,7 @@ private fun AddApiKeyDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         
-                        // 价格信息
+                        // Note
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Outlined.Payments,
@@ -691,7 +691,7 @@ private fun AddApiKeyDialog(
                             )
                         }
                         
-                        // Get API Key 链接
+                        // Get API Key
                         if (selectedProvider.apiKeyUrl.isNotBlank()) {
                             TextButton(
                                 onClick = { uriHandler.openUri(selectedProvider.apiKeyUrl) },
@@ -710,7 +710,7 @@ private fun AddApiKeyDialog(
                     }
                 }
                 
-                // API Key 输入（本地模型可选）
+                // API Key input( local optional)
                 OutlinedTextField(
                     value = apiKey,
                     onValueChange = { apiKey = it },
@@ -730,7 +730,7 @@ private fun AddApiKeyDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // 别名输入（用于识别多个相同供应商的 API Key）
+                // input( for API Key)
                 OutlinedTextField(
                     value = alias,
                     onValueChange = { alias = it },
@@ -740,7 +740,7 @@ private fun AddApiKeyDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // Custom Base URL（CUSTOM 和自托管供应商显示）
+                // Custom Base URL( CUSTOM display)
                 if (selectedProvider.allowCustomBaseUrl) {
                     OutlinedTextField(
                         value = customBaseUrl,
@@ -752,7 +752,7 @@ private fun AddApiKeyDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // API 格式选择
+                    // API select
                     var formatExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = formatExpanded,
@@ -784,7 +784,7 @@ private fun AddApiKeyDialog(
                         }
                     }
                     
-                    // 高级选项展开/收起
+                    // advanced expand/
                     TextButton(
                         onClick = { showAdvancedOptions = !showAdvancedOptions },
                         modifier = Modifier.fillMaxWidth()
@@ -798,7 +798,7 @@ private fun AddApiKeyDialog(
                         Text(Strings.advancedOptions)
                     }
                     
-                    // 高级选项：自定义端点
+                    // advanced
                     AnimatedVisibility(visible = showAdvancedOptions) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedTextField(
@@ -824,7 +824,7 @@ private fun AddApiKeyDialog(
                     }
                 }
                 
-                // 测试结果
+                // Note
                 testResult?.let {
                     Text(
                         it,
@@ -837,7 +837,7 @@ private fun AddApiKeyDialog(
         },
         confirmButton = {
             Row {
-                // 测试按钮
+                // button
                 TextButton(
                     onClick = {
                         val config = ApiKeyConfig(
@@ -898,7 +898,7 @@ private fun AddApiKeyDialog(
 }
 
 /**
- * 模型排序方式
+ * Note
  */
 private enum class ModelSortType(val displayName: String) {
     NAME(Strings.sortByName),
@@ -908,8 +908,8 @@ private enum class ModelSortType(val displayName: String) {
 }
 
 /**
- * 添加模型对话框
- * 支持选择 API Key 和批量添加模型
+ * dialog
+ * supportselect API Key
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -924,16 +924,16 @@ private fun AddModelDialog(
     var selectedApiKey by remember { mutableStateOf(initialApiKey) }
     var models by remember { mutableStateOf<List<AiModel>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-    var selectedModels by remember { mutableStateOf<Set<AiModel>>(emptySet()) }  // 支持多选
+    var selectedModels by remember { mutableStateOf<Set<AiModel>>(emptySet()) }  // support
     var customModelId by remember { mutableStateOf("") }
     var alias by remember { mutableStateOf("") }
     var selectedCapabilities by remember { mutableStateOf<Set<ModelCapability>>(setOf(ModelCapability.TEXT)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var sortType by remember { mutableStateOf(ModelSortType.NAME) }
-    var isBatchMode by remember { mutableStateOf(false) }  // 批量模式
-    var searchQuery by remember { mutableStateOf("") }  // 搜索关键词
+    var isBatchMode by remember { mutableStateOf(false) }  // mode
+    var searchQuery by remember { mutableStateOf("") }  // Note
     
-    // 过滤和排序后的模型列表
+    // list
     val filteredAndSortedModels = remember(models, sortType, searchQuery) {
         val filtered = if (searchQuery.isBlank()) {
             models
@@ -952,10 +952,10 @@ private fun AddModelDialog(
         }
     }
     
-    // Load模型列表
+    // Load list
     LaunchedEffect(selectedApiKey) {
         isLoading = true
-        selectedModels = emptySet()  // 切换 API Key 时清空选择
+        selectedModels = emptySet()  // switch API Key select
         val result = apiClient.fetchModels(selectedApiKey)
         if (result.isSuccess) {
             models = result.getOrNull() ?: emptyList()
@@ -982,7 +982,7 @@ private fun AddModelDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // API Key 选择器
+                // API Key select
                 var apiKeyExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = apiKeyExpanded,
@@ -1055,9 +1055,9 @@ private fun AddModelDialog(
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // 模型选择
+                        // select
                         if (models.isNotEmpty()) {
-                            // 搜索框
+                            // Note
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
@@ -1078,7 +1078,7 @@ private fun AddModelDialog(
                                 )
                             )
                             
-                            // Sort选项和批量模式切换
+                            // Sort modeswitch
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1092,7 +1092,7 @@ private fun AddModelDialog(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // 批量模式切换
+                                    // modeswitch
                                     PremiumFilterChip(
                                         selected = isBatchMode,
                                         onClick = { 
@@ -1105,7 +1105,7 @@ private fun AddModelDialog(
                                 }
                             }
                             
-                            // 排序选项
+                            // Note
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 items(ModelSortType.entries.size) { index ->
                                     val type = ModelSortType.entries[index]
@@ -1118,7 +1118,7 @@ private fun AddModelDialog(
                                 }
                             }
                             
-                            // 已选模型计数（批量模式）
+                            // ( mode)
                             if (isBatchMode && selectedModels.isNotEmpty()) {
                                 Text(
                                     Strings.selectedModelsCount.format(selectedModels.size),
@@ -1127,7 +1127,7 @@ private fun AddModelDialog(
                                 )
                             }
                             
-                            // 无搜索结果提示
+                            // hint
                             if (filteredAndSortedModels.isEmpty() && searchQuery.isNotEmpty()) {
                                 Text(
                                     Strings.noSearchResults,
@@ -1151,7 +1151,7 @@ private fun AddModelDialog(
                                                 }
                                             } else {
                                                 selectedModels = setOf(model)
-                                                customModelId = ""  // 清空手动输入
+                                                customModelId = ""  // input
                                             }
                                         },
                                     shape = MaterialTheme.shapes.small,
@@ -1163,7 +1163,7 @@ private fun AddModelDialog(
                                         modifier = Modifier.padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // 批量模式显示复选框
+                                        // modedisplay
                                         if (isBatchMode) {
                                             Checkbox(
                                                 checked = model in selectedModels,
@@ -1243,7 +1243,7 @@ private fun AddModelDialog(
                             }
                         }
                         
-                        // 手动输入模型 ID（仅非批量模式）
+                        // input ID( only mode)
                         if (!isBatchMode) {
                             HorizontalDivider()
                             Text(Strings.orManualInputModelId, style = MaterialTheme.typography.labelMedium)
@@ -1259,7 +1259,7 @@ private fun AddModelDialog(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
-                            // 别名
+                            // Note
                             OutlinedTextField(
                                 value = alias,
                                 onValueChange = { alias = it },
@@ -1268,7 +1268,7 @@ private fun AddModelDialog(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
-                            // 能力标签选择
+                            // labelselect
                             Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
                             Text(
                                 Strings.selectCapabilitiesHint,
@@ -1312,7 +1312,7 @@ private fun AddModelDialog(
                     PremiumButton(
                         onClick = {
                             val modelsToSave = if (isBatchMode && selectedModels.isNotEmpty()) {
-                                // 批量模式：为每个选中的模型创建 SavedModel
+                                // mode: in create SavedModel
                                 selectedModels.map { model ->
                                     val capabilities = model.capabilities.toSet().ifEmpty { setOf(ModelCapability.TEXT) }
                                     val defaultMappings = capabilities.associateWith { capability ->
@@ -1329,7 +1329,7 @@ private fun AddModelDialog(
                                     )
                                 }
                             } else {
-                                // 单个模式
+                                // mode
                                 val model = selectedModels.firstOrNull() ?: AiModel(
                                     id = customModelId,
                                     name = customModelId,
@@ -1369,7 +1369,7 @@ private fun AddModelDialog(
 }
 
 /**
- * 编辑模型对话框
+ * edit dialog
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1423,7 +1423,7 @@ private fun EditModelDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // 能力标签选择
+                    // labelselect
                     Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
                     
                     FlowRow(
@@ -1446,7 +1446,7 @@ private fun EditModelDialog(
                         }
                     }
                     
-                    // 功能场景映射配置
+                    // config
                     if (selectedCapabilities.isNotEmpty()) {
                         HorizontalDivider()
                         
@@ -1507,7 +1507,7 @@ private fun EditModelDialog(
 }
 
 /**
- * 能力标签对应功能场景的配置卡片
+ * label configcard
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1588,7 +1588,7 @@ private fun CapabilityFeatureCard(
                         }
                     }
                     
-                    // 快捷操作
+                    // Note
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1597,7 +1597,7 @@ private fun CapabilityFeatureCard(
                     ) {
                         TextButton(
                             onClick = {
-                                // 恢复默认
+                                // default
                                 val defaults = AiFeature.entries.filter { 
                                     it.defaultCapabilities.contains(capability) 
                                 }.toSet()
@@ -1630,7 +1630,7 @@ private fun CapabilityFeatureCard(
 }
 
 /**
- * FlowRow 组件（用于标签布局）
+ * FlowRow( forlabel)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

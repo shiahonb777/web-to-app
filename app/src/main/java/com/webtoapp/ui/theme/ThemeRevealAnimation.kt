@@ -26,55 +26,55 @@ import kotlinx.coroutines.launch
 import kotlin.math.hypot
 import kotlin.math.max
 
-// ==================== 圆形揭示动画状态 ====================
+// ==================== Circular Reveal State ====================
 
 /**
- * 管理深/浅色模式切换的圆形揭示动画状态
+ * Manages circular reveal state for light/dark mode switching.
  * 
- * ★ 完全可打断设计 ★
- * - 动画进行中再次点击：立即取消当前动画，重新截图，从新位置启动
- * - 使用 spring 物理引擎：打断时保留速度，过渡自然
- * - 支持快速连续点击：即使 0.1 秒内连点也能正确响应
+ * Fully interruptible design.
+ * - Tap again during animation: cancel current run, resnapshot, restart from new position.
+ * - Spring physics keeps velocity on interrupt for natural continuity.
+ * - Handles rapid repeated taps reliably.
  */
 class ThemeRevealState {
-    /** 当前是否正在播放动画 */
+    /** Whether an animation is currently running. */
     var isAnimating by mutableStateOf(false)
         internal set
     
-    /** 切换前的屏幕截图 */
+    /** Screen snapshot captured before theme switch. */
     var snapshot: ImageBitmap? by mutableStateOf(null)
         internal set
 
-    /** 动画进度 0f→1f */
+    /** Animation progress 0f -> 1f. */
     val animationProgress = Animatable(0f)
 
-    /** 动画中心点（屏幕坐标） */
+    /** Reveal center in screen coordinates. */
     var revealCenter by mutableStateOf(Offset.Zero)
         internal set
 
-    /** 是否正在切换到深色模式（决定裁剪方向） */
+    /** Whether switching to dark mode (controls clip direction). */
     var toDark by mutableStateOf(false)
         internal set
 
-    /** 屏幕对角线长度（动画最大半径） */
+    /** Screen diagonal length (max reveal radius). */
     var maxRadius by mutableFloatStateOf(0f)
         internal set
 
-    /** ★ 打断核心：当前动画 Job，用于取消 */
+    /** Current animation Job, used for cancellation. */
     internal var currentAnimationJob: Job? = null
 
-    /** ★ 打断计数器：每次触发递增，LaunchedEffect 通过此值检测是否被打断 */
+    /** Interrupt generation counter; incremented every trigger. */
     var revealGeneration by mutableIntStateOf(0)
         internal set
 
     /**
-     * 触发圆形揭示动画 — 支持打断
+     * Trigger circular reveal animation with interrupt support.
      *
-     * 如果当前有动画正在播放：
-     * 1. 取消当前动画 Job
-     * 2. 立即完成清理（但不清理 isAnimating 标志）
-     * 3. 重新截图当前画面（已包含上一次主题切换的部分效果）
-     * 4. 从新点击位置启动新动画
+     * If an animation is already running:
+     * 1. Cancel current animation Job.
+     * 2. Run immediate cleanup (except isAnimating flag).
+     * 3. Capture a fresh snapshot of the current partial result.
+     * 4. Start a new animation from the new tap position.
      */
     fun triggerReveal(
         center: Offset,
@@ -83,14 +83,14 @@ class ThemeRevealState {
         window: Window?,
         onCaptureDone: () -> Unit
     ) {
-        // ★ 打断：取消当前动画
+        // Interrupt: cancel current animation
         currentAnimationJob?.cancel()
         currentAnimationJob = null
 
         revealCenter = center
         toDark = switchToDark
 
-        // 计算从中心到四角的最远距离作为最大半径
+        // Compute max radius as the farthest corner distance from center
         val w = view.width.toFloat()
         val h = view.height.toFloat()
         maxRadius = max(
@@ -98,10 +98,10 @@ class ThemeRevealState {
             max(hypot(center.x, h - center.y), hypot(w - center.x, h - center.y))
         )
 
-        // 递增 generation 使旧 LaunchedEffect 失效
+        // Increment generation to invalidate previous LaunchedEffect
         revealGeneration++
 
-        // 截图当前屏幕（包含被打断的部分动画状态）
+        // Snapshot current screen (including interrupted partial state)
         captureScreen(view, window) { bitmap ->
             snapshot = bitmap.asImageBitmap()
             isAnimating = true
@@ -110,7 +110,7 @@ class ThemeRevealState {
     }
 
     /**
-     * 截取当前屏幕
+     * Capture current screen.
      */
     private fun captureScreen(view: View, window: Window?, onCaptured: (Bitmap) -> Unit) {
         val width = view.width
@@ -156,7 +156,7 @@ class ThemeRevealState {
     }
 
     /**
-     * 清理资源
+     * Clean up resources.
      */
     internal fun cleanup() {
         isAnimating = false
@@ -166,26 +166,26 @@ class ThemeRevealState {
 }
 
 /**
- * 记住并管理 ThemeRevealState
+ * Remember and manage ThemeRevealState.
  */
 @Composable
 fun rememberThemeRevealState(): ThemeRevealState {
     return remember { ThemeRevealState() }
 }
 
-// 全局 CompositionLocal 提供动画状态
+// Global CompositionLocal for reveal state
 val LocalThemeRevealState = staticCompositionLocalOf<ThemeRevealState?> { null }
 
-// ==================== 圆形揭示动画叠层 ====================
+// ==================== Circular Reveal Overlay ====================
 
 /**
- * 圆形揭示动画叠层 — ★ 完全可打断版 ★
+ * Circular reveal overlay - fully interruptible version.
  *
- * 打断机制：
- * - LaunchedEffect 以 revealGeneration 为 key
- * - 用户再次点击 → generation 变化 → 旧协程自动取消 → 新协程启动
- * - 动画从 snapTo(0f) 重新开始，但 snapshot 已是包含了半完成状态的新截图
- * - 使用 spring 物理引擎，打断后从当前速度自然过渡
+ * Interrupt mechanism:
+ * - LaunchedEffect uses revealGeneration as key.
+ * - New tap changes generation -> old coroutine cancels -> new coroutine starts.
+ * - Animation restarts from snapTo(0f) with a fresh partial-state snapshot.
+ * - Spring physics gives natural velocity continuity after interruption.
  */
 @Composable
 fun CircularRevealOverlay(
@@ -197,11 +197,11 @@ fun CircularRevealOverlay(
     val snap = revealState.snapshot ?: return
     val coroutineScope = rememberCoroutineScope()
 
-    // ★ key = revealGeneration: 每次打断都会取消旧效果、启动新效果
+    // key = revealGeneration: each interrupt cancels old effect and starts new one
     LaunchedEffect(revealState.revealGeneration) {
         revealState.animationProgress.snapTo(0f)
 
-        // 保存 Job 以支持外部取消
+        // Keep Job reference for external cancellation
         val job = coroutineScope.launch {
             revealState.animationProgress.animateTo(
                 targetValue = 1f,
@@ -210,7 +210,7 @@ fun CircularRevealOverlay(
                     easing = FastOutSlowInEasing
                 )
             )
-            // 正常结束（未被打断）才执行清理
+            // Clean up only on normal completion (not interrupted)
             revealState.cleanup()
         }
         revealState.currentAnimationJob = job
@@ -221,7 +221,7 @@ fun CircularRevealOverlay(
     val center = revealState.revealCenter
     val maxR = revealState.maxRadius
 
-    // 当前半径
+    // Current reveal radius
     val currentRadius = maxR * progress
 
     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -236,7 +236,7 @@ fun CircularRevealOverlay(
             )
         }
 
-        // 用 Difference 模式：绘制整个 snapshot，但挖掉圆形区域
+        // Difference mode: draw full snapshot and carve out circular area
         clipPath(circlePath, clipOp = ClipOp.Difference) {
             drawImage(snap)
         }

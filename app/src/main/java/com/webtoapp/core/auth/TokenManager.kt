@@ -8,10 +8,10 @@ import com.webtoapp.core.logging.AppLogger
 import java.util.UUID
 
 /**
- * JWT Token 持久化管理器
+ * JWT Token
  * 
- * 使用 EncryptedSharedPreferences 安全存储 Token
- * 降级到普通 SharedPreferences 如果加密不可用
+ * EncryptedSharedPreferences Token
+ * SharedPreferences
  */
 class TokenManager(context: Context) {
 
@@ -50,7 +50,7 @@ class TokenManager(context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    // ─── Token 操作 ───
+    // ─── Token ───
 
     fun saveTokens(accessToken: String, refreshToken: String) {
         prefs.edit()
@@ -75,7 +75,7 @@ class TokenManager(context: Context) {
 
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
-    // ─── 用户数据缓存 ───
+    // ─── ───
 
     fun saveUserJson(json: String) {
         prefs.edit().putString(KEY_USER_JSON, json).apply()
@@ -83,7 +83,7 @@ class TokenManager(context: Context) {
 
     fun getUserJson(): String? = prefs.getString(KEY_USER_JSON, null)
 
-    // ─── 设备 ID ───
+    // ─── ID ───
 
     fun getDeviceId(): String {
         var deviceId = prefs.getString(KEY_DEVICE_ID, null)

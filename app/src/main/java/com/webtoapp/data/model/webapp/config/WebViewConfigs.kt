@@ -3,9 +3,9 @@ package com.webtoapp.data.model.webapp.config
 import androidx.compose.runtime.Stable
 
 enum class StatusBarColorMode {
-    THEME,      // 跟随主题色（默认）
-    TRANSPARENT,// 完全透明
-    CUSTOM      // Custom颜色
+    THEME,      // Follow the theme color
+    TRANSPARENT,// Fully transparent
+    CUSTOM      // Custom color
 }
 
 enum class StatusBarBackgroundType {
@@ -222,65 +222,45 @@ enum class SplashOrientation {
 }
 
 /**
- * 键盘调整模式 — 控制软键盘弹出时的页面行为
- *
- * - RESIZE: 页面自动调整大小，键盘会推起内容（确保输入框可见，可能有轻微卡顿）
- * - NOTHING: 键盘覆盖页面，不调整布局（更流畅，但可能遮挡输入框）
+ * Controls how the page reacts when the soft keyboard opens.
  */
 enum class KeyboardAdjustMode {
-    RESIZE,      // 页面调整大小（键盘推起内容）
-    NOTHING      // 键盘覆盖页面（无布局调整）
+    RESIZE,      // Resize the page so inputs stay visible
+    NOTHING      // Let the keyboard overlay the page
 }
 
 /**
- * 屏幕方向模式 — 用于 WebApp / 各类应用配置
- *
- * 支持七种模式：
- * - PORTRAIT: 锁定竖屏（正向）
- * - LANDSCAPE: 锁定横屏（正向）
- * - REVERSE_PORTRAIT: 锁定反向竖屏（倒置）
- * - REVERSE_LANDSCAPE: 锁定反向横屏
- * - SENSOR_PORTRAIT: 竖屏 + 重力感应（允许正向/反向竖屏切换）
- * - SENSOR_LANDSCAPE: 横屏 + 重力感应（允许正向/反向横屏切换）
- * - AUTO: 全方向自动旋转（跟随重力感应，平板友好）
+ * Supported screen orientation modes.
  */
 enum class OrientationMode {
-    PORTRAIT,            // 锁定竖屏（正向）
-    LANDSCAPE,           // 锁定横屏（正向）
-    REVERSE_PORTRAIT,    // 锁定反向竖屏（倒置）
-    REVERSE_LANDSCAPE,   // 锁定反向横屏
-    SENSOR_PORTRAIT,     // 竖屏 + 重力感应（正向/反向竖屏自动切换）
-    SENSOR_LANDSCAPE,    // 横屏 + 重力感应（正向/反向横屏自动切换）
-    AUTO                 // 全方向自动旋转（重力感应）
+    PORTRAIT,            // Lock to portrait
+    LANDSCAPE,           // Lock to landscape
+    REVERSE_PORTRAIT,    // Lock to reverse portrait
+    REVERSE_LANDSCAPE,   // Lock to reverse landscape
+    SENSOR_PORTRAIT,     // Auto-switch within portrait orientations
+    SENSOR_LANDSCAPE,    // Auto-switch within landscape orientations
+    AUTO                 // Fully sensor-driven rotation
 }
 
 /**
- * 屏幕常亮模式
+ * Screen awake behavior.
  */
 enum class ScreenAwakeMode {
-    OFF,       // 关闭：跟随系统超时
-    ALWAYS,    // 始终常亮：适用于 code-server、数字相框等
-    TIMED      // 定时常亮：在指定时间后恢复系统超时（节省电量）
+    OFF,       // Follow the system timeout
+    ALWAYS,    // Keep the screen on until the app exits
+    TIMED      // Keep the screen on for a limited time
 }
 
 /**
- * 视口适配模式 — 控制 WebView 如何处理页面的视口缩放
- *
- * 问题背景：Unity WebGL 游戏、Canvas 应用等使用固定尺寸渲染，
- * Android WebView 默认的 DPI 缩放会导致内容放大，UI 元素被裁切到屏幕外。
- *
- * - DEFAULT: 标准行为，适合大多数网页
- * - FIT_SCREEN: 强制内容适配屏幕（注入 viewport meta + CSS 缩放），解决 Unity/Canvas 放大裁切问题
- * - DESKTOP: 桌面视口（980px 宽），适合桌面端网页
- * - CUSTOM: 用户自定义视口宽度
+ * Controls how WebView scales the page viewport.
  */
 enum class ViewportMode {
-    DEFAULT,       // 标准模式（适合大多数网页）
-    FIT_SCREEN,    // 适配屏幕（强制缩放至可见范围，适合 Unity/Canvas/游戏）
-    DESKTOP,       // 桌面视口（980px 宽度，适合桌面端网页）
-    CUSTOM         // 自定义视口宽度
+    DEFAULT,       // Standard behavior for most pages
+    FIT_SCREEN,    // Force content to fit the screen
+    DESKTOP,       // Use a desktop-style viewport
+    CUSTOM         // Use a custom viewport width
 }
 
 /**
- * Media app configuration（图片/视频转APP）- 兼容旧版单媒体模式
+ * Media app configuration kept for legacy single-media flows.
  */

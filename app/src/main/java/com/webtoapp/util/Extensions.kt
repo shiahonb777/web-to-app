@@ -15,10 +15,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * 扩展函数集合
+ * Shared extension helpers.
  */
 
-// ==================== Context 扩展 ====================
+// Context extensions
 
 fun Context.toast(message: String, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, message, duration).show()
@@ -32,7 +32,7 @@ fun Context.isNetworkAvailable(): Boolean {
 }
 
 /**
- * 检查是否为 WiFi 连接
+ * Check whether the current network is Wi-Fi.
  */
 fun Context.isWifiConnected(): Boolean {
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -72,14 +72,14 @@ fun Context.shareText(text: String, title: String = "Share") {
 }
 
 /**
- * 获取缓存目录大小
+ * Return the total cache directory size.
  */
 fun Context.getCacheDirSize(): Long {
     return cacheDir.calculateDirSize() + (externalCacheDir?.calculateDirSize() ?: 0L)
 }
 
 /**
- * 清除缓存
+ * Clear app cache directories.
  */
 fun Context.clearCache(): Boolean {
     return try {
@@ -91,7 +91,7 @@ fun Context.clearCache(): Boolean {
     }
 }
 
-// ==================== String 扩展 ====================
+// String extensions
 
 fun String.isValidUrl(): Boolean {
     return try {
@@ -103,7 +103,7 @@ fun String.isValidUrl(): Boolean {
 }
 
 fun String.normalizeUrl(): String {
-    // 不自动补全协议，用户输入什么就用什么
+    // Keep the user input unchanged.
     return this.trim()
 }
 
@@ -128,7 +128,7 @@ fun String.extractDomain(): String? {
 }
 
 /**
- * 截断字符串，超出部分用省略号表示
+ * Truncate a string and append an ellipsis when needed.
  */
 fun String.truncate(maxLength: Int, ellipsis: String = "..."): String {
     return if (length <= maxLength) this
@@ -136,22 +136,22 @@ fun String.truncate(maxLength: Int, ellipsis: String = "..."): String {
 }
 
 /**
- * 安全地转换为 Int
+ * Parse an Int or return the fallback value.
  */
 fun String.toIntOrDefault(default: Int = 0): Int {
     return toIntOrNull() ?: default
 }
 
 /**
- * 安全地转换为 Long
+ * Parse a Long or return the fallback value.
  */
 fun String.toLongOrDefault(default: Long = 0L): Long {
     return toLongOrNull() ?: default
 }
 
-// ==================== Long 扩展 ====================
+// Long extensions
 
-// Date格式化器缓存（线程安全）
+// Thread-safe date formatter cache.
 private val dateFormatCache = object : ThreadLocal<MutableMap<String, SimpleDateFormat>>() {
     override fun initialValue() = mutableMapOf<String, SimpleDateFormat>()
 }
@@ -165,7 +165,7 @@ fun Long.toDateString(pattern: String = "yyyy-MM-dd HH:mm"): String {
 }
 
 /**
- * 格式化为文件大小字符串
+ * Format a byte count as a human-readable file size.
  */
 fun Long.toFileSizeString(): String {
     return when {
@@ -177,7 +177,7 @@ fun Long.toFileSizeString(): String {
 }
 
 /**
- * 格式化为时长字符串 (毫秒 -> HH:mm:ss)
+ * Format milliseconds as a duration string.
  */
 fun Long.toDurationString(): String {
     val seconds = this / 1000
@@ -192,10 +192,10 @@ fun Long.toDurationString(): String {
     }
 }
 
-// ==================== File 扩展 ====================
+// File extensions
 
 /**
- * 计算目录大小
+ * Compute the total size of a directory tree.
  */
 fun File.calculateDirSize(): Long {
     if (!exists()) return 0L
@@ -207,7 +207,7 @@ fun File.calculateDirSize(): Long {
 }
 
 /**
- * 安全删除文件或目录
+ * Delete a file or directory without throwing.
  */
 fun File.safeDelete(): Boolean {
     return try {
@@ -218,28 +218,28 @@ fun File.safeDelete(): Boolean {
 }
 
 /**
- * 获取文件扩展名
+ * Return the lowercase file extension.
  */
 fun File.getExtension(): String {
     return name.substringAfterLast('.', "").lowercase()
 }
 
-// ==================== Collection 扩展 ====================
+// Collection extensions
 
 fun <T> List<T>.safeGet(index: Int): T? = getOrNull(index)
 
 /**
- * 安全地获取第一个元素
+ * Return the first item or null.
  */
 fun <T> List<T>.safeFirst(): T? = firstOrNull()
 
 /**
- * 安全地获取最后一个元素
+ * Return the last item or null.
  */
 fun <T> List<T>.safeLast(): T? = lastOrNull()
 
 /**
- * 分批处理列表
+ * Iterate through the list in batches.
  */
 inline fun <T> List<T>.forEachBatch(batchSize: Int, action: (List<T>) -> Unit) {
     chunked(batchSize).forEach(action)

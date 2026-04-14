@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Gallery 画廊播放器（Shell 模式）
- * 从 APK 的 assets/gallery/ 目录加载媒体文件
+ * Gallery( Shell mode)
+ * from APK assets/gallery/ directoryload file
  */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -44,7 +44,7 @@ fun ShellGalleryPlayer(
     val scope = rememberCoroutineScope()
     val assetDecryptor = remember { com.webtoapp.core.crypto.AssetDecryptor(context) }
     
-    // 获取排序后的媒体列表
+    // list
     val items = remember(galleryConfig) {
         when (galleryConfig.playMode) {
             "SHUFFLE" -> galleryConfig.items.shuffled()
@@ -73,21 +73,21 @@ fun ShellGalleryPlayer(
         return
     }
     
-    // Pager 状态
+    // Pager state
     val pagerState = androidx.compose.foundation.pager.rememberPagerState(
         initialPage = 0,
         pageCount = { effectiveItems.size }
     )
     
-    // 当前项索引
+    // current
     val currentIndex by remember { derivedStateOf { pagerState.settledPage } }
     val currentItem = effectiveItems.getOrNull(currentIndex)
     
-    // 控制 UI 显示状态
+    // UI displaystate
     var showControls by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(galleryConfig.autoPlay) }
     
-    // 图片自动播放计时器
+    // Note
     LaunchedEffect(currentIndex, isPlaying) {
         if (isPlaying && currentItem?.type == "IMAGE" && !pagerState.isScrollInProgress) {
             kotlinx.coroutines.delay(galleryConfig.imageInterval * 1000L)
@@ -101,7 +101,7 @@ fun ShellGalleryPlayer(
         }
     }
     
-    // 自动隐藏控制 UI
+    // hide UI
     LaunchedEffect(showControls) {
         if (showControls) {
             kotlinx.coroutines.delay(3000)
@@ -109,7 +109,7 @@ fun ShellGalleryPlayer(
         }
     }
     
-    // 背景颜色
+    // color
     val bgColor = remember(galleryConfig.backgroundColor) {
         try {
             Color(android.graphics.Color.parseColor(galleryConfig.backgroundColor))
@@ -128,7 +128,7 @@ fun ShellGalleryPlayer(
                 )
             }
     ) {
-        // 主内容 - HorizontalPager
+        // content- HorizontalPager
         androidx.compose.foundation.pager.HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -171,7 +171,7 @@ fun ShellGalleryPlayer(
             }
         }
         
-        // 顶部信息栏
+        // top
         AnimatedVisibility(
             visible = showControls && galleryConfig.showMediaInfo,
             enter = fadeIn() + slideInVertically(),
@@ -216,7 +216,7 @@ fun ShellGalleryPlayer(
                         )
                     }
                     
-                    // 媒体类型图标
+                    // typeicon
                     currentItem?.let { item ->
                         Icon(
                             if (item.type == "VIDEO") Icons.Outlined.Videocam 
@@ -230,7 +230,7 @@ fun ShellGalleryPlayer(
             }
         }
         
-        // 播放/暂停按钮（仅图片模式）
+        // / button( only mode)
         if (currentItem?.type == "IMAGE") {
             AnimatedVisibility(
                 visible = showControls,
@@ -257,7 +257,7 @@ fun ShellGalleryPlayer(
             }
         }
         
-        // 左右导航箭头
+        // Note
         AnimatedVisibility(
             visible = showControls && currentIndex > 0,
             enter = fadeIn(),
@@ -368,7 +368,7 @@ private fun deriveGalleryItemsFromAssets(
 }
 
 /**
- * Gallery 图片查看器（从 assets 加载）
+ * Gallery( from assets load)
  */
 @Composable
 fun ShellGalleryImageViewer(
@@ -380,15 +380,15 @@ fun ShellGalleryImageViewer(
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     
-    // 加载图片
+    // load
     LaunchedEffect(item.assetPath) {
         isLoading = true
         try {
-            // 尝试加载加密版本
+            // load version
             val imageBytes = try {
                 assetDecryptor.loadAsset(item.assetPath)
             } catch (e: Exception) {
-                // 回退到非加密版本
+                // fallback version
                 context.assets.open(item.assetPath).use { it.readBytes() }
             }
             bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -418,7 +418,7 @@ fun ShellGalleryImageViewer(
 }
 
 /**
- * Gallery 视频播放器（从 assets 加载）
+ * Gallery( from assets load)
  */
 @Composable
 fun ShellGalleryVideoPlayer(
@@ -444,7 +444,7 @@ fun ShellGalleryVideoPlayer(
     var duration by remember { mutableLongStateOf(0L) }
     val isEncrypted = remember(item.assetPath) { assetDecryptor.isEncrypted(item.assetPath) }
     
-    // 创建和释放 MediaPlayer
+    // create MediaPlayer
     DisposableEffect(item.assetPath, isEncrypted) {
         val mediaPlayer = android.media.MediaPlayer()
         var assetFd: android.content.res.AssetFileDescriptor? = null
@@ -466,7 +466,7 @@ fun ShellGalleryVideoPlayer(
                 }
                 
                 if (!isEncrypted) {
-                    // 优先使用 AssetFileDescriptor（避免大文件内存拷贝）
+                    // prefer AssetFileDescriptor( file)
                     try {
                         assetFd = context.assets.openFd(item.assetPath)
                         withContext(Dispatchers.Main) {
@@ -482,7 +482,7 @@ fun ShellGalleryVideoPlayer(
                         AppLogger.w("ShellGallery", "openFd failed, fallback to stream copy: ${item.assetPath}", e)
                     }
                     
-                    // 回退：非加密资源流式复制到临时文件
+                    // fallback: file
                     val ext = item.assetPath.substringAfterLast('.', "mp4")
                     val tempFile = java.io.File(context.cacheDir, "gallery_video_${System.currentTimeMillis()}.$ext")
                     context.assets.open(item.assetPath).use { input ->
@@ -494,7 +494,7 @@ fun ShellGalleryVideoPlayer(
                         mediaPlayer.prepareAsync()
                     }
                 } else {
-                    // 加密资源：解密到临时文件
+                    // file
                     val videoBytes = assetDecryptor.loadAsset(item.assetPath)
                     val ext = item.assetPath.substringAfterLast('.', "mp4")
                     val tempFile = java.io.File(context.cacheDir, "gallery_video_${System.currentTimeMillis()}.$ext")
@@ -527,13 +527,13 @@ fun ShellGalleryVideoPlayer(
             }
             player = null
             isPrepared = false
-            // 清理临时文件
+            // file
             tempVideoFile?.delete()
             tempVideoFile = null
         }
     }
     
-    // 处理播放状态变化
+    // handle state
     LaunchedEffect(isPlaying, isPrepared, isCurrentPage) {
         player?.let { mp ->
             if (isPrepared) {
@@ -546,7 +546,7 @@ fun ShellGalleryVideoPlayer(
         }
     }
     
-    // 处理音量
+    // handle
     LaunchedEffect(enableAudio, isPrepared) {
         player?.let { mp ->
             if (isPrepared) {
@@ -558,7 +558,7 @@ fun ShellGalleryVideoPlayer(
         }
     }
     
-    // 更新播放进度
+    // update
     LaunchedEffect(isPlaying, isPrepared) {
         while (isPlaying && isPrepared) {
             player?.let { mp ->
@@ -613,7 +613,7 @@ fun ShellGalleryVideoPlayer(
             modifier = Modifier.fillMaxSize()
         )
         
-        // 视频控制层
+        // Note
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn(),
@@ -630,7 +630,7 @@ fun ShellGalleryVideoPlayer(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .navigationBarsPadding()
                 ) {
-                    // 进度条
+                    // Note
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -664,13 +664,13 @@ fun ShellGalleryVideoPlayer(
                         )
                     }
                     
-                    // 控制按钮
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 后退 10 秒
+                        // 10
                         IconButton(onClick = { 
                             player?.let { mp ->
                                 if (isPrepared) mp.seekTo((mp.currentPosition - 10000).coerceAtLeast(0))
@@ -683,7 +683,7 @@ fun ShellGalleryVideoPlayer(
                             )
                         }
                         
-                        // 播放/暂停
+                        // Note
                         IconButton(
                             onClick = { onPlayStateChange(!isPlaying) },
                             modifier = Modifier.size(56.dp)
@@ -696,7 +696,7 @@ fun ShellGalleryVideoPlayer(
                             )
                         }
                         
-                        // 快进 10 秒
+                        // 10
                         IconButton(onClick = { 
                             player?.let { mp ->
                                 if (isPrepared) mp.seekTo((mp.currentPosition + 10000).coerceAtMost(mp.duration))

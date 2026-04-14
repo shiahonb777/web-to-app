@@ -59,7 +59,7 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 文件槽位组件
+ * file
  */
 @Composable
 internal fun FileSlot(
@@ -153,7 +153,7 @@ internal fun FileSlot(
 }
 
 /**
- * 带编辑按钮的文件槽位组件
+ * editbutton file
  */
 @Composable
 internal fun FileSlotWithEditor(
@@ -269,7 +269,7 @@ internal fun FileSlotWithEditor(
 }
 
 /**
- * 全屏代码编辑器对话框
+ * codeedit dialog
  */
 @Composable
 internal fun CodeEditorDialog(
@@ -514,7 +514,7 @@ internal fun CodeEditorDialog(
 }
 
 /**
- * 从Uri获取文件名
+ * fromUri file
  */
 internal fun getFileName(context: android.content.Context, uri: Uri): String? {
     var result: String? = null
@@ -535,7 +535,7 @@ internal fun getFileName(context: android.content.Context, uri: Uri): String? {
 }
 
 /**
- * 复制Uri内容到临时文件
+ * Uricontent file
  */
 internal fun copyUriToTempFile(
     context: android.content.Context,
@@ -558,7 +558,7 @@ internal fun copyUriToTempFile(
 }
 
 /**
- * 根据文件名获取文件类型
+ * file filetype
  */
 internal fun getFileType(fileName: String): HtmlFileType {
     val extension = fileName.substringAfterLast('.', "").lowercase()

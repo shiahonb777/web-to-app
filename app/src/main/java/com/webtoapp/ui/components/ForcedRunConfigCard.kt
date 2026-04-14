@@ -35,20 +35,20 @@ fun ForcedRunConfigCard(
     var enabled by remember(config) { mutableStateOf(config?.enabled ?: false) }
     var mode by remember(config) { mutableStateOf(config?.mode ?: ForcedRunMode.FIXED_TIME) }
     
-    // 固定时间模式
+    // mode
     var startTime by remember(config) { mutableStateOf(config?.startTime ?: "08:00") }
     var endTime by remember(config) { mutableStateOf(config?.endTime ?: "12:00") }
     var activeDays by remember(config) { mutableStateOf(config?.activeDays ?: listOf(1, 2, 3, 4, 5, 6, 7)) }
     
-    // 倒计时模式
+    // mode
     var countdownMinutes by remember(config) { mutableIntStateOf(config?.countdownMinutes ?: 60) }
     
-    // 限时模式
+    // mode
     var accessStartTime by remember(config) { mutableStateOf(config?.accessStartTime ?: "08:00") }
     var accessEndTime by remember(config) { mutableStateOf(config?.accessEndTime ?: "22:00") }
     var accessDays by remember(config) { mutableStateOf(config?.accessDays ?: listOf(1, 2, 3, 4, 5, 6, 7)) }
     
-    // 通用配置
+    // config
     var blockSystemUI by remember(config) { mutableStateOf(config?.blockSystemUI ?: true) }
     var blockBackButton by remember(config) { mutableStateOf(config?.blockBackButton ?: true) }
     var blockHomeButton by remember(config) { mutableStateOf(config?.blockHomeButton ?: true) }
@@ -56,7 +56,7 @@ fun ForcedRunConfigCard(
     var allowEmergencyExit by remember(config) { mutableStateOf(config?.allowEmergencyExit ?: false) }
     var emergencyPassword by remember(config) { mutableStateOf(config?.emergencyPassword ?: "") }
     
-    // Time选择对话框
+    // Timeselectdialog
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
     var showAccessStartTimePicker by remember { mutableStateOf(false) }
@@ -91,7 +91,7 @@ fun ForcedRunConfigCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -141,7 +141,7 @@ fun ForcedRunConfigCard(
             
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // Enable开关
+                    // Enable
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -173,7 +173,7 @@ fun ForcedRunConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 运行模式选择
+                            // runmodeselect
                             Text(
                                 Strings.forcedRunMode,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -221,10 +221,10 @@ fun ForcedRunConfigCard(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 根据模式显示不同配置
+                            // modedisplay config
                             when (mode) {
                                 ForcedRunMode.FIXED_TIME -> {
-                                    // 固定时间段配置
+                                    // config
                                     Text(
                                         Strings.fixedTimeModeHint,
                                         style = MaterialTheme.typography.bodySmall,
@@ -233,7 +233,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(12.dp))
                                     
-                                    // Start时间
+                                    // Start
                                     OutlinedCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -265,7 +265,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
-                                    // End时间
+                                    // End
                                     OutlinedCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -297,7 +297,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(12.dp))
                                     
-                                    // 生效日期
+                                    // Note
                                     Text(
                                         Strings.activeDays,
                                         style = MaterialTheme.typography.bodyMedium,
@@ -314,7 +314,7 @@ fun ForcedRunConfigCard(
                                 }
                                 
                                 ForcedRunMode.COUNTDOWN -> {
-                                    // 倒计时模式配置
+                                    // modeconfig
                                     Text(
                                         Strings.countdownModeHint,
                                         style = MaterialTheme.typography.bodySmall,
@@ -339,7 +339,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
-                                    // 快捷预设
+                                    // Note
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -357,7 +357,7 @@ fun ForcedRunConfigCard(
                                 }
                                 
                                 ForcedRunMode.DURATION -> {
-                                    // 限时模式配置
+                                    // modeconfig
                                     Text(
                                         Strings.durationModeHint,
                                         style = MaterialTheme.typography.bodySmall,
@@ -366,7 +366,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(12.dp))
                                     
-                                    // 可进入开始时间
+                                    // Note
                                     OutlinedCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -398,7 +398,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
-                                    // 可进入结束时间
+                                    // Note
                                     OutlinedCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -430,7 +430,7 @@ fun ForcedRunConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(12.dp))
                                     
-                                    // 可进入日期
+                                    // Note
                                     Text(
                                         Strings.accessDays,
                                         style = MaterialTheme.typography.bodyMedium,
@@ -451,14 +451,14 @@ fun ForcedRunConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 高级选项
+                            // advanced
                             Text(
                                 Strings.advancedOptions,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // 屏蔽系统UI
+                            // systemUI
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -474,7 +474,7 @@ fun ForcedRunConfigCard(
                                 )
                             }
                             
-                            // 屏蔽返回键
+                            // back
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -490,7 +490,7 @@ fun ForcedRunConfigCard(
                                 )
                             }
                             
-                            // 屏蔽Home键
+                            // Home
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -506,7 +506,7 @@ fun ForcedRunConfigCard(
                                 )
                             }
                             
-                            // Show倒计时
+                            // Show
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -524,7 +524,7 @@ fun ForcedRunConfigCard(
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            // 紧急退出
+                            // Note
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -571,7 +571,7 @@ fun ForcedRunConfigCard(
         }
     }
     
-    // Time选择对话框
+    // Timeselectdialog
     if (showStartTimePicker) {
         TimePickerDialog(
             initialTime = startTime,
@@ -622,7 +622,7 @@ fun ForcedRunConfigCard(
 }
 
 /**
- * 星期选择器
+ * select
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

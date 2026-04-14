@@ -702,8 +702,8 @@ class AdBlocker {
             Regex(escaped, RegexOption.IGNORE_CASE)
         }
 
-        // 预分配的阻止响应字节数组 (减少 GC 压力)
-        // 每页可能阻止 30-100 个广告请求, 预分配避免重复创建 ByteArray
+        // Preallocate the blocked response buffer to ease GC pressure.
+        // Each page may block dozens of ads, so reuse the ByteArray instead of reallocating.
         val EMPTY_BYTES = ByteArray(0)
         val BLOCKED_JS_BYTES = "/* blocked */".toByteArray()
         val BLOCKED_CSS_BYTES = "/* blocked */".toByteArray()
@@ -724,8 +724,8 @@ class AdBlocker {
     // ★ Exception filter anchor-domain index — mirrors anchorDomainIndex for @@rules
     private val exceptionAnchorDomainIndex = HashMap<String, MutableList<Int>>()
 
-    // ★ LRU 缓存 — 避免相同 URL 重复计算 shouldBlock
-    // 每页面 iframe/重复资源请求很常见, 缓存命中率 30-50%
+    // ★ LRU cache — avoid recalculating shouldBlock for the same URL
+    // Iframes and repeated resources are common; cache hits stay around 30-50%
     @Suppress("serial")
     private val blockResultCache = object : LinkedHashMap<Int, Boolean>(256, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, Boolean>?): Boolean = size > 512
@@ -814,7 +814,7 @@ class AdBlocker {
         // ★ Essential resource URL pattern protection — pre-compiled single-pass regex
         if (ESSENTIAL_RESOURCE_REGEX.containsMatchIn(lowerUrl)) return false
 
-        // ★ LRU 缓存查询 — 避免相同 URL 重复做 Regex 扫描
+        // ★ LRU cache lookup — skip repeated regex scans for identical URLs
         val cacheKey = lowerUrl.hashCode() xor (if (isThirdParty) 0x9e3779b9.toInt() else 0)
         synchronized(blockResultCache) {
             blockResultCache[cacheKey]?.let { return it }
@@ -837,7 +837,7 @@ class AdBlocker {
         resType: ResourceType,
         isThirdParty: Boolean
     ): Boolean {
-        // Phase 1: Exact host match (HashSet O(1) — 最快检查)
+        // Phase 1: Exact host match (HashSet O(1) — fastest check)
         val hostMatched = urlHost != null && (matchesHostSet(urlHost, exactHosts) || matchesHostSet(urlHost, hostsFileHosts))
 
         if (hostMatched) {
@@ -1022,7 +1022,7 @@ class AdBlocker {
 
     /**
      * Create a type-specific empty response to avoid page errors
-     * 使用预分配的字节数组, 仅创建 InputStream 包装器 (最小 GC 压力)
+     * Use the preallocated byte arrays and minimal InputStream wrappers to keep GC low
      */
     fun createEmptyResponse(resourceType: String): WebResourceResponse {
         return when (resourceType) {
@@ -1416,12 +1416,12 @@ class AdBlocker {
     }
 
     /**
-     * C 级 URL host 提取 (零分配指针遍历)
-     * 替换 Uri.parse(url).host 避免创建 URI 对象 + JVM GC 压力
-     * shouldBlock 每次子资源请求都调用, 累计 GC 减少显著
+     * C-level host extraction with zero-allocation pointer traversal
+     * Avoid Uri.parse(url).host to skip URI object creation and extra GC
+     * shouldBlock runs for every subresource, so saving allocations matters
      */
     private fun extractHost(url: String): String? {
-        // C 级提取 → 回退到 Uri.parse
+        // Fall back to Uri.parse when the C-level scan misses
         val host = com.webtoapp.core.perf.NativePerfEngine.extractHost(url)
         if (host != null) return host.lowercase()
         return try {

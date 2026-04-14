@@ -24,9 +24,9 @@ import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.data.model.WebViewConfig
 
 /**
- * Shell 主布局：Scaffold + TopAppBar + 内容区域
+ * Shell: Scaffold + TopAppBar + contentarea
  *
- * 包含：进度条、激活/阻止状态显示、内容路由、所有覆盖层组件
+ * , / statedisplay, content,
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,7 +35,7 @@ fun BoxScope.ShellScaffoldLayout(
     appType: String,
     hideToolbar: Boolean,
     hideBrowserToolbar: Boolean = false,
-    // 状态
+    // state
     isLoading: Boolean,
     loadProgress: Int,
     pageTitle: String,
@@ -57,29 +57,29 @@ fun BoxScope.ShellScaffoldLayout(
     webViewManager: com.webtoapp.core.webview.WebViewManager,
     deepLinkUrl: String?,
     bgmState: BgmPlayerState,
-    // 下拉刷新
+    // pull- to- refresh
     swipeRefreshEnabled: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
-    // 回调
+    // Note
     onWebViewCreated: (WebView) -> Unit,
     onWebViewRefUpdated: (WebView) -> Unit,
     onShowActivationDialog: () -> Unit,
     onErrorDismiss: () -> Unit,
     onActivityFinish: () -> Unit,
-    // Status bar配置
+    // Status barconfig
     statusBarHeightDp: Int
 ) {
     val context = LocalContext.current
 
-    // 是否显示顶部导航栏：非全屏模式或全屏模式下用户选择显示
+    // displaytop: modeor mode userselectdisplay
     val showToolbar = when {
         hideBrowserToolbar -> false
         hideToolbar -> config.webViewConfig.showToolbarInFullscreen
         else -> true
     }
 
-    // 读取键盘调整模式
+    // keyboard mode
     val keyboardAdjustMode = remember {
         try {
             KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
@@ -89,10 +89,10 @@ fun BoxScope.ShellScaffoldLayout(
     }
 
     Scaffold(
-        // 根据键盘调整模式设置 contentWindowInsets
-        // RESIZE 模式且全屏：保留 IME insets 以便 Compose 响应键盘
-        // blockSystemNavigationGesture=true 且全屏：屏蔽系统导航手势（consume gesture area）
-        // 全屏且未屏蔽导航手势：使用 ScaffoldDefaults 以保留系统手势区域
+        // keyboard modesettings contentWindowInsets
+        // RESIZE mode: IME insets Compose keyboard
+        // blockSystemNavigationGesture=true: system( consume gesture area)
+        // ScaffoldDefaults system area
         contentWindowInsets = when {
             keyboardAdjustMode == KeyboardAdjustMode.RESIZE && hideToolbar -> WindowInsets.ime
             hideToolbar && webViewConfig.blockSystemNavigationGesture -> WindowInsets(0)
@@ -112,8 +112,8 @@ fun BoxScope.ShellScaffoldLayout(
             }
         }
     ) { padding ->
-        // 计算内容的 padding
-        // Fullscreen模式 + 显示状态栏时，需要给内容添加状态栏高度的 padding，避免被遮挡
+        // content padding
+        // Fullscreenmode + displaystatus bar, content status bar padding,
         val density = LocalDensity.current
 
         val topInsetPx = WindowInsets.statusBars.getTop(density)
@@ -123,31 +123,31 @@ fun BoxScope.ShellScaffoldLayout(
             24.dp
         }
 
-        // 计算实际需要的状态栏 padding（使用自定义高度或系统默认高度）
+        // status bar padding( orsystemdefault)
         val actualStatusBarPadding = if (statusBarHeightDp > 0) statusBarHeightDp.dp else systemStatusBarHeightDp
 
         val contentModifier = when {
             hideToolbar && showToolbar -> {
-                // Fullscreen模式但显示toolbar：使用 Scaffold 的 padding（toolbar高度）
+                // Fullscreenmode displaytoolbar: Scaffold padding( toolbar)
                 Modifier.fillMaxSize().padding(padding)
             }
             hideToolbar && config.webViewConfig.showStatusBarInFullscreen -> {
-                // Fullscreen模式但显示状态栏：内容需要在状态栏下方
-                // 使用自定义高度或系统默认高度作为顶部 padding
+                // Fullscreenmode displaystatus bar: content status bar
+                // orsystemdefault top padding
                 Modifier.fillMaxSize().padding(top = actualStatusBarPadding)
             }
             hideToolbar -> {
-                // 完全全屏模式：内容铺满整个屏幕
+                // mode: content
                 Modifier.fillMaxSize()
             }
             else -> {
-                // 非全屏模式：使用 Scaffold 的 padding
+                // mode: Scaffold padding
                 Modifier.fillMaxSize().padding(padding)
             }
         }
 
         Box(modifier = contentModifier) {
-            // 进度条
+            // Note
             AnimatedVisibility(
                 visible = isLoading,
                 enter = fadeIn(),
@@ -159,8 +159,8 @@ fun BoxScope.ShellScaffoldLayout(
                 )
             }
 
-            // 使用 key 包裹：当渲染进程被杀死后 webViewRecreationKey 自增，
-            // 强制整个内容子树重建，自动重新加载页面
+            // key: when webViewRecreationKey,
+            // content, load
             key(webViewRecreationKey) {
                 ShellContentArea(
                     config = config,
@@ -183,17 +183,17 @@ fun BoxScope.ShellScaffoldLayout(
                 )
             }
 
-            // Lyrics显示（逻辑已提取到 ShellOverlays.kt）
+            // Lyricsdisplay( ShellOverlays. kt)
             ShellLyricsOverlay(config = config, bgmState = bgmState)
 
-            // 强制运行倒计时（逻辑已提取到 ShellOverlays.kt）
+            // force- run( ShellOverlays. kt)
             ShellForcedRunOverlay(
                 config = config,
                 forcedRunActive = forcedRunActive,
                 forcedRunRemainingMs = forcedRunRemainingMs
             )
 
-            // 悬浮返回按钮（逻辑已提取到 ShellOverlays.kt）
+            // backbutton( ShellOverlays. kt)
             ShellFloatingBackButton(
                 hideToolbar = hideToolbar || hideBrowserToolbar,
                 showToolbar = showToolbar,
@@ -204,14 +204,14 @@ fun BoxScope.ShellScaffoldLayout(
                 webViewRef = webViewRef
             )
 
-            // Error提示（逻辑已提取到 ShellOverlays.kt）
+            // Errorhint( ShellOverlays. kt)
             ShellErrorCard(
                 errorMessage = errorMessage,
                 forcedRunActive = forcedRunActive,
                 onDismiss = onErrorDismiss
             )
 
-            // 虚拟导航栏（逻辑已提取到 ShellOverlays.kt）
+            // ( ShellOverlays. kt)
             ShellVirtualNavBar(
                 appType = appType,
                 config = config,
@@ -221,7 +221,7 @@ fun BoxScope.ShellScaffoldLayout(
                 webViewRef = webViewRef
             )
 
-            // Ad拦截切换按钮（逻辑已提取到 ShellOverlays.kt）
+            // Adinterceptswitchbutton( ShellOverlays. kt)
             ShellAdBlockToggle(
                 config = config,
                 forcedRunActive = forcedRunActive,
@@ -232,7 +232,7 @@ fun BoxScope.ShellScaffoldLayout(
 }
 
 /**
- * Shell TopAppBar（标题 + 导航按钮）
+ * Shell TopAppBar( + button)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -295,7 +295,7 @@ private fun ShellTopAppBar(
 }
 
 /**
- * 内容区域：根据激活状态和强制运行状态显示不同内容
+ * contentarea: state force- runstatedisplay content
  */
 @Composable
 private fun ShellContentArea(
@@ -309,7 +309,7 @@ private fun ShellContentArea(
     webViewCallbacks: WebViewCallbacks,
     webViewManager: com.webtoapp.core.webview.WebViewManager,
     deepLinkUrl: String?,
-    // 下拉刷新
+    // pull- to- refresh
     swipeRefreshEnabled: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
@@ -318,7 +318,7 @@ private fun ShellContentArea(
     onShowActivationDialog: () -> Unit,
     onActivityFinish: () -> Unit
 ) {
-    // Activation检查中，显示加载状态
+    // Activationcheck, displayloadstate
     if (!isActivationChecked) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -327,7 +327,7 @@ private fun ShellContentArea(
             CircularProgressIndicator()
         }
     }
-    // 未激活提示
+    // hint
     else if (!isActivated && config.activationEnabled) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -365,7 +365,7 @@ private fun ShellContentArea(
             }
         }
     } else {
-        // 内容路由（逻辑已提取到 ShellContentRouter.kt）
+        // content( ShellContentRouter. kt)
         ShellContentRouter(
             appType = appType,
             config = config,

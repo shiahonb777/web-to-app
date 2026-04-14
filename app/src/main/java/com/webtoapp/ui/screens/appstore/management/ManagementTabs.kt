@@ -75,7 +75,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
-// 应用管理控制台 (Premium UI)
+// appmanagement( Premium UI)
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -98,7 +98,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
         "health" to "健康", "other" to Strings.catOther
     )
 
-    // 编辑对话框
+    // editdialog
     if (showEditDialog && apiClient != null && scope != null) {
         AlertDialog(
             onDismissRequest = { if (!isUpdating) showEditDialog = false },
@@ -174,7 +174,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
         )
     }
 
-    // 删除确认对话框
+    // delete dialog
     if (showDeleteDialog && apiClient != null && scope != null) {
         AlertDialog(
             onDismissRequest = { if (!isDeleting) showDeleteDialog = false },
@@ -221,7 +221,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
     }
 
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
-        // 渐变三格统计
+        // gradient
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GradientMiniStat(mgmtGradientBlue, Icons.Outlined.Download, "${app.downloads}", "下载", Modifier.weight(1f))
@@ -229,7 +229,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
                 GradientMiniStat(mgmtGradientGreen, Icons.Outlined.ThumbUp, "${app.likeCount}", "点赞", Modifier.weight(1f))
             }
         }
-        // 应用信息卡
+        // app card
         item {
             Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f), shadowElevation = 1.dp) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -253,10 +253,10 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
                 }
             }
         }
-        // 操作区
+        // Note
         if (apiClient != null && scope != null) {
             item {
-                // 编辑按钮
+                // editbutton
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(mgmtGradientBlue)).clickable { showEditDialog = true }.padding(vertical = 13.dp),
                     contentAlignment = Alignment.Center
@@ -269,7 +269,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
             }
             item {
                 Spacer(Modifier.height(12.dp))
-                // 删除按钮（危险区域）
+                // deletebutton( area)
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -300,7 +300,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
     }
 }
 
-// ── 激活码 Tab ──
+// activation code Tab
 @Composable
 internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient, scope: kotlinx.coroutines.CoroutineScope) {
     var settings by remember { mutableStateOf<ActivationSettings?>(null) }
@@ -367,7 +367,7 @@ internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClien
         else if (errorMsg != null) { item { PublishedItemErrorState(errorMsg) { loadSettings() } } }
         else {
             val s = settings ?: return@LazyColumn
-            // 渐变设置卡
+            // gradientsettingscard
             item {
                 Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f), shadowElevation = 1.dp) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -387,7 +387,7 @@ internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClien
                     }
                 }
             }
-            // 渐变统计
+            // gradient
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     GradientMiniStat(mgmtGradientPurple, Icons.Outlined.VpnKey, "${s.totalCodes}", "总激活码", Modifier.weight(1f))
@@ -395,7 +395,7 @@ internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClien
                     GradientMiniStat(mgmtGradientOrange, Icons.Outlined.Pending, "${s.totalCodes - s.usedCodes}", "未使用", Modifier.weight(1f))
                 }
             }
-            // 渐变添加按钮
+            // gradient button
             item {
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(mgmtGradientPurple)).clickable { showAddDialog = true }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -404,7 +404,7 @@ internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClien
                     }
                 }
             }
-            // 激活码列表
+            // activation codelist
             items(s.codes, key = { it.id }) { code ->
                 Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)) {
                     Row(Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -429,7 +429,7 @@ internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClien
     }
 }
 
-// ── 公告 Tab ──
+// announcement Tab
 @Composable
 internal fun ManagementAnnouncementTab(app: AppStoreItem, apiClient: CloudApiClient, scope: kotlinx.coroutines.CoroutineScope) {
     var announcements by remember { mutableStateOf<List<Announcement>>(emptyList()) }
@@ -509,7 +509,7 @@ internal fun ManagementAnnouncementTab(app: AppStoreItem, apiClient: CloudApiCli
     }
 }
 
-// ── 更新 Tab ──
+// update Tab
 @Composable
 internal fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, scope: kotlinx.coroutines.CoroutineScope) {
     var config by remember { mutableStateOf<UpdateConfig?>(null) }
@@ -641,7 +641,7 @@ internal fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, s
                         }
                     }
 
-                    // R2 云存储加速
+                    // R2
                     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (useR2) Color(0xFF3B82F6).copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)) {
                         Row(Modifier.padding(14.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
@@ -694,7 +694,7 @@ internal fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, s
     }
 }
 
-// ── 用户 Tab ──
+// user Tab
 @Composable
 internal fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, scope: kotlinx.coroutines.CoroutineScope) {
     var users by remember { mutableStateOf<List<AppUser>>(emptyList()) }
@@ -717,7 +717,7 @@ internal fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                     GradientMiniStat(mgmtGradientPurple, Icons.Outlined.Public, "${geoData.size}", "国家/地区", Modifier.weight(1f))
                 }
             }
-            // 地理分布
+            // geo distribution
             item {
                 Surface(Modifier.fillMaxWidth().clickable { showGeo = !showGeo }, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)) {
                     Row(Modifier.padding(14.dp).fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
@@ -742,7 +742,7 @@ internal fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                     }
                 }
             }
-            // 用户列表
+            // userlist
             item { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientBlue))); Text("👤 用户列表", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold) } }
             if (users.isEmpty()) { item { Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) { Text("暂无用户数据", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
             else {
@@ -773,7 +773,7 @@ internal fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, sc
     }
 }
 
-/** 国家代码转 emoji 旗帜 */
+/** country code emoji */
 internal fun countryFlag(countryCode: String): String {
     if (countryCode.length != 2) return "🌍"
     val first = Character.codePointAt(countryCode.uppercase(), 0) - 0x41 + 0x1F1E6
@@ -782,5 +782,5 @@ internal fun countryFlag(countryCode: String): String {
 }
 
 // ════════════════════════════════════════════════
-// 发布应用 Bottom Sheet
+// app Bottom Sheet
 // ════════════════════════════════════════════════

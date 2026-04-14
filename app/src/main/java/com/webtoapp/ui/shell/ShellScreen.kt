@@ -27,10 +27,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 /**
- * Shell 模式主屏幕 Composable
+ * Shell mode Composable
  *
- * 包含所有 UI 状态声明、初始化逻辑、以及各子组件的组合。
- * 从 ShellActivity.kt 中提取。
+ * UI state, initialize, and.
+ * from ShellActivity. kt.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +44,7 @@ fun ShellScreen(
     onHideCustomView: () -> Unit,
     onFullscreenModeChanged: (Boolean) -> Unit,
     onForcedRunStateChanged: (Boolean, ForcedRunConfig?) -> Unit,
-    // Status bar配置
+    // Status barconfig
     statusBarBackgroundType: String = "COLOR",
     statusBarBackgroundColor: String? = null,
     statusBarBackgroundImage: String? = null,
@@ -57,7 +57,7 @@ fun ShellScreen(
     val activation = ShellRuntimeServices.activation
     val announcement = ShellRuntimeServices.announcement
     val adBlocker = ShellRuntimeServices.adBlock
-    // 强制运行状态管理（逻辑已提取到 ShellForcedRunState.kt）
+    // force- runstatemanagement( ShellForcedRunState. kt)
     val forcedRunState = rememberForcedRunState(context)
     val forcedRunActive = forcedRunState.forcedRunActive
     val forcedRunRemainingMs = forcedRunState.forcedRunRemainingMs
@@ -66,10 +66,10 @@ fun ShellScreen(
 
     // Normalize appType (avoid case/whitespace issues)
     val appType = config.appType.trim().uppercase()
-    // 调试：打印 appType
+    // appType
     AppLogger.d("ShellScreen", "appType='${config.appType}' (normalized='$appType'), targetUrl='${config.targetUrl}'")
     
-    // 状态
+    // state
     var isLoading by remember { mutableStateOf(true) }
     var loadProgress by remember { mutableIntStateOf(0) }
     var currentUrl by remember { mutableStateOf("") }
@@ -78,31 +78,31 @@ fun ShellScreen(
     var showActivationDialog by remember { mutableStateOf(false) }
     var showAnnouncementDialog by remember { mutableStateOf(false) }
     
-    // Activation状态：如果启用了激活码，默认未激活，防止 WebView 在检查完成前加载
+    // Activationstate: if activation code, default, WebView check load
     var isActivated by remember { mutableStateOf(!config.activationEnabled) }
-    // Activation检查是否完成（用于显示加载状态）
+    // Activationcheck( showloadstate)
     var isActivationChecked by remember { mutableStateOf(!config.activationEnabled) }
-    // 当渲染进程被杀死时自增，强制 AndroidView 重建
+    // when, AndroidView
     var webViewRecreationKey by remember { mutableIntStateOf(0) }
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
 
-    // 同步检查启动画面配置（必须在 WebView 初始化之前）
-    // 同时检查加密和非加密版本
+    // synccheck animation config( WebView initialize)
+    // check version
     val splashMediaExists = remember {
         if (config.splashEnabled) {
             val extension = if (config.splashType == "VIDEO") "mp4" else "png"
             val assetPath = "splash_media.$extension"
             val encryptedPath = "$assetPath.enc"
             
-            // 先检查加密版本
+            // check version
             val hasEncrypted = try {
                 context.assets.open(encryptedPath).close()
                 true
             } catch (e: Exception) { false }
             
-            // 再检查非加密版本
+            // check version
             val hasNormal = try {
                 context.assets.open(assetPath).close()
                 true
@@ -114,12 +114,12 @@ fun ShellScreen(
         } else false
     }
     
-    // Start画面状态 - 根据配置同步初始化
+    // Start state- configsyncinitialize
     var showSplash by remember { mutableStateOf(config.splashEnabled && splashMediaExists) }
     var splashCountdown by remember { mutableIntStateOf(if (config.splashEnabled && splashMediaExists) config.splashDuration else 0) }
     var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
     
-    // Handle启动画面横屏
+    // Handle animation
     LaunchedEffect(showSplash) {
         if (showSplash && config.splashLandscape) {
             originalOrientation = activity.requestedOrientation
@@ -127,19 +127,19 @@ fun ShellScreen(
         }
     }
 
-    // WebView引用
+    // WebView
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
     
-    // 长按菜单状态
+    // long- press state
     var showLongPressMenu by remember { mutableStateOf(false) }
     var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
     var longPressTouchX by remember { mutableFloatStateOf(0f) }
     var longPressTouchY by remember { mutableFloatStateOf(0f) }
     val longPressHandler = remember { LongPressHandler(context, scope) }
 
-    // Initialize配置
+    // Initializeconfig
     LaunchedEffect(Unit) {
-        // 设置界面语言（根据 APK 打包时的配置）
+        // settings( APK config)
         try {
             val appLanguage = when (config.language.uppercase()) {
                 "ENGLISH" -> com.webtoapp.core.i18n.AppLanguage.ENGLISH
@@ -152,22 +152,22 @@ fun ShellScreen(
             AppLogger.e("ShellActivity", "设置语言失败", e)
         }
         
-        // Configure广告拦截
+        // Configure intercept
         if (config.adBlockEnabled) {
             adBlocker.initialize(config.adBlockRules, useDefaultRules = true)
             adBlocker.setEnabled(true)
         }
 
-        // Check激活状态
+        // Check state
         if (config.activationEnabled) {
-            // 如果配置为每次都需要验证，则重置激活状态
+            // ifconfig verify, reset state
             if (config.activationRequireEveryTime) {
                 activation.resetActivation(-1L)
                 isActivated = false
                 isActivationChecked = true
                 showActivationDialog = true
             } else {
-                // Shell 模式使用固定 ID
+                // Shell mode ID
                 val activated = activation.isActivated(-1L).first()
                 isActivated = activated
                 isActivationChecked = true
@@ -177,7 +177,7 @@ fun ShellScreen(
             }
         }
 
-        // Check公告
+        // Checkannouncement
         if (config.announcementEnabled && isActivated && config.announcementTitle.isNotEmpty()) {
             val ann = Announcement(
                 title = config.announcementTitle,
@@ -188,9 +188,9 @@ fun ShellScreen(
             showAnnouncementDialog = announcement.shouldShowAnnouncement(-1L, ann)
         }
 
-        // Set屏幕方向（根据应用类型判断）
-        // ★ 新版：优先使用 orientationMode（支持 7 种模式），
-        //       向后兼容旧版只有 landscapeMode 布尔值的 APK
+        // Set( apptype)
+        // ★: prefer orientationMode( support 7 mode) ,
+        // landscapeMode APK
         val validOrientationModes = setOf("PORTRAIT", "LANDSCAPE", "REVERSE_PORTRAIT", "REVERSE_LANDSCAPE", "SENSOR_PORTRAIT", "SENSOR_LANDSCAPE", "AUTO")
         val resolvedOrientationMode = when (appType) {
             "HTML", "FRONTEND" -> config.htmlConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
@@ -202,7 +202,7 @@ fun ShellScreen(
             "PYTHON_APP" -> config.pythonAppConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
             "GO_APP" -> config.goAppConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
             else -> {
-                // WEB 应用：优先使用新的 orientationMode（支持全部 7 种模式）
+                // WEB app: prefer orientationMode( supportall 7 mode)
                 val orientMode = config.webViewConfig.orientationMode.uppercase()
                 if (orientMode in validOrientationModes) orientMode
                 else if (config.webViewConfig.landscapeMode) "LANDSCAPE" else "PORTRAIT"
@@ -231,22 +231,22 @@ fun ShellScreen(
             }
             else -> {
                 if (TvUtils.isTv(context)) {
-                    // TV 设备不锁定方向，保持默认横屏
+                    // TV, default
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 } else {
-                    // 手机/平板锁定为竖屏模式
+                    // / mode
                     @SuppressLint("SourceLockedOrientationActivity")
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 }
             }
         }
 
-        // Start画面已在同步初始化阶段处理
+        // Start syncinitialize handle
         AppLogger.d("ShellActivity", "LaunchedEffect: showSplash=$showSplash, splashCountdown=$splashCountdown")
         
     }
 
-    // 强制运行副作用管理（逻辑已提取到 ShellForcedRunState.kt）
+    // force- run management( ShellForcedRunState. kt)
     ForcedRunEffects(
         state = forcedRunState,
         config = config.forcedRunConfig,
@@ -255,9 +255,9 @@ fun ShellScreen(
         onForcedRunStateChanged = onForcedRunStateChanged
     )
 
-    // Start画面倒计时（仅用于图片类型，视频类型由播放器控制）
+    // Start( onlyfor type, type)
     LaunchedEffect(showSplash, splashCountdown) {
-        // Video类型不使用倒计时，由视频播放器控制结束
+        // Videotype,
         if (config.splashType == "VIDEO") return@LaunchedEffect
         
         if (showSplash && splashCountdown > 0) {
@@ -265,7 +265,7 @@ fun ShellScreen(
             splashCountdown--
         } else if (showSplash && splashCountdown <= 0) {
             showSplash = false
-            // 恢复原始方向
+            // Note
             if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
                 activity.requestedOrientation = originalOrientation
                 originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -273,10 +273,10 @@ fun ShellScreen(
         }
     }
     
-    // ===== 背景音乐播放器（逻辑已提取到 ShellBgmPlayer.kt）=====
+    // =====( ShellBgmPlayer. kt) =====
     val bgmState = rememberBgmPlayerState(context, config)
 
-    // WebView回调（逻辑已提取到 ShellWebViewCallbacks.kt）
+    // WebView( ShellWebViewCallbacks. kt)
     val webViewCallbacks = remember {
         createShellWebViewCallbacks(
             context = context,
@@ -304,36 +304,36 @@ fun ShellScreen(
         )
     }
 
-    // 转换配置（逻辑已提取到 ShellWebViewConfig.kt）
+    // config( ShellWebViewConfig. kt)
     val webViewConfig = buildWebViewConfig(config)
 
     val webViewManager = com.webtoapp.ui.webview.rememberWebViewManager(context, adBlocker)
 
-    // Yes否隐藏工具栏（全屏模式）
+    // Yes hide( mode)
     val hideToolbar = config.webViewConfig.hideToolbar
     val hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar
-    // 下拉刷新开关
+    // pull- to- refresh
     val swipeRefreshEnabled = config.webViewConfig.swipeRefreshEnabled
 
     LaunchedEffect(hideToolbar) {
         onFullscreenModeChanged(hideToolbar)
     }
     
-    // 关闭启动画面的回调（提前定义）
+    // close animation( )
     val closeSplash = {
         showSplash = false
-        // 恢复原始方向
+        // Note
         if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             activity.requestedOrientation = originalOrientation
             originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 
-    // 整体容器，确保启动画面覆盖在 Scaffold 之上
-    // 使用 fillMaxSize 确保内容铺满整个屏幕（包括状态栏区域）
+    // , ensure animation Scaffold
+    // fillMaxSize ensurecontent( status bararea)
     Box(modifier = Modifier.fillMaxSize()) {
     
-    // Scaffold 布局（逻辑已提取到 ShellScaffoldLayout.kt）
+    // Scaffold( ShellScaffoldLayout. kt)
     ShellScaffoldLayout(
         config = config,
         appType = appType,
@@ -370,7 +370,7 @@ fun ShellScreen(
         statusBarHeightDp = statusBarHeightDp
     )
 
-    // Activation码对话框（逻辑已提取到 ShellDialogs.kt）
+    // Activation dialog( ShellDialogs. kt)
     if (showActivationDialog) {
         ShellActivationDialog(
             config = config,
@@ -378,7 +378,7 @@ fun ShellScreen(
             onActivated = {
                 isActivated = true
                 showActivationDialog = false
-                // Check公告
+                // Checkannouncement
                 if (config.announcementEnabled && config.announcementTitle.isNotEmpty()) {
                     val ann = Announcement(
                         title = config.announcementTitle,
@@ -392,7 +392,7 @@ fun ShellScreen(
         )
     }
 
-    // Announcement对话框（逻辑已提取到 ShellDialogs.kt）
+    // Announcementdialog( ShellDialogs. kt)
     if (showAnnouncementDialog && config.announcementTitle.isNotEmpty()) {
         ShellAnnouncementDialog(
             config = config,
@@ -400,7 +400,7 @@ fun ShellScreen(
         )
     }
     
-    // 强制运行权限引导对话框（逻辑已提取到 ShellDialogs.kt）
+    // force- run dialog( ShellDialogs. kt)
     if (forcedRunState.showForcedRunPermissionDialog && config.forcedRunConfig != null) {
         ShellForcedRunPermissionDialog(
             config = config,
@@ -409,7 +409,7 @@ fun ShellScreen(
         )
     }
 
-    // Start画面覆盖层（在 Box 内，覆盖在 Scaffold 之上）
+    // Start( Box, Scaffold)
     AnimatedVisibility(
         visible = showSplash,
         enter = fadeIn(animationSpec = tween(300)),
@@ -422,14 +422,14 @@ fun ShellScreen(
             videoEndMs = config.splashVideoEndMs,
             fillScreen = config.splashFillScreen,
             enableAudio = config.splashEnableAudio,
-            // 点击跳过（仅当启用时）
+            // ( onlywhen)
             onSkip = if (config.splashClickToSkip) { closeSplash } else null,
-            // Play完成回调（始终需要）
+            // Play( always)
             onComplete = closeSplash
         )
     }
     
-    // 长按菜单（逻辑已提取到 ShellLongPressMenu.kt）
+    // long- press( ShellLongPressMenu. kt)
     if (showLongPressMenu && longPressResult != null) {
         ShellLongPressMenu(
             menuStyle = config.webViewConfig.longPressMenuStyle,
@@ -444,7 +444,7 @@ fun ShellScreen(
         )
     }
     
-    // Status bar背景覆盖层
+    // Status bar
     // Show overlay when: fullscreen with status bar visible, OR non-fullscreen with custom status bar config
     val hasCustomStatusBar = statusBarBackgroundType != "COLOR" || statusBarBackgroundColor != null || statusBarHeightDp > 0
     val showStatusBarOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) || (!hideToolbar && hasCustomStatusBar)
@@ -497,5 +497,5 @@ fun ShellScreen(
         )
     }
     
-    } // 关闭外层 Box
+    } // close Box
 }

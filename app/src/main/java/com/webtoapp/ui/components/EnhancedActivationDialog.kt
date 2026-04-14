@@ -31,9 +31,8 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.util.threadLocalCompat
 import java.text.SimpleDateFormat
 import java.util.*
-
 /**
- * 增强版激活码对话框 - 高级视觉设计，状态信息丰富
+ * enhancedactivation codedialog- advanced, state
  */
 @Composable
 fun EnhancedActivationDialog(

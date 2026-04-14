@@ -7,21 +7,21 @@ import java.io.File
 import java.util.zip.ZipFile
 
 /**
- * APK 体积分析器
+ * Note: brief English comment.
  * 
- * 构建完成后分析 APK 文件结构，提供：
- * - 按类别分组的体积占比（Native Libs / DEX / Assets / Resources / 其他）
- * - 最大文件 Top N 列表
- * - 可操作的优化建议
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  * 
- * 类似 Android Studio 的 APK Analyzer，但运行在手机端。
+ * Note: brief English comment.
  */
 object ApkAnalyzer {
     
     private const val TAG = "ApkAnalyzer"
     
     /**
-     * 文件分类
+     * Note: brief English comment.
      */
     enum class FileCategory(val displayName: String, val color: String) {
         NATIVE_LIBS("Native Libraries", "#FF6B6B"),
@@ -34,7 +34,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 单个文件条目信息
+     * Note: brief English comment.
      */
     data class FileEntry(
         val path: String,
@@ -50,7 +50,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 分类汇总
+     * Note: brief English comment.
      */
     data class CategorySummary(
         val category: FileCategory,
@@ -62,7 +62,7 @@ object ApkAnalyzer {
     )
     
     /**
-     * 优化建议
+     * Note: brief English comment.
      */
     data class OptimizationHint(
         val title: String,
@@ -74,7 +74,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 完整分析报告
+     * Note: brief English comment.
      */
     data class AnalysisReport(
         val apkFile: File,
@@ -95,11 +95,11 @@ object ApkAnalyzer {
     }
     
     /**
-     * 分析 APK 文件
+     * Note: brief English comment.
      * 
-     * @param apkFile APK 文件
-     * @param topN 最大文件列表的条目数
-     * @return 分析报告
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun analyze(apkFile: File, topN: Int = 15): AnalysisReport = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
@@ -172,7 +172,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 生成纯文本报告（用于日志或分享）
+     * Note: brief English comment.
      */
     fun formatReport(report: AnalysisReport): String = buildString {
         appendLine("═══════════════════════════════════════")
@@ -232,7 +232,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 分类文件
+     * Note: brief English comment.
      */
     private fun categorize(path: String): FileCategory = when {
         path.startsWith("lib/") -> FileCategory.NATIVE_LIBS
@@ -245,7 +245,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 生成优化建议
+     * Note: brief English comment.
      */
     private fun generateHints(
         entries: List<FileEntry>,
@@ -365,7 +365,7 @@ object ApkAnalyzer {
     }
     
     /**
-     * 格式化文件大小
+     * Note: brief English comment.
      */
     private fun formatSize(bytes: Long): String = when {
         bytes < 1024 -> "${bytes} B"

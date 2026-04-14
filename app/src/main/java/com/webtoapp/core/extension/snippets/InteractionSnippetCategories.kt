@@ -16,7 +16,7 @@ internal fun eventListeners() = CodeSnippetCategory(
     const target = e.target;
     if (target.matches('选择器')) {
         e.preventDefault();
-        // Handle点击
+        // Handle.
     }
 });""",
                 tags = listOf(Strings.tagClick, Strings.tagEvent)
@@ -27,7 +27,7 @@ internal fun eventListeners() = CodeSnippetCategory(
                 description = Strings.snippetKeyboardEventDesc,
                 code = """document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-        // Handle回车键
+        // Handle.
     }
     if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
@@ -47,7 +47,7 @@ window.addEventListener('scroll', () => {
     lastScrollTop = scrollTop;
     
     if (scrollTop > 300) {
-        // Show返回顶部按钮
+        // Show by.
     }
 });""",
                 tags = listOf(Strings.tagScroll, Strings.tagPosition)
@@ -60,7 +60,7 @@ window.addEventListener('scroll', () => {
     mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
             if (node.nodeType === 1) {
-                // Handle新添加的元素
+                // Handle.
                 if (node.matches && node.matches('.ad')) {
                     node.remove();
                 }
@@ -85,7 +85,7 @@ window.addEventListener('resize', () => {
     resizeTimeout = setTimeout(() => {
         const width = window.innerWidth;
         const height = window.innerHeight;
-        // Handle窗口大小变化
+        // Handle large small.
     }, 100);
 });""",
                 tags = listOf(Strings.tagWindow, Strings.tagSize)
@@ -107,7 +107,7 @@ window.addEventListener('resize', () => {
                 description = Strings.snippetContextMenuDesc,
                 code = """document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    // Show自定义菜单或阻止默认菜单
+    // Show single or single.
 });""",
                 tags = listOf(Strings.tagRightClick, Strings.tagMenu)
             ),
@@ -117,10 +117,10 @@ window.addEventListener('resize', () => {
                 description = Strings.snippetVisibilityDesc,
                 code = """document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        // Page切换到后台
+        // Page to after.
         console.log('页面隐藏');
     } else {
-        // Page切换到前台
+        // Page to before.
         console.log('页面显示');
     }
 });""",
@@ -131,10 +131,10 @@ window.addEventListener('resize', () => {
                 name = Strings.snippetBeforeUnload,
                 description = Strings.snippetBeforeUnloadDesc,
                 code = """window.addEventListener('beforeunload', (e) => {
-    // Save数据
+    // Save.
     localStorage.setItem('lastVisit', Date.now());
     
-    // 如需提示用户，取消注释以下代码
+    // use .
     // e.preventDefault();
     // e.returnValue = '';
 });""",
@@ -173,7 +173,7 @@ document.addEventListener('touchend', (e) => {
                 code = """let pressTimer = null;
 document.addEventListener('touchstart', (e) => {
     pressTimer = setTimeout(() => {
-        // 长按触发
+        // by.
         console.log('长按:', e.target);
     }, 500);
 });
@@ -346,7 +346,7 @@ function toggleAutoScroll(speed = 2) {
     autoScrolling ? stopAutoScroll() : startAutoScroll(speed);
 }
 
-// 按空格键切换
+// by.
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();
@@ -402,7 +402,7 @@ window.addEventListener('scroll', () => {
 
 setupInfiniteScroll(async () => {
     console.log('加载更多内容...');
-    // 在这里加载更多内容
+    // in multiple.
 });""",
                 tags = listOf(Strings.tagScroll, Strings.tagLoading)
             ),
@@ -552,8 +552,8 @@ const errors = validateForm({
         
         console.log('表单数据:', data);
         
-        // 可以在这里进行自定义处理
-        // 然后决定是否继续提交
+        // can in.
+        // after is.
         // form.submit();
     });
 });""",
@@ -567,7 +567,7 @@ const errors = validateForm({
     const form = document.querySelector(formSelector);
     if (form) {
         form.reset();
-        // 触发 change 事件
+        // change.
         form.querySelectorAll('input, select, textarea').forEach(el => {
             el.dispatchEvent(new Event('change', { bubbles: true }));
         });

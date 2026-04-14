@@ -26,17 +26,17 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.ui.theme.*
 import androidx.compose.ui.graphics.Color
 
-// ==================== macOS / iOS 玻璃质感效果系统 ====================
+// ==================== macOS / iOS system ====================
 
 /**
- * Modifier 扩展：macOS 风格毛玻璃效果
+ * Modifier: macOS
  *
- * 核心视觉特征（参照 macOS Sonoma / iOS 18 控制中心）:
- *   1. 半透明深色/浅色填充 — 不是透明，也不是纯白/纯黑
- *   2. 极细白色边框 (0.5dp) — 在暗色下尤其明显
- *   3. 顶部内侧高光渐变 — 模拟光线从上方照射到玻璃曲面
- *   4. 柔和扩散阴影 — 不是 Material 那种硬边 elevation
- *   5. 高斯模糊背景 (Android 12+)
+ * ( macOS Sonoma / iOS 18)
+ * 1. /- , /
+ * 2. ( 0. 5dp)
+ * 3. top gradient- from
+ * 4. - Material elevation
+ * 5. ( Android 12+)
  */
 @Composable
 fun Modifier.liquidGlass(
@@ -49,11 +49,11 @@ fun Modifier.liquidGlass(
 ): Modifier {
     val isDark = LocalIsDarkTheme.current
 
-    // macOS 在暗色下用极淡的白色填充，亮色下用极淡的白色 + 更高透明度
+    // macOS, +
     val fillColor = if (isDark)
         Color.White.copy(alpha = tintAlpha * 0.8f)
     else
-        Color.White.copy(alpha = 0.78f)       // 亮色：高不透明度磨砂玻璃
+        Color.White.copy(alpha = 0.78f)       // Note
 
 
     val borderColor = if (isDark)
@@ -69,7 +69,7 @@ fun Modifier.liquidGlass(
     val shape = RoundedCornerShape(cornerRadius)
 
     return this
-        // 1. 柔和扩散阴影
+        // 1.
         .shadow(
             elevation = shadowElevation,
             shape = shape,
@@ -77,9 +77,9 @@ fun Modifier.liquidGlass(
             spotColor = shadowColor
         )
         .clip(shape)
-        // 2. 半透明填充（不用 blur！Compose 的 blur 会模糊内容本身）
+        // 2. ( blur! Compose blur content)
         .background(fillColor, shape)
-        // 3. 极细边框
+        // 3.
         .border(
             width = 0.5.dp,
             color = borderColor,
@@ -88,8 +88,8 @@ fun Modifier.liquidGlass(
 }
 
 /**
- * Modifier 扩展：macOS 风格的渐变背景底层
- * 为整个页面提供一个有层次感的背景，让上层的玻璃卡片有内容可以"透过"
+ * Modifier: macOS gradient
+ * , card content " "
  */
 @Composable
 fun Modifier.glassBackground(): Modifier {
@@ -97,12 +97,12 @@ fun Modifier.glassBackground(): Modifier {
     val isDark = LocalIsDarkTheme.current
 
     val bgColors = if (isDark) {
-        // 暗色：使用主题的深色背景渐变
+        // gradient
         theme.gradients.background.ifEmpty {
             listOf(Color(0xFF0C0A14), Color(0xFF1A1030), Color(0xFF261840))
         }
     } else {
-        // 亮色：柔和的主题色渐变（不是纯白，而是有色调！）
+        // gradient( , ! )
         val primary = theme.lightColors.primary
         val tertiary = theme.lightColors.tertiary
         listOf(
@@ -118,7 +118,7 @@ fun Modifier.glassBackground(): Modifier {
 }
 
 /**
- * Modifier 扩展：iOS 风格按压缩放动效
+ * Modifier: iOS
  */
 @Composable
 fun Modifier.pressScale(
@@ -146,7 +146,7 @@ fun Modifier.pressScale(
 }
 
 /**
- * Modifier 扩展：出场淡入 + 上滑动画
+ * Modifier: + animation
  */
 @Composable
 fun Modifier.fadeSlideIn(
@@ -183,7 +183,7 @@ fun Modifier.fadeSlideIn(
 }
 
 /**
- * Modifier 扩展：列表项交错出场
+ * Modifier: list
  */
 @Composable
 fun Modifier.staggeredFadeIn(

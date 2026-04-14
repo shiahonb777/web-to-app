@@ -41,17 +41,17 @@ import com.webtoapp.ui.screens.create.runtime.PythonProjectImportAnalysis
 import com.webtoapp.ui.screens.create.runtime.PythonProjectImporter
 
 /**
- * 创建/编辑 Python 应用页面
+ * create/edit Python app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Flask=灰黑, Django=绿, FastAPI=青, Tornado=蓝）
- * - requirements.txt / pyproject.toml 依赖面板
- * - 服务器类型可视化选择器（Builtin / Gunicorn WSGI / Uvicorn ASGI）
- * - WSGI/ASGI 模块配置
- * - 虚拟环境检测指示器
- * - Django 专属配置面板（settings 模块、静态目录、ALLOWED_HOSTS）
- * - FastAPI 专属配置面板（API 文档端点、ASGI 推荐）
- * - 框架特定提示
+ * Note
+ * Hero area( Flask=, Django=, FastAPI=, Tornado=)
+ * requirements. txt / pyproject. toml panel
+ * type select( Builtin / Gunicorn WSGI / Uvicorn ASGI)
+ * WSGI/ASGI moduleconfig
+ * indicator
+ * Django configpanel( settings module, directory, ALLOWED_HOSTS)
+ * FastAPI configpanel( API, ASGI)
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -72,11 +72,11 @@ fun CreatePythonAppScreen(
     val isEdit = existingAppId > 0L
     val projectImporter = remember(context) { PythonProjectImporter(context) }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // Python 配置
+    // Python config
     var entryFile by remember { mutableStateOf("app.py") }
     var entryModule by remember { mutableStateOf("") }
     var serverType by remember { mutableStateOf("builtin") }
@@ -85,31 +85,31 @@ fun CreatePythonAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：依赖列表
+    // list
     var requirements by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var requirementsSource by remember { mutableStateOf("") }
     var showAllDeps by remember { mutableStateOf(false) }
     
-    // 增强：虚拟环境
+    // Note
     var venvDetected by remember { mutableStateOf(false) }
     var venvPath by remember { mutableStateOf<String?>(null) }
     
-    // 增强：Python 版本
+    // Python version
     var pythonVersion by remember { mutableStateOf<String?>(null) }
     
-    // 增强：Django 专属
+    // Django
     var djangoSettingsModule by remember { mutableStateOf("") }
     var djangoStaticDir by remember { mutableStateOf("static") }
     
-    // 增强：FastAPI 专属
+    // FastAPI
     var fastapiDocsEnabled by remember { mutableStateOf(true) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -144,7 +144,7 @@ fun CreatePythonAppScreen(
         appName = appNameOverride ?: analysis.suggestedAppName ?: appName
     }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -199,14 +199,14 @@ fun CreatePythonAppScreen(
     
     val canCreate = projectId != null
     
-    // 获取框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework?.lowercase()) {
             "flask" -> Color(0xFF333333)
             "django" -> Color(0xFF0C4B33)
             "fastapi" -> Color(0xFF009688)
             "tornado" -> Color(0xFF4285F4)
-            else -> Color(0xFF3776AB) // Python 默认蓝
+            else -> Color(0xFF3776AB) // Python default
         }
     }
     
@@ -259,14 +259,14 @@ fun CreatePythonAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             PythonHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
                 pythonVersion = pythonVersion
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
                     title = Strings.sampleProjects,
@@ -294,7 +294,7 @@ fun CreatePythonAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -326,13 +326,13 @@ fun CreatePythonAppScreen(
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -406,17 +406,17 @@ fun CreatePythonAppScreen(
                 }
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. 虚拟环境指示器 ==========
+                // ========== 5. Virtual Env Indicator ==========
                 PythonVenvIndicator(
                     venvDetected = venvDetected,
                     venvPath = venvPath,
                     frameworkColor = frameworkColor
                 )
                 
-                // ========== 6. 依赖面板 ==========
+                // ========== 6. Dependencies Panel ==========
                 if (requirements.isNotEmpty()) {
                     PythonRequirementsCard(
                         requirements = requirements,
@@ -427,7 +427,7 @@ fun CreatePythonAppScreen(
                     )
                 }
                 
-                // ========== 7. 服务器类型选择器 ==========
+                // ========== 7. Server Type Selector ==========
                 PythonServerTypeCard(
                     serverType = serverType,
                     detectedFramework = detectedFramework,
@@ -435,7 +435,7 @@ fun CreatePythonAppScreen(
                     frameworkColor = frameworkColor
                 )
                 
-                // ========== 8. WSGI/ASGI 模块配置 ==========
+                // ========== 8. WSGI/ASGI Module Settings ==========
                 PythonModuleConfigCard(
                     entryFile = entryFile,
                     onEntryFileChange = { entryFile = it },
@@ -444,7 +444,7 @@ fun CreatePythonAppScreen(
                     serverType = serverType
                 )
                 
-                // ========== 9. Django 专属面板 ==========
+                // ========== 9. Django Panel ==========
                 if (detectedFramework == "django") {
                     PythonDjangoCard(
                         settingsModule = djangoSettingsModule,
@@ -454,7 +454,7 @@ fun CreatePythonAppScreen(
                     )
                 }
                 
-                // ========== 10. FastAPI 专属面板 ==========
+                // ========== 10. FastAPI Panel ==========
                 if (detectedFramework == "fastapi") {
                     PythonFastapiCard(
                         docsEnabled = fastapiDocsEnabled,
@@ -462,10 +462,10 @@ fun CreatePythonAppScreen(
                     )
                 }
                 
-                // ========== 11. 框架提示 ==========
+                // ========== 11. Framework Tips ==========
                 PythonFrameworkTipCard(framework = detectedFramework)
                 
-                // ========== 12. 环境变量 ==========
+                // ========== 12. Environment Variables ==========
                 RuntimeEnvVarsCard(
                     envVars = envVars,
                     newEnvKey = newEnvKey,
@@ -482,7 +482,7 @@ fun CreatePythonAppScreen(
                 )
             }
             
-            // 状态提示
+            // Status message
             if (screenState.isBusy) {
                 RuntimeLoadingCard(screenState.phase)
             }
@@ -497,10 +497,10 @@ fun CreatePythonAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * Python 框架品牌化 Hero 区域
+ * Python Hero area
  */
 @Composable
 private fun PythonHeroSection(
@@ -571,7 +571,7 @@ private fun PythonHeroSection(
 }
 
 /**
- * 虚拟环境检测指示器
+ * indicator
  */
 @Composable
 private fun PythonVenvIndicator(
@@ -629,7 +629,7 @@ private fun PythonVenvIndicator(
 }
 
 /**
- * 依赖列表面板
+ * listpanel
  */
 @Composable
 private fun PythonRequirementsCard(
@@ -707,7 +707,7 @@ private fun PythonRequirementsCard(
 }
 
 /**
- * 服务器类型可视化选择器
+ * type select
  */
 @Composable
 private fun PythonServerTypeCard(
@@ -772,7 +772,7 @@ private fun PythonServerTypeCard(
 }
 
 /**
- * 单个服务器选项卡片
+ * card
  */
 @Composable
 private fun PythonServerOption(
@@ -834,7 +834,7 @@ private fun PythonServerOption(
 }
 
 /**
- * WSGI/ASGI 模块与入口文件配置卡片
+ * WSGI/ASGI modulewith fileconfigcard
  */
 @Composable
 private fun PythonModuleConfigCard(
@@ -891,7 +891,7 @@ private fun PythonModuleConfigCard(
 }
 
 /**
- * Django 专属配置面板
+ * Django configpanel
  */
 @Composable
 private fun PythonDjangoCard(
@@ -952,7 +952,7 @@ private fun PythonDjangoCard(
 }
 
 /**
- * FastAPI 专属配置面板
+ * FastAPI configpanel
  */
 @Composable
 private fun PythonFastapiCard(
@@ -997,7 +997,7 @@ private fun PythonFastapiCard(
 }
 
 /**
- * 框架特定提示卡片
+ * hintcard
  */
 @Composable
 private fun PythonFrameworkTipCard(framework: String?) {

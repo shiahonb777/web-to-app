@@ -108,7 +108,24 @@ These notes are kept in the contributing guide so README stays user-facing.
 ### i18n Layering
 
 - `app/src/main/java/com/webtoapp/core/i18n/strings`
-    `Strings.kt` now acts as a compatibility facade while grouped string sources are split here by feature. Common, create, cloud, community, AI, module, and shell text should keep moving into dedicated files instead of bloating the old 30k-line monster again.
+    `Strings.kt` is now a compatibility facade only. Feature text lives in grouped files such as `CommonStrings`, `CreateStrings`, `CloudStrings`, `CommunityStrings`, `AiStrings`, `AiCodingStrings`, `AiConfigStrings`, `ModuleStrings`, `ExtensionStrings`, `ShellStrings`, `WebViewStrings`, `ProjectStrings`, `SnippetStrings`, `StoreStrings`, `BillingStrings`, `MusicStrings`, `UiStrings`, `BuildStrings`, `CompatStrings`, and `SampleStrings`. New text and translation work should go to the nearest grouped file instead of feeding the old monster again.
+
+### Translation Contributions
+
+- `app/src/main/java/com/webtoapp/core/i18n/strings`
+    Translate grouped Kotlin sources here first. Do not add or edit translated text in `Strings.kt`; it only forwards to the grouped files.
+- `python tools/export_i18n_catalog.py --format all`
+    Exports `build/i18n/i18n_catalog.csv` and `build/i18n/i18n_catalog.json` so translators can work from a table instead of reading Kotlin directly.
+- `kind=resource-backed`
+    These rows come from Android `R.string.*` resources. Update the matching files under `app/src/main/res/values-zh`, `app/src/main/res/values-en`, and `app/src/main/res/values-ar` instead of changing grouped Kotlin text.
+- Keep placeholders unchanged
+    Do not translate or remove `%s`, `%1$s`, `${VERSION}`, `{name}`, newline markers, product names, or punctuation that is part of the format. The exporter will surface many of these in the `notes` column.
+- Non-Kotlin contributors are welcome
+    If you do not want to edit Kotlin, attach the edited CSV/JSON or list `source_file + key + target language + translated text` in the PR or issue. A maintainer can port it into the grouped source file.
+- New strings still follow the split structure
+    Add new text to the nearest grouped file in `core/i18n/strings`. Do not dump new literals back into `Strings.kt`.
+- `python tools/export_i18n_catalog.py --check`
+    Runs a static parse check and prints missing-language counts so maintainers can catch broken getter patterns before asking someone else to compile.
 
 ### AI Layering
 

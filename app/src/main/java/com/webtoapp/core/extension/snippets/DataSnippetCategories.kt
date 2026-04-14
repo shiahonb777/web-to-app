@@ -46,11 +46,9 @@ const data = loadData('myKey', {});""",
                 description = Strings.snippetSessionStorageDesc,
                 code = """// Save（页面关闭后清除）
 sessionStorage.setItem('key', 'value');
-// 读取
 const value = sessionStorage.getItem('key');
 // Delete
 sessionStorage.removeItem('key');
-// 清空所有
 sessionStorage.clear();""",
                 tags = listOf(Strings.tagSession, Strings.tagTemporary)
             ),
@@ -218,7 +216,7 @@ postData('https://api.example.com/submit', { name: 'value' });""",
     link.click();
 }
 
-// Download Blob 数据
+// Download Blob.
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     downloadFile(url, filename);
@@ -397,7 +395,6 @@ internal fun textProcessing() = CodeSnippetCategory(
                 name = Strings.snippetExtractArticle,
                 description = Strings.snippetExtractArticleDesc,
                 code = """function extractArticle() {
-    // 尝试常见的文章容器
     const selectors = [
         'article', '[class*="article"]', '[class*="content"]',
         '[class*="post"]', '[class*="entry"]', 'main', '.main'
@@ -451,7 +448,7 @@ replaceText({
     const selection = window.getSelection().toString().trim();
     if (!selection || selection.length > 200) return;
     
-    // 移除旧的翻译按钮
+    // by.
     document.querySelector('#translate-btn')?.remove();
     
     const btn = document.createElement('button');
@@ -481,29 +478,24 @@ replaceText({
                 code = """function htmlToMarkdown(html) {
     let md = html;
     
-    // 标题
     md = md.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\\n');
     md = md.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\\n');
     md = md.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\\n');
     
-    // 格式
     md = md.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
     md = md.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**');
     md = md.replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*');
     md = md.replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*');
     
-    // 链接和图片
     md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
     md = md.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, '![$2]($1)');
     
     // List
     md = md.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\\n');
     
-    // 段落和换行
     md = md.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\\n\\n');
     md = md.replace(/<br[^>]*>/gi, '\\n');
     
-    // 移除其他标签
     md = md.replace(/<[^>]+>/g, '');
     
     return md.trim();

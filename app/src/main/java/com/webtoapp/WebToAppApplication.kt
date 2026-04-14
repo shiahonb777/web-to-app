@@ -15,11 +15,9 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 
 /**
- * Application 入口。
+ * Application entry point.
  *
- * 现在这里只保留两件事：
- * - 启动 Koin
- * - 把生命周期事件转发给启动/清理管理器
+ * Starts Koin and forwards lifecycle events to the startup manager.
  */
 class WebToAppApplication : Application() {
 

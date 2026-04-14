@@ -46,9 +46,7 @@ import com.webtoapp.ui.components.aimodule.ProviderIcon
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
-
-// Theme-adaptive code block colors
+import java.util.* // Theme-adaptive code block colors
 @Composable
 fun codeBlockColors(): CodeBlockColors {
     val isDark = !MaterialTheme.colorScheme.background.luminance().let { it > 0.5f }
@@ -100,7 +98,7 @@ data class CodeBlockColors(
     val operator: Color
 )
 
-// Simple Markdown text rendering - 对代码内容禁用Markdown
+// Simple Markdown text rendering- codecontent Markdown
 @Composable
 fun MarkdownText(
     text: String,
@@ -108,7 +106,7 @@ fun MarkdownText(
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
-    // 检测是否包含代码内容
+    // codecontent
     val isCodeContent = text.contains("```") || 
         text.contains("<!DOCTYPE") || 
         text.contains("<html") ||
@@ -121,10 +119,10 @@ fun MarkdownText(
     
     SelectionContainer {
         if (isCodeContent) {
-            // 代码内容使用纯文本，保留所有字符
+            // codecontent text,
             Text(text = text, style = style, color = color, modifier = modifier)
         } else {
-            // 普通文本使用 Markdown 渲染
+            // text Markdown
             val annotatedString = parseMarkdown(text, color)
             Text(text = annotatedString, style = style, modifier = modifier)
         }
@@ -767,7 +765,7 @@ fun ConfigPanel(
 ) {
     val isDark = com.webtoapp.ui.theme.LocalIsDarkTheme.current
     
-    // 毛玻璃容器色
+    // Note
     val glassFill = if (isDark)
         Color.White.copy(alpha = 0.10f)
     else
@@ -781,7 +779,7 @@ fun ConfigPanel(
     Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(Strings.sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         
-        // Text model - 毛玻璃卡片
+        // Text model- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.textModel, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -795,7 +793,7 @@ fun ConfigPanel(
             }
         }
         
-        // Image model - 毛玻璃卡片
+        // Image model- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.imageModelOptional, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -809,7 +807,7 @@ fun ConfigPanel(
             }
         }
         
-        // Temperature - 毛玻璃卡片
+        // Temperature- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -824,7 +822,7 @@ fun ConfigPanel(
         
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         
-        // 工具包配置 - 毛玻璃卡片
+        // config- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Row(
@@ -889,7 +887,7 @@ fun ConfigPanel(
                                             )
                                         }
                                     }
-                                    // 需要图像模型的工具显示提示
+                                    // displayhint
                                     if (toolType.requiresImageModel && config.imageModelId.isNullOrBlank()) {
                                         Spacer(Modifier.width(8.dp))
                                         Surface(
@@ -911,7 +909,7 @@ fun ConfigPanel(
                                     color = MaterialTheme.colorScheme.outline
                                 )
                             }
-                            // 需要图像模型但未配置时禁用开关
+                            // config
                             val canEnable = !toolType.requiresImageModel || !config.imageModelId.isNullOrBlank()
                             PremiumSwitch(
                                 checked = isEnabled && canEnable,
@@ -935,7 +933,7 @@ fun ConfigPanel(
         
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         
-        // Rules - 毛玻璃卡片
+        // Rules- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.rules, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -961,7 +959,7 @@ fun ConfigPanel(
                             Spacer(Modifier.width(8.dp))
                             Text(rule, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(weight = 1f, fill = true))
                             IconButton(onClick = { 
-                                // If it is默认规则（空列表），则先转为实际列表再删除
+                                // If it isdefault( list) , list delete
                                 val newRules = if (config.rules.isEmpty()) {
                                     effectiveRules.toMutableList().apply { removeAt(index) }
                                 } else {
@@ -981,7 +979,7 @@ fun ConfigPanel(
 }
 
 /**
- * 图像模型选择器（支持"不使用"选项）
+ * select( support" ")
  */
 @Composable
 private fun ImageModelSelector(
@@ -994,7 +992,7 @@ private fun ImageModelSelector(
     var expanded by remember { mutableStateOf(false) }
     
     Box(modifier = modifier) {
-        // Select器按钮
+        // Select button
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(12.dp),
@@ -1006,13 +1004,13 @@ private fun ImageModelSelector(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // 供应商图标
+                // icon
                 ProviderIcon(
                     provider = selectedModel?.model?.provider,
                     modifier = Modifier.size(28.dp)
                 )
                 
-                // 模型信息
+                // Note
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     if (selectedModel != null) {
                         Text(
@@ -1036,7 +1034,7 @@ private fun ImageModelSelector(
                     }
                 }
                 
-                // 下拉箭头
+                // Note
                 Icon(
                     Icons.Default.ArrowDropDown,
                     contentDescription = Strings.expand,
@@ -1045,13 +1043,13 @@ private fun ImageModelSelector(
             }
         }
         
-        // 下拉菜单
+        // Note
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.widthIn(min = 280.dp, max = 360.dp).heightIn(max = 400.dp)
         ) {
-            // 不使用选项
+            // Note
             DropdownMenuItem(
                 text = {
                     Row(
@@ -1145,7 +1143,7 @@ private fun ImageModelSelector(
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
-            // Configure更多模型
+            // Configure
             DropdownMenuItem(
                 text = {
                     Row(
@@ -1210,10 +1208,10 @@ private fun parseColor(colorString: String): Color = try {
 private fun Color.luminance(): Float = 0.299f * red + 0.587f * green + 0.114f * blue
 
 
-// ==================== 项目文件面板组件 ====================
+// ==================== itemfilepanel ====================
 
 /**
- * 项目文件面板 - 显示会话的项目文件夹内容
+ * itemfilepanel- displaysession itemfile content
  */
 @Composable
 fun ProjectFilesPanel(
@@ -1233,7 +1231,7 @@ fun ProjectFilesPanel(
         shadowElevation = 8.dp
     ) {
         Column {
-            // 标题栏
+            // Note
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1289,7 +1287,7 @@ fun ProjectFilesPanel(
                 }
             }
             
-            // File列表
+            // Filelist
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically() + fadeIn(),
@@ -1323,7 +1321,7 @@ fun ProjectFilesPanel(
                         }
                     }
                 } else {
-                    // 按基础文件名分组
+                    // file
                     val groupedFiles = files.groupBy { it.getBaseName() }
                     
                     LazyColumn(
@@ -1356,7 +1354,7 @@ fun ProjectFilesPanel(
 }
 
 /**
- * 文件组项目 - 显示一个文件的所有版本
+ * file item- display file version
  */
 @Composable
 private fun FileGroupItem(
@@ -1370,7 +1368,7 @@ private fun FileGroupItem(
     var showVersions by remember { mutableStateOf(false) }
     
     Column {
-        // 主文件项（最新版本）
+        // file( version)
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1385,10 +1383,10 @@ private fun FileGroupItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // File图标
+                // Fileicon
                 FileTypeIcon(type = latestFile.type, modifier = Modifier.size(32.dp))
                 
-                // File信息
+                // File
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -1420,7 +1418,7 @@ private fun FileGroupItem(
                     )
                 }
                 
-                // Version历史按钮
+                // Version button
                 if (versions.size > 1) {
                     IconButton(
                         onClick = { showVersions = !showVersions },
@@ -1435,7 +1433,7 @@ private fun FileGroupItem(
                     }
                 }
                 
-                // 预览按钮
+                // previewbutton
                 if (latestFile.type == ProjectFileType.HTML) {
                     IconButton(
                         onClick = { onPreviewClick(latestFile) },
@@ -1452,7 +1450,7 @@ private fun FileGroupItem(
             }
         }
         
-        // Version历史列表
+        // Version list
         AnimatedVisibility(
             visible = showVersions && versions.size > 1,
             enter = expandVertically() + fadeIn(),
@@ -1514,7 +1512,7 @@ private fun FileGroupItem(
 }
 
 /**
- * 文件类型图标
+ * filetypeicon
  */
 @Composable
 fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
@@ -1545,7 +1543,7 @@ fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
 }
 
 /**
- * 文件预览面板
+ * filepreviewpanel
  */
 @Composable
 fun FilePreviewPanel(
@@ -1564,7 +1562,7 @@ fun FilePreviewPanel(
         shadowElevation = 4.dp
     ) {
         Column {
-            // 标题栏
+            // Note
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1612,7 +1610,7 @@ fun FilePreviewPanel(
                 }
             }
             
-            // 代码内容
+            // codecontent
             val colors = codeBlockColors()
             Surface(
                 modifier = Modifier

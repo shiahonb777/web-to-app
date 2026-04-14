@@ -53,7 +53,7 @@ import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
 
 /**
- * AI 编程主界面 - 统一支持7种应用类型
+ * AI- unifiedsupport7 apptype
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,16 +65,16 @@ fun AiCodingScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    // 管理器
+    // manager
     val storage = remember { AiCodingStorage(context) }
     val configManager = remember { AiConfigManager(context) }
     val apiClient = remember { AiApiClient(context) }
     val htmlAgent = remember { AiCodingAgent(context) }
     
-    // 当前选中的编程类型
+    // current in type
     var selectedCodingType by remember { mutableStateOf(AiCodingType.HTML) }
     
-    // 状态
+    // state
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
     
@@ -87,21 +87,21 @@ fun AiCodingScreen(
         isLoading = false
     }
     
-    // 筛选模型
+    // filter
     val textModels = savedModels.filter { it.supportsFeature(AiFeature.AI_CODING) }
     val imageModels = savedModels.filter { it.supportsFeature(AiFeature.AI_CODING_IMAGE) }
     
-    // 当前会话
+    // currentsession
     var currentSession by remember { mutableStateOf<AiCodingSession?>(null) }
     
-    // 当会话变化时同步 codingType
+    // whensession sync codingType
     LaunchedEffect(currentSession?.id) {
         currentSession?.let { session ->
             selectedCodingType = session.codingType
         }
     }
     
-    // 从 sessions Flow 同步 currentSession
+    // from sessions Flow sync currentSession
     LaunchedEffect(currentSessionId, sessions) {
         val sessionFromFlow = sessions.find { it.id == currentSessionId }
         if (sessionFromFlow != null) {
@@ -125,18 +125,18 @@ fun AiCodingScreen(
     var streamingThinking by remember { mutableStateOf("") }
     var generatingSessionId by remember { mutableStateOf<String?>(null) }
     
-    // 项目文件相关状态
+    // itemfilerelatedstate
     val projectFileManager = remember { ProjectFileManager(context) }
     var projectFiles by remember { mutableStateOf<List<ProjectFileInfo>>(emptyList()) }
     var selectedProjectFile by remember { mutableStateOf<ProjectFileInfo?>(null) }
     var selectedFileContent by remember { mutableStateOf<String?>(null) }
     var isFilesPanelExpanded by remember { mutableStateOf(true) }
     
-    // 代码编辑状态
+    // codeeditstate
     var isEditingCode by remember { mutableStateOf(false) }
     var editingCodeContent by remember { mutableStateOf("") }
     
-    // 当会话变化时刷新项目文件列表
+    // whensession refreshitemfilelist
     LaunchedEffect(currentSessionId) {
         currentSessionId?.let { sessionId ->
             projectFiles = projectFileManager.listFiles(sessionId)
@@ -161,7 +161,7 @@ fun AiCodingScreen(
     var currentServiceConnection by remember { mutableStateOf<ServiceConnection?>(null) }
     var isServiceBound by remember { mutableStateOf(false) }
     
-    // Session切换时清空流式状态
+    // Sessionswitch state
     LaunchedEffect(currentSessionId) {
         if (currentSessionId != generatingSessionId) {
             streamingContent = ""
@@ -182,7 +182,7 @@ fun AiCodingScreen(
     var showSaveDialog by remember { mutableStateOf(false) }
     var editingMessage by remember { mutableStateOf<AiCodingMessage?>(null) }
     
-    // Image选择器
+    // Imageselect
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -204,7 +204,7 @@ fun AiCodingScreen(
     
     val listState = rememberLazyListState()
     
-    // Auto滚动到底部
+    // Autoscroll bottom
     LaunchedEffect(currentSession?.messages?.size) {
         currentSession?.messages?.size?.let { size ->
             if (size > 0) {
@@ -213,7 +213,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 发送消息函数
+    // message
     fun sendMessage() {
         if (inputText.isBlank()) return
         if (chatState !is ChatState.Idle) return
@@ -495,7 +495,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 预览（仅 HTML/Frontend 支持）
+    // preview( only HTML/Frontend support)
     fun previewCode(codeBlock: CodeBlock) {
         if (!selectedCodingType.supportPreview) {
             Toast.makeText(context, Strings.previewNotSupported, Toast.LENGTH_SHORT).show()
@@ -516,7 +516,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 预览项目文件（仅 HTML/Frontend）
+    // previewitemfile( only HTML/Frontend)
     fun previewProjectFile(fileInfo: ProjectFileInfo) {
         if (!selectedCodingType.supportPreview) {
             Toast.makeText(context, Strings.previewNotSupported, Toast.LENGTH_SHORT).show()
@@ -535,7 +535,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 选择项目文件并加载内容
+    // selectitemfileandloadcontent
     fun selectProjectFile(fileInfo: ProjectFileInfo) {
         scope.launch {
             selectedProjectFile = fileInfo
@@ -547,7 +547,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 保存编辑的代码
+    // saveedit code
     fun saveEditedCode() {
         scope.launch {
             val file = selectedProjectFile ?: return@launch
@@ -564,7 +564,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 下载代码到本地
+    // downloadcode local
     fun downloadCode(codeBlock: CodeBlock) {
         scope.launch {
             try {
@@ -587,11 +587,11 @@ fun AiCodingScreen(
         }
     }
     
-    // 导出所有代码到项目
+    // export code item
     fun exportAllToProject() {
         scope.launch {
             try {
-                // 优先使用项目文件夹中的文件
+                // prefer itemfile infile
                 val sessionId = currentSessionId
                 val files = if (sessionId != null && projectFiles.isNotEmpty()) {
                     projectFiles.map { fileInfo ->
@@ -605,7 +605,7 @@ fun AiCodingScreen(
                         ProjectFile(fileInfo.name, content, type)
                     }
                 } else {
-                    // 回退到从消息中提取代码块
+                    // fallback frommessage code
                     val allCodeBlocks = currentSession?.messages
                         ?.flatMap { it.codeBlocks }
                         ?: emptyList()
@@ -648,7 +648,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 下载所有文件到本地
+    // download file local
     fun downloadAllFiles() {
         scope.launch {
             try {
@@ -714,19 +714,19 @@ fun AiCodingScreen(
                     }
                 },
                 actions = {
-                    // 代码库
+                    // repository
                     IconButton(onClick = { showCodeLibrarySheet = true }) {
                         Icon(Icons.Outlined.Folder, Strings.codeLibrary)
                     }
-                    // 检查点回退
+                    // checkpointfallback
                     IconButton(onClick = { showConversationCheckpointsSheet = true }) {
                         Icon(Icons.Outlined.Restore, Strings.rollback)
                     }
-                    // 设置
+                    // settings
                     IconButton(onClick = { showConfigSheet = true }) {
                         Icon(Icons.Outlined.Settings, Strings.settings)
                     }
-                    // 侧边栏（切换开关）
+                    // sidebar( switch)
                     IconButton(onClick = { showDrawer = !showDrawer }) {
                         Icon(Icons.Default.Menu, Strings.sessionList)
                     }
@@ -771,7 +771,7 @@ fun AiCodingScreen(
                     }
                 }
             } else if (currentSession == null) {
-                // 欢迎界面 - 带类型选择
+                // Welcome screen with type selection
                 AiCodingWelcomeContent(
                     selectedType = selectedCodingType,
                     onTypeSelect = { selectedCodingType = it },
@@ -788,9 +788,9 @@ fun AiCodingScreen(
                     onNavigateToAiSettings = onNavigateToAiSettings
                 )
             } else {
-                // 主内容区域
+                // Main content area
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // 消息列表
+                    // Message list
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -840,12 +840,12 @@ fun AiCodingScreen(
                         }
                     }
                     
-                    // 底部面板 - 项目文件 + 代码编辑器
+                    // Bottom panel - project files + code editor
                     if (currentSession != null) {
                         Column(
                             modifier = Modifier.align(Alignment.BottomCenter)
                         ) {
-                            // 代码编辑/预览面板
+                            // Code edit/preview panel
                             AnimatedVisibility(
                                 visible = selectedProjectFile != null && selectedFileContent != null,
                                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -878,7 +878,7 @@ fun AiCodingScreen(
                                 )
                             }
                             
-                            // 项目文件目录树面板
+                            // Project file tree panel
                             AiCodingDirectoryTreePanel(
                                 files = projectFiles,
                                 selectedFile = selectedProjectFile,
@@ -902,11 +902,11 @@ fun AiCodingScreen(
         }
     }
     
-    // ==================== 弹窗 / 抽屉 ====================
+    // ==================== Sheets / Drawer ====================
     
-    // 侧边抽屉 - 会话列表
+    // Side drawer - session list
     if (showDrawer) {
-        // 半透明遮罩，点击关闭
+        // Semi-transparent overlay, click to close
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -915,7 +915,7 @@ fun AiCodingScreen(
                     showDrawer = false
                 }
         )
-        // 从右侧滑入的会话面板
+        // Session panel sliding in from the right
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.CenterEnd
@@ -948,7 +948,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 配置底部弹窗
+    // Configuration bottom sheet
     if (showConfigSheet) {
         ModalBottomSheet(
             onDismissRequest = { showConfigSheet = false }
@@ -992,7 +992,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 模板选择弹窗
+    // Template selection sheet
     if (showTemplatesSheet) {
         ModalBottomSheet(
             onDismissRequest = { showTemplatesSheet = false }
@@ -1023,7 +1023,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 教程弹窗
+    // Tutorial sheet
     if (showTutorialSheet) {
         ModalBottomSheet(
             onDismissRequest = { showTutorialSheet = false }
@@ -1035,7 +1035,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 版本检查点弹窗
+    // Version checkpoint sheet
     if (showCheckpointsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showCheckpointsSheet = false }
@@ -1074,7 +1074,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 编辑消息对话框
+    // Edit message dialog
     editingMessage?.let { message ->
         EditMessageDialog(
             message = message,
@@ -1095,7 +1095,7 @@ fun AiCodingScreen(
         )
     }
     
-    // 保存项目对话框
+    // Save project dialog
     if (showSaveDialog) {
         SaveProjectDialog(
             storage = storage,
@@ -1108,7 +1108,7 @@ fun AiCodingScreen(
         )
     }
     
-    // 代码库弹窗
+    // Snippet library sheet
     if (showCodeLibrarySheet) {
         val codeLibrary by storage.codeLibraryFlow.collectAsState(initial = emptyList())
         
@@ -1158,7 +1158,7 @@ fun AiCodingScreen(
         }
     }
     
-    // 对话检查点回退弹窗
+    // Conversation checkpoint rollback sheet
     var conversationCheckpoints by remember { mutableStateOf<List<ConversationCheckpoint>>(emptyList()) }
     
     LaunchedEffect(showConversationCheckpointsSheet, currentSession?.id) {
@@ -1222,10 +1222,10 @@ fun AiCodingScreen(
         }
 }
 
-// ==================== 子组件 ====================
+// ==================== Child Components ====================
 
 /**
- * 欢迎界面 - 带应用类型选择
+ * welcome- apptypeselect
  */
 @Composable
 private fun AiCodingWelcomeContent(
@@ -1246,7 +1246,7 @@ private fun AiCodingWelcomeContent(
     ) {
         Spacer(modifier = Modifier.height(32.dp))
         
-        // Logo区域
+        // Logoarea
         Surface(
             modifier = Modifier.size(80.dp),
             shape = RoundedCornerShape(20.dp),
@@ -1278,7 +1278,7 @@ private fun AiCodingWelcomeContent(
         
         Spacer(modifier = Modifier.height(28.dp))
         
-        // 应用类型选择标题
+        // apptypeselect
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -1307,7 +1307,7 @@ private fun AiCodingWelcomeContent(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // 应用类型网格 - 两列
+        // apptype
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -1362,7 +1362,7 @@ private fun AiCodingWelcomeContent(
         
         Spacer(modifier = Modifier.height(28.dp))
         
-        // 开始新对话按钮
+        // button
         PremiumButton(
             onClick = onNewChat,
             modifier = Modifier
@@ -1380,7 +1380,7 @@ private fun AiCodingWelcomeContent(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // 示例提示词标题
+        // hint
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -1409,7 +1409,7 @@ private fun AiCodingWelcomeContent(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // 示例提示词卡片
+        // hint card
         val examplePrompts = selectedType.getExamplePrompts()
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -1455,7 +1455,7 @@ private fun AiCodingWelcomeContent(
         
         Spacer(modifier = Modifier.height(20.dp))
         
-        // 辅助操作
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1490,7 +1490,7 @@ private fun AiCodingWelcomeContent(
 }
 
 /**
- * 图像生成指示器
+ * indicator
  */
 @Composable
 private fun AiCodingImageGeneratingIndicator(prompt: String) {
@@ -1523,7 +1523,7 @@ private fun AiCodingImageGeneratingIndicator(prompt: String) {
 }
 
 /**
- * 会话列表侧边栏 - 带类型切换
+ * sessionlistsidebar- typeswitch
  */
 @Composable
 private fun AiCodingSessionDrawerContent(
@@ -1536,7 +1536,7 @@ private fun AiCodingSessionDrawerContent(
     onCodingTypeChange: (AiCodingType) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // 类型筛选
+    // typefilter
     var filterType by remember { mutableStateOf<AiCodingType?>(null) }
     val filteredSessions = if (filterType != null) {
         sessions.filter { it.codingType == filterType }
@@ -1545,7 +1545,7 @@ private fun AiCodingSessionDrawerContent(
     }
     
     Column(modifier = Modifier.fillMaxHeight()) {
-        // 头部
+        // header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1559,7 +1559,7 @@ private fun AiCodingSessionDrawerContent(
             }
         }
         
-        // 类型筛选横向滚动
+        // typefilter scroll
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1567,7 +1567,7 @@ private fun AiCodingSessionDrawerContent(
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // "全部" 筛选
+            // "all" filter
             PremiumFilterChip(
                 selected = filterType == null,
                 onClick = { filterType = null },
@@ -1587,7 +1587,7 @@ private fun AiCodingSessionDrawerContent(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        // 新建按钮
+        // newbutton
         FilledTonalButton(
             onClick = {
                 filterType?.let { onCodingTypeChange(it) }
@@ -1611,7 +1611,7 @@ private fun AiCodingSessionDrawerContent(
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
         
-        // 会话列表
+        // sessionlist
         LazyColumn(modifier = Modifier.weight(weight = 1f, fill = true)) {
             items(filteredSessions, key = { it.id }) { session ->
                 AiCodingSessionListItem(
@@ -1636,7 +1636,7 @@ private fun AiCodingSessionDrawerContent(
 }
 
 /**
- * 会话列表项 - 显示编程类型标识
+ * sessionlist- display type
  */
 @Composable
 private fun AiCodingSessionListItem(
@@ -1661,7 +1661,7 @@ private fun AiCodingSessionListItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 类型图标
+            // typeicon
             Icon(com.webtoapp.util.SvgIconMapper.getIcon(session.codingType.icon), contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(10.dp))
             
@@ -1681,7 +1681,7 @@ private fun AiCodingSessionListItem(
                 )
             }
             
-            // 删除按钮
+            // deletebutton
             IconButton(
                 onClick = { showDeleteConfirm = true },
                 modifier = Modifier.size(32.dp)
@@ -1718,7 +1718,7 @@ private fun AiCodingSessionListItem(
 }
 
 /**
- * 项目文件目录树面板
+ * itemfilefile treepanel
  */
 @Composable
 private fun AiCodingDirectoryTreePanel(
@@ -1743,7 +1743,7 @@ private fun AiCodingDirectoryTreePanel(
         tonalElevation = 2.dp
     ) {
         Column {
-            // 头部
+            // header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1807,7 +1807,7 @@ private fun AiCodingDirectoryTreePanel(
                 }
             }
             
-            // 文件列表（展开时）
+            // filelist( expand)
             AnimatedVisibility(visible = isExpanded) {
                 LazyColumn(
                     modifier = Modifier
@@ -1829,7 +1829,7 @@ private fun AiCodingDirectoryTreePanel(
                                 .padding(horizontal = 16.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 树形缩进线
+                            // Note
                             Box(
                                 modifier = Modifier
                                     .width(2.dp)
@@ -1838,11 +1838,11 @@ private fun AiCodingDirectoryTreePanel(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             
-                            // 文件图标
+                            // fileicon
                             Icon(com.webtoapp.util.SvgIconMapper.getIcon(fileIcon), contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.width(8.dp))
                             
-                            // 文件名
+                            // file
                             Text(
                                 fileInfo.name,
                                 style = MaterialTheme.typography.bodySmall,
@@ -1855,14 +1855,14 @@ private fun AiCodingDirectoryTreePanel(
                                 overflow = TextOverflow.Ellipsis
                             )
                             
-                            // 文件大小
+                            // file
                             Text(
                                 fileInfo.formatSize(),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
                             
-                            // 预览按钮（仅支持预览的类型+HTML文件）
+                            // previewbutton( onlysupportpreview type+HTMLfile)
                             if (codingType.supportPreview && fileInfo.type == ProjectFileType.HTML) {
                                 IconButton(
                                     onClick = { onPreviewClick(fileInfo) },
@@ -1885,7 +1885,7 @@ private fun AiCodingDirectoryTreePanel(
 }
 
 /**
- * 根据文件信息获取对应的图标
+ * file icon
  */
 private fun getFileIcon(fileInfo: ProjectFileInfo): String {
     return when (fileInfo.type) {
@@ -1916,7 +1916,7 @@ private fun getFileIcon(fileInfo: ProjectFileInfo): String {
 }
 
 /**
- * 代码编辑/预览面板
+ * codeedit/previewpanel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1945,7 +1945,7 @@ private fun AiCodingFileEditorPanel(
                 .fillMaxWidth()
                 .heightIn(max = 350.dp)
         ) {
-            // 头部工具栏
+            // header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1979,13 +1979,13 @@ private fun AiCodingFileEditorPanel(
                 }
                 
                 Row {
-                    // 预览按钮
+                    // previewbutton
                     if (canPreview) {
                         IconButton(onClick = onPreview, modifier = Modifier.size(32.dp)) {
                             Icon(Icons.Outlined.PlayArrow, Strings.preview, modifier = Modifier.size(18.dp))
                         }
                     }
-                    // 编辑/保存切换
+                    // edit/saveswitch
                     IconButton(onClick = onToggleEdit, modifier = Modifier.size(32.dp)) {
                         Icon(
                             if (isEditing) Icons.Outlined.Save else Icons.Outlined.Edit,
@@ -1994,7 +1994,7 @@ private fun AiCodingFileEditorPanel(
                             tint = if (isEditing) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    // 关闭
+                    // close
                     IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.Close, Strings.close, modifier = Modifier.size(18.dp))
                     }
@@ -2003,7 +2003,7 @@ private fun AiCodingFileEditorPanel(
             
             HorizontalDivider()
             
-            // 代码内容区
+            // codecontent
             if (isEditing) {
                 OutlinedTextField(
                     value = content,

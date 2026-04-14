@@ -3,9 +3,9 @@ package com.webtoapp.core.ai.coding
 import com.webtoapp.core.i18n.Strings
 
 /**
- * AI 编程支持的应用类型
+ * AI Coding.
  * 
- * 7种需要代码构建的应用类型（排除网页、媒体、画廊）
+ * Note.
  */
 enum class AiCodingType(
     val icon: String,
@@ -57,7 +57,7 @@ enum class AiCodingType(
     );
 
     /**
-     * 获取本地化显示名称
+     * Note.
      */
     fun getDisplayName(): String = when (this) {
         HTML -> Strings.codingTypeHtml
@@ -70,7 +70,7 @@ enum class AiCodingType(
     }
 
     /**
-     * 获取本地化描述
+     * Note.
      */
     fun getDescription(): String = when (this) {
         HTML -> Strings.codingTypeHtmlDesc
@@ -83,7 +83,7 @@ enum class AiCodingType(
     }
 
     /**
-     * 获取主要编程语言
+     * Note.
      */
     fun getPrimaryLanguage(): String = when (this) {
         HTML -> "html"
@@ -96,12 +96,12 @@ enum class AiCodingType(
     }
 
     /**
-     * 获取写入文件的工具名称
+     * Note.
      */
     fun getWriteToolName(): String = "write_file"
 
     /**
-     * 获取写入文件的工具描述（已本地化）
+     * Note.
      */
     fun getWriteToolDescription(): String = when (this) {
         HTML -> Strings.writeToolDescHtml
@@ -114,7 +114,7 @@ enum class AiCodingType(
     }
 
     /**
-     * 获取本地化示例提示词
+     * Note.
      */
     fun getExamplePrompts(): List<String> = when (this) {
         HTML -> listOf(Strings.aiPromptHtml1, Strings.aiPromptHtml2)

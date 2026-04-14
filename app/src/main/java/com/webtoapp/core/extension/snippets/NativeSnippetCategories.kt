@@ -15,7 +15,6 @@ internal fun nativeBridgeOperations() = CodeSnippetCategory(
                 code = """// 短提示
 NativeBridge.showToast('操作成功');
 
-// 长提示
 NativeBridge.showToast('请稍候，正在处理...', 'long');""",
                 tags = listOf(Strings.tagToast, Strings.tagToast, Strings.tagMessage)
             ),
@@ -26,10 +25,9 @@ NativeBridge.showToast('请稍候，正在处理...', 'long');""",
                 code = """// 短震动（100ms）
 NativeBridge.vibrate();
 
-// Custom时长震动
+// Custom when.
 NativeBridge.vibrate(500);
 
-// 模式震动（震动-暂停-震动）
 NativeBridge.vibratePattern('100,200,100,200');""",
                 tags = listOf(Strings.tagVibrate, Strings.tagFeedback, Strings.tagHaptic)
             ),
@@ -47,7 +45,7 @@ NativeBridge.vibratePattern('100,200,100,200');""",
     }
 }
 
-// 使用示例：复制选中文本
+// use in.
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('copy-btn')) {
         const text = e.target.dataset.text;
@@ -65,7 +63,7 @@ function shareContent(title, text, url) {
     NativeBridge.share(title, text, url);
 }
 
-// 分享当前页面
+// before.
 function shareCurrentPage() {
     NativeBridge.share(
         document.title,
@@ -74,7 +72,7 @@ function shareCurrentPage() {
     );
 }
 
-// 添加分享按钮
+// by.
 const shareBtn = document.createElement('button');
 shareBtn.textContent = '分享';
 shareBtn.onclick = shareCurrentPage;""",
@@ -89,7 +87,7 @@ function saveImage(imageUrl, filename) {
     NativeBridge.saveImageToGallery(imageUrl, filename || '');
 }
 
-// 为所有图片添加长按保存功能
+// as by Save.
 document.querySelectorAll('img').forEach(img => {
     img.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -109,7 +107,7 @@ function saveVideo(videoUrl, filename) {
     NativeBridge.saveVideoToGallery(videoUrl, filename || '');
 }
 
-// 为视频添加下载按钮
+// as by.
 document.querySelectorAll('video').forEach(video => {
     const btn = document.createElement('button');
     btn.textContent = '保存视频';
@@ -129,7 +127,7 @@ function openInBrowser(url) {
     NativeBridge.openUrl(url);
 }
 
-// 拦截外部链接，用浏览器打开
+// intercept use.
 document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (link && link.href && !link.href.startsWith(location.origin)) {
@@ -149,11 +147,10 @@ console.log('设备型号:', deviceInfo.model);
 console.log('Android 版本:', deviceInfo.androidVersion);
 console.log('屏幕尺寸:', deviceInfo.screenWidth, 'x', deviceInfo.screenHeight);
 
-// Get应用信息
+// Get use.
 const appInfo = JSON.parse(NativeBridge.getAppInfo());
 console.log('应用版本:', appInfo.versionName);
 
-// 根据设备调整布局
 if (deviceInfo.screenWidth < 400) {
     document.body.classList.add('small-screen');
 }""",
@@ -170,13 +167,13 @@ if (NativeBridge.isNetworkAvailable()) {
     NativeBridge.showToast('当前无网络连接');
 }
 
-// Get网络类型
+// Get.
 const networkType = NativeBridge.getNetworkType();
 console.log('网络类型:', networkType); // wifi, mobile, none
 
-// 根据网络类型调整行为
+// as.
 if (networkType === 'mobile') {
-    // 移动网络下减少数据使用
+    // use.
     document.querySelectorAll('video').forEach(v => v.preload = 'none');
 }""",
                 tags = listOf(Strings.tagNetwork, Strings.tagWiFi, Strings.tagData)
@@ -190,13 +187,13 @@ function saveTextFile(content, filename) {
     NativeBridge.saveToFile(content, filename, 'text/plain');
 }
 
-// Save JSON 文件
+// Save JSON.
 function saveJsonFile(data, filename) {
     const json = JSON.stringify(data, null, 2);
     NativeBridge.saveToFile(json, filename, 'application/json');
 }
 
-// Export页面数据
+// Export.
 const pageData = {
     title: document.title,
     url: location.href,
@@ -268,7 +265,6 @@ internal fun domOperations() = CodeSnippetCategory(
                 description = Strings.snippetQuerySingleDesc,
                 code = """const element = document.querySelector('选择器');
 if (element) {
-    // 对元素进行操作
 }""",
                 tags = listOf(Strings.tagQuery, Strings.tagSelector)
             ),
@@ -277,7 +273,6 @@ if (element) {
                 name = Strings.snippetQueryAll,
                 description = Strings.snippetQueryAllDesc,
                 code = """document.querySelectorAll('选择器').forEach(el => {
-    // 对每个元素进行操作
 });""",
                 tags = listOf(Strings.tagQuery, Strings.tagIterate)
             ),
@@ -322,8 +317,8 @@ document.body.appendChild(newElement);""",
                 code = """const element = document.querySelector('选择器');
 if (element) {
     element.textContent = '新的文本内容';
-    // 或者使用 innerHTML 支持 HTML
-    // element.innerHTML = '<strong>加粗文本</strong>';
+    // or use innerHTML Supports HTML.
+    // element.innerHTML = '<strong> </strong>';.
 }""",
                 tags = listOf(Strings.tagText, Strings.tagModify)
             ),

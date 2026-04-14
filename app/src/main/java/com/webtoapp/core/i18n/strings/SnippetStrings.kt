@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object SnippetStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 代码片段分类 ====================
+    // ==================== Snippet Categories ====================
     val snippetNative: String get() = when (lang) {
         AppLanguage.CHINESE -> "原生能力"
         AppLanguage.ENGLISH -> "Native Features"

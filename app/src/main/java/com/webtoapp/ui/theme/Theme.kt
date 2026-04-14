@@ -10,15 +10,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import org.koin.compose.koinInject
 
-// ==================== 主题状态 ====================
+// ==================== Theme State ====================
 
 /**
- * 当前主题的 CompositionLocal
+ * CompositionLocal for the current theme.
  */
 val LocalAppTheme = staticCompositionLocalOf { AppThemes.Default }
 
 /**
- * 动画设置的 CompositionLocal
+ * CompositionLocal for animation settings.
  */
 data class AnimationSettings(
     val enabled: Boolean = true,
@@ -30,9 +30,9 @@ data class AnimationSettings(
 
 val LocalAnimationSettings = staticCompositionLocalOf { AnimationSettings() }
 
-// ==================== 默认配色 ====================
+// ==================== Default Color Schemes ====================
 
-// Light Theme Colors (极简主义)
+// Light Theme Colors (minimal)
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF1A1A1A),
     onPrimary = Color.White,
@@ -60,7 +60,7 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = Color(0xFFE8E8E8)
 )
 
-// Dark Theme Colors (极简主义暗色)
+// Dark Theme Colors (minimal dark)
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFFEEEEEE),
     onPrimary = Color(0xFF1A1A1A),
@@ -86,16 +86,16 @@ private val DarkColorScheme = darkColorScheme(
     outlineVariant = Color(0xFF2A2A2A)
 )
 
-// ==================== 主题入口 ====================
+// ==================== Theme Entrypoints ====================
 
 /**
- * 当前是否为深色主题的 CompositionLocal
+ * CompositionLocal for whether dark theme is active.
  */
 val LocalIsDarkTheme = staticCompositionLocalOf { false }
 
 /**
- * 应用主题入口（简化版，不需要 isDarkTheme 回调）
- * 支持自定义主题和动态取色
+ * App theme entry (simplified, no isDarkTheme callback).
+ * Supports custom themes and dynamic colors.
  */
 @Composable
 fun WebToAppTheme(
@@ -109,20 +109,20 @@ fun WebToAppTheme(
 }
 
 /**
- * 应用主题入口
- * 支持自定义主题和动态取色
- * @param content 接收一个 Boolean 参数表示当前是否为深色主题
+ * App theme entry.
+ * Supports custom themes and dynamic colors.
+ * @param content Receives a Boolean indicating whether dark theme is active.
  */
 @Composable
 fun WebToAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,  // Default关闭动态取色以使用自定义主题
+    dynamicColor: Boolean = false,  // Default
     content: @Composable (isDarkTheme: Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val themeManager: ThemeManager = koinInject()
     
-    // 收集主题设置 - StateFlow 已缓存状态，不会在重组时重置
+    // Collect theme settings; StateFlow keeps cached state across recomposition
     val themeType by themeManager.themeTypeFlow.collectAsStateWithLifecycle()
     val darkModeSetting by themeManager.darkModeFlow.collectAsStateWithLifecycle()
     val enableAnimations by themeManager.enableAnimationsFlow.collectAsStateWithLifecycle()
@@ -131,17 +131,17 @@ fun WebToAppTheme(
     val enableSound by themeManager.enableSoundFlow.collectAsStateWithLifecycle()
     val animationSpeed by themeManager.animationSpeedFlow.collectAsStateWithLifecycle()
     
-    // 确定是否使用暗色模式
+    // Resolve whether to use dark mode
     val useDarkTheme = when (darkModeSetting) {
         ThemeManager.DarkModeSettings.SYSTEM -> darkTheme
         ThemeManager.DarkModeSettings.LIGHT -> false
         ThemeManager.DarkModeSettings.DARK -> true
     }
     
-    // Get当前主题
+    // Get current theme
     val currentTheme = AppThemes.getTheme(themeType)
     
-    // 确定配色方案
+    // Resolve color scheme
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (useDarkTheme) dynamicDarkColorScheme(context) 
@@ -151,7 +151,7 @@ fun WebToAppTheme(
         else -> currentTheme.lightColors
     }
     
-    // 动画设置
+    // Animation settings
     val animationSettings = AnimationSettings(
         enabled = enableAnimations,
         particlesEnabled = enableParticles,
@@ -160,7 +160,7 @@ fun WebToAppTheme(
         speedMultiplier = animationSpeed.multiplier
     )
 
-    // 根据主题形状生成 Material3 Shapes
+    // Build Material3 Shapes from theme shape config
     val themeShapes = Shapes(
         extraSmall = RoundedCornerShape(currentTheme.shapes.cornerRadius * 0.25f),
         small = RoundedCornerShape(currentTheme.shapes.buttonRadius),
@@ -184,7 +184,7 @@ fun WebToAppTheme(
 }
 
 /**
- * 简化版主题入口（用于预览或不需要主题管理的场景）
+ * Simplified theme entry (for previews or unmanaged theme scenarios).
  */
 @Composable
 fun WebToAppThemeSimple(
@@ -208,8 +208,8 @@ fun WebToAppThemeSimple(
 val Typography = Typography()
 
 /**
- * Shell 模式主题入口
- * 根据配置文件中的主题类型应用对应主题
+ * Shell mode theme entry.
+ * Applies theme by theme type from config.
  */
 @Composable
 fun ShellTheme(
@@ -219,27 +219,27 @@ fun ShellTheme(
 ) {
     val systemDarkTheme = isSystemInDarkTheme()
     
-    // Parse主题类型
+    // Parse theme type
     val themeType = try {
         AppThemeType.valueOf(themeTypeName)
     } catch (e: Exception) {
         AppThemeType.KIMI_NO_NAWA
     }
     
-    // 确定是否使用暗色模式
+    // Resolve whether to use dark mode
     val useDarkTheme = when (darkModeSetting) {
         "LIGHT" -> false
         "DARK" -> true
         else -> systemDarkTheme // SYSTEM
     }
     
-    // Get当前主题
+    // Get current theme
     val currentTheme = AppThemes.getTheme(themeType)
     
-    // 确定配色方案
+    // Resolve color scheme
     val colorScheme = if (useDarkTheme) currentTheme.darkColors else currentTheme.lightColors
     
-    // 动画设置（Shell 模式使用默认设置）
+    // Animation settings (Shell mode uses defaults)
     val animationSettings = AnimationSettings(
         enabled = true,
         particlesEnabled = currentTheme.effects.enableParticles,

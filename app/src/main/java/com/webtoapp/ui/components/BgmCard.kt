@@ -29,10 +29,10 @@ import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.data.model.BgmPlayMode
 
 /**
- * 背景音乐设置卡片（优化版）
- * - 更精致的播放列表预览
- * - 播放模式/音量/歌词的紧凑展示
- * - 视觉反馈微动画
+ * settingscard( )
+ * listpreview
+ * mode/ /
+ * animation
  */
 @Composable
 fun BgmCard(
@@ -43,7 +43,7 @@ fun BgmCard(
 ) {
     var showSelectorDialog by remember { mutableStateOf(false) }
 
-    // 图标微动画
+    // icon animation
     val iconScale by animateFloatAsState(
         targetValue = if (enabled) 1.1f else 1f,
         animationSpec = tween(300),
@@ -55,7 +55,7 @@ fun BgmCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 标题和开关
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -115,7 +115,7 @@ fun BgmCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                // 当前配置概览（增强版）
+                // currentconfig( enhanced)
                 if (config.playlist.isNotEmpty()) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -124,13 +124,13 @@ fun BgmCard(
                         tonalElevation = 1.dp
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            // 播放列表预览（最多显示 3 首）
+                            // listpreview( display 3)
                             config.playlist.take(3).forEachIndexed { index, bgm ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // 序号圆形
+                                    // Note
                                     Box(
                                         modifier = Modifier
                                             .size(22.dp)
@@ -164,7 +164,7 @@ fun BgmCard(
                                 }
                             }
                             
-                            // "还有 N 首..." 提示
+                            // " N. . . " hint
                             if (config.playlist.size > 3) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -181,12 +181,12 @@ fun BgmCard(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            // 状态标签行
+                            // statelabel
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // 播放模式
+                                // mode
                                 StatusChip(
                                     icon = when (config.playMode) {
                                         BgmPlayMode.LOOP -> Icons.Outlined.Repeat
@@ -200,14 +200,14 @@ fun BgmCard(
                                     }
                                 )
                                 
-                                // 音量
+                                // Note
                                 StatusChip(
                                     icon = if (config.volume > 0.5f) Icons.AutoMirrored.Outlined.VolumeUp
                                            else Icons.AutoMirrored.Outlined.VolumeDown,
                                     label = "${(config.volume * 100).toInt()}%"
                                 )
                                 
-                                // 歌词
+                                // Note
                                 if (config.showLyrics) {
                                     StatusChip(
                                         icon = Icons.Outlined.Subtitles,
@@ -219,7 +219,7 @@ fun BgmCard(
                     }
                 }
                 
-                // 选择/修改按钮
+                // select/ button
                 PremiumOutlinedButton(
                     onClick = { showSelectorDialog = true },
                     modifier = Modifier.fillMaxWidth()
@@ -237,7 +237,7 @@ fun BgmCard(
         }
     }
     
-    // 音乐选择对话框
+    // selectdialog
     if (showSelectorDialog) {
         BgmSelectorDialog(
             currentConfig = config,
@@ -251,7 +251,7 @@ fun BgmCard(
 }
 
 /**
- * 紧凑状态标签（播放模式/音量/歌词等）
+ * statelabel( mode/ /)
  */
 @Composable
 private fun StatusChip(

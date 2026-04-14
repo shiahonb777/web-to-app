@@ -662,7 +662,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Disguised as"
         AppLanguage.ARABIC -> "متنكر كـ"
     }
-    // ==================== 端口管理 ====================
+    // ==================== Port Management ====================
     val portManagerTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "端口管理"
         AppLanguage.ENGLISH -> "Port Manager"
@@ -1136,7 +1136,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Install"
         AppLanguage.ARABIC -> "تثبيت"
     }
-    // ==================== 隔离配置选项 ====================
+    // ==================== Isolation Options ====================
     val fingerprintProtection: String get() = when (lang) {
         AppLanguage.CHINESE -> "指纹防护"
         AppLanguage.ENGLISH -> "Fingerprint Protection"
@@ -1364,7 +1364,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Generate new fingerprint on each app launch"
         AppLanguage.ARABIC -> "إنشاء بصمة جديدة في كل تشغيل للتطبيق"
     }
-    // ==================== 强制运行相关字符串 ====================
+    // ==================== Force-run Strings ====================
     val forcedRunSettings: String get() = when (lang) {
         AppLanguage.CHINESE -> "强制运行设置"
         AppLanguage.ENGLISH -> "Forced Run Settings"
@@ -1550,7 +1550,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Next access time: %s"
         AppLanguage.ARABIC -> "وقت الوصول التالي: %s"
     }
-    // ==================== 黑科技功能 ====================
+    // ==================== Advanced Features ====================
     val blackTechFeatures: String get() = when (lang) {
         AppLanguage.CHINESE -> "黑科技功能"
         AppLanguage.ENGLISH -> "Black Tech Features"
@@ -1736,7 +1736,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "⚠️ Warning: Enabling the above features may cause device heating, rapid battery drain, etc. Please understand the risks before enabling. Some features require special permissions to work."
         AppLanguage.ARABIC -> "⚠️ تحذير: قد يؤدي تمكين الميزات أعلاه إلى تسخين الجهاز واستنزاف البطارية بسرعة وما إلى ذلك. يرجى فهم المخاطر قبل التمكين. تتطلب بعض الميزات أذونات خاصة للعمل."
     }
-    // ==================== 浏览器内核设置 ====================
+    // ==================== Browser Kernel Settings ====================
     val browserKernelTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "浏览器内核设置"
         AppLanguage.ENGLISH -> "Browser Kernel Settings"
@@ -1934,7 +1934,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Open in browser"
         AppLanguage.ARABIC -> "فتح في المتصفح"
     }
-    // ==================== 油猴脚本功能 ====================
+    // ==================== Userscript Features ====================
     val userscriptTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "油猴脚本管理"
         AppLanguage.ENGLISH -> "Userscript Manager"
@@ -2240,7 +2240,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Reload Page"
         AppLanguage.ARABIC -> "إعادة تحميل الصفحة"
     }
-    // ==================== 内嵌浏览器引擎 ====================
+    // ==================== Embedded Browser Engine ====================
     val embeddedEngineTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "内嵌浏览器引擎"
         AppLanguage.ENGLISH -> "Embedded Browser Engine"
@@ -2390,7 +2390,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Using GeckoView will increase APK size by ~%s MB"
         AppLanguage.ARABIC -> "استخدام GeckoView سيزيد حجم APK بنحو %s MB"
     }
-    // ==================== 性能优化 (Performance Optimization) ====================
+    // ==================== Performance Optimization (Performance Optimization) ====================
     val performanceOptimization: String get() = when (lang) {
         AppLanguage.CHINESE -> "性能优化"
         AppLanguage.ENGLISH -> "Performance Optimization"
@@ -2618,7 +2618,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Comprehensive performance optimization (resource/build/loading/runtime)"
         AppLanguage.ARABIC -> "تحسين شامل للأداء (الموارد/البناء/التحميل/وقت التشغيل)"
     }
-    // ==================== 软件加固 (App Hardening) ====================
+    // ==================== App Hardening (App Hardening) ====================
     val hardeningEnabled: String get() = when (lang) {
         AppLanguage.CHINESE -> "已启用加固保护"
         AppLanguage.ENGLISH -> "Hardening protection enabled"
@@ -3188,7 +3188,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Protection Layers"
         AppLanguage.ARABIC -> "طبقات الحماية"
     }
-    // ==================== Shields 枚举 i18n ====================
+    // ==================== Shields Enum i18n ====================
     val shieldsCookieAllowAll: String get() = when (lang) {
         AppLanguage.CHINESE -> "允许所有 Cookie"
         AppLanguage.ENGLISH -> "Allow all cookies"
@@ -3266,7 +3266,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Ad network"
         AppLanguage.ARABIC -> "شبكة الإعلانات"
     }
-    // ==================== 自启动设置 ====================
+    // ==================== Auto-start Settings ====================
     val autoStartSettings: String get() = when (lang) {
         AppLanguage.CHINESE -> "自启动设置"
         AppLanguage.ENGLISH -> "Auto Start Settings"
@@ -3368,7 +3368,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "✅ All permissions ready, auto start will work properly"
         AppLanguage.ARABIC -> "✅ جميع الأذونات جاهزة، سيعمل التشغيل التلقائي بشكل صحيح"
     }
-    // ==================== Hosts 广告拦截 ====================
+    // ==================== Hosts Ad Blocking ====================
     val hostsAdBlock: String get() = when (lang) {
         AppLanguage.CHINESE -> "Hosts 广告拦截"
         AppLanguage.ENGLISH -> "Hosts Ad Blocking"
@@ -3476,7 +3476,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Download & Import"
         AppLanguage.ARABIC -> "تنزيل واستيراد"
     }
-    // ==================== 设备伪装 (Device Disguise) ====================
+    // ==================== Spoofing (Device Disguise) ====================
     val deviceTypePhone: String get() = when (lang) {
         AppLanguage.CHINESE -> "手机"
         AppLanguage.ENGLISH -> "Phone"
@@ -3608,7 +3608,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Apply Custom Config"
         AppLanguage.ARABIC -> "تطبيق التكوين المخصص"
     }
-    // ==================== 黑科技 v2.0 — 特殊模式 ====================
+    // ==================== v2.0 — Special Mode ====================
     val specialModes: String get() = when (lang) {
         AppLanguage.CHINESE -> "特殊模式"
         AppLanguage.ENGLISH -> "Special Modes"
@@ -3704,7 +3704,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Run Check"
         AppLanguage.ARABIC -> "تشغيل الفحص"
     }
-    // ==================== 用户脚本 ====================
+    // ==================== User Scripts ====================
     val userScripts: String get() = when (lang) {
         AppLanguage.CHINESE -> "User script"
         AppLanguage.ENGLISH -> "User Scripts"
@@ -3806,7 +3806,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Clear Code"
         AppLanguage.ARABIC -> "مسح الكود"
     }
-    // ==================== 长按菜单设置 ====================
+    // ==================== Long-Press Menu ====================
     val longPressMenuSettings: String get() = when (lang) {
         AppLanguage.CHINESE -> "长按菜单"
         AppLanguage.ENGLISH -> "Long Press Menu"
@@ -3902,7 +3902,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Style Preview"
         AppLanguage.ARABIC -> "معاينة النمط"
     }
-    // ==================== 黑科技 v2.0 — 网络控制 ====================
+    // ==================== v2.0 — Network Control ====================
     val networkControl: String get() = when (lang) {
         AppLanguage.CHINESE -> "网络控制"
         AppLanguage.ENGLISH -> "Network Control"
@@ -3974,7 +3974,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Disable cellular network (requires system permission, not supported on all devices)"
         AppLanguage.ARABIC -> "إيقاف الشبكة الخلوية (يتطلب إذن النظام، غير مدعوم على جميع الأجهزة)"
     }
-    // ==================== 后台运行 ====================
+    // ==================== Background Running ====================
     val backgroundRunTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "Background Run"
         AppLanguage.ENGLISH -> "Background Run"
@@ -4046,7 +4046,7 @@ internal object ShellStrings {
         AppLanguage.ENGLISH -> "Hide Advanced"
         AppLanguage.ARABIC -> "إخفاء الإعدادات المتقدمة"
     }
-    // ==================== 图标与应用/伪装功能 ====================
+    // ==================== /Spoofing ====================
     val disguiseMultiIconTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "图标与应用"
         AppLanguage.ENGLISH -> "Icons & App"

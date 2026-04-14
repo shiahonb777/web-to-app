@@ -456,7 +456,7 @@ fun CommunityScreen(
                 }
 
                 else -> {
-                    // ─── Feed Tab (广场) ───
+                    // Feed Tab( )
                     // Tag Filter Bar
                     LazyRow(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),

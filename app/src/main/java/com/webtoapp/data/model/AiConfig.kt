@@ -3,15 +3,15 @@ package com.webtoapp.data.model
 import com.webtoapp.core.i18n.Strings
 
 /**
- * AI 供应商分类
+ * AI provider categories.
  */
 enum class ProviderCategory {
-    RECOMMENDED,   // 推荐
-    INTERNATIONAL, // 国际供应商
-    CHINESE,       // 国内供应商
-    AGGREGATOR,    // 聚合平台
-    SELF_HOSTED,   // 本地/自托管
-    CUSTOM;        // 自定义
+    RECOMMENDED,   // Recommended
+    INTERNATIONAL, // International providers
+    CHINESE,       // Chinese providers
+    AGGREGATOR,    // Aggregators
+    SELF_HOSTED,   // Self-hosted
+    CUSTOM;        // Custom
     
     val displayName: String get() = when (this) {
         RECOMMENDED -> Strings.providerCategoryRecommended
@@ -24,8 +24,8 @@ enum class ProviderCategory {
 }
 
 /**
- * AI 供应商
- * 参考 LiteLLM (github.com/BerriAI/litellm) 的供应商列表
+ * AI providers.
+ * Mirrors the LiteLLM (github.com/BerriAI/litellm) list.
  */
 enum class AiProvider(
     val baseUrl: String,
@@ -33,7 +33,7 @@ enum class AiProvider(
     val apiKeyUrl: String = "",
     val category: ProviderCategory = ProviderCategory.INTERNATIONAL
 ) {
-    // ==================== 推荐 ====================
+    // ==================== Recommended ====================
     GOOGLE(
         baseUrl = "https://generativelanguage.googleapis.com",
         modelsEndpoint = "/v1beta/models",
@@ -47,7 +47,7 @@ enum class AiProvider(
         category = ProviderCategory.RECOMMENDED
     ),
     
-    // ==================== 国际供应商 ====================
+    // ==================== International ====================
     OPENAI(
         baseUrl = "https://api.openai.com",
         modelsEndpoint = "/v1/models",
@@ -85,7 +85,7 @@ enum class AiProvider(
         category = ProviderCategory.INTERNATIONAL
     ),
     
-    // ==================== 快速推理 ====================
+    // ==================== Fast inference ====================
     GROQ(
         baseUrl = "https://api.groq.com/openai",
         modelsEndpoint = "/v1/models",
@@ -105,7 +105,7 @@ enum class AiProvider(
         category = ProviderCategory.INTERNATIONAL
     ),
     
-    // ==================== 聚合平台 ====================
+    // ==================== Aggregators ====================
     TOGETHER(
         baseUrl = "https://api.together.xyz",
         modelsEndpoint = "/v1/models",
@@ -137,7 +137,7 @@ enum class AiProvider(
         category = ProviderCategory.AGGREGATOR
     ),
     
-    // ==================== 国内供应商 ====================
+    // ==================== Chinese providers ====================
     DEEPSEEK(
         baseUrl = "https://api.deepseek.com",
         modelsEndpoint = "/v1/models",
@@ -211,7 +211,7 @@ enum class AiProvider(
         category = ProviderCategory.CHINESE
     ),
     
-    // ==================== 本地/自托管 ====================
+    // ==================== Self-hosted ====================
     OLLAMA(
         baseUrl = "http://localhost:11434",
         modelsEndpoint = "/api/tags",
@@ -231,7 +231,7 @@ enum class AiProvider(
         category = ProviderCategory.SELF_HOSTED
     ),
     
-    // ==================== 自定义 ====================
+    // ==================== Custom ====================
     CUSTOM(
         baseUrl = "",
         modelsEndpoint = "/v1/models",
@@ -345,7 +345,7 @@ enum class AiProvider(
     }
     
     /**
-     * 是否需要 API Key（本地模型不需要）
+     * Whether an API key is required (local models skip this).
      */
     val requiresApiKey: Boolean get() = when (this) {
         OLLAMA, LM_STUDIO, VLLM -> false
@@ -353,7 +353,7 @@ enum class AiProvider(
     }
     
     /**
-     * 是否允许自定义 Base URL
+     * Whether a custom base URL is allowed.
      */
     val allowCustomBaseUrl: Boolean get() = when (this) {
         CUSTOM, OLLAMA, LM_STUDIO, VLLM -> true
@@ -362,8 +362,8 @@ enum class AiProvider(
 }
 
 /**
- * AI 功能场景
- * 定义应用中使用 AI 的各个功能模块
+ * AI feature scenarios.
+ * Defines the app modules that use AI.
  */
 enum class AiFeature(
     val icon: String,
@@ -399,7 +399,7 @@ enum class AiFeature(
 }
 
 /**
- * 模型能力标签
+ * Model capability tags.
  */
 enum class ModelCapability {
     TEXT, AUDIO, IMAGE, IMAGE_GENERATION, VIDEO, CODE, FUNCTION_CALL, LONG_CONTEXT;
@@ -428,7 +428,7 @@ enum class ModelCapability {
 }
 
 /**
- * 获取本地化的能力显示名称
+ * Gets the localized capability display name.
  */
 fun ModelCapability.getLocalizedDisplayName(): String {
     return when (this) {
@@ -436,7 +436,7 @@ fun ModelCapability.getLocalizedDisplayName(): String {
         ModelCapability.AUDIO -> com.webtoapp.core.i18n.Strings.audioUnderstanding
         ModelCapability.IMAGE -> com.webtoapp.core.i18n.Strings.imageUnderstanding
         ModelCapability.IMAGE_GENERATION -> com.webtoapp.core.i18n.Strings.imageGeneration
-        ModelCapability.VIDEO -> com.webtoapp.core.i18n.Strings.imageUnderstanding // 复用
+        ModelCapability.VIDEO -> com.webtoapp.core.i18n.Strings.imageUnderstanding // Reuse
         ModelCapability.CODE -> com.webtoapp.core.i18n.Strings.codeGeneration
         ModelCapability.FUNCTION_CALL -> com.webtoapp.core.i18n.Strings.functionCall
         ModelCapability.LONG_CONTEXT -> com.webtoapp.core.i18n.Strings.longContext
@@ -444,7 +444,7 @@ fun ModelCapability.getLocalizedDisplayName(): String {
 }
 
 /**
- * 获取本地化的能力描述
+ * Gets the localized capability description.
  */
 fun ModelCapability.getLocalizedDescription(): String {
     return when (this) {
@@ -452,7 +452,7 @@ fun ModelCapability.getLocalizedDescription(): String {
         ModelCapability.AUDIO -> com.webtoapp.core.i18n.Strings.understandAndTranscribeAudio
         ModelCapability.IMAGE -> com.webtoapp.core.i18n.Strings.understandAndAnalyzeImages
         ModelCapability.IMAGE_GENERATION -> com.webtoapp.core.i18n.Strings.generateImages
-        ModelCapability.VIDEO -> com.webtoapp.core.i18n.Strings.understandAndAnalyzeImages // 复用
+        ModelCapability.VIDEO -> com.webtoapp.core.i18n.Strings.understandAndAnalyzeImages // Reuse
         ModelCapability.CODE -> com.webtoapp.core.i18n.Strings.generateAndUnderstandCode
         ModelCapability.FUNCTION_CALL -> com.webtoapp.core.i18n.Strings.supportToolCall
         ModelCapability.LONG_CONTEXT -> com.webtoapp.core.i18n.Strings.supportLongTextInput
@@ -460,7 +460,7 @@ fun ModelCapability.getLocalizedDescription(): String {
 }
 
 /**
- * 能力标签到功能场景的映射配置
+ * Mapping from capability tags to feature scenarios.
  */
 data class CapabilityFeatureMapping(
     val capability: ModelCapability,
@@ -468,7 +468,7 @@ data class CapabilityFeatureMapping(
 ) {
     companion object {
         /**
-         * 获取默认的能力-功能映射
+         * Gets the default capability-to-feature mapping.
          */
         fun getDefaultMappings(): List<CapabilityFeatureMapping> {
             return ModelCapability.entries.map { capability ->
@@ -484,63 +484,63 @@ data class CapabilityFeatureMapping(
 }
 
 /**
- * AI 模型配置
+ * AI model configuration.
  */
 data class AiModel(
-    val id: String,                        // 模型 ID（如 gpt-5.1-codex）
-    val name: String,                      // Show名称
-    val provider: AiProvider,              // 供应商
-    val capabilities: List<ModelCapability> = listOf(ModelCapability.TEXT), // 能力标签
-    val contextLength: Int = 4096,         // 上下文长度（token）
-    val inputPrice: Double = 0.0,          // 输入价格（$/百万 token）
-    val outputPrice: Double = 0.0,         // 输出价格（$/百万 token）
-    val isCustom: Boolean = false          // Yes否为手动添加的模型
+    val id: String,                        // Model ID (e.g., gpt-5.1-codex)
+    val name: String,                      // Display name
+    val provider: AiProvider,              // Provider
+    val capabilities: List<ModelCapability> = listOf(ModelCapability.TEXT), // Capability tags
+    val contextLength: Int = 4096,         // Context length (tokens)
+    val inputPrice: Double = 0.0,          // Input price ($/million tokens)
+    val outputPrice: Double = 0.0,         // Output price ($/million tokens)
+    val isCustom: Boolean = false          // Whether the model was added manually
 )
 
 /**
- * API 格式类型（用于自定义端点）
+ * API format types (for custom endpoints).
  */
 enum class ApiFormat {
-    OPENAI_COMPATIBLE,  // OpenAI 兼容格式（默认）
-    ANTHROPIC,          // Anthropic Claude 格式
-    GOOGLE_GEMINI;      // Google Gemini 格式
+    OPENAI_COMPATIBLE,  // OpenAI compatible format (default)
+    ANTHROPIC,          // Anthropic Claude format
+    GOOGLE_GEMINI;      // Google Gemini format
     
     val displayName: String get() = when (this) {
-        OPENAI_COMPATIBLE -> "OpenAI 兼容"
+        OPENAI_COMPATIBLE -> "OpenAI compatible"
         ANTHROPIC -> "Anthropic Claude"
         GOOGLE_GEMINI -> "Google Gemini"
     }
 }
 
 /**
- * API 密钥配置
+ * API key configuration.
  */
 data class ApiKeyConfig(
     val id: String = java.util.UUID.randomUUID().toString(),
     val provider: AiProvider,
     val apiKey: String,
-    val baseUrl: String? = null,                    // Custom base URL（可选）
-    val customModelsEndpoint: String? = null,       // 自定义模型列表端点（如 /v1/models）
-    val customChatEndpoint: String? = null,         // 自定义聊天端点（如 /v1/chat/completions）
-    val apiFormat: ApiFormat = ApiFormat.OPENAI_COMPATIBLE, // API 格式类型
-    val alias: String? = null,                      // 用户自定义别名（用于识别）
+    val baseUrl: String? = null,                    // Custom base URL (optional)
+    val customModelsEndpoint: String? = null,       // Custom models endpoint (e.g., /v1/models)
+    val customChatEndpoint: String? = null,         // Custom chat endpoint (e.g., /v1/chat/completions)
+    val apiFormat: ApiFormat = ApiFormat.OPENAI_COMPATIBLE, // API format type
+    val alias: String? = null,                      // User-defined alias for identification
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis()
 ) {
     /**
-     * 获取显示名称（别名或供应商名称）
+     * Gets the display name (alias or provider name).
      */
     val displayName: String get() = alias?.takeIf { it.isNotBlank() } ?: provider.displayName
     
     /**
-     * 获取有效的 models 端点
+     * Gets the valid models endpoint.
      */
     fun getEffectiveModelsEndpoint(): String {
         return customModelsEndpoint?.takeIf { it.isNotBlank() } ?: provider.modelsEndpoint
     }
     
     /**
-     * 获取有效的 chat 端点
+     * Gets the valid chat endpoint.
      */
     fun getEffectiveChatEndpoint(): String {
         return customChatEndpoint?.takeIf { it.isNotBlank() } ?: when (provider) {
@@ -556,26 +556,25 @@ data class ApiKeyConfig(
 }
 
 /**
- * 已保存的模型配置（用户选择并保存的模型）
+ * Saved model configurations chosen by users.
  */
 data class SavedModel(
     val id: String = java.util.UUID.randomUUID().toString(),
     val model: AiModel,
-    val apiKeyId: String,                  // 关联的 API Key ID
-    val alias: String? = null,             // User自定义别名
-    val capabilities: List<ModelCapability>, // User指定的能力标签
-    val featureMappings: Map<ModelCapability, Set<AiFeature>> = emptyMap(), // 能力到功能的自定义映射
-    val isDefault: Boolean = false,        // Yes否为默认模型
+    val apiKeyId: String,                  // Associated API key ID
+    val alias: String? = null,             // User alias
+    val capabilities: List<ModelCapability>, // User-selected capability tags
+    val featureMappings: Map<ModelCapability, Set<AiFeature>> = emptyMap(), // Custom capability-to-feature mappings
+    val isDefault: Boolean = false,        // Whether this is the default model
     val createdAt: Long = System.currentTimeMillis()
 ) {
     /**
-     * 获取此模型支持的功能场景
-     * 根据能力标签和自定义映射计算
+     * Computes feature scenarios supported by this model using capability tags and custom mappings.
      */
     fun getSupportedFeatures(): Set<AiFeature> {
         val features = mutableSetOf<AiFeature>()
         capabilities.forEach { capability ->
-            // 优先使用自定义映射，否则使用默认映射
+            // Prefer custom mappings; fall back to defaults otherwise
             val mappedFeatures = featureMappings[capability]
                 ?: AiFeature.entries.filter { it.defaultCapabilities.contains(capability) }.toSet()
             features.addAll(mappedFeatures)
@@ -584,14 +583,14 @@ data class SavedModel(
     }
     
     /**
-     * 检查此模型是否支持指定功能
+     * Checks if this model supports the specified feature.
      */
     fun supportsFeature(feature: AiFeature): Boolean {
         return getSupportedFeatures().contains(feature)
     }
     
     /**
-     * 获取指定能力对应的功能列表
+     * Gets the feature list for the specified capability.
      */
     fun getFeaturesForCapability(capability: ModelCapability): Set<AiFeature> {
         return featureMappings[capability]
@@ -600,43 +599,43 @@ data class SavedModel(
 }
 
 /**
- * AI 配置（整体配置，存储在 DataStore）
+ * AI settings (stored in DataStore).
  */
 data class AiSettings(
     val apiKeys: List<ApiKeyConfig> = emptyList(),
     val savedModels: List<SavedModel> = emptyList(),
-    val defaultModelId: String? = null     // Default模型 ID
+    val defaultModelId: String? = null     // Default model ID
 )
 
 /**
- * LRC 生成任务状态
+ * LRC generation task status.
  */
 enum class LrcTaskStatus {
-    PENDING,     // 等待中
-    PROCESSING,  // Handle中
+    PENDING,     // Pending
+    PROCESSING,  // Processing
     COMPLETED,   // Completed
     FAILED       // Failed
 }
 
 /**
- * LRC 生成任务
+ * LRC task.
  */
 data class LrcTask(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val bgmItemId: String,           // 音乐项 ID
-    val bgmName: String,             // 音乐名称
-    val bgmPath: String,             // 音乐路径
-    val modelId: String,             // 使用的模型 ID
+    val bgmItemId: String,           // Music item ID
+    val bgmName: String,             // Music name
+    val bgmPath: String,             // Music path
+    val modelId: String,             // Model ID used
     val status: LrcTaskStatus = LrcTaskStatus.PENDING,
-    val progress: Int = 0,           // 进度 0-100
-    val resultLrc: LrcData? = null,  // Generate的歌词
+    val progress: Int = 0,           // Progress 0-100
+    val resultLrc: LrcData? = null,  // Generated lyrics
     val errorMessage: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val completedAt: Long? = null
 )
 
 /**
- * 预置字幕主题
+ * Preset lyric themes.
  */
 object PresetLrcThemes {
     val themes = listOf(
@@ -718,12 +717,12 @@ object PresetLrcThemes {
 }
 
 /**
- * 获取本地化的AI供应商显示名称
+ * Gets the localized AI provider display name.
  */
 fun AiProvider.getLocalizedDisplayName(): String = displayName
 
 /**
- * 获取本地化的AI功能场景显示名称
+ * Gets the localized AI feature display name.
  */
 fun AiFeature.getLocalizedDisplayName(): String {
     return when (this) {
@@ -738,7 +737,7 @@ fun AiFeature.getLocalizedDisplayName(): String {
 }
 
 /**
- * 获取本地化的AI功能场景描述
+ * Gets the localized AI feature description.
  */
 fun AiFeature.getLocalizedDescription(): String {
     return when (this) {
@@ -753,11 +752,11 @@ fun AiFeature.getLocalizedDescription(): String {
 }
 
 /**
- * 获取本地化的AI供应商描述
+ * Gets the localized AI provider description.
  */
 fun AiProvider.getLocalizedDescription(): String = description
 
 /**
- * 获取本地化的AI供应商定价信息
+ * Gets the localized AI provider pricing info.
  */
 fun AiProvider.getLocalizedPricing(): String = pricing

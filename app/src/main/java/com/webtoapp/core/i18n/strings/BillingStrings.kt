@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object BillingStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 订阅和计费 ====================
+    // ==================== Subscription and Billing ====================
     val selectPlan: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择套餐"
         AppLanguage.ENGLISH -> "Select Plan"

@@ -11,18 +11,18 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * 应用列表提供器
- * 获取设备上已安装的应用列表
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class AppListProvider(private val context: Context) {
 
     private val packageManager: PackageManager = context.packageManager
 
     /**
-     * 获取已安装应用列表
-     * @param filter 筛选类型
-     * @param searchQuery 搜索关键词
-     * @return 应用列表
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun getInstalledApps(
         filter: AppFilterType = AppFilterType.USER,
@@ -38,7 +38,7 @@ class AppListProvider(private val context: Context) {
         packages
             .mapNotNull { packageInfo -> packageInfo.toInstalledAppInfo() }
             .filter { app ->
-                // App类型筛选
+                // Note: brief English comment.
                 when (filter) {
                     AppFilterType.ALL -> true
                     AppFilterType.USER -> !app.isSystemApp
@@ -46,7 +46,7 @@ class AppListProvider(private val context: Context) {
                 }
             }
             .filter { app ->
-                // Search筛选
+                // Note: brief English comment.
                 if (searchQuery.isBlank()) {
                     true
                 } else {
@@ -58,14 +58,14 @@ class AppListProvider(private val context: Context) {
     }
 
     /**
-     * 获取指定包名的应用信息
+     * Note: brief English comment.
      */
     suspend fun getAppInfo(packageName: String): InstalledAppInfo? = withContext(Dispatchers.IO) {
         getPackageInfoSafely(packageName)?.toInstalledAppInfo()
     }
 
     /**
-     * PackageInfo 转换为 InstalledAppInfo
+     * Note: brief English comment.
      */
     private fun PackageInfo.toInstalledAppInfo(): InstalledAppInfo? {
         val appInfo = applicationInfo ?: return null
@@ -113,14 +113,14 @@ class AppListProvider(private val context: Context) {
     }
 
     /**
-     * 检查应用是否已安装
+     * Note: brief English comment.
      */
     fun isAppInstalled(packageName: String): Boolean {
         return getPackageInfoSafely(packageName) != null
     }
 
     /**
-     * Get app数量
+     * Note: brief English comment.
      */
     suspend fun getAppCount(filter: AppFilterType = AppFilterType.USER): Int {
         return getInstalledApps(filter).size

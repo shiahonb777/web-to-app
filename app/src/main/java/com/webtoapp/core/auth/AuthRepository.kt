@@ -4,9 +4,9 @@ import com.google.gson.Gson
 import com.webtoapp.core.logging.AppLogger
 
 /**
- * 认证仓库 — 封装 AuthApiClient 与 TokenManager 的交互
+ * — AuthApiClient TokenManager
  * 
- * 负责登录/注册后自动保存 Token，并提供统一的认证状态查询
+ * Token handling wrapper.
  */
 class AuthRepository(
     private val apiClient: AuthApiClient,
@@ -19,15 +19,15 @@ class AuthRepository(
     private val gson = Gson()
 
     /**
-     * 登录（支持用户名或邮箱）
+     * （）
      */
     suspend fun login(account: String, password: String): AuthResult<UserProfile> {
         return when (val result = apiClient.login(account, password)) {
             is AuthResult.Success -> {
                 val loginResponse = result.data
-                // 保存 Token
+                // Token
                 tokenManager.saveTokens(loginResponse.accessToken, loginResponse.refreshToken)
-                // 缓存用户信息
+                // Note.
                 tokenManager.saveUserJson(gson.toJson(loginResponse.user))
                 AppLogger.i(TAG, "Login successful: ${loginResponse.user.username}")
                 AuthResult.Success(loginResponse.user)
@@ -37,14 +37,14 @@ class AuthRepository(
     }
 
     /**
-     * 发送邮箱验证码
+     * Send email verification code
      */
     suspend fun sendVerificationCode(email: String): AuthResult<String> {
         return apiClient.sendVerificationCode(email)
     }
 
     /**
-     * 注册
+     * Note.
      */
     suspend fun register(email: String, username: String, password: String, verificationCode: String): AuthResult<UserProfile> {
         return when (val result = apiClient.register(email, username, password, verificationCode)) {
@@ -61,21 +61,21 @@ class AuthRepository(
     }
 
     /**
-     * 退出登录（通知服务器使 Token 失效）
+     * （ Token ）
      */
     suspend fun logout() {
         try {
             val deviceId = tokenManager.getDeviceId()
             apiClient.logout(deviceId)
         } catch (_: Exception) {
-            // 即使服务器调用失败，也清理本地
+            // ，
             tokenManager.clearTokens()
         }
         AppLogger.i(TAG, "User logged out")
     }
 
     /**
-     * 从所有设备登出
+     * Note.
      */
     suspend fun logoutAll(): AuthResult<String> {
         return when (val result = apiClient.logoutAll()) {
@@ -91,7 +91,7 @@ class AuthRepository(
     }
 
     /**
-     * 获取本地缓存的用户信息
+     * Note.
      */
     fun getCachedUser(): UserProfile? {
         val json = tokenManager.getUserJson() ?: return null
@@ -103,7 +103,7 @@ class AuthRepository(
     }
 
     /**
-     * 从服务端刷新用户信息
+     * Note.
      */
     suspend fun refreshProfile(): AuthResult<UserProfile> {
         return when (val result = apiClient.getProfile()) {
@@ -116,21 +116,21 @@ class AuthRepository(
     }
 
     /**
-     * 获取 Pro 状态
+     * Pro
      */
     suspend fun getProStatus(): AuthResult<ProStatus> {
         return apiClient.getProStatus()
     }
 
     /**
-     * 是否已登录
+     * Note.
      */
     fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
 
     // ─── Heartbeat ───
 
     /**
-     * 心跳 — 用于统计在线时长
+     * —
      */
     suspend fun heartbeat() {
         apiClient.heartbeat()
@@ -139,21 +139,21 @@ class AuthRepository(
     // ─── Password Management ───
 
     /**
-     * 修改密码
+     * Change password
      */
     suspend fun changePassword(currentPassword: String, newPassword: String): AuthResult<String> {
         return apiClient.changePassword(currentPassword, newPassword)
     }
 
     /**
-     * 忘记密码
+     * Note.
      */
     suspend fun forgotPassword(email: String): AuthResult<String> {
         return apiClient.forgotPassword(email)
     }
 
     /**
-     * 重置密码（验证码方式）→ 自动登录
+     * （）→
      */
     suspend fun resetPassword(email: String, code: String, newPassword: String): AuthResult<UserProfile> {
         return when (val result = apiClient.resetPassword(email, code, newPassword)) {
@@ -171,7 +171,7 @@ class AuthRepository(
     // ─── Account Deletion ───
 
     /**
-     * 永久删除账号
+     * Permanently delete account
      */
     suspend fun deleteAccount(password: String, reason: String = ""): AuthResult<String> {
         return apiClient.deleteAccount(password, reason)
@@ -180,7 +180,7 @@ class AuthRepository(
     // ─── Google OAuth ───
 
     /**
-     * Google 登录
+     * Google login
      */
     suspend fun googleLogin(idToken: String): AuthResult<UserProfile> {
         val deviceId = tokenManager.getDeviceId()
@@ -205,7 +205,7 @@ class AuthRepository(
     // ─── Avatar Upload ───
 
     /**
-     * 上传头像
+     * Upload avatar
      */
     suspend fun uploadAvatar(imageBytes: ByteArray, mimeType: String = "image/jpeg"): AuthResult<AvatarUploadResult> {
         return apiClient.uploadAvatar(imageBytes, mimeType)
@@ -214,7 +214,7 @@ class AuthRepository(
     // ─── Update Profile ───
 
     /**
-     * 更新用户资料
+     * Update user profile
      */
     suspend fun updateProfile(username: String? = null): AuthResult<UserProfile> {
         return when (val result = apiClient.updateProfile(username = username)) {
@@ -229,10 +229,9 @@ class AuthRepository(
     // ─── Bind Email ───
 
     /**
-     * 绑定邮箱
+     * Note.
      */
     suspend fun bindEmail(email: String, verificationCode: String): AuthResult<String> {
         return apiClient.bindEmail(email, verificationCode)
     }
 }
-

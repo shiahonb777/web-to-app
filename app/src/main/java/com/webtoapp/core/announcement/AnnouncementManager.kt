@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
 /**
- * 公告管理器
+ * Announcement manager
  */
 private val Context.announcementDataStore: DataStore<Preferences> by preferencesDataStore(name = "announcement")
 
@@ -29,11 +29,11 @@ class AnnouncementManager(private val context: Context) {
         private const val TAG = "AnnouncementManager"
     }
     
-    // Network状态
+    // Network
     private val _isNetworkAvailable = MutableStateFlow(true)
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable
     
-    // Network状态回调
+    // Network
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     
     init {
@@ -41,7 +41,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 检查当前网络状态
+     * Check current network state
      */
     private fun checkNetworkStatus() {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -51,7 +51,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 开始监听网络状态变化
+     * Start observing network state changes
      */
     fun startNetworkMonitoring() {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -82,7 +82,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 停止网络监听
+     * Stop network monitoring
      */
     fun stopNetworkMonitoring() {
         networkCallback?.let {
@@ -97,23 +97,23 @@ class AnnouncementManager(private val context: Context) {
     }
 
     /**
-     * 检查是否需要显示公告（启动时触发）
-     * @param appId 应用ID
-     * @param announcement 公告配置
-     * @return 是否需要显示
+     * Check if announcement should show on launch
+     * @param appId parameter
+     * @param announcement parameter
+     * @return result
      */
     suspend fun shouldShowAnnouncement(appId: Long, announcement: Announcement?): Boolean {
         return shouldShowAnnouncementForTrigger(appId, announcement, isLaunch = true, isNoNetwork = false)
     }
     
     /**
-     * 检查是否需要显示公告（根据触发条件）
-     * @param appId 应用ID
-     * @param announcement 公告配置
-     * @param isLaunch 是否为启动触发
-     * @param isNoNetwork 是否为无网络触发
-     * @param isInterval 是否为定时间隔触发
-     * @return 是否需要显示
+     * Check if announcement should show by trigger
+     * @param appId parameter
+     * @param announcement parameter
+     * @param isLaunch parameter
+     * @param isNoNetwork parameter
+     * @param isInterval parameter
+     * @return result
      */
     suspend fun shouldShowAnnouncementForTrigger(
         appId: Long, 
@@ -130,12 +130,12 @@ class AnnouncementManager(private val context: Context) {
             return false
         }
 
-        // Check用户是否选择了“不再显示”
+        // Check“”
         if (isNeverShow(appId)) {
             return false
         }
         
-        // Check触发条件
+        // Check
         val shouldTrigger = when {
             isLaunch -> announcement.triggerOnLaunch
             isNoNetwork -> announcement.triggerOnNoNetwork
@@ -147,7 +147,7 @@ class AnnouncementManager(private val context: Context) {
             return false
         }
 
-        // 如果设置为仅显示一次，检查是否已显示过
+        // ，
         if (announcement.showOnce) {
             val shownVersion = getShownVersion(appId)
             return shownVersion < announcement.version
@@ -157,10 +157,10 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 检查是否需要触发定时公告
-     * @param appId 应用ID
-     * @param announcement 公告配置
-     * @return 是否需要触发
+     * Check if timed announcement should trigger
+     * @param appId parameter
+     * @param announcement parameter
+     * @return result
      */
     suspend fun shouldTriggerIntervalAnnouncement(appId: Long, announcement: Announcement?): Boolean {
         if (announcement == null || !announcement.enabled) {
@@ -172,7 +172,7 @@ class AnnouncementManager(private val context: Context) {
             return false
         }
         
-        // Check用户是否选择了“不再显示”
+        // Check“”
         if (isNeverShow(appId)) {
             return false
         }
@@ -185,7 +185,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 获取上次定时触发时间
+     * Get last timed trigger time
      */
     private suspend fun getLastIntervalTriggerTime(appId: Long): Long {
         return context.announcementDataStore.data.first()[
@@ -194,7 +194,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 记录定时触发时间
+     * Record timed trigger time
      */
     suspend fun markIntervalTrigger(appId: Long) {
         context.announcementDataStore.edit { preferences ->
@@ -203,7 +203,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 重置定时触发状态（启动时调用）
+     * Reset timed trigger state on launch
      */
     suspend fun resetIntervalTrigger(appId: Long) {
         context.announcementDataStore.edit { preferences ->
@@ -212,7 +212,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 检查用户是否选择了“不再显示”
+     * Check if user selected do not show again
      */
     private suspend fun isNeverShow(appId: Long): Boolean {
         return context.announcementDataStore.data.first()[
@@ -221,7 +221,7 @@ class AnnouncementManager(private val context: Context) {
     }
     
     /**
-     * 标记“不再显示”
+     * Mark do not show again
      */
     suspend fun markNeverShow(appId: Long) {
         context.announcementDataStore.edit { preferences ->
@@ -230,7 +230,7 @@ class AnnouncementManager(private val context: Context) {
     }
 
     /**
-     * 获取已显示的公告版本
+     * Get shown announcement versions
      */
     private suspend fun getShownVersion(appId: Long): Int {
         return context.announcementDataStore.data.first()[
@@ -239,7 +239,7 @@ class AnnouncementManager(private val context: Context) {
     }
 
     /**
-     * 标记公告已显示
+     * Mark announcement as shown
      */
     suspend fun markAnnouncementShown(appId: Long, version: Int) {
         context.announcementDataStore.edit { preferences ->
@@ -248,7 +248,7 @@ class AnnouncementManager(private val context: Context) {
     }
 
     /**
-     * 重置公告显示状态（用于测试或重新显示）
+     * Reset announcement display state
      */
     suspend fun resetAnnouncementStatus(appId: Long) {
         context.announcementDataStore.edit { preferences ->
@@ -257,7 +257,7 @@ class AnnouncementManager(private val context: Context) {
     }
 
     /**
-     * 创建公告配置
+     * Create announcement config
      */
     fun createAnnouncement(
         title: String,

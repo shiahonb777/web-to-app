@@ -42,16 +42,16 @@ android {
             useSupportLibrary = true
         }
         
-        // NDK 配置
+        // NDK setup
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
         
-        // CMake 配置
+        // CMake setup
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
-                // Android 官方针对 NDK r27 的 16 KB 页面大小支持开关
+                // Enable 16 KB page size support for NDK r27+
                 arguments += listOf(
                     "-DANDROID_STL=c++_shared",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
@@ -60,7 +60,7 @@ android {
         }
     }
     
-    // 外部 Native 构建配置
+    // External native build setup
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -70,9 +70,7 @@ android {
 
     buildTypes {
         release {
-            // 启用 R8 tree-shaking（移除未使用代码）+ 资源压缩
-            // ProGuard 规则中已设置 -dontobfuscate，确保类名不被混淆
-            // （WebToApp 使用自身 APK 作为模板，类名必须保持不变）
+            // Keep shrinkers on, but preserve class names for template reuse.
             isMinifyEnabled = true
             isShrinkResources = true
             signingConfig = signingConfigs.getByName("shiaho")
@@ -83,16 +81,14 @@ android {
         }
     }
     
-    // 禁用 ABI splits，生成单一完整 APK
-    // 这对于 WebToApp 是必要的，因为应用需要使用自身 APK 作为模板
+    // Disable ABI splits so the app can reuse its own APK as a template.
     splits {
         abi {
             isEnable = false
         }
     }
     
-    // 允许以 "." 开头的 assets 目录被打包（如 .pypackages）
-    // 默认 aapt 会忽略 dot-prefixed 文件，但预打包的 Python 依赖需要它
+    // Keep dot-prefixed assets such as .pypackages.
     aaptOptions {
         ignoreAssetsPattern = ""
     }
@@ -130,10 +126,10 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-        // 确保 native 库不被压缩，否则安装会失败
+        // Keep native libraries uncompressed.
         jniLibs {
             useLegacyPackaging = true
-            // 排除 GeckoView 原生库 — 这些 .so 文件由用户按需下载，不内置到主 APK
+            // Exclude GeckoView native libs because they are downloaded on demand.
             excludes += "**/libxul.so"
             excludes += "**/libmozglue.so"
             excludes += "**/libgeckoffi.so"
@@ -206,20 +202,20 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.26.0")
     implementation("org.tukaani:xz:1.9")
     
-    // APK 签名库（支持 v1/v2/v3 签名）
+    // APK signing
     implementation("com.android.tools.build:apksig:8.3.0")
     
-    // GeckoView (Firefox 内核) — Java/Kotlin API 编译进 dex，原生 .so 排除（按需下载）
+    // GeckoView API only; native libs stay out of the base APK.
     implementation("org.mozilla.geckoview:geckoview-arm64-v8a:137.0.20250414091429")
     
-    // ZXing 二维码生成和扫描
+    // ZXing for QR generation and scanning
     implementation("com.google.zxing:core:3.5.2")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     
-    // Vico 图表库（高级数据看板）
+    // Vico charts
     implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-beta.3")
     
-    // Google Play Billing (Pro/Ultra 订阅)
+    // Note.
     implementation("com.android.billingclient:billing-ktx:7.0.0")
     
     // Google Sign-In (Credential Manager + Web OAuth fallback)
@@ -270,7 +266,7 @@ tasks.register("downloadPhpBinary") {
         println("Extracting PHP binary...")
         project.exec { commandLine("tar", "-xzf", tarFile.absolutePath, "-C", tempDir.absolutePath) }
         
-        // pmmp tar.gz structure: bin/php or just php
+        // pmmp archives may store the binary at bin/php or php.
         val extracted = File(tempDir, "bin/php").takeIf { it.exists() }
             ?: tempDir.walkTopDown().firstOrNull { it.name == "php" && it.isFile }
             ?: throw GradleException("PHP binary not found in archive")
@@ -282,3 +278,4 @@ tasks.register("downloadPhpBinary") {
         println("PHP binary installed: ${outputFile.relativeTo(rootDir)}")
     }
 }
+

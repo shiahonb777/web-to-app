@@ -6,25 +6,25 @@
 #include <vector>
 #include <cstdint>
 
-// 加密常量
+// Encryption constants
 namespace CryptoConstants {
     constexpr int AES_KEY_SIZE = 32;        // 256 bits
     constexpr int AES_GCM_IV_SIZE = 12;     // 96 bits
     constexpr int AES_GCM_TAG_SIZE = 16;    // 128 bits
     constexpr int PBKDF2_ITERATIONS = 10000;
     
-    // 加密文件魔数 "WTAE"
+    // Encrypted file magic "WTAE"
     constexpr uint32_t ENCRYPTED_MAGIC = 0x57544145;
 }
 
-// 加密结果
+// Encryption result
 struct CryptoResult {
     bool success;
     std::vector<uint8_t> data;
     std::string error;
 };
 
-// AES-GCM 加密/解密
+// AES-GCM encrypt/decrypt
 class AesGcm {
 public:
     static CryptoResult encrypt(
@@ -42,7 +42,7 @@ public:
     );
 };
 
-// 密钥派生
+// Key derivation
 class KeyDerivation {
 public:
     static std::vector<uint8_t> deriveKey(
@@ -55,7 +55,7 @@ public:
     static std::vector<uint8_t> sha256(const uint8_t* data, size_t len);
 };
 
-// 反调试检测
+// Anti-debugging detection
 class AntiDebug {
 public:
     static bool isDebuggerAttached();
@@ -65,13 +65,13 @@ public:
     static bool isRunningInEmulator();
     static bool isRooted();
     
-    // 新增方法
-    static void setStrictMode(bool enabled);  // 设置严格模式
-    static int getSecurityThreatLevel();      // 获取威胁等级 (0-100)
-    static bool shouldBlockSensitiveOperation(); // 是否应阻止敏感操作
+    // Additional helpers
+    static void setStrictMode(bool enabled);  // enable strict mode
+    static int getSecurityThreatLevel();      // return threat level (0-100)
+    static bool shouldBlockSensitiveOperation(); // whether to block sensitive operations
 };
 
-// 完整性检查
+// Integrity checks
 class IntegrityCheck {
 public:
     static bool verifySignature(JNIEnv* env, jobject context, const std::string& expected_hash);

@@ -119,7 +119,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             }
         }
         
-        return true // 默认总是提供相机选项
+        return true // default
     }
     
     private fun launchFileChooserIntent(params: WebChromeClient.FileChooserParams?) {

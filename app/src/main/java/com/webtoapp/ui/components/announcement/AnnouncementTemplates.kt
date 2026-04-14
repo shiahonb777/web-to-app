@@ -41,7 +41,7 @@ import com.webtoapp.ui.components.PremiumOutlinedButton
 import com.webtoapp.data.model.AnnouncementTemplateType
 
 /**
- * 公告模板类型
+ * announcement type
  */
 enum class AnnouncementTemplate(
     val type: AnnouncementTemplateType,
@@ -62,7 +62,7 @@ enum class AnnouncementTemplate(
 }
 
 /**
- * 公告配置扩展 - 包含模板信息
+ * announcementconfig
  */
 data class AnnouncementConfig(
     val announcement: Announcement,
@@ -78,8 +78,8 @@ private fun Announcement.linkTextOrDefault(defaultText: String = Strings.viewDet
     linkText?.ifEmpty { defaultText } ?: defaultText
 
 /**
- * 公告弹窗 - 根据模板显示不同样式
- * 所有模板遵循统一的设计语言: 圆角 24-28dp / 渐变色系 / 微动画
+ * announcementdialog- display
+ * unified: 24- 28dp / gradient / animation
  */
 @Composable
 fun AnnouncementDialog(
@@ -112,7 +112,7 @@ fun AnnouncementDialog(
 }
 
 // ==========================================
-// 共享的对话框容器壳 — 保证所有模板的入场动画一致
+// dialog- animation
 // ==========================================
 @Composable
 private fun TemplateShell(
@@ -135,7 +135,7 @@ private fun TemplateShell(
 }
 
 // ==========================================
-// 共享的底部按钮栏
+// bottombutton
 // ==========================================
 @Composable
 private fun DialogActions(
@@ -199,7 +199,7 @@ private fun DialogActions(
 }
 
 // ==========================================
-// 1. 极简风 MINIMAL — 纯白大留白
+// 1. MINIMAL
 // ==========================================
 @Composable
 private fun MinimalTemplate(
@@ -274,7 +274,7 @@ private fun MinimalTemplate(
 }
 
 // ==========================================
-// 2. 小红书风 — 渐变粉红色头部 + 圆角卡片
+// 2. - gradient header + card
 // ==========================================
 @Composable
 private fun XiaohongshuTemplate(
@@ -283,7 +283,7 @@ private fun XiaohongshuTemplate(
     onLinkClick: ((String) -> Unit)?
 ) {
     TemplateShell(config) {
-        // 渐变头部
+        // gradientheader
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -319,7 +319,7 @@ private fun XiaohongshuTemplate(
             }
         }
 
-        // 内容区
+        // content
         Column(modifier = Modifier.padding(24.dp)) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -346,7 +346,7 @@ private fun XiaohongshuTemplate(
 }
 
 // ==========================================
-// 3. 渐变风 — 整体紫蓝渐变背景
+// 3. gradient- gradient
 // ==========================================
 @Composable
 private fun GradientTemplate(
@@ -375,7 +375,7 @@ private fun GradientTemplate(
                     )
                 )
         ) {
-            // 装饰光圈
+            // Note
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -459,7 +459,7 @@ private fun GradientTemplate(
 }
 
 // ==========================================
-// 4. 毛玻璃风 — iOS 风格磨砂感
+// 4. - iOS
 // ==========================================
 @Composable
 private fun GlassmorphismTemplate(
@@ -478,7 +478,7 @@ private fun GlassmorphismTemplate(
         elevation = CardDefaults.cardElevation(defaultElevation = 20.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // 头部图标区
+            // headericon
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -546,7 +546,7 @@ private fun GlassmorphismTemplate(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            // iOS 风格的按钮
+            // iOS button
             if (onLinkClick != null && linkUrl != null) {
                 TextButton(
                     onClick = { onLinkClick(linkUrl) },
@@ -586,7 +586,7 @@ private fun GlassmorphismTemplate(
 }
 
 // ==========================================
-// 5. 霓虹风 — 暗底 + 发光渐变边框
+// 5. - + gradient
 // ==========================================
 @Composable
 private fun NeonTemplate(
@@ -594,7 +594,7 @@ private fun NeonTemplate(
     onDismiss: () -> Unit,
     onLinkClick: ((String) -> Unit)?
 ) {
-    // 呼吸发光动画
+    // animation
     val glowTransition = rememberInfiniteTransition(label = "neon_glow")
     val glowAlpha by glowTransition.animateFloat(
         initialValue = 0.4f,
@@ -671,7 +671,7 @@ private fun NeonTemplate(
 }
 
 // ==========================================
-// 6. 可爱风 — 粉色泡泡 + 圆润形态
+// 6. - +
 // ==========================================
 @Composable
 private fun CuteTemplate(
@@ -738,7 +738,7 @@ private fun CuteTemplate(
 }
 
 // ==========================================
-// 7. 优雅风 — 金色调 + 衬线字体感
+// 7. - +
 // ==========================================
 @Composable
 private fun ElegantTemplate(
@@ -748,7 +748,7 @@ private fun ElegantTemplate(
 ) {
     TemplateShell(config, backgroundColor = Color(0xFFFAF8F5)) {
         Column(modifier = Modifier.padding(32.dp)) {
-            // 顶部金色装饰线
+            // top
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -803,7 +803,7 @@ private fun ElegantTemplate(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 底部金色装饰线
+            // bottom
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -822,7 +822,7 @@ private fun ElegantTemplate(
 }
 
 // ==========================================
-// 8. 节日风 — 红金庆典
+// 8.
 // ==========================================
 @Composable
 private fun FestiveTemplate(
@@ -831,7 +831,7 @@ private fun FestiveTemplate(
     onLinkClick: ((String) -> Unit)?
 ) {
     TemplateShell(config) {
-        // 红色渐变头部
+        // gradientheader
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -845,7 +845,7 @@ private fun FestiveTemplate(
                 .padding(28.dp),
             contentAlignment = Alignment.Center
         ) {
-            // 装饰粒子
+            // Note
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -869,7 +869,7 @@ private fun FestiveTemplate(
             }
         }
 
-        // 内容区
+        // content
         Column(modifier = Modifier.padding(24.dp)) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -895,7 +895,7 @@ private fun FestiveTemplate(
 }
 
 // ==========================================
-// 9. 暗黑风 — 深灰底 + 紫色强调
+// 9. - +
 // ==========================================
 @Composable
 private fun DarkTemplate(
@@ -958,7 +958,7 @@ private fun DarkTemplate(
 }
 
 // ==========================================
-// 10. 自然风 — 绿色清新
+// 10.
 // ==========================================
 @Composable
 private fun NatureTemplate(
@@ -967,7 +967,7 @@ private fun NatureTemplate(
     onLinkClick: ((String) -> Unit)?
 ) {
     TemplateShell(config) {
-        // 绿色渐变头部
+        // gradientheader
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1003,7 +1003,7 @@ private fun NatureTemplate(
             }
         }
 
-        // 内容区
+        // content
         Column(modifier = Modifier.padding(24.dp)) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -1029,14 +1029,14 @@ private fun NatureTemplate(
 }
 
 /**
- * AnnouncementTemplate 本地化扩展函数
+ * AnnouncementTemplate local
  */
 fun AnnouncementTemplate.getLocalizedDisplayName(): String = this.displayName
 
 fun AnnouncementTemplate.getLocalizedDescription(): String = this.description
 
 /**
- * 通用的进出场动画扩展 — 弹簧缩放 + 淡入
+ * animation- +
  */
 @Composable
 private fun Modifier.animateEnterExit(enabled: Boolean): Modifier = composed {

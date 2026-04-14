@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object UiStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 动画速度 ====================
+    // ==================== Animation Speed ====================
     val speedSlow: String get() = when (lang) {
         AppLanguage.CHINESE -> "慢速"
         AppLanguage.ENGLISH -> "Slow"
@@ -125,7 +125,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Particles"
         AppLanguage.ARABIC -> "جسيمات"
     }
-    // ==================== 通用 ====================
+    // ==================== General ====================
     val yes: String get() = when (lang) {
         AppLanguage.CHINESE -> "Yes"
         AppLanguage.ENGLISH -> "Yes"
@@ -371,7 +371,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Grant Permission"
         AppLanguage.ARABIC -> "منح الإذن"
     }
-    // ==================== 更多通用消息 ====================
+    // ==================== More General Messages ====================
     val savingToGallery: String get() = when (lang) {
         AppLanguage.CHINESE -> "正在保存到相册..."
         AppLanguage.ENGLISH -> "Saving to gallery..."
@@ -479,7 +479,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "All logs copied"
         AppLanguage.ARABIC -> "تم نسخ جميع السجلات"
     }
-    // ==================== 使用统计 ====================
+    // ==================== Usage Stats ====================
     val statsTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "使用统计"
         AppLanguage.ENGLISH -> "Usage Statistics"
@@ -563,7 +563,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "d ago"
         AppLanguage.ARABIC -> "يوم مضت"
     }
-    // ==================== 下载和保存 ====================
+    // ==================== Download and Save ====================
     val saveFailed: String get() = when (lang) {
         AppLanguage.CHINESE -> "保存失败"
         AppLanguage.ENGLISH -> "Save failed"
@@ -659,7 +659,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Download failed: %s"
         AppLanguage.ARABIC -> "فشل التحميل: %s"
     }
-    // ==================== 关于页面补充 ====================
+    // ==================== About Page Extras ====================
     val joinCommunityGroup: String get() = when (lang) {
         AppLanguage.CHINESE -> "加入交流群"
         AppLanguage.ENGLISH -> "Join Community"
@@ -749,7 +749,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "International access"
         AppLanguage.ARABIC -> "الوصول الدولي"
     }
-    // ==================== 方案管理 ====================
+    // ==================== Scheme Management ====================
     val quickSchemes: String get() = when (lang) {
         AppLanguage.CHINESE -> "快捷方案"
         AppLanguage.ENGLISH -> "Quick Schemes"
@@ -827,7 +827,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Select Icon"
         AppLanguage.ARABIC -> "اختيار أيقونة"
     }
-    // ==================== 应用分类 ====================
+    // ==================== App Categories ====================
     val allApps: String get() = when (lang) {
         AppLanguage.CHINESE -> "全部"
         AppLanguage.ENGLISH -> "All"
@@ -905,7 +905,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Long press to edit or delete"
         AppLanguage.ARABIC -> "اضغط مطولاً للتعديل أو الحذف"
     }
-    // ==================== 关于页面 - 法律声明 ====================
+    // ==================== About Page - ====================
     val legalDisclaimerTitle1: String get() = when (lang) {
         AppLanguage.CHINESE -> "一、软件性质与用途"
         AppLanguage.ENGLISH -> "1. Nature and Purpose of Software"
@@ -995,7 +995,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Made with love by Shiaho"
         AppLanguage.ARABIC -> "صنع بحب بواسطة Shiaho"
     }
-    // ==================== 提示消息 ====================
+    // ==================== Hint Messages ====================
     val msgAppCreated: String get() = when (lang) {
         AppLanguage.CHINESE -> "应用创建成功"
         AppLanguage.ENGLISH -> "App created successfully"
@@ -1061,7 +1061,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Deleted"
         AppLanguage.ARABIC -> "تم الحذف"
     }
-    // ==================== 主题设置页面 ====================
+    // ==================== Theme Settings ====================
     val themeSettings: String get() = when (lang) {
         AppLanguage.CHINESE -> "主题设置"
         AppLanguage.ENGLISH -> "Theme Settings"
@@ -1133,7 +1133,7 @@ internal object UiStrings {
         AppLanguage.ENGLISH -> "Theme Features"
         AppLanguage.ARABIC -> "ميزات السمة"
     }
-    // ==================== 主题设置相关字符串 ====================
+    // ==================== Theme Settings Strings ====================
     val animationDisabled: String get() = when (lang) {
         AppLanguage.CHINESE -> "动画已禁用"
         AppLanguage.ENGLISH -> "Animation disabled"

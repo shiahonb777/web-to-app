@@ -46,14 +46,14 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 创建/编辑媒体画廊应用页面
- * 支持多图片/视频选择、分类管理、播放设置等
+ * create/edit app
+ * support / select, management, settings
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGalleryAppScreen(
     webAppRepository: com.webtoapp.data.repository.WebAppRepository,
-    existingAppId: Long? = null,  // 编辑模式时传入已有应用ID
+    existingAppId: Long? = null,  // editmode appID
     onBack: () -> Unit,
     onCreated: (
         name: String,
@@ -65,7 +65,7 @@ fun CreateGalleryAppScreen(
     val context = LocalContext.current
     val isEditMode = existingAppId != null
     
-    // 编辑模式时加载已有应用数据
+    // editmodeload app
     var existingApp by remember { mutableStateOf<WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -75,22 +75,22 @@ fun CreateGalleryAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // App信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
     var themeType by remember { mutableStateOf("AURORA") }
     
-    // Media列表
+    // Medialist
     var galleryItems by remember { mutableStateOf<List<GalleryItem>>(emptyList()) }
     var isLoadingMedia by remember { mutableStateOf(false) }
     
-    // 分类
+    // Note
     var categories by remember { mutableStateOf<List<GalleryCategory>>(emptyList()) }
     var showCategoryDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<GalleryCategory?>(null) }
     
-    // Play设置
+    // Playsettings
     var playMode by remember { mutableStateOf(GalleryPlayMode.SEQUENTIAL) }
     var imageInterval by remember { mutableIntStateOf(3) }
     var loop by remember { mutableStateOf(true) }
@@ -99,7 +99,7 @@ fun CreateGalleryAppScreen(
     var videoAutoNext by remember { mutableStateOf(true) }
     var enableAudio by remember { mutableStateOf(true) }
     
-    // Show设置
+    // Showsettings
     var defaultView by remember { mutableStateOf(GalleryViewMode.GRID) }
     var gridColumns by remember { mutableIntStateOf(3) }
     var sortOrder by remember { mutableStateOf(GallerySortOrder.CUSTOM) }
@@ -109,26 +109,26 @@ fun CreateGalleryAppScreen(
     var backgroundColor by remember { mutableStateOf("#000000") }
     var rememberPosition by remember { mutableStateOf(false) }
     
-    // UI 状态
+    // UI state
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedItems by remember { mutableStateOf<Set<String>>(emptySet()) }
     var isSelectionMode by remember { mutableStateOf(false) }
     var showItemDetailDialog by remember { mutableStateOf<GalleryItem?>(null) }
     
-    // 编辑模式：加载现有应用数据到UI状态
+    // editmode: load app UIstate
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
-            // 加载基本信息
+            // load
             appName = app.name
             appIconPath = app.iconPath
             themeType = app.themeType
             
-            // 加载画廊配置
+            // load config
             app.galleryConfig?.let { config ->
                 galleryItems = config.items
                 categories = config.categories
                 
-                // 播放设置
+                // settings
                 playMode = config.playMode
                 imageInterval = config.imageInterval
                 loop = config.loop
@@ -137,7 +137,7 @@ fun CreateGalleryAppScreen(
                 videoAutoNext = config.videoAutoNext
                 enableAudio = config.enableAudio
                 
-                // 显示设置
+                // displaysettings
                 defaultView = config.defaultView
                 gridColumns = config.gridColumns
                 sortOrder = config.sortOrder
@@ -150,7 +150,7 @@ fun CreateGalleryAppScreen(
         }
     }
     
-    // File选择器 - 多选图片和视频
+    // Fileselect
     val mediaPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -176,7 +176,7 @@ fun CreateGalleryAppScreen(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
     
-    // 判断是否可以创建
+    // create
     val canCreate = galleryItems.isNotEmpty()
     
     Scaffold(
@@ -190,7 +190,7 @@ fun CreateGalleryAppScreen(
                     }
                 },
                 actions = {
-                    // Select模式下显示操作按钮
+                    // Selectmode display button
                     if (isSelectionMode && selectedItems.isNotEmpty()) {
                         IconButton(onClick = {
                             galleryItems = galleryItems.filterNot { it.id in selectedItems }
@@ -246,7 +246,7 @@ fun CreateGalleryAppScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 顶部标签栏
+            // toplabel
             TabRow(
                 selectedTabIndex = selectedTabIndex,
                 modifier = Modifier.fillMaxWidth()
@@ -271,7 +271,7 @@ fun CreateGalleryAppScreen(
                 )
             }
             
-            // 内容区域
+            // contentarea
             when (selectedTabIndex) {
                 0 -> MediaManagementTab(
                     items = galleryItems,
@@ -319,7 +319,7 @@ fun CreateGalleryAppScreen(
                     },
                     onDeleteCategory = { cat ->
                         categories = categories.filter { it.id != cat.id }
-                        // 移除引用
+                        // Remove reference
                         galleryItems = galleryItems.map { item ->
                             if (item.categoryId == cat.id) item.copy(categoryId = null) else item
                         }
@@ -374,7 +374,7 @@ fun CreateGalleryAppScreen(
         }
     }
     
-    // 分类编辑对话框
+    // Category edit dialog
     if (showCategoryDialog) {
         CategoryEditDialog(
             category = editingCategory,
@@ -392,7 +392,7 @@ fun CreateGalleryAppScreen(
         )
     }
     
-    // Media详情对话框
+    // Media details dialog
     showItemDetailDialog?.let { item ->
         MediaItemDetailDialog(
             item = item,
@@ -413,7 +413,7 @@ fun CreateGalleryAppScreen(
 }
 
 /**
- * 媒体管理标签页
+ * managementlabel
  */
 @Composable
 private fun MediaManagementTab(
@@ -447,7 +447,7 @@ private fun MediaManagementTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App信息卡片
+        // App card
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -473,7 +473,7 @@ private fun MediaManagementTab(
             }
         }
         
-        // 分类管理
+        // management
         if (categories.isNotEmpty() || items.isNotEmpty()) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -512,7 +512,7 @@ private fun MediaManagementTab(
             }
         }
         
-        // Media列表卡片
+        // Medialistcard
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -550,7 +550,7 @@ private fun MediaManagementTab(
                         CircularProgressIndicator()
                     }
                 } else if (items.isEmpty()) {
-                    // Empty状态
+                    // Emptystate
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -581,7 +581,7 @@ private fun MediaManagementTab(
                         }
                     }
                 } else {
-                    // Media网格
+                    // Media
                     MediaGrid(
                         items = items,
                         selectedItems = selectedItems,
@@ -593,7 +593,7 @@ private fun MediaManagementTab(
             }
         }
         
-        // 统计信息
+        // Note
         if (items.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -629,7 +629,7 @@ private fun MediaManagementTab(
 }
 
 /**
- * 媒体网格
+ * Note
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -642,7 +642,7 @@ private fun MediaGrid(
 ) {
     val context = LocalContext.current
     
-    // 使用固定高度的网格，避免嵌套滚动问题
+    // , scroll
     val gridHeight = ((items.size + 2) / 3) * 120
     
     LazyVerticalGrid(
@@ -672,7 +672,7 @@ private fun MediaGrid(
                         onLongClick = { onItemLongClick(item) }
                     )
             ) {
-                // 缩略图
+                // Note
                 val imagePath = item.thumbnailPath ?: item.path
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -684,7 +684,7 @@ private fun MediaGrid(
                     contentScale = ContentScale.Crop
                 )
                 
-                // Video标记
+                // Video
                 if (item.type == GalleryItemType.VIDEO) {
                     Box(
                         modifier = Modifier
@@ -714,7 +714,7 @@ private fun MediaGrid(
                     }
                 }
                 
-                // 选中标记
+                // Note
                 if (isSelectionMode) {
                     Box(
                         modifier = Modifier
@@ -744,7 +744,7 @@ private fun MediaGrid(
 }
 
 /**
- * 播放设置标签页
+ * settingslabel
  */
 @Composable
 private fun PlaybackSettingsTab(
@@ -772,7 +772,7 @@ private fun PlaybackSettingsTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Play模式
+        // Playmode
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -810,7 +810,7 @@ private fun PlaybackSettingsTab(
             }
         }
         
-        // Image播放设置
+        // Image settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -819,7 +819,7 @@ private fun PlaybackSettingsTab(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // Image播放间隔
+                // Image
                 Text(
                     text = "${Strings.galleryImageInterval}: ${imageInterval}s",
                     style = MaterialTheme.typography.bodyMedium
@@ -834,7 +834,7 @@ private fun PlaybackSettingsTab(
             }
         }
         
-        // Video播放设置
+        // Video settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -865,7 +865,7 @@ private fun PlaybackSettingsTab(
             }
         }
         
-        // 通用设置
+        // settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -921,7 +921,7 @@ private fun PlaybackSettingsTab(
 }
 
 /**
- * 显示设置标签页
+ * displaysettingslabel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -948,7 +948,7 @@ private fun DisplaySettingsTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 视图模式
+        // mode
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -984,7 +984,7 @@ private fun DisplaySettingsTab(
                     )
                 }
                 
-                // 网格列数
+                // Note
                 AnimatedVisibility(visible = defaultView == GalleryViewMode.GRID) {
                     Column {
                         Spacer(modifier = Modifier.height(16.dp))
@@ -1004,7 +1004,7 @@ private fun DisplaySettingsTab(
             }
         }
         
-        // Sort方式
+        // Sort
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -1046,7 +1046,7 @@ private fun DisplaySettingsTab(
             }
         }
         
-        // Play器设置
+        // Play settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -1091,7 +1091,7 @@ private fun DisplaySettingsTab(
             }
         }
         
-        // 背景颜色
+        // color
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -1127,7 +1127,7 @@ private fun DisplaySettingsTab(
     }
 }
 
-// ==================== 辅助组件 ====================
+// Note
 
 @Composable
 private fun PlayModeOption(
@@ -1258,7 +1258,7 @@ private fun StatItem(
 }
 
 /**
- * 分类编辑对话框
+ * editdialog
  */
 @Composable
 private fun CategoryEditDialog(
@@ -1351,7 +1351,7 @@ private fun CategoryEditDialog(
 }
 
 /**
- * 媒体详情对话框
+ * dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1371,7 +1371,7 @@ private fun MediaItemDetailDialog(
         title = { Text(Strings.galleryMediaDetail) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                // 预览
+                // preview
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1413,7 +1413,7 @@ private fun MediaItemDetailDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 分类选择
+                // select
                 if (categories.isNotEmpty()) {
                     Text(Strings.galleryCategory, style = MaterialTheme.typography.labelMedium)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1516,7 +1516,7 @@ private fun MediaItemDetailDialog(
     )
 }
 
-// ==================== 工具函数 ====================
+// Note
 
 private fun GallerySortOrder.toDisplayString(): String {
     return when (this) {
@@ -1538,7 +1538,7 @@ private fun formatFileSize(bytes: Long): String {
     }
 }
 
-// ==================== 全新V2版本：优雅强大设计 ====================
+// ==================== V2version: ====================
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun CreateGalleryAppScreenV2(
@@ -1556,7 +1556,7 @@ fun CreateGalleryAppScreenV2(
     val scope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
 
-    // 从数据库加载已有应用（编辑模式）
+    // from load app( editmode)
     var existingApp by remember { mutableStateOf<WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -1564,7 +1564,7 @@ fun CreateGalleryAppScreenV2(
         }
     }
 
-    // 状态
+    // state
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
@@ -1575,7 +1575,7 @@ fun CreateGalleryAppScreenV2(
     var selectedItems by remember { mutableStateOf<Set<String>>(emptySet()) }
     val isSelectionMode = selectedItems.isNotEmpty()
 
-    // 核心播放设置
+    // settings
     var loop by remember { mutableStateOf(true) }
     var autoPlay by remember { mutableStateOf(false) }
     var imageInterval by remember { mutableIntStateOf(3) }
@@ -1587,7 +1587,7 @@ fun CreateGalleryAppScreenV2(
     var showSettingsSheet by remember { mutableStateOf(false) }
     var previewItem by remember { mutableStateOf<GalleryItem?>(null) }
 
-    // 从已有应用注入数据
+    // from app
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
             appName = app.name
@@ -1603,7 +1603,7 @@ fun CreateGalleryAppScreenV2(
         }
     }
 
-    // Select器
+    // Select
     val mediaPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -1630,7 +1630,7 @@ fun CreateGalleryAppScreenV2(
 
     val canCreate = galleryItems.isNotEmpty()
 
-    // 顶部栏（选择模式/普通模式）
+    // top( selectmode/ mode)
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -1709,7 +1709,7 @@ fun CreateGalleryAppScreenV2(
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // 可折叠应用信息
+            // Collapsible app info
             AnimatedVisibility(visible = showAppInfoSection, enter = expandVertically(), exit = shrinkVertically()) {
                 Surface(color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)) {
                     Row(
@@ -1748,7 +1748,7 @@ fun CreateGalleryAppScreenV2(
                 Icon(if (showAppInfoSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, modifier = Modifier.fillMaxWidth().padding(4.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            // 统计条
+            // Stats bar
             if (galleryItems.isNotEmpty()) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1763,7 +1763,7 @@ fun CreateGalleryAppScreenV2(
                 }
             }
 
-            // Media网格
+            // Media grid
             Box(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 if (isLoadingMedia) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -1818,7 +1818,7 @@ fun CreateGalleryAppScreenV2(
         }
     }
 
-    // 预览对话框
+    // Preview dialog
     previewItem?.let { item ->
         MediaPreviewDialog(
             item = item,
@@ -1832,7 +1832,7 @@ fun CreateGalleryAppScreenV2(
     }
 }
 
-// ============ V2 辅助组件 ============
+// ============ V2 helper components ============
 @Composable
 private fun StatChip(icon: ImageVector, value: Int) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1974,4 +1974,3 @@ private fun MediaPreviewDialog(item: GalleryItem, onDismiss: () -> Unit, onDelet
         dismissButton = { TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(Strings.delete) } }
     )
 }
-

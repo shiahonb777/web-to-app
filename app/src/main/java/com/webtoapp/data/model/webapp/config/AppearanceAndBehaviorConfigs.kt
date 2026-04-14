@@ -7,7 +7,7 @@ data class AdConfig(
     val interstitialId: String = "",
     val splashEnabled: Boolean = false,
     val splashId: String = "",
-    val splashDuration: Int = 3 // 秒
+    val splashDuration: Int = 3 // seconds
 )
 
 enum class AnnouncementTemplateType {
@@ -82,7 +82,7 @@ data class TranslateConfig(
 )
 
 /**
- * WebApp 扩展函数 - 获取所有激活码（兼容新旧格式）
+ * WebApp extension - collect all activation codes (new and legacy).
  */
 fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.ActivationCode> {
     val codes = mutableListOf<com.webtoapp.core.activation.ActivationCode>()
@@ -102,7 +102,7 @@ fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.Activation
 }
 
 /**
- * WebApp 扩展函数 - 获取激活码字符串列表（用于兼容旧代码）
+ * WebApp extension - list activation code strings for legacy support.
  */
 fun WebApp.getActivationCodeStrings(): List<String> {
     val strings = mutableListOf<String>()

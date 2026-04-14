@@ -7,15 +7,15 @@ import com.webtoapp.data.model.AiProvider
 import com.webtoapp.data.model.ModelCapability
 
 /**
- * LiteLLM 模型注册表
+ * LiteLLM.
  * 
- * 基于 LiteLLM (github.com/BerriAI/litellm) 的 model_prices_and_context_window.json
- * 提供完整的模型配置数据：上下文长度、价格、能力标签等
+ * LiteLLM (github.com/BerriAI/litellm) model_prices_and_context_window.json.
+ * Note.
  * 
- * JSON 格式 (compact):
+ * JSON (compact):.
  * {
  *   "model-id": {
- *     "p": "PROVIDER",     // 供应商枚举名
+ *     "p": "PROVIDER", //.
  *     "mi": 128000,        // max input tokens
  *     "mo": 16384,         // max output tokens
  *     "ic": 2.5,           // input cost per million tokens ($)
@@ -90,29 +90,29 @@ class LiteLLMModelRegistry(context: Context) {
     }
     
     /**
-     * 查找模型信息
-     * 支持多种匹配策略：
-     * 1. 精确匹配 key
-     * 2. provider/model 格式匹配
-     * 3. 模糊匹配（去掉provider前缀后匹配）
+     * Note.
+     * Note.
+     * 1. key.
+     * 2. provider/model.
+     * 3. provider.
      */
     fun findModel(modelId: String, provider: AiProvider? = null): ModelInfo? {
-        // 1. 精确匹配
+        // Note.
         models[modelId]?.let { return it }
         
-        // 2. 带 provider 前缀匹配 (litellm 格式: "openai/gpt-4o")
+        // 2. provider (litellm : "openai/gpt-4o").
         val providerPrefix = provider?.let { mapProviderToLiteLLMPrefix(it) }
         if (providerPrefix != null) {
             models["$providerPrefix/$modelId"]?.let { return it }
         }
         
-        // 3. 去掉已有前缀再匹配
+        // Note.
         val bareId = if (modelId.contains("/")) modelId.substringAfter("/") else modelId
         if (bareId != modelId) {
             models[bareId]?.let { return it }
         }
         
-        // 4. 在对应 provider 的模型列表中查找包含 bareId 的模型
+        // 4. provider bareId.
         if (provider != null) {
             val providerName = provider.name
             providerModels[providerName]?.forEach { key ->
@@ -127,28 +127,28 @@ class LiteLLMModelRegistry(context: Context) {
     }
     
     /**
-     * 获取模型上下文长度
+     * Note.
      */
     fun getContextLength(modelId: String, provider: AiProvider? = null): Int? {
         return findModel(modelId, provider)?.maxInputTokens?.takeIf { it > 0 }
     }
     
     /**
-     * 获取模型输入价格 ($/百万token)
+     * ($/ token).
      */
     fun getInputPrice(modelId: String, provider: AiProvider? = null): Double? {
         return findModel(modelId, provider)?.inputCostPerMillion?.takeIf { it > 0.0 }
     }
     
     /**
-     * 获取模型输出价格 ($/百万token)
+     * ($/ token).
      */
     fun getOutputPrice(modelId: String, provider: AiProvider? = null): Double? {
         return findModel(modelId, provider)?.outputCostPerMillion?.takeIf { it > 0.0 }
     }
     
     /**
-     * 获取模型能力列表
+     * Model Capabilities.
      */
     fun getCapabilities(modelId: String, provider: AiProvider? = null): List<ModelCapability>? {
         val info = findModel(modelId, provider) ?: return null
@@ -159,7 +159,7 @@ class LiteLLMModelRegistry(context: Context) {
         if (info.supportsAudioInput || info.supportsAudioOutput) caps.add(ModelCapability.AUDIO)
         if (info.isImageGeneration) caps.add(ModelCapability.IMAGE_GENERATION)
         
-        // 基于模型名推断代码能力
+        // Note.
         val id = modelId.lowercase()
         if (id.contains("code") || id.contains("codestral") || id.contains("starcoder") ||
             id.contains("codellama") || id.contains("codegemma") || id.contains("codeqwen") ||
@@ -171,49 +171,49 @@ class LiteLLMModelRegistry(context: Context) {
     }
     
     /**
-     * 获取指定供应商的所有已知模型ID列表
-     * 用于在 API 不提供 /models 端点时提供默认模型列表
+     * ID.
+     * API /models.
      */
     fun getDefaultModels(provider: AiProvider): List<String> {
         val providerName = provider.name
         return providerModels[providerName]?.map { key ->
-            // 去掉 provider 前缀 (如 "openai/gpt-4o" -> "gpt-4o")
+            // provider ( "openai/gpt-4o" -> "gpt-4o").
             if (key.contains("/")) key.substringAfter("/") else key
         }?.distinct()?.sorted() ?: emptyList()
     }
     
     /**
-     * 获取指定供应商的推荐模型（常用、非过时的模型）
+     * Note.
      */
     fun getRecommendedModels(provider: AiProvider): List<String> {
         val all = getDefaultModels(provider)
         if (all.isEmpty()) return emptyList()
         
-        // 过滤掉明显过时的模型
+        // Note.
         val deprecated = listOf("0301", "0314", "0613", "0125", "preview", "experimental")
         return all.filter { modelId ->
             val id = modelId.lowercase()
-            // 保留最新版本，过滤旧版本
+            // Note.
             !deprecated.any { suffix -> id.endsWith(suffix) } &&
-            !id.contains("instruct") && // 通常 instruct 变体不推荐直接使用
-            !id.startsWith("ft:") // 排除微调模型
-        }.take(50) // 限制数量
+            !id.contains("instruct") && // instruct.
+            !id.startsWith("ft:") // Note.
+        }.take(50) // Note.
     }
     
     /**
-     * 模型是否已知（在注册表中有记录）
+     * Note.
      */
     fun isKnownModel(modelId: String, provider: AiProvider? = null): Boolean {
         return findModel(modelId, provider) != null
     }
     
     /**
-     * 获取注册表中的总模型数
+     * Note.
      */
     fun totalModels(): Int = models.size
     
     /**
-     * 映射 AiProvider 到 LiteLLM 的 provider 前缀
+     * AiProvider LiteLLM provider.
      */
     private fun mapProviderToLiteLLMPrefix(provider: AiProvider): String? {
         return when (provider) {

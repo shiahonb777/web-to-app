@@ -5,20 +5,20 @@ import android.view.View
 import com.webtoapp.data.model.WebViewConfig
 
 /**
- * 浏览器引擎统一接口
- * 所有引擎实现（SystemWebView、GeckoView）都需要实现此接口
+ * Note.
+ * SystemWebView GeckoView.
  */
 interface BrowserEngine {
 
-    /** 引擎类型 */
+    /** Note. */
     val engineType: EngineType
 
     /**
-     * 创建并配置浏览器 View
+     * config.
      * @param context Android Context
-     * @param config WebView 配置
-     * @param callback 引擎回调
-     * @return 配置好的 View 实例（WebView 或 GeckoView）
+     * config.
+     * param callback.
+     * config.
      */
     fun createView(
         context: Context,
@@ -27,95 +27,95 @@ interface BrowserEngine {
     ): View
 
     /**
-     * 加载 URL
-     * @param url 要加载的地址
+     * load.
+     * load.
      */
     fun loadUrl(url: String)
 
     /**
-     * 执行 JavaScript
-     * @param script JS 代码
-     * @param resultCallback 执行结果回调（可选）
+     * JavaScript.
+     * param script JS.
+     * param resultCallback.
      */
     fun evaluateJavascript(script: String, resultCallback: ((String?) -> Unit)? = null)
 
     /**
-     * 是否可以后退
+     * Note.
      */
     fun canGoBack(): Boolean
 
     /**
-     * 后退
+     * Note.
      */
     fun goBack()
 
     /**
-     * 是否可以前进
+     * Note.
      */
     fun canGoForward(): Boolean
 
     /**
-     * 前进
+     * Note.
      */
     fun goForward()
 
     /**
-     * 重新加载
+     * load.
      */
     fun reload()
 
     /**
-     * 停止加载
+     * load stop.
      */
     fun stopLoading()
 
     /**
-     * 获取当前 URL
+     * URL.
      */
     fun getCurrentUrl(): String?
 
     /**
-     * 获取当前页面标题
+     * page.
      */
     fun getTitle(): String?
 
     /**
-     * 获取底层 View（用于直接操作，如设置焦点等）
+     * View.
      */
     fun getView(): View?
 
     /**
-     * 请求焦点
+     * Note.
      */
     fun requestFocus() {
         getView()?.requestFocus()
     }
 
     /**
-     * 销毁引擎实例，释放资源
+     * asset.
      */
     fun destroy()
 
     /**
-     * 清除缓存
-     * @param includeDiskFiles 是否包括磁盘缓存
+     * cache.
+     * cache.
      */
     fun clearCache(includeDiskFiles: Boolean = true)
 
     /**
-     * 清除历史记录
+     * Note.
      */
     fun clearHistory()
 
     /**
-     * 获取浏览器隐私保护 Shields 实例
-     * @return BrowserShields 实例，未初始化时返回 null
+     * protection.
+     * return BrowserShields null.
      */
     fun getShields(): com.webtoapp.core.engine.shields.BrowserShields? = null
 
     /**
-     * 切换阅读模式
-     * @param enabled 是否开启阅读模式
+     * Note.
+     * param enabled.
      */
     fun toggleReaderMode(enabled: Boolean) {}
 }

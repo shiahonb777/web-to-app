@@ -2,26 +2,26 @@ package com.webtoapp.core.extension
 
 /**
  * Chrome Extension API Polyfill
- * 
- * 生成 JavaScript polyfill 代码，在 WebView 中模拟 Chrome Extension API，
- * 使依赖 chrome.* 和 browser.* API 的扩展能正常运行。
- * 
- * 支持的 API：
+ *
+ * JavaScript polyfill in WebView in Chrome Extension API.
+ * chrome.* browser.* API extension .
+ *
+ * Supports API.
  * - chrome.runtime.id / getURL / sendMessage / onMessage / onInstalled / getManifest / lastError
  * - chrome.storage.local.get / set / remove / clear + onChanged
- * - chrome.storage.sync (映射到 local)
+ * - chrome.storage.sync.
  * - chrome.tabs.create / query
- * - browser.* (自动映射到 chrome.* + Promise 包装)
+ * - browser.*.
  */
 object ChromeExtensionPolyfill {
 
     /**
-     * 生成 Chrome Extension API polyfill 脚本
-     * 
-     * @param extensionId 扩展唯一标识符（用于 storage 命名空间隔离和 runtime.id）
-     * @param manifestJson 扩展的 manifest.json 字符串（用于 runtime.getManifest）
-     * @param isBackground 是否为 background script 模式（影响消息路由方式）
-     * @return 完整的 JS polyfill 代码
+     * Chrome Extension API polyfill.
+     *
+     * @param extensionId extension.
+     * @param manifestJson extension manifest.json.
+     * @param isBackground is as background script.
+     * @return JS polyfill.
      */
     fun generatePolyfill(
         extensionId: String,
@@ -1254,7 +1254,7 @@ object ChromeExtensionPolyfill {
     // IMPORTANT: Do NOT wrap chrome with a Proxy that Promise-wraps all functions.
     // A Proxy wrapper causes synchronous APIs like getURL() to return Promise objects
     // instead of strings. This breaks DOM attribute assignments like:
-    //   linkEl.setAttribute('href', browser.runtime.getURL('style.css'))
+    // linkEl.setAttribute('href', browser.runtime.getURL('style.css'))
     // which would set href="[object Promise]" instead of the actual URL.
     //
     // Extensions that bundle webextension-polyfill will create their own proper

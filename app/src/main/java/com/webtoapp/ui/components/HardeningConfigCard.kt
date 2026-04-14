@@ -18,8 +18,8 @@ import com.webtoapp.data.model.AppHardeningConfig
 import androidx.compose.ui.graphics.Color
 
 /**
- * 软件加固配置卡片
- * 独立于加密功能，提供企业级应用加固保护配置
+ * configcard
+ * , app config
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +44,7 @@ fun HardeningConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -96,20 +96,20 @@ fun HardeningConfigCard(
                 )
             }
             
-            // 展开详细配置
+            // expand config
             AnimatedVisibility(visible = config.enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 加固等级快捷预设
+                    // Note
                     Text(
                         text = Strings.hardeningLevel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
-                    // 等级选择芯片
+                    // select
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -136,7 +136,7 @@ fun HardeningConfigCard(
                         )
                     }
                     
-                    // 等级描述
+                    // Note
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -161,7 +161,7 @@ fun HardeningConfigCard(
                         }
                     }
                     
-                    // 保护层数统计
+                    // Note
                     val layerCount = countProtectionLayers(config)
                     Row(
                         modifier = Modifier
@@ -192,12 +192,12 @@ fun HardeningConfigCard(
                         }
                     }
                     
-                    // ==================== 高级设置展开 ====================
+                    // ==================== advancedsettingsexpand ====================
                     AnimatedVisibility(visible = showAdvanced) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // ===== DEX 保护 =====
+                            // ===== DEX =====
                             HardeningSectionHeader(
                                 title = Strings.dexProtection,
                                 icon = Icons.Default.Code,
@@ -235,7 +235,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== Native SO 保护 =====
+                            // ===== Native SO =====
                             HardeningSectionHeader(
                                 title = Strings.soProtection,
                                 icon = Icons.Default.Memory,
@@ -273,7 +273,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 反逆向工程 =====
+                            // Note
                             HardeningSectionHeader(
                                 title = Strings.antiReverse,
                                 icon = Icons.Default.Security,
@@ -323,7 +323,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 环境检测 =====
+                            // Note
                             HardeningSectionHeader(
                                 title = Strings.environmentDetection,
                                 icon = Icons.Default.PhoneAndroid,
@@ -367,7 +367,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 代码混淆 =====
+                            // ===== code =====
                             HardeningSectionHeader(
                                 title = Strings.codeObfuscation,
                                 icon = Icons.Default.VisibilityOff,
@@ -405,7 +405,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 运行时自保护 (RASP) =====
+                            // ===== run( RASP) =====
                             HardeningSectionHeader(
                                 title = Strings.raspProtection,
                                 icon = Icons.Default.VerifiedUser,
@@ -449,7 +449,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 防篡改 =====
+                            // Note
                             HardeningSectionHeader(
                                 title = Strings.antiTamper,
                                 icon = Icons.Default.Fingerprint,
@@ -487,7 +487,7 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 威胁响应策略 =====
+                            // Note
                             HardeningSectionHeader(
                                 title = Strings.threatResponse,
                                 icon = Icons.Default.Warning,
@@ -496,7 +496,7 @@ fun HardeningConfigCard(
                             )
                             AnimatedVisibility(visible = showThreatOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    // 响应策略选择
+                                    // select
                                     Text(
                                         text = Strings.threatResponse,
                                         style = MaterialTheme.typography.labelMedium,
@@ -511,7 +511,7 @@ fun HardeningConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(4.dp))
                                     
-                                    // 响应延迟
+                                    // Note
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -562,7 +562,7 @@ fun HardeningConfigCard(
                         }
                     }
                     
-                    // 加固说明
+                    // Note
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
@@ -593,7 +593,7 @@ fun HardeningConfigCard(
 }
 
 /**
- * 加固等级选择芯片
+ * select
  */
 @Composable
 private fun HardeningLevelChip(
@@ -612,7 +612,7 @@ private fun HardeningLevelChip(
 }
 
 /**
- * 加固分区标题
+ * Note
  */
 @Composable
 private fun HardeningSectionHeader(
@@ -665,7 +665,7 @@ private fun HardeningSectionHeader(
 }
 
 /**
- * 加固选项行
+ * Note
  */
 @Composable
 private fun HardeningOption(
@@ -707,7 +707,7 @@ private fun HardeningOption(
 }
 
 /**
- * 威胁响应策略选择器
+ * select
  */
 @Composable
 private fun ThreatResponseSelector(
@@ -742,7 +742,7 @@ private fun ThreatResponseSelector(
 }
 
 /**
- * 计算当前保护层数
+ * current
  */
 private fun countProtectionLayers(config: AppHardeningConfig): Int {
     var count = 0

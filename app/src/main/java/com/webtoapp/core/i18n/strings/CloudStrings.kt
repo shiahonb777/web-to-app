@@ -923,7 +923,7 @@ internal object CloudStrings {
         AppLanguage.ENGLISH -> "Please enter a valid activation code"
         AppLanguage.ARABIC -> "يرجى إدخال رمز تفعيل صالح"
     }
-    // ==================== 高级数据看板 ====================
+    // ==================== ====================
     val analyticsOpens: String get() = when (lang) {
         AppLanguage.CHINESE -> "打开次数"
         AppLanguage.ENGLISH -> "Opens"
@@ -995,7 +995,7 @@ internal object CloudStrings {
         AppLanguage.ENGLISH -> "Analytics"
         AppLanguage.ARABIC -> "لوحة البيانات"
     }
-    // ==================== 网站健康监控 ====================
+    // ==================== ====================
     val healthTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "网站健康"
         AppLanguage.ENGLISH -> "Site Health"

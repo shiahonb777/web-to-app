@@ -424,7 +424,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "Media Gallery"
         AppLanguage.ARABIC -> "معرض الوسائط"
     }
-    // ==================== 多站点聚合应用 ====================
+    // ==================== Multi-site Aggregation App ====================
     val multiWebHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "多站点聚合"
         AppLanguage.ENGLISH -> "Multi-Site Aggregator"
@@ -658,7 +658,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "One URL per line, paste multiple links from clipboard"
         AppLanguage.ARABIC -> "رابط واحد لكل سطر، الصق عدة روابط من الحافظة"
     }
-    // ==================== WordPress 功能字符串 ====================
+    // ==================== WordPress Strings ====================
     val wpDownloadDeps: String get() = when (lang) {
         AppLanguage.CHINESE -> "下载 WordPress 依赖"
         AppLanguage.ENGLISH -> "Download WordPress Dependencies"
@@ -874,7 +874,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "WordPress project imported successfully"
         AppLanguage.ARABIC -> "تم استيراد مشروع WordPress بنجاح"
     }
-    // ==================== 构建环境页面 ====================
+    // ==================== Build Environment ====================
     val buildEnvironment: String get() = when (lang) {
         AppLanguage.CHINESE -> "构建环境"
         AppLanguage.ENGLISH -> "Build Environment"
@@ -1024,7 +1024,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "Clean"
         AppLanguage.ARABIC -> "تنظيف"
     }
-    // ==================== 前端项目页面 ====================
+    // ==================== Frontend Project Page ====================
     val selectProject: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择项目"
         AppLanguage.ENGLISH -> "Select Project"
@@ -1204,7 +1204,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "Built-in build engine ready. Supports importing built projects or simple builds with esbuild. Complex projects are recommended to be built on computer."
         AppLanguage.ARABIC -> "محرك البناء المدمج جاهز. يدعم استيراد المشاريع المبنية أو البناء البسيط باستخدام esbuild. يُنصح ببناء المشاريع المعقدة على الكمبيوتر."
     }
-    // ==================== HTML应用页面 ====================
+    // ==================== HTML App Page ====================
     val selectFiles: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择文件"
         AppLanguage.ENGLISH -> "Select Files"
@@ -1642,7 +1642,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "Got it"
         AppLanguage.ARABIC -> "فهمت"
     }
-    // ==================== 激活对话框 ====================
+    // ==================== Activation Dialog ====================
     val activateApp: String get() = when (lang) {
         AppLanguage.CHINESE -> "激活应用"
         AppLanguage.ENGLISH -> "Activate App"
@@ -1810,7 +1810,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "Valid permanently after one activation"
         AppLanguage.ARABIC -> "صالح بشكل دائم بعد تفعيل واحد"
     }
-    // ==================== 媒体画廊 ====================
+    // ==================== Media Gallery ====================
     val galleryApp: String get() = when (lang) {
         AppLanguage.CHINESE -> "媒体画廊"
         AppLanguage.ENGLISH -> "Media Gallery"
@@ -2248,7 +2248,7 @@ internal object CreateStrings {
         AppLanguage.ENGLISH -> "Double tap left/right to seek"
         AppLanguage.ARABIC -> "انقر مرتين على اليسار/اليمين للتنقل"
     }
-    // ==================== 公告模板名称 ====================
+    // ==================== Announcement Template Names ====================
     val templateMinimalDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "简约清爽的设计风格"
         AppLanguage.ENGLISH -> "Clean and simple design style"

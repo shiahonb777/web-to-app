@@ -30,7 +30,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * "更多" Tab — 工具 & 设置入口
+ * " " Tab- & settings
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +74,7 @@ fun MoreScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-                // ── AI 工具 ──
+                // AI
                 MoreSectionTitle(Strings.moreSectionAiTools)
                 MoreMenuCard {
                     MoreMenuItem(
@@ -89,7 +89,7 @@ fun MoreScreen(
                     )
                 }
 
-                // ── 开发工具 ──
+                // Note
                 MoreSectionTitle(Strings.moreSectionDevTools)
                 MoreMenuCard {
                     MoreMenuItem(
@@ -119,7 +119,7 @@ fun MoreScreen(
                     )
                 }
 
-                // ── 浏览器 & 网络 ──
+                // & network
                 MoreSectionTitle(Strings.moreSectionBrowser)
                 MoreMenuCard {
                     MoreMenuItem(
@@ -134,7 +134,7 @@ fun MoreScreen(
                     )
                 }
 
-                // ── 数据 & 统计 ──
+                // Note
                 MoreSectionTitle(Strings.moreSectionAppearance)
                 MoreMenuCard {
                     MoreMenuItem(
@@ -144,7 +144,7 @@ fun MoreScreen(
                     )
                 }
 
-                // ── 关于 ──
+                // Note
                 MoreMenuCard {
                     MoreMenuItem(
                         title = Strings.menuAbout,

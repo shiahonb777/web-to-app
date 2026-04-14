@@ -38,7 +38,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 模块详情 — Jobs-style frosted glass + spring physics
+ * module- Jobs- style frosted glass + spring physics
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +81,7 @@ fun ModuleDetailScreen(
                 }
             )
         },
-        // 毛玻璃底部输入栏
+        // bottominput
         bottomBar = {
             FrostedBottomBar {
                 Row(
@@ -138,11 +138,11 @@ fun ModuleDetailScreen(
         } else {
             module?.let { mod ->
                 LazyColumn(Modifier) {
-                    // === 主体 ===
+                    // Note
                     item {
                         StaggeredItem(index = 0) {
                             Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                                // 作者
+                                // Note
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.clickable { onNavigateToUser(mod.authorId) }
@@ -204,7 +204,7 @@ fun ModuleDetailScreen(
                         GlassDivider()
                     }
 
-                    // === 操作栏 ===
+                    // Note
                     item {
                         StaggeredItem(index = 1) {
                             Row(
@@ -252,7 +252,7 @@ fun ModuleDetailScreen(
                         GlassDivider()
                     }
 
-                    // === 评论 ===
+                    // Note
                     if (comments.isEmpty() && !commentsLoading) {
                         item {
                             Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
@@ -292,7 +292,7 @@ fun ModuleDetailScreen(
 }
 
 // ═══════════════════════════════════════════
-// 物理弹簧操作按钮
+// spring button
 // ═══════════════════════════════════════════
 
 @Composable
@@ -307,11 +307,11 @@ private fun PhysicsActionButton(
         tween(280), label = "btnClr"
     )
 
-    // 粒子爆炸触发
+    // Note
     var burstKey by remember { mutableIntStateOf(0) }
     var showBurst by remember { mutableStateOf(false) }
 
-    // 弹簧缩放
+    // Note
     var bouncing by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         if (bouncing) 1.35f else 1f,
@@ -321,7 +321,7 @@ private fun PhysicsActionButton(
     )
 
     Box(contentAlignment = Alignment.Center) {
-        // 粒子层
+        // Note
         LikeBurstEffect(
             trigger = showBurst,
             color = activeColor,
@@ -355,7 +355,7 @@ private fun PhysicsActionButton(
         }
     }
 
-    // 重置粒子
+    // reset
     LaunchedEffect(burstKey) {
         if (showBurst) {
             kotlinx.coroutines.delay(500)
@@ -365,7 +365,7 @@ private fun PhysicsActionButton(
 }
 
 // ═══════════════════════════════════════════
-// 评论行
+// Note
 // ═══════════════════════════════════════════
 
 @Composable
@@ -410,7 +410,7 @@ private fun CommentRow(comment: ModuleComment, onUserClick: () -> Unit) {
 }
 
 // ═══════════════════════════════════════════
-// Shimmer 骨架
+// Shimmer
 // ═══════════════════════════════════════════
 
 @Composable
@@ -457,7 +457,7 @@ private fun DetailShimmer(modifier: Modifier = Modifier) {
 }
 
 // ═══════════════════════════════════════════
-// 举报 Sheet
+// Sheet
 // ═══════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)

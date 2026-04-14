@@ -7,9 +7,9 @@ import com.webtoapp.core.i18n.Strings
 import java.io.File
 
 /**
- * 模块方案 - 预设的模块组合
- * 
- * 用户可以保存常用的模块组合为方案，方便快速应用
+ * Approach -.
+ *
+ * use can Save use as Approach use.
  */
 data class ModulePreset(
     val id: String = java.util.UUID.randomUUID().toString(),
@@ -22,7 +22,7 @@ data class ModulePreset(
 )
 
 /**
- * 模块方案管理器
+ * Approachmanager.
  */
 @SuppressLint("StaticFieldLeak")
 class ModulePresetManager private constructor(private val context: Context) {
@@ -48,14 +48,14 @@ class ModulePresetManager private constructor(private val context: Context) {
     }
     
     /**
-     * 获取所有方案（内置 + 用户）
+     * Get Approach.
      */
     fun getAllPresets(): List<ModulePreset> {
         return getBuiltInPresets() + getUserPresets()
     }
     
     /**
-     * 获取内置方案
+     * Get Approach.
      */
     fun getBuiltInPresets(): List<ModulePreset> = listOf(
         ModulePreset(
@@ -119,7 +119,7 @@ class ModulePresetManager private constructor(private val context: Context) {
     )
     
     /**
-     * 获取用户自定义方案
+     * Get use Approach.
      */
     fun getUserPresets(): List<ModulePreset> {
         return try {
@@ -136,7 +136,7 @@ class ModulePresetManager private constructor(private val context: Context) {
     }
     
     /**
-     * 保存用户方案
+     * Save use Approach.
      */
     fun savePreset(preset: ModulePreset): Result<ModulePreset> {
         return try {
@@ -155,7 +155,7 @@ class ModulePresetManager private constructor(private val context: Context) {
     }
     
     /**
-     * 删除用户方案
+     * use Approach.
      */
     fun deletePreset(presetId: String): Result<Unit> {
         return try {
@@ -168,7 +168,7 @@ class ModulePresetManager private constructor(private val context: Context) {
     }
     
     /**
-     * 从当前选择创建方案
+     * from before Approach.
      */
     fun createPresetFromSelection(
         name: String,

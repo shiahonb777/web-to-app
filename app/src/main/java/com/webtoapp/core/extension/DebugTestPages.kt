@@ -3,14 +3,13 @@ package com.webtoapp.core.extension
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 调试测试页面
- * 
- * 提供多种类型的测试页面，用于开发和调试扩展模块
+ *
+ * multiple use extension.
  */
 object DebugTestPages {
     
     /**
-     * 获取所有测试页面
+     * Get.
      */
     fun getAll(): List<TestPage> = listOf(
         basicHtmlPage(),
@@ -24,7 +23,7 @@ object DebugTestPages {
     )
     
     /**
-     * 基础HTML测试页
+     * HTML.
      */
     private fun basicHtmlPage() = TestPage(
         id = "basic-html",
@@ -94,7 +93,7 @@ object DebugTestPages {
     )
 
     /**
-     * 表单测试页
+     * single.
      */
     private fun formTestPage() = TestPage(
         id = "form-test",
@@ -166,7 +165,6 @@ object DebugTestPages {
     )
     
     /**
-     * 媒体测试页
      */
     private fun mediaTestPage() = TestPage(
         id = "media-test",
@@ -224,7 +222,6 @@ object DebugTestPages {
     )
 
     /**
-     * 广告模拟页
      */
     private fun adSimulatorPage() = TestPage(
         id = "ad-simulator",
@@ -301,7 +298,6 @@ object DebugTestPages {
     )
     
     /**
-     * 弹窗测试页
      */
     private fun popupTestPage() = TestPage(
         id = "popup-test",
@@ -365,7 +361,6 @@ object DebugTestPages {
     )
 
     /**
-     * 滚动测试页
      */
     private fun scrollTestPage() = TestPage(
         id = "scroll-test",
@@ -414,7 +409,7 @@ object DebugTestPages {
     )
     
     /**
-     * API测试页
+     * API.
      */
     private fun apiTestPage() = TestPage(
         id = "api-test",
@@ -506,7 +501,6 @@ object DebugTestPages {
     )
     
     /**
-     * 样式测试页
      */
     private fun styleTestPage() = TestPage(
         id = "style-test",
@@ -571,7 +565,6 @@ object DebugTestPages {
 }
 
 /**
- * 测试页面数据类
  */
 data class TestPage(
     val id: String,
@@ -581,7 +574,7 @@ data class TestPage(
     val html: String
 ) {
     /**
-     * 生成 data URL
+     * data URL.
      */
     fun toDataUrl(): String {
         val encoded = android.util.Base64.encodeToString(

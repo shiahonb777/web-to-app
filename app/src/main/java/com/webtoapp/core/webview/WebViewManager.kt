@@ -40,7 +40,7 @@ class WebViewManager(
 ) {
     
     companion object {
-        // Desktop Chrome User-Agent — Chrome 版本从系统 WebView 动态获取
+        // Desktop Chrome User-Agent Chrome from WebView Get.
         internal var DESKTOP_USER_AGENT: String? = null
         internal const val DESKTOP_USER_AGENT_FALLBACK = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
         
@@ -81,7 +81,7 @@ class WebViewManager(
         // Local cleartext hosts allowed by network security config
         internal val LOCAL_CLEARTEXT_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
 
-        // Well-known map tile server host suffixes — these must NEVER be blocked by
+        // Well-known map tile server host suffixes these must NEVER be blocked by
         // ad/tracker filters, otherwise Leaflet / Mapbox / Google Maps tile layers break.
         internal val MAP_TILE_HOST_SUFFIXES = setOf(
             "tile.openstreetmap.org",
@@ -145,17 +145,17 @@ class WebViewManager(
         internal val BLOCKED_SPECIAL_SCHEMES = setOf("javascript", "data", "file", "content", "about")
 
         /**
-         * Viewport Fit-Screen Script — 解决 Unity WebGL / Canvas 游戏放大裁切问题
+         * Viewport Fit-Screen Script Unity WebGL / Canvas large issue.
          *
-         * 问题根因：
-         * 1. Unity WebGL 等游戏使用固定尺寸 <canvas>（如 960x600），不会响应 viewport 变化
-         * 2. Android WebView 默认 DPI 缩放(devicePixelRatio > 1) 导致画布按物理像素渲染，
-         *    实际显示比屏幕大，UI 元素被裁切到屏幕外
+         * issue .
+         * 1. Unity WebGL etc use <canvas> not viewport.
+         * 2. Android WebView DPI (devicePixelRatio > 1) by .
+         * large UI to.
          *
-         * 解决方案：
-         * 1. 强制注入 viewport meta: width=device-width, initial-scale=1.0
-         * 2. 检测 <canvas> 元素，如果宽度超出 viewport 则用 CSS transform 缩放至适配
-         * 3. 同时处理 Unity 的 #unity-container / #unity-canvas 典型容器
+         * Solution.
+         * 1. viewport meta: width=device-width, initial-scale=1.0.
+         * 2. <canvas> viewport use CSS transform.
+         * 3. when Unity #unity-container / #unity-canvas.
          */
         internal const val VIEWPORT_FIT_SCREEN_JS = """(function(){
             'use strict';
@@ -264,7 +264,7 @@ class WebViewManager(
                         okhttp3.ConnectionSpec.Builder(okhttp3.ConnectionSpec.MODERN_TLS)
                             .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_3)
                             .build(),
-                        // Allow cleartext HTTP — bypasses Android network security config for this client only
+                        // Allow cleartext HTTP bypasses Android network security config for this client only
                         okhttp3.ConnectionSpec.CLEARTEXT
                     )
                 )
@@ -273,10 +273,10 @@ class WebViewManager(
         }
 
         /**
-         * Viewport Custom Script — 自定义视口宽度
+         * Viewport Custom Script .
          *
-         * 通过注入 viewport meta 标签来设置自定义的视口宽度，
-         * 允许用户指定 320-3840 像素范围内的任意视口宽度。
+         * viewport meta .
+         * use 320-3840 .
          */
         internal const val VIEWPORT_CUSTOM_JS = """(function(){
             'use strict';
@@ -294,14 +294,14 @@ class WebViewManager(
 
         /**
          * Scroll Position Save/Restore Script
-         * 
-         * 解决 Android WebView goBack() 后滚动位置丢失的问题。
-         * 原因: goBack() 会重新加载页面, 加上 onPageStarted 中大量 JS 注入
-         * (内核伪装/剪切板/性能优化/用户脚本) 导致 DOM 在浏览器原生滚动恢复
-         * 之前就被修改, 滚动位置被重置到顶部。
-         * 
-         * 方案: 通过 sessionStorage 在页面离开前保存滚动位置,
-         * 返回后在 onPageFinished 延迟恢复。
+         *
+         * Android WebView goBack() after scroll position issue.
+         * Cause: goBack(), onPageStarted in large JS.
+         * DOM in restore.
+         * before, scroll position Reset to .
+         *
+         * Approach: sessionStorage in before Savescroll position,.
+         * after in onPageFinished restore.
          */
         internal const val SCROLL_SAVE_JS = """(function(){
             'use strict';
@@ -352,17 +352,17 @@ class WebViewManager(
         })();"""
         
         /**
-         * 图片加载修复 (Image Repair)
-         * 
-         * 解决问题：某些网站（动漫、游戏等站点）的图片 CDN 使用 Referer 防盗链，
-         * Android WebView 跨域图片请求有时不带 Referer 头，导致 CDN 返回 403，图片显示破碎。
-         * 在浏览器中正常加载但 WebView 中失败。
-         * 
-         * 修复策略：
-         * 1. 检测所有加载失败的 <img> 元素
-         * 2. 通过 fetch + no-referrer 重新请求图片数据
-         * 3. 将响应转为 Object URL 并替换 src
-         * 4. 使用 MutationObserver 监听 DOM 变化，修复动态加载的图片
+         * image loadingfix (Image Repair)
+         *
+         * issue CDN use Referer .
+         * Android WebView request when not Referer CDN 403 .
+         * in in WebView in .
+         *
+         * fix .
+         * 1. <img>.
+         * 2. fetch + no-referrer request.
+         * 3. as Object URL and src.
+         * 4. use MutationObserver observe DOM fix.
          */
         internal const val IMAGE_REPAIR_JS = """
             (function() {
@@ -381,11 +381,11 @@ class WebViewManager(
                     repaired.add(img);
                     var originalSrc = img.src;
                     
-                    // 方法1: 设置 referrerPolicy 属性并重新加载
+                    // 1: referrerPolicy and.
                     img.referrerPolicy = 'no-referrer';
                     img.crossOrigin = 'anonymous';
                     
-                    // 方法2: 通过 fetch + no-referrer 获取图片并转为 blob URL
+                    // 2: fetch + no-referrer Get and as blob URL.
                     fetch(originalSrc, {
                         referrerPolicy: 'no-referrer',
                         mode: 'cors',
@@ -397,13 +397,13 @@ class WebViewManager(
                         if (blob.size > 0) {
                             var blobUrl = URL.createObjectURL(blob);
                             img.src = blobUrl;
-                            // 清理: 图片加载后释放 Object URL
+                            // : image loading after Release Object URL.
                             img.addEventListener('load', function() {
                                 setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 5000);
                             }, { once: true });
                         }
                     }).catch(function() {
-                        // fetch 也失败了（CORS 限制），回退: 仅设置 referrerPolicy 后重触发
+                        // fetch : referrerPolicy after.
                         img.src = '';
                         img.referrerPolicy = 'no-referrer';
                         setTimeout(function() { img.src = originalSrc; }, 50);
@@ -414,14 +414,14 @@ class WebViewManager(
                     var images = document.querySelectorAll('img');
                     for (var i = 0; i < images.length; i++) {
                         var img = images[i];
-                        // 检测图片是否加载失败: 有 src 但 naturalWidth=0 且已完成加载
+                        // is: src naturalWidth=0.
                         if (img.src && img.complete && img.naturalWidth === 0 && img.naturalHeight === 0) {
                             repairImage(img);
                         }
                     }
                 }
                 
-                // 为所有现有图片添加 error 监听
+                // as error observe.
                 function attachErrorListeners() {
                     var images = document.querySelectorAll('img');
                     for (var i = 0; i < images.length; i++) {
@@ -435,7 +435,7 @@ class WebViewManager(
                     }
                 }
                 
-                // 监听 DOM 变化，修复动态加载的图片（懒加载等）
+                // observe DOM fix.
                 var observer = new MutationObserver(function(mutations) {
                     var needsScan = false;
                     for (var m = 0; m < mutations.length; m++) {
@@ -457,12 +457,12 @@ class WebViewManager(
                 });
                 observer.observe(document.documentElement, { childList: true, subtree: true });
                 
-                // 初始扫描：延迟检测已加载失败的图片
+                // .
                 attachErrorListeners();
                 setTimeout(scanBrokenImages, 1500);
                 setTimeout(scanBrokenImages, 5000);
                 
-                // 自动停止 observer 防止性能问题
+                // observer issue.
                 setTimeout(function() { observer.disconnect(); }, 30000);
             })();
         """
@@ -488,15 +488,15 @@ class WebViewManager(
         
         /**
          * Clipboard API Polyfill for Android WebView
-         * 
-         * Android WebView 不实现 navigator.clipboard API（readText/writeText 始终返回
-         * NotAllowedError），导致网页的粘贴功能完全失效。
-         * 
-         * 这个 polyfill 通过 NativeBridge 桥接到 Android 原生 ClipboardManager，
-         * 让网页可以正常使用 navigator.clipboard.readText() 和 writeText()。
-         * 
-         * 同时修补 navigator.permissions.query() 让 clipboard-read/clipboard-write
-         * 始终返回 'granted'，与 Chrome 行为一致。
+         *
+         * Android WebView not navigator.clipboard APIreadText/writeText.
+         * NotAllowedError .
+         *
+         * polyfill NativeBridge to Android ClipboardManager.
+         * can use navigator.clipboard.readText() writeText().
+         *
+         * when navigator.permissions.query() clipboard-read/clipboard-write.
+         * 'granted' and Chrome as .
          */
         internal const val CLIPBOARD_POLYFILL_JS = """
             (function() {
@@ -622,10 +622,10 @@ class WebViewManager(
     private val managedWebViews
         get() = sessionState.managedWebViews
     
-    // Browser Shields — privacy protection manager
+    // Browser Shields privacy protection manager
     private lateinit var shields: BrowserShields
     
-    // Error page manager — custom error page generation
+    // Error page manager custom error page generation
     private var errorPageManager: ErrorPageManager? = null
     private var lastFailedUrl: String?
         get() = sessionState.lastFailedUrl
@@ -633,7 +633,7 @@ class WebViewManager(
             sessionState.lastFailedUrl = value
         }
     
-    // file:// retry counter — auto-retry when file not yet extracted (race condition)
+    // file:// retry counter auto-retry when file not yet extracted (race condition)
     private var fileRetryCount: Int
         get() = sessionState.fileRetryCount
         set(value) {
@@ -654,7 +654,7 @@ class WebViewManager(
             sessionState.currentMainFrameUrl = value
         }
     
-    // Cookie flush 防抖 — 避免快速导航时每次 onPageFinished 都同步写磁盘
+    // Cookie flush debounce when onPageFinished.
     private val cookieFlushRunnable = Runnable {
         try { CookieManager.getInstance().flush() } catch (_: Exception) {}
     }
@@ -692,8 +692,8 @@ class WebViewManager(
     }
     
     /**
-     * 从系统 WebView 默认 UA 中提取 Chrome 版本号，保持 UA 与设备一致。
-     * 避免硬编码过时的 Chrome/120 被网站检测为旧浏览器。
+     * from WebView UA in Extract Chrome UA and .
+     * when Chrome/120 as .
      */
     private fun ensureDynamicUserAgents() {
         val resolved = userAgentResolver.ensureDynamicUserAgents(
@@ -765,14 +765,14 @@ class WebViewManager(
         
         // Initialize Error Page Manager
         if (config.errorPageConfig.mode != ErrorPageMode.DEFAULT) {
-            // 始终注入当前语言到错误页配置，确保跟随用户语言设置
+            // before to config use.
             val errorConfig = config.errorPageConfig.copy(
                 language = com.webtoapp.core.i18n.Strings.currentLanguage.value.name
             )
             errorPageManager = ErrorPageManager(errorConfig)
         }
         
-        // Debug log：Confirm extension module config
+        // Debug logConfirm extension module config
         AppLogger.d("WebViewManager", "configureWebView: extensionModuleIds=${extensionModuleIds.size}, embeddedModules=${embeddedExtensionModules.size}")
         embeddedExtensionModules.forEach { module ->
             AppLogger.d("WebViewManager", "  Embedded module: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}")
@@ -781,7 +781,6 @@ class WebViewManager(
         // Track this WebView
         managedWebViews[webView] = true
         
-        // ============ Cookie 持久化配置 ============
         // Enable cookies and third-party cookies for login persistence
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
@@ -836,7 +835,7 @@ class WebViewManager(
                 addJavascriptInterface(ShareBridge(context), "NativeShareBridge")
             }
             
-            // Register OAuth block detection bridge — lets the safety-net JS
+            // Register OAuth block detection bridge lets the safety-net JS
             // notify Kotlin when Google renders the "not secure" error page client-side
             addJavascriptInterface(object {
                 @android.webkit.JavascriptInterface
@@ -859,7 +858,7 @@ class WebViewManager(
             // Initialize Chrome Extension background script runtimes
             extensionRuntimeCoordinator.initChromeExtensionRuntimes(webView)
 
-            // 浏览器内核伪装 — 在 UA 设置完成后清洗, 移除 wv/Version 标识
+            // in UA after, wv/Version.
             com.webtoapp.core.kernel.BrowserKernel.configureWebView(webView)
         }
     }
@@ -1374,9 +1373,9 @@ class WebViewManager(
      * Chrome Custom Tab (CCT) uses a real Chrome renderer process, so Google's
      * server-side WebView detection does NOT trigger. CCT and WebView share the
      * same cookie jar, which means:
-     * 1. User logs in via CCT → session cookie is set
-     * 2. CCT closes → WebView resumes the original page
-     * 3. WebView reloads → session cookie is present → user is logged in
+     * 1. User logs in via CCT session cookie is set
+     * 2. CCT closes WebView resumes the original page
+     * 3. WebView reloads session cookie is present user is logged in
      *
      * Fallback: If Chrome is not installed, falls back to system browser.
      */
@@ -1385,13 +1384,13 @@ class WebViewManager(
     }
 
     /**
-     * C 级 URL host 提取 (零分配)
-     * shouldInterceptRequest 每次子资源请求调用 ~3 次
-     * 替换 Uri.parse(url).host 避免创建 URI 对象 + GC 压力
+     * C level URL host Extract.
+     * shouldInterceptRequest request use ~3.
+     * Uri.parse(url).host URI + GC.
      */
     private fun extractHostFromUrl(url: String?): String? {
         val target = url?.takeIf { it.isNotBlank() } ?: return null
-        // C 级零分配提取 → 回退到 Uri.parse
+        // C level Extract to Uri.parse.
         return com.webtoapp.core.perf.NativePerfEngine.extractHost(target)?.lowercase()
             ?: runCatching { Uri.parse(target).host?.lowercase() }.getOrNull()
     }
@@ -1532,19 +1531,19 @@ class WebViewManager(
             sessionState.currentConfig = value
         }
     
-    // Browser Disguise — pre-generated anti-fingerprint JS (cached per configureWebView call)
+    // Browser Disguise pre-generated anti-fingerprint JS (cached per configureWebView call)
     private var cachedBrowserDisguiseJs: String?
         get() = sessionState.cachedBrowserDisguiseJs
         set(value) {
             sessionState.cachedBrowserDisguiseJs = value
         }
-    // Browser Disguise — config reference (for BrowserDisguiseEngine integration)
+    // Browser Disguise config reference (for BrowserDisguiseEngine integration)
     private var cachedBrowserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig?
         get() = sessionState.cachedBrowserDisguiseConfig
         set(value) {
             sessionState.cachedBrowserDisguiseConfig = value
         }
-    // Device Disguise — config reference (for device type/brand/model UA spoofing)
+    // Device Disguise config reference (for device type/brand/model UA spoofing)
     private var currentDeviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig?
         get() = sessionState.currentDeviceDisguiseConfig
         set(value) {
@@ -1575,11 +1574,10 @@ class WebViewManager(
                     (function() {
                         'use strict';
                         
-                        // 标记 polyfill 已加载
+                        // polyfill.
                         if (window.__webtoapp_zoom_polyfill__) return;
                         window.__webtoapp_zoom_polyfill__ = true;
                         
-                        // 存储元素原始宽度
                         var originalWidths = new WeakMap();
                         
                         function convertZoomToTransform(el) {
@@ -1592,15 +1590,15 @@ class WebViewManager(
                                     scale = parseFloat(zoom) / 100;
                                 }
                                 if (!isNaN(scale) && scale > 0 && scale !== 1) {
-                                    // 保存原始宽度
+                                    // Save.
                                     if (!originalWidths.has(el)) {
                                         originalWidths.set(el, el.style.width || '');
                                     }
-                                    // 清除 zoom 并应用 transform
+                                    // zoom and use transform.
                                     el.style.zoom = '';
                                     el.style.transform = 'scale(' + scale + ')';
                                     el.style.transformOrigin = 'top left';
-                                    // 缩小时需要扩展宽度以避免内容被裁切
+                                    // small when extension.
                                     if (scale < 1) {
                                         el.style.width = (100 / scale) + '%';
                                     }
@@ -1609,7 +1607,7 @@ class WebViewManager(
                             }
                         }
                         
-                        // MutationObserver 监听 style 属性变化
+                        // MutationObserver observe style.
                         var observer = new MutationObserver(function(mutations) {
                             mutations.forEach(function(mutation) {
                                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
@@ -1619,7 +1617,7 @@ class WebViewManager(
                                     mutation.addedNodes.forEach(function(node) {
                                         if (node.nodeType === 1) {
                                             convertZoomToTransform(node);
-                                            // 也检查子元素
+                                            // Check.
                                             if (node.querySelectorAll) {
                                                 node.querySelectorAll('*').forEach(function(child) {
                                                     convertZoomToTransform(child);
@@ -1631,7 +1629,7 @@ class WebViewManager(
                             });
                         });
                         
-                        // 设置 observer 的函数
+                        // observer.
                         function setupObserver() {
                             if (document.documentElement) {
                                 observer.observe(document.documentElement, {
@@ -1640,7 +1638,6 @@ class WebViewManager(
                                     subtree: true,
                                     attributeFilter: ['style']
                                 });
-                                // 初始扫描
                                 if (document.body) {
                                     convertZoomToTransform(document.body);
                                     document.body.querySelectorAll('*').forEach(function(el) {
@@ -1651,14 +1648,14 @@ class WebViewManager(
                             }
                         }
                         
-                        // DOM 就绪后设置 observer
+                        // DOM after observer.
                         if (document.readyState === 'loading') {
                             document.addEventListener('DOMContentLoaded', setupObserver);
                         } else {
                             setupObserver();
                         }
                         
-                        // Override CSSStyleDeclaration.zoom setter（最关键的拦截）
+                        // Override CSSStyleDeclaration.zoom setter.
                         try {
                             var zoomDescriptor = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, 'zoom');
                             Object.defineProperty(CSSStyleDeclaration.prototype, 'zoom', {
@@ -1679,7 +1676,7 @@ class WebViewManager(
                                             return;
                                         }
                                     }
-                                    // 重置为默认
+                                    // Reset as.
                                     if (value === '' || value === '1' || value === 'normal' || value === 'initial') {
                                         this.transform = '';
                                         this.transformOrigin = '';
@@ -1689,7 +1686,7 @@ class WebViewManager(
                                     }
                                 },
                                 get: function() {
-                                    // 返回基于 transform 计算的 zoom 值
+                                    // transform zoom.
                                     var transform = this.transform;
                                     if (transform && transform.indexOf('scale(') !== -1) {
                                         var match = transform.match(/scale\(([\d.]+)\)/);

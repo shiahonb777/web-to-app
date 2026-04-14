@@ -41,17 +41,17 @@ import com.webtoapp.ui.screens.create.runtime.GoProjectImportAnalysis
 import com.webtoapp.ui.screens.create.runtime.GoProjectImporter
 
 /**
- * 创建/编辑 Go 服务应用页面
+ * create/edit Go app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Gin=蓝, Fiber=紫, Echo=青, Chi=红）
- * - go.mod 信息面板（模块路径、Go 版本、依赖数量）
- * - 预编译二进制检测卡片（文件名、大小、ELF 检查）
- * - 目标架构可视化选择器（ARM64, ARM, x86_64）
- * - 静态文件目录配置
- * - 健康检查端点配置
- * - 依赖列表面板
- * - 框架特定提示
+ * Note
+ * Hero area( Gin=, Fiber=, Echo=, Chi=)
+ * go. mod panel( modulepath, Go version, )
+ * card( file, , ELF check)
+ * select( ARM64, ARM, x86_64)
+ * filedirectoryconfig
+ * check config
+ * listpanel
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -72,11 +72,11 @@ fun CreateGoAppScreen(
     val isEdit = existingAppId > 0L
     val projectImporter = remember(context) { GoProjectImporter(context) }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // Go 配置
+    // Go config
     var binaryName by remember { mutableStateOf("") }
     var staticDir by remember { mutableStateOf("") }
     var landscapeMode by remember { mutableStateOf(false) }
@@ -84,28 +84,28 @@ fun CreateGoAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：go.mod 信息
+    // go. mod
     var goModulePath by remember { mutableStateOf<String?>(null) }
     var goVersion by remember { mutableStateOf<String?>(null) }
     var goDeps by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var showAllDeps by remember { mutableStateOf(false) }
     
-    // 增强：二进制检测
+    // Note
     var binarySize by remember { mutableStateOf<Long?>(null) }
     var binaryDetected by remember { mutableStateOf(false) }
     
-    // 增强：目标架构
+    // Note
     var targetArch by remember { mutableStateOf("arm64") }
     
-    // 增强：健康检查
+    // check
     var healthCheckEndpoint by remember { mutableStateOf("/health") }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -138,7 +138,7 @@ fun CreateGoAppScreen(
         appName = appNameOverride ?: analysis.suggestedAppName ?: appName
     }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -192,7 +192,7 @@ fun CreateGoAppScreen(
     
     val canCreate = projectId != null
     
-    // 获取框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework?.lowercase()) {
             "gin" -> Color(0xFF0090FF)
@@ -200,7 +200,7 @@ fun CreateGoAppScreen(
             "echo" -> Color(0xFF00BCD4)
             "chi" -> AppColors.Error
             "net_http" -> Color(0xFF00ADD8)
-            else -> Color(0xFF00ADD8) // Go 默认蓝
+            else -> Color(0xFF00ADD8) // Go default
         }
     }
     
@@ -251,14 +251,14 @@ fun CreateGoAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             GoHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
                 goVersion = goVersion
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
                     title = Strings.sampleProjects,
@@ -286,7 +286,7 @@ fun CreateGoAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -318,13 +318,13 @@ fun CreateGoAppScreen(
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -393,10 +393,10 @@ fun CreateGoAppScreen(
                 }
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. Go 模块信息面板 ==========
+                // ========== 5. Go Module Info Panel ==========
                 if (goModulePath != null) {
                     GoModuleInfoCard(
                         modulePath = goModulePath!!,
@@ -406,7 +406,7 @@ fun CreateGoAppScreen(
                     )
                 }
                 
-                // ========== 6. 二进制检测卡片 ==========
+                // ========== 6. Binary Detection Card ==========
                 GoBinaryDetectionCard(
                     binaryDetected = binaryDetected,
                     binaryName = binaryName,
@@ -415,26 +415,26 @@ fun CreateGoAppScreen(
                     frameworkColor = frameworkColor
                 )
                 
-                // ========== 7. 目标架构选择器 ==========
+                // ========== 7. Target Architecture Selector ==========
                 GoTargetArchCard(
                     targetArch = targetArch,
                     onArchChange = { targetArch = it },
                     frameworkColor = frameworkColor
                 )
                 
-                // ========== 8. 静态文件配置 ==========
+                // ========== 8. Static File Settings ==========
                 GoStaticFilesCard(
                     staticDir = staticDir,
                     onStaticDirChange = { staticDir = it }
                 )
                 
-                // ========== 9. 健康检查端点 ==========
+                // ========== 9. Health Check Endpoint ==========
                 GoHealthCheckCard(
                     endpoint = healthCheckEndpoint,
                     onEndpointChange = { healthCheckEndpoint = it }
                 )
                 
-                // ========== 10. 依赖面板 ==========
+                // ========== 10. Dependencies Panel ==========
                 if (goDeps.isNotEmpty()) {
                     GoDepsCard(
                         deps = goDeps,
@@ -444,10 +444,10 @@ fun CreateGoAppScreen(
                     )
                 }
                 
-                // ========== 11. 框架提示 ==========
+                // ========== 11. Framework Tips ==========
                 GoFrameworkTipCard(framework = detectedFramework)
                 
-                // ========== 12. 环境变量 ==========
+                // ========== 12. Environment Variables ==========
                 RuntimeEnvVarsCard(
                     envVars = envVars,
                     newEnvKey = newEnvKey,
@@ -464,7 +464,7 @@ fun CreateGoAppScreen(
                 )
             }
             
-            // 状态提示
+            // Status message
             if (screenState.isBusy) {
                 RuntimeLoadingCard(screenState.phase)
             }
@@ -479,10 +479,10 @@ fun CreateGoAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * Go 框架品牌化 Hero 区域
+ * Go Hero area
  */
 @Composable
 private fun GoHeroSection(
@@ -553,7 +553,7 @@ private fun GoHeroSection(
 }
 
 /**
- * Go 模块信息卡片
+ * Go module card
  */
 @Composable
 private fun GoModuleInfoCard(
@@ -613,7 +613,7 @@ private fun GoModuleInfoCard(
 }
 
 /**
- * 预编译二进制检测卡片
+ * card
  */
 @Composable
 private fun GoBinaryDetectionCard(
@@ -681,7 +681,7 @@ private fun GoBinaryDetectionCard(
 }
 
 /**
- * 目标架构选择器
+ * select
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -729,7 +729,7 @@ private fun GoTargetArchCard(
 }
 
 /**
- * 静态文件目录配置卡片
+ * filedirectoryconfigcard
  */
 @Composable
 private fun GoStaticFilesCard(
@@ -767,7 +767,7 @@ private fun GoStaticFilesCard(
 }
 
 /**
- * 健康检查端点卡片
+ * check card
  */
 @Composable
 private fun GoHealthCheckCard(
@@ -799,7 +799,7 @@ private fun GoHealthCheckCard(
 }
 
 /**
- * 依赖面板
+ * panel
  */
 @Composable
 private fun GoDepsCard(
@@ -867,7 +867,7 @@ private fun GoDepsCard(
 }
 
 /**
- * 框架特定提示
+ * hint
  */
 @Composable
 private fun GoFrameworkTipCard(framework: String?) {
@@ -911,7 +911,7 @@ private fun GoFrameworkTipCard(framework: String?) {
 }
 
 /**
- * 格式化文件大小
+ * file
  */
 private fun formatFileSize(bytes: Long): String {
     return when {

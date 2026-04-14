@@ -48,9 +48,9 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 登录 & 注册页面
+ * & register
  *
- * 整合登录、注册表单以及忘记密码流程
+ * , register and
  */
 @Suppress("UNUSED_PARAMETER")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,22 +66,22 @@ fun AuthScreen(
     val resetCodeState by authViewModel.resetCodeState.collectAsStateWithLifecycle()
     val sendCodeState by authViewModel.sendCodeState.collectAsStateWithLifecycle()
 
-    // Tab 状态: 0 = 登录, 1 = 注册
+    // Tab state: 0 =, 1 = register
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    // 忘记密码模式
+    // mode
     var showForgotPassword by remember { mutableStateOf(false) }
     var forgotPasswordEmail by remember { mutableStateOf("") }
     var resetCode by remember { mutableStateOf("") }
     var resetNewPassword by remember { mutableStateOf("") }
     var resetCodeCountdown by remember { mutableIntStateOf(0) }
 
-    // 登录表单
+    // Note
     var loginAccount by remember { mutableStateOf("") }
     var loginPassword by remember { mutableStateOf("") }
     var loginPasswordVisible by remember { mutableStateOf(false) }
 
-    // 注册表单
+    // register
     var regEmail by remember { mutableStateOf("") }
     var regUsername by remember { mutableStateOf("") }
     var regPassword by remember { mutableStateOf("") }
@@ -90,19 +90,19 @@ fun AuthScreen(
     var regConfirmPasswordVisible by remember { mutableStateOf(false) }
     var regVerificationCode by remember { mutableStateOf("") }
 
-    // 验证码倒计时
+    // verify
     var codeCountdown by remember { mutableIntStateOf(0) }
     
-    // Google 登录加载状态
+    // Google loadstate
     var googleLoading by remember { mutableStateOf(false) }
     
-    // 注册成功公告弹窗
+    // registersuccessannouncementdialog
     var showAnnouncement by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 监听登录/注册结果
+    // /register
     LaunchedEffect(loginState) {
         when (loginState) {
             is FormState.Success -> {
@@ -120,7 +120,7 @@ fun AuthScreen(
     LaunchedEffect(registerState) {
         when (registerState) {
             is FormState.Success -> {
-                // 注册成功 → 显示云端功能公告
+                // registersuccess → display announcement
                 showAnnouncement = true
                 authViewModel.resetRegisterState()
             }
@@ -132,10 +132,10 @@ fun AuthScreen(
         }
     }
     
-    // 注册成功公告弹窗
+    // registersuccessannouncementdialog
     if (showAnnouncement) {
         AlertDialog(
-            onDismissRequest = { /* 不允许点击外部关闭 */ },
+            onDismissRequest = { /* close */ },
             icon = {
                 Icon(
                     Icons.Filled.Info,
@@ -181,12 +181,12 @@ fun AuthScreen(
         )
     }
 
-    // 监听验证码发送结果
+    // verify
     LaunchedEffect(sendCodeState) {
         when (sendCodeState) {
             is FormState.Success -> {
                 snackbarHostState.showSnackbar((sendCodeState as FormState.Success).message)
-                codeCountdown = 60  // 启动 60 秒倒计时
+                codeCountdown = 60  // 60
                 authViewModel.resetSendCodeState()
             }
             is FormState.Error -> {
@@ -197,7 +197,7 @@ fun AuthScreen(
         }
     }
 
-    // 倒计时器
+    // Note
     LaunchedEffect(codeCountdown) {
         if (codeCountdown > 0) {
             kotlinx.coroutines.delay(1000)
@@ -205,7 +205,7 @@ fun AuthScreen(
         }
     }
 
-    // 监听重置验证码发送结果
+    // resetverify
     LaunchedEffect(resetCodeState) {
         when (resetCodeState) {
             is FormState.Success -> {
@@ -221,7 +221,7 @@ fun AuthScreen(
         }
     }
 
-    // 重置验证码倒计时
+    // resetverify
     LaunchedEffect(resetCodeCountdown) {
         if (resetCodeCountdown > 0) {
             kotlinx.coroutines.delay(1000)
@@ -229,11 +229,11 @@ fun AuthScreen(
         }
     }
 
-    // 监听忘记密码重置结果
+    // reset
     LaunchedEffect(forgotPasswordState) {
         when (forgotPasswordState) {
             is FormState.Success -> {
-                // 密码重置成功 → authState 已变为 LoggedIn → 自动切到 ProfileScreen
+                // resetsuccess → authState LoggedIn → ProfileScreen
                 snackbarHostState.showSnackbar(Strings.authPasswordResetSuccess)
                 showForgotPassword = false
                 resetCode = ""
@@ -330,7 +330,7 @@ fun AuthScreen(
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // ─── 忘记密码流程 ───
+                // Note
                 if (showForgotPassword) {
                     ForgotPasswordForm(
                         authViewModel = authViewModel,
@@ -350,8 +350,8 @@ fun AuthScreen(
                         }
                     )
                 } else {
-                    // ─── 登录 / 注册标签 ───
-                    // Tab 切换
+                    // / registerlabel
+                    // Tab switch
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -393,7 +393,7 @@ fun AuthScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // 表单区域
+                    // area
                     AnimatedContent(
                         targetState = selectedTab,
                         transitionSpec = {
@@ -409,7 +409,7 @@ fun AuthScreen(
                     ) { tab ->
                         when (tab) {
                             0 -> {
-                                // ─── 登录表单 ───
+                                // Note
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -468,7 +468,7 @@ fun AuthScreen(
                                         )
                                     )
 
-                                    // 忘记密码链接
+                                    // Note
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End
@@ -513,7 +513,7 @@ fun AuthScreen(
                                         )
                                     }
 
-                                    // ─── Google 登录分隔线 ───
+                                    // Google
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -535,7 +535,7 @@ fun AuthScreen(
                                         )
                                     }
 
-                                    // ─── Google 登录按钮 ───
+                                    // Google button
                                     val context = LocalContext.current
                                     val coroutineScope = rememberCoroutineScope()
 
@@ -587,7 +587,7 @@ fun AuthScreen(
                                         )
                                     }
 
-                                    // 切换到注册
+                                    // switch register
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -611,7 +611,7 @@ fun AuthScreen(
                                 }
                             }
                             1 -> {
-                                // ─── 注册表单 ───
+                                // register
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -726,7 +726,7 @@ fun AuthScreen(
                                         isError = regConfirmPassword.isNotEmpty() && regPassword != regConfirmPassword
                                     )
 
-                                    // ─── 邮箱验证码 ───
+                                    // verify
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -811,7 +811,7 @@ fun AuthScreen(
                                         )
                                     }
 
-                                    // 切换到登录
+                                    // switch
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -840,7 +840,7 @@ fun AuthScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 功能说明
+                // Note
                 if (!showForgotPassword) {
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -882,7 +882,7 @@ fun AuthScreen(
         }
 }
 
-// ─── 忘记密码表单 ───
+// Note
 
 @Composable
 private fun ForgotPasswordForm(
@@ -902,7 +902,7 @@ private fun ForgotPasswordForm(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 邮箱输入
+        // input
         OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
@@ -919,7 +919,7 @@ private fun ForgotPasswordForm(
             )
         )
 
-        // 验证码输入 + 发送按钮
+        // verify input + button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -968,7 +968,7 @@ private fun ForgotPasswordForm(
             }
         }
 
-        // 新密码输入
+        // input
         OutlinedTextField(
             value = resetNewPassword,
             onValueChange = onResetNewPasswordChange,
@@ -1009,7 +1009,7 @@ private fun ForgotPasswordForm(
             Text(Strings.authResetPasswordBtn)
         }
 
-        // 返回登录
+        // back
         Row(
             modifier = Modifier
                 .fillMaxWidth()

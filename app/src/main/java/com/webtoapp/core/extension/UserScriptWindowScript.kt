@@ -1,17 +1,17 @@
 package com.webtoapp.core.extension
 
 /**
- * 油猴脚本浮窗管理器 JS 脚本
- * 
- * 在 WebView 中注入，提供 window.__WTA_SCRIPT_WINDOWS__ 全局对象，
- * 实现多窗口管理：创建、关闭、最小化、恢复、拖动、缩放、任务栏。
- * 复用 ExtensionPanelScript 的 CSS 变量风格。
+ * manager JS.
+ *
+ * in WebView in window.__WTA_SCRIPT_WINDOWS__ .
+ * multiple manage small restore .
+ * use ExtensionPanelScript CSS .
  */
 object UserScriptWindowScript {
 
     /**
-     * 获取浮窗管理器 JS 代码
-     * 应在 GM polyfill 之后、userscript 代码之前注入
+     * Get manager JS.
+     * in GM polyfill after userscript before.
      */
     fun getWindowManagerScript(): String = """
 (function() {
@@ -20,7 +20,7 @@ object UserScriptWindowScript {
 
     // ==================== CSS ====================
     const SW_STYLES = `
-        /* 浮窗容器层 */
+        /* */
         #wta-sw-layer {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -30,7 +30,7 @@ object UserScriptWindowScript {
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 单个浮窗 */
+        /* */
         .wta-sw-window {
             position: fixed;
             background: var(--wta-surface, rgba(255,255,255,0.95));
@@ -65,7 +65,7 @@ object UserScriptWindowScript {
             transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
 
-        /* 标题栏 */
+        /* */
         .wta-sw-titlebar {
             display: flex;
             align-items: center;
@@ -133,7 +133,7 @@ object UserScriptWindowScript {
             transform: scale(0.88);
         }
 
-        /* 内容区 */
+        /* */
         .wta-sw-body {
             flex: 1;
             overflow-y: auto;
@@ -144,7 +144,7 @@ object UserScriptWindowScript {
             font-size: 14px;
         }
 
-        /* 缩放手柄 */
+        /* */
         .wta-sw-resize {
             position: absolute;
             bottom: 0;
@@ -168,7 +168,7 @@ object UserScriptWindowScript {
             border-radius: 0 0 2px 0;
         }
 
-        /* 底部任务栏 */
+        /* */
         #wta-sw-taskbar {
             position: fixed;
             bottom: 0;
@@ -220,7 +220,7 @@ object UserScriptWindowScript {
             font-size: 14px;
         }
 
-        /* 菜单按钮（GM_registerMenuCommand 用）*/
+        /* (GM_registerMenuCommand )*/
         .wta-sw-menu-btn {
             display: flex;
             align-items: center;
@@ -245,7 +245,7 @@ object UserScriptWindowScript {
             transform: scale(0.98);
         }
 
-        /* 暗色模式适配 */
+        /* */
         @media (prefers-color-scheme: dark) {
             .wta-sw-window {
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
@@ -256,7 +256,6 @@ object UserScriptWindowScript {
         }
     `;
 
-    // ==================== 多语言 ====================
     var _LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                 (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     var _I18N = {

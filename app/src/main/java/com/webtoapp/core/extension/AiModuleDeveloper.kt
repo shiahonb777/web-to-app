@@ -11,17 +11,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /**
- * AI 模块开发器
- * 
- * 使用 AI 辅助生成扩展模块代码
- * 
- * 注意：推荐使用新的 ModuleAgentEngine 获得更好的开发体验
+ * AI.
+ *
+ * use AI extension.
+ *
+ * use ModuleAgentEngine.
  * @see com.webtoapp.core.extension.agent.ModuleAgentEngine
  */
 class AiModuleDeveloper(private val context: Context) {
     
     companion object {
-        // 代码块解析
         private val JSON_BLOCK_REGEX = Regex("```json\\s*([\\s\\S]*?)\\s*```")
         private val JS_BLOCK_REGEX = Regex("```(?:javascript|js)\\s*([\\s\\S]*?)\\s*```")
         private val CSS_BLOCK_REGEX = Regex("```css\\s*([\\s\\S]*?)\\s*```")
@@ -31,13 +30,13 @@ class AiModuleDeveloper(private val context: Context) {
     private val aiClient = AiApiClient(context)
     private val gson = com.webtoapp.util.GsonProvider.gson
     
-    // 新的 Agent 引擎（推荐使用）
+    // Agent.
     val agentEngine = ModuleAgentEngine(context)
     
     /**
-     * AI 生成模块代码（简化版本）
-     * 
-     * 推荐使用 agentEngine.develop() 获得完整的 Agent 开发体验
+     * AI.
+     *
+     * use agentEngine.develop() Agent.
      */
     suspend fun generateModuleCode(
         prompt: String,
@@ -45,7 +44,7 @@ class AiModuleDeveloper(private val context: Context) {
         existingCode: String? = null
     ): AiGenerationResult = withContext(Dispatchers.IO) {
         try {
-            // Get AI 配置
+            // Get AI config.
             val apiKeys = aiConfigManager.apiKeysFlow.first()
             val savedModels = aiConfigManager.savedModelsFlow.first()
             
@@ -89,7 +88,6 @@ class AiModuleDeveloper(private val context: Context) {
     }
 
     /**
-     * 构建系统提示词
      */
     private fun buildSystemPrompt(category: ModuleCategory?): String {
         val categoryHint = category?.let {
@@ -141,7 +139,7 @@ $categoryHint
     }
     
     /**
-     * 构建用户提示词
+     * use.
      */
     private fun buildUserPrompt(prompt: String, existingCode: String?): String {
         return if (existingCode.isNullOrBlank()) {
@@ -161,11 +159,11 @@ $existingCode
     }
     
     /**
-     * 解析 AI 响应
+     * AI.
      */
     private fun parseAiResponse(content: String): AiGeneratedModule {
         try {
-            // 提取 JSON 块
+            // Extract JSON.
             val jsonMatch = JSON_BLOCK_REGEX.find(content)
             
             if (jsonMatch != null) {
@@ -173,10 +171,9 @@ $existingCode
                 return gson.fromJson(jsonStr, AiGeneratedModule::class.java)
             }
             
-            // 尝试直接解析
             return gson.fromJson(content, AiGeneratedModule::class.java)
         } catch (e: Exception) {
-            // Parse失败，尝试提取代码块
+            // Parse Extract.
             val jsCode = JS_BLOCK_REGEX.find(content)?.groupValues?.get(1) ?: content
             val cssCode = CSS_BLOCK_REGEX.find(content)?.groupValues?.get(1) ?: ""
             
@@ -192,7 +189,6 @@ $existingCode
     }
     
     /**
-     * 优化现有代码
      */
     suspend fun optimizeCode(code: String): AiGenerationResult {
         return generateModuleCode(
@@ -204,7 +200,7 @@ $existingCode
 
 
 /**
- * AI 生成结果
+ * AI.
  */
 sealed class AiGenerationResult {
     data class Success(val module: AiGeneratedModule) : AiGenerationResult()
@@ -212,7 +208,7 @@ sealed class AiGenerationResult {
 }
 
 /**
- * AI 生成的模块数据
+ * AI.
  */
 data class AiGeneratedModule(
     val name: String,
@@ -223,7 +219,7 @@ data class AiGeneratedModule(
     val configItems: List<AiConfigItem>
 ) {
     /**
-     * 转换为 ExtensionModule
+     * as ExtensionModule.
      */
     fun toExtensionModule(): ExtensionModule {
         return ExtensionModule(
@@ -243,7 +239,7 @@ data class AiGeneratedModule(
 }
 
 /**
- * AI 配置项
+ * AI config.
  */
 data class AiConfigItem(
     val key: String,

@@ -75,8 +75,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
- * 统一市场页面 — 应用商店 + 模块市场
- * 使用顶部 Tab 切换「应用」和「模块」两个子页面
+ * unifiedmarket- appstore + modulemarket
+ * Top tab switch: "app" and "module"
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,14 +90,14 @@ fun AppStoreScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    // ── Pager 状态 ──
+    // Pager state
     val pagerState = rememberPagerState(pageCount = { 2 })
 
-    // ── 搜索状态 ──
+    // state
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // ── 右上角菜单 ──
+    // Note
     var showMenu by remember { mutableStateOf(false) }
     var showDownloadManager by remember { mutableStateOf(false) }
     var showMyApps by remember { mutableStateOf(false) }
@@ -106,7 +106,7 @@ fun AppStoreScreen(
     var showMyModules by remember { mutableStateOf(false) }
     var showPublishModule by remember { mutableStateOf(false) }
 
-    // 活跃下载数 badge
+    // download badge
     val emptyTasks = remember { mutableStateOf<Map<Int, AppDownloadManager.DownloadTask>>(emptyMap()) }
     val activeTasks by (downloadManager?.activeTasks?.collectAsState() ?: emptyTasks)
     val activeCount = activeTasks.count {
@@ -116,7 +116,7 @@ fun AppStoreScreen(
     val emptyDownloaded = remember { mutableStateOf<List<AppDownloadManager.DownloadedApp>>(emptyList()) }
     val downloadedAppsList by (downloadManager?.downloadedApps?.collectAsState() ?: emptyDownloaded)
     val downloadedCount = downloadedAppsList.size
-    // 当前 Tab 名称
+    // current Tab
     val tabTitles = listOf(Strings.marketTabApps, Strings.marketTabModules)
 
     Scaffold(
@@ -163,7 +163,7 @@ fun AppStoreScreen(
             } else {
                 TopAppBar(
                     title = {
-                        // 内嵌 pill-style Tab 切换器 — 不占额外空间
+                        // pill- style Tab switch
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f)
@@ -354,7 +354,7 @@ fun AppStoreScreen(
 
 
 // ════════════════════════════════════════════════
-// Tab 1: 应用市场
+// Tab 1: appmarket
 // ════════════════════════════════════════════════
 
 @Composable
@@ -433,7 +433,7 @@ private fun AppsTabContent(
 
     LaunchedEffect(Unit) { loadApps() }
     LaunchedEffect(selectedCategory, selectedSort, sortOrder) { loadApps() }
-    // 当搜索完成（不再 active 且 query 变化过）时重新加载
+    // when( active query) load
     LaunchedEffect(searchQuery, isSearchActive) {
         if (!isSearchActive) loadApps()
     }
@@ -449,7 +449,7 @@ private fun AppsTabContent(
         contentPadding = PaddingValues(bottom = 80.dp),
         horizontalArrangement = if (isLandscape) Arrangement.spacedBy(8.dp) else Arrangement.spacedBy(0.dp)
     ) {
-        // ── 分类筛选 (full-width) ──
+        // filter( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -488,7 +488,7 @@ private fun AppsTabContent(
             }
         }
 
-        // ── 排序 (full-width) ──
+        // ( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
                 modifier = Modifier
@@ -615,7 +615,7 @@ private fun AppsTabContent(
             }
         }
 
-        // ── 应用列表 — cards auto-fill grid columns ──
+        // applist- cards auto- fill grid columns
         items(apps, key = { it.id }) { app ->
             AppListCard(
                 app = app,
@@ -677,7 +677,7 @@ private fun AppsTabContent(
         }
     }
 
-    // ── 应用详情底部弹窗 ──
+    // app bottomdialog
     selectedApp?.let { app ->
         AppDetailSheet(
             app = app,
@@ -690,7 +690,7 @@ private fun AppsTabContent(
 
 
 // ════════════════════════════════════════════════
-// Tab 2: 模块市场
+// Tab 2: modulemarket
 // ════════════════════════════════════════════════
 
 @Composable
@@ -706,7 +706,7 @@ private fun ModulesTabContent(
     val loading by cloudViewModel.storeLoading.collectAsStateWithLifecycle()
     val total by cloudViewModel.storeTotal.collectAsStateWithLifecycle()
 
-    // 跟踪是否已完成首次加载——避免空列表瞬间闪过
+    // load- - list
     var initialLoaded by remember { mutableStateOf(false) }
     var selectedStoreModule by remember { mutableStateOf<StoreModuleInfo?>(null) }
 
@@ -741,21 +741,21 @@ private fun ModulesTabContent(
         )
     }
 
-    // 首次进入触发加载
+    // load
     LaunchedEffect(Unit) { loadModules() }
     LaunchedEffect(selectedCategory, selectedSort, sortOrder) { loadModules() }
     LaunchedEffect(searchQuery, isSearchActive) {
         if (!isSearchActive) loadModules()
     }
 
-    // 当 loading 变为 false 且 modules 加载过后，标记首次加载完成
+    // when loading false modules load, load
     LaunchedEffect(loading) {
         if (!loading && !initialLoaded) {
             initialLoaded = true
         }
     }
 
-    // ── 首次加载：全屏 loading（覆盖 loading 尚未被 ViewModel 设为 true 的那一帧）──
+    // load: loading( loading ViewModel true)
     if (!initialLoaded) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -791,7 +791,7 @@ private fun ModulesTabContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = if (isLandscape) Arrangement.spacedBy(12.dp) else Arrangement.spacedBy(0.dp)
     ) {
-        // ── 分类过滤 (full-width) ──
+        // ( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
@@ -813,7 +813,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 排序 + 统计 (full-width) ──
+        // +( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -854,7 +854,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 切换分类/排序后的加载中 (full-width) ──
+        // switch / load( full- width)
         if (loading && initialLoaded) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(
@@ -866,7 +866,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 模块列表 — cards auto-fill grid columns ──
+        // modulelist- cards auto- fill grid columns
         if (!loading) {
             items(modules, key = { it.id }) { module ->
                 ModuleStoreCard(
@@ -878,7 +878,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 空状态 (full-width) ──
+        // state( full- width)
         if (!loading && modules.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Column(

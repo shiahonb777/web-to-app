@@ -1,10 +1,10 @@
 /**
- * 反调试和环境检测
- * 
- * 注意事项：
- * 1. 模拟器检测默认关闭，因为很多正常用户使用模拟器
- * 2. Root 检测仅作为参考，不应阻止用户使用
- * 3. 调试器检测主要用于保护敏感操作
+ * Anti-debug and environment checks
+ *
+ * Notes:
+ * 1. Emulator detection stays permissive because many legitimate users run in emulators.
+ * 2. Root detection is advisory and should not block usage.
+ * 3. Debug detection focuses on protecting sensitive operations.
  */
 
 #include "crypto_engine.h"
@@ -28,17 +28,17 @@
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
-// 全局标志：是否启用严格模式（默认关闭，避免误判正常用户）
+// Global flag toggles strict mode (off by default to avoid false positives)
 static std::atomic<bool> g_strictMode(false);
 
-// 设置严格模式
+// Set strict mode
 void AntiDebug::setStrictMode(bool enabled) {
     g_strictMode.store(enabled);
 }
 
-// 检测调试器
+// Detect debugger
 bool AntiDebug::isDebuggerAttached() {
-    // 方法1: 检查 TracerPid
+    // Method 1: check TracerPid
     std::ifstream status("/proc/self/status");
     if (status.is_open()) {
         std::string line;
@@ -55,14 +55,14 @@ bool AntiDebug::isDebuggerAttached() {
         }
     }
     
-    // 注意：移除 ptrace(PTRACE_TRACEME) 调用
-    // 该调用在某些模拟器（如 MuMu）上可能导致崩溃或异常行为
-    // TracerPid 检查已经足够检测大多数调试场景
+    // Note: ptrace(PTRACE_TRACEME) calls were removed
+    // Such calls can crash or misbehave inside some emulators (e.g., MuMu)
+    // TracerPid detection already covers most debugging cases
     
     return false;
 }
 
-// 检测 tracer
+// Detect tracer
 bool AntiDebug::isTracerAttached() {
     char path[256];
     snprintf(path, sizeof(path), "/proc/%d/status", getpid());
@@ -82,9 +82,9 @@ bool AntiDebug::isTracerAttached() {
     return false;
 }
 
-// 检测 Frida（增强版）
+// Frida detection (extended)
 bool AntiDebug::detectFrida() {
-    // 方法1: 检查多个 Frida 常用端口
+    // Method 1: probe multiple Frida ports
     const int frida_ports[] = {27042, 27043, 27044, 27045, 0};
     
     for (int i = 0; frida_ports[i] != 0; i++) {
@@ -96,7 +96,7 @@ bool AntiDebug::detectFrida() {
         addr.sin_port = htons(frida_ports[i]);
         inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
         
-        // 设置非阻塞和超时
+        // Set non-blocking mode and timeouts
         int flags = fcntl(sock, F_GETFL, 0);
         fcntl(sock, F_SETFL, flags | O_NONBLOCK);
         
@@ -115,12 +115,12 @@ bool AntiDebug::detectFrida() {
         }
     }
     
-    // 方法2: 检查 /proc/self/maps 中的 frida 相关库
+    // Method 2: scan /proc/self/maps for Frida libraries
     std::ifstream maps("/proc/self/maps");
     if (maps.is_open()) {
         std::string line;
         while (std::getline(maps, line)) {
-            // 检查更多 Frida 相关特征
+            // Search for additional Frida fingerprints
             if (line.find("frida") != std::string::npos ||
                 line.find("gadget") != std::string::npos ||
                 line.find("agent") != std::string::npos && line.find(".so") != std::string::npos) {
@@ -130,7 +130,7 @@ bool AntiDebug::detectFrida() {
         }
     }
     
-    // 方法3: 检查 frida-server 进程
+    // Method 3: look for frida-server processes
     DIR* dir = opendir("/proc");
     if (dir) {
         struct dirent* entry;
@@ -155,7 +155,7 @@ bool AntiDebug::detectFrida() {
         closedir(dir);
     }
     
-    // 方法4: 检查 /data/local/tmp 下的 frida 文件
+    // Method 4: check /data/local/tmp for Frida files
     const char* frida_files[] = {
         "/data/local/tmp/frida-server",
         "/data/local/tmp/re.frida.server",
@@ -174,9 +174,9 @@ bool AntiDebug::detectFrida() {
     return false;
 }
 
-// 检测 Xposed（包括 LSPosed、EdXposed 等新版本）
+// Detect Xposed (including LSPosed/EdXposed variants)
 bool AntiDebug::detectXposed() {
-    // 方法1: 检查传统 Xposed 路径
+    // Method 1: check traditional Xposed paths
     const char* xposed_paths[] = {
         "/system/framework/XposedBridge.jar",
         "/system/bin/app_process.orig",
@@ -195,7 +195,7 @@ bool AntiDebug::detectXposed() {
         }
     }
     
-    // 方法2: 检查 LSPosed / EdXposed 路径
+    // Method 2: check LSPosed/EdXposed paths
     const char* lsposed_paths[] = {
         "/data/adb/lspd",
         "/data/adb/modules/zygisk_lsposed",
@@ -215,7 +215,7 @@ bool AntiDebug::detectXposed() {
         }
     }
     
-    // 方法3: 检查 /proc/self/maps
+    // Method 3: scan /proc/self/maps
     std::ifstream maps("/proc/self/maps");
     if (maps.is_open()) {
         std::string line;
@@ -230,23 +230,23 @@ bool AntiDebug::detectXposed() {
         }
     }
     
-    // 方法4: 检查堆栈中的 Xposed 相关类（通过异常检测）
-    // 这需要在 Java 层实现，这里仅做文件系统检查
+    // Method 4: look for Xposed classes via stack traces (requires Java-side hooks)
+    // Java-side detection is required, so only filesystem checks live here
     
     return false;
 }
 
-// 检测模拟器（改进版：区分恶意模拟器和正常用户模拟器）
+// Detect emulator (distinguish malicious vs legitimate emulator usage)
 bool AntiDebug::isRunningInEmulator() {
-    // 如果不是严格模式，跳过模拟器检测（避免误判正常用户）
+    // Skip emulator checks when not in strict mode to avoid false positives
     if (!g_strictMode.load()) {
         LOGD("模拟器检测已跳过（非严格模式）");
         return false;
     }
     
-    int score = 0;  // 使用评分机制，避免单一特征误判
+    int score = 0;  // Use scoring to avoid false positives from a single clue
     
-    // 检查常见模拟器特征文件（每个 +1 分）
+    // Check known emulator artifact files (+1 per match)
     const char* emulator_files[] = {
         "/dev/socket/qemud",
         "/dev/qemu_pipe",
@@ -264,7 +264,7 @@ bool AntiDebug::isRunningInEmulator() {
         }
     }
     
-    // 检查 /proc/cpuinfo（+2 分，因为这是较强的特征）
+    // Inspect /proc/cpuinfo (+2 because it is a strong indicator)
     std::ifstream cpuinfo("/proc/cpuinfo");
     if (cpuinfo.is_open()) {
         std::string line;
@@ -277,7 +277,7 @@ bool AntiDebug::isRunningInEmulator() {
         }
     }
     
-    // 检查系统属性特征（通过 /system/build.prop）
+    // Inspect system properties via /system/build.prop
     std::ifstream buildprop("/system/build.prop");
     if (buildprop.is_open()) {
         std::string line;
@@ -291,7 +291,7 @@ bool AntiDebug::isRunningInEmulator() {
         }
     }
     
-    // 评分阈值：需要多个特征同时满足才判定为模拟器
+    // Threshold requires multiple indicators before classifying as emulator
     bool isEmulator = score >= 3;
     if (isEmulator) {
         LOGW("Emulator detected with score: %d", score);
@@ -300,7 +300,7 @@ bool AntiDebug::isRunningInEmulator() {
     return isEmulator;
 }
 
-// 检测 Root（改进版：使用评分机制）
+// Detect root (enhanced scoring)
 bool AntiDebug::isRooted() {
     int score = 0;
     
@@ -325,7 +325,7 @@ bool AntiDebug::isRooted() {
         }
     }
     
-    // 检查 Magisk 相关路径
+    // Check Magisk-related paths
     const char* magisk_paths[] = {
         "/magisk/.core",
         "/sbin/.magisk",
@@ -341,15 +341,15 @@ bool AntiDebug::isRooted() {
         }
     }
     
-    // 检查 su 命令是否可执行
+    // Check if su binary is executable
     if (access("/system/xbin/su", X_OK) == 0 ||
         access("/system/bin/su", X_OK) == 0 ||
         access("/sbin/su", X_OK) == 0) {
         score += 2;
     }
     
-    // 检查 Magisk 隐藏（MagiskHide / Shamiko）
-    // 通过检查 /proc/self/mountinfo 中的挂载点
+    // Check Magisk hiding (MagiskHide / Shamiko)
+    // Inspect mount points in /proc/self/mountinfo
     std::ifstream mountinfo("/proc/self/mountinfo");
     if (mountinfo.is_open()) {
         std::string line;
@@ -370,7 +370,7 @@ bool AntiDebug::isRooted() {
     return rooted;
 }
 
-// 综合安全检测（返回威胁等级 0-100）
+// Comprehensive security assessment (threat level 0-100)
 int AntiDebug::getSecurityThreatLevel() {
     int threatLevel = 0;
     
@@ -387,10 +387,10 @@ int AntiDebug::getSecurityThreatLevel() {
     }
     
     if (isRooted()) {
-        threatLevel += 5;  // Root 本身不是很大的威胁
+        threatLevel += 5;  // Root itself is not a major threat
     }
     
-    // 模拟器在非严格模式下不计入威胁
+    // Emulators are excluded from the threat level when not in strict mode
     if (g_strictMode.load() && isRunningInEmulator()) {
         threatLevel += 10;
     }
@@ -398,8 +398,9 @@ int AntiDebug::getSecurityThreatLevel() {
     return threatLevel > 100 ? 100 : threatLevel;
 }
 
-// 是否应该阻止敏感操作
+// Determine whether to block sensitive operations
 bool AntiDebug::shouldBlockSensitiveOperation() {
-    // 只有在检测到调试器或 Frida 时才阻止
+    // Block only when a debugger or Frida is detected
     return isDebuggerAttached() || detectFrida();
 }
+

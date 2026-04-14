@@ -76,7 +76,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
 // ════════════════════════════════════════════════
-// 下载管理 Bottom Sheet (统一：活跃下载 + 已下载应用)
+// downloadmanagement Bottom Sheet( unified: download + downloadapp)
 // ════════════════════════════════════════════════
 
 @Composable
@@ -416,5 +416,5 @@ internal fun DownloadedAppCard(
 
 
 // ════════════════════════════════════════════════
-// 我的发布 — 共享组件
+// Note
 // ════════════════════════════════════════════════

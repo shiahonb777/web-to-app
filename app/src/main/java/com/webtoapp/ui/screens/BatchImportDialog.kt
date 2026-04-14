@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 
 /**
- * 批量导入对话框
+ * importdialog
  */
 @Composable
 fun BatchImportDialog(
@@ -41,7 +41,7 @@ fun BatchImportDialog(
     var importResult by remember { mutableStateOf<Int?>(null) }
     var selectedTab by remember { mutableIntStateOf(0) }
     
-    // 书签文件选择器
+    // fileselect
     val bookmarkLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -62,7 +62,7 @@ fun BatchImportDialog(
                     .heightIn(max = 500.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Tab 切换
+                // Tab switch
                 TabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
@@ -80,7 +80,7 @@ fun BatchImportDialog(
                 
                 when (selectedTab) {
                     0 -> {
-                        // 文本输入
+                        // textinput
                         OutlinedTextField(
                             value = inputText,
                             onValueChange = {
@@ -95,7 +95,7 @@ fun BatchImportDialog(
                         )
                     }
                     1 -> {
-                        // 书签文件导入
+                        // fileimport
                         PremiumOutlinedButton(
                             onClick = { bookmarkLauncher.launch("text/html") },
                             modifier = Modifier.fillMaxWidth()
@@ -107,7 +107,7 @@ fun BatchImportDialog(
                     }
                 }
                 
-                // 解析结果预览
+                // preview
                 if (parsedEntries.isNotEmpty()) {
                     HorizontalDivider()
                     Text(
@@ -161,7 +161,7 @@ fun BatchImportDialog(
                     }
                 }
                 
-                // 导入结果
+                // import
                 if (importResult != null) {
                     Surface(
                         shape = MaterialTheme.shapes.small,

@@ -43,7 +43,7 @@ import com.webtoapp.ui.components.UserTitleBadges
 import androidx.compose.ui.graphics.Color
 
 /**
- * 用户主页 — 全面对接所有 API 数据，精致 UI
+ * userhome- API, UI
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

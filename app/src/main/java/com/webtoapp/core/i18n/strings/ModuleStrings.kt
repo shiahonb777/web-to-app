@@ -245,7 +245,7 @@ internal object ModuleStrings {
         AppLanguage.ENGLISH -> "Minimizable"
         AppLanguage.ARABIC -> "قابل للتصغير"
     }
-    // ==================== 扩展模块页面 ====================
+    // ==================== Extension Module Page ====================
     val searchModules: String get() = when (lang) {
         AppLanguage.CHINESE -> "搜索模块..."
         AppLanguage.ENGLISH -> "Search modules..."
@@ -431,7 +431,7 @@ internal object ModuleStrings {
         AppLanguage.ENGLISH -> "Manual Create"
         AppLanguage.ARABIC -> "إنشاء يدوي"
     }
-    // ==================== 模块编辑器 ====================
+    // ==================== Module Editor ====================
     val pleaseEnterModuleName: String get() = when (lang) {
         AppLanguage.CHINESE -> "请输入模块名称"
         AppLanguage.ENGLISH -> "Please enter module name"
@@ -809,7 +809,7 @@ internal object ModuleStrings {
         AppLanguage.ENGLISH -> "Default Value"
         AppLanguage.ARABIC -> "القيمة الافتراضية"
     }
-    // ==================== 模块分类 ====================
+    // ==================== Module Categories ====================
     val catContentFilter: String get() = when (lang) {
         AppLanguage.CHINESE -> "内容过滤"
         AppLanguage.ENGLISH -> "Content Filter"
@@ -1109,7 +1109,7 @@ internal object ModuleStrings {
         AppLanguage.ENGLISH -> "Ad Block"
         AppLanguage.ARABIC -> "حظر الإعلانات"
     }
-    // ==================== 模块模板 ====================
+    // ==================== Module Templates ====================
     val tplElementHider: String get() = when (lang) {
         AppLanguage.CHINESE -> "元素隐藏器"
         AppLanguage.ENGLISH -> "Element Hider"
@@ -1409,7 +1409,7 @@ internal object ModuleStrings {
         AppLanguage.ENGLISH -> "Only collect links containing keyword"
         AppLanguage.ARABIC -> "جمع الروابط التي تحتوي على الكلمة المفتاحية فقط"
     }
-    // ==================== 模块权限 ====================
+    // ==================== Module Permissions ====================
     val permDomAccess: String get() = when (lang) {
         AppLanguage.CHINESE -> "DOM 访问"
         AppLanguage.ENGLISH -> "DOM Access"
@@ -1781,7 +1781,7 @@ internal object ModuleStrings {
         AppLanguage.ENGLISH -> "Control page navigation"
         AppLanguage.ARABIC -> "التحكم في تنقل الصفحة"
     }
-    // ==================== 配置项类型 ====================
+    // ==================== Config Item Types ====================
     val configTypeText: String get() = when (lang) {
         AppLanguage.CHINESE -> "文本"
         AppLanguage.ENGLISH -> "Text"

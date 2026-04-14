@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
 
 /**
- * 关于作者页面 - 现代简约风格
+ * Note
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,22 +67,22 @@ fun AboutScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    // 当前版本信息
+    // currentversion
     val (currentVersionName, currentVersionCode) = remember {
         AppUpdateChecker.getCurrentVersionInfo(context)
     }
     
-    // Check更新状态
+    // Checkupdatestate
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<AppUpdateChecker.UpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var checkError by remember { mutableStateOf<String?>(null) }
     
-    // Download状态
+    // Downloadstate
     var isDownloading by remember { mutableStateOf(false) }
     var downloadId by remember { mutableLongStateOf(-1L) }
     
-    // Listen下载完成
+    // Listendownload
     DisposableEffect(downloadId) {
         if (downloadId == -1L) return@DisposableEffect onDispose {}
         
@@ -109,12 +109,12 @@ fun AboutScreen(
         }
     }
     
-    // Theme色 - 使用当前主题的渐变色
+    // Theme- current gradient
     val theme = LocalAppTheme.current
     val primaryGradient = theme.gradients.primary.ifEmpty { listOf(Color(0xFF667eea), Color(0xFF764ba2)) }
     val accentColor = primaryGradient.first()
     
-    // 动画
+    // animation
     val infiniteTransition = rememberInfiniteTransition(label = "about")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -151,7 +151,7 @@ fun AboutScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 背景装饰（减小高度）
+            // Note
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -171,7 +171,7 @@ fun AboutScreen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // ========== 头像与作者信息区 ==========
+                // ========== with ==========
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -181,7 +181,7 @@ fun AboutScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // 头像（带发光效果）
+                        // Note
                         Box(
                             modifier = Modifier
                                 .drawBehind {
@@ -213,7 +213,7 @@ fun AboutScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // 作者名
+                        // Note
                         Text(
                             text = "Shiaho",
                             style = MaterialTheme.typography.headlineMedium,
@@ -222,7 +222,7 @@ fun AboutScreen(
                         
                         Spacer(modifier = Modifier.height(4.dp))
                         
-                        // 标语
+                        // Note
                         Text(
                             text = Strings.authorTagline,
                             style = MaterialTheme.typography.bodyMedium,
@@ -231,7 +231,7 @@ fun AboutScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // App信息
+                        // App
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -251,7 +251,7 @@ fun AboutScreen(
                                 shape = RoundedCornerShape(20.dp),
                                 color = MaterialTheme.colorScheme.secondaryContainer,
                                 modifier = Modifier.clickable {
-                                    // 点击版本号检查更新
+                                    // version checkupdate
                                     scope.launch {
                                         isCheckingUpdate = true
                                         checkError = null
@@ -288,7 +288,7 @@ fun AboutScreen(
                     }
                 }
                 
-                // ========== 检查更新按钮 ==========
+                // ========== checkupdatebutton ==========
                 EnhancedElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -366,7 +366,7 @@ fun AboutScreen(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // ========== 自动检查更新开关 ==========
+                // ========== checkupdate ==========
                 var autoCheckEnabled by remember {
                     mutableStateOf(AppUpdateChecker.isAutoCheckEnabled(context))
                 }
@@ -428,19 +428,19 @@ fun AboutScreen(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // ========== 数据备份卡片 ==========
+                // ========== card ==========
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                     com.webtoapp.ui.components.DataBackupCard(repository = webAppRepository)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // ========== 联系卡片区 ==========
+                // ========== card ==========
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 简介卡片
+                    // card
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp)
@@ -478,7 +478,7 @@ fun AboutScreen(
                         }
                     }
                     
-                    // ========== 社交媒体快捷入口 ==========
+                    // Note
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp)
@@ -509,7 +509,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 社交媒体网格 - 第一行
+                            // Note
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -539,7 +539,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // 社交媒体网格 - 第二行
+                            // Note
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -569,7 +569,7 @@ fun AboutScreen(
                         }
                     }
                     
-                    // ========== 交流群卡片 ==========
+                    // ========== card ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp)
@@ -608,7 +608,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // QQ群
+                            // QQ
                             ContactCardCompact(
                                 context = context,
                                 iconText = "Q",
@@ -623,7 +623,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(10.dp))
                             
-                            // TG群
+                            // TG
                             ContactCardCompact(
                                 context = context,
                                 iconText = "TG",
@@ -638,7 +638,7 @@ fun AboutScreen(
                         }
                     }
                     
-                    // ========== 联系作者卡片 ==========
+                    // ========== card ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp)
@@ -677,7 +677,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 作者QQ
+                            // QQ
                             ContactCardCompact(
                                 context = context,
                                 iconText = "Q",
@@ -692,7 +692,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(10.dp))
                             
-                            // QQ邮箱
+                            // QQ
                             ContactCardCompact(
                                 context = context,
                                 iconText = "✉",
@@ -722,7 +722,7 @@ fun AboutScreen(
                         }
                     }
                     
-                    // ========== 开源仓库卡片 ==========
+                    // ========== card ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp)
@@ -776,7 +776,7 @@ fun AboutScreen(
                         }
                     }
                     
-                    // ========== 更新日志 ==========
+                    // ========== update ==========
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp)
@@ -1052,7 +1052,7 @@ fun AboutScreen(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // ========== 法律免责声明 ==========
+                    // Note
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp)
@@ -1083,7 +1083,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // 重要提示框
+                            // hint
                             Surface(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
                                 shape = RoundedCornerShape(8.dp)
@@ -1110,14 +1110,14 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 1. 软件性质声明
+                            // 1.
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle1,
                                 content = "本软件为开源技术研究与教育演示工具，所有功能均基于Android系统公开API实现，" +
                                         "旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。"
                             )
                             
-                            // 2. 用户责任
+                            // 2. user
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle2,
                                 content = "用户应确保在合法、正当的场景下使用本软件，包括但不限于：\n" +
@@ -1128,7 +1128,7 @@ fun AboutScreen(
                                         "严禁将本软件用于任何侵犯他人人身自由、隐私权、财产权等合法权益的行为。"
                             )
                             
-                            // 3. 特殊功能声明
+                            // 3.
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle3,
                                 content = "本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于技术演示性质：\n\n" +
@@ -1138,7 +1138,7 @@ fun AboutScreen(
                                         "4. 【风险自担原则】启用高级功能可能造成设备发热、电池消耗加快等情况，用户需自行承担相关风险"
                             )
                             
-                            // 4. 免责条款
+                            // 4.
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle4,
                                 content = "1. 本软件按「现状」提供，开发者不对软件的适用性、可靠性、安全性作任何明示或暗示的保证\n\n" +
@@ -1147,7 +1147,7 @@ fun AboutScreen(
                                         "4. 任何第三方利用本软件源代码进行的修改、分发行为，其法律责任由该第三方自行承担"
                             )
                             
-                            // 5. 合规使用
+                            // 5.
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle5,
                                 content = "To ensure lawful and compliant use, it is recommended that users:\n" +
@@ -1157,7 +1157,7 @@ fun AboutScreen(
                                         "• Regularly review and comply with the latest applicable local laws and regulations"
                             )
                             
-                            // 6. 版权与开源
+                            // 6. with
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle6,
                                 content = "This software is released under The Unlicense and dedicated to the public domain. Anyone may use, modify, distribute, or sell it for any purpose." +
@@ -1166,7 +1166,7 @@ fun AboutScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 最终声明
+                            // Note
                             Surface(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                                 shape = RoundedCornerShape(8.dp)
@@ -1204,10 +1204,10 @@ fun AboutScreen(
                         }
                     }
                     
-                    // 底部留白
+                    // bottom
                     Spacer(modifier = Modifier.height(32.dp))
                     
-                    // 底部信息
+                    // bottom
                     Text(
                         text = Strings.madeWithLove,
                         style = MaterialTheme.typography.bodySmall,
@@ -1222,7 +1222,7 @@ fun AboutScreen(
         }
     }
     
-    // ========== 更新对话框 ==========
+    // ========== updatedialog ==========
     if (showUpdateDialog && updateInfo != null) {
         UpdateDialog(
             updateInfo = updateInfo!!,
@@ -1254,7 +1254,7 @@ fun AboutScreen(
 }
 
 /**
- * 更新对话框
+ * updatedialog
  */
 @Composable
 private fun UpdateDialog(
@@ -1287,7 +1287,7 @@ private fun UpdateDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (updateInfo.hasUpdate) {
-                    // Version对比
+                    // Version
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -1325,7 +1325,7 @@ private fun UpdateDialog(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Update说明
+                    // Update
                     if (updateInfo.releaseNotes.isNotEmpty()) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -1392,7 +1392,7 @@ private fun UpdateDialog(
 }
 
 /**
- * 联系方式项
+ * Note
  */
 @Composable
 private fun ContactItem(
@@ -1468,7 +1468,7 @@ private fun ContactItem(
 }
 
 /**
- * 带链接的联系方式项
+ * Note
  */
 @Composable
 private fun ContactItemWithLink(
@@ -1484,7 +1484,7 @@ private fun ContactItemWithLink(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                // 打开链接
+                // open
                 try {
                     context.openUrl(link)
                 } catch (e: Exception) {
@@ -1543,7 +1543,7 @@ private fun ContactItemWithLink(
             }
             
             Row {
-                // Copy按钮
+                // Copybutton
                 FilledTonalIconButton(onClick = onCopy) {
                     Icon(
                         Icons.Default.ContentCopy,
@@ -1552,7 +1552,7 @@ private fun ContactItemWithLink(
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                // 打开链接按钮
+                // open button
                 FilledTonalIconButton(
                     onClick = {
                         try {
@@ -1574,7 +1574,7 @@ private fun ContactItemWithLink(
 }
 
 /**
- * 版本区块
+ * version
  */
 @Composable
 private fun VersionSection(
@@ -1613,7 +1613,7 @@ private fun VersionSection(
 }
 
 /**
- * 更新项 — 接受 emoji 字符串，内部映射为 Material Icon
+ * update- emoji, Material Icon
  */
 @Composable
 private fun ChangeItem(emoji: String, text: String) {
@@ -1661,7 +1661,7 @@ private fun ChangeItem(emoji: String, text: String) {
 }
 
 /**
- * 复制到剪贴板
+ * Note
  */
 private fun copyToClipboard(context: Context, label: String, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -1671,7 +1671,7 @@ private fun copyToClipboard(context: Context, label: String, text: String) {
 }
 
 /**
- * 社交媒体按钮 - 带品牌色彩的卡片式按钮（文字图标版本）
+ * button- card button( iconversion)
  */
 @Composable
 private fun SocialMediaButton(
@@ -1740,7 +1740,7 @@ private fun SocialMediaButton(
 }
 
 /**
- * 社交媒体按钮 - 带品牌色彩的卡片式按钮（AI图标版本）
+ * button- card button( AIiconversion)
  */
 @Composable
 private fun SocialMediaButton(
@@ -1809,7 +1809,7 @@ private fun SocialMediaButton(
 }
 
 /**
- * 紧凑型联系方式卡片 - 带自定义图标
+ * card- icon
  */
 @Composable
 private fun ContactCardCompact(
@@ -1847,7 +1847,7 @@ private fun ContactCardCompact(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(weight = 1f, fill = true)
             ) {
-                // Custom图标
+                // Customicon
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -1890,7 +1890,7 @@ private fun ContactCardCompact(
             }
             
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                // Copy按钮
+                // Copybutton
                 FilledTonalIconButton(
                     onClick = { copyToClipboard(context, label, copyValue) },
                     modifier = Modifier.size(36.dp)
@@ -1901,7 +1901,7 @@ private fun ContactCardCompact(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                // 打开链接按钮
+                // open button
                 FilledTonalIconButton(
                     onClick = {
                         try {
@@ -1924,7 +1924,7 @@ private fun ContactCardCompact(
 }
 
 /**
- * 法律声明段落组件
+ * Note
  */
 @Composable
 private fun LegalSection(

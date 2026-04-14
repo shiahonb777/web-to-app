@@ -8,22 +8,20 @@ import com.webtoapp.util.GsonProvider
 import com.webtoapp.core.shell.BgmShellItem
 import com.webtoapp.core.shell.LrcShellTheme
 import java.io.*
-import java.util.zip.*
-
-/**
- * APK 模板管理器
- * 管理预编译的 WebView Shell APK 模板
+import java.util.zip.*/**
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class ApkTemplate(private val context: Context) {
 
     companion object {
-        // 模板 APK 在 assets 中的路径
+        // Note: brief English comment.
         private const val TEMPLATE_APK = "template/webview_shell.apk"
         
-        // Configure文件路径（在 APK 内）
+        // Note: brief English comment.
         const val CONFIG_PATH = "assets/app_config.json"
         
-        // Icon资源路径
+        // Note: brief English comment.
         val ICON_PATHS = listOf(
             "res/mipmap-mdpi-v4/ic_launcher.png" to 48,
             "res/mipmap-hdpi-v4/ic_launcher.png" to 72,
@@ -32,7 +30,7 @@ class ApkTemplate(private val context: Context) {
             "res/mipmap-xxxhdpi-v4/ic_launcher.png" to 192
         )
         
-        // 圆形图标资源路径
+        // Note: brief English comment.
         val ROUND_ICON_PATHS = listOf(
             "res/mipmap-mdpi-v4/ic_launcher_round.png" to 48,
             "res/mipmap-hdpi-v4/ic_launcher_round.png" to 72,
@@ -44,7 +42,7 @@ class ApkTemplate(private val context: Context) {
 
     private val gson = GsonProvider.gson
 
-    // 模板缓存目录
+    // Note: brief English comment.
     private val templateDir = File(context.cacheDir, "apk_templates")
 
     init {
@@ -52,18 +50,18 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 获取模板 APK 文件
-     * 如果不存在则从 assets 解压
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun getTemplateApk(): File? {
         val templateFile = File(templateDir, "webview_shell.apk")
         
-        // Check模板是否已存在
+        // Note: brief English comment.
         if (templateFile.exists()) {
             return templateFile
         }
 
-        // 从 assets 复制（如果存在）
+        // Note: brief English comment.
         return try {
             context.assets.open(TEMPLATE_APK).use { input ->
                 FileOutputStream(templateFile).use { output ->
@@ -72,13 +70,13 @@ class ApkTemplate(private val context: Context) {
             }
             templateFile
         } catch (e: Exception) {
-            // 模板不存在，需要动态创建
+            // Note: brief English comment.
             null
         }
     }
 
     /**
-     * 检查是否有可用的模板
+     * Note: brief English comment.
      */
     fun hasTemplate(): Boolean {
         return try {
@@ -90,7 +88,7 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 创建配置 JSON
+     * Note: brief English comment.
      */
     fun createConfigJson(config: ApkConfig): String {
         return """
@@ -351,8 +349,8 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 转义 JSON 字符串
-     * 完整处理所有JSON特殊字符，确保JavaScript代码可以正确嵌入
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun escapeJson(str: String): String {
         val sb = StringBuilder()
@@ -366,7 +364,7 @@ class ApkTemplate(private val context: Context) {
                 '\b' -> sb.append("\\b")
                 '\u000C' -> sb.append("\\f") // form feed
                 else -> {
-                    // 控制字符使用Unicode转义
+                    // Note: brief English comment.
                     if (char.code < 32) {
                         sb.append("\\u${char.code.toString(16).padStart(4, '0')}")
                     } else {
@@ -379,7 +377,7 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 将 Bitmap 缩放到指定尺寸并压缩为 PNG
+     * Note: brief English comment.
      */
     fun scaleBitmapToPng(bitmap: Bitmap, size: Int): ByteArray {
         val scaled = Bitmap.createScaledBitmap(bitmap, size, size, true)
@@ -392,7 +390,7 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 从文件加载 Bitmap
+     * Note: brief English comment.
      */
     fun loadBitmap(iconPath: String): Bitmap? {
         return try {
@@ -411,29 +409,29 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 创建 Adaptive Icon 前景图
-     * 遵循 Android Adaptive Icon 规范：
-     * - 前景层总尺寸 108dp
-     * - 安全区域（完整显示）为中间 72dp（66.67%）
-     * - 外围 18dp 作为 safe zone 边距
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      *
-     * @param bitmap 用户上传的图标
-     * @param size 输出尺寸（像素）
-     * @return PNG 格式字节数组
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun createAdaptiveForegroundIcon(bitmap: Bitmap, size: Int): ByteArray {
-        // Create透明画布
+        // Note: brief English comment.
         val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = android.graphics.Canvas(output)
         
-        // 计算安全区域尺寸（72/108 ≈ 66.67%）
+        // Note: brief English comment.
         val safeZoneSize = (size * 72f / 108f).toInt()
         val padding = (size - safeZoneSize) / 2
         
-        // 将用户图标缩放到安全区域尺寸
+        // Note: brief English comment.
         val scaled = Bitmap.createScaledBitmap(bitmap, safeZoneSize, safeZoneSize, true)
         
-        // 居中绘制到画布（使用 filter paint 提升小尺寸图标质量）
+        // Note: brief English comment.
         val paint = android.graphics.Paint().apply {
             isAntiAlias = true
             isFilterBitmap = true
@@ -450,7 +448,7 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 创建圆形图标
+     * Note: brief English comment.
      */
     fun createRoundIcon(bitmap: Bitmap, size: Int): ByteArray {
         val scaled = Bitmap.createScaledBitmap(bitmap, size, size, true)
@@ -462,11 +460,11 @@ class ApkTemplate(private val context: Context) {
             isFilterBitmap = true
         }
         
-        // 绘制圆形
+        // Note: brief English comment.
         val rect = android.graphics.RectF(0f, 0f, size.toFloat(), size.toFloat())
         canvas.drawOval(rect, paint)
         
-        // Set混合模式
+        // Note: brief English comment.
         paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
         canvas.drawBitmap(scaled, 0f, 0f, paint)
         
@@ -480,7 +478,7 @@ class ApkTemplate(private val context: Context) {
     }
 
     /**
-     * 清理缓存
+     * Note: brief English comment.
      */
     fun clearCache() {
         templateDir.listFiles()?.forEach { it.delete() }
@@ -488,7 +486,7 @@ class ApkTemplate(private val context: Context) {
 }
 
 /**
- * APK 配置数据类
+ * Note: brief English comment.
  */
 data class ApkConfig(
     val appName: String,
@@ -498,7 +496,7 @@ data class ApkConfig(
     val versionName: String = "1.0.0",
     val iconPath: String? = null,
     
-    // Activation码
+    // Note: brief English comment.
     val activationEnabled: Boolean = false,
     val activationCodes: List<String> = emptyList(),
     val activationRequireEveryTime: Boolean = false,
@@ -507,7 +505,7 @@ data class ApkConfig(
     val activationDialogInputLabel: String = "",
     val activationDialogButtonText: String = "",
     
-    // Ad拦截
+    // Note: brief English comment.
     val adBlockEnabled: Boolean = false,
     val adBlockRules: List<String> = emptyList(),
     
@@ -524,7 +522,7 @@ data class ApkConfig(
     val announcementRequireConfirmation: Boolean = false,
     val announcementAllowNeverShow: Boolean = false,
     
-    // WebView 配置
+    // Note: brief English comment.
     val javaScriptEnabled: Boolean = true,
     val domStorageEnabled: Boolean = true,
     val zoomEnabled: Boolean = true,
@@ -541,7 +539,7 @@ data class ApkConfig(
     val orientationMode: String = "PORTRAIT", // 屏幕方向模式: PORTRAIT, LANDSCAPE, REVERSE_PORTRAIT, REVERSE_LANDSCAPE, SENSOR_PORTRAIT, SENSOR_LANDSCAPE, AUTO
     val injectScripts: List<com.webtoapp.data.model.UserScript> = emptyList(), // User注入脚本
     
-    // Status bar配置
+    // Note: brief English comment.
     val statusBarColorMode: String = "THEME", // THEME, TRANSPARENT, CUSTOM
     val statusBarColor: String? = null, // Custom状态栏颜色
     val statusBarDarkIcons: Boolean? = null, // Status bar图标颜色
@@ -549,7 +547,7 @@ data class ApkConfig(
     val statusBarBackgroundImage: String? = null, // Cropped image path
     val statusBarBackgroundAlpha: Float = 1.0f, // Alpha 0.0-1.0
     val statusBarHeightDp: Int = 0, // Custom高度dp（0=系统默认）
-    // Status bar深色模式配置
+    // Note: brief English comment.
     val statusBarColorModeDark: String = "THEME",
     val statusBarColorDark: String? = null,
     val statusBarDarkIconsDark: Boolean? = null,
@@ -563,7 +561,7 @@ data class ApkConfig(
     val popupBlockerToggleEnabled: Boolean = false, // Allow用户在运行时切换弹窗拦截开关
     val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
     
-    // 浏览器兼容性增强配置
+    // Note: brief English comment.
     val initialScale: Int = 0, // Initial scale (0-200, 0=自动)
     val viewportMode: String = "DEFAULT", // DEFAULT, FIT_SCREEN, DESKTOP
     val newWindowBehavior: String = "SAME_WINDOW", // SAME_WINDOW, EXTERNAL_BROWSER, POPUP_WINDOW, BLOCK
@@ -584,14 +582,14 @@ data class ApkConfig(
     val pwaOfflineEnabled: Boolean = false, // PWA Service Worker 离线缓存
     val pwaOfflineStrategy: String = "NETWORK_FIRST", // CACHE_FIRST, NETWORK_FIRST, STALE_WHILE_REVALIDATE
     
-    // 网络错误页配置
+    // Note: brief English comment.
     val errorPageMode: String = "BUILTIN_STYLE", // DEFAULT, BUILTIN_STYLE, CUSTOM_HTML, CUSTOM_MEDIA
     val errorPageBuiltInStyle: String = "MATERIAL", // MATERIAL, SATELLITE, OCEAN, FOREST, MINIMAL, NEON
     val errorPageShowMiniGame: Boolean = false,
     val errorPageMiniGameType: String = "RANDOM",
     val errorPageAutoRetrySeconds: Int = 15,
     
-    // 悬浮小窗配置
+    // Note: brief English comment.
     val floatingWindowEnabled: Boolean = false,
     val floatingWindowSizePercent: Int = 80,     // [向后兼容] 窗口大小百分比 50-100
     val floatingWindowWidthPercent: Int = 80,    // 独立宽度百分比 30-100
@@ -608,7 +606,7 @@ data class ApkConfig(
     val floatingWindowShowResizeHandle: Boolean = true,
     val floatingWindowLockPosition: Boolean = false,
     
-    // Start画面配置
+    // Note: brief English comment.
     val splashEnabled: Boolean = false,
     val splashType: String = "IMAGE",      // "IMAGE" or "VIDEO"
     val splashDuration: Int = 3,           // Show时长（秒）
@@ -619,7 +617,7 @@ data class ApkConfig(
     val splashFillScreen: Boolean = true,  // Yes否自动放大铺满屏幕
     val splashEnableAudio: Boolean = false, // Yes否启用视频音频
     
-    // Media应用配置（图片/视频转APP）
+    // Note: brief English comment.
     val appType: String = "WEB",           // "WEB", "IMAGE", "VIDEO", "HTML"
     val mediaEnableAudio: Boolean = true,  // Video是否启用音频
     val mediaLoop: Boolean = true,         // Yes否循环播放
@@ -628,13 +626,13 @@ data class ApkConfig(
     val mediaLandscape: Boolean = false,   // Yes否横屏显示
     val mediaKeepScreenOn: Boolean = true, // 保持屏幕常亮
     
-    // HTML应用配置
+    // Note: brief English comment.
     val htmlEntryFile: String = "index.html",  // HTML入口文件名
     val htmlEnableJavaScript: Boolean = true,  // Yes否启用JavaScript
     val htmlEnableLocalStorage: Boolean = true, // Yes否启用本地存储
     val htmlLandscapeMode: Boolean = false,    // HTML应用横屏模式
     
-    // Gallery 画廊应用配置
+    // Note: brief English comment.
     val galleryItems: List<GalleryShellItemConfig> = emptyList(),
     val galleryPlayMode: String = "SEQUENTIAL",
     val galleryImageInterval: Int = 3,
@@ -647,7 +645,7 @@ data class ApkConfig(
     val galleryEnableAudio: Boolean = true,
     val galleryVideoAutoNext: Boolean = true,
     
-    // Background music配置
+    // Note: brief English comment.
     val bgmEnabled: Boolean = false,       // Yes否启用背景音乐
     val bgmPlaylist: List<BgmShellItem> = emptyList(), // Play列表
     val bgmPlayMode: String = "LOOP",      // Play模式: LOOP, SEQUENTIAL, SHUFFLE
@@ -656,67 +654,67 @@ data class ApkConfig(
     val bgmShowLyrics: Boolean = true,     // Yes否显示歌词
     val bgmLrcTheme: LrcShellTheme? = null, // Lyrics主题
     
-    // Theme配置
+    // Note: brief English comment.
     val themeType: String = "AURORA",      // Theme类型
     val darkMode: String = "SYSTEM",       // Dark mode: SYSTEM, LIGHT, DARK
     
-    // Web page自动翻译配置
+    // Note: brief English comment.
     val translateEnabled: Boolean = false,        // Yes否启用自动翻译
     val translateTargetLanguage: String = "zh-CN", // 目标语言: zh-CN, en, ja, ar
     val translateShowButton: Boolean = true,      // Yes否显示翻译按钮
     
-    // 扩展模块配置
+    // Note: brief English comment.
     val extensionModuleIds: List<String> = emptyList(), // Enable的扩展模块ID列表
     val embeddedExtensionModules: List<EmbeddedExtensionModule> = emptyList(), // 嵌入的扩展模块完整数据
     val extensionFabIcon: String = "", // 扩展模块悬浮按钮自定义图标
     
-    // 自启动配置
+    // Note: brief English comment.
     val autoStartEnabled: Boolean = false,
     val bootStartEnabled: Boolean = false,
     val scheduledStartEnabled: Boolean = false,
     val scheduledTime: String = "08:00",
     val scheduledDays: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7),
 
-    // 强制运行配置
+    // Note: brief English comment.
     val forcedRunConfig: ForcedRunConfig? = null,
     
-    // 独立环境/多开配置
+    // Note: brief English comment.
     val isolationEnabled: Boolean = false,
     val isolationConfig: com.webtoapp.core.isolation.IsolationConfig? = null,
     
-    // 后台运行配置
+    // Note: brief English comment.
     val backgroundRunEnabled: Boolean = false,
     val backgroundRunConfig: BackgroundRunConfig? = null,
     
-    // 黑科技功能配置（独立模块）
+    // Note: brief English comment.
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
     
-    // App伪装配置（独立模块）
+    // Note: brief English comment.
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
     
-    // 界面语言配置
+    // Note: brief English comment.
     val language: String = "CHINESE",  // CHINESE, ENGLISH, ARABIC
     
-    // 浏览器引擎配置
+    // Note: brief English comment.
     val engineType: String = "SYSTEM_WEBVIEW",  // SYSTEM_WEBVIEW, GECKOVIEW
     
-    // Deep link配置
+    // Note: brief English comment.
     val deepLinkEnabled: Boolean = false,       // 是否启用链接打开
     val deepLinkHosts: List<String> = emptyList(), // 匹配的域名列表
     
-    // WordPress 配置
+    // Note: brief English comment.
     val wordpressSiteTitle: String = "",       // 站点标题
     val wordpressPhpPort: Int = 0,             // PHP 服务器端口（0=自动分配）
     val wordpressLandscapeMode: Boolean = false, // 横屏模式
     
-    // Node.js 配置
+    // Note: brief English comment.
     val nodejsMode: String = "STATIC",         // STATIC, BACKEND, FULLSTACK
     val nodejsPort: Int = 0,                   // Node.js 服务器端口（0=自动分配）
     val nodejsEntryFile: String = "",          // 入口文件（backend 模式需要）
     val nodejsEnvVars: Map<String, String> = emptyMap(), // 环境变量
     val nodejsLandscapeMode: Boolean = false,  // 横屏模式
     
-    // PHP 通用应用配置
+    // Note: brief English comment.
     val phpAppFramework: String = "",           // 框架名称
     val phpAppDocumentRoot: String = "",        // Web 根目录
     val phpAppEntryFile: String = "index.php",  // 入口文件
@@ -724,7 +722,7 @@ data class ApkConfig(
     val phpAppEnvVars: Map<String, String> = emptyMap(),
     val phpAppLandscapeMode: Boolean = false,
     
-    // Python Web 应用配置
+    // Note: brief English comment.
     val pythonAppFramework: String = "",
     val pythonAppEntryFile: String = "app.py",
     val pythonAppEntryModule: String = "",
@@ -733,7 +731,7 @@ data class ApkConfig(
     val pythonAppEnvVars: Map<String, String> = emptyMap(),
     val pythonAppLandscapeMode: Boolean = false,
     
-    // Go Web 服务配置
+    // Note: brief English comment.
     val goAppFramework: String = "",
     val goAppBinaryName: String = "",
     val goAppPort: Int = 0,
@@ -741,19 +739,19 @@ data class ApkConfig(
     val goAppEnvVars: Map<String, String> = emptyMap(),
     val goAppLandscapeMode: Boolean = false,
     
-    // 多站点聚合应用配置
+    // Note: brief English comment.
     val multiWebSites: List<com.webtoapp.core.shell.MultiWebSiteShellConfig> = emptyList(),
     val multiWebDisplayMode: String = "TABS",
     val multiWebRefreshInterval: Int = 30,
     val multiWebShowSiteIcons: Boolean = true,
     val multiWebLandscapeMode: Boolean = false,
     
-    // 云 SDK 配置（构建时嵌入）
+    // Note: brief English comment.
     val cloudSdkConfig: com.webtoapp.core.shell.CloudSdkConfig = com.webtoapp.core.shell.CloudSdkConfig()
 )
 
 /**
- * 后台运行配置
+ * Note: brief English comment.
  */
 data class BackgroundRunConfig(
     val notificationTitle: String = "",
@@ -763,7 +761,7 @@ data class BackgroundRunConfig(
 )
 
 /**
- * Gallery 媒体项配置（用于 APK 构建）
+ * Note: brief English comment.
  */
 data class GalleryShellItemConfig(
     val id: String,
@@ -775,8 +773,8 @@ data class GalleryShellItemConfig(
 )
 
 /**
- * 嵌入到 APK 中的扩展模块数据
- * 包含模块执行所需的所有信息
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 data class EmbeddedExtensionModule(
     val id: String,
@@ -793,7 +791,7 @@ data class EmbeddedExtensionModule(
 )
 
 /**
- * 嵌入的 URL 匹配规则
+ * Note: brief English comment.
  */
 data class EmbeddedUrlMatchRule(
     val pattern: String,

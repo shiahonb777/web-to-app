@@ -56,8 +56,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 
 /**
- * 帖子详情页 — Premium Twitter/X Style
- * 完整功能：帖子内容、媒体展示、应用链接、交互栏（物理弹簧）、评论列表、回复评论
+ * Premium Twitter/X Style
+ * content, , app, ( spring) , list,
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable

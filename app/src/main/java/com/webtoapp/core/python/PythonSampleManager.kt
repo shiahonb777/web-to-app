@@ -6,7 +6,7 @@ import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
 /**
- * Python 示例项目管理器
+ * project.
  */
 object PythonSampleManager {
     

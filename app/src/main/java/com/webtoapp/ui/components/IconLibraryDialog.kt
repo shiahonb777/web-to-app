@@ -27,20 +27,20 @@ import com.webtoapp.util.IconLibraryStorage
 import kotlinx.coroutines.launch
 
 /**
- * 图标库对话框
+ * icon dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IconLibraryDialog(
     onDismiss: () -> Unit,
-    onSelectIcon: (String) -> Unit,  // 返回图标文件路径
+    onSelectIcon: (String) -> Unit,  // backiconfilepath
     onOpenAiGenerator: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val icons by IconLibraryStorage.iconsFlow.collectAsState(initial = emptyList())
     
-    // Initialize图标库
+    // Initializeicon
     LaunchedEffect(Unit) {
         IconLibraryStorage.initialize(context)
     }
@@ -55,7 +55,7 @@ fun IconLibraryDialog(
             Column(
                 modifier = Modifier.padding(24.dp)
             ) {
-                // 标题栏
+                // Note
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -94,7 +94,7 @@ fun IconLibraryDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // AI 生成按钮
+                // AI button
                 OutlinedCard(
                     onClick = {
                         onDismiss()
@@ -136,7 +136,7 @@ fun IconLibraryDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Icon网格
+                // Icon
                 if (icons.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -196,7 +196,7 @@ fun IconLibraryDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 底部按钮
+                // bottombutton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -211,7 +211,7 @@ fun IconLibraryDialog(
 }
 
 /**
- * 图标网格项
+ * icon
  */
 @Composable
 private fun IconGridItem(
@@ -239,7 +239,7 @@ private fun IconGridItem(
             contentScale = ContentScale.Crop
         )
         
-        // AI生成标记
+        // AI
         if (icon.isAiGenerated) {
             Surface(
                 modifier = Modifier
@@ -259,7 +259,7 @@ private fun IconGridItem(
             }
         }
         
-        // Delete按钮
+        // Deletebutton
         IconButton(
             onClick = { showDeleteConfirm = true },
             modifier = Modifier
@@ -275,7 +275,7 @@ private fun IconGridItem(
         }
     }
     
-    // Delete确认对话框
+    // Delete dialog
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },

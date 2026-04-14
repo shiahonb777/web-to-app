@@ -6,8 +6,8 @@
 
 ```
 app/src/main/java/com/webtoapp/
-├── WebToAppApplication.kt        # Application类
-├── core/                         # 核心运行时与业务模块
+├── WebToAppApplication.kt        # Application class
+├── core/                         # Core runtime and business modules
 │   ├── activation/ adblock/ ads/ ai/ announcement/
 │   ├── appmodifier/ auth/ autostart/ background/
 │   ├── backup/ bgm/ billing/ blacktech/ common/
@@ -108,7 +108,24 @@ app/src/main/java/com/webtoapp/
 ### i18n 分层
 
 - `app/src/main/java/com/webtoapp/core/i18n/strings`
-    `Strings.kt` 现在只是兼容门面，通用、创建页、云端、社区、AI、模块、Shell 文案已经开始往这里拆。后续新增字符串优先放分组文件，别再把 3 万行老怪物继续喂胖。
+    `Strings.kt` 现在只是兼容门面，不再直接养文案。真正的功能文案已经按 `CommonStrings`、`CreateStrings`、`CloudStrings`、`CommunityStrings`、`AiStrings`、`AiCodingStrings`、`AiConfigStrings`、`ModuleStrings`、`ExtensionStrings`、`ShellStrings`、`WebViewStrings`、`ProjectStrings`、`SnippetStrings`、`StoreStrings`、`BillingStrings`、`MusicStrings`、`UiStrings`、`BuildStrings`、`CompatStrings`、`SampleStrings` 这些分组拆开。后续新增文案和翻译都优先进对应分组文件，别再把旧怪物喂胖。
+
+### 翻译贡献
+
+- `app/src/main/java/com/webtoapp/core/i18n/strings`
+    翻译优先改这里的分组 Kotlin 文件。不要直接往 `Strings.kt` 里加或改译文，它现在只负责兼容转发。
+- `python tools/export_i18n_catalog.py --format all`
+    先导出 `build/i18n/i18n_catalog.csv` 和 `build/i18n/i18n_catalog.json`，翻译人员可以直接对照表格工作，不用硬啃 Kotlin。
+- `kind=resource-backed`
+    这类条目不是 Kotlin 里的硬编码，而是走 Android `R.string.*` 资源。要去改 `app/src/main/res/values-zh`、`app/src/main/res/values-en`、`app/src/main/res/values-ar` 里的对应 `strings.xml`，不要去改分组 Kotlin 文案。
+- 占位符别乱动
+    `%s`、`%1$s`、`${VERSION}`、`{name}`、换行标记、产品名和格式相关标点都别翻、别删、别改顺序。导出表的 `notes` 列会尽量把这些危险点标出来。
+- 不会 Kotlin 也能贡献翻译
+    如果你不想直接改源码，可以把改好的 CSV/JSON 附在 PR/issue 里，或者直接列出 `source_file + key + 目标语言 + 译文`，由维护者帮你回填到对应分组文件。
+- 新增文案也别倒车
+    新字符串要放进 `core/i18n/strings` 下最接近功能的分组文件，不要又把字面量回灌到 `Strings.kt` 这个旧粪坑里。
+- `python tools/export_i18n_catalog.py --check`
+    跑一次静态解析检查，顺手看缺失语言统计。这样至少能先确认 getter 结构没被改坏，再让别人去编译。
 
 ### AI 分层
 
@@ -169,7 +186,7 @@ app/src/main/java/com/webtoapp/
 ## 模块开发示例
 
 ```javascript
-// 示例1：自动隐藏广告
+// Example 1: Auto-hide ads
 const selectors = getConfig('selectors', '.ad-banner').split('\n');
 function hideAds() {
     selectors.forEach(sel => {
@@ -181,7 +198,7 @@ function hideAds() {
 hideAds();
 new MutationObserver(hideAds).observe(document.body, { childList: true, subtree: true });
 
-// 示例2：一键保存图片（使用 NativeBridge）
+// Example 2: One-click image save (with NativeBridge)
 document.querySelectorAll('img').forEach(img => {
     img.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -191,7 +208,7 @@ document.querySelectorAll('img').forEach(img => {
     });
 });
 
-// 示例3：分享当前页面
+// Example 3: Share current page
 function shareCurrentPage() {
     NativeBridge.share(document.title, '分享给你一个有趣的页面', location.href);
 }

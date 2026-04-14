@@ -129,7 +129,7 @@ internal fun MyAppsSheet(
         "health" to "健康", "other" to Strings.catOther
     )
 
-    // ── 删除确认（共享组件） ──
+    // delete( )
     appToDelete?.let { app ->
         ItemDeleteConfirmDialog(
             itemName = app.name,
@@ -149,7 +149,7 @@ internal fun MyAppsSheet(
         )
     }
 
-    // ── 管理控制台 ──
+    // management
     managedApp?.let { app ->
         AppManagementSheet(
             app = app,
@@ -167,7 +167,7 @@ internal fun MyAppsSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-            // ── Header（共享组件） ──
+            // Header( )
             MyPublishedItemsHeader(
                 title = Strings.storeMyApps,
                 isRefreshing = isRefreshing,
@@ -208,7 +208,7 @@ internal fun MyAppsSheet(
                 }
             }
 
-            // ── 统计概览（共享组件） ──
+            // Note
             if (!isLoading && myApps.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 StatsOverviewRow(
@@ -221,7 +221,7 @@ internal fun MyAppsSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── 内容状态（共享组件） ──
+            // contentstate( )
             if (isLoading) {
                 PublishedItemLoadingState("Loading my apps...")
             } else if (errorMsg != null) {
@@ -304,13 +304,13 @@ internal fun MyAppsSheet(
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f, fill = false)
                                             )
-                                            // 分类标签（共享组件）
+                                            // label( )
                                             CategoryTag(
                                                 label = categoryLabels[app.category] ?: app.category,
                                                 color = MaterialTheme.colorScheme.tertiary
                                             )
                                         }
-                                        // 信息 pills（共享组件）
+                                        // pills( )
                                         PublishedItemStatsPills(
                                             versionName = app.versionName,
                                             downloads = app.downloads,
@@ -337,7 +337,7 @@ internal fun MyAppsSheet(
                                         }
                                     }
                                 }
-                                // 描述
+                                // Note
                                 if (!app.description.isNullOrBlank()) {
                                     Text(
                                         app.description,
@@ -360,7 +360,7 @@ internal fun MyAppsSheet(
 
 
 // ════════════════════════════════════════════════
-// 应用管理控制台 (Premium UI)
+// appmanagement( Premium UI)
 // ════════════════════════════════════════════════
 
-/** 管理控制台用渐变色组 */
+/** management gradient */

@@ -109,7 +109,7 @@ val startupModule = module {
 }
 
 /**
- * 所有模块的聚合列表，在 Application.onCreate 中一次性加载
+ * Module list loaded once by `Application.onCreate`.
  */
 val appModules = listOf(
     databaseModule,

@@ -6,19 +6,17 @@ import java.io.File
 import java.util.UUID
 
 /**
- * Chrome 浏览器扩展解析器
- * 
- * 解析 manifest.json 中的 content_scripts 配置，
- * 将 Chrome 扩展转换为一组 ExtensionModule。
- * 
- * 支持 Manifest V2 和 V3 格式。
+ * Chrome extension parser
+ *
+ * Reads content_scripts from manifest.json and converts a Chrome extension into ExtensionModule instances.
+ * Supports both Manifest V2 and V3.
  */
 object ChromeExtensionParser {
     
     private const val TAG = "ChromeExtensionParser"
     
     /**
-     * Chrome permission → ModulePermission mapping
+     * Chrome permission ModulePermission mapping
      */
     private val PERMISSION_MAP = mapOf(
         "activeTab" to ModulePermission.DOM_ACCESS,
@@ -50,7 +48,7 @@ object ChromeExtensionParser {
     )
     
     /**
-     * 解析结果
+     * Parse result
      */
     data class ParseResult(
         val extensionName: String,
@@ -65,11 +63,10 @@ object ChromeExtensionParser {
     )
     
     /**
-     * 从已解压的扩展目录解析
-     * @param extensionDir 解压后的扩展根目录
-     * @param overrideExtensionId 可选：覆盖扩展 ID（当调用者知道正确的 ID 时使用，
-     *        例如 ExtensionFileManager 传入 UUID 目录名以确保与文件系统路径一致）
-     * @return 解析结果
+     * Parse a Chrome extension from an unpacked directory.
+     * @param extensionDir Root directory of the unpacked extension.
+     * @param overrideExtensionId Optional extension ID override for callers needing a consistent path (e.g., ExtensionFileManager passes the UUID folder name).
+     * @return Parse result
      */
     fun parseFromDirectory(extensionDir: File, overrideExtensionId: String? = null): ParseResult {
         val warnings = mutableListOf<String>()
@@ -97,7 +94,7 @@ object ChromeExtensionParser {
             
             AppLogger.d(TAG, "Parsing extension: $name v$version (manifest v$manifestVersion)")
             
-            // 解析 content_scripts
+            // content_scripts.
             val contentScripts = manifest.optJSONArray("content_scripts")
             if (contentScripts == null || contentScripts.length() == 0) {
                 warnings.add("No content_scripts found in manifest.json")
@@ -132,7 +129,7 @@ object ChromeExtensionParser {
             for (i in 0 until contentScripts.length()) {
                 val cs = contentScripts.getJSONObject(i)
                 
-                // 匹配 URL 规则
+                // URL rules.
                 val matches = mutableListOf<String>()
                 cs.optJSONArray("matches")?.let { arr ->
                     for (j in 0 until arr.length()) matches.add(arr.getString(j))
@@ -143,19 +140,19 @@ object ChromeExtensionParser {
                     for (j in 0 until arr.length()) excludeMatches.add(arr.getString(j))
                 }
                 
-                // JS 文件
+                // JS.
                 val jsFiles = mutableListOf<String>()
                 cs.optJSONArray("js")?.let { arr ->
                     for (j in 0 until arr.length()) jsFiles.add(arr.getString(j))
                 }
                 
-                // CSS 文件
+                // CSS.
                 val cssFiles = mutableListOf<String>()
                 cs.optJSONArray("css")?.let { arr ->
                     for (j in 0 until arr.length()) cssFiles.add(arr.getString(j))
                 }
                 
-                // 运行时机
+                // when.
                 val runAt = when (cs.optString("run_at", "document_idle")) {
                     "document_start" -> ModuleRunTime.DOCUMENT_START
                     "document_end" -> ModuleRunTime.DOCUMENT_END
@@ -171,7 +168,7 @@ object ChromeExtensionParser {
                     if (it == "MAIN") "MAIN" else "ISOLATED"
                 }
                 
-                // 读取 JS 文件内容
+                // JS.
                 val jsCode = StringBuilder()
                 jsFiles.forEach { jsPath ->
                     val jsFile = extensionDir.resolve(jsPath)
@@ -184,7 +181,7 @@ object ChromeExtensionParser {
                     }
                 }
                 
-                // 读取 CSS 文件内容
+                // CSS.
                 val cssCode = StringBuilder()
                 cssFiles.forEach { cssPath ->
                     val cssFile = extensionDir.resolve(cssPath)
@@ -197,13 +194,13 @@ object ChromeExtensionParser {
                     }
                 }
                 
-                // 跳过空的 content_script
+                // content_script.
                 if (jsCode.isBlank() && cssCode.isBlank()) {
                     warnings.add("content_scripts[$i] has no JS or CSS content, skipped")
                     continue
                 }
                 
-                // 构建 URL 匹配规则
+                // URL rules.
                 val urlMatchRules = mutableListOf<UrlMatchRule>()
                 matches.forEach { pattern ->
                     urlMatchRules.add(UrlMatchRule(
@@ -220,7 +217,6 @@ object ChromeExtensionParser {
                     ))
                 }
                 
-                // 模块名称
                 val moduleName = if (contentScripts.length() == 1) {
                     name
                 } else {
@@ -231,7 +227,7 @@ object ChromeExtensionParser {
                     id = "${extensionId}_cs_$i",
                     name = moduleName,
                     description = description,
-                    icon = "extension", // Chrome 扩展图标
+                    icon = "extension", // Chrome.
                     category = ModuleCategory.FUNCTION_ENHANCE,
                     version = ModuleVersion(name = version),
                     code = jsCode.toString(),
@@ -247,12 +243,12 @@ object ChromeExtensionParser {
                 ))
             }
             
-            // 解析 permissions 并分类
+            // permissions and.
             val rawPermissions = mutableListOf<String>()
             manifest.optJSONArray("permissions")?.let { arr ->
                 for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
             }
-            // Manifest V3: host_permissions 单独列出
+            // Manifest V3: host_permissions single.
             manifest.optJSONArray("host_permissions")?.let { arr ->
                 for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
             }
@@ -308,19 +304,19 @@ object ChromeExtensionParser {
     }
     
     /**
-     * 转换 Chrome match pattern 为通配符格式
+     * Chrome match pattern as.
      * Chrome match pattern: scheme://host/path
-     * 特殊值: <all_urls>
+     * : <all_urls>.
      */
     private fun convertChromeMatchPattern(pattern: String): String {
         if (pattern == "<all_urls>") return "*"
-        // Chrome match pattern 格式本身兼容通配符匹配
+        // Chrome match pattern.
         return pattern
     }
     
     /**
-     * 检测文件是否为 Chrome 扩展 (.crx)
-     * CRX 文件头: "Cr24" magic bytes
+     * is as Chrome extension (.crx)
+     * CRX: "Cr24" magic bytes.
      */
     fun isCrxFile(file: File): Boolean {
         if (!file.exists() || file.length() < 4) return false
@@ -340,12 +336,12 @@ object ChromeExtensionParser {
     }
     
     /**
-     * 获取 CRX 文件中 ZIP 数据的偏移量
-     * 
-     * CRX3 格式:
-     *   [4 bytes magic] [4 bytes version] [4 bytes header_size] [header] [zip data]
-     * CRX2 格式:
-     *   [4 bytes magic] [4 bytes version] [4 bytes pk_len] [4 bytes sig_len] [pk] [sig] [zip data]
+     * Get CRX in ZIP.
+     *
+     * CRX3:
+     * [4 bytes magic] [4 bytes version] [4 bytes header_size] [header] [zip data]
+     * CRX2:
+     * [4 bytes magic] [4 bytes version] [4 bytes pk_len] [4 bytes sig_len] [pk] [sig] [zip data]
      */
     fun getCrxZipOffset(file: File): Long {
         return try {

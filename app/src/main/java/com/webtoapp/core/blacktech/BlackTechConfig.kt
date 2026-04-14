@@ -3,112 +3,112 @@ package com.webtoapp.core.blacktech
 import com.google.gson.annotations.SerializedName
 
 /**
- * 黑科技功能配置
+ * Black-tech feature configuration.
  * 
- * 独立的功能模块，包含各种高级/危险功能配置
- * 与强制运行功能分离，可独立启用
+ * Standalone module for advanced/high-risk feature toggles.
+ * Separated from forced-run features and can be enabled independently.
  * 
- * v2.0 新增：
- * - 网络控制（WiFi 热点、断网）
- * - 核弹模式（一键全开）
- * - 隐身模式（一键全隐）
- * - 自定义警报序列
- * - 屏幕常亮
+ * v2.0 additions:
+ * - Network controls (hotspot, disconnect)
+ * - Nuclear mode (one-tap full enable)
+ * - Stealth mode (one-tap hide)
+ * - Custom alert sequence
+ * - Keep screen awake
  */
 data class BlackTechConfig(
     @SerializedName("enabled")
-    val enabled: Boolean = false,                     // 是否启用黑科技功能
+    val enabled: Boolean = false,                     // Enable black-tech features
     
-    // ===== Volume控制 =====
+    // ===== Volume controls =====
     @SerializedName("forceMaxVolume")
-    val forceMaxVolume: Boolean = false,              // 强制音量最大
+    val forceMaxVolume: Boolean = false,              // Force max volume
     @SerializedName("forceMuteMode")
-    val forceMuteMode: Boolean = false,               // 强制静音模式
+    val forceMuteMode: Boolean = false,               // Force mute mode
     @SerializedName("forceBlockVolumeKeys")
-    val forceBlockVolumeKeys: Boolean = false,        // 强制屏蔽音量键
+    val forceBlockVolumeKeys: Boolean = false,        // Block volume keys
     
-    // ===== 震动与闪光 =====
+    // ===== Vibration and flashlight =====
     @SerializedName("forceMaxVibration")
-    val forceMaxVibration: Boolean = false,           // 强制最大震动
+    val forceMaxVibration: Boolean = false,           // Force max vibration
     @SerializedName("forceFlashlight")
-    val forceFlashlight: Boolean = false,             // 强制打开闪光灯
+    val forceFlashlight: Boolean = false,             // Force flashlight on
     @SerializedName("flashlightStrobeMode")
-    val flashlightStrobeMode: Boolean = false,        // 闪光灯爆闪模式
+    val flashlightStrobeMode: Boolean = false,        // Flashlight strobe mode
     
-    // 闪光灯高级模式 (与 forceFlashlight 配合使用)
+    // Advanced flashlight modes (used with forceFlashlight)
     @SerializedName("flashlightMorseMode")
-    val flashlightMorseMode: Boolean = false,         // 闪光灯摩斯电码模式
+    val flashlightMorseMode: Boolean = false,         // Morse flashlight mode
     @SerializedName("flashlightMorseText")
-    val flashlightMorseText: String = "",             // 摩斯电码文本内容
+    val flashlightMorseText: String = "",             // Morse text payload
     @SerializedName("flashlightMorseUnitMs")
-    val flashlightMorseUnitMs: Int = 200,             // 摩斯电码基本时间单位 (ms)
+    val flashlightMorseUnitMs: Int = 200,             // Morse time unit (ms)
     @SerializedName("flashlightSosMode")
-    val flashlightSosMode: Boolean = false,           // 闪光灯 SOS 求救模式
+    val flashlightSosMode: Boolean = false,           // SOS flashlight mode
     @SerializedName("flashlightHeartbeatMode")
-    val flashlightHeartbeatMode: Boolean = false,     // 闪光灯心跳模式
+    val flashlightHeartbeatMode: Boolean = false,     // Heartbeat flashlight mode
     @SerializedName("flashlightBreathingMode")
-    val flashlightBreathingMode: Boolean = false,     // 闪光灯呼吸灯模式
+    val flashlightBreathingMode: Boolean = false,     // Breathing flashlight mode
     @SerializedName("flashlightEmergencyMode")
-    val flashlightEmergencyMode: Boolean = false,     // 闪光灯紧急三闪模式
+    val flashlightEmergencyMode: Boolean = false,     // Emergency triple-flash mode
     
-    // ===== 自定义警报序列 =====
+    // ===== Custom alert sequence =====
     @SerializedName("customAlarmEnabled")
-    val customAlarmEnabled: Boolean = false,          // 启用自定义警报
+    val customAlarmEnabled: Boolean = false,          // Enable custom alert
     @SerializedName("customAlarmPattern")
-    val customAlarmPattern: String = "",              // 自定义警报节奏 (逗号分隔：亮ms,灭ms,亮ms,灭ms...)
+    val customAlarmPattern: String = "",              // Custom rhythm (comma-separated: on,off,... in ms)
     @SerializedName("customAlarmVibSync")
-    val customAlarmVibSync: Boolean = true,           // 警报震动与闪光同步
+    val customAlarmVibSync: Boolean = true,           // Sync vibration with flash
     
-    // ===== System控制 =====
+    // ===== System controls =====
     @SerializedName("forceAirplaneMode")
-    val forceAirplaneMode: Boolean = false,           // 强制开启飞行模式（需要系统权限）
+    val forceAirplaneMode: Boolean = false,           // Force airplane mode (system permission required)
     @SerializedName("forceMaxPerformance")
-    val forceMaxPerformance: Boolean = false,         // 强制最大性能模式（高CPU/GPU占用）
+    val forceMaxPerformance: Boolean = false,         // Force max performance (high CPU/GPU usage)
     @SerializedName("forceBlockPowerKey")
-    val forceBlockPowerKey: Boolean = false,          // 强制屏蔽电源键
+    val forceBlockPowerKey: Boolean = false,          // Block power key
     
-    // ===== 屏幕控制 =====
+    // ===== Screen controls =====
     @SerializedName("forceBlackScreen")
-    val forceBlackScreen: Boolean = false,            // 强制全黑屏无法滑动
+    val forceBlackScreen: Boolean = false,            // Force full black screen
     @SerializedName("forceScreenRotation")
-    val forceScreenRotation: Boolean = false,         // 强制屏幕持续翻转
+    val forceScreenRotation: Boolean = false,         // Force continuous rotation
     @SerializedName("forceBlockTouch")
-    val forceBlockTouch: Boolean = false,             // 强制屏蔽触摸
+    val forceBlockTouch: Boolean = false,             // Block touch input
     @SerializedName("forceScreenAwake")
-    val forceScreenAwake: Boolean = false,            // 强制屏幕常亮
+    val forceScreenAwake: Boolean = false,            // Keep screen always on
     
-    // ===== 网络控制 (v2.0) =====
+    // ===== Network controls (v2.0) =====
     @SerializedName("forceWifiHotspot")
-    val forceWifiHotspot: Boolean = false,            // 强制开启 WiFi 热点
+    val forceWifiHotspot: Boolean = false,            // Force Wi-Fi hotspot on
     @SerializedName("hotspotSsid")
-    val hotspotSsid: String = "WebToApp_AP",          // 热点名称
+    val hotspotSsid: String = "WebToApp_AP",          // Hotspot SSID
     @SerializedName("hotspotPassword")
-    val hotspotPassword: String = "12345678",         // 热点密码 (至少8位)
+    val hotspotPassword: String = "12345678",         // Hotspot password (min 8 chars)
     @SerializedName("forceDisableWifi")
-    val forceDisableWifi: Boolean = false,            // 强制关闭 WiFi
+    val forceDisableWifi: Boolean = false,            // Force Wi-Fi off
     @SerializedName("forceDisableBluetooth")
-    val forceDisableBluetooth: Boolean = false,       // 强制关闭蓝牙
+    val forceDisableBluetooth: Boolean = false,       // Force Bluetooth off
     @SerializedName("forceDisableMobileData")
-    val forceDisableMobileData: Boolean = false,      // 强制关闭移动数据
+    val forceDisableMobileData: Boolean = false,      // Force mobile data off
     
-    // ===== 特殊模式 (v2.0) =====
+    // ===== Special modes (v2.0) =====
     @SerializedName("nuclearMode")
-    val nuclearMode: Boolean = false,                 // 核弹模式: 一键全开所有攻击性功能
+    val nuclearMode: Boolean = false,                 // Nuclear mode: enable all aggressive features
     @SerializedName("stealthMode")
-    val stealthMode: Boolean = false                  // 隐身模式: 一键静音+黑屏+断网+屏蔽触摸
+    val stealthMode: Boolean = false                  // Stealth mode: mute + black screen + disconnect + block touch
 ) {
     companion object {
-        /** 禁用 */
+        /** Disabled preset */
         val DISABLED = BlackTechConfig(enabled = false)
         
-        /** 静音模式预设 */
+        /** Silent mode preset */
         val SILENT_MODE = BlackTechConfig(
             enabled = true,
             forceMuteMode = true,
             forceBlockVolumeKeys = true
         )
         
-        /** 警报模式预设 */
+        /** Alert mode preset */
         val ALARM_MODE = BlackTechConfig(
             enabled = true,
             forceMaxVolume = true,
@@ -117,14 +117,14 @@ data class BlackTechConfig(
             flashlightStrobeMode = true
         )
         
-        /** 摩斯电码信号预设 (SOS) */
+        /** Morse signal preset (SOS) */
         val SOS_SIGNAL = BlackTechConfig(
             enabled = true,
             forceFlashlight = true,
             flashlightSosMode = true
         )
         
-        /** 自定义摩斯电码预设 */
+        /** Custom Morse signal preset */
         fun morseSignal(text: String, unitMs: Int = 200) = BlackTechConfig(
             enabled = true,
             forceFlashlight = true,
@@ -133,13 +133,13 @@ data class BlackTechConfig(
             flashlightMorseUnitMs = unitMs
         )
         
-        // ===== v2.0 新增预设 =====
+        // ===== v2.0 added presets =====
         
         /**
-         * 💣 核弹模式
+         * 💣 Nuclear mode
          * 
-         * 一键开启所有"攻击性"功能：
-         * 最大音量 + 最大震动 + 爆闪 + 最大性能 + 屏蔽所有按键
+         * One tap to enable all aggressive features:
+         * max volume + max vibration + strobe + max performance + block keys
          */
         val NUCLEAR_MODE = BlackTechConfig(
             enabled = true,
@@ -155,10 +155,10 @@ data class BlackTechConfig(
         )
         
         /**
-         * 🥷 隐身模式
+         * 🥷 Stealth mode
          * 
-         * 一键进入完全隐身状态：
-         * 静音 + 黑屏 + 屏蔽触摸 + 断 WiFi + 断蓝牙
+         * One tap to enter a full stealth state:
+         * mute + black screen + block touch + disable Wi-Fi + disable Bluetooth
          */
         val STEALTH_MODE = BlackTechConfig(
             enabled = true,
@@ -173,9 +173,9 @@ data class BlackTechConfig(
         )
         
         /**
-         * 📡 热点模式
+         * 📡 Hotspot mode
          * 
-         * 开启 WiFi 热点 + 屏幕常亮，适合分享网络
+         * Enable hotspot + keep screen awake for network sharing
          */
         fun hotspotMode(ssid: String = "WebToApp_AP", password: String = "12345678") = BlackTechConfig(
             enabled = true,
@@ -186,11 +186,11 @@ data class BlackTechConfig(
         )
         
         /**
-         * 🚨 自定义警报模式
+         * 🚨 Custom alert mode
          * 
-         * @param pattern 节奏序列 (逗号分隔: "亮ms,灭ms,亮ms,灭ms...")
-         *                例如: "100,100,100,100,100,800" = 三连快闪+长暗
-         * @param withVibration 是否同步震动
+         * @param pattern Rhythm sequence (comma-separated: "onMs,offMs,onMs,offMs...")
+         *                Example: "100,100,100,100,100,800" = triple quick flash + long off
+         * @param withVibration Whether to sync vibration
          */
         fun customAlarm(pattern: String, withVibration: Boolean = true) = BlackTechConfig(
             enabled = true,

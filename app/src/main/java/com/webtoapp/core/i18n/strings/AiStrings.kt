@@ -347,7 +347,7 @@ internal object AiStrings {
         AppLanguage.ENGLISH -> "Build a Go microservice with gRPC endpoints and HTTP gateway"
         AppLanguage.ARABIC -> "بناء خدمة Go مصغرة مع نقاط gRPC وبوابة HTTP"
     }
-    // ==================== HTML编程助手 ====================
+    // ==================== HTML Coding Assistant ====================
     val htmlCodingAssistant: String get() = when (lang) {
         AppLanguage.CHINESE -> "HTML编程助手"
         AppLanguage.ENGLISH -> "HTML Coding Assistant"
@@ -857,7 +857,7 @@ internal object AiStrings {
         AppLanguage.ENGLISH -> "Rollback failed"
         AppLanguage.ARABIC -> "فشل التراجع"
     }
-    // ==================== AI 模块开发器 ====================
+    // ==================== AI Module Builder ====================
     val restart: String get() = when (lang) {
         AppLanguage.CHINESE -> "重新开始"
         AppLanguage.ENGLISH -> "Restart"
@@ -1079,7 +1079,7 @@ internal object AiStrings {
         AppLanguage.ENGLISH -> "Start Development"
         AppLanguage.ARABIC -> "بدء التطوير"
     }
-    // ==================== Agent 思考消息 ====================
+    // ==================== Agent Reasoning Messages ====================
     val agentAnalyzing: String get() = when (lang) {
         AppLanguage.CHINESE -> "正在分析需求"
         AppLanguage.ENGLISH -> "Analyzing requirement"
@@ -1475,7 +1475,7 @@ internal object AiStrings {
         AppLanguage.ENGLISH -> "Hover to view element info"
         AppLanguage.ARABIC -> "تمرير لعرض معلومات العنصر"
     }
-    // ==================== Agent 工具描述 ====================
+    // ==================== Agent Tool Descriptions ====================
     val agentToolSyntaxCheck: String get() = when (lang) {
         AppLanguage.CHINESE -> "检查 JavaScript 或 CSS 代码的语法错误。返回错误列表和修复建议。"
         AppLanguage.ENGLISH -> "Check JavaScript or CSS code for syntax errors. Returns error list and fix suggestions."
@@ -1715,7 +1715,7 @@ internal object AiStrings {
         AppLanguage.ENGLISH -> "Preview module effect"
         AppLanguage.ARABIC -> "معاينة تأثير الوحدة"
     }
-    // ==================== AI 设置页面 ====================
+    // ==================== AI Settings ====================
     val apiKeys: String get() = when (lang) {
         AppLanguage.CHINESE -> "API 密钥"
         AppLanguage.ENGLISH -> "API Keys"
@@ -2603,7 +2603,7 @@ internal object AiStrings {
         AppLanguage.ENGLISH -> "Completely free (self-hosted)"
         AppLanguage.ARABIC -> "مجاني تماماً (استضافة ذاتية)"
     }
-    // ==================== AI 编程 ====================
+    // ==================== AI Coding ====================
     val selectCodingType: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择应用类型"
         AppLanguage.ENGLISH -> "Select App Type"

@@ -5,40 +5,40 @@ import com.webtoapp.core.i18n.Strings
 import java.util.UUID
 
 /**
- * HTML编程AI - 数据模型
+ * HTML AI -.
  */
 
 /**
- * 对话会话
+ * Note.
  */
 data class AiCodingSession(
     val id: String = UUID.randomUUID().toString(),
-    val title: String = "",  // 使用空字符串，UI层显示时使用 Strings.newConversation
+    val title: String = "",  // UI Strings.newConversation.
     val messages: List<AiCodingMessage> = emptyList(),
-    val checkpoints: List<ProjectCheckpoint> = emptyList(),  // Version检查点
-    val currentCheckpointIndex: Int = -1,                     // 当前检查点索引
+    val checkpoints: List<ProjectCheckpoint> = emptyList(),  // Version.
+    val currentCheckpointIndex: Int = -1,                     // Note.
     val config: SessionConfig = SessionConfig(),
-    val projectDir: String? = null,                           // 项目文件夹路径
-    val codingType: AiCodingType = AiCodingType.HTML,        // AI编程类型
+    val projectDir: String? = null,                           // Note.
+    val codingType: AiCodingType = AiCodingType.HTML,        // AI.
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
 
 /**
- * 会话配置
+ * Session Config.
  */
 data class SessionConfig(
-    val textModelId: String? = null,           // 文本模型ID
-    val imageModelId: String? = null,          // 图像模型ID（可选）
-    val temperature: Float = 0.7f,             // 温度 0.0-2.0
-    val rules: List<String> = emptyList(),     // 规则列表（空则使用默认规则）
-    val selectedTemplateId: String? = null,    // 选中的模板ID
-    val selectedStyleId: String? = null,       // 选中的风格ID
-    // 工具包配置
-    val enabledTools: Set<AiCodingToolType> = setOf(AiCodingToolType.WRITE_HTML)  // Enable的工具
+    val textModelId: String? = null,           // ID.
+    val imageModelId: String? = null,          // ID.
+    val temperature: Float = 0.7f,             // Note.
+    val rules: List<String> = emptyList(),     // Note.
+    val selectedTemplateId: String? = null,    // ID.
+    val selectedStyleId: String? = null,       // ID.
+    // Note.
+    val enabledTools: Set<AiCodingToolType> = setOf(AiCodingToolType.WRITE_HTML)  // Enable.
 ) {
     /**
-     * 获取实际规则列表（如果为空则使用当前语言的默认规则）
+     * Note.
      */
     fun getEffectiveRules(): List<String> {
         return if (rules.isEmpty()) {
@@ -50,7 +50,7 @@ data class SessionConfig(
 }
 
 /**
- * HTML 工具类型
+ * HTML.
  */
 enum class AiCodingToolType(
     val icon: String,
@@ -86,75 +86,75 @@ enum class AiCodingToolType(
 }
 
 /**
- * 对话消息
+ * Note.
  */
 data class AiCodingMessage(
     val id: String = UUID.randomUUID().toString(),
     val role: MessageRole,
     val content: String,
-    val images: List<String> = emptyList(),    // Image路径列表（最多3张）
-    val thinking: String? = null,               // 思考过程（如有）
-    val codeBlocks: List<CodeBlock> = emptyList(), // 提取的代码块（兼容旧数据）
-    val fileRefs: List<FileReference> = emptyList(), // File引用（新机制）
+    val images: List<String> = emptyList(),    // Image 3.
+    val thinking: String? = null,               // Note.
+    val codeBlocks: List<CodeBlock> = emptyList(), // Note.
+    val fileRefs: List<FileReference> = emptyList(), // File.
     val timestamp: Long = System.currentTimeMillis(),
-    val isEdited: Boolean = false,              // Yes否被编辑过
-    val originalContent: String? = null         // 原始内容（编辑前）
+    val isEdited: Boolean = false,              // Yes.
+    val originalContent: String? = null         // Note.
 )
 
 /**
- * 文件引用（指向项目文件夹中的实际文件）
+ * Note.
  */
 data class FileReference(
-    val filename: String,           // File名 (如 index_v2.html)
-    val baseName: String,           // 基础文件名 (如 index)
-    val version: Int,               // Version号
-    val type: ProjectFileType,      // File类型
+    val filename: String,           // File ( index_v2.html).
+    val baseName: String,           // ( index).
+    val version: Int,               // Version.
+    val type: ProjectFileType,      // File.
     val createdAt: Long = System.currentTimeMillis()
 )
 
 /**
- * 消息角色
+ * Note.
  */
 enum class MessageRole {
     USER,       // User
-    ASSISTANT,  // AI助手
-    SYSTEM      // System消息
+    ASSISTANT,  // AI.
+    SYSTEM      // System.
 }
 
 /**
- * 代码块
+ * Note.
  */
 data class CodeBlock(
     val id: String = UUID.randomUUID().toString(),
-    val language: String = "html",              // 语言类型
-    val filename: String? = null,               // File名
-    val content: String,                        // 代码内容
-    val isComplete: Boolean = true              // Yes否完整代码
+    val language: String = "html",              // Note.
+    val filename: String? = null,               // File.
+    val content: String,                        // Note.
+    val isComplete: Boolean = true              // Yes.
 )
 
 /**
- * 项目检查点（版本控制）
+ * Note.
  */
 data class ProjectCheckpoint(
     val id: String = UUID.randomUUID().toString(),
-    val name: String,                           // Check点名称
+    val name: String,                           // Check.
     val description: String = "",               // Description
-    val messageIndex: Int,                      // 消息索引位置
-    val files: List<ProjectFile>,               // 该版本的所有文件
+    val messageIndex: Int,                      // Note.
+    val files: List<ProjectFile>,               // Note.
     val timestamp: Long = System.currentTimeMillis()
 )
 
 /**
- * 项目文件
+ * Note.
  */
 data class ProjectFile(
-    val name: String,                           // File名
-    val content: String,                        // File内容
+    val name: String,                           // File.
+    val content: String,                        // File.
     val type: ProjectFileType = ProjectFileType.HTML
 )
 
 /**
- * 项目文件类型
+ * Note.
  */
 enum class ProjectFileType(val extension: String, val mimeType: String) {
     HTML("html", "text/html"),
@@ -167,22 +167,22 @@ enum class ProjectFileType(val extension: String, val mimeType: String) {
 }
 
 /**
- * 主题风格模板
+ * Note.
  */
 data class StyleTemplate(
     val id: String,
-    val name: String,                           // 模板名称
-    val category: TemplateCategory,             // 分类
+    val name: String,                           // Note.
+    val category: TemplateCategory,             // Note.
     val description: String,                    // Description
-    val previewImage: String? = null,           // 预览图路径
-    val cssFramework: String? = null,           // 使用的CSS框架
-    val colorScheme: ColorScheme? = null,       // 配色方案
-    val promptHint: String,                     // 提示词提示
-    val exampleCode: String? = null             // 示例代码
+    val previewImage: String? = null,           // Note.
+    val cssFramework: String? = null,           // CSS.
+    val colorScheme: ColorScheme? = null,       // Note.
+    val promptHint: String,                     // Note.
+    val exampleCode: String? = null             // Note.
 )
 
 /**
- * 模板分类
+ * Template Categories.
  */
 enum class TemplateCategory {
     MODERN,
@@ -215,7 +215,7 @@ enum class TemplateCategory {
 }
 
 /**
- * 配色方案
+ * Note.
  */
 data class ColorScheme(
     val primary: String,
@@ -227,20 +227,20 @@ data class ColorScheme(
 )
 
 /**
- * 风格参考词
+ * Note.
  */
 data class StyleReference(
     val id: String,
-    val name: String,                           // 风格名称（如"哈利波特风格"）
-    val category: StyleReferenceCategory,       // 分类
-    val keywords: List<String>,                 // 关键词
-    val description: String,                    // 风格描述
-    val colorHints: List<String>,               // 配色提示
-    val elementHints: List<String>              // 元素提示
+    val name: String,                           // Note.
+    val category: StyleReferenceCategory,       // Note.
+    val keywords: List<String>,                 // Note.
+    val description: String,                    // Note.
+    val colorHints: List<String>,               // Note.
+    val elementHints: List<String>              // Note.
 )
 
 /**
- * 风格参考分类
+ * Note.
  */
 enum class StyleReferenceCategory {
     MOVIE,
@@ -265,7 +265,7 @@ enum class StyleReferenceCategory {
 }
 
 /**
- * Rules 模板
+ * Rules.
  */
 data class RulesTemplate(
     val id: String,
@@ -275,7 +275,7 @@ data class RulesTemplate(
 )
 
 /**
- * 图像生成请求
+ * Note.
  */
 data class ImageGenerationRequest(
     val prompt: String,
@@ -286,7 +286,7 @@ data class ImageGenerationRequest(
 )
 
 /**
- * 图像生成结果
+ * Note.
  */
 data class ImageGenerationResult(
     val success: Boolean,
@@ -296,17 +296,17 @@ data class ImageGenerationResult(
 )
 
 /**
- * AI响应解析结果
+ * AI.
  */
 data class ParsedAiResponse(
-    val textContent: String,                    // 纯文本内容
-    val thinking: String?,                      // 思考内容
-    val codeBlocks: List<CodeBlock>,           // 代码块列表
-    val imageRequests: List<ImageGenerationRequest> // 图像生成请求
+    val textContent: String,                    // Note.
+    val thinking: String?,                      // Note.
+    val codeBlocks: List<CodeBlock>,           // Note.
+    val imageRequests: List<ImageGenerationRequest> // Note.
 )
 
 /**
- * 对话状态
+ * Note.
  */
 sealed class ChatState {
     object Idle : ChatState()
@@ -317,49 +317,49 @@ sealed class ChatState {
 }
 
 /**
- * 保存配置
+ * Note.
  */
 data class SaveConfig(
-    val directory: String,                      // Save目录
-    val projectName: String,                    // 项目名称
-    val createFolder: Boolean = true,           // Yes否创建文件夹
-    val overwrite: Boolean = false              // Yes否覆盖
+    val directory: String,                      // Save.
+    val projectName: String,                    // Note.
+    val createFolder: Boolean = true,           // Yes.
+    val overwrite: Boolean = false              // Yes.
 )
 
 /**
- * 代码库项目
+ * Note.
  */
 data class CodeLibraryItem(
     val id: String = UUID.randomUUID().toString(),
-    val sessionId: String,                      // 关联的会话ID
-    val messageId: String,                      // 关联的消息ID
-    val title: String,                          // 项目标题
+    val sessionId: String,                      // ID.
+    val messageId: String,                      // ID.
+    val title: String,                          // Note.
     val description: String = "",               // Description
-    val files: List<ProjectFile>,               // File列表
-    val previewHtml: String,                    // 预览用的合并HTML
-    val conversationContext: String,            // 对话上下文摘要
-    val userPrompt: String,                     // User原始提问
+    val files: List<ProjectFile>,               // File.
+    val previewHtml: String,                    // HTML.
+    val conversationContext: String,            // Note.
+    val userPrompt: String,                     // User.
     val createdAt: Long = System.currentTimeMillis(),
-    val tags: List<String> = emptyList(),       // 标签
-    val isFavorite: Boolean = false             // Yes否收藏
+    val tags: List<String> = emptyList(),       // Note.
+    val isFavorite: Boolean = false             // Yes.
 )
 
 /**
- * 对话检查点（增强版）
+ * Note.
  */
 data class ConversationCheckpoint(
     val id: String = UUID.randomUUID().toString(),
     val sessionId: String,                      // SessionID
-    val name: String,                           // Check点名称
-    val messageCount: Int,                      // 消息数量
-    val messages: List<AiCodingMessage>,      // 完整消息列表快照
-    val codeLibraryIds: List<String>,           // 关联的代码库项目ID列表
-    val config: SessionConfig,                  // Session配置快照
+    val name: String,                           // Check.
+    val messageCount: Int,                      // Note.
+    val messages: List<AiCodingMessage>,      // Note.
+    val codeLibraryIds: List<String>,           // ID.
+    val config: SessionConfig,                  // Session.
     val timestamp: Long = System.currentTimeMillis()
 )
 
 /**
- * 获取本地化的HTML工具显示名称
+ * HTML.
  */
 fun AiCodingToolType.getLocalizedDisplayName(): String {
     return when (this) {
@@ -374,7 +374,7 @@ fun AiCodingToolType.getLocalizedDisplayName(): String {
 }
 
 /**
- * 获取本地化的HTML工具描述
+ * HTML.
  */
 fun AiCodingToolType.getLocalizedDescription(): String {
     return when (this) {
@@ -389,7 +389,7 @@ fun AiCodingToolType.getLocalizedDescription(): String {
 }
 
 /**
- * 获取本地化的模板分类显示名称
+ * Template Categories.
  */
 fun TemplateCategory.getLocalizedDisplayName(): String {
     return when (this) {
@@ -409,7 +409,7 @@ fun TemplateCategory.getLocalizedDisplayName(): String {
 }
 
 /**
- * 获取本地化的风格参考分类显示名称
+ * Note.
  */
 fun StyleReferenceCategory.getLocalizedDisplayName(): String {
     return when (this) {

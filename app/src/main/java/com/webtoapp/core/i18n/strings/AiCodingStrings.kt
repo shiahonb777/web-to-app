@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object AiCodingStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== HTML编程 ====================
+    // ==================== HTML ====================
     val downloadFile: String get() = when (lang) {
         AppLanguage.CHINESE -> "下载"
         AppLanguage.ENGLISH -> "Download"
@@ -143,7 +143,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Add new rule..."
         AppLanguage.ARABIC -> "إضافة قاعدة جديدة..."
     }
-    // ==================== HTML编程AI样式模板 ====================
+    // ==================== HTML AI ====================
     val styleModernMinimal: String get() = when (lang) {
         AppLanguage.CHINESE -> "现代简约"
         AppLanguage.ENGLISH -> "Modern Minimal"
@@ -263,7 +263,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Glowing neon effect, nightclub style"
         AppLanguage.ARABIC -> "تأثير نيون متوهج، نمط الملهى الليلي"
     }
-    // ==================== HTML 工具类型 ====================
+    // ==================== HTML ====================
     val toolWriteHtml: String get() = when (lang) {
         AppLanguage.CHINESE -> "写入 HTML"
         AppLanguage.ENGLISH -> "Write HTML"
@@ -371,7 +371,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Requires image model"
         AppLanguage.ARABIC -> "يتطلب نموذج صورة"
     }
-    // ==================== 安全扫描 ====================
+    // ==================== ====================
     val secEvalDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "使用 eval() 执行动态代码"
         AppLanguage.ENGLISH -> "Using eval() to execute dynamic code"
@@ -491,7 +491,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Base64 is for encoding only, not for security"
         AppLanguage.ARABIC -> "Base64 للترميز فقط، ليس لأغراض أمنية"
     }
-    // ==================== 工具参数描述 ====================
+    // ==================== ====================
     val paramCodeToCheck: String get() = when (lang) {
         AppLanguage.CHINESE -> "要检查的代码"
         AppLanguage.ENGLISH -> "Code to check"
@@ -611,7 +611,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Preview page URL"
         AppLanguage.ARABIC -> "عنوان URL لصفحة المعاينة"
     }
-    // ==================== 错误恢复操作 ====================
+    // ==================== ====================
     val retryAction: String get() = when (lang) {
         AppLanguage.CHINESE -> "Retry"
         AppLanguage.ENGLISH -> "Retry"
@@ -683,7 +683,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Dismiss error message"
         AppLanguage.ARABIC -> "إغلاق رسالة الخطأ"
     }
-    // ==================== AI功能场景 ====================
+    // ==================== AI ====================
     val featureWriteHtml: String get() = when (lang) {
         AppLanguage.CHINESE -> "写入 HTML"
         AppLanguage.ENGLISH -> "Write HTML"
@@ -743,7 +743,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "General Chat"
         AppLanguage.ARABIC -> "محادثة عامة"
     }
-    // ==================== Agent 工具执行器 ====================
+    // ==================== Agent ====================
     val toolErrUnknown: String get() = when (lang) {
         AppLanguage.CHINESE -> "未知工具"
         AppLanguage.ENGLISH -> "Unknown tool"
@@ -809,7 +809,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Creation failed"
         AppLanguage.ARABIC -> "فشل الإنشاء"
     }
-    // ==================== 语法检查消息 ====================
+    // ==================== ====================
     val syntaxBraceMismatch: String get() = when (lang) {
         AppLanguage.CHINESE -> "大括号不匹配"
         AppLanguage.ENGLISH -> "Braces mismatch"
@@ -881,7 +881,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Check all [ ] are properly paired"
         AppLanguage.ARABIC -> "تحقق من تطابق جميع [ ]"
     }
-    // ==================== Lint 警告 ====================
+    // ==================== Lint ====================
     val lintNoVar: String get() = when (lang) {
         AppLanguage.CHINESE -> "建议使用 let 或 const 代替 var"
         AppLanguage.ENGLISH -> "Prefer let or const instead of var"
@@ -941,7 +941,7 @@ internal object AiCodingStrings {
         AppLanguage.ENGLISH -> "Some lines exceed 120 characters, consider splitting for readability"
         AppLanguage.ARABIC -> "بعض الأسطر تتجاوز 120 حرفاً، يُنصح بتقسيمها"
     }
-    // ==================== AI 规则模板 ====================
+    // ==================== AI ====================
     val ruleUseChinese: String get() = when (lang) {
         AppLanguage.CHINESE -> "使用中文进行对话"
         AppLanguage.ENGLISH -> "Communicate in English"

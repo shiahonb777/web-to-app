@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Encryption config card
- * 用于在创建应用时配置 APK 加密选项
+ * forcreateappconfig APK
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -39,7 +39,7 @@ fun EncryptionConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -89,13 +89,13 @@ fun EncryptionConfigCard(
                 )
             }
             
-            // Expand详细配置
+            // Expand config
             AnimatedVisibility(visible = config.enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 快捷预设
+                    // Note
                     Text(
                         text = Strings.encryptionLevel,
                         style = MaterialTheme.typography.labelMedium,
@@ -154,13 +154,13 @@ fun EncryptionConfigCard(
                         )
                     }
                     
-                    // Custom配置
+                    // Customconfig
                     AnimatedVisibility(visible = expanded) {
                         Column(
                             modifier = Modifier.padding(top = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // Resource加密选项
+                            // Resource
                             Text(
                                 text = Strings.resourceEncryption,
                                 style = MaterialTheme.typography.labelMedium,
@@ -205,7 +205,7 @@ fun EncryptionConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // Encryption强度选择
+                            // Encryption select
                             Text(
                                 text = Strings.encryptionStrength,
                                 style = MaterialTheme.typography.labelMedium,
@@ -220,7 +220,7 @@ fun EncryptionConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // Security保护选项
+                            // Security
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -275,7 +275,7 @@ fun EncryptionConfigCard(
                                         onCheckedChange = { onConfigChange(config.copy(obfuscateStrings = it)) }
                                     )
                                     
-                                    // Security保护说明
+                                    // Security
                                     Card(
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
@@ -304,7 +304,7 @@ fun EncryptionConfigCard(
                         }
                     }
                     
-                    // Encryption说明
+                    // Encryption
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -335,7 +335,7 @@ fun EncryptionConfigCard(
 }
 
 /**
- * 加密强度选择器
+ * select
  */
 @Composable
 private fun EncryptionLevelSelector(

@@ -10,10 +10,9 @@ import com.webtoapp.data.model.WebApp
 import kotlinx.coroutines.flow.Flow
 
 /**
- * WebApp 数据访问对象。
+ * WebApp DAO.
  *
- * 这里只保留当前主流程仍在用的读写入口，
- * 不再继续养那些纯转调、已经没人叫的历史接口。
+ * Keeps only the active read/write paths and drops unused legacy passthroughs.
  */
 @Dao
 interface WebAppDao {

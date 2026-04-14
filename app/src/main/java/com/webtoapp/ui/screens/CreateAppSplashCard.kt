@@ -29,10 +29,10 @@ import com.webtoapp.ui.viewmodel.EditState
 
 
 /**
- * 检查媒体文件是否存在
+ * check file
  */
 fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, savedPath: String?): Boolean {
-    // 优先检查保存的路径
+    // preferchecksave path
     if (!savedPath.isNullOrEmpty()) {
         return java.io.File(savedPath).exists()
     }
@@ -49,7 +49,7 @@ fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, sa
 }
 
 /**
- * 启动画面设置卡片
+ * animation settingscard
  */
 @Composable
 fun SplashScreenCard(
@@ -67,12 +67,12 @@ fun SplashScreenCard(
 ) {
     val context = LocalContext.current
     
-    // Check媒体文件是否存在
+    // Check file
     val mediaExists = remember(editState.splashMediaUri, editState.savedSplashPath) {
         checkMediaExists(context, editState.splashMediaUri, editState.savedSplashPath)
     }
     
-    // 如果媒体不存在但 URI 非空，自动清除
+    // if URI, clear
     LaunchedEffect(mediaExists, editState.splashMediaUri) {
         if (!mediaExists && editState.splashMediaUri != null) {
             onClearMedia()
@@ -84,7 +84,7 @@ fun SplashScreenCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 标题和开关
+            // Note
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Wallpaper,
                 title = Strings.splashScreen,
@@ -104,10 +104,10 @@ fun SplashScreenCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Media预览区域
+                // Mediapreviewarea
                 if (editState.splashMediaUri != null && mediaExists) {
                     if (editState.splashConfig.type == SplashType.VIDEO) {
-                        // Video裁剪器
+                        // Video
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -134,7 +134,7 @@ fun SplashScreenCard(
                             )
                         }
                     } else {
-                        // Image预览
+                        // Imagepreview
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -157,7 +157,7 @@ fun SplashScreenCard(
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
-                                // Delete按钮
+                                // Deletebutton
                                 IconButton(
                                     onClick = onClearMedia,
                                     modifier = Modifier
@@ -174,7 +174,7 @@ fun SplashScreenCard(
                         }
                     }
                 } else {
-                    // Empty状态 - 选择媒体
+                    // Emptystate- select
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -208,7 +208,7 @@ fun SplashScreenCard(
                     }
                 }
 
-                // Select按钮
+                // Selectbutton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -231,9 +231,9 @@ fun SplashScreenCard(
                     }
                 }
 
-                // 以下设置仅在上传媒体后显示
+                // settingsonly upload display
                 if (editState.splashMediaUri != null && mediaExists) {
-                    // Show时长设置（仅图片显示，视频使用裁剪范围）
+                    // Show settings( only display, )
                     if (editState.splashConfig.type == SplashType.IMAGE) {
                         Column {
                             Text(
@@ -250,7 +250,7 @@ fun SplashScreenCard(
                         }
                     }
 
-                    // 点击跳过设置
+                    // settings
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -270,7 +270,7 @@ fun SplashScreenCard(
                         )
                     }
                     
-                    // Show方向设置
+                    // Show settings
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -295,7 +295,7 @@ fun SplashScreenCard(
                         )
                     }
                     
-                    // 铺满屏幕设置
+                    // settings
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -315,7 +315,7 @@ fun SplashScreenCard(
                         )
                     }
                     
-                    // Enable音频设置（仅视频类型显示）
+                    // Enable settings( only typedisplay)
                     if (editState.splashConfig.type == SplashType.VIDEO) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

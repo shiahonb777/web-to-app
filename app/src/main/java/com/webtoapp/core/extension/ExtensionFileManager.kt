@@ -15,13 +15,13 @@ import java.util.UUID
 import java.util.zip.ZipInputStream
 
 /**
- * 扩展文件管理器
- * 
- * 负责：
- * - 从 URI / 文件导入油猴脚本 (.user.js)
- * - 从 URI / 文件导入 Chrome 扩展 (.crx / .zip)
- * - 解压扩展包到独立目录
- * - 管理扩展文件的生命周期（清理等）
+ * extension manager.
+ *
+ * .
+ * - from URI / (.user.js)
+ * - from URI / Chrome extension (.crx /.zip)
+ * - extension to.
+ * - manageextension.
  */
 class ExtensionFileManager(private val context: Context) {
     
@@ -54,7 +54,6 @@ class ExtensionFileManager(private val context: Context) {
     private val httpClient get() = NetworkModule.defaultClient
     
     /**
-     * 导入结果
      */
     sealed class ImportResult {
         data class UserScript(
@@ -72,7 +71,7 @@ class ExtensionFileManager(private val context: Context) {
     // ==================== Userscript Import ====================
     
     /**
-     * 从 URI 导入油猴脚本
+     * from URI.
      */
     suspend fun importUserScript(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
         try {
@@ -89,7 +88,7 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 从文本内容导入油猴脚本
+     * from.
      */
     fun importUserScriptFromText(content: String, fileName: String = ""): ImportResult {
         return try {
@@ -104,11 +103,11 @@ class ExtensionFileManager(private val context: Context) {
     // ==================== Chrome Extension Import ====================
     
     /**
-     * 从 URI 导入 Chrome 扩展 (.crx 或 .zip)
+     * from URI Chrome extension.
      */
     suspend fun importChromeExtension(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
         try {
-            // 复制到临时文件
+            // to when.
             val tempFile = File(tempDir, "ext_${System.currentTimeMillis()}")
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(tempFile).use { output ->
@@ -122,7 +121,7 @@ class ExtensionFileManager(private val context: Context) {
             
             val result = importChromeExtensionFromFile(tempFile)
             
-            // 清理临时文件
+            // when.
             tempFile.delete()
             
             result
@@ -133,7 +132,7 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 从文件导入 Chrome 扩展
+     * from Chrome extension.
      */
     suspend fun importChromeExtensionFromFile(file: File): ImportResult = withContext(Dispatchers.IO) {
         try {
@@ -144,15 +143,15 @@ class ExtensionFileManager(private val context: Context) {
             val isCrx = ChromeExtensionParser.isCrxFile(file)
             
             if (isCrx) {
-                // CRX 文件 - 跳过头部，解压 ZIP 数据
+                // CRX - ZIP.
                 val zipOffset = ChromeExtensionParser.getCrxZipOffset(file)
                 extractCrxToDirectory(file, zipOffset, extractDir)
             } else {
-                // 普通 ZIP 文件
+                // ZIP.
                 extractZipToDirectory(file, extractDir)
             }
             
-            // 检查是否有嵌套目录（部分扩展 ZIP 内有一层目录）
+            // Check is.
             val actualDir = findManifestDirectory(extractDir)
             if (actualDir == null) {
                 extractDir.deleteRecursively()
@@ -240,12 +239,12 @@ class ExtensionFileManager(private val context: Context) {
                     val bytes = response.body?.bytes() ?: byteArrayOf()
                     
                     if (contentType.startsWith("text/") || contentType.contains("json") || contentType.contains("xml") || contentType.contains("javascript")) {
-                        // Text content — store as-is
+                        // Text content store as-is
                         val text = String(bytes)
                         cacheFile.writeText(text)
                         result[name] = text
                     } else {
-                        // Binary content — store as data URI
+                        // Binary content store as data URI
                         val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
                         val dataUri = "data:$contentType;base64,$base64"
                         cacheFile.writeText(dataUri)
@@ -290,7 +289,7 @@ class ExtensionFileManager(private val context: Context) {
     // ==================== File Operations ====================
     
     /**
-     * 清理扩展目录
+     * extension.
      */
     fun cleanupExtensionDir(dirName: String) {
         try {
@@ -305,7 +304,7 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 清理所有临时文件
+     * when.
      */
     fun cleanupTemp() {
         try {
@@ -316,7 +315,7 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 获取扩展目录总大小
+     * Getextension large small.
      */
     fun getExtensionsDirSize(): Long {
         return extensionsDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
@@ -325,7 +324,7 @@ class ExtensionFileManager(private val context: Context) {
     // ==================== Private Helpers ====================
     
     /**
-     * 解压 ZIP 文件到目录
+     * ZIP to.
      */
     private fun extractZipToDirectory(zipFile: File, targetDir: File) {
         ZipInputStream(zipFile.inputStream().buffered()).use { zis ->
@@ -334,13 +333,13 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 从 CRX 文件提取 ZIP 数据并解压
+     * from CRX Extract ZIP and.
      */
     private fun extractCrxToDirectory(crxFile: File, zipOffset: Long, targetDir: File) {
         RandomAccessFile(crxFile, "r").use { raf ->
             raf.seek(zipOffset)
             
-            // 读取剩余数据到临时 ZIP 文件
+            // to when ZIP.
             val tempZip = File(tempDir, "crx_zip_${System.currentTimeMillis()}.zip")
             try {
                 FileOutputStream(tempZip).use { fos ->
@@ -358,14 +357,14 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 从 ZipInputStream 解压到目录
+     * from ZipInputStream to.
      */
     private fun extractZipStream(zis: ZipInputStream, targetDir: File) {
         var entry = zis.nextEntry
         while (entry != null) {
             val entryName = entry.name
             
-            // 安全检查：防止 Zip Slip 攻击
+            // Check Zip Slip.
             val destFile = File(targetDir, entryName).canonicalFile
             if (!destFile.path.startsWith(targetDir.canonicalPath)) {
                 AppLogger.w(TAG, "Skipping potentially unsafe zip entry: $entryName")
@@ -374,7 +373,7 @@ class ExtensionFileManager(private val context: Context) {
                 continue
             }
             
-            // 跳过 macOS 资源文件
+            // macOS.
             if (entryName.startsWith("__MACOSX/") || entryName.endsWith(".DS_Store")) {
                 zis.closeEntry()
                 entry = zis.nextEntry
@@ -396,13 +395,13 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 在目录中查找 manifest.json（处理可能的嵌套目录）
+     * in in manifest.json.
      */
     private fun findManifestDirectory(dir: File): File? {
-        // 直接在根目录查找
+        // in.
         if (dir.resolve("manifest.json").exists()) return dir
         
-        // 检查一级子目录
+        // Check level.
         dir.listFiles()?.filter { it.isDirectory }?.forEach { subDir ->
             if (subDir.resolve("manifest.json").exists()) return subDir
         }
@@ -411,7 +410,7 @@ class ExtensionFileManager(private val context: Context) {
     }
     
     /**
-     * 从 URI 获取文件名
+     * from URI Get.
      */
     private fun getFileName(uri: Uri): String? {
         return try {

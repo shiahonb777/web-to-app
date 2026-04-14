@@ -212,9 +212,9 @@ object WindowHelper {
     ): Int {
         val originalOrientation = activity.requestedOrientation
         
-        // 仅当 custom view 是视频播放器时切换到横屏
-        // 游戏/Canvas 等全屏请求不应改变方向
-        // 视频播放器通常是 SurfaceView 或 TextureView
+        // Switch to landscape only when custom view is a video player
+        // Full-screen requests from games/canvas should not change orientation
+        // Video players are usually SurfaceView or TextureView
         val isVideoView = view is android.view.SurfaceView ||
                           view is android.view.TextureView ||
                           (view is ViewGroup && hasVideoChildView(view))
@@ -223,7 +223,7 @@ object WindowHelper {
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             AppLogger.d("WindowHelper", "Video fullscreen: switching to SENSOR_LANDSCAPE")
         } else {
-            // 非视频内容（游戏、Canvas 等）：保持当前方向
+            // Non-video content (game/canvas, etc.): keep current orientation
             AppLogger.d("WindowHelper", "Non-video fullscreen: keeping current orientation ($originalOrientation)")
         }
 
@@ -239,8 +239,8 @@ object WindowHelper {
     }
     
     /**
-     * 递归检查 ViewGroup 中是否包含视频播放 View (SurfaceView/TextureView)
-     * 用于判断 onShowCustomView 传入的是视频全屏还是其他全屏内容
+     * Recursively checks whether a ViewGroup contains video views (SurfaceView/TextureView).
+     * Used to distinguish video full-screen from other full-screen custom content in onShowCustomView.
      */
     private fun hasVideoChildView(parent: ViewGroup): Boolean {
         for (i in 0 until parent.childCount) {

@@ -15,43 +15,43 @@ import com.google.gson.JsonParser
 import okhttp3.Request
 
 /**
- * 应用更新检查器
+ * Note.
  * 
- * 架构设计（最大化节省服务器流量）：
- * - 版本检查：通过自有服务器 API（仅几 KB 的 JSON 响应）
- * - APK 下载：直接走 GitHub Releases（免费无限流量，不消耗服务器带宽）
- * - 备用方案：如果服务器 API 不可用，fallback 到 GitHub releases 页面抓取
+ * （）：
+ * - ： API（ KB JSON ）
+ * - APK ： GitHub Releases（，）
+ * - ： API ，fallback GitHub releases
  * 
- * 流量消耗对比：
- *   服务器 API：~1 KB/次检查
- *   GitHub 下载：0 服务器流量（GitHub 承担）
+ * ：
+ * API：~1 KB/
+ * GitHub ：0 （GitHub ）
  */
 object AppUpdateChecker {
     
     private const val TAG = "AppUpdateChecker"
     
-    // 自有服务器 API（版本检查用，仅传输 JSON，几乎不消耗流量）
+    // API（， JSON，）
     private const val API_BASE_URL = "https://api.shiaho.sbs"
     private const val CHECK_UPDATE_URL = "$API_BASE_URL/api/v1/app-version/check"
     
-    // APK 下载地址模板（通过 gh-proxy 加速，全球可用，不消耗服务器流量）
+    // APK （ gh-proxy ，，）
     private const val DOWNLOAD_URL_TEMPLATE = "https://gh-proxy.org/https://github.com/shiahonb777/web-to-app/releases/download/v{VERSION}/web-to-app-{VERSION}.APK"
     
-    // GitHub releases 页面（备用版本检测）
+    // GitHub releases （）
     private const val GITHUB_RELEASES_URL = "https://github.com/shiahonb777/web-to-app/releases"
     
-    // 重试配置
+    // Note.
     private const val MAX_RETRIES = 3
     private const val RETRY_DELAY_MS = 1000L
     
-    // Cache配置
-    private const val CACHE_TTL_MS = 30 * 60 * 1000L // 30分钟
+    // Cache
+    private const val CACHE_TTL_MS = 30 * 60 * 1000L // 30
     
-    // 自动检查更新 偏好设置
+    // Note.
     private const val PREFS_NAME = "app_update_prefs"
     private const val KEY_AUTO_CHECK_UPDATE = "auto_check_update"
     private const val KEY_LAST_AUTO_CHECK_TIME = "last_auto_check_time"
-    private const val AUTO_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000L // 6小时冷却
+    private const val AUTO_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000L // 6
     
     // Pre-compiled regex for fallback version extraction
     private val VERSION_REGEX = Regex("""releases/(?:tag|download)/v?(\d+\.\d+\.\d+)""")
@@ -66,20 +66,20 @@ object AppUpdateChecker {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     
     /**
-     * 获取自动检查更新开关状态（默认开启）
+     * （）
      */
     fun isAutoCheckEnabled(context: Context): Boolean =
         getPrefs(context).getBoolean(KEY_AUTO_CHECK_UPDATE, true)
     
     /**
-     * 设置自动检查更新开关
+     * Note.
      */
     fun setAutoCheckEnabled(context: Context, enabled: Boolean) {
         getPrefs(context).edit().putBoolean(KEY_AUTO_CHECK_UPDATE, enabled).apply()
     }
     
     /**
-     * 检查是否需要自动检查更新（冷却时间内不重复检查）
+     * （）
      */
     fun shouldAutoCheck(context: Context): Boolean {
         if (!isAutoCheckEnabled(context)) return false
@@ -88,42 +88,42 @@ object AppUpdateChecker {
     }
     
     /**
-     * 记录自动检查时间
+     * Note.
      */
     fun recordAutoCheck(context: Context) {
         getPrefs(context).edit().putLong(KEY_LAST_AUTO_CHECK_TIME, System.currentTimeMillis()).apply()
     }
     
     /**
-     * 版本更新信息
+     * Note.
      */
     data class UpdateInfo(
-        val versionName: String,      // Version名称，如 "v1.9.5"
-        val versionCode: Int = 0,     // 版本号
-        val downloadUrl: String,      // APK 下载链接（GitHub）
-        val hasUpdate: Boolean,       // 是否有更新
-        val isForceUpdate: Boolean = false, // 是否强制更新
-        val title: String = "",       // 更新标题
-        val releaseNotes: String = "", // 更新说明
-        val fileSize: Long = 0       // 文件大小
+        val versionName: String,      // Version， "v1.9.5"
+        val versionCode: Int = 0,     // Note.
+        val downloadUrl: String,      // APK （GitHub）
+        val hasUpdate: Boolean,       // Note.
+        val isForceUpdate: Boolean = false, // Note.
+        val title: String = "",       // Note.
+        val releaseNotes: String = "", // Note.
+        val fileSize: Long = 0       // Note.
     )
     
     /**
-     * 检查更新（带缓存）
-     * @param currentVersionName 当前应用的版本名称（如 "1.9.5"）
-     * @param currentVersionCode 当前应用的版本号（如 10905）
-     * @param forceRefresh 是否强制刷新（忽略缓存）
-     * @return 更新信息，失败返回 Result.failure
+     * （）
+     * @param currentVersionName parameter
+     * @param currentVersionCode parameter
+     * @param forceRefresh parameter
+     * @return result
      */
     suspend fun checkUpdate(
         currentVersionName: String,
         currentVersionCode: Int = 0,
         forceRefresh: Boolean = false
     ): Result<UpdateInfo> = withContext(Dispatchers.IO) {
-        // Check缓存
+        // Check
         if (!forceRefresh && isCacheValid()) {
             cachedUpdateInfo?.let { cached ->
-                // 重新计算 hasUpdate
+                // hasUpdate
                 val hasUpdate = if (currentVersionCode > 0 && cached.versionCode > 0) {
                     cached.versionCode > currentVersionCode
                 } else {
@@ -133,11 +133,11 @@ object AppUpdateChecker {
             }
         }
         
-        // 带重试的请求：优先用服务器 API，失败后 fallback 到 GitHub
+        // ： API， fallback GitHub
         var lastException: Exception? = null
         repeat(MAX_RETRIES) { attempt ->
             try {
-                // 首选：自有服务器 API（几乎不消耗流量）
+                // ： API（）
                 val result = fetchFromServerApi(currentVersionName, currentVersionCode)
                 if (result.isSuccess) {
                     result.getOrNull()?.let { info ->
@@ -157,7 +157,7 @@ object AppUpdateChecker {
             }
         }
         
-        // Fallback：GitHub releases 页面抓取
+        // Fallback：GitHub releases
         AppLogger.i(TAG, "服务器 API 不可用，尝试 GitHub fallback")
         try {
             val fallbackResult = fetchFromGitHub(currentVersionName)
@@ -176,8 +176,8 @@ object AppUpdateChecker {
     }
     
     /**
-     * 通过自有服务器 API 检查更新
-     * 流量消耗：约 1KB（JSON 响应）
+     * API
+     * ： 1KB（JSON ）
      */
     private fun fetchFromServerApi(currentVersionName: String, currentVersionCode: Int): Result<UpdateInfo> {
         return try {
@@ -199,7 +199,7 @@ object AppUpdateChecker {
             val data = json.getAsJsonObject("data")
             
             if (data == null || !data.has("has_update") || !data.get("has_update").asBoolean) {
-                // 没有更新
+                // Note.
                 return Result.success(UpdateInfo(
                     versionName = "v$currentVersionName",
                     versionCode = vCode,
@@ -208,13 +208,13 @@ object AppUpdateChecker {
                 ))
             }
             
-            // 有更新
+            // Note.
             val latest = data.getAsJsonObject("latest_version") ?: data
             val serverVersionName = latest.get("version_name")?.asString ?: ""
             val serverDownloadUrl = latest.get("download_url")?.asString ?: ""
             
-            // 如果服务器返回的下载链接是 GitHub 链接，直接用；
-            // 否则构建 GitHub 下载链接以节省服务器流量
+            // GitHub ，；
+            // GitHub
             val downloadUrl = if (serverDownloadUrl.contains("github.com")) {
                 serverDownloadUrl
             } else {
@@ -239,7 +239,7 @@ object AppUpdateChecker {
     }
     
     /**
-     * Fallback：通过 GitHub releases 页面抓取版本（备用方案）
+     * Fallback： GitHub releases （）
      */
     private fun fetchFromGitHub(currentVersionName: String): Result<UpdateInfo> {
         return try {
@@ -276,7 +276,7 @@ object AppUpdateChecker {
     }
     
     /**
-     * 检查缓存是否有效
+     * Note.
      */
     private fun isCacheValid(): Boolean {
         return cachedUpdateInfo != null && 
@@ -284,7 +284,7 @@ object AppUpdateChecker {
     }
     
     /**
-     * 清除缓存
+     * Note.
      */
     fun clearCache() {
         cachedUpdateInfo = null
@@ -292,7 +292,7 @@ object AppUpdateChecker {
     }
     
     /**
-     * 从 releases 页面提取最新版本号（fallback 用）
+     * releases （fallback ）
      */
     private fun extractLatestVersion(html: String): String {
         var latestVersion = ""
@@ -312,14 +312,14 @@ object AppUpdateChecker {
     }
     
     /**
-     * 构建 GitHub 下载地址（不消耗服务器流量）
+     * GitHub （）
      */
     private fun buildGitHubDownloadUrl(version: String): String {
         return DOWNLOAD_URL_TEMPLATE.replace("{VERSION}", version)
     }
     
     /**
-     * 比较两个版本号
+     * Note.
      */
     fun compareVersions(v1: String, v2: String): Int {
         val code1 = parseVersionToCode(v1)
@@ -328,9 +328,9 @@ object AppUpdateChecker {
     }
     
     /**
-     * 将版本号转换为数字便于比较
-     * 支持格式: "1.5.0", "v1.5.0", "1.5", "v1.5"
-     * 转换规则: major * 10000 + minor * 100 + patch
+     * Note.
+     * : "1.5.0", "v1.5.0", "1.5", "v1.5"
+     * : major * 10000 + minor * 100 + patch
      */
     private fun parseVersionToCode(version: String): Int {
         return try {
@@ -348,8 +348,8 @@ object AppUpdateChecker {
     }
     
     /**
-     * 使用系统 DownloadManager 下载 APK
-     * @return 下载ID，失败返回 -1
+     * DownloadManager APK
+     * @return result
      */
     fun downloadApk(
         context: Context,
@@ -383,7 +383,7 @@ object AppUpdateChecker {
     }
     
     /**
-     * 安装 APK
+     * APK
      */
     fun installApk(context: Context, downloadId: Long) {
         try {
@@ -404,7 +404,7 @@ object AppUpdateChecker {
     }
     
     /**
-     * 获取当前应用版本信息
+     * Note.
      */
     fun getCurrentVersionInfo(context: Context): Pair<String, Int> {
         return try {

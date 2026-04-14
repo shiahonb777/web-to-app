@@ -44,9 +44,9 @@ import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.R
 
 /**
- * 用户资料页面
+ * user
  * 
- * 展示已登录用户的资料、会员状态、使用统计、密码管理、账号注销
+ * user, state, , management,
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,14 +71,14 @@ fun ProfileScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 监听密码修改状态
+    // state
     LaunchedEffect(passwordState) {
         when (passwordState) {
             is FormState.Success -> {
                 snackbarHostState.showSnackbar((passwordState as FormState.Success).message)
                 authViewModel.resetPasswordState()
                 showChangePasswordDialog = false
-                onLogout() // 需要重新登录
+                onLogout() // Note
             }
             is FormState.Error -> {
                 snackbarHostState.showSnackbar((passwordState as FormState.Error).message)
@@ -88,7 +88,7 @@ fun ProfileScreen(
         }
     }
 
-    // 监听账号注销状态
+    // state
     LaunchedEffect(deleteAccountState) {
         when (deleteAccountState) {
             is FormState.Success -> {
@@ -105,7 +105,7 @@ fun ProfileScreen(
         }
     }
 
-    // 如果未登录，返回
+    // if, back
     val user = (authState as? AuthState.LoggedIn)?.user ?: run {
         LaunchedEffect(Unit) { onBack() }
         return
@@ -144,7 +144,7 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 头像 & 用户名
+            // & user
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -182,7 +182,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 会员标签
+            // label
             val planLabel = when (user.proPlan) {
                 "pro_monthly", "pro_quarterly", "pro_yearly" -> "Pro"
                 "pro_lifetime", "lifetime" -> "Pro ∞"
@@ -222,7 +222,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 激活码兑换入口
+            // activation code
             EnhancedElevatedCard(
                 onClick = onNavigateActivationCode,
                 modifier = Modifier.fillMaxWidth(),
@@ -261,7 +261,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 使用统计
+            // Note
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -292,12 +292,12 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 会员状态卡片
+            // statecard
             if (proStatus != null || user.isPro) {
                 ProStatusCard(proStatus, user, onNavigateSubscription)
                 Spacer(modifier = Modifier.height(16.dp))
             } else {
-                // Free 用户 — 显示升级引导
+                // Free user- display
                 EnhancedElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -343,7 +343,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // 功能菜单
+            // Note
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -383,7 +383,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 退出登录
+            // Note
             PremiumOutlinedButton(
                 onClick = { showLogoutDialog = true },
                 modifier = Modifier
@@ -405,7 +405,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 在所有设备上登出
+            // Note
             TextButton(
                 onClick = { showLogoutAllDialog = true },
                 modifier = Modifier.fillMaxWidth()
@@ -419,7 +419,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 注销账号（危险操作）
+            // Note
             TextButton(
                 onClick = { showDeleteAccountDialog = true },
                 colors = ButtonDefaults.textButtonColors(
@@ -441,7 +441,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(40.dp))
         }
 
-        // ─── 退出登录确认对话框 ───
+        // dialog
         if (showLogoutDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
@@ -469,7 +469,7 @@ fun ProfileScreen(
             )
         }
 
-        // ─── 所有设备登出确认对话框 ───
+        // dialog
         if (showLogoutAllDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutAllDialog = false },
@@ -499,7 +499,7 @@ fun ProfileScreen(
             )
         }
 
-        // ─── 修改密码对话框 ───
+        // dialog
         if (showChangePasswordDialog) {
             ChangePasswordDialog(
                 authViewModel = authViewModel,
@@ -507,7 +507,7 @@ fun ProfileScreen(
             )
         }
 
-        // ─── 注销账号对话框 ───
+        // dialog
         if (showDeleteAccountDialog) {
             DeleteAccountDialog(
                 authViewModel = authViewModel,
@@ -517,7 +517,7 @@ fun ProfileScreen(
     }
 }
 
-// ─── 修改密码对话框 ───
+// dialog
 
 @Composable
 private fun ChangePasswordDialog(
@@ -600,7 +600,7 @@ private fun ChangePasswordDialog(
     )
 }
 
-// ─── 注销账号对话框 ───
+// dialog
 
 @Composable
 private fun DeleteAccountDialog(
@@ -725,7 +725,7 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
     val isUltraLifetime = user.proPlan == "ultra_lifetime"
     val isLifetime = isProLifetime || isUltraLifetime
 
-    // 根据会员层级选择不同的颜色主题
+    // select color
     val cardColor = when {
         isUltraLifetime -> Color(0xFFFFD700).copy(alpha = 0.15f)
         isUltra -> Color(0xFFFFD700).copy(alpha = 0.15f)
@@ -801,7 +801,7 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                 }
             }
 
-            // Pro 永久 → Ultra 永久 升级按钮
+            // Pro → Ultra button
             if (isProLifetime) {
                 val proLifetimePrice = 99.0
                 val ultraLifetimePrice = 199.0
@@ -814,7 +814,7 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { /* TODO: 触发升级流程 */ }
+                        .clickable { /* TODO */ }
                         .padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

@@ -14,14 +14,14 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 /**
- * 云服务 Auth API 客户端
+ * Cloud auth API client
  * 
- * 对接服务器端 /api/v1/auth/ 和 /api/v1/user/ 接口
+ * API paths: /api/v1/auth/ and /api/v1/user/
  */
 class AuthApiClient(private val tokenManager: TokenManager) {
 
     companion object {
-        // 服务器 API 基础 URL
+        // API URL
         const val BASE_URL = "https://api.shiaho.sbs"
         private const val TAG = "AuthApiClient"
     }
@@ -38,7 +38,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── Auth API ───
 
     /**
-     * 发送邮箱验证码
+     * Send email verification code
      */
     suspend fun sendVerificationCode(email: String): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
@@ -67,7 +67,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 用户注册
+     * User registration
      */
     suspend fun register(
         email: String,
@@ -113,7 +113,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 用户登录（支持用户名或邮箱）
+     * User login (username or email)
      */
     suspend fun login(
         account: String,
@@ -160,7 +160,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 刷新 Token
+     * Refresh token
      */
     suspend fun refreshToken(refreshToken: String): AuthResult<TokenPair> = withContext(Dispatchers.IO) {
         try {
@@ -196,7 +196,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── User API ───
 
     /**
-     * 获取用户资料（需要 Token）
+     * Get user profile (token required)
      */
     suspend fun getProfile(): AuthResult<UserProfile> = withContext(Dispatchers.IO) {
         try {
@@ -217,7 +217,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
                 val profile = parseUserProfile(data)
                 AuthResult.Success(profile)
             } else if (response.code == 401) {
-                // Token 过期，尝试刷新
+                // Token ，
                 val refreshResult = tryRefreshAndRetry { getProfile() }
                 refreshResult
             } else {
@@ -230,7 +230,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 更新用户资料
+     * Update user profile
      */
     suspend fun updateProfile(
         username: String? = null,
@@ -268,7 +268,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 获取 Pro 会员状态
+     * Get Pro status
      */
     suspend fun getProStatus(): AuthResult<ProStatus> = withContext(Dispatchers.IO) {
         try {
@@ -305,7 +305,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── Logout (Server-side) ───
 
     /**
-     * 登出（通知服务器使 Token 失效）
+     * Logout (invalidate token on server)
      */
     suspend fun logout(deviceId: String? = null): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
@@ -329,7 +329,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 登出所有设备
+     * Logout all devices
      */
     suspend fun logoutAll(): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
@@ -351,7 +351,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── Password Management ───
 
     /**
-     * 修改密码
+     * Change password
      */
     suspend fun changePassword(
         currentPassword: String,
@@ -387,7 +387,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 忘记密码 — 请求重置验证码
+     * Forgot password - request reset code
      */
     suspend fun forgotPassword(email: String): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
@@ -415,7 +415,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 重置密码 — 使用验证码
+     * Reset password with code
      */
     suspend fun resetPassword(
         email: String,
@@ -460,7 +460,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── Account Deletion (Google Play Compliance) ───
 
     /**
-     * 永久删除账号
+     * Permanently delete account
      */
     suspend fun deleteAccount(
         password: String,
@@ -498,7 +498,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── Google OAuth ───
 
     /**
-     * Google 登录
+     * Google login
      */
     suspend fun googleLogin(
         idToken: String,
@@ -548,7 +548,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     // ─── Avatar Upload ───
 
     /**
-     * 上传头像
+     * Upload avatar
      */
     suspend fun uploadAvatar(imageBytes: ByteArray, mimeType: String = "image/jpeg"): AuthResult<AvatarUploadResult> = withContext(Dispatchers.IO) {
         try {
@@ -666,7 +666,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 心跳 — 每 60 秒调用一次，用于统计在线时长
+     * Heartbeat called every 60s for online duration
      */
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         try {
@@ -682,7 +682,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 
     /**
-     * 绑定邮箱（Google 登录用户后续绑定）
+     * （Google login）
      */
     suspend fun bindEmail(email: String, verificationCode: String): AuthResult<String> = withContext(Dispatchers.IO) {
         try {

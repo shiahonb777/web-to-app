@@ -42,15 +42,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
 /**
- * 端口管理页面
+ * management
  * 
- * 功能：
- * - 扫描并显示所有运行中的服务（含响应延迟、运行时长）
- * - 支持终止单个服务 / 一键终止所有服务
- * - 支持在浏览器中打开服务
- * - 端口范围使用率仪表盘
- * - 可选自动刷新（5s 间隔）
- * - 僵尸端口自动检测与清理
+ * Note
+ * anddisplay runin( , run)
+ * support /
+ * support open
+ * Note
+ * optional refresh( 5s)
+ * with
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,17 +68,17 @@ fun PortManagerScreen(
     var autoRefresh by remember { mutableStateOf(false) }
     var showRangeStats by remember { mutableStateOf(false) }
     
-    // 扫描函数
+    // Note
     suspend fun doScan() {
         isScanning = true
         services = ProcessPortScanner.scanAllPorts(context)
         isScanning = false
     }
     
-    // 初始扫描
+    // Note
     LaunchedEffect(Unit) { doScan() }
     
-    // 自动刷新
+    // refresh
     LaunchedEffect(autoRefresh) {
         if (autoRefresh) {
             while (true) {
@@ -88,12 +88,12 @@ fun PortManagerScreen(
         }
     }
     
-    // 刷新函数
+    // refresh
     fun refresh() {
         scope.launch { doScan() }
     }
     
-    // 终止单个服务
+    // Note
     fun killService(service: RunningService) {
         scope.launch {
             val success = ProcessPortScanner.killProcess(service.port)
@@ -109,7 +109,7 @@ fun PortManagerScreen(
         }
     }
     
-    // 终止所有服务
+    // Note
     fun killAllServices() {
         scope.launch {
             val count = ProcessPortScanner.killAllProcesses(context)
@@ -119,7 +119,7 @@ fun PortManagerScreen(
         }
     }
     
-    // 在浏览器中打开
+    // open
     fun openInBrowser(url: String) {
         try {
             context.openUrl(url)
@@ -139,7 +139,7 @@ fun PortManagerScreen(
                     }
                 },
                 actions = {
-                    // 自动刷新开关
+                    // refresh
                     IconButton(onClick = { autoRefresh = !autoRefresh }) {
                         Icon(
                             if (autoRefresh) Icons.Default.SyncDisabled else Icons.Default.Sync,
@@ -148,7 +148,7 @@ fun PortManagerScreen(
                                    else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // 手动刷新按钮
+                    // refreshbutton
                     IconButton(
                         onClick = { refresh() },
                         enabled = !isScanning
@@ -162,7 +162,7 @@ fun PortManagerScreen(
                             Icon(Icons.Default.Refresh, Strings.portManagerAutoRefresh)
                         }
                     }
-                    // 终止所有按钮
+                    // button
                     if (services.isNotEmpty()) {
                         IconButton(onClick = { showKillAllDialog = true }) {
                             Icon(
@@ -185,14 +185,14 @@ fun PortManagerScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 统计卡片
+            // card
             PortStatsCard(
                 services = services,
                 showRangeStats = showRangeStats,
                 onToggleRangeStats = { showRangeStats = !showRangeStats }
             )
             
-            // 服务列表
+            // list
             if (services.isEmpty() && !isScanning) {
                 EmptyState()
             } else {
@@ -213,7 +213,7 @@ fun PortManagerScreen(
         }
     }
     
-    // 终止所有确认对话框
+    // dialog
     if (showKillAllDialog) {
         AlertDialog(
             onDismissRequest = { showKillAllDialog = false },
@@ -241,7 +241,7 @@ fun PortManagerScreen(
         )
     }
     
-    // 终止单个确认对话框
+    // dialog
     showKillDialog?.let { service ->
         AlertDialog(
             onDismissRequest = { showKillDialog = null },
@@ -297,7 +297,7 @@ fun PortManagerScreen(
 }
 
 /**
- * 端口统计卡片（含可展开的端口范围使用率面板）
+ * card( expand panel)
  */
 @Composable
 private fun PortStatsCard(
@@ -339,7 +339,7 @@ private fun PortStatsCard(
                         else 
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    // 展开端口范围统计
+                    // expand
                     IconButton(
                         onClick = onToggleRangeStats,
                         modifier = Modifier.size(28.dp)
@@ -357,7 +357,7 @@ private fun PortStatsCard(
             if (services.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 按类型分组统计
+                // type
                 val grouped = services.groupBy { it.type }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -369,7 +369,7 @@ private fun PortStatsCard(
                 }
             }
             
-            // 端口范围使用率仪表盘
+            // Note
             AnimatedVisibility(visible = showRangeStats) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     HorizontalDivider()
@@ -425,7 +425,7 @@ private fun PortStatsCard(
 }
 
 /**
- * 服务类型标签
+ * typelabel
  */
 @Composable
 private fun ServiceTypeChip(type: ServiceType, count: Int) {
@@ -454,7 +454,7 @@ private fun ServiceTypeChip(type: ServiceType, count: Int) {
 }
 
 /**
- * 服务卡片
+ * card
  */
 @Composable
 private fun ServiceCard(
@@ -463,7 +463,7 @@ private fun ServiceCard(
     onOpen: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // 实时更新运行时长
+    // updaterun
     var uptimeText by remember { mutableStateOf("") }
     LaunchedEffect(service.allocatedAt) {
         if (service.allocatedAt > 0) {
@@ -491,13 +491,13 @@ private fun ServiceCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左侧：类型指示器 + 端口
+                // left: typeindicator +
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(weight = 1f, fill = true)
                 ) {
-                    // 类型颜色指示器
+                    // typecolorindicator
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -524,7 +524,7 @@ private fun ServiceCard(
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
                             )
-                            // 响应延迟标签
+                            // label
                             if (service.responseTimeMs >= 0) {
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
@@ -572,12 +572,12 @@ private fun ServiceCard(
                     }
                 }
                 
-                // 右侧：状态指示器
+                // right: stateindicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 响应状态
+                    // state
                     val statusColor by animateColorAsState(
                         if (service.isResponding) AppColors.Success else AppColors.Warning,
                         label = "statusColor"
@@ -589,7 +589,7 @@ private fun ServiceCard(
                             .background(statusColor)
                     )
                     
-                    // 展开/收起图标
+                    // expand/ icon
                     val rotation by animateFloatAsState(
                         if (expanded) 180f else 0f,
                         label = "rotation"
@@ -605,7 +605,7 @@ private fun ServiceCard(
                 }
             }
             
-            // 展开详情
+            // expand
             AnimatedVisibility(visible = expanded) {
                 Column(
                     modifier = Modifier.padding(top = 12.dp)
@@ -613,7 +613,7 @@ private fun ServiceCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 详细信息
+                    // Note
                     DetailRow("URL", service.url)
                     DetailRow("PID", if (service.pid > 0) service.pid.toString() else Strings.portManagerUnknown)
                     DetailRow(Strings.portManagerProcess, service.processName.ifEmpty { Strings.portManagerUnknown })
@@ -627,12 +627,12 @@ private fun ServiceCard(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 操作按钮
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 打开按钮
+                        // openbutton
                         PremiumOutlinedButton(
                             onClick = onOpen,
                             modifier = Modifier.weight(weight = 1f, fill = true),
@@ -647,7 +647,7 @@ private fun ServiceCard(
                             Text(Strings.portManagerOpen)
                         }
                         
-                        // 终止按钮
+                        // button
                         PremiumButton(
                             onClick = onKill,
                             modifier = Modifier.weight(weight = 1f, fill = true),
@@ -671,7 +671,7 @@ private fun ServiceCard(
 }
 
 /**
- * 详情行
+ * Note
  */
 @Composable
 private fun DetailRow(label: String, value: String) {
@@ -695,7 +695,7 @@ private fun DetailRow(label: String, value: String) {
 }
 
 /**
- * 空状态
+ * state
  */
 @Composable
 private fun EmptyState() {

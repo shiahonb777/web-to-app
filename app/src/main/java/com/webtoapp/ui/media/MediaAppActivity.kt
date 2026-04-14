@@ -38,8 +38,8 @@ import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.theme.WebToAppTheme
 
 /**
- * 媒体应用展示 Activity
- * 用于显示图片或播放视频的独立应用
+ * Media app display Activity.
+ * Standalone app for image display and video playback.
  */
 class MediaAppActivity : AppCompatActivity() {
     
@@ -48,7 +48,7 @@ class MediaAppActivity : AppCompatActivity() {
         private val gson = com.webtoapp.util.GsonProvider.gson
         
         /**
-         * 启动预览模式（从 WebApp 数据加载）
+         * Launch preview mode (load from WebApp data).
          */
         fun startForPreview(context: Context, webApp: WebApp) {
             context.startActivity(Intent(context, MediaAppActivity::class.java).apply {
@@ -63,14 +63,14 @@ class MediaAppActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 尝试从 Intent 加载 WebApp（预览模式）
+        // Try loading WebApp from Intent (preview mode)
         val webAppJson = intent.getStringExtra(EXTRA_WEB_APP)
         val config = if (webAppJson != null) {
-            // 预览模式：从 WebApp 数据创建配置
+            // Preview mode: build config from WebApp data
             val webApp = gson.fromJson(webAppJson, WebApp::class.java)
             createConfigFromWebApp(webApp)
         } else {
-            // 独立应用模式：从 assets 加载配置
+            // Standalone mode: load config from assets
             loadConfig()
         }
         
@@ -79,7 +79,7 @@ class MediaAppActivity : AppCompatActivity() {
             return
         }
         
-        // Set任务列表中显示的应用名称（修复双重名称显示问题）
+        // Set app label shown in recents (fix duplicate title issue)
         setTaskDescription(
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 android.app.ActivityManager.TaskDescription.Builder()
@@ -93,10 +93,10 @@ class MediaAppActivity : AppCompatActivity() {
         
         currentConfig = config
         
-        // Set全屏
+        // Set full-screen
         setupFullscreen()
         
-        // Set屏幕方向
+        // Set screen orientation
         requestedOrientation = if (config.landscape) {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         } else {
@@ -114,7 +114,7 @@ class MediaAppActivity : AppCompatActivity() {
     }
     
     /**
-     * 从 WebApp 数据创建 MediaAppConfig（预览模式）
+     * Build MediaAppConfig from WebApp data (preview mode).
      */
     private fun createConfigFromWebApp(webApp: WebApp): MediaAppConfig? {
         val mediaConfig = webApp.mediaConfig ?: return null
@@ -147,35 +147,35 @@ class MediaAppActivity : AppCompatActivity() {
     }
     
     private fun setupFullscreen() {
-        // 让内容延伸到系统栏下方
+        // Extend content behind system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
         
-        // Set状态栏和导航栏为完全透明
+        // Set status and navigation bars fully transparent
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
         
-        // 保持屏幕常亮（根据配置）
+        // Keep screen on (by config)
         if (currentConfig?.keepScreenOn == true) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
         
-        // Support刘海屏/挖孔屏，内容延伸到刘海区域
+        // Support cutout/punch-hole areas and extend content into them
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode = 
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
         
-        // Hide系统栏（状态栏 + 导航栏）
+        // Hide system bars (status + navigation)
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.systemBars())
-            // 从边缘滑动时临时显示系统栏
+            // Temporarily show system bars on edge swipe
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
     
     /**
-     * 窗口获得焦点时重新应用沉浸式模式
-     * 防止用户从边缘滑出系统栏后不自动隐藏
+     * Re-apply immersive mode when window gains focus.
+     * Prevent bars from staying visible after edge swipe.
      */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -192,7 +192,7 @@ class MediaAppActivity : AppCompatActivity() {
 }
 
 /**
- * Media app configuration（从 JSON 加载）
+ * Media app configuration (loaded from JSON).
  */
 data class MediaAppConfig(
     val appName: String = "",
@@ -204,11 +204,11 @@ data class MediaAppConfig(
     val fillScreen: Boolean = true,
     val landscape: Boolean = false,
     val backgroundColor: String = "#000000",
-    val keepScreenOn: Boolean = true       // 保持屏幕常亮
+    val keepScreenOn: Boolean = true       // Comment
 )
 
 /**
- * 媒体应用主界面
+ * Media app main screen.
  */
 @Composable
 fun MediaAppScreen(
@@ -251,7 +251,7 @@ fun MediaAppScreen(
 }
 
 /**
- * 图片展示组件
+ * Image display component.
  */
 @Composable
 fun ImageDisplay(
@@ -276,7 +276,7 @@ fun ImageDisplay(
 }
 
 /**
- * 视频播放组件
+ * Video player component.
  */
 @Composable
 fun VideoPlayer(

@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * 语言选择按钮（用于 TopAppBar）
+ * selectbutton( for TopAppBar)
  */
 @Composable
 fun LanguageSelectorButton(
@@ -37,7 +37,7 @@ fun LanguageSelectorButton(
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
     var showDialog by remember { mutableStateOf(false) }
     
-    // 语言选择按钮
+    // selectbutton
     IconButton(
         onClick = { showDialog = true },
         modifier = Modifier.size(40.dp)
@@ -49,7 +49,7 @@ fun LanguageSelectorButton(
         )
     }
     
-    // 语言选择对话框
+    // selectdialog
     if (showDialog) {
         LanguageSelectionDialog(
             currentLanguage = currentLanguage,
@@ -66,7 +66,7 @@ fun LanguageSelectorButton(
 }
 
 /**
- * 语言选择对话框
+ * selectdialog
  */
 @Composable
 fun LanguageSelectionDialog(
@@ -112,7 +112,7 @@ fun LanguageSelectionDialog(
 }
 
 /**
- * 单个语言选项
+ * Note
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -174,7 +174,7 @@ private fun LanguageOption(
 }
 
 /**
- * 首次启动语言选择屏幕
+ * select
  */
 @Composable
 fun FirstLaunchLanguageScreen(
@@ -188,7 +188,7 @@ fun FirstLaunchLanguageScreen(
     val isTv = isRunningOnTv()
     val confirmFocusRequester = remember { FocusRequester() }
     
-    // TV 上减小 icon 和间距，避免内容超出屏幕
+    // TV icon, content
     val iconSize = if (isTv) 48.dp else 72.dp
     val topSpacing = if (isTv) 12.dp else 24.dp
     val sectionSpacing = if (isTv) 16.dp else 32.dp
@@ -212,7 +212,7 @@ fun FirstLaunchLanguageScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // TV 模式下顶部留一些空间
+            // TV mode top
             if (isTv) {
                 Spacer(modifier = Modifier.height(16.dp))
             } else {
@@ -229,7 +229,7 @@ fun FirstLaunchLanguageScreen(
             
             Spacer(modifier = Modifier.height(topSpacing))
             
-            // 多语言欢迎文字
+            // welcome
             Text(
                 text = "Welcome / 欢迎 / مرحبا",
                 style = if (isTv) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
@@ -248,7 +248,7 @@ fun FirstLaunchLanguageScreen(
             
             Spacer(modifier = Modifier.height(sectionSpacing))
             
-            // 语言选项 - TV 模式下限制宽度让卡片不会过宽
+            // TV mode card
             Column(
                 modifier = Modifier
                     .then(if (isTv) Modifier.widthIn(max = 500.dp) else Modifier.fillMaxWidth()),
@@ -266,7 +266,7 @@ fun FirstLaunchLanguageScreen(
             
             Spacer(modifier = Modifier.height(sectionSpacing))
             
-            // Confirm按钮
+            // Confirmbutton
             PremiumButton(
                 onClick = {
                     selectedLanguage?.let { lang ->
@@ -294,14 +294,14 @@ fun FirstLaunchLanguageScreen(
                 )
             }
             
-            // 底部留白确保按钮不会被截断
+            // bottom ensurebutton
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
 
 /**
- * 首次启动语言选项卡片
+ * card
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

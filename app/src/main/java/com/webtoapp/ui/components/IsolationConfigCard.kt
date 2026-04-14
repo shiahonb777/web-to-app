@@ -20,9 +20,9 @@ import com.webtoapp.core.isolation.*
 import androidx.compose.ui.graphics.Color
 
 /**
- * 应用隔离/多开配置卡片
+ * app / configcard
  * 
- * 用于在构建应用时配置独立环境选项
+ * for appconfig
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -40,7 +40,7 @@ fun IsolationConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -92,13 +92,13 @@ fun IsolationConfigCard(
                 )
             }
             
-            // Expand详细配置
+            // Expand config
             AnimatedVisibility(visible = config.enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 快捷预设
+                    // Note
                     Text(
                         text = Strings.isolationLevel,
                         style = MaterialTheme.typography.labelMedium,
@@ -151,13 +151,13 @@ fun IsolationConfigCard(
                         )
                     }
                     
-                    // Custom配置
+                    // Customconfig
                     AnimatedVisibility(visible = expanded) {
                         Column(
                             modifier = Modifier.padding(top = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // 指纹防护
+                            // Note
                             Text(
                                 text = Strings.fingerprintProtection,
                                 style = MaterialTheme.typography.labelMedium,
@@ -211,7 +211,7 @@ fun IsolationConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // Network防护
+                            // Network
                             Text(
                                 text = Strings.networkProtection,
                                 style = MaterialTheme.typography.labelMedium,
@@ -251,7 +251,7 @@ fun IsolationConfigCard(
                                 }
                             )
                             
-                            // IP 范围选择
+                            // IP select
                             AnimatedVisibility(visible = config.ipSpoofConfig.enabled) {
                                 Column(
                                     modifier = Modifier.padding(start = 16.dp, top = 8.dp)
@@ -279,7 +279,7 @@ fun IsolationConfigCard(
                                         }
                                     }
                                     
-                                    // Search输入框（仅在选择"搜索"时显示）
+                                    // Searchinput( only select" "display)
                                     AnimatedVisibility(visible = config.ipSpoofConfig.randomIpRange == IpRange.SEARCH) {
                                         Column(
                                             modifier = Modifier.padding(top = 8.dp)
@@ -317,7 +317,7 @@ fun IsolationConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // 高级选项
+                            // advanced
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -392,7 +392,7 @@ fun IsolationConfigCard(
                         }
                     }
                     
-                    // 功能说明
+                    // Note
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -482,7 +482,7 @@ private fun IsolationOption(
     }
 }
 
-// 辅助函数：判断是否为预设配置
+// config
 private fun isBasicConfig(config: IsolationConfig): Boolean {
     return config.enabled &&
             config.storageIsolation &&

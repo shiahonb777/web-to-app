@@ -775,12 +775,12 @@ data class ExtensionModule(
                 while (i < pattern.length) {
                     val c = pattern[i]
                     when {
-                        // Handle *:// → (https?|ftp|file)://
+                        // Handle *:// (https?|ftp|file)://
                         c == '*' && pattern.startsWith("*://", i) -> {
                             append("(https?|ftp|file)://")
                             i += 4 // skip *://
                         }
-                        // Regular wildcard * → .*
+                        // Regular wildcard * .*
                         c == '*' -> {
                             append(".*")
                             i++
@@ -813,8 +813,7 @@ data class ExtensionModule(
     private var _cachedExecutableCode: String? = null
     
     /**
-     * 生成最终执行的代码（注入配置值）
-     * 结果会缓存，避免每次页面加载时重复 Gson 序列化和字符串拼接
+     * when Gson.
      */
     fun generateExecutableCode(): String {
         _cachedExecutableCode?.let { return it }
@@ -859,7 +858,7 @@ data class ExtensionModule(
         return """
             (function() {
                 'use strict';
-                // Module配置
+                // Moduleconfig.
                 const __MODULE_CONFIG__ = $configJson;
                 const __MODULE_UI_CONFIG__ = $uiConfigJson;
                 const __MODULE_RUN_MODE__ = '$runModeStr';
@@ -872,12 +871,12 @@ data class ExtensionModule(
                     runMode: __MODULE_RUN_MODE__
                 };
                 
-                // Configure访问函数
+                // Configure.
                 function getConfig(key, defaultValue) {
                     return __MODULE_CONFIG__[key] !== undefined ? __MODULE_CONFIG__[key] : defaultValue;
                 }
                 
-                // CSS 注入
+                // CSS.
                 ${if (cssCode.isNotBlank()) """
                 (function() {
                     const style = document.createElement('style');
@@ -887,36 +886,36 @@ data class ExtensionModule(
                 })();
                 """ else ""}
                 
-                // User代码
+                // User.
                 try {
                     $code
                 } catch(e) {
                     console.error('[ExtModule: ${name.escapeForJsSingleQuote()}] Error:', e);
                 }
                 
-                // 自动注册模块到面板系统（使用配置的 uiConfig）
-                // 如果用户代码已经调用了 register，面板系统会更新已有注册
-                // 注意：只在用户代码未传递 uiConfig 时才补充注册
+                // to.
+                // use use register.
+                // in use uiConfig when.
                 (function __autoRegister__() {
                     if (typeof __WTA_MODULE_UI__ === 'undefined') {
                         setTimeout(__autoRegister__, 100);
                         return;
                     }
-                    // 等待面板完全初始化后再检查，避免面板未就绪时误判为"未注册"
+                    // etc after Check when as " ".
                     var panel = window.__WTA_PANEL__;
                     if (!panel || !panel._initialized) {
                         setTimeout(__autoRegister__, 100);
                         return;
                     }
-                    // 检查用户代码是否已经用正确的 uiConfig 注册过
+                    // Check use is use uiConfig.
                     if (panel.modules) {
                         var existing = panel.modules.find(function(m) { return m.id === __MODULE_INFO__.id; });
                         if (existing && existing.uiConfig && existing.uiConfig.type) {
-                            // 用户代码已注册且包含 uiConfig，跳过自动注册
+                            // use uiConfig.
                             return;
                         }
                     }
-                    // 用户代码未注册或未传递 uiConfig，补充注册
+                    // use or uiConfig.
                     __WTA_MODULE_UI__.register({
                         id: __MODULE_INFO__.id,
                         name: __MODULE_INFO__.name,
@@ -930,7 +929,6 @@ data class ExtensionModule(
     }
     
     /**
-     * 验证模块完整性
      */
     fun validate(): List<String> {
         val errors = mutableListOf<String>()

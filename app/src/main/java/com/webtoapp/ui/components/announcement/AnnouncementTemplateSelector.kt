@@ -37,7 +37,7 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 模板渐变配色 — 每个模板的两色渐变
+ * gradient- gradient
  */
 private val templateColors = mapOf(
     AnnouncementTemplate.MINIMAL to listOf(Color(0xFFF5F5F5), Color(0xFFE8E8E8)),
@@ -53,7 +53,7 @@ private val templateColors = mapOf(
 )
 
 /**
- * 模板图标 emoji
+ * icon emoji
  */
 private val templateEmoji = mapOf(
     AnnouncementTemplate.MINIMAL to "✦",
@@ -69,7 +69,7 @@ private val templateEmoji = mapOf(
 )
 
 /**
- * 模板强调色 (用于文字、边框等)
+ * ( for, )
  */
 private val templateAccentColor = mapOf(
     AnnouncementTemplate.MINIMAL to Color(0xFF1A1A1A),
@@ -85,7 +85,7 @@ private val templateAccentColor = mapOf(
 )
 
 /**
- * 预览区域内容颜色 (模拟排版行的颜色)
+ * previewareacontentcolor( color)
  */
 private val templatePreviewContentColor = mapOf(
     AnnouncementTemplate.MINIMAL to Color(0xFFCCCCCC),
@@ -101,7 +101,7 @@ private val templatePreviewContentColor = mapOf(
 )
 
 /**
- * 模板预览标题行颜色
+ * preview color
  */
 private val templatePreviewTitleColor = mapOf(
     AnnouncementTemplate.MINIMAL to Color(0xFF999999),
@@ -117,13 +117,13 @@ private val templatePreviewTitleColor = mapOf(
 )
 
 /**
- * 公告模板选择器 — 重构版
+ * announcement select- refactored
  *
- * 设计亮点：
- *  • 更大的预览卡片 (116dp宽) 带真实弹窗缩略图
- *  • 选中边框使用模板自身强调色渐变
- *  • 底部显示模板名称 + 选中勾
- *  • 弹簧缩放 + 阴影联动动画
+ * Note
+ * • previewcard( 116dp) dialog
+ * • gradient
+ * • bottomdisplay +
+ * • + animation
  */
 @Composable
 fun AnnouncementTemplateSelector(
@@ -132,7 +132,7 @@ fun AnnouncementTemplateSelector(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        // 标题行
+        // Note
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 14.dp)
@@ -166,7 +166,7 @@ fun AnnouncementTemplateSelector(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.weight(1f))
-            // 当前选中标签
+            // current label
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = (templateAccentColor[selectedTemplate] ?: MaterialTheme.colorScheme.primary)
@@ -198,7 +198,7 @@ fun AnnouncementTemplateSelector(
 }
 
 /**
- * 单个模板卡片 — 高保真预览
+ * card- preview
  */
 @Composable
 private fun TemplateCard(
@@ -231,7 +231,7 @@ private fun TemplateCard(
             .width(116.dp)
             .scale(cardScale)
     ) {
-        // 预览区
+        // preview
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -258,7 +258,7 @@ private fun TemplateCard(
                 .padding(10.dp),
             contentAlignment = Alignment.Center
         ) {
-            // 模拟弹窗缩略图
+            // dialog
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -268,7 +268,7 @@ private fun TemplateCard(
                 Text(text = emoji, fontSize = 22.sp)
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // 模拟标题行
+                // Note
                 Box(
                     modifier = Modifier
                         .width(50.dp)
@@ -277,7 +277,7 @@ private fun TemplateCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 模拟内容行
+                // content
                 Box(
                     modifier = Modifier
                         .width(60.dp)
@@ -293,7 +293,7 @@ private fun TemplateCard(
                 )
             }
 
-            // 选中勾
+            // Note
             if (isSelected) {
                 Box(
                     modifier = Modifier
@@ -315,7 +315,7 @@ private fun TemplateCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 模板名称
+        // Note
         Text(
             text = template.getLocalizedDisplayName(),
             style = MaterialTheme.typography.labelMedium,
@@ -330,7 +330,7 @@ private fun TemplateCard(
 }
 
 /**
- * 公告模板预览对话框 — 增强版
+ * announcement previewdialog- enhanced
  */
 @Composable
 fun AnnouncementPreviewDialog(
@@ -371,7 +371,7 @@ fun AnnouncementPreviewDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // 模板信息卡片
+                // card
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = accentColor.copy(alpha = 0.08f),
@@ -411,7 +411,7 @@ fun AnnouncementPreviewDialog(
                     }
                 }
 
-                // 功能标签
+                // label
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (config.showEmoji) {
                         Surface(
@@ -461,7 +461,7 @@ fun AnnouncementPreviewDialog(
 }
 
 /**
- * 完整的公告配置卡片（包含模板选择）— 增强版
+ * announcementconfigcard( select) - enhanced
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -489,7 +489,7 @@ fun EnhancedAnnouncementCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 标题行 — 使用当前模板强调色的渐变图标
+            // current gradienticon
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -550,7 +550,7 @@ fun EnhancedAnnouncementCard(
 
             AnimatedVisibility(visible = enabled) {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    // 模板选择器
+                    // select
                     AnnouncementTemplateSelector(
                         selectedTemplate = template,
                         onTemplateSelected = onTemplateChange
@@ -560,7 +560,7 @@ fun EnhancedAnnouncementCard(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
-                    // 公告标题
+                    // announcement
                     PremiumTextField(
                         value = title,
                         onValueChange = onTitleChange,
@@ -573,7 +573,7 @@ fun EnhancedAnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // 公告内容
+                    // announcementcontent
                     PremiumTextField(
                         value = content,
                         onValueChange = onContentChange,
@@ -596,7 +596,7 @@ fun EnhancedAnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // 链接设置区
+                    // settings
                     Surface(
                         shape = RoundedCornerShape(14.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
@@ -643,7 +643,7 @@ fun EnhancedAnnouncementCard(
                         }
                     }
 
-                    // 显示频率
+                    // display
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -666,7 +666,7 @@ fun EnhancedAnnouncementCard(
                         )
                     }
 
-                    // 预览按钮
+                    // previewbutton
                     PremiumOutlinedButton(
                         onClick = onPreview,
                         modifier = Modifier.fillMaxWidth(),

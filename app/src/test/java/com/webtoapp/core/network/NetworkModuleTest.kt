@@ -5,7 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.TimeUnit
 
 /**
- * NetworkModule 单元测试
+ * Unit tests for `NetworkModule`.
  */
 class NetworkModuleTest {
 

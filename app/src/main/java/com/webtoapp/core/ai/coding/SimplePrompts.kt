@@ -4,17 +4,17 @@ import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 简单模式提示词 - 用于不支持工具调用的模型回退方案
+ * Note.
  * 
- * 设计原则：
- * - 引导 AI 直接输出 HTML（以 <!DOCTYPE html> 开头），不使用代码块标记
- * - 简洁明确的代码规范，专注移动端 WebView
- * - 支持风格模板定制
+ * Note.
+ * - AI HTML <!DOCTYPE html>.
+ * - WebView.
+ * Note.
  */
 object SimplePrompts {
     
     /**
-     * 构建系统提示词 - 极简版（语言自适应）
+     * Note.
      */
     fun buildSystemPrompt(): String {
         return when (Strings.currentLanguage.value) {
@@ -70,7 +70,7 @@ You are a mobile frontend expert, creating HTML pages in mobile APP WebView.
     }
     
     /**
-     * 构建系统提示词 - 带风格模板（语言自适应）
+     * Note.
      */
     fun buildSystemPrompt(template: StyleTemplate? = null): String {
         val base = buildSystemPrompt()

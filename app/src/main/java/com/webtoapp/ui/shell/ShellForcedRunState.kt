@@ -10,7 +10,7 @@ import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.delay
 
 /**
- * 强制运行状态持有类
+ * force- runstate
  */
 class ForcedRunState(
     val forcedRunManager: ForcedRunManager,
@@ -30,7 +30,7 @@ class ForcedRunState(
 }
 
 /**
- * 创建并记住强制运行状态
+ * createand force- runstate
  */
 @Composable
 fun rememberForcedRunState(context: Context): ForcedRunState {
@@ -56,7 +56,7 @@ fun rememberForcedRunState(context: Context): ForcedRunState {
 }
 
 /**
- * 格式化持续时间（毫秒 -> HH:MM:SS 或 MM:SS）
+ * ( - > HH: MM: SS or MM: SS)
  */
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms.coerceAtLeast(0) / 1000
@@ -71,7 +71,7 @@ fun formatDuration(ms: Long): String {
 }
 
 /**
- * 更新强制运行状态
+ * updateforce- runstate
  */
 fun updateForcedRunState(
     state: ForcedRunState,
@@ -115,7 +115,7 @@ fun updateForcedRunState(
 }
 
 /**
- * 强制运行副作用管理（LaunchedEffect + DisposableEffect）
+ * force- run management( LaunchedEffect + DisposableEffect)
  */
 @Composable
 fun ForcedRunEffects(
@@ -125,7 +125,7 @@ fun ForcedRunEffects(
     context: Context,
     onForcedRunStateChanged: (Boolean, ForcedRunConfig?) -> Unit
 ) {
-    // 检查强制运行权限
+    // checkforce- run
     LaunchedEffect(Unit) {
         if (config?.enabled == true && !state.forcedRunPermissionChecked) {
             val protectionLevel = config.protectionLevel
@@ -143,7 +143,7 @@ fun ForcedRunEffects(
         }
     }
 
-    // 定期更新强制运行状态
+    // updateforce- runstate
     LaunchedEffect(isActivated, config) {
         while (true) {
             updateForcedRunState(state, config, isActivated)
@@ -151,12 +151,12 @@ fun ForcedRunEffects(
         }
     }
 
-    // 通知强制运行状态变化
+    // force- runstate
     LaunchedEffect(state.forcedRunActive, config) {
         onForcedRunStateChanged(state.forcedRunActive, config)
     }
 
-    // 清理
+    // Note
     DisposableEffect(Unit) {
         onDispose {
             if (state.forcedRunActive) {

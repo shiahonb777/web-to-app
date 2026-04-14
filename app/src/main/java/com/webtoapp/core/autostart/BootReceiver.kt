@@ -8,29 +8,29 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellRuntimeServices
 
 /**
- * 开机 / 时间变更 广播接收器
  *
- * 监听以下系统事件：
- * - BOOT_COMPLETED       — 设备开机完成后自动启动配置的应用
- * - QUICKBOOT_POWERON    — HTC/Samsung 快速启动完成（补充覆盖）
- * - LOCKED_BOOT_COMPLETED — Direct Boot 模式支持（Android 7+）
- * - TIME_SET             — 用户手动修改系统时间后重新调度闹钟
- * - TIMEZONE_CHANGED     — 用户切换时区后重新调度闹钟
- * - MY_PACKAGE_REPLACED  — 应用更新后恢复闹钟调度（系统会清除 PendingIntent）
  *
- * 优化点（v2）：
- * 1. 使用 goAsync() 获取额外处理时间，避免 10s ANR 限制
- * 2. 持有 WakeLock 确保 CPU 不会在 Handler.postDelayed 期间休眠
- * 3. 支持 HTC/Samsung 的 QUICKBOOT_POWERON 广播
- * 4. 应用更新后自动恢复闹钟调度
- * 5. 开机延迟使用可配置的 bootDelay 参数
+ * ：
+ * - BOOT_COMPLETED —
+ * - QUICKBOOT_POWERON — HTC/Samsung （）
+ * - LOCKED_BOOT_COMPLETED — Direct Boot （Android 7+）
+ * - TIME_SET —
+ * - TIMEZONE_CHANGED —
+ * - MY_PACKAGE_REPLACED — （ PendingIntent）
+ *
+ * （v2）：
+ * 1. goAsync() ， 10s ANR
+ * 2. WakeLock CPU Handler.postDelayed
+ * 3. HTC/Samsung QUICKBOOT_POWERON
+ * 4.
+ * 5. bootDelay
  */
 class BootReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "BootReceiver"
         private const val WAKELOCK_TAG = "WebToApp:BootReceiver"
-        private const val WAKELOCK_TIMEOUT_MS = 60_000L // 最长持锁 60s
+        private const val WAKELOCK_TIMEOUT_MS = 60_000L // 60s
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -51,18 +51,18 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     /**
-     * 处理开机完成事件
+     * Note.
      */
     private fun handleBootCompleted(context: Context) {
         AppLogger.d(TAG, "收到开机完成广播")
 
-        // goAsync() 获取额外处理时间（从 10s 延长到约 30s）
+        // goAsync() （ 10s 30s）
         val pendingResult = goAsync()
 
         val autoStartManager = AutoStartManager(context)
         val bootDelay = autoStartManager.getBootDelay()
 
-        // 获取 WakeLock 确保延迟启动期间 CPU 不休眠
+        // WakeLock CPU
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = pm.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
@@ -72,7 +72,7 @@ class BootReceiver : BroadcastReceiver() {
         }
 
         try {
-            // ① 开机自启动
+            // ①
             val isShellMode = try {
                 ShellRuntimeServices.shellMode.isShellMode()
             } catch (e: Exception) {
@@ -106,12 +106,12 @@ class BootReceiver : BroadcastReceiver() {
                 }
             }
 
-            // ② 重新设置定时闹钟（开机后系统闹钟会丢失）
+            // ② （）
             autoStartManager.rescheduleAlarmIfNeeded()
         } catch (e: Exception) {
             AppLogger.e(TAG, "开机自启动处理异常", e)
         } finally {
-            // 释放 WakeLock + 通知系统本次广播处理完成
+            // WakeLock +
             try {
                 if (wakeLock.isHeld) wakeLock.release()
             } catch (_: Exception) {}
@@ -122,8 +122,8 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     /**
-     * 处理应用更新事件
-     * 应用更新后，之前注册的 PendingIntent 会被系统清除，需要重新调度闹钟
+     * Note.
+     * ， PendingIntent ，
      */
     private fun handlePackageReplaced(context: Context) {
         AppLogger.d(TAG, "收到应用更新广播，恢复闹钟调度")
@@ -136,8 +136,8 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     /**
-     * 处理时间/时区变更事件
-     * 系统时间改变后，之前调度的精确闹钟可能不再准确，需要重新调度
+     *
+     * ，，
      */
     private fun handleTimeChanged(context: Context, action: String) {
         AppLogger.d(TAG, "收到时间变更广播: $action")

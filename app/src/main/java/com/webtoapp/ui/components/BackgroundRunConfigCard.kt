@@ -16,8 +16,8 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.BackgroundRunExportConfig
 
 /**
- * 后台运行配置卡片
- * 用于配置应用退出后继续在后台运行
+ * runconfigcard
+ * forconfigapp run
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +36,7 @@ fun BackgroundRunConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -81,13 +81,13 @@ fun BackgroundRunConfigCard(
                 )
             }
             
-            // Expand的详细配置
+            // Expand config
             AnimatedVisibility(visible = enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Show通知开关
+                    // Show
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -103,7 +103,7 @@ fun BackgroundRunConfigCard(
                         )
                     }
 
-                    // 保持CPU唤醒开关
+                    // CPU
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -119,7 +119,7 @@ fun BackgroundRunConfigCard(
                         )
                     }
                     
-                    // Expand更多设置
+                    // Expand settings
                     TextButton(
                         onClick = { expanded = !expanded },
                         modifier = Modifier.align(Alignment.End)
@@ -127,10 +127,10 @@ fun BackgroundRunConfigCard(
                         Text(if (expanded) Strings.hideAdvanced else Strings.showAdvanced)
                     }
                     
-                    // 高级设置
+                    // advancedsettings
                     AnimatedVisibility(visible = expanded) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Custom通知标题
+                            // Custom
                             PremiumTextField(
                                 value = config.notificationTitle,
                                 onValueChange = { onConfigChange(config.copy(notificationTitle = it)) },
@@ -140,7 +140,7 @@ fun BackgroundRunConfigCard(
                                 singleLine = true
                             )
                             
-                            // Custom通知内容
+                            // Custom content
                             PremiumTextField(
                                 value = config.notificationContent,
                                 onValueChange = { onConfigChange(config.copy(notificationContent = it)) },

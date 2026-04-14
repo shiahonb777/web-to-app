@@ -416,7 +416,7 @@ internal object CommonStrings {
         AppLanguage.ENGLISH -> "%s app updated successfully"
         AppLanguage.ARABIC -> "تم تحديث تطبيق %s بنجاح"
     }
-    // ==================== 团队协作 ====================
+    // ==================== Team Collaboration ====================
     val teamTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "团队管理"
         AppLanguage.ENGLISH -> "Teams"
@@ -650,7 +650,7 @@ internal object CommonStrings {
         AppLanguage.ENGLISH -> "You haven't joined any teams"
         AppLanguage.ARABIC -> "لم تنضم إلى أي فريق"
     }
-    // ==================== 关于页面 ====================
+    // ==================== About Page ====================
     val about: String get() = when (lang) {
         AppLanguage.CHINESE -> "关于"
         AppLanguage.ENGLISH -> "About"
@@ -830,7 +830,7 @@ internal object CommonStrings {
         AppLanguage.ENGLISH -> "Update Later"
         AppLanguage.ARABIC -> "التحديث لاحقًا"
     }
-    // ==================== 额外字符串 ====================
+    // ==================== Extra Strings ====================
     val seconds: String get() = when (lang) {
         AppLanguage.CHINESE -> "秒"
         AppLanguage.ENGLISH -> "seconds"
@@ -1400,7 +1400,7 @@ internal object CommonStrings {
         AppLanguage.ENGLISH -> "Enable Audio"
         AppLanguage.ARABIC -> "تفعيل الصوت"
     }
-    // ==================== 更新日志 ====================
+    // ==================== Changelog ====================
     val cookiesPersistenceFeature: String get() = when (lang) {
         AppLanguage.CHINESE -> "新增cookies持久化"
         AppLanguage.ENGLISH -> "Cookies persistence feature"
@@ -1952,7 +1952,7 @@ internal object CommonStrings {
         AppLanguage.ENGLISH -> "Desktop mode: force desktop version"
         AppLanguage.ARABIC -> "وضع سطح المكتب: فرض إصدار سطح المكتب"
     }
-    // ==================== 主题相关 ====================
+    // ==================== Theme ====================
     val themeAurora: String get() = when (lang) {
         AppLanguage.CHINESE -> "极光梦境"
         AppLanguage.ENGLISH -> "Aurora Dreams"
@@ -2204,7 +2204,7 @@ internal object CommonStrings {
         AppLanguage.ENGLISH -> "Schopenhauer's gaze into the abyss, intertwined currents of will and veil of representation"
         AppLanguage.ARABIC -> "تحديق شوبنهاور في الهاوية، تيارات الإرادة وحجاب التمثل المتشابكة"
     }
-    // ==================== 颜色名称 ====================
+    // ==================== Color Names ====================
     val colorRed: String get() = when (lang) {
         AppLanguage.CHINESE -> "红色"
         AppLanguage.ENGLISH -> "Red"

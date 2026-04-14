@@ -9,28 +9,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 /**
- * Android TV 检测工具
+ * Android TV
  */
 object TvUtils {
 
     /**
-     * 检测当前设备是否为 Android TV
-     * 通过 UiModeManager 和 Leanback feature 双重检测
+     * Android TV
+     * UiModeManager Leanback feature
      */
     fun isTv(context: Context): Boolean {
-        // 方式1：通过 UiModeManager 检测
+        // 1： UiModeManager
         val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
         if (uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION) {
             return true
         }
 
-        // 方式2：通过 Leanback feature 检测（部分 TV 盒子可能不设置 UI_MODE）
+        // 2： Leanback feature （ TV UI_MODE）
         if (context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ||
             context.packageManager.hasSystemFeature("android.software.leanback")) {
             return true
         }
 
-        // 方式3：通过 FEATURE_TELEVISION 检测（旧版 API）
+        // 3： FEATURE_TELEVISION （ API）
         @Suppress("DEPRECATION")
         if (context.packageManager.hasSystemFeature(PackageManager.FEATURE_TELEVISION)) {
             return true
@@ -41,8 +41,8 @@ object TvUtils {
 }
 
 /**
- * Composable 版本的 TV 检测
- * 在 UI 层方便使用
+ * Composable TV
+ * UI
  */
 @Composable
 fun isRunningOnTv(): Boolean {

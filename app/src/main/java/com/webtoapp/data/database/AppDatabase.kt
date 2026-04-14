@@ -21,11 +21,11 @@ private const val DATABASE_NAME = "webtoapp.db"
 private val UNSUPPORTED_LEGACY_VERSIONS = IntArray(27) { index -> index + 1 }
 
 /**
- * Room 数据库。
+ * Room database.
  *
- * 兼容策略已经收口到 `28+`：
- * - `28 -> 33` 继续保留增量迁移
- * - `<28` 直接按不受支持的旧结构处理，触发破坏式重建
+ * Compatibility policy now focuses on API level 28+:
+ * - `28 -> 33` keeps incremental migrations
+ * - `<28` falls back to destructive rebuild
  */
 @Database(
     entities = [WebApp::class, AppCategory::class, AppUsageStats::class, AppHealthRecord::class],

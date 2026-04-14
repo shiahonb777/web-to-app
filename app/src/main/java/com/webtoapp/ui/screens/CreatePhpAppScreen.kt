@@ -44,15 +44,15 @@ import com.webtoapp.ui.screens.create.runtime.PhpProjectImporter
 import com.webtoapp.ui.screens.create.runtime.PhpProjectSourceLoader
 
 /**
- * 创建/编辑 PHP 应用页面
+ * create/edit PHP app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Laravel=红, ThinkPHP=蓝, CodeIgniter=橙, Slim=绿）
- * - Composer 依赖面板（解析 composer.json）
- * - Web 根目录可视化选择器
- * - PHP 扩展开关面板
- * - 数据库配置区
- * - 框架特定提示
+ * Note
+ * Hero area( Laravel=, ThinkPHP=, CodeIgniter=, Slim=)
+ * Composer panel( composer. json)
+ * Web directory select
+ * PHP expand panel
+ * config
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -74,11 +74,11 @@ fun CreatePhpAppScreen(
     val projectImporter = remember(context) { PhpProjectImporter(context) }
     val sourceLoader = remember { PhpProjectSourceLoader() }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // PHP 配置
+    // PHP config
     var documentRoot by remember { mutableStateOf("") }
     var entryFile by remember { mutableStateOf("index.php") }
     var landscapeMode by remember { mutableStateOf(false) }
@@ -86,22 +86,22 @@ fun CreatePhpAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：Composer 依赖
+    // Composer
     var composerDeps by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var composerDevDeps by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var showAllDeps by remember { mutableStateOf(false) }
     var showAllDevDeps by remember { mutableStateOf(false) }
     
-    // 增强：检测到的 Web 目录
+    // Web directory
     var detectedWebDirs by remember { mutableStateOf<List<String>>(emptyList()) }
     var useCustomDocRoot by remember { mutableStateOf(false) }
     
-    // 增强：PHP 扩展
+    // PHP
     var phpExtensions by remember { mutableStateOf<Map<String, Boolean>>(mapOf(
         "pdo_sqlite" to true,
         "json" to true,
@@ -113,14 +113,14 @@ fun CreatePhpAppScreen(
         "xml" to false
     )) }
     
-    // 增强：数据库
+    // Note
     var detectedDbFiles by remember { mutableStateOf<List<String>>(emptyList()) }
     var sqlitePath by remember { mutableStateOf("") }
     
-    // 增强：框架版本
+    // version
     var frameworkVersion by remember { mutableStateOf<String?>(null) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -153,7 +153,7 @@ fun CreatePhpAppScreen(
         appName = appNameOverride ?: analysis.suggestedAppName ?: appName
     }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -173,11 +173,11 @@ fun CreatePhpAppScreen(
         }
     }
     
-    // 依赖下载状态
+    // downloadstate
     val downloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     var showDownloadDialog by remember { mutableStateOf(false) }
     
-    // 文件选择器
+    // fileselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -213,7 +213,7 @@ fun CreatePhpAppScreen(
         }
     }
     
-    // ZIP 文件选择器
+    // ZIP fileselect
     val zipPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -247,14 +247,14 @@ fun CreatePhpAppScreen(
     
     val canCreate = projectId != null
     
-    // 获取框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework?.lowercase()) {
             "laravel" -> Color(0xFFFF2D20)
             "thinkphp" -> Color(0xFF6190E8)
             "codeigniter" -> Color(0xFFDD4814)
             "slim" -> Color(0xFF74B72E)
-            else -> Color(0xFF777BB4) // PHP默认紫色
+            else -> Color(0xFF777BB4) // PHPdefault
         }
     }
     
@@ -308,14 +308,14 @@ fun CreatePhpAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             PhpHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
                 frameworkVersion = frameworkVersion
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
                     title = Strings.sampleProjects,
@@ -345,7 +345,7 @@ fun CreatePhpAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -377,13 +377,13 @@ fun CreatePhpAppScreen(
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -452,10 +452,10 @@ fun CreatePhpAppScreen(
                 }
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. Composer 依赖面板 ==========
+                // ========== 5. Composer Dependencies Panel ==========
                 if (composerDeps.isNotEmpty() || composerDevDeps.isNotEmpty()) {
                     PhpComposerDepsCard(
                         deps = composerDeps,
@@ -468,7 +468,7 @@ fun CreatePhpAppScreen(
                     )
                 }
                 
-                // ========== 6. Web 根目录选择器 ==========
+                // ========== 6. Web Root Selector ==========
                 PhpDocRootCard(
                     detectedWebDirs = detectedWebDirs,
                     currentDocRoot = documentRoot,
@@ -483,7 +483,7 @@ fun CreatePhpAppScreen(
                     onEntryFileChange = { entryFile = it }
                 )
                 
-                // ========== 7. PHP 扩展面板 ==========
+                // ========== 7. PHP Extensions Panel ==========
                 PhpExtensionsCard(
                     extensions = phpExtensions,
                     onToggle = { ext, enabled ->
@@ -491,7 +491,7 @@ fun CreatePhpAppScreen(
                     }
                 )
                 
-                // ========== 8. 数据库配置 ==========
+                // ========== 8. Database Settings ==========
                 if (detectedDbFiles.isNotEmpty()) {
                     PhpDatabaseCard(
                         detectedDbFiles = detectedDbFiles,
@@ -500,10 +500,10 @@ fun CreatePhpAppScreen(
                     )
                 }
                 
-                // ========== 9. 框架提示 ==========
+                // ========== 9. Framework Tips ==========
                 PhpFrameworkTipCard(framework = detectedFramework)
                 
-                // ========== 10. 环境变量 ==========
+                // ========== 10. Environment Variables ==========
                 RuntimeEnvVarsCard(
                     envVars = envVars,
                     newEnvKey = newEnvKey,
@@ -520,7 +520,7 @@ fun CreatePhpAppScreen(
                 )
             }
             
-            // 状态提示
+            // Status message
             if (screenState.isBusy) {
                 RuntimeLoadingCard(screenState.phase)
             }
@@ -533,7 +533,7 @@ fun CreatePhpAppScreen(
         }
     }
     
-    // PHP 下载对话框
+    // PHP download dialog
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
@@ -571,10 +571,10 @@ fun CreatePhpAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * PHP 框架品牌化 Hero 区域
+ * PHP Hero area
  */
 @Composable
 private fun PhpHeroSection(
@@ -645,7 +645,7 @@ private fun PhpHeroSection(
 }
 
 /**
- * Composer 依赖面板
+ * Composer panel
  */
 @Composable
 private fun PhpComposerDepsCard(
@@ -734,7 +734,7 @@ private fun PhpComposerDepsCard(
 }
 
 /**
- * Web 根目录选择卡片
+ * Web directoryselectcard
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -826,7 +826,7 @@ private fun PhpDocRootCard(
 }
 
 /**
- * PHP 扩展面板
+ * PHP panel
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -869,7 +869,7 @@ private fun PhpExtensionsCard(
 }
 
 /**
- * 数据库配置卡片
+ * configcard
  */
 @Composable
 private fun PhpDatabaseCard(
@@ -920,7 +920,7 @@ private fun PhpDatabaseCard(
 }
 
 /**
- * 框架特定提示卡片
+ * hintcard
  */
 @Composable
 private fun PhpFrameworkTipCard(framework: String?) {
@@ -958,4 +958,3 @@ private fun PhpFrameworkTipCard(framework: String?) {
         }
     }
 }
-

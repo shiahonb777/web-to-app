@@ -49,7 +49,7 @@ private fun Context.findActivity(): Activity? {
 }
 
 /**
- * 用户当前套餐层级
+ * usercurrent
  */
 private enum class UserTier {
     FREE, PRO_MONTHLY, PRO_QUARTERLY, PRO_YEARLY, PRO_LIFETIME, ULTRA_MONTHLY, ULTRA_QUARTERLY, ULTRA_YEARLY, ULTRA_LIFETIME
@@ -60,10 +60,10 @@ private fun UserTier.isUltra() = this in listOf(UserTier.ULTRA_MONTHLY, UserTier
 private fun UserTier.isLifetime() = this == UserTier.PRO_LIFETIME || this == UserTier.ULTRA_LIFETIME
 
 /**
- * 订阅购买页面
+ * Note
  *
- * 展示 Free、Pro、Ultra 三个层级的订阅方案。
- * 支持月度、年度和终身套餐切换。
+ * Free, Pro, Ultra.
+ * support, switch.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,14 +80,14 @@ fun SubscriptionScreen(
     val currentSub by billingManager.currentSubscription.collectAsStateWithLifecycle()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
-    // 确保 Billing 已连接（如果 Application 预初始化失败则在此重试）
+    // ensure Billing( if Application initializefailed)
     LaunchedEffect(Unit) {
         if (!isConnected) {
             billingManager.connect()
         }
     }
 
-    // 从用户登录信息推断当前套餐
+    // fromuser current
     val userTier = remember(authState) {
         when (val state = authState) {
             is AuthState.LoggedIn -> {
@@ -109,7 +109,7 @@ fun SubscriptionScreen(
         }
     }
 
-    // 0=月度, 1=季度, 2=年度, 3=终身
+    // 0=, 1=, 2=, 3=
     var selectedPeriod by remember { mutableIntStateOf(
         when {
             userTier.isLifetime() -> 3
@@ -122,7 +122,7 @@ fun SubscriptionScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // 处理购买结果
+    // handle
     LaunchedEffect(purchaseState) {
         when (val state = purchaseState) {
             is PurchaseState.Success -> {
@@ -164,7 +164,7 @@ fun SubscriptionScreen(
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 标题
+            // Note
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -181,7 +181,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // 周期切换: 月度 / 年度 / 终身
+            // switch: / /
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -217,7 +217,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // 当前用户状态提示（非 Free）
+            // currentuserstatehint( Free)
             if (userTier != UserTier.FREE) {
                 item {
                     val planDisplayName = when (userTier) {
@@ -266,12 +266,12 @@ fun SubscriptionScreen(
                 }
             }
 
-            // ═══ Free 方案 ═══
+            // ═══ Free ═══
             item {
                 FreeCard(isCurrent = userTier == UserTier.FREE)
             }
 
-            // ═══ Pro 方案 ═══
+            // ═══ Pro ═══
             item {
                 val isCurrentPro = when (selectedPeriod) {
                     0 -> userTier == UserTier.PRO_MONTHLY
@@ -280,7 +280,7 @@ fun SubscriptionScreen(
                     3 -> userTier == UserTier.PRO_LIFETIME
                     else -> false
                 }
-                // 如果用户已经是 Ultra 任意等级，Pro 也不需要显示"订阅"
+                // ifuser Ultra, Pro display" "
                 val isDowngrade = userTier.isUltra()
 
                 when (selectedPeriod) {
@@ -352,7 +352,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // ═══ Ultra 方案 ═══
+            // ═══ Ultra ═══
             item {
                 val isCurrentUltra = when (selectedPeriod) {
                     0 -> userTier == UserTier.ULTRA_MONTHLY
@@ -432,7 +432,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // 恢复购买
+            // Note
             item {
                 TextButton(
                     onClick = {
@@ -446,7 +446,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // 说明
+            // Note
             item {
                 Text(
                     Strings.subscriptionDisclaimer,
@@ -463,7 +463,7 @@ fun SubscriptionScreen(
         }
 }
 
-// ─── 功能列表 ───
+// list
 
 private fun proFeatures() = listOf(
     FeatureItem(Icons.Outlined.Cloud, Strings.proCloudProjects, Strings.proCloudProjectsDesc),
@@ -485,7 +485,7 @@ private fun ultraFeatures() = listOf(
     FeatureItem(Icons.Outlined.Speed, Strings.ultraPrioritySupport, Strings.ultraPrioritySupportDesc),
 )
 
-// ─── 组件 ───
+// Note
 
 private data class FeatureItem(
     val icon: ImageVector,
@@ -511,7 +511,7 @@ private fun PeriodChip(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Free 套餐卡片 — 展示免费版功能
+ * Free card
  */
 @Composable
 private fun FreeCard(isCurrent: Boolean) {
@@ -520,7 +520,7 @@ private fun FreeCard(isCurrent: Boolean) {
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column {
-            // 头部
+            // header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -560,7 +560,7 @@ private fun FreeCard(isCurrent: Boolean) {
                 }
             }
 
-            // 功能列表
+            // list
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -645,7 +645,7 @@ private fun SubscriptionCard(
         } else Modifier
     ) {
         Column {
-            // 头部（渐变）
+            // header( gradient)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -711,7 +711,7 @@ private fun SubscriptionCard(
                         }
                     }
 
-                    // 升级提示
+                    // hint
                     if (upgradeNote != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
@@ -741,7 +741,7 @@ private fun SubscriptionCard(
                 }
             }
 
-            // 功能列表
+            // list
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -777,7 +777,7 @@ private fun SubscriptionCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 订阅按钮
+                // button
                 PremiumButton(
                     onClick = onSubscribe,
                     modifier = Modifier

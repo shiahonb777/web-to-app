@@ -32,9 +32,9 @@ import com.webtoapp.core.extension.CodeSnippets
 import androidx.compose.ui.graphics.Color
 
 /**
- * 代码块选择器对话框
+ * code select dialog
  * 
- * 提供分类浏览、搜索、预览和插入代码块的功能
+ * , , preview code
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,13 +49,13 @@ fun CodeSnippetSelectorDialog(
     val allCategories = remember { CodeSnippets.getAll() }
     val popularSnippets = remember { CodeSnippets.getPopular() }
     
-    // Search结果
+    // Search
     val searchResults = remember(searchQuery) {
         if (searchQuery.isBlank()) emptyList()
         else CodeSnippets.search(searchQuery)
     }
     
-    // 当前显示的代码块
+    // currentdisplay code
     val displaySnippets = when {
         searchQuery.isNotBlank() -> searchResults
         selectedCategory != null -> selectedCategory!!.snippets
@@ -74,7 +74,7 @@ fun CodeSnippetSelectorDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
                     title = { Text(com.webtoapp.core.i18n.Strings.codeBlockLibraryTitle) },
                     navigationIcon = {
@@ -83,7 +83,7 @@ fun CodeSnippetSelectorDialog(
                         }
                     },
                     actions = {
-                        // 统计信息
+                        // Note
                         Text(
                             "${allCategories.size} ${com.webtoapp.core.i18n.Strings.categoriesAndBlocks.split("·")[0].trim()} · ${allCategories.sumOf { it.snippets.size }} ${com.webtoapp.core.i18n.Strings.categoriesAndBlocks.split("·")[1].trim()}",
                             style = MaterialTheme.typography.labelMedium,
@@ -98,7 +98,7 @@ fun CodeSnippetSelectorDialog(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    // Search框
+                    // Search
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { 
@@ -121,14 +121,14 @@ fun CodeSnippetSelectorDialog(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 分类标签
+                    // label
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 热门
+                        // Note
                         PremiumFilterChip(
                             selected = selectedCategory == null && searchQuery.isBlank(),
                             onClick = { 
@@ -141,7 +141,7 @@ fun CodeSnippetSelectorDialog(
                             } else null
                         )
                         
-                        // 分类
+                        // Note
                         allCategories.forEach { category ->
                             PremiumFilterChip(
                                 selected = selectedCategory == category,
@@ -159,7 +159,7 @@ fun CodeSnippetSelectorDialog(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 当前分类描述
+                    // current
                     selectedCategory?.let { category ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
@@ -190,7 +190,7 @@ fun CodeSnippetSelectorDialog(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                     
-                    // Search结果提示
+                    // Search hint
                     if (searchQuery.isNotBlank()) {
                         Text(
                             com.webtoapp.core.i18n.Strings.foundResults.format(searchResults.size),
@@ -200,7 +200,7 @@ fun CodeSnippetSelectorDialog(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                     
-                    // 代码块列表
+                    // code list
                     LazyColumn(
                         modifier = Modifier.weight(weight = 1f, fill = true),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -249,7 +249,7 @@ fun CodeSnippetSelectorDialog(
         }
     }
     
-    // 代码预览对话框
+    // codepreviewdialog
     previewSnippet?.let { snippet ->
         CodeSnippetPreviewDialog(
             snippet = snippet,
@@ -263,7 +263,7 @@ fun CodeSnippetSelectorDialog(
 }
 
 /**
- * 代码块列表项
+ * code list
  */
 @Composable
 private fun CodeSnippetItem(
@@ -296,7 +296,7 @@ private fun CodeSnippetItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                // 标签
+                // label
                 if (snippet.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -317,7 +317,7 @@ private fun CodeSnippetItem(
                 }
             }
             
-            // 插入按钮
+            // button
             FilledTonalIconButton(
                 onClick = onInsert,
                 modifier = Modifier.size(36.dp)
@@ -334,7 +334,7 @@ private fun CodeSnippetItem(
 
 
 /**
- * 代码块预览对话框
+ * code previewdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -358,7 +358,7 @@ fun CodeSnippetPreviewDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
                     title = { 
                         Column {
@@ -382,7 +382,7 @@ fun CodeSnippetPreviewDialog(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    // 标签
+                    // label
                     if (snippet.tags.isNotEmpty()) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -404,7 +404,7 @@ fun CodeSnippetPreviewDialog(
                         }
                     }
                     
-                    // 代码预览
+                    // codepreview
                     Surface(
                         modifier = Modifier
                             .weight(weight = 1f, fill = true)
@@ -413,7 +413,7 @@ fun CodeSnippetPreviewDialog(
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Column {
-                            // 代码头部
+                            // codeheader
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -446,7 +446,7 @@ fun CodeSnippetPreviewDialog(
                             
                             HorizontalDivider()
                             
-                            // 代码内容
+                            // codecontent
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -468,7 +468,7 @@ fun CodeSnippetPreviewDialog(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 操作按钮
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -496,8 +496,8 @@ fun CodeSnippetPreviewDialog(
 }
 
 /**
- * 代码块快速选择卡片
- * 用于模块编辑器中快速插入代码
+ * code selectcard
+ * formoduleedit code
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -556,7 +556,7 @@ fun CodeSnippetQuickPicker(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
-            // 热门代码块
+            // code
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -580,7 +580,7 @@ fun CodeSnippetQuickPicker(
         }
     }
     
-    // 完整选择器对话框
+    // select dialog
     if (showFullSelector) {
         CodeSnippetSelectorDialog(
             onDismiss = { showFullSelector = false },
@@ -590,8 +590,8 @@ fun CodeSnippetQuickPicker(
 }
 
 /**
- * 分类代码块网格
- * 按分类展示代码块
+ * code
+ * code
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

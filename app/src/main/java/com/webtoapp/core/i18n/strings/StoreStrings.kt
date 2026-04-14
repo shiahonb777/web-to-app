@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object StoreStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 应用商店 ====================
+    // ==================== App Store ====================
     val storeSearchPlaceholder: String get() = when (lang) {
         AppLanguage.CHINESE -> "搜索应用..."
         AppLanguage.ENGLISH -> "Search apps..."
@@ -659,7 +659,7 @@ internal object StoreStrings {
         AppLanguage.ENGLISH -> "Are you sure you want to delist this app?"
         AppLanguage.ARABIC -> "هل أنت متأكد من إزالة هذا التطبيق؟"
     }
-    // ==================== 举报 ====================
+    // ==================== Report ====================
     val storeReportAppTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "举报应用"
         AppLanguage.ENGLISH -> "Report App"

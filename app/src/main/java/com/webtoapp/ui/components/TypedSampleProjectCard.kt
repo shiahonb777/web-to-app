@@ -25,10 +25,10 @@ import com.webtoapp.ui.theme.LocalAppTheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * 通用示例项目卡片
+ * itemcard
  * 
- * 支持 PHP / Python / Go / DocsSite 等各类型示例项目展示。
- * UI 模式参考 SampleProjectCard.kt（渐变边框、Play 按钮、标签行）。
+ * support PHP / Python / Go / DocsSite type item.
+ * UI mode SampleProjectCard. kt( gradient, Play button, label) .
  */
 @Composable
 fun TypedSampleProjectsCard(
@@ -47,7 +47,7 @@ fun TypedSampleProjectsCard(
     
     Box(modifier = containerModifier) {
         Column(modifier = Modifier.padding(20.dp)) {
-            // 标题区域
+            // area
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -121,7 +121,7 @@ fun TypedSampleProjectsCard(
 }
 
 /**
- * 单个示例项目项
+ * item
  */
 @Composable
 private fun TypedSampleProjectItem(
@@ -153,7 +153,7 @@ private fun TypedSampleProjectItem(
         modifier = itemModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 图标容器
+        // icon
         Box(
             modifier = Modifier
                 .size(52.dp)
@@ -214,7 +214,7 @@ private fun TypedSampleProjectItem(
         
         Spacer(modifier = Modifier.width(8.dp))
         
-        // Play 按钮
+        // Play button
         Box(
             modifier = Modifier
                 .size(36.dp)

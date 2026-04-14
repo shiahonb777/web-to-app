@@ -4,17 +4,17 @@ import com.webtoapp.core.i18n.AiPromptManager
 import com.webtoapp.core.i18n.Strings
 
 /**
- * HTML编程AI - 提示词与模板管理
+ * HTML AI -.
  * 
- * 优化原则：
- * 1. 简洁明确，避免冗余
- * 2. 关键规则前置
- * 3. 减少示例代码，让AI自由发挥
+ * Note.
+ * Note.
+ * Note.
+ * 3. AI.
  */
 object AiCodingPrompts {
 
     /**
-     * 构建系统提示词 - 根据语言设置生成对应语言的提示词
+     * Note.
      */
     fun buildSystemPrompt(
         config: SessionConfig,
@@ -40,21 +40,21 @@ object AiCodingPrompts {
     }
 
     /**
-     * 根据模板ID获取模板
+     * ID.
      */
     fun getTemplateById(id: String): StyleTemplate? {
         return styleTemplates.find { it.id == id }
     }
 
     /**
-     * 根据风格ID获取风格
+     * ID.
      */
     fun getStyleById(id: String): StyleReference? {
         return styleReferences.find { it.id == id }
     }
 
     /**
-     * 预置的风格模板库
+     * Note.
      */
     val styleTemplates = listOf(
         StyleTemplate(
@@ -211,7 +211,7 @@ object AiCodingPrompts {
     )
 
     /**
-     * 风格参考词库
+     * Note.
      */
     val styleReferences = listOf(
         StyleReference(
@@ -289,7 +289,7 @@ object AiCodingPrompts {
     )
 
     /**
-     * Rules 模板
+     * Rules.
      */
     val rulesTemplates: List<RulesTemplate> get() = listOf(
         RulesTemplate(

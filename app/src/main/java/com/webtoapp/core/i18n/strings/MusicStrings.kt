@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object MusicStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 在线音乐 ====================
+    // ==================== Online Music ====================
     val onlineMusic: String get() = when (lang) {
         AppLanguage.CHINESE -> "在线音乐"
         AppLanguage.ENGLISH -> "Online Music"
@@ -131,7 +131,7 @@ internal object MusicStrings {
         AppLanguage.ENGLISH -> "results"
         AppLanguage.ARABIC -> "نتائج"
     }
-    // ==================== 背景音乐选择器 ====================
+    // ==================== BGM Picker ====================
     val selectBgm: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择背景音乐"
         AppLanguage.ENGLISH -> "Select Background Music"
@@ -233,7 +233,7 @@ internal object MusicStrings {
         AppLanguage.ENGLISH -> "[OK] Lyrics saved"
         AppLanguage.ARABIC -> "[OK] تم حفظ كلمات الأغنية"
     }
-    // ==================== 背景音乐补充 ====================
+    // ==================== BGM Extras ====================
     val previewLyrics: String get() = when (lang) {
         AppLanguage.CHINESE -> "预览歌词"
         AppLanguage.ENGLISH -> "Preview Lyrics"
@@ -491,7 +491,7 @@ internal object MusicStrings {
         AppLanguage.ENGLISH -> "Other"
         AppLanguage.ARABIC -> "أخرى"
     }
-    // ==================== 在线音乐搜索 (新增) ====================
+    // ==================== Online Music Search ( ) ====================
     val playbackFailed: String get() = when (lang) {
         AppLanguage.CHINESE -> "播放失败"
         AppLanguage.ENGLISH -> "Playback failed"

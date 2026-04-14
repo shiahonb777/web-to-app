@@ -24,8 +24,8 @@ import com.webtoapp.core.backup.DataBackupManager
 import kotlinx.coroutines.launch
 
 /**
- * Data backup card组件
- * 提供一键导出和导入所有应用数据的功能
+ * Data backup card
+ * export import app
  */
 @Composable
 fun DataBackupCard(
@@ -35,13 +35,13 @@ fun DataBackupCard(
     val scope = rememberCoroutineScope()
     val backupManager = remember { DataBackupManager(context) }
     
-    // 状态
+    // state
     var isExporting by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
     var progressMessage by remember { mutableStateOf("") }
     var showProgress by remember { mutableStateOf(false) }
     
-    // Export文件选择器
+    // Exportfileselect
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
@@ -78,7 +78,7 @@ fun DataBackupCard(
         }
     }
     
-    // Import文件选择器
+    // Importfileselect
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -120,7 +120,7 @@ fun DataBackupCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题
+            // Note
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -154,7 +154,7 @@ fun DataBackupCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 进度显示
+            // display
             if (showProgress) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
@@ -168,12 +168,12 @@ fun DataBackupCard(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             
-            // 按钮行
+            // button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Export按钮
+                // Exportbutton
                 PremiumOutlinedButton(
                     onClick = {
                         val fileName = backupManager.generateBackupFileName()
@@ -198,7 +198,7 @@ fun DataBackupCard(
                     Text(Strings.exportData)
                 }
                 
-                // Import按钮
+                // Importbutton
                 PremiumButton(
                     onClick = {
                         importLauncher.launch(arrayOf("application/zip"))
@@ -226,7 +226,7 @@ fun DataBackupCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 提示信息
+            // hint
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(8.dp)

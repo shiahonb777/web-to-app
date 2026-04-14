@@ -7,7 +7,7 @@ import com.webtoapp.core.i18n.Strings
 import java.io.File
 
 /**
- * 通用示例项目数据类
+ * Note: brief English comment.
  */
 data class TypedSampleProject(
     val id: String,
@@ -20,10 +20,10 @@ data class TypedSampleProject(
 )
 
 /**
- * 通用示例项目提取器
+ * Note: brief English comment.
  * 
- * 提供从 assets 解压示例项目到 app 目录的公共逻辑，
- * 被各类型的 SampleManager 共享使用。
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 object SampleProjectExtractor {
     
@@ -31,7 +31,7 @@ object SampleProjectExtractor {
     private const val SAMPLES_DIR = "sample_projects"
     
     /**
-     * 根据当前语言获取项目 ID 后缀
+     * Note: brief English comment.
      */
     fun getLanguageSuffix(): String {
         return when (Strings.currentLanguage.value) {
@@ -42,9 +42,9 @@ object SampleProjectExtractor {
     }
     
     /**
-     * 解压示例项目到应用目录
+     * Note: brief English comment.
      * 
-     * @return 解压后的项目路径
+     * Note: brief English comment.
      */
     suspend fun extractSampleProject(
         context: Context,
@@ -59,7 +59,7 @@ object SampleProjectExtractor {
             val cachedVersion = if (versionFile.exists()) versionFile.readText().trim().toLongOrNull() else null
             
             if (!forceRefresh && outputDir.exists() && cachedVersion == currentVersion) {
-                // 检查是否有实质文件（至少存在 1 个子文件）
+                // Note: brief English comment.
                 if (outputDir.listFiles()?.any { it.name != ".version" } == true) {
                     AppLogger.d(TAG, "示例项目已存在且版本匹配: ${outputDir.absolutePath}")
                     return Result.success(outputDir.absolutePath)
@@ -86,9 +86,9 @@ object SampleProjectExtractor {
     }
     
     /**
-     * 获取 App 版本标识（versionCode + lastUpdateTime）
-     * 使用 lastUpdateTime 确保即使 versionCode 不变（debug 构建），
-     * 重新安装 APK 后也会刷新示例项目缓存
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun getAppVersionCode(context: Context): Long {
         return try {
@@ -99,7 +99,7 @@ object SampleProjectExtractor {
                 @Suppress("DEPRECATION")
                 packageInfo.versionCode.toLong()
             }
-            // 混合 versionCode 和 lastUpdateTime，确保 APK 更新后缓存失效
+            // Note: brief English comment.
             versionCode xor (packageInfo.lastUpdateTime / 1000)
         } catch (e: Exception) {
             0L
@@ -107,7 +107,7 @@ object SampleProjectExtractor {
     }
     
     /**
-     * 递归复制 assets 目录
+     * Note: brief English comment.
      */
     private fun copyAssetFolder(context: Context, assetPath: String, targetDir: File) {
         val assetManager = context.assets
@@ -133,7 +133,7 @@ object SampleProjectExtractor {
     }
     
     /**
-     * 清理所有已解压的示例项目
+     * Note: brief English comment.
      */
     fun clearExtractedProjects(context: Context) {
         val samplesDir = File(context.filesDir, "sample_projects")

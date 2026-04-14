@@ -63,7 +63,7 @@ internal fun AppNavigationEffects() {
                     }
                 }
             } catch (_: Exception) {
-                // 静默失败，不打扰用户
+                // Ignore failures silently so the user is not disturbed
             }
         }
     }

@@ -1,9 +1,9 @@
 package com.webtoapp.data.model
 
 /**
- * 云项目关联配置（编辑器侧）。
+ * Cloud project linking configuration (editor side).
  *
- * 这是编辑器数据库里的持久化配置，不直接给导出的 APP 用。
+ * Persisted in the editor database, not shipped to exported apps.
  */
 data class CloudAppConfig(
     val enabled: Boolean = false,

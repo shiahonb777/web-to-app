@@ -9,16 +9,10 @@ import com.webtoapp.core.shell.ShellRuntimeServices
 import java.util.Calendar
 
 /**
- * 定时启动广播接收器
+ * Handles scheduled auto-start broadcast.
  *
- * 接收精确闹钟触发的广播，启动配置的应用，并立即调度下一次闹钟。
- *
- * 优化点（v2）：
- * 1. 使用 "单次精确闹钟 + 触发后 reschedule" 模式替换 setRepeating
- * 2. 只在匹配日才真正启动（双重保障，与 Manager 的精确计算互补）
- * 3. 使用 AutoStartLauncher 集中处理启动逻辑，消除重复代码
- * 4. 触发后自动调度下一次，保证连续运行
- * 5. goAsync() + WakeLock 保证可靠执行
+ * Uses one-shot exact alarms plus rescheduling after each trigger.
+ * Uses goAsync() and WakeLock for more reliable execution.
  */
 class ScheduledStartReceiver : BroadcastReceiver() {
 
@@ -33,10 +27,10 @@ class ScheduledStartReceiver : BroadcastReceiver() {
 
         AppLogger.d(TAG, "收到定时启动广播")
 
-        // goAsync() 获取额外处理时间
+        // goAsync()
         val pendingResult = goAsync()
 
-        // WakeLock 防止 CPU 在处理期间休眠
+        // WakeLock CPU
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = pm.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
@@ -48,14 +42,14 @@ class ScheduledStartReceiver : BroadcastReceiver() {
         try {
             val autoStartManager = AutoStartManager(context)
 
-            // 检测运行模式
+            // Note.
             val isShellMode = try {
                 ShellRuntimeServices.shellMode.isShellMode()
             } catch (e: Exception) {
                 false
             }
 
-            // 获取今天是星期几（转换为 1=周一 .. 7=周日）
+            // （ 1= .. 7=）
             val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
             val dayOfWeek = if (today == Calendar.SUNDAY) 7 else today - 1
 
@@ -65,7 +59,7 @@ class ScheduledStartReceiver : BroadcastReceiver() {
                 handleMainAppMode(context, autoStartManager, dayOfWeek)
             }
 
-            // ★ 核心：触发后立即调度下一次闹钟
+            // ★ ：
             autoStartManager.rescheduleAfterTrigger()
         } catch (e: Exception) {
             AppLogger.e(TAG, "定时启动处理异常", e)
@@ -80,7 +74,7 @@ class ScheduledStartReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Shell 模式下的定时启动处理
+     * Shell
      */
     private fun handleShellMode(context: Context, dayOfWeek: Int) {
         val config = try {
@@ -108,7 +102,7 @@ class ScheduledStartReceiver : BroadcastReceiver() {
     }
 
     /**
-     * 主应用模式下的定时启动处理
+     * Note.
      */
     private fun handleMainAppMode(context: Context, autoStartManager: AutoStartManager, dayOfWeek: Int) {
         val config = autoStartManager.getScheduledStartConfig() ?: run {

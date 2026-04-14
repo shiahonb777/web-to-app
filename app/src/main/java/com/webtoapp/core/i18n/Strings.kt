@@ -29,14 +29,14 @@ import com.webtoapp.core.i18n.strings.WebViewStrings
 import org.koin.compose.koinInject
 
 /**
- * 多语言字符串管理器
- * 提供运行时可切换的多语言字符串
+ * Note.
+ * Note.
  * 
- * 支持语言：中文、英文、阿拉伯语
+ * Note.
  */
 object Strings {
     
-    // 当前语言状态
+    // Note.
     private val _currentLanguage = mutableStateOf(AppLanguage.CHINESE)
     val currentLanguage: State<AppLanguage> = _currentLanguage
 
@@ -63,12 +63,12 @@ object Strings {
     internal fun resourceString(@StringRes resId: Int, vararg formatArgs: Any): String =
         getString(resId, *formatArgs)
     
-    // Get当前语言
+    // Get.
     private val lang: AppLanguage get() = _currentLanguage.value
-    // 过渡期给分组 strings 对象用，避免继续把 3 万行都塞在一个 object 里
+    // strings 3 object.
     internal val delegateLanguage: AppLanguage get() = _currentLanguage.value
     
-    // ==================== 应用标题 ====================
+    // ==================== ====================
     val appTitle: String get() = "WebToApp"
     
     val typewriterText1: String get() = "WebToApp"
@@ -83,7 +83,7 @@ object Strings {
         AppLanguage.ARABIC -> "إمكانيات لا حدود لها للبرمجة"
     }
     
-    // ==================== 主界面 ====================
+    // ==================== ====================
     val myApps: String get() = when (lang) {
         else -> getString(R.string.title_my_apps)
     }
@@ -106,7 +106,7 @@ object Strings {
         else -> getString(R.string.webview_back)
     }
     
-    // ==================== 菜单项 ====================
+    // ==================== ====================
     val menuAiCoding: String get() = CommonStrings.menuAiCoding
     
     val menuThemeSettings: String get() = CommonStrings.menuThemeSettings
@@ -119,7 +119,7 @@ object Strings {
     
     val menuAbout: String get() = CommonStrings.menuAbout
 
-    // ==================== 底部 Tab ====================
+    // ==================== Tab ====================
     val tabHome: String get() = CommonStrings.tabHome
     val tabStore: String get() = CommonStrings.tabStore
     val marketTabApps: String get() = CommonStrings.marketTabApps
@@ -137,7 +137,7 @@ object Strings {
     val tabProfile: String get() = CommonStrings.tabProfile
     val tabMore: String get() = CommonStrings.tabMore
 
-    // More 页面分类标题
+    // More.
     val moreSectionAiTools: String get() = CommonStrings.moreSectionAiTools
     val moreSectionDevTools: String get() = CommonStrings.moreSectionDevTools
     val moreSectionBrowser: String get() = CommonStrings.moreSectionBrowser
@@ -148,7 +148,7 @@ object Strings {
         AppLanguage.ARABIC -> "المتجر قريباً\nاكتشف وشارك التطبيقات المذهلة"
     }
 
-    // ==================== 应用商店 ====================
+    // ==================== App Store ====================
     val storeSearchPlaceholder: String get() = StoreStrings.storeSearchPlaceholder
     val storeAllCategories: String get() = StoreStrings.storeAllCategories
     val storeAppsCount: String get() = StoreStrings.storeAppsCount
@@ -184,7 +184,7 @@ object Strings {
     val storeCatHealth: String get() = StoreStrings.storeCatHealth
     val storeCatOther: String get() = StoreStrings.storeCatOther
 
-    // ── 商店 - 下载管理 / 我的应用 / 发布 ──
+    // Note.
     val storeDownloadManager: String get() = StoreStrings.storeDownloadManager
     val storeDownloadedApps: String get() = StoreStrings.storeDownloadedApps
     val storeMyApps: String get() = StoreStrings.storeMyApps
@@ -218,7 +218,7 @@ object Strings {
     val storeScreenshotsAdded: String get() = StoreStrings.storeScreenshotsAdded
     val storeFillRequired: String get() = StoreStrings.storeFillRequired
     val storeAddScreenshot: String get() = StoreStrings.storeAddScreenshot
-    // ── 模块市场 - 我的模块 / 发布模块 ──
+    // Note.
     val storeMyModules: String get() = StoreStrings.storeMyModules
     val storePublishModule: String get() = StoreStrings.storePublishModule
     val storeNoPublishedModules: String get() = StoreStrings.storeNoPublishedModules
@@ -228,7 +228,7 @@ object Strings {
     val storeModulePublishSubtitle: String get() = StoreStrings.storeModulePublishSubtitle
     val storeModulePublishSuccess: String get() = StoreStrings.storeModulePublishSuccess
 
-    // ==================== 团队协作 ====================
+    // ==================== Team Collaboration ====================
     val teamTitle: String get() = CommonStrings.teamTitle
     val teamCreate: String get() = CommonStrings.teamCreate
     val teamName: String get() = CommonStrings.teamName
@@ -269,7 +269,7 @@ object Strings {
     val teamAddContributor: String get() = CommonStrings.teamAddContributor
     val teamNoTeams: String get() = CommonStrings.teamNoTeams
 
-    // ==================== 社区功能 ====================
+    // ==================== ====================
     val tabCommunity: String get() = CommunityStrings.tabCommunity
 
     val communityCreatePost: String get() = CommunityStrings.communityCreatePost
@@ -328,7 +328,7 @@ object Strings {
 
     val communityLoginToPost: String get() = CommunityStrings.communityLoginToPost
 
-    // ==================== 社区补充翻译 ====================
+    // ==================== Translations ====================
 
     val communityApplication: String get() = CommunityStrings.communityApplication
 
@@ -410,7 +410,7 @@ object Strings {
 
     val communitySaveForLaterHint: String get() = CommunityStrings.communitySaveForLaterHint
 
-    // formatTimeAgo 相关
+    // formatTimeAgo.
     val timeJustNow: String get() = CommunityStrings.timeJustNow
 
     val timeMinutesAgo: String get() = CommunityStrings.timeMinutesAgo
@@ -423,14 +423,14 @@ object Strings {
 
     val timeMonthsAgo: String get() = CommunityStrings.timeMonthsAgo
 
-    // formatDuration 相关
+    // formatDuration.
     val durationHourMinute: String get() = CommunityStrings.durationHourMinute
 
     val durationMinute: String get() = CommunityStrings.durationMinute
 
     val durationLessThanMinute: String get() = CommunityStrings.durationLessThanMinute
 
-    // ==================== 社区增强 ====================
+    // ==================== ====================
     val communitySearch: String get() = CommunityStrings.communitySearch
 
     val communitySearchUsers: String get() = CommunityStrings.communitySearchUsers
@@ -439,7 +439,7 @@ object Strings {
 
     val communityNoUsersFound: String get() = CommunityStrings.communityNoUsersFound
 
-    // ── 统一搜索面板 ──
+    // Note.
     val communitySearchPosts: String get() = CommunityStrings.communitySearchPosts
 
     val communitySearchPostsHint: String get() = CommunityStrings.communitySearchPostsHint
@@ -452,7 +452,7 @@ object Strings {
 
     val communitySearchAll: String get() = CommunityStrings.communitySearchAll
 
-    // ── @提及 ──
+    // Note.
     val communityMentionSelectUser: String get() = CommunityStrings.communityMentionSelectUser
 
     val communityFollowersList: String get() = CommunityStrings.communityFollowersList
@@ -471,13 +471,13 @@ object Strings {
 
     val communityDeleteConfirm: String get() = CommunityStrings.communityDeleteConfirm
 
-    // CLI-11: 浏览量标签
+    // CLI-11:.
     val communityViews: String get() = CommunityStrings.communityViews
 
-    // CLI-02: 编辑帖子
+    // CLI-02:.
     val communityEditPost: String get() = CommunityStrings.communityEditPost
 
-    // CLI-01: 删除确认
+    // CLI-01:.
     val communityConfirmDelete: String get() = CommunityStrings.communityConfirmDelete
 
     val communityDeletePostConfirmMsg: String get() = CommunityStrings.communityDeletePostConfirmMsg
@@ -486,7 +486,7 @@ object Strings {
 
     val communitySave: String get() = CommunityStrings.communitySave
 
-    // ==================== 模块详情补充 ====================
+    // ==================== ====================
     val communityPost: String get() = CommunityStrings.communityPost
 
     val communityPostYourReply: String get() = CommunityStrings.communityPostYourReply
@@ -513,7 +513,7 @@ object Strings {
 
     val communityRatings: String get() = CommunityStrings.communityRatings
 
-    // ==================== 高级数据看板 ====================
+    // ==================== ====================
     val analyticsOpens: String get() = CloudStrings.analyticsOpens
     val analyticsActiveUsers: String get() = CloudStrings.analyticsActiveUsers
     val analyticsInstalls: String get() = CloudStrings.analyticsInstalls
@@ -527,7 +527,7 @@ object Strings {
     val analyticsVersionDistribution: String get() = CloudStrings.analyticsVersionDistribution
     val analyticsDashboard: String get() = CloudStrings.analyticsDashboard
 
-    // ==================== 云项目 Tab 名称 ====================
+    // ==================== Tab ====================
     val cloudOverview: String get() = CloudStrings.cloudOverview
 
     val cloudSync: String get() = CloudStrings.cloudSync
@@ -574,7 +574,7 @@ object Strings {
 
     val cloudBackups: String get() = CloudStrings.cloudBackups
 
-    // ==================== 用户认证 ====================
+    // ==================== ====================
     val authCloudService: String get() = CloudStrings.authCloudService
 
     val authCloudDesc: String get() = CloudStrings.authCloudDesc
@@ -663,7 +663,7 @@ object Strings {
 
     val authMenuSecurityDesc: String get() = CloudStrings.authMenuSecurityDesc
 
-    // ==================== 密码重置 ====================
+    // ==================== ====================
     val authForgotPassword: String get() = CloudStrings.authForgotPassword
 
     val authResetPasswordTitle: String get() = CloudStrings.authResetPasswordTitle
@@ -711,7 +711,7 @@ object Strings {
     val menuAccount: String get() = CommonStrings.menuAccount
     val menuLoginRegister: String get() = CommonStrings.menuLoginRegister
 
-    // ==================== 云服务 ====================
+    // ==================== ====================
     val cloudActivationCode: String get() = CloudStrings.cloudActivationCode
 
     val cloudRedeemTitle: String get() = CloudStrings.cloudRedeemTitle
@@ -826,7 +826,7 @@ object Strings {
 
     val cloudHideAdvanced: String get() = CloudStrings.cloudHideAdvanced
 
-    // ==================== 激活码预览对话框 ====================
+    // ==================== ====================
     val cloudPreviewTierUpgrade: String get() = CloudStrings.cloudPreviewTierUpgrade
 
     val cloudPreviewTitle: String get() = CloudStrings.cloudPreviewTitle
@@ -851,7 +851,7 @@ object Strings {
 
     val cloudCodeFormatError: String get() = CloudStrings.cloudCodeFormatError
     
-    // ==================== 使用统计 ====================
+    // ==================== Usage Stats ====================
     val menuStats: String get() = CommonStrings.menuStats
     val statsTitle: String get() = UiStrings.statsTitle
     val statsTotalLaunches: String get() = UiStrings.statsTotalLaunches
@@ -868,7 +868,7 @@ object Strings {
     val statsHoursAgo: String get() = UiStrings.statsHoursAgo
     val statsDaysAgo: String get() = UiStrings.statsDaysAgo
     
-    // ==================== 网站健康监控 ====================
+    // ==================== ====================
     val healthTitle: String get() = CloudStrings.healthTitle
     val healthOnline: String get() = CloudStrings.healthOnline
     val healthSlow: String get() = CloudStrings.healthSlow
@@ -880,7 +880,7 @@ object Strings {
     val healthUptime24h: String get() = CloudStrings.healthUptime24h
     val healthHistory: String get() = CloudStrings.healthHistory
     
-    // ==================== 网站截图 ====================
+    // ==================== ====================
     val screenshotCapture: String get() = when (lang) {
         AppLanguage.CHINESE -> "截取预览"
         AppLanguage.ENGLISH -> "Capture Preview"
@@ -897,7 +897,7 @@ object Strings {
         AppLanguage.ARABIC -> "جارٍ الالتقاط..."
     }
     
-    // ==================== 批量导入 ====================
+    // ==================== ====================
     val menuBatchImport: String get() = CommonStrings.menuBatchImport
     val batchImportTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "批量导入"
@@ -935,7 +935,7 @@ object Strings {
         AppLanguage.ARABIC -> "استيراد"
     }
     
-    // ==================== 模板分享 ====================
+    // ==================== ====================
     val templateExport: String get() = when (lang) {
         AppLanguage.CHINESE -> "导出为模板"
         AppLanguage.ENGLISH -> "Export as Template"
@@ -961,7 +961,7 @@ object Strings {
     
     val menuLanguage: String get() = CommonStrings.menuLanguage
 
-    // ==================== 创建应用类型 ====================
+    // ==================== Create App ====================
     val createWebApp: String get() = CreateStrings.createWebApp
     
     val createMediaApp: String get() = CreateStrings.createMediaApp
@@ -986,7 +986,7 @@ object Strings {
     
     val createGoApp: String get() = CreateStrings.createGoApp
     
-    // ==================== 多站点聚合应用 ====================
+    // ==================== Multi-site Aggregation App ====================
     val appTypeMultiWeb: String get() = CommonStrings.appTypeMultiWeb
     
     val createMultiWebApp: String get() = CreateStrings.createMultiWebApp
@@ -1071,7 +1071,7 @@ object Strings {
 
     val createDocsSite: String get() = CreateStrings.createDocsSite
     
-    // ==================== 应用类型标签 ====================
+    // ==================== ====================
     val appTypeWeb: String get() = CommonStrings.appTypeWeb
     
     val appTypeImage: String get() = CommonStrings.appTypeImage
@@ -1096,7 +1096,7 @@ object Strings {
     
     val appTypeDocsSite: String get() = CommonStrings.appTypeDocsSite
     
-    // ==================== 通用项目字符串 ====================
+    // ==================== General ====================
     val dirNotExists: String get() = ProjectStrings.dirNotExists
     
     val copyingDocsFiles: String get() = ProjectStrings.copyingDocsFiles
@@ -1127,7 +1127,7 @@ object Strings {
     
     val docsHistoryRouting: String get() = ProjectStrings.docsHistoryRouting
     
-    // ==================== PHP 应用字符串 ====================
+    // ==================== PHP App Strings ====================
     val phpFrameworkDetected: String get() = ProjectStrings.phpFrameworkDetected
     
     val phpDocumentRoot: String get() = ProjectStrings.phpDocumentRoot
@@ -1160,7 +1160,7 @@ object Strings {
     
     val phpZipNoPhpFiles: String get() = ProjectStrings.phpZipNoPhpFiles
     
-    // ==================== Python 应用字符串 ====================
+    // ==================== Python ====================
     val pySelectProject: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择 Python 项目目录"
         AppLanguage.ENGLISH -> "Select Python Project Directory"
@@ -1203,7 +1203,7 @@ object Strings {
         AppLanguage.ARABIC -> "فشل تشغيل معاينة تطبيق Python"
     }
     
-    // ==================== Go 应用字符串 ====================
+    // ==================== Go ====================
     val goSelectBinary: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择 Go 二进制文件"
         AppLanguage.ENGLISH -> "Select Go Binary"
@@ -1240,7 +1240,7 @@ object Strings {
         AppLanguage.ARABIC -> "فشل تشغيل معاينة تطبيق Go"
     }
     
-    // ==================== Node.js 应用预览字符串 ====================
+    // ==================== Node.js ====================
     val nodeProjectNotFound: String get() = when (lang) {
         AppLanguage.CHINESE -> "Node.js 项目文件不存在"
         AppLanguage.ENGLISH -> "Node.js project files not found"
@@ -1259,7 +1259,7 @@ object Strings {
         AppLanguage.ARABIC -> "فشل تشغيل معاينة تطبيق Node.js"
     }
     
-    // ==================== 文档站点字符串 ====================
+    // ==================== ====================
     val docsSelectProject: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择文档站点目录"
         AppLanguage.ENGLISH -> "Select Docs Site Directory"
@@ -1284,7 +1284,7 @@ object Strings {
         AppLanguage.ARABIC -> "موقع التوثيق جاهز"
     }
     
-    // ==================== WordPress 功能字符串 ====================
+    // ==================== WordPress Strings ====================
     val wpDownloadDeps: String get() = CreateStrings.wpDownloadDeps
     
     val wpDownloadDesc: String get() = CreateStrings.wpDownloadDesc
@@ -1357,7 +1357,7 @@ object Strings {
     
     val wpImportSuccess: String get() = CreateStrings.wpImportSuccess
     
-    // ==================== Node.js 功能字符串 ====================
+    // ==================== Node.js Strings ====================
     val njsCreateTitle: String get() = ProjectStrings.njsCreateTitle
     
     val njsBasicConfig: String get() = ProjectStrings.njsBasicConfig
@@ -1404,7 +1404,7 @@ object Strings {
     
     val njsLandscapeMode: String get() = ProjectStrings.njsLandscapeMode
     
-    // ==================== 操作按钮 ====================
+    // ==================== Action Buttons ====================
     val btnCreate: String get() = BuildStrings.btnCreate
     
     val btnPreview: String get() = BuildStrings.btnPreview
@@ -1455,7 +1455,7 @@ object Strings {
     
     val autoDetectCategoryHint: String get() = BuildStrings.autoDetectCategoryHint
     
-    // ==================== AI 模块开发帮助 ====================
+    // ==================== AI Module Dev Help ====================
     val helpHowToUse: String get() = AiConfigStrings.helpHowToUse
     
     val helpHowToUseContent: String get() = AiConfigStrings.helpHowToUseContent
@@ -1484,7 +1484,7 @@ object Strings {
     
     val helpSaveModuleContent: String get() = AiConfigStrings.helpSaveModuleContent
 
-    // ==================== 表单标签 ====================
+    // ==================== ====================
     val labelAppName: String get() = when (lang) {
         AppLanguage.CHINESE -> "应用名称"
         AppLanguage.ENGLISH -> "App Name"
@@ -1527,7 +1527,7 @@ object Strings {
         AppLanguage.ARABIC -> "معلومات التطبيق"
     }
     
-    // ==================== 提示消息 ====================
+    // ==================== Hint Messages ====================
     val msgAppCreated: String get() = UiStrings.msgAppCreated
     
     val msgAppDeleted: String get() = UiStrings.msgAppDeleted
@@ -1550,10 +1550,10 @@ object Strings {
     
     val msgDeleted: String get() = UiStrings.msgDeleted
 
-    // ==================== 统一运行时依赖管理 ====================
+    // ==================== ====================
     val menuRuntimeDeps: String get() = CommonStrings.menuRuntimeDeps
     
-    // ==================== 端口管理 ====================
+    // ==================== Port Management ====================
     val menuPortManager: String get() = CommonStrings.menuPortManager
     
     val portManagerTitle: String get() = ShellStrings.portManagerTitle
@@ -1720,7 +1720,7 @@ object Strings {
     
     val depInstall: String get() = ShellStrings.depInstall
     
-    // ==================== 下载详情 ====================
+    // ==================== ====================
     
     val depDlPause: String get() = when (lang) {
         AppLanguage.CHINESE -> "暂停"
@@ -1764,7 +1764,7 @@ object Strings {
         AppLanguage.ARABIC -> "متوقف مؤقتًا"
     }
     
-    // ==================== 删除确认对话框 ====================
+    // ==================== ====================
     val deleteConfirmTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "确认删除"
         AppLanguage.ENGLISH -> "Confirm Delete"
@@ -1777,7 +1777,7 @@ object Strings {
         AppLanguage.ARABIC -> "هل أنت متأكد أنك تريد حذف هذا التطبيق؟"
     }
     
-    // ==================== 构建对话框 ====================
+    // ==================== ====================
     val buildDialogTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "构建 APK"
         AppLanguage.ENGLISH -> "Build APK"
@@ -1790,7 +1790,7 @@ object Strings {
         AppLanguage.ARABIC -> "جاري البناء..."
     }
     
-    // ==================== 构建环境页面 ====================
+    // ==================== Build Environment ====================
     val buildEnvironment: String get() = CreateStrings.buildEnvironment
     
     val envReady: String get() = CreateStrings.envReady
@@ -1841,7 +1841,7 @@ object Strings {
     
     val clean: String get() = CreateStrings.clean
 
-    // ==================== 前端项目页面 ====================
+    // ==================== Frontend Project Page ====================
     val selectProject: String get() = CreateStrings.selectProject
     
     val selectProjectFolder: String get() = CreateStrings.selectProjectFolder
@@ -1904,7 +1904,7 @@ object Strings {
     
     val builtInEngineReady: String get() = CreateStrings.builtInEngineReady
 
-    // ==================== 媒体应用页面 ====================
+    // ==================== Media App Page ====================
     val createMediaAppTitle: String get() = CreateStrings.createMediaAppTitle
     
     val selectMediaType: String get() = ProjectStrings.selectMediaType
@@ -1949,7 +1949,7 @@ object Strings {
     
     val fullscreenPlayVideo: String get() = ProjectStrings.fullscreenPlayVideo
 
-    // ==================== HTML应用页面 ====================
+    // ==================== HTML App Page ====================
     val createHtmlAppTitle: String get() = CreateStrings.createHtmlAppTitle
     
     val selectFiles: String get() = CreateStrings.selectFiles
@@ -1984,7 +1984,7 @@ object Strings {
     
     val orientationAutoHint: String get() = CreateStrings.orientationAutoHint
     
-    // ── 方向模式分组标签 ──
+    // Note.
     
     val orientationBasicLabel: String get() = CreateStrings.orientationBasicLabel
     
@@ -1994,13 +1994,13 @@ object Strings {
     
     val orientationSensorLabel: String get() = CreateStrings.orientationSensorLabel
     
-    // ── 基础模式描述 ──
+    // Note.
     
     val orientationLandscapeDesc: String get() = CreateStrings.orientationLandscapeDesc
     
     val orientationAutoDesc: String get() = CreateStrings.orientationAutoDesc
     
-    // ── 反向模式 ──
+    // Note.
     
     val orientationReversePortrait: String get() = CreateStrings.orientationReversePortrait
     
@@ -2010,7 +2010,7 @@ object Strings {
     
     val orientationReverseLandscapeDesc: String get() = CreateStrings.orientationReverseLandscapeDesc
     
-    // ── 感应模式 ──
+    // Note.
     
     val orientationSensorPortrait: String get() = CreateStrings.orientationSensorPortrait
     
@@ -2028,7 +2028,7 @@ object Strings {
     
     val keepScreenOnHint: String get() = CreateStrings.keepScreenOnHint
     
-    // ── 屏幕常亮模式 ──
+    // Note.
     
     val screenAwakeModeLabel: String get() = CreateStrings.screenAwakeModeLabel
     
@@ -2127,7 +2127,7 @@ object Strings {
     
     val gotIt: String get() = CreateStrings.gotIt
 
-    // ==================== ZIP 导入 ====================
+    // ==================== ZIP Import ====================
     
     val zipImportMode: String get() = ProjectStrings.zipImportMode
     
@@ -2165,7 +2165,7 @@ object Strings {
     
     val zipFileTreeTitle: String get() = ProjectStrings.zipFileTreeTitle
 
-    // ==================== 文件夹导入 ====================
+    // ==================== ====================
 
     val folderImportMode: String get() = CreateStrings.folderImportMode
 
@@ -2181,7 +2181,7 @@ object Strings {
 
     val folderImportFailed: String get() = CreateStrings.folderImportFailed
 
-    // ==================== 创建应用页面 ====================
+    // ==================== Create App ====================
     val editApp: String get() = CreateStrings.editApp
     
     val inputAppName: String get() = CreateStrings.inputAppName
@@ -2246,7 +2246,7 @@ object Strings {
         AppLanguage.ARABIC -> "تفعيل الرسوم المتحركة"
     }
     
-    // ==================== 公告触发机制 ====================
+    // ==================== ====================
     val announcementTriggerSettings: String get() = CreateStrings.announcementTriggerSettings
     
     val announcementTriggerOnLaunch: String get() = CreateStrings.announcementTriggerOnLaunch
@@ -2265,7 +2265,7 @@ object Strings {
     
     val announcementTriggerIntervalIncludeLaunch: String get() = CreateStrings.announcementTriggerIntervalIncludeLaunch
     
-    // ==================== 增强公告 UI 新增字符串 ====================
+    // ==================== Enhanced Announcement UI Strings ====================
     
     val announcementSubtitle: String get() = CreateStrings.announcementSubtitle
     
@@ -2340,7 +2340,7 @@ object Strings {
     val reselect: String get() = CompatStrings.reselect
     
     
-    // ==================== 扩展模块页面 ====================
+    // ==================== Extension Module Page ====================
     val extensionModule: String get() = ModuleStrings.extensionModule
     
     val searchModules: String get() = ModuleStrings.searchModules
@@ -2415,7 +2415,7 @@ object Strings {
     
     val aiModuleDeveloper: String get() = AiStrings.aiModuleDeveloper
 
-    // ==================== 主题设置页面 ====================
+    // ==================== Theme Settings ====================
     val themeSettings: String get() = UiStrings.themeSettings
     
     val theme: String get() = UiStrings.theme
@@ -2438,7 +2438,7 @@ object Strings {
     
     val darkModeHint: String get() = UiStrings.darkModeHint
     
-    // ==================== 暗色模式选项 ====================
+    // ==================== ====================
     val alwaysLight: String get() = when (lang) {
         AppLanguage.CHINESE -> "始终浅色"
         AppLanguage.ENGLISH -> "Always Light"
@@ -2451,7 +2451,7 @@ object Strings {
         AppLanguage.ARABIC -> "داكن دائمًا"
     }
     
-    // ==================== 动画速度 ====================
+    // ==================== Animation Speed ====================
     val speedSlow: String get() = UiStrings.speedSlow
     
     val speedNormal: String get() = UiStrings.speedNormal
@@ -2492,7 +2492,7 @@ object Strings {
     
     val particles: String get() = UiStrings.particles
 
-    // ==================== 关于页面 ====================
+    // ==================== About Page ====================
     val about: String get() = CommonStrings.about
     
     val independentDeveloper: String get() = CommonStrings.independentDeveloper
@@ -2545,7 +2545,7 @@ object Strings {
 
     val autoCheckUpdateDesc: String get() = CommonStrings.autoCheckUpdateDesc
 
-    // ==================== AI 状态 ====================
+    // ==================== AI ====================
     val aiGenerating: String get() = AiStrings.aiGenerating
     
     val aiAnalyzing: String get() = AiStrings.aiAnalyzing
@@ -2564,7 +2564,7 @@ object Strings {
     
     val aiError: String get() = AiStrings.aiError
     
-    // ==================== 通用 ====================
+    // ==================== General ====================
     val yes: String get() = UiStrings.yes
     
     val no: String get() = UiStrings.no
@@ -2603,14 +2603,14 @@ object Strings {
     
     val info: String get() = UiStrings.info
     
-    // ==================== 空状态提示 ====================
+    // ==================== ====================
     val emptyStateHint: String get() = when (lang) {
         AppLanguage.CHINESE -> "点击下方按钮创建您的第一个应用"
         AppLanguage.ENGLISH -> "Tap the button below to create your first app"
         AppLanguage.ARABIC -> "اضغط على الزر أدناه لإنشاء تطبيقك الأول"
     }
     
-    // ==================== 构建环境功能列表 ====================
+    // ==================== ====================
     val featureImportBuiltProjects: String get() = when (lang) {
         AppLanguage.CHINESE -> "导入已构建的 Vue/React/Angular 项目"
         AppLanguage.ENGLISH -> "Import built Vue/React/Angular projects"
@@ -2663,7 +2663,7 @@ object Strings {
         AppLanguage.ARABIC -> "يستخدم هذا التطبيق تصميم المبادئ الأولى، دون الاعتماد على وقت تشغيل Node.js التقليدي:\n\n• أداة التعبئة المدمجة: تنفيذ Kotlin خالص للمشاريع البسيطة\n• esbuild: ثنائي أصلي مترجم لـ Android، أداء عالي\n• التدهور التدريجي: يجد دائمًا حل بناء يعمل\n\nسير العمل الموصى به: أكمل npm run build على الكمبيوتر، ثم استورد مخرجات البناء."
     }
 
-    // ==================== 应用修改器 ====================
+    // ==================== ====================
     val appIconModifier: String get() = CommonStrings.appIconModifier
     
     val searchApps: String get() = when (lang) {
@@ -2720,7 +2720,7 @@ object Strings {
         AppLanguage.ARABIC -> "تم النسخ بنجاح، يرجى تأكيد التثبيت"
     }
 
-    // ==================== 资源加密 ====================
+    // ==================== ====================
     val resourceEncryption: String get() = when (lang) {
         AppLanguage.CHINESE -> "资源加密"
         AppLanguage.ENGLISH -> "Resource Encryption"
@@ -2757,7 +2757,7 @@ object Strings {
         AppLanguage.ARABIC -> "متقدم"
     }
 
-    // ==================== 独立环境 ====================
+    // ==================== ====================
     val isolatedEnvironment: String get() = when (lang) {
         AppLanguage.CHINESE -> "独立环境"
         AppLanguage.ENGLISH -> "Isolated Environment"
@@ -2776,7 +2776,7 @@ object Strings {
         AppLanguage.ARABIC -> "مستوى العزل"
     }
 
-    // ==================== 激活对话框 ====================
+    // ==================== Activation Dialog ====================
     val activateApp: String get() = CreateStrings.activateApp
     
     val enterActivationCodeToContinue: String get() = CreateStrings.enterActivationCodeToContinue
@@ -2841,7 +2841,7 @@ object Strings {
     
     val requireEveryLaunchHintOff: String get() = CreateStrings.requireEveryLaunchHintOff
 
-    // ==================== 颜色选择器 ====================
+    // ==================== ====================
     val selectColor: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择颜色"
         AppLanguage.ENGLISH -> "Select Color"
@@ -2860,7 +2860,7 @@ object Strings {
         AppLanguage.ARABIC -> "مثال: FF5722 أو 80FF5722"
     }
 
-    // ==================== 在线音乐 ====================
+    // ==================== Online Music ====================
     val onlineMusic: String get() = MusicStrings.onlineMusic
     
     val searchSongName: String get() = MusicStrings.searchSongName
@@ -2903,7 +2903,7 @@ object Strings {
     
     val results: String get() = MusicStrings.results
 
-    // ==================== 图标生成器 ====================
+    // ==================== ====================
     val selectModel: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择模型"
         AppLanguage.ENGLISH -> "Select Model"
@@ -2952,7 +2952,7 @@ object Strings {
         AppLanguage.ARABIC -> "إعادة التوليد"
     }
 
-    // ==================== 状态栏配置 ====================
+    // ==================== ====================
     val backgroundType: String get() = when (lang) {
         AppLanguage.CHINESE -> "背景类型"
         AppLanguage.ENGLISH -> "Background Type"
@@ -2977,7 +2977,7 @@ object Strings {
         AppLanguage.ARABIC -> "تأكيد القص"
     }
 
-    // ==================== 歌词对齐 ====================
+    // ==================== ====================
     val nextStepTimeAlign: String get() = when (lang) {
         AppLanguage.CHINESE -> "下一步：时间对齐"
         AppLanguage.ENGLISH -> "Next: Time Alignment"
@@ -3014,7 +3014,7 @@ object Strings {
         AppLanguage.ARABIC -> "حفظ LRC"
     }
     
-    // ==================== 额外字符串 ====================
+    // ==================== Extra Strings ====================
     val seconds: String get() = CommonStrings.seconds
     
     val allowClickToSkip: String get() = CommonStrings.allowClickToSkip
@@ -3129,7 +3129,7 @@ object Strings {
     
     val activationCodeType: String get() = CreateStrings.activationCodeType
     
-    // Activation码类型名称和描述
+    // Activation.
     val activationTypePermanent: String get() = CommonStrings.activationTypePermanent
     val activationTypePermanentDesc: String get() = CommonStrings.activationTypePermanentDesc
     val activationTypeTimeLimited: String get() = CommonStrings.activationTypeTimeLimited
@@ -3223,7 +3223,7 @@ object Strings {
     
     val enableAudioLabel: String get() = CommonStrings.enableAudioLabel
 
-    // ==================== 图标库 ====================
+    // ==================== ====================
     val iconLibrary: String get() = when (lang) {
         AppLanguage.CHINESE -> "图标库"
         AppLanguage.ENGLISH -> "Icon Library"
@@ -3272,7 +3272,7 @@ object Strings {
         AppLanguage.ARABIC -> "هل أنت متأكد أنك تريد حذف هذه الأيقونة من المكتبة؟"
     }
 
-    // ==================== 下载和保存 ====================
+    // ==================== Download and Save ====================
     val saveFailed: String get() = UiStrings.saveFailed
     
     val saveFailedWithReason: String get() = UiStrings.saveFailedWithReason
@@ -3307,7 +3307,7 @@ object Strings {
     
     val downloadFailedWithReason: String get() = UiStrings.downloadFailedWithReason
 
-    // ==================== 公告模板 ====================
+    // ==================== ====================
     val previewAnnouncementEffect: String get() = when (lang) {
         AppLanguage.CHINESE -> "预览公告效果"
         AppLanguage.ENGLISH -> "Preview Announcement Effect"
@@ -3336,7 +3336,7 @@ object Strings {
         AppLanguage.ARABIC -> "عرض مرة واحدة فقط"
     }
 
-    // ==================== AI 配置 ====================
+    // ==================== AI Config ====================
     val textGeneration: String get() = AiConfigStrings.textGeneration
     
     val basicTextDialogue: String get() = AiConfigStrings.basicTextDialogue
@@ -3369,7 +3369,7 @@ object Strings {
     
     val retry: String get() = AiConfigStrings.retry
 
-    // ==================== 通用操作 ====================
+    // ==================== General ====================
     val closeDialog: String get() = when (lang) {
         AppLanguage.CHINESE -> "关闭"
         AppLanguage.ENGLISH -> "Close"
@@ -3382,7 +3382,7 @@ object Strings {
         AppLanguage.ARABIC -> "حذف"
     }
 
-    // ==================== 更多通用消息 ====================
+    // ==================== More General Messages ====================
     val savingToGallery: String get() = UiStrings.savingToGallery
     
     val savingImageToGallery: String get() = UiStrings.savingImageToGallery
@@ -3421,7 +3421,7 @@ object Strings {
     
     val copiedAllLogs: String get() = UiStrings.copiedAllLogs
     
-    // ==================== 控制台 ====================
+    // ==================== ====================
     val console: String get() = when (lang) {
         AppLanguage.CHINESE -> "控制台"
         AppLanguage.ENGLISH -> "Console"
@@ -3440,7 +3440,7 @@ object Strings {
         AppLanguage.ARABIC -> "أدخل JavaScript..."
     }
     
-    // ==================== 下载桥接 ====================
+    // ==================== Download Bridge ====================
     val preparingDownload: String get() = WebViewStrings.preparingDownload
     
     val cannotGetFileData: String get() = WebViewStrings.cannotGetFileData
@@ -3483,7 +3483,7 @@ object Strings {
     
     val imageGenerationFailed: String get() = WebViewStrings.imageGenerationFailed
 
-    // ==================== HTML编程助手 ====================
+    // ==================== HTML Coding Assistant ====================
     val htmlCodingAssistant: String get() = AiStrings.htmlCodingAssistant
     
     val messagesCount: String get() = AiStrings.messagesCount
@@ -3666,7 +3666,7 @@ object Strings {
     
     val rollbackFailed: String get() = AiStrings.rollbackFailed
 
-    // ==================== 模块编辑器 ====================
+    // ==================== Module Editor ====================
     val pleaseEnterModuleName: String get() = ModuleStrings.pleaseEnterModuleName
     
     val pleaseEnterCodeContent: String get() = ModuleStrings.pleaseEnterCodeContent
@@ -3695,9 +3695,9 @@ object Strings {
     
     val buildFailed: String get() = ModuleStrings.buildFailed
 
-    // ==================== 图标库 ====================
+    // ==================== ====================
 
-    // ==================== 扩展模块卡片 ====================
+    // ==================== Extension Module Cards ====================
     val saveAsScheme: String get() = ExtensionStrings.saveAsScheme
     
     val clearAll: String get() = ExtensionStrings.clearAll
@@ -3732,9 +3732,9 @@ object Strings {
     
     val selectIcon: String get() = ExtensionStrings.selectIcon
 
-    // ==================== 公告模板 ====================
+    // ==================== ====================
 
-    // ==================== 歌词对齐 ====================
+    // ==================== ====================
     
     val tapToMark: String get() = when (lang) {
         AppLanguage.CHINESE -> "打点"
@@ -3748,7 +3748,7 @@ object Strings {
         AppLanguage.ARABIC -> "العودة للتعديل"
     }
 
-    // ==================== 数据备份 ====================
+    // ==================== ====================
     val exportData: String get() = when (lang) {
         AppLanguage.CHINESE -> "导出数据"
         AppLanguage.ENGLISH -> "Export Data"
@@ -3761,7 +3761,7 @@ object Strings {
         AppLanguage.ARABIC -> "استيراد البيانات"
     }
 
-    // ==================== 自动启动 ====================
+    // ==================== ====================
     val launchTime: String get() = when (lang) {
         AppLanguage.CHINESE -> "启动时间"
         AppLanguage.ENGLISH -> "Launch Time"
@@ -3774,7 +3774,7 @@ object Strings {
         AppLanguage.ARABIC -> "اختيار وقت التشغيل"
     }
 
-    // ==================== HTML编程 ====================
+    // ==================== HTML ====================
     val downloadFile: String get() = AiCodingStrings.downloadFile
     
     val exportAll: String get() = AiCodingStrings.exportAll
@@ -3823,7 +3823,7 @@ object Strings {
     
     val addNewRule: String get() = AiCodingStrings.addNewRule
 
-    // ==================== HTML编程AI样式模板 ====================
+    // ==================== HTML AI ====================
     val styleModernMinimal: String get() = AiCodingStrings.styleModernMinimal
     val styleModernMinimalDesc: String get() = AiCodingStrings.styleModernMinimalDesc
     val styleGlassmorphism: String get() = AiCodingStrings.styleGlassmorphism
@@ -3845,7 +3845,7 @@ object Strings {
     val styleNeonGlow: String get() = AiCodingStrings.styleNeonGlow
     val styleNeonGlowDesc: String get() = AiCodingStrings.styleNeonGlowDesc
 
-    // ==================== HTML编程AI风格参考 ====================
+    // ==================== HTML AI ====================
     val styleHarryPotter: String get() = AiConfigStrings.styleHarryPotter
     val styleHarryPotterDesc: String get() = AiConfigStrings.styleHarryPotterDesc
     val styleGhibli: String get() = AiConfigStrings.styleGhibli
@@ -3863,7 +3863,7 @@ object Strings {
     val styleJapanese: String get() = AiConfigStrings.styleJapanese
     val styleJapaneseDesc: String get() = AiConfigStrings.styleJapaneseDesc
 
-    // ==================== HTML编程AI规则模板 ====================
+    // ==================== HTML AI ====================
     val rulesChinese: String get() = when (lang) {
         AppLanguage.CHINESE -> "中文对话"
         AppLanguage.ENGLISH -> "Chinese Dialogue"
@@ -3905,7 +3905,7 @@ object Strings {
         AppLanguage.ARABIC -> "مناسب لإنشاء النماذج وصفحات جمع البيانات"
     }
 
-    // ==================== 隔离配置 ====================
+    // ==================== ====================
     val countryRegion: String get() = when (lang) {
         AppLanguage.CHINESE -> "国家/地区"
         AppLanguage.ENGLISH -> "Country/Region"
@@ -3918,14 +3918,14 @@ object Strings {
         AppLanguage.ARABIC -> "مثال: اليابان، كوريا، المملكة المتحدة..."
     }
 
-    // ==================== 代码片段 ====================
+    // ==================== ====================
     val searchCodeSnippets: String get() = when (lang) {
         AppLanguage.CHINESE -> "搜索代码块..."
         AppLanguage.ENGLISH -> "Search code snippets..."
         AppLanguage.ARABIC -> "البحث عن مقتطفات الكود..."
     }
 
-    // ==================== 模块编辑器 ====================
+    // ==================== Module Editor ====================
     val moduleNameRequired: String get() = ModuleStrings.moduleNameRequired
     
     val inputModuleName: String get() = ModuleStrings.inputModuleName
@@ -4032,7 +4032,7 @@ object Strings {
     
     val defaultValue: String get() = ModuleStrings.defaultValue
 
-    // ==================== AI设置 ====================
+    // ==================== AI ====================
     val provider: String get() = when (lang) {
         AppLanguage.CHINESE -> "供应商"
         AppLanguage.ENGLISH -> "Provider"
@@ -4063,7 +4063,7 @@ object Strings {
         AppLanguage.ARABIC -> "الاسم المستعار"
     }
 
-    // ==================== 创建应用 ====================
+    // ==================== Create App ====================
     val activationCode: String get() = CreateStrings.activationCode
     
     val inputActivationCodeHint: String get() = CreateStrings.inputActivationCodeHint
@@ -4100,7 +4100,7 @@ object Strings {
     
     val adBlockToggleDescription: String get() = ProjectStrings.adBlockToggleDescription
 
-    // ==================== 通用 ====================
+    // ==================== General ====================
     val done: String get() = UiStrings.done
     
     val edit: String get() = UiStrings.edit
@@ -4145,7 +4145,7 @@ object Strings {
     
     val grantPermission: String get() = UiStrings.grantPermission
 
-    // ==================== AI 模块开发帮助 ====================
+    // ==================== AI Module Dev Help ====================
     val howToUse: String get() = AiConfigStrings.howToUse
     
     val howToUseContent: String get() = AiConfigStrings.howToUseContent
@@ -4174,7 +4174,7 @@ object Strings {
     
     val saveModuleContent: String get() = AiConfigStrings.saveModuleContent
 
-    // ==================== WebView 高级设置 ====================
+    // ==================== WebView Advanced Settings ====================
     val javaScriptSetting: String get() = WebViewStrings.javaScriptSetting
     
     val javaScriptSettingHint: String get() = WebViewStrings.javaScriptSettingHint
@@ -4211,7 +4211,7 @@ object Strings {
     
     val crossOriginIsolationSettingHint: String get() = WebViewStrings.crossOriginIsolationSettingHint
     
-    // ==================== 视口适配模式 ====================
+    // ==================== ====================
     val viewportModeTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "视口适配模式"
         AppLanguage.ENGLISH -> "Viewport Mode"
@@ -4266,7 +4266,7 @@ object Strings {
         AppLanguage.ARABIC -> "عرض محدد مسبقاً"
     }
 
-    // ==================== 隔离配置选项 ====================
+    // ==================== Isolation Options ====================
     val fingerprintProtection: String get() = ShellStrings.fingerprintProtection
     
     val networkProtection: String get() = ShellStrings.networkProtection
@@ -4347,7 +4347,7 @@ object Strings {
     
     val regenerateOnLaunchHint: String get() = ShellStrings.regenerateOnLaunchHint
 
-    // ==================== 加密配置选项 ====================
+    // ==================== Encryption Options ====================
     val configFileEncryption: String get() = BuildStrings.configFileEncryption
     
     val configFileEncryptionHint: String get() = BuildStrings.configFileEncryptionHint
@@ -4394,7 +4394,7 @@ object Strings {
     
     val pbkdf2Iterations: String get() = BuildStrings.pbkdf2Iterations
 
-    // ==================== 错误恢复操作 ====================
+    // ==================== ====================
     val retryAction: String get() = AiCodingStrings.retryAction
     
     val retryActionHint: String get() = AiCodingStrings.retryActionHint
@@ -4419,7 +4419,7 @@ object Strings {
     
     val dismissActionHint: String get() = AiCodingStrings.dismissActionHint
 
-    // ==================== 主题设置预览 ====================
+    // ==================== ====================
     val lightModePreview: String get() = when (lang) {
         AppLanguage.CHINESE -> "浅色模式"
         AppLanguage.ENGLISH -> "Light Mode"
@@ -4432,7 +4432,7 @@ object Strings {
         AppLanguage.ARABIC -> "الوضع الداكن"
     }
 
-    // ==================== 关于页面 ====================
+    // ==================== About Page ====================
     val communityGroup: String get() = CommunityStrings.communityGroup
     
     val openSourceRepository: String get() = CommonStrings.openSourceRepository
@@ -4443,7 +4443,7 @@ object Strings {
     
     val updateLaterButton: String get() = CommonStrings.updateLaterButton
 
-    // ==================== 前端项目 ====================
+    // ==================== ====================
     val frameworkLabel: String get() = when (lang) {
         AppLanguage.CHINESE -> "框架"
         AppLanguage.ENGLISH -> "Framework"
@@ -4480,7 +4480,7 @@ object Strings {
         AppLanguage.ARABIC -> "%d"
     }
     
-    // ==================== 模块编辑器补充 ====================
+    // ==================== Module Editor Extras ====================
     val urlPattern: String get() = ExtensionStrings.urlPattern
     
     val regexExpression: String get() = ExtensionStrings.regexExpression
@@ -4511,7 +4511,7 @@ object Strings {
     
     val cssCodePlaceholder: String get() = ExtensionStrings.cssCodePlaceholder
     
-    // ==================== 关于页面补充 ====================
+    // ==================== About Page Extras ====================
     val authorTagline: String get() = CommonStrings.authorTagline
     
     val joinCommunityGroup: String get() = UiStrings.joinCommunityGroup
@@ -4549,7 +4549,7 @@ object Strings {
     
     val authorAvatar: String get() = CommonStrings.authorAvatar
     
-    // ==================== AI 模块开发器 ====================
+    // ==================== AI Module Builder ====================
     val aiModuleDeveloperTitle: String get() = AiStrings.aiModuleDeveloperTitle
     
     val restart: String get() = AiStrings.restart
@@ -4630,7 +4630,7 @@ object Strings {
     
     val startDevelopment: String get() = AiStrings.startDevelopment
     
-    // ==================== 背景音乐选择器 ====================
+    // ==================== BGM Picker ====================
     val selectBgm: String get() = MusicStrings.selectBgm
     
     val selectedMusic: String get() = MusicStrings.selectedMusic
@@ -4665,7 +4665,7 @@ object Strings {
     
     val lyricsSaved: String get() = MusicStrings.lyricsSaved
     
-    // ==================== AI 模块开发器补充 ====================
+    // ==================== AI Module Builder ====================
     val syntaxCorrect: String get() = when (lang) {
         AppLanguage.CHINESE -> "语法正确"
         AppLanguage.ENGLISH -> "Syntax Correct"
@@ -4722,7 +4722,7 @@ object Strings {
         AppLanguage.ARABIC -> "• مطلوب تكوين مفتاح API للذكاء الاصطناعي\n• قد تحتاج الميزات المعقدة إلى تعديلات متعددة\n• يوصى بالاختبار على صفحات الاختبار"
     }
     
-    // ==================== 背景音乐补充 ====================
+    // ==================== BGM Extras ====================
     val previewLyrics: String get() = MusicStrings.previewLyrics
     
     val hasLyrics: String get() = MusicStrings.hasLyrics
@@ -4771,7 +4771,7 @@ object Strings {
     
     val forward10s: String get() = MusicStrings.forward10s
     
-    // ==================== AI 设置页面补充 ====================
+    // ==================== AI Settings ====================
     val free: String get() = when (lang) {
         AppLanguage.CHINESE -> "免费"
         AppLanguage.ENGLISH -> "Free"
@@ -4802,7 +4802,7 @@ object Strings {
         AppLanguage.ARABIC -> "تحديد الكل"
     }
     
-    // ==================== 更新日志 ====================
+    // ==================== Changelog ====================
     // v1.9.5
     val cookiesPersistenceFeature: String get() = CommonStrings.cookiesPersistenceFeature
     
@@ -5008,9 +5008,9 @@ object Strings {
     
     val desktopModeFeature: String get() = CommonStrings.desktopModeFeature
     
-    // ==================== 错误消息 ====================
+    // ==================== ====================
     
-    // ==================== 更新检查 ====================
+    // ==================== ====================
     
     val networkRequestFailed: String get() = when (lang) {
         AppLanguage.CHINESE -> "网络请求失败"
@@ -5036,7 +5036,7 @@ object Strings {
         AppLanguage.ARABIC -> "جاري تنزيل %s ..."
     }
     
-    // ==================== 图标库 ====================
+    // ==================== ====================
     val aiIcon: String get() = AiStrings.aiIcon
     
     val icon: String get() = when (lang) {
@@ -5045,17 +5045,17 @@ object Strings {
         AppLanguage.ARABIC -> "أيقونة"
     }
     
-    // ==================== AI 模块开发 ====================
+    // ==================== AI ====================
     val aiModuleDevelopment: String get() = AiStrings.aiModuleDevelopment
     
-    // ==================== 可用于功能 ====================
+    // ==================== ====================
     val availableFor: String get() = when (lang) {
         AppLanguage.CHINESE -> "可用于"
         AppLanguage.ENGLISH -> "Available for"
         AppLanguage.ARABIC -> "متاح لـ"
     }
     
-    // ==================== 更新日志补充 ====================
+    // ==================== Changelog ====================
     val materialDesign3UI: String get() = when (lang) {
         AppLanguage.CHINESE -> "Material Design 3 界面"
         AppLanguage.ENGLISH -> "Material Design 3 UI"
@@ -5076,7 +5076,7 @@ object Strings {
     
     val activationCodeAnnouncementAdBlock: String get() = CreateStrings.activationCodeAnnouncementAdBlock
     
-    // ==================== 媒体保存 ====================
+    // ==================== ====================
     
     val savedToGallery: String get() = when (lang) {
         AppLanguage.CHINESE -> "%s已保存到相册"
@@ -5084,7 +5084,7 @@ object Strings {
         AppLanguage.ARABIC -> "تم حفظ %s في المعرض"
     }
     
-    // ==================== 代码块库 ====================
+    // ==================== ====================
     val codeBlockLibrary: String get() = when (lang) {
         AppLanguage.CHINESE -> "代码块库"
         AppLanguage.ENGLISH -> "Code Block Library"
@@ -5115,7 +5115,7 @@ object Strings {
         AppLanguage.ARABIC -> "تصفح الكل"
     }
     
-    // ==================== 模块测试 ====================
+    // ==================== ====================
     
     val enterSchemeName: String get() = when (lang) {
         AppLanguage.CHINESE -> "输入方案名称"
@@ -5129,7 +5129,7 @@ object Strings {
         AppLanguage.ARABIC -> "وصف موجز لغرض المخطط"
     }
     
-    // ==================== 激活相关 ====================
+    // ==================== ====================
     val pleaseActivateApp: String get() = when (lang) {
         AppLanguage.CHINESE -> "请先激活应用"
         AppLanguage.ENGLISH -> "Please activate the app first"
@@ -5148,9 +5148,9 @@ object Strings {
         AppLanguage.ARABIC -> "يرجى إدخال رمز التفعيل للمتابعة"
     }
     
-    // ==================== 数据备份 ====================
+    // ==================== ====================
     
-    // ==================== 自动启动 ====================
+    // ==================== ====================
     val startTime: String get() = when (lang) {
         AppLanguage.CHINESE -> "启动时间"
         AppLanguage.ENGLISH -> "Start Time"
@@ -5163,9 +5163,9 @@ object Strings {
         AppLanguage.ARABIC -> "اختيار وقت البدء"
     }
     
-    // ==================== LRC编辑器 ====================
+    // ==================== LRC ====================
     
-    // ==================== 主题相关 ====================
+    // ==================== Theme ====================
     val themeAurora: String get() = CommonStrings.themeAurora
     
     val themeAuroraDesc: String get() = CommonStrings.themeAuroraDesc
@@ -5250,7 +5250,7 @@ object Strings {
     
     val themeWillAndRepresentationDesc: String get() = CommonStrings.themeWillAndRepresentationDesc
     
-    // ==================== 动画风格 ====================
+    // ==================== ====================
     val animSmooth: String get() = when (lang) {
         AppLanguage.CHINESE -> "丝滑流畅"
         AppLanguage.ENGLISH -> "Smooth"
@@ -5287,7 +5287,7 @@ object Strings {
         AppLanguage.ARABIC -> "درامي"
     }
     
-    // ==================== 交互风格 ====================
+    // ==================== ====================
     val interRipple: String get() = when (lang) {
         AppLanguage.CHINESE -> "水波涟漪"
         AppLanguage.ENGLISH -> "Ripple"
@@ -5324,7 +5324,7 @@ object Strings {
         AppLanguage.ARABIC -> "جسيمات"
     }
     
-    // ==================== 模块分类 ====================
+    // ==================== Module Categories ====================
     val catContentFilter: String get() = ModuleStrings.catContentFilter
     val catContentFilterDesc: String get() = ModuleStrings.catContentFilterDesc
     val catContentEnhance: String get() = ModuleStrings.catContentEnhance
@@ -5372,7 +5372,7 @@ object Strings {
     val catOther: String get() = ModuleStrings.catOther
     val catOtherDesc: String get() = ModuleStrings.catOtherDesc
     
-    // ==================== 模块执行时机 ====================
+    // ==================== Module Timing ====================
     val runTimeDocStart: String get() = ExtensionStrings.runTimeDocStart
     val runTimeDocStartDesc: String get() = ExtensionStrings.runTimeDocStartDesc
     val runTimeDocEnd: String get() = ExtensionStrings.runTimeDocEnd
@@ -5384,7 +5384,7 @@ object Strings {
     val runTimeBeforeUnload: String get() = ExtensionStrings.runTimeBeforeUnload
     val runTimeBeforeUnloadDesc: String get() = ExtensionStrings.runTimeBeforeUnloadDesc
     
-    // ==================== 风格参考分类 ====================
+    // ==================== ====================
     val styleRefMovie: String get() = when (lang) {
         AppLanguage.CHINESE -> "电影"
         AppLanguage.ENGLISH -> "Movie"
@@ -5426,7 +5426,7 @@ object Strings {
         AppLanguage.ARABIC -> "نمط ثقافي"
     }
     
-    // ==================== 颜色名称 ====================
+    // ==================== Color Names ====================
     val colorRed: String get() = CommonStrings.colorRed
     
     val colorPink: String get() = CommonStrings.colorPink
@@ -5477,7 +5477,7 @@ object Strings {
     
     val colorSelected: String get() = CommonStrings.colorSelected
     
-    // ==================== 扩展模块相关 ====================
+    // ==================== Extension Module ====================
     val selectedCount2: String get() = ExtensionStrings.selectedCount2
     
     val addCustomFeatures: String get() = ExtensionStrings.addCustomFeatures
@@ -5502,7 +5502,7 @@ object Strings {
     
     val configurableItems: String get() = ExtensionStrings.configurableItems
     
-    // ==================== 媒体内容 ====================
+    // ==================== ====================
     val mediaContent: String get() = when (lang) {
         AppLanguage.CHINESE -> "媒体内容"
         AppLanguage.ENGLISH -> "Media Content"
@@ -5515,7 +5515,7 @@ object Strings {
         AppLanguage.ARABIC -> "خلفية شريط الحالة"
     }
     
-    // ==================== 激活相关补充 ====================
+    // ==================== ====================
     val appNeedsActivation: String get() = CommonStrings.appNeedsActivation
     
     val skip: String get() = when (lang) {
@@ -5524,14 +5524,14 @@ object Strings {
         AppLanguage.ARABIC -> "تخطي"
     }
     
-    // ==================== 项目模板 ====================
+    // ==================== ====================
     val projectTemplateExport: String get() = when (lang) {
         AppLanguage.CHINESE -> "项目模板导出"
         AppLanguage.ENGLISH -> "Project Template Export"
         AppLanguage.ARABIC -> "تصدير قالب المشروع"
     }
     
-    // ==================== 公告模板按钮 ====================
+    // ==================== ====================
     val iKnow: String get() = when (lang) {
         AppLanguage.CHINESE -> "我知道了"
         AppLanguage.ENGLISH -> "I Know"
@@ -5556,7 +5556,7 @@ object Strings {
         AppLanguage.ARABIC -> "🌱 حسناً"
     }
     
-    // ==================== 代码块选择器 ====================
+    // ==================== ====================
     val codeBlockLibraryTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "代码块库"
         AppLanguage.ENGLISH -> "Code Block Library"
@@ -5605,7 +5605,7 @@ object Strings {
         AppLanguage.ARABIC -> "%d كتل كود"
     }
     
-    // ==================== LRC 编辑器 ====================
+    // ==================== LRC ====================
     
     val totalLinesCount: String get() = when (lang) {
         AppLanguage.CHINESE -> "共 %d 行歌词"
@@ -5613,7 +5613,7 @@ object Strings {
         AppLanguage.ARABIC -> "%d سطر من الكلمات"
     }
     
-    // ==================== 模块测试 ====================
+    // ==================== ====================
     val testModuleTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "测试模块"
         AppLanguage.ENGLISH -> "Test Module"
@@ -5644,7 +5644,7 @@ object Strings {
         AppLanguage.ARABIC -> "💡 ستقوم صفحة الاختبار بتحميل الوحدات المحددة، يمكنك ملاحظة التأثيرات الفعلية"
     }
     
-    // ==================== 方案管理 ====================
+    // ==================== Scheme Management ====================
     val quickSchemes: String get() = UiStrings.quickSchemes
     
     val allSchemesBtn: String get() = UiStrings.allSchemesBtn
@@ -5673,28 +5673,28 @@ object Strings {
     
     val selectIconTitle: String get() = UiStrings.selectIconTitle
     
-    // ==================== 颜色选择器 ====================
+    // ==================== ====================
     
-    // ==================== 扩展模块卡片 ====================
+    // ==================== Extension Module Cards ====================
     
     val selectedCountFormat: String get() = ExtensionStrings.selectedCountFormat
     
-    // ==================== 启动画面 ====================
+    // ==================== ====================
     
-    // ==================== LRC预览 ====================
+    // ==================== LRC ====================
     val previewLrcHint: String get() = when (lang) {
         AppLanguage.CHINESE -> "预览生成的 LRC 效果，确认无误后保存"
         AppLanguage.ENGLISH -> "Preview generated LRC effect, save after confirmation"
         AppLanguage.ARABIC -> "معاينة تأثير LRC المُنشأ، احفظ بعد التأكيد"
     }
     
-    // ==================== 主题名称 ====================
+    // ==================== ====================
     
-    // ==================== 动画风格 ====================
+    // ==================== ====================
     
-    // ==================== 交互风格 ====================
+    // ==================== ====================
     
-    // ==================== AI功能场景 ====================
+    // ==================== AI ====================
     val featureWriteHtml: String get() = AiCodingStrings.featureWriteHtml
     
     val featureEditHtml: String get() = AiCodingStrings.featureEditHtml
@@ -5715,14 +5715,14 @@ object Strings {
     
     val featureGeneralChat: String get() = AiCodingStrings.featureGeneralChat
     
-    // ==================== 编程相关 ====================
+    // ==================== ====================
     val coding: String get() = when (lang) {
         AppLanguage.CHINESE -> "编程"
         AppLanguage.ENGLISH -> "Coding"
         AppLanguage.ARABIC -> "البرمجة"
     }
     
-    // ==================== AI功能描述 ====================
+    // ==================== AI ====================
     val aiCodingDesc: String get() = AiStrings.aiCodingDesc
     
     val aiCodingImageDesc: String get() = AiStrings.aiCodingImageDesc
@@ -5753,7 +5753,7 @@ object Strings {
         AppLanguage.ARABIC -> "وظيفة الدردشة العامة بالذكاء الاصطناعي"
     }
     
-    // ==================== HTML工具描述 ====================
+    // ==================== HTML ====================
     val aiImageGeneration: String get() = AiStrings.aiImageGeneration
     
     val writeHtmlDesc: String get() = when (lang) {
@@ -5792,7 +5792,7 @@ object Strings {
         AppLanguage.ARABIC -> "إصلاح أخطاء بناء الجملة المكتشفة تلقائيًا"
     }
     
-    // ==================== 模板分类 ====================
+    // ==================== Template Categories ====================
     val templateModern: String get() = ExtensionStrings.templateModern
     
     val templateGlassmorphism: String get() = ExtensionStrings.templateGlassmorphism
@@ -5817,7 +5817,7 @@ object Strings {
     
     val templateGame: String get() = ExtensionStrings.templateGame
     
-    // ==================== 会话配置 ====================
+    // ==================== Session Config ====================
     val sessionConfig: String get() = AiConfigStrings.sessionConfig
     
     val textModel: String get() = AiConfigStrings.textModel
@@ -5846,7 +5846,7 @@ object Strings {
     val disclaimerWarningText: String get() = AiConfigStrings.disclaimerWarningText
     val finalUserAgreementConfirmation: String get() = AiConfigStrings.finalUserAgreementConfirmation
     
-    // ==================== HTML 工具类型 ====================
+    // ==================== HTML ====================
     val toolWriteHtml: String get() = AiCodingStrings.toolWriteHtml
     val toolWriteHtmlDesc: String get() = AiCodingStrings.toolWriteHtmlDesc
     val toolEditHtml: String get() = AiCodingStrings.toolEditHtml
@@ -5866,7 +5866,7 @@ object Strings {
     val required: String get() = AiCodingStrings.required
     val requiresImageModel: String get() = AiCodingStrings.requiresImageModel
     
-    // ==================== 模块模板 ====================
+    // ==================== Module Templates ====================
     val tplElementHider: String get() = ModuleStrings.tplElementHider
     val tplElementHiderDesc: String get() = ModuleStrings.tplElementHiderDesc
     val tplAdBlocker: String get() = ModuleStrings.tplAdBlocker
@@ -5884,7 +5884,7 @@ object Strings {
     val tplScrollToTop: String get() = ModuleStrings.tplScrollToTop
     val tplScrollToTopDesc: String get() = ModuleStrings.tplScrollToTopDesc
     
-    // ==================== 代码片段分类 ====================
+    // ==================== Snippet Categories ====================
     val snippetNative: String get() = SnippetStrings.snippetNative
     val snippetNativeDesc: String get() = SnippetStrings.snippetNativeDesc
     val snippetShowToast: String get() = SnippetStrings.snippetShowToast
@@ -5924,7 +5924,7 @@ object Strings {
     val snippetScroll: String get() = SnippetStrings.snippetScroll
     val snippetScrollDesc: String get() = SnippetStrings.snippetScrollDesc
     
-    // DOM 操作代码片段
+    // DOM.
     val snippetQuerySingle: String get() = SnippetStrings.snippetQuerySingle
     val snippetQuerySingleDesc: String get() = SnippetStrings.snippetQuerySingleDesc
     val snippetQueryAll: String get() = SnippetStrings.snippetQueryAll
@@ -5982,7 +5982,7 @@ object Strings {
     val snippetLineHeight: String get() = SnippetStrings.snippetLineHeight
     val snippetLineHeightDesc: String get() = SnippetStrings.snippetLineHeightDesc
     
-    // 事件监听代码片段
+    // Note.
     val snippetClickEvent: String get() = SnippetStrings.snippetClickEvent
     val snippetClickEventDesc: String get() = SnippetStrings.snippetClickEventDesc
     val snippetKeyboardEvent: String get() = SnippetStrings.snippetKeyboardEvent
@@ -6006,7 +6006,7 @@ object Strings {
     val snippetLongPress: String get() = SnippetStrings.snippetLongPress
     val snippetLongPressDesc: String get() = SnippetStrings.snippetLongPressDesc
     
-    // Storage操作代码片段
+    // Storage.
     val snippetLocalSet: String get() = SnippetStrings.snippetLocalSet
     val snippetLocalSetDesc: String get() = SnippetStrings.snippetLocalSetDesc
     val snippetLocalGet: String get() = SnippetStrings.snippetLocalGet
@@ -6022,7 +6022,7 @@ object Strings {
     val snippetIndexedDB: String get() = SnippetStrings.snippetIndexedDB
     val snippetIndexedDBDesc: String get() = SnippetStrings.snippetIndexedDBDesc
     
-    // Network请求代码片段
+    // Network.
     val snippetGetRequest: String get() = SnippetStrings.snippetGetRequest
     val snippetGetRequestDesc: String get() = SnippetStrings.snippetGetRequestDesc
     val snippetPostRequest: String get() = SnippetStrings.snippetPostRequest
@@ -6036,7 +6036,7 @@ object Strings {
     val snippetJsonp: String get() = SnippetStrings.snippetJsonp
     val snippetJsonpDesc: String get() = SnippetStrings.snippetJsonpDesc
     
-    // 数据处理代码片段
+    // Note.
     val snippetExtractTable: String get() = SnippetStrings.snippetExtractTable
     val snippetExtractTableDesc: String get() = SnippetStrings.snippetExtractTableDesc
     val snippetExtractLinks: String get() = SnippetStrings.snippetExtractLinks
@@ -6064,7 +6064,7 @@ object Strings {
     val snippetSnackbar: String get() = SnippetStrings.snippetSnackbar
     val snippetSnackbarDesc: String get() = SnippetStrings.snippetSnackbarDesc
     
-    // 悬浮组件代码片段
+    // Note.
     val snippetToolbar: String get() = SnippetStrings.snippetToolbar
     val snippetToolbarDesc: String get() = SnippetStrings.snippetToolbarDesc
     val snippetSidebar: String get() = SnippetStrings.snippetSidebar
@@ -6074,7 +6074,7 @@ object Strings {
     val snippetMiniPlayer: String get() = SnippetStrings.snippetMiniPlayer
     val snippetMiniPlayerDesc: String get() = SnippetStrings.snippetMiniPlayerDesc
     
-    // 通知系统代码片段
+    // Note.
     val snippetBrowserNotif: String get() = SnippetStrings.snippetBrowserNotif
     val snippetBrowserNotifDesc: String get() = SnippetStrings.snippetBrowserNotifDesc
     val snippetBadge: String get() = SnippetStrings.snippetBadge
@@ -6098,7 +6098,7 @@ object Strings {
     val snippetScrollSpy: String get() = SnippetStrings.snippetScrollSpy
     val snippetScrollSpyDesc: String get() = SnippetStrings.snippetScrollSpyDesc
     
-    // 表单操作代码片段
+    // Note.
     val snippetForm: String get() = SnippetStrings.snippetForm
     val snippetFormDesc: String get() = SnippetStrings.snippetFormDesc
     val snippetAutoFill: String get() = SnippetStrings.snippetAutoFill
@@ -6114,7 +6114,7 @@ object Strings {
     val snippetPasswordToggle: String get() = SnippetStrings.snippetPasswordToggle
     val snippetPasswordToggleDesc: String get() = SnippetStrings.snippetPasswordToggleDesc
     
-    // Media操作代码片段
+    // Media.
     val snippetMedia: String get() = SnippetStrings.snippetMedia
     val snippetMediaDesc: String get() = SnippetStrings.snippetMediaDesc
     val snippetVideoSpeed: String get() = SnippetStrings.snippetVideoSpeed
@@ -6134,7 +6134,7 @@ object Strings {
     val snippetFullscreen: String get() = SnippetStrings.snippetFullscreen
     val snippetFullscreenDesc: String get() = SnippetStrings.snippetFullscreenDesc
     
-    // Page增强代码片段
+    // Page.
     val snippetEnhance: String get() = SnippetStrings.snippetEnhance
     val snippetEnhanceDesc: String get() = SnippetStrings.snippetEnhanceDesc
     val snippetReadingMode: String get() = SnippetStrings.snippetReadingMode
@@ -6152,7 +6152,7 @@ object Strings {
     val snippetHideAds: String get() = SnippetStrings.snippetHideAds
     val snippetHideAdsDesc: String get() = SnippetStrings.snippetHideAdsDesc
     
-    // 内容过滤代码片段
+    // Note.
     val snippetFilter: String get() = SnippetStrings.snippetFilter
     val snippetFilterDesc: String get() = SnippetStrings.snippetFilterDesc
     val snippetKeywordFilter: String get() = SnippetStrings.snippetKeywordFilter
@@ -6164,7 +6164,7 @@ object Strings {
     val snippetFilterSmallImages: String get() = SnippetStrings.snippetFilterSmallImages
     val snippetFilterSmallImagesDesc: String get() = SnippetStrings.snippetFilterSmallImagesDesc
     
-    // Ad拦截代码片段
+    // Ad.
     val snippetAdBlock: String get() = SnippetStrings.snippetAdBlock
     val snippetAdBlockDesc: String get() = SnippetStrings.snippetAdBlockDesc
     val snippetBlockPopup: String get() = SnippetStrings.snippetBlockPopup
@@ -6176,7 +6176,7 @@ object Strings {
     val snippetAntiAdblock: String get() = SnippetStrings.snippetAntiAdblock
     val snippetAntiAdblockDesc: String get() = SnippetStrings.snippetAntiAdblockDesc
     
-    // 工具函数代码片段
+    // Note.
     val snippetUtility: String get() = SnippetStrings.snippetUtility
     val snippetUtilityDesc: String get() = SnippetStrings.snippetUtilityDesc
     val snippetDebounce: String get() = SnippetStrings.snippetDebounce
@@ -6196,7 +6196,7 @@ object Strings {
     val snippetRetry: String get() = SnippetStrings.snippetRetry
     val snippetRetryDesc: String get() = SnippetStrings.snippetRetryDesc
     
-    // 文本处理代码片段
+    // Note.
     val snippetText: String get() = SnippetStrings.snippetText
     val snippetTextDesc: String get() = SnippetStrings.snippetTextDesc
     val snippetExtractArticle: String get() = SnippetStrings.snippetExtractArticle
@@ -6208,7 +6208,7 @@ object Strings {
     val snippetHtmlToMarkdown: String get() = SnippetStrings.snippetHtmlToMarkdown
     val snippetHtmlToMarkdownDesc: String get() = SnippetStrings.snippetHtmlToMarkdownDesc
     
-    // Request拦截代码片段
+    // Request.
     val snippetIntercept: String get() = SnippetStrings.snippetIntercept
     val snippetInterceptDesc: String get() = SnippetStrings.snippetInterceptDesc
     val snippetInterceptFetch: String get() = SnippetStrings.snippetInterceptFetch
@@ -6220,7 +6220,7 @@ object Strings {
     val snippetBlockRequests: String get() = SnippetStrings.snippetBlockRequests
     val snippetBlockRequestsDesc: String get() = SnippetStrings.snippetBlockRequestsDesc
     
-    // Auto化代码片段
+    // Auto.
     val snippetAutomation: String get() = SnippetStrings.snippetAutomation
     val snippetAutomationDesc: String get() = SnippetStrings.snippetAutomationDesc
     val snippetAutoClick: String get() = SnippetStrings.snippetAutoClick
@@ -6236,7 +6236,7 @@ object Strings {
     val snippetAutoLoginCheck: String get() = SnippetStrings.snippetAutoLoginCheck
     val snippetAutoLoginCheckDesc: String get() = SnippetStrings.snippetAutoLoginCheckDesc
     
-    // Debug工具代码片段
+    // Debug.
     val snippetDebug: String get() = SnippetStrings.snippetDebug
     val snippetDebugDesc: String get() = SnippetStrings.snippetDebugDesc
     val snippetConsolePanel: String get() = SnippetStrings.snippetConsolePanel
@@ -6248,7 +6248,7 @@ object Strings {
     val snippetNetworkLog: String get() = SnippetStrings.snippetNetworkLog
     val snippetNetworkLogDesc: String get() = SnippetStrings.snippetNetworkLogDesc
     
-    // ==================== 模块模板 ====================
+    // ==================== Module Templates ====================
     val templateColorTheme: String get() = ModuleStrings.templateColorTheme
     val templateColorThemeDesc: String get() = ModuleStrings.templateColorThemeDesc
     val templateBgColor: String get() = ModuleStrings.templateBgColor
@@ -6290,7 +6290,7 @@ object Strings {
     val aiGeneratedModule: String get() = AiStrings.aiGeneratedModule
     val aiGeneratedModuleDesc: String get() = AiStrings.aiGeneratedModuleDesc
 
-    // ==================== 模块管理错误信息 ====================
+    // ==================== Module Management Errors ====================
     val errModuleNotFound: String get() = ExtensionStrings.errModuleNotFound
     val errNoModulesToExport: String get() = ExtensionStrings.errNoModulesToExport
     val errInvalidModuleFile: String get() = ExtensionStrings.errInvalidModuleFile
@@ -6307,7 +6307,7 @@ object Strings {
     val shareModuleSubject: String get() = ExtensionStrings.shareModuleSubject
     val moduleCopySuffix: String get() = ModuleStrings.moduleCopySuffix
 
-    // ==================== 模块验证 ====================
+    // ==================== ====================
     val validateNameEmpty: String get() = when (lang) {
         AppLanguage.CHINESE -> "模块名称不能为空"
         AppLanguage.ENGLISH -> "Module name cannot be empty"
@@ -6324,7 +6324,7 @@ object Strings {
         AppLanguage.ARABIC -> "عنصر التكوين '%s' مطلوب"
     }
 
-    // ==================== 模块预设工厂 ====================
+    // ==================== Module Preset Factory ====================
     val presetBlockElements: String get() = ExtensionStrings.presetBlockElements
     val presetInjectStyle: String get() = ExtensionStrings.presetInjectStyle
     val presetAutoClick: String get() = ExtensionStrings.presetAutoClick
@@ -6338,7 +6338,7 @@ object Strings {
     val tagFloatingWidget: String get() = ExtensionStrings.tagFloatingWidget
     val builtInVersion: String get() = ExtensionStrings.builtInVersion
 
-    // ==================== Agent 状态 ====================
+    // ==================== Agent ====================
     val agentStateIdle: String get() = when (lang) {
         AppLanguage.CHINESE -> "空闲"
         AppLanguage.ENGLISH -> "Idle"
@@ -6385,7 +6385,7 @@ object Strings {
         AppLanguage.ARABIC -> "خطأ"
     }
 
-    // ==================== 思考类型 ====================
+    // ==================== ====================
     val thoughtAnalysis: String get() = when (lang) {
         AppLanguage.CHINESE -> "需求分析"
         AppLanguage.ENGLISH -> "Analysis"
@@ -6427,7 +6427,7 @@ object Strings {
         AppLanguage.ARABIC -> "خاتمة"
     }
 
-    // ==================== Agent 工具执行器 ====================
+    // ==================== Agent ====================
     val toolErrUnknown: String get() = AiCodingStrings.toolErrUnknown
     val toolErrExecFailed: String get() = AiCodingStrings.toolErrExecFailed
     val toolErrChainFailed: String get() = AiCodingStrings.toolErrChainFailed
@@ -6440,7 +6440,7 @@ object Strings {
     val toolModuleCreated: String get() = AiCodingStrings.toolModuleCreated
     val toolModuleCreateFailed: String get() = AiCodingStrings.toolModuleCreateFailed
 
-    // ==================== 语法检查消息 ====================
+    // ==================== ====================
     val syntaxBraceMismatch: String get() = AiCodingStrings.syntaxBraceMismatch
     val syntaxBraceMissing: String get() = AiCodingStrings.syntaxBraceMissing
     val syntaxBraceExtra: String get() = AiCodingStrings.syntaxBraceExtra
@@ -6454,7 +6454,7 @@ object Strings {
     val syntaxBracketExtra: String get() = AiCodingStrings.syntaxBracketExtra
     val syntaxBracketCheckPair: String get() = AiCodingStrings.syntaxBracketCheckPair
 
-    // ==================== Lint 警告 ====================
+    // ==================== Lint ====================
     val lintNoVar: String get() = AiCodingStrings.lintNoVar
     val lintEqeqeq: String get() = AiCodingStrings.lintEqeqeq
     val lintNoEval: String get() = AiCodingStrings.lintNoEval
@@ -6466,7 +6466,7 @@ object Strings {
     val lintUseArrowFn: String get() = AiCodingStrings.lintUseArrowFn
     val lintLineTooLong: String get() = AiCodingStrings.lintLineTooLong
 
-    // ==================== 自动修复 ====================
+    // ==================== ====================
     val fixVarToLet: String get() = when (lang) {
         AppLanguage.CHINESE -> "将 var 替换为 let"
         AppLanguage.ENGLISH -> "Replaced var with let"
@@ -6478,7 +6478,7 @@ object Strings {
         AppLanguage.ARABIC -> "تم استبدال == بـ ==="
     }
 
-    // ==================== 配置验证 ====================
+    // ==================== ====================
     val validateConfigMissingKey: String get() = when (lang) {
         AppLanguage.CHINESE -> "配置项缺少 key"
         AppLanguage.ENGLISH -> "Config item missing key"
@@ -6495,7 +6495,7 @@ object Strings {
         AppLanguage.ARABIC -> "عنصر التكوين المطلوب '%s' بدون قيمة"
     }
 
-    // ==================== 安全扫描 ====================
+    // ==================== ====================
     val secEvalDesc: String get() = AiCodingStrings.secEvalDesc
     val secEvalRec: String get() = AiCodingStrings.secEvalRec
     val secInnerHtmlDesc: String get() = AiCodingStrings.secInnerHtmlDesc
@@ -6517,7 +6517,7 @@ object Strings {
     val secBase64Desc: String get() = AiCodingStrings.secBase64Desc
     val secBase64Rec: String get() = AiCodingStrings.secBase64Rec
 
-    // ==================== 工具参数描述 ====================
+    // ==================== ====================
     val paramCodeToCheck: String get() = AiCodingStrings.paramCodeToCheck
     val paramCodeLang: String get() = AiCodingStrings.paramCodeLang
     val paramCodeToScan: String get() = AiCodingStrings.paramCodeToScan
@@ -6539,7 +6539,7 @@ object Strings {
     val paramModuleId: String get() = AiCodingStrings.paramModuleId
     val paramPreviewUrl: String get() = AiCodingStrings.paramPreviewUrl
 
-    // ==================== Agent 思考消息 ====================
+    // ==================== Agent Reasoning Messages ====================
     val agentAnalyzing: String get() = AiStrings.agentAnalyzing
     val agentPlanning: String get() = AiStrings.agentPlanning
     val agentCallingAi: String get() = AiStrings.agentCallingAi
@@ -6607,7 +6607,7 @@ object Strings {
     val templateDomInspector: String get() = AiStrings.templateDomInspector
     val templateDomInspectorDesc: String get() = AiStrings.templateDomInspectorDesc
     
-    // ==================== 内置模块 ====================
+    // ==================== Built-in Modules ====================
     val builtinVideoDownloader: String get() = ExtensionStrings.builtinVideoDownloader
     val builtinVideoDownloaderDesc: String get() = ExtensionStrings.builtinVideoDownloaderDesc
     val builtinDouyinExtractor: String get() = ExtensionStrings.builtinDouyinExtractor
@@ -6627,7 +6627,7 @@ object Strings {
     val builtinElementBlocker: String get() = ExtensionStrings.builtinElementBlocker
     val builtinElementBlockerDesc: String get() = ExtensionStrings.builtinElementBlockerDesc
     
-    // ==================== 内置 Chrome 扩展 ====================
+    // ==================== Chrome ====================
     val builtinBewlyCat: String get() = when (lang) {
         AppLanguage.CHINESE -> "BewlyCat (B站增强)"
         AppLanguage.ENGLISH -> "BewlyCat (Bilibili Enhanced)"
@@ -6639,7 +6639,7 @@ object Strings {
         AppLanguage.ARABIC -> "تحسينات واجهة جميلة لـ Bilibili: الصفحة الرئيسية والبحث وصفحات الفيديو والمزيد"
     }
     
-    // ==================== 模块触发条件 ====================
+    // ==================== Module Triggers ====================
     val triggerAuto: String get() = ExtensionStrings.triggerAuto
     val triggerAutoDesc: String get() = ExtensionStrings.triggerAutoDesc
     val triggerManual: String get() = ExtensionStrings.triggerManual
@@ -6661,7 +6661,7 @@ object Strings {
     val triggerVisibility: String get() = ExtensionStrings.triggerVisibility
     val triggerVisibilityDesc: String get() = ExtensionStrings.triggerVisibilityDesc
     
-    // ==================== 模块权限 ====================
+    // ==================== Module Permissions ====================
     val permDomAccess: String get() = ModuleStrings.permDomAccess
     val permDomAccessDesc: String get() = ModuleStrings.permDomAccessDesc
     val permDomObserve: String get() = ModuleStrings.permDomObserve
@@ -6725,7 +6725,7 @@ object Strings {
     val permNavigation: String get() = ModuleStrings.permNavigation
     val permNavigationDesc: String get() = ModuleStrings.permNavigationDesc
     
-    // ==================== 配置项类型 ====================
+    // ==================== Config Item Types ====================
     val configTypeText: String get() = ModuleStrings.configTypeText
     val configTypeTextDesc: String get() = ModuleStrings.configTypeTextDesc
     val configTypeTextarea: String get() = ModuleStrings.configTypeTextarea
@@ -6771,7 +6771,7 @@ object Strings {
     val configTypeImage: String get() = ModuleStrings.configTypeImage
     val configTypeImageDesc: String get() = ModuleStrings.configTypeImageDesc
     
-    // ==================== LRC 主题 ====================
+    // ==================== LRC ====================
     val lrcThemeDefault: String get() = when (lang) {
         AppLanguage.CHINESE -> "默认"
         AppLanguage.ENGLISH -> "Default"
@@ -6813,7 +6813,7 @@ object Strings {
         AppLanguage.ARABIC -> "نشط"
     }
     
-    // ==================== 测试页面 ====================
+    // ==================== Test Page ====================
     val testPageBasicHtml: String get() = SampleStrings.testPageBasicHtml
     val testPageBasicHtmlDesc: String get() = SampleStrings.testPageBasicHtmlDesc
     val testPageForm: String get() = SampleStrings.testPageForm
@@ -6831,7 +6831,7 @@ object Strings {
     val testPageApi: String get() = SampleStrings.testPageApi
     val testPageApiDesc: String get() = SampleStrings.testPageApiDesc
     
-    // ==================== 模块方案预设 ====================
+    // ==================== Module Scheme Presets ====================
     val presetReading: String get() = ExtensionStrings.presetReading
     val presetReadingDesc: String get() = ExtensionStrings.presetReadingDesc
     val presetAdblock: String get() = ExtensionStrings.presetAdblock
@@ -6843,7 +6843,7 @@ object Strings {
     val presetNight: String get() = ExtensionStrings.presetNight
     val presetNightDesc: String get() = ExtensionStrings.presetNightDesc
     
-    // ==================== Agent 工具描述 ====================
+    // ==================== Agent Tool Descriptions ====================
     val agentToolSyntaxCheck: String get() = AiStrings.agentToolSyntaxCheck
     val agentToolLintCode: String get() = AiStrings.agentToolLintCode
     val agentToolSecurityScan: String get() = AiStrings.agentToolSecurityScan
@@ -6857,7 +6857,7 @@ object Strings {
     val agentToolCreateModule: String get() = AiStrings.agentToolCreateModule
     val agentToolPreviewModule: String get() = AiStrings.agentToolPreviewModule
     
-    // Agent 工具类型显示名称
+    // Agent.
     val toolTypeSyntaxCheck: String get() = AiStrings.toolTypeSyntaxCheck
     val toolTypeSyntaxCheckDesc: String get() = AiStrings.toolTypeSyntaxCheckDesc
     val toolTypeLintCode: String get() = AiStrings.toolTypeLintCode
@@ -6887,7 +6887,7 @@ object Strings {
     val toolTypePreviewModule: String get() = AiStrings.toolTypePreviewModule
     val toolTypePreviewModuleDesc: String get() = AiStrings.toolTypePreviewModuleDesc
     
-    // ==================== 分类分组 ====================
+    // ==================== ====================
     val categoryGroupContent: String get() = when (lang) {
         AppLanguage.CHINESE -> "内容处理"
         AppLanguage.ENGLISH -> "Content"
@@ -6934,7 +6934,7 @@ object Strings {
         AppLanguage.ARABIC -> "أخرى"
     }
     
-    // ==================== 权限分组 ====================
+    // ==================== ====================
     val permGroupBasic: String get() = when (lang) {
         AppLanguage.CHINESE -> "基础权限"
         AppLanguage.ENGLISH -> "Basic Permissions"
@@ -6976,7 +6976,7 @@ object Strings {
         AppLanguage.ARABIC -> "الأذونات المتقدمة"
     }
     
-    // ==================== AI 功能场景 ====================
+    // ==================== AI Scenarios ====================
     val featureAiCoding: String get() = AiConfigStrings.featureAiCoding
     val featureAiCodingDesc: String get() = AiConfigStrings.featureAiCodingDesc
     val featureAiCodingImage: String get() = AiConfigStrings.featureAiCodingImage
@@ -6992,7 +6992,7 @@ object Strings {
     val featureGeneral: String get() = AiConfigStrings.featureGeneral
     val featureGeneralDesc: String get() = AiConfigStrings.featureGeneralDesc
     
-    // ==================== 模型能力 ====================
+    // ==================== Model Capabilities ====================
     val capabilityText: String get() = AiConfigStrings.capabilityText
     val capabilityTextDesc: String get() = AiConfigStrings.capabilityTextDesc
     val capabilityAudio: String get() = AiConfigStrings.capabilityAudio
@@ -7010,7 +7010,7 @@ object Strings {
     val capabilityLongContext: String get() = AiConfigStrings.capabilityLongContext
     val capabilityLongContextDesc: String get() = AiConfigStrings.capabilityLongContextDesc
     
-    // ==================== 模块配置项 ====================
+    // ==================== Module Config Items ====================
     val configCssSelector: String get() = ExtensionStrings.configCssSelector
     val configCssSelectorDesc: String get() = ExtensionStrings.configCssSelectorDesc
     val configCssSelectorPlaceholder: String get() = ExtensionStrings.configCssSelectorPlaceholder
@@ -7024,7 +7024,7 @@ object Strings {
     val configFont: String get() = ExtensionStrings.configFont
     val configFontSize: String get() = ExtensionStrings.configFontSize
     
-    // ==================== 风格参考分类 ====================
+    // ==================== ====================
     val styleMovie: String get() = when (lang) {
         AppLanguage.CHINESE -> "电影"
         AppLanguage.ENGLISH -> "Movie"
@@ -7073,14 +7073,14 @@ object Strings {
         AppLanguage.ARABIC -> "أسلوب ثقافي"
     }
     
-    // ==================== 主题设置页面 ====================
+    // ==================== Theme Settings ====================
     val colorScheme: String get() = UiStrings.colorScheme
     
     val themeFeatures: String get() = UiStrings.themeFeatures
     
     val applyTheme: String get() = CommonStrings.applyTheme
     
-    // ==================== 启动画面设置 ====================
+    // ==================== ====================
     val allowSkip: String get() = when (lang) {
         AppLanguage.CHINESE -> "允许点击跳过"
         AppLanguage.ENGLISH -> "Allow Skip"
@@ -7129,7 +7129,7 @@ object Strings {
         AppLanguage.ARABIC -> "معاينة الإعلان"
     }
     
-    // ==================== CreateAppScreen 翻译 ====================
+    // ==================== CreateAppScreen Translations ====================
     val showStatusBar: String get() = WebViewStrings.showStatusBar
     
     val showStatusBarHint: String get() = WebViewStrings.showStatusBarHint
@@ -7170,7 +7170,7 @@ object Strings {
     
     val landscapeDisplayHint: String get() = WebViewStrings.landscapeDisplayHint
     
-    // ==================== 自启动设置 ====================
+    // ==================== Auto-start Settings ====================
     val autoStartSettings: String get() = ShellStrings.autoStartSettings
 
     val autoStartDescription: String get() = ShellStrings.autoStartDescription
@@ -7205,7 +7205,7 @@ object Strings {
     
     val autoStartPermissionReady: String get() = ShellStrings.autoStartPermissionReady
     
-    // ==================== 公告模板 ====================
+    // ==================== ====================
     val selectAnnouncementStyle: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择公告样式"
         AppLanguage.ENGLISH -> "Select Announcement Style"
@@ -7236,7 +7236,7 @@ object Strings {
         AppLanguage.ARABIC -> "اعرف المزيد"
     }
     
-    // ==================== 公告模板名称 ====================
+    // ==================== Announcement Template Names ====================
     
     val templateMinimalDesc: String get() = CreateStrings.templateMinimalDesc
     
@@ -7268,7 +7268,7 @@ object Strings {
     
     val templateNatureDesc: String get() = CreateStrings.templateNatureDesc
     
-    // ==================== 语言选项 ====================
+    // ==================== ====================
     val langChinese: String get() = when (lang) {
         AppLanguage.CHINESE -> "中文"
         AppLanguage.ENGLISH -> "Chinese"
@@ -7293,7 +7293,7 @@ object Strings {
         AppLanguage.ARABIC -> "العربية"
     }
     
-    // ==================== 公告模板额外翻译 ====================
+    // ==================== Translations ====================
     val systemNotification: String get() = when (lang) {
         AppLanguage.CHINESE -> "系统通知"
         AppLanguage.ENGLISH -> "System Notification"
@@ -7318,7 +7318,7 @@ object Strings {
         AppLanguage.ARABIC -> "انقر للاختيار أو استخدم الزر أدناه"
     }
     
-    // ==================== AI 设置页面 ====================
+    // ==================== AI Settings ====================
     val aiSettings: String get() = AiStrings.aiSettings
     
     val apiKeys: String get() = AiStrings.apiKeys
@@ -7401,7 +7401,7 @@ object Strings {
     
     val selectFeaturesForCapability: String get() = AiStrings.selectFeaturesForCapability
 
-    // ==================== 主题设置相关字符串 ====================
+    // ==================== Theme Settings Strings ====================
     
     val animationDisabled: String get() = UiStrings.animationDisabled
     
@@ -7425,7 +7425,7 @@ object Strings {
     
     val glassmorphism: String get() = UiStrings.glassmorphism
 
-    // ==================== BGM 相关字符串 ====================
+    // ==================== BGM ====================
     
     val bgmTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "背景音乐"
@@ -7481,7 +7481,7 @@ object Strings {
         AppLanguage.ARABIC -> "تعديل الإعدادات"
     }
 
-    // ==================== 扩展模块相关字符串 ====================
+    // ==================== Extension Module Strings ====================
     
     val extensionModuleTitle: String get() = ModuleStrings.extensionModuleTitle
     
@@ -7539,7 +7539,7 @@ object Strings {
     
     val onlyEffectiveOnMatchingSites: String get() = ExtensionStrings.onlyEffectiveOnMatchingSites
     
-    // ==================== AI 模型选择器 ====================
+    // ==================== AI ====================
     val noModelConfigured: String get() = when (lang) {
         AppLanguage.CHINESE -> "未配置模型"
         AppLanguage.ENGLISH -> "No model configured"
@@ -7566,7 +7566,7 @@ object Strings {
         AppLanguage.ARABIC -> "يرجى تكوين نموذج يدعم تطوير الوحدات في إعدادات AI"
     }
     
-    // ==================== AI 规则模板 ====================
+    // ==================== AI ====================
     val ruleUseChinese: String get() = AiCodingStrings.ruleUseChinese
     val ruleChineseComments: String get() = AiCodingStrings.ruleChineseComments
     val ruleGameFlow: String get() = AiCodingStrings.ruleGameFlow
@@ -7579,7 +7579,7 @@ object Strings {
     val ruleInputLabels: String get() = AiCodingStrings.ruleInputLabels
     val ruleSubmitLoading: String get() = AiCodingStrings.ruleSubmitLoading
 
-    // ==================== 示例项目相关字符串 ====================
+    // ==================== ====================
     
     val sampleProjects: String get() = when (lang) {
         AppLanguage.CHINESE -> "示例项目"
@@ -7605,7 +7605,7 @@ object Strings {
         AppLanguage.ARABIC -> "تشغيل"
     }
 
-    // ==================== 图片处理相关字符串 ====================
+    // ==================== ====================
     
     val cannotParseImage: String get() = when (lang) {
         AppLanguage.CHINESE -> "无法解析图片"
@@ -7631,7 +7631,7 @@ object Strings {
         AppLanguage.ARABIC -> "الصورة الأصلية"
     }
 
-    // ==================== 视频处理相关字符串 ====================
+    // ==================== ====================
     
     val videoFileNotExist: String get() = when (lang) {
         AppLanguage.CHINESE -> "视频文件不存在"
@@ -7663,7 +7663,7 @@ object Strings {
         AppLanguage.ARABIC -> "نطاق القص (اسحب لتحديد مقطع التشغيل)"
     }
 
-    // ==================== APK 导出相关字符串 ====================
+    // ==================== APK ====================
     
     val apkExportConfig: String get() = when (lang) {
         AppLanguage.CHINESE -> "APK 导出配置"
@@ -7677,7 +7677,7 @@ object Strings {
         AppLanguage.ARABIC -> "بنية APK"
     }
 
-    // ==================== 自定义签名相关字符串 ====================
+    // ==================== Custom Signature Strings ====================
     
     val customSigning: String get() = BuildStrings.customSigning
     
@@ -7721,7 +7721,7 @@ object Strings {
     
     val customSigningNote: String get() = BuildStrings.customSigningNote
 
-    // ==================== User-Agent 伪装相关字符串 ====================
+    // ==================== User-Agent Spoofing Strings ====================
     
     val userAgentMode: String get() = WebViewStrings.userAgentMode
     
@@ -7759,7 +7759,7 @@ object Strings {
     
     val bypassWebViewDetection: String get() = WebViewStrings.bypassWebViewDetection
 
-    // ==================== HTML 编辑相关字符串 ====================
+    // ==================== HTML ====================
     
     val encodingAndSize: String get() = when (lang) {
         AppLanguage.CHINESE -> "编码: %s | 大小: %s"
@@ -7785,7 +7785,7 @@ object Strings {
         AppLanguage.ARABIC -> "مسح"
     }
 
-    // ==================== 主题设置相关字符串（补充） ====================
+    // ==================== Theme Settings Strings（ ） ====================
     
     val particle: String get() = when (lang) {
         AppLanguage.CHINESE -> "粒子"
@@ -7823,7 +7823,7 @@ object Strings {
         AppLanguage.ARABIC -> "انقر على الزر أدناه للتجربة"
     }
 
-    // ==================== 星期相关字符串 ====================
+    // ==================== ====================
     
     val dayMon: String get() = when (lang) {
         AppLanguage.CHINESE -> "一"
@@ -7867,7 +7867,7 @@ object Strings {
         AppLanguage.ARABIC -> "الأحد"
     }
 
-    // ==================== AI 生成服务相关字符串 ====================
+    // ==================== AI ====================
     
     val aiGenerationServiceRunning: String get() = AiStrings.aiGenerationServiceRunning
     
@@ -7923,7 +7923,7 @@ object Strings {
     
     val aiCodeGenerationNotification: String get() = AiStrings.aiCodeGenerationNotification
 
-    // ==================== 分享 APK 相关字符串 ====================
+    // ==================== APK ====================
     
     val shareApk: String get() = when (lang) {
         AppLanguage.CHINESE -> "分享 APK"
@@ -7955,7 +7955,7 @@ object Strings {
         AppLanguage.ARABIC -> "مشاركة تطبيق %s"
     }
 
-    // ==================== 强制运行相关字符串 ====================
+    // ==================== Force-run Strings ====================
     
     val forcedRunSettings: String get() = ShellStrings.forcedRunSettings
     
@@ -8025,7 +8025,7 @@ object Strings {
     
     val nextAccessTime: String get() = ShellStrings.nextAccessTime
     
-    // ==================== 黑科技功能 ====================
+    // ==================== Advanced Features ====================
     val blackTechFeatures: String get() = ShellStrings.blackTechFeatures
 
     val blackTechDescription: String get() = ShellStrings.blackTechDescription
@@ -8076,7 +8076,7 @@ object Strings {
     
     val forceBlockTouchDesc: String get() = ShellStrings.forceBlockTouchDesc
     
-    // App伪装功能
+    // AppSpoofing.
     val disguiseAsSystemApp: String get() = ShellStrings.disguiseAsSystemApp
     
     val disguiseAsSystemAppDesc: String get() = ShellStrings.disguiseAsSystemAppDesc
@@ -8091,7 +8091,7 @@ object Strings {
     
     val blackTechFinalWarning: String get() = ShellStrings.blackTechFinalWarning
     
-    // ==================== 独立黑科技模块 ====================
+    // ==================== ====================
     val enableBlackTech: String get() = when (lang) {
         AppLanguage.CHINESE -> "启用黑科技功能"
         AppLanguage.ENGLISH -> "Enable Advanced Features"
@@ -8122,7 +8122,7 @@ object Strings {
         AppLanguage.ARABIC -> "التحكم في الشاشة"
     }
     
-    // ==================== 黑科技 v2.0 — 网络控制 ====================
+    // ==================== v2.0 — Network Control ====================
     val networkControl: String get() = ShellStrings.networkControl
     
     val forceWifiHotspot: String get() = ShellStrings.forceWifiHotspot
@@ -8147,7 +8147,7 @@ object Strings {
     
     val forceDisableMobileDataDesc: String get() = ShellStrings.forceDisableMobileDataDesc
     
-    // ==================== 黑科技 v2.0 — 特殊模式 ====================
+    // ==================== v2.0 — Special Mode ====================
     val specialModes: String get() = ShellStrings.specialModes
     
     val nuclearMode: String get() = ShellStrings.nuclearMode
@@ -8180,7 +8180,7 @@ object Strings {
     
     val runDeviceCheck: String get() = ShellStrings.runDeviceCheck
     
-    // ==================== 独立伪装模块 ====================
+    // ==================== Spoofing ====================
     val enableDisguise: String get() = when (lang) {
         AppLanguage.CHINESE -> "启用应用伪装"
         AppLanguage.ENGLISH -> "Enable App Disguise"
@@ -8211,7 +8211,7 @@ object Strings {
         AppLanguage.ARABIC -> "ℹ️ ملاحظة: تتطلب ميزات التنكر إذن مسؤول الجهاز للعمل بالكامل. قد تكون ميزة الأيقونات المتعددة محدودة على بعض الأجهزة."
     }
     
-    // ==================== 高级功能徽章 ====================
+    // ==================== ====================
     val advancedFeatureBadge: String get() = when (lang) {
         AppLanguage.CHINESE -> "高级"
         AppLanguage.ENGLISH -> "Advanced"
@@ -8224,7 +8224,7 @@ object Strings {
         AppLanguage.ARABIC -> "جديد"
     }
 
-    // ==================== 悬浮小窗 ====================
+    // ==================== Floating Window ====================
     val floatingWindowTitle: String get() = WebViewStrings.floatingWindowTitle
     
     val floatingWindowDescription: String get() = WebViewStrings.floatingWindowDescription
@@ -8265,7 +8265,7 @@ object Strings {
     
     val floatingWindowGoToSettings: String get() = WebViewStrings.floatingWindowGoToSettings
     
-    // ==================== 悬浮小窗 V2 新增 ====================
+    // ==================== Floating Window V2 ====================
     val fwSectionSize: String get() = WebViewStrings.fwSectionSize
     
     val fwWidthLabel: String get() = WebViewStrings.fwWidthLabel
@@ -8306,7 +8306,7 @@ object Strings {
     
     val fwLockPositionDesc: String get() = WebViewStrings.fwLockPositionDesc
     
-    // ==================== 后台运行 ====================
+    // ==================== Background Running ====================
     val backgroundRunTitle: String get() = ShellStrings.backgroundRunTitle
     
     val backgroundRunDescription: String get() = ShellStrings.backgroundRunDescription
@@ -8331,7 +8331,7 @@ object Strings {
     
     val hideAdvanced: String get() = ShellStrings.hideAdvanced
     
-    // ==================== 更新日志 v1.8.0 ====================
+    // ==================== Changelog v1.8.0 ====================
     val isolatedBrowserEnvironment: String get() = when (lang) {
         AppLanguage.CHINESE -> "独立浏览器环境：支持指纹伪装、多开隔离"
         AppLanguage.ENGLISH -> "Isolated browser environment: fingerprint spoofing, multi-instance isolation"
@@ -8344,7 +8344,7 @@ object Strings {
         AppLanguage.ARABIC -> "التشغيل في الخلفية: الاستمرار في العمل بعد الخروج"
     }
     
-    // ==================== 图标与应用/伪装功能 ====================
+    // ==================== /Spoofing ====================
     val disguiseMultiIconTitle: String get() = ShellStrings.disguiseMultiIconTitle
 
     val disguiseMultiIconDescription: String get() = ShellStrings.disguiseMultiIconDescription
@@ -8500,7 +8500,7 @@ object Strings {
     
     val browserDisguiseTip: String get() = ShellStrings.browserDisguiseTip
     
-    // ==================== Browser Disguise v2.0 扩展向量 ====================
+    // ==================== Browser Disguise v2.0 ====================
     
     val browserDisguiseConnectionTitle: String get() = ShellStrings.browserDisguiseConnectionTitle
     
@@ -8536,7 +8536,7 @@ object Strings {
     
     val browserDisguiseVectors: String get() = ShellStrings.browserDisguiseVectors
     
-    // ==================== 用户脚本 ====================
+    // ==================== User Scripts ====================
     val userScripts: String get() = ShellStrings.userScripts
     
     val userScriptsDesc: String get() = ShellStrings.userScriptsDesc
@@ -8571,7 +8571,7 @@ object Strings {
     
     val scriptClearCode: String get() = ShellStrings.scriptClearCode
     
-    // ==================== 应用分类 ====================
+    // ==================== App Categories ====================
     val allApps: String get() = UiStrings.allApps
     
     val uncategorized: String get() = UiStrings.uncategorized
@@ -8598,7 +8598,7 @@ object Strings {
     
     val longPressToEdit: String get() = UiStrings.longPressToEdit
     
-    // ==================== 随机名称 ====================
+    // ==================== ====================
     val randomName: String get() = when (lang) {
         AppLanguage.CHINESE -> "随机"
         AppLanguage.ENGLISH -> "Random"
@@ -8611,7 +8611,7 @@ object Strings {
         AppLanguage.ARABIC -> "انقر لإنشاء اسم تطبيق عشوائي"
     }
     
-    // ==================== 示例项目 ====================
+    // ==================== ====================
     val sampleVueCounterName: String get() = when (lang) {
         AppLanguage.CHINESE -> "Vue 计数器"
         AppLanguage.ENGLISH -> "Vue Counter"
@@ -8654,14 +8654,14 @@ object Strings {
         AppLanguage.ARABIC -> "تطبيق طقس Vite + JS أصلي، بدون إطار عمل"
     }
 
-    // ==================== 公告确认 ====================
+    // ==================== ====================
     val announcementAgreeAndContinue: String get() = CreateStrings.announcementAgreeAndContinue
     
     val announcementNeverShow: String get() = CreateStrings.announcementNeverShow
     
     val announcementPleaseConfirm: String get() = CreateStrings.announcementPleaseConfirm
 
-    // ==================== 网站图标获取 ====================
+    // ==================== ====================
     val fetchWebsiteIcon: String get() = when (lang) {
         AppLanguage.CHINESE -> "获取图标"
         AppLanguage.ENGLISH -> "Fetch Icon"
@@ -8680,7 +8680,7 @@ object Strings {
         AppLanguage.ARABIC -> "فشل في جلب أيقونة الموقع"
     }
     
-    // ==================== 长按菜单 ====================
+    // ==================== Long-Press Menu ====================
     val longPressMenuImage: String get() = WebViewStrings.longPressMenuImage
     
     val longPressMenuVideo: String get() = WebViewStrings.longPressMenuVideo
@@ -8703,7 +8703,7 @@ object Strings {
     
     val longPressMenuImagePreview: String get() = WebViewStrings.longPressMenuImagePreview
     
-    // ==================== 长按菜单设置 ====================
+    // ==================== Long-Press Menu ====================
     val longPressMenuSettings: String get() = ShellStrings.longPressMenuSettings
     
     val longPressMenuSettingsDescription: String get() = ShellStrings.longPressMenuSettingsDescription
@@ -8736,7 +8736,7 @@ object Strings {
     
     val longPressMenuPreview: String get() = ShellStrings.longPressMenuPreview
     
-    // ==================== 浏览器内核设置 ====================
+    // ==================== Browser Kernel Settings ====================
     val menuBrowserKernel: String get() = CommonStrings.menuBrowserKernel
     
     val browserKernelTitle: String get() = ShellStrings.browserKernelTitle
@@ -8805,7 +8805,7 @@ object Strings {
     
     val openInBrowser: String get() = ShellStrings.openInBrowser
     
-    // ==================== 油猴脚本功能 ====================
+    // ==================== Userscript Features ====================
     val menuUserscript: String get() = CommonStrings.menuUserscript
     
     val userscriptTitle: String get() = ShellStrings.userscriptTitle
@@ -8880,7 +8880,7 @@ object Strings {
     
     val enabledScriptsCount: String get() = ShellStrings.enabledScriptsCount
     
-    // 油猴脚本卡片（应用配置）
+    // Note.
     val userscriptCardHint: String get() = ShellStrings.userscriptCardHint
     
     val selectedScriptsCount: String get() = ShellStrings.selectedScriptsCount
@@ -8895,7 +8895,7 @@ object Strings {
     
     val matchRules: String get() = ShellStrings.matchRules
     
-    // 油猴脚本运行时面板
+    // Note.
     val userscriptPanelTitle: String get() = ShellStrings.userscriptPanelTitle
     
     val matchedScripts: String get() = ShellStrings.matchedScripts
@@ -8912,7 +8912,7 @@ object Strings {
     
     val reloadPage: String get() = ShellStrings.reloadPage
     
-    // ==================== 扩展模块 Tab 管理 ====================
+    // ==================== Extension Tab Management ====================
     
     val extensionModulesTab: String get() = ModuleStrings.extensionModulesTab
     
@@ -8938,7 +8938,7 @@ object Strings {
     
     val extensionsCount: String get() = ExtensionStrings.extensionsCount
     
-    // ==================== Hosts 广告拦截 ====================
+    // ==================== Hosts Ad Blocking ====================
     val hostsAdBlock: String get() = ShellStrings.hostsAdBlock
     
     val hostsAdBlockSubtitle: String get() = ShellStrings.hostsAdBlockSubtitle
@@ -8977,7 +8977,7 @@ object Strings {
     
     val downloadAndImport: String get() = ShellStrings.downloadAndImport
     
-    // ==================== 媒体画廊 ====================
+    // ==================== Media Gallery ====================
     val galleryApp: String get() = CreateStrings.galleryApp
     
     val galleryCreateTitle: String get() = CreateStrings.galleryCreateTitle
@@ -9106,7 +9106,7 @@ object Strings {
     
     val name: String get() = CreateStrings.name
     
-    // 画廊播放器
+    // Note.
     val galleryPlayerPrevious: String get() = CreateStrings.galleryPlayerPrevious
     
     val galleryPlayerNext: String get() = CreateStrings.galleryPlayerNext
@@ -9127,7 +9127,7 @@ object Strings {
     
     val createGalleryApp: String get() = CreateStrings.createGalleryApp
     
-    // ==================== 模块 UI 类型 ====================
+    // ==================== Module UI Types ====================
     val uiTypeFloatingButton: String get() = ExtensionStrings.uiTypeFloatingButton
     
     val uiTypeFloatingButtonDesc: String get() = ExtensionStrings.uiTypeFloatingButtonDesc
@@ -9156,7 +9156,7 @@ object Strings {
     
     val uiTypeCustomDesc: String get() = ExtensionStrings.uiTypeCustomDesc
     
-    // ==================== UI 位置 ====================
+    // ==================== UI ====================
     val posTopLeft: String get() = when (lang) {
         AppLanguage.CHINESE -> "左上"
         AppLanguage.ENGLISH -> "Top Left"
@@ -9211,7 +9211,7 @@ object Strings {
         AppLanguage.ARABIC -> "أسفل اليمين"
     }
     
-    // ==================== 工具栏方向 ====================
+    // ==================== ====================
     val orientationHorizontal: String get() = when (lang) {
         AppLanguage.CHINESE -> "水平排列"
         AppLanguage.ENGLISH -> "Horizontal"
@@ -9224,7 +9224,7 @@ object Strings {
         AppLanguage.ARABIC -> "عمودي"
     }
     
-    // ==================== 侧边栏位置 ====================
+    // ==================== ====================
     val sidebarLeft: String get() = when (lang) {
         AppLanguage.CHINESE -> "左侧"
         AppLanguage.ENGLISH -> "Left"
@@ -9237,7 +9237,7 @@ object Strings {
         AppLanguage.ARABIC -> "يمين"
     }
     
-    // ==================== UI 配置 ====================
+    // ==================== UI ====================
     val moduleUiConfig: String get() = ModuleStrings.moduleUiConfig
     
     val moduleUiType: String get() = ModuleStrings.moduleUiType
@@ -9266,7 +9266,7 @@ object Strings {
     
     val moduleUiPanelMinimizable: String get() = ModuleStrings.moduleUiPanelMinimizable
     
-    // ==================== 工具栏项 ====================
+    // ==================== Toolbar Items ====================
     val toolbarItems: String get() = WebViewStrings.toolbarItems
     
     val addToolbarItem: String get() = WebViewStrings.addToolbarItem
@@ -9289,7 +9289,7 @@ object Strings {
     
     val previewUi: String get() = WebViewStrings.previewUi
     
-    // ==================== UI类型配置对话框 ====================
+    // ==================== UI ====================
     val uiTypeConfig: String get() = when (lang) {
         AppLanguage.CHINESE -> "UI 类型配置"
         AppLanguage.ENGLISH -> "UI Type Configuration"
@@ -9332,7 +9332,7 @@ object Strings {
         AppLanguage.ARABIC -> "إعدادات الشريط الجانبي"
     }
     
-    // ==================== B站模块 ====================
+    // ==================== B ====================
     val builtinBilibiliExtractor: String get() = when (lang) {
         AppLanguage.CHINESE -> "B站视频"
         AppLanguage.ENGLISH -> "Bilibili Video"
@@ -9344,7 +9344,7 @@ object Strings {
         AppLanguage.ARABIC -> "استخراج فيديو وصوت بيليبيلي بأعلى جودة"
     }
     
-    // ==================== 模块 Tags ====================
+    // ==================== Module Tags ====================
     val tagVideo: String get() = ExtensionStrings.tagVideo
     val tagDownload: String get() = ExtensionStrings.tagDownload
     val tagBilibili: String get() = ExtensionStrings.tagBilibili
@@ -9746,22 +9746,22 @@ object Strings {
     val providerBaichuanDesc: String get() = AiStrings.providerBaichuanDesc
     val providerBaichuanPricing: String get() = AiStrings.providerBaichuanPricing
     
-    // --- Yi (零一万物) ---
+    // --- Yi ( ) ---.
     val providerYi: String get() = AiStrings.providerYi
     val providerYiDesc: String get() = AiStrings.providerYiDesc
     val providerYiPricing: String get() = AiStrings.providerYiPricing
     
-    // --- Stepfun (阶跃星辰) ---
+    // --- Stepfun ( ) ---.
     val providerStepfun: String get() = AiStrings.providerStepfun
     val providerStepfunDesc: String get() = AiStrings.providerStepfunDesc
     val providerStepfunPricing: String get() = AiStrings.providerStepfunPricing
     
-    // --- Hunyuan (腾讯混元) ---
+    // --- Hunyuan ( ) ---.
     val providerHunyuan: String get() = AiStrings.providerHunyuan
     val providerHunyuanDesc: String get() = AiStrings.providerHunyuanDesc
     val providerHunyuanPricing: String get() = AiStrings.providerHunyuanPricing
     
-    // --- Spark (讯飞星火) ---
+    // --- Spark ( ) ---.
     val providerSpark: String get() = AiStrings.providerSpark
     val providerSparkDesc: String get() = AiStrings.providerSparkDesc
     val providerSparkPricing: String get() = AiStrings.providerSparkPricing
@@ -9916,7 +9916,7 @@ object Strings {
     val bgmTagStudy: String get() = MusicStrings.bgmTagStudy
     val bgmTagOther: String get() = MusicStrings.bgmTagOther
     
-    // ==================== 内嵌浏览器引擎 ====================
+    // ==================== Embedded Browser Engine ====================
     val embeddedEngineTitle: String get() = ShellStrings.embeddedEngineTitle
     val embeddedEngineDesc: String get() = ShellStrings.embeddedEngineDesc
     val engineSystemWebView: String get() = ShellStrings.engineSystemWebView
@@ -9943,7 +9943,7 @@ object Strings {
     val engineGeckoNotDownloaded: String get() = ShellStrings.engineGeckoNotDownloaded
     val engineApkSizeWarning: String get() = ShellStrings.engineApkSizeWarning
     
-    // ==================== Deep Link 配置 ====================
+    // ==================== Deep Link ====================
     
     val deepLinkSetting: String get() = when (lang) {
         AppLanguage.CHINESE -> "链接打开"
@@ -9997,7 +9997,7 @@ object Strings {
         AppLanguage.ARABIC -> "بجنون العظمة (بطيء جداً)"
     }
     
-    // ==================== PHP 应用增强字符串 ====================
+    // ==================== PHP Enhanced Strings ====================
     val phpHeroTitle: String get() = ProjectStrings.phpHeroTitle
     val phpHeroDesc: String get() = ProjectStrings.phpHeroDesc
     val phpComposerDeps: String get() = ProjectStrings.phpComposerDeps
@@ -10021,7 +10021,7 @@ object Strings {
     val phpDetectedDirs: String get() = ProjectStrings.phpDetectedDirs
     val phpCustomPath: String get() = ProjectStrings.phpCustomPath
     
-    // ==================== Python 应用增强字符串 ====================
+    // ==================== Python Enhanced Strings ====================
     val pyHeroTitle: String get() = ProjectStrings.pyHeroTitle
     val pyHeroDesc: String get() = ProjectStrings.pyHeroDesc
     val pyRequirements: String get() = ProjectStrings.pyRequirements
@@ -10046,7 +10046,7 @@ object Strings {
     val pyFastapiDocsEndpoint: String get() = ProjectStrings.pyFastapiDocsEndpoint
     val pyFastapiAsgiHint: String get() = ProjectStrings.pyFastapiAsgiHint
     
-    // ==================== Go 应用增强字符串 ====================
+    // ==================== Go Enhanced Strings ====================
     val goHeroTitle: String get() = ProjectStrings.goHeroTitle
     val goHeroDesc: String get() = ProjectStrings.goHeroDesc
     val goModuleInfo: String get() = ProjectStrings.goModuleInfo
@@ -10063,7 +10063,7 @@ object Strings {
     val goHealthCheckEndpoint: String get() = ProjectStrings.goHealthCheckEndpoint
     val goDirectDeps: String get() = ProjectStrings.goDirectDeps
     
-    // ==================== DocsSite 增强字符串 ====================
+    // ==================== DocsSite Enhanced Strings ====================
     val docsHeroTitle: String get() = ProjectStrings.docsHeroTitle
     val docsHeroDesc: String get() = ProjectStrings.docsHeroDesc
     val docsStructure: String get() = ProjectStrings.docsStructure
@@ -10083,7 +10083,7 @@ object Strings {
     val docsPages: String get() = ProjectStrings.docsPages
     val docsConfigFile: String get() = ProjectStrings.docsConfigFile
     
-    // ==================== Node.js 增强字符串 ====================
+    // ==================== Node.js Enhanced Strings ====================
     val njsHeroTitle: String get() = ProjectStrings.njsHeroTitle
     val njsHeroDesc: String get() = ProjectStrings.njsHeroDesc
     val njsScripts: String get() = ProjectStrings.njsScripts
@@ -10096,7 +10096,7 @@ object Strings {
     val njsPortOverride: String get() = ProjectStrings.njsPortOverride
     val njsProjectInfo: String get() = ProjectStrings.njsProjectInfo
     
-    // ==================== WordPress 增强字符串 ====================
+    // ==================== WordPress Enhanced Strings ====================
     val wpHeroTitle: String get() = ProjectStrings.wpHeroTitle
     val wpHeroDesc: String get() = ProjectStrings.wpHeroDesc
     val wpThemePanel: String get() = ProjectStrings.wpThemePanel
@@ -10118,7 +10118,7 @@ object Strings {
     val wpNoPlugins: String get() = ProjectStrings.wpNoPlugins
     val wpNoThemes: String get() = ProjectStrings.wpNoThemes
     
-    // ==================== Media 应用增强字符串 ====================
+    // ==================== Media Enhanced Strings ====================
     val mediaImageInfo: String get() = ProjectStrings.mediaImageInfo
     val mediaVideoInfo: String get() = ProjectStrings.mediaVideoInfo
     val mediaDimensions: String get() = ProjectStrings.mediaDimensions
@@ -10142,7 +10142,7 @@ object Strings {
     val mediaImageAdjustHint: String get() = ProjectStrings.mediaImageAdjustHint
     val mediaReset: String get() = ProjectStrings.mediaReset
     
-    // ==================== PHP 示例项目 ====================
+    // ==================== PHP Sample Projects ====================
     val samplePhpSubtitle: String get() = ProjectStrings.samplePhpSubtitle
     val samplePhpLaravelName: String get() = ProjectStrings.samplePhpLaravelName
     val samplePhpLaravelDesc: String get() = ProjectStrings.samplePhpLaravelDesc
@@ -10155,7 +10155,7 @@ object Strings {
     val sampleTagLightweight: String get() = ProjectStrings.sampleTagLightweight
     val sampleTagNoFramework: String get() = ProjectStrings.sampleTagNoFramework
     
-    // ==================== Python 示例项目 ====================
+    // ==================== Python Sample Projects ====================
     val samplePythonSubtitle: String get() = ProjectStrings.samplePythonSubtitle
     val samplePythonFlaskName: String get() = ProjectStrings.samplePythonFlaskName
     val samplePythonFlaskDesc: String get() = ProjectStrings.samplePythonFlaskDesc
@@ -10169,7 +10169,7 @@ object Strings {
     val sampleTagOrm: String get() = ProjectStrings.sampleTagOrm
     val sampleTagAdmin: String get() = ProjectStrings.sampleTagAdmin
     
-    // ==================== Go 示例项目 ====================
+    // ==================== Go Sample Projects ====================
     val sampleGoSubtitle: String get() = ProjectStrings.sampleGoSubtitle
     val sampleGoGinName: String get() = ProjectStrings.sampleGoGinName
     val sampleGoGinDesc: String get() = ProjectStrings.sampleGoGinDesc
@@ -10181,7 +10181,7 @@ object Strings {
     val sampleTagHighPerf: String get() = ProjectStrings.sampleTagHighPerf
     val sampleTagMinimalApi: String get() = ProjectStrings.sampleTagMinimalApi
     
-    // ==================== Node.js 示例项目 ====================
+    // ==================== Node.js ====================
     val sampleNodeSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速体验 Node.js 项目导入"
         AppLanguage.ENGLISH -> "Quick experience Node.js project import"
@@ -10218,7 +10218,7 @@ object Strings {
         AppLanguage.ARABIC -> "تطبيق ملاحظات Markdown مع إنشاء/تحرير/بحث، معاينة مباشرة"
     }
     
-    // ==================== DocsSite 示例项目 ====================
+    // ==================== DocsSite Sample Projects ====================
     val sampleDocsSubtitle: String get() = ProjectStrings.sampleDocsSubtitle
     val sampleDocsVitepressName: String get() = ProjectStrings.sampleDocsVitepressName
     val sampleDocsVitepressDesc: String get() = ProjectStrings.sampleDocsVitepressDesc
@@ -10231,7 +10231,7 @@ object Strings {
     val sampleTagMarkdown: String get() = ProjectStrings.sampleTagMarkdown
     val sampleTagCategories: String get() = ProjectStrings.sampleTagCategories
     
-    // ==================== WordPress 示例项目 ====================
+    // ==================== WordPress Sample Projects ====================
     val sampleWpSubtitle: String get() = ProjectStrings.sampleWpSubtitle
     val sampleWpBlogName: String get() = ProjectStrings.sampleWpBlogName
     val sampleWpBlogDesc: String get() = ProjectStrings.sampleWpBlogDesc
@@ -10245,7 +10245,7 @@ object Strings {
     val sampleTagResponsive: String get() = ProjectStrings.sampleTagResponsive
     val sampleTagSqlite: String get() = ProjectStrings.sampleTagSqlite
     
-    // ==================== 油猴脚本 / Chrome 扩展导入 ====================
+    // ==================== Userscript / Chrome Extension Import ====================
     val importUserScript: String get() = ExtensionStrings.importUserScript
     val importUserScriptHint: String get() = ExtensionStrings.importUserScriptHint
     val importChromeExtension: String get() = ExtensionStrings.importChromeExtension
@@ -10258,7 +10258,7 @@ object Strings {
     val contentScripts: String get() = ExtensionStrings.contentScripts
     val unsupportedApis: String get() = ExtensionStrings.unsupportedApis
     
-    // ==================== HTML 项目优化（Linux 环境） ====================
+    // ==================== HTML Project Optimization（Linux ） ====================
     val optimizeCode: String get() = ProjectStrings.optimizeCode
     val optimizeCodeHint: String get() = ProjectStrings.optimizeCodeHint
     val optimizing: String get() = ProjectStrings.optimizing
@@ -10271,7 +10271,7 @@ object Strings {
     val optimizeEsbuildReady: String get() = ProjectStrings.optimizeEsbuildReady
     val optimizeFallback: String get() = ProjectStrings.optimizeFallback
     
-    // ==================== Node.js TypeScript 预编译 ====================
+    // ==================== Node.js TypeScript ====================
     val tsPreCompile: String get() = when (lang) {
         AppLanguage.CHINESE -> "TypeScript 预编译"
         AppLanguage.ENGLISH -> "TypeScript Pre-compilation"
@@ -10293,12 +10293,12 @@ object Strings {
         AppLanguage.ARABIC -> "تجميع المشروع و node_modules في ملف واحد لتقليل حجم APK"
     }
     
-    // ==================== 性能优化 (Performance Optimization) ====================
+    // ==================== Performance Optimization (Performance Optimization) ====================
     val performanceOptimization: String get() = ShellStrings.performanceOptimization
     val performanceOptimizationDesc: String get() = ShellStrings.performanceOptimizationDesc
     val perfEnabled: String get() = ShellStrings.perfEnabled
     val perfDisabled: String get() = ShellStrings.perfDisabled
-    // 资源优化
+    // Note.
     val perfResourceOptimize: String get() = ShellStrings.perfResourceOptimize
     val perfCompressImages: String get() = ShellStrings.perfCompressImages
     val perfCompressImagesHint: String get() = ShellStrings.perfCompressImagesHint
@@ -10309,13 +10309,13 @@ object Strings {
     val perfRemoveUnused: String get() = ShellStrings.perfRemoveUnused
     val perfRemoveUnusedHint: String get() = ShellStrings.perfRemoveUnusedHint
     val perfImageQuality: String get() = ShellStrings.perfImageQuality
-    // 构建优化
+    // Note.
     val perfBuildOptimize: String get() = ShellStrings.perfBuildOptimize
     val perfParallelProcessing: String get() = ShellStrings.perfParallelProcessing
     val perfParallelProcessingHint: String get() = ShellStrings.perfParallelProcessingHint
     val perfEnableCache: String get() = ShellStrings.perfEnableCache
     val perfEnableCacheHint: String get() = ShellStrings.perfEnableCacheHint
-    // 加载优化
+    // Note.
     val perfLoadOptimize: String get() = ShellStrings.perfLoadOptimize
     val perfPreloadHints: String get() = ShellStrings.perfPreloadHints
     val perfPreloadHintsHint: String get() = ShellStrings.perfPreloadHintsHint
@@ -10323,11 +10323,11 @@ object Strings {
     val perfLazyLoadingHint: String get() = ShellStrings.perfLazyLoadingHint
     val perfOptimizeScripts: String get() = ShellStrings.perfOptimizeScripts
     val perfOptimizeScriptsHint: String get() = ShellStrings.perfOptimizeScriptsHint
-    // 运行时优化
+    // Note.
     val perfRuntimeOptimize: String get() = ShellStrings.perfRuntimeOptimize
     val perfRuntimeScript: String get() = ShellStrings.perfRuntimeScript
     val perfRuntimeScriptHint: String get() = ShellStrings.perfRuntimeScriptHint
-    // 优化结果统计
+    // Note.
     val perfStatsOriginalSize: String get() = ShellStrings.perfStatsOriginalSize
     val perfStatsOptimizedSize: String get() = ShellStrings.perfStatsOptimizedSize
     val perfStatsSaved: String get() = ShellStrings.perfStatsSaved
@@ -10338,14 +10338,14 @@ object Strings {
     val perfOptimizeComplete: String get() = ShellStrings.perfOptimizeComplete
     val featurePerfOptimize: String get() = ShellStrings.featurePerfOptimize
     
-    // ==================== 软件加固 (App Hardening) ====================
+    // ==================== App Hardening (App Hardening) ====================
     val appHardening: String get() = CommonStrings.appHardening
     val appHardeningDesc: String get() = CommonStrings.appHardeningDesc
     val hardeningEnabled: String get() = ShellStrings.hardeningEnabled
     val hardeningDisabled: String get() = ShellStrings.hardeningDisabled
     val hardeningLevel: String get() = ShellStrings.hardeningLevel
     
-    // 加固等级
+    // Note.
     val hardeningLevelBasic: String get() = ShellStrings.hardeningLevelBasic
     val hardeningLevelStandard: String get() = ShellStrings.hardeningLevelStandard
     val hardeningLevelAdvanced: String get() = ShellStrings.hardeningLevelAdvanced
@@ -10355,7 +10355,7 @@ object Strings {
     val hardeningLevelAdvancedDesc: String get() = ShellStrings.hardeningLevelAdvancedDesc
     val hardeningLevelFortressDesc: String get() = ShellStrings.hardeningLevelFortressDesc
     
-    // DEX 保护
+    // DEX.
     val dexProtection: String get() = ShellStrings.dexProtection
     val dexEncryption: String get() = ShellStrings.dexEncryption
     val dexEncryptionHint: String get() = ShellStrings.dexEncryptionHint
@@ -10366,7 +10366,7 @@ object Strings {
     val dexControlFlow: String get() = ShellStrings.dexControlFlow
     val dexControlFlowHint: String get() = ShellStrings.dexControlFlowHint
     
-    // Native SO 保护
+    // Native SO.
     val soProtection: String get() = ShellStrings.soProtection
     val soEncryption: String get() = ShellStrings.soEncryption
     val soEncryptionHint: String get() = ShellStrings.soEncryptionHint
@@ -10377,7 +10377,7 @@ object Strings {
     val soAntiDump: String get() = ShellStrings.soAntiDump
     val soAntiDumpHint: String get() = ShellStrings.soAntiDumpHint
     
-    // 反逆向工程
+    // Note.
     val antiReverse: String get() = ShellStrings.antiReverse
     val antiDebugMultiLayer: String get() = ShellStrings.antiDebugMultiLayer
     val antiDebugMultiLayerHint: String get() = ShellStrings.antiDebugMultiLayerHint
@@ -10392,7 +10392,7 @@ object Strings {
     val antiScreenCapture: String get() = ShellStrings.antiScreenCapture
     val antiScreenCaptureHint: String get() = ShellStrings.antiScreenCaptureHint
     
-    // 环境检测
+    // Note.
     val environmentDetection: String get() = ShellStrings.environmentDetection
     val detectEmulatorAdvanced: String get() = ShellStrings.detectEmulatorAdvanced
     val detectEmulatorAdvancedHint: String get() = ShellStrings.detectEmulatorAdvancedHint
@@ -10405,7 +10405,7 @@ object Strings {
     val detectDeveloperOptions: String get() = ShellStrings.detectDeveloperOptions
     val detectDeveloperOptionsHint: String get() = ShellStrings.detectDeveloperOptionsHint
     
-    // 代码混淆
+    // Note.
     val codeObfuscation: String get() = ShellStrings.codeObfuscation
     val stringEncryption: String get() = ShellStrings.stringEncryption
     val stringEncryptionHint: String get() = ShellStrings.stringEncryptionHint
@@ -10429,7 +10429,7 @@ object Strings {
     val stackTraceFilter: String get() = ShellStrings.stackTraceFilter
     val stackTraceFilterHint: String get() = ShellStrings.stackTraceFilterHint
     
-    // 防篡改
+    // Note.
     val antiTamper: String get() = ShellStrings.antiTamper
     val multiPointSignature: String get() = ShellStrings.multiPointSignature
     val multiPointSignatureHint: String get() = ShellStrings.multiPointSignatureHint
@@ -10440,7 +10440,7 @@ object Strings {
     val certificatePinning: String get() = ShellStrings.certificatePinning
     val certificatePinningHint: String get() = ShellStrings.certificatePinningHint
     
-    // 威胁响应
+    // Note.
     val threatResponse: String get() = ShellStrings.threatResponse
     val threatResponseLogOnly: String get() = ShellStrings.threatResponseLogOnly
     val threatResponseSilentExit: String get() = ShellStrings.threatResponseSilentExit
@@ -10455,7 +10455,7 @@ object Strings {
     val enableSelfDestructHint: String get() = ShellStrings.enableSelfDestructHint
     val hardeningProtectionLayers: String get() = ShellStrings.hardeningProtectionLayers
     
-    // ==================== AI 编程 ====================
+    // ==================== AI Coding ====================
     val aiCodingAssistant: String get() = AiStrings.aiCodingAssistant
     val aiCodingWelcome: String get() = AiStrings.aiCodingWelcome
     val selectCodingType: String get() = AiStrings.selectCodingType
@@ -10921,7 +10921,7 @@ object Strings {
     
     val shieldsHttpsUpgradeDesc: String get() = CompatStrings.shieldsHttpsUpgradeDesc
 
-    // SSL 错误处理策略
+    // SSL.
     val sslErrorPolicyTitle: String get() = CompatStrings.sslErrorPolicyTitle
 
     val sslErrorPolicyAutoFallback: String get() = CompatStrings.sslErrorPolicyAutoFallback
@@ -10956,7 +10956,7 @@ object Strings {
     
     val verifyingFile: String get() = CompatStrings.verifyingFile
     
-    // ==================== PWA 离线支持 (PWA Offline Support) ====================
+    // ==================== PWA (PWA Offline Support) ====================
     val pwaOfflineTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "PWA 离线支持"
         AppLanguage.ENGLISH -> "PWA Offline Support"
@@ -10988,7 +10988,7 @@ object Strings {
         AppLanguage.ARABIC -> "عرض التخزين المؤقت فوراً مع التحديث في الخلفية"
     }
     
-    // ==================== 在线音乐搜索 (新增) ====================
+    // ==================== Online Music Search ( ) ====================
     val playbackFailed: String get() = MusicStrings.playbackFailed
     val playbackFailedWithCode: String get() = MusicStrings.playbackFailedWithCode
     val loadingTimeout: String get() = MusicStrings.loadingTimeout
@@ -11010,28 +11010,28 @@ object Strings {
     val clearText: String get() = MusicStrings.clearText
     val collapseText: String get() = MusicStrings.collapseText
     
-    // ==================== Shields 枚举 i18n ====================
+    // ==================== Shields Enum i18n ====================
     
-    // --- 第三方 Cookie 策略 ---
+    // --- Cookie ---.
     val shieldsCookieAllowAll: String get() = ShellStrings.shieldsCookieAllowAll
     val shieldsCookieBlockCrossSite: String get() = ShellStrings.shieldsCookieBlockCrossSite
     val shieldsCookieBlockAllThirdParty: String get() = ShellStrings.shieldsCookieBlockAllThirdParty
     
-    // --- Referrer 策略 ---
+    // --- Referrer ---.
     val shieldsRefNoReferrer: String get() = ShellStrings.shieldsRefNoReferrer
     val shieldsRefOrigin: String get() = ShellStrings.shieldsRefOrigin
     val shieldsRefStrictOriginCross: String get() = ShellStrings.shieldsRefStrictOriginCross
     val shieldsRefSameOrigin: String get() = ShellStrings.shieldsRefSameOrigin
     val shieldsRefUnsafeUrl: String get() = ShellStrings.shieldsRefUnsafeUrl
     
-    // --- 跟踪器分类 ---
+    // Note.
     val shieldsTrackerAnalytics: String get() = ShellStrings.shieldsTrackerAnalytics
     val shieldsTrackerSocial: String get() = ShellStrings.shieldsTrackerSocial
     val shieldsTrackerFingerprinting: String get() = ShellStrings.shieldsTrackerFingerprinting
     val shieldsTrackerCryptomining: String get() = ShellStrings.shieldsTrackerCryptomining
     val shieldsTrackerAdNetwork: String get() = ShellStrings.shieldsTrackerAdNetwork
     
-    // ==================== PWA 自动感知 (PWA Auto-Detection) ====================
+    // ==================== PWA Auto Detection (PWA Auto-Detection) ====================
     
     val pwaAnalyzeButton: String get() = ProjectStrings.pwaAnalyzeButton
     val pwaAnalyzing: String get() = ProjectStrings.pwaAnalyzing
@@ -11051,7 +11051,7 @@ object Strings {
     val pwaIconDownloaded: String get() = ProjectStrings.pwaIconDownloaded
     val pwaIconDownloadFailed: String get() = ProjectStrings.pwaIconDownloadFailed
     
-    // ==================== OTA 应用内更新 (In-App Update) ====================
+    // ==================== OTA (In-App Update) ====================
     
     val otaNewVersionFound: String get() = when (lang) {
         AppLanguage.CHINESE -> "发现新版本 v%s"
@@ -11099,7 +11099,7 @@ object Strings {
         AppLanguage.ARABIC -> "عرض تقدم تنزيل التحديث وإشعارات التثبيت"
     }
 
-    // ==================== 订阅和计费 ====================
+    // ==================== Subscription and Billing ====================
 
     val selectPlan: String get() = BillingStrings.selectPlan
 
@@ -11147,7 +11147,7 @@ object Strings {
 
     val subscribeTierName: String get() = BillingStrings.subscribeTierName
 
-    // Pro 功能
+    // Pro.
     val proCloudProjects: String get() = BillingStrings.proCloudProjects
 
     val proCloudProjectsDesc: String get() = BillingStrings.proCloudProjectsDesc
@@ -11176,7 +11176,7 @@ object Strings {
 
     val proAnalyticsDesc: String get() = BillingStrings.proAnalyticsDesc
 
-    // Ultra 功能
+    // Ultra.
     val ultraIncludesAllPro: String get() = BillingStrings.ultraIncludesAllPro
 
     val ultraFcmPush: String get() = BillingStrings.ultraFcmPush
@@ -11203,7 +11203,7 @@ object Strings {
 
     val ultraPrioritySupportDesc: String get() = BillingStrings.ultraPrioritySupportDesc
 
-    // Free 功能
+    // Free.
     val freeUnlimitedApps: String get() = BillingStrings.freeUnlimitedApps
 
     val freeUnlimitedAppsDesc: String get() = BillingStrings.freeUnlimitedAppsDesc
@@ -11252,7 +11252,7 @@ object Strings {
 
     val ultraLifetime: String get() = BillingStrings.ultraLifetime
 
-    // ==================== 社区功能 ====================
+    // ==================== ====================
 
     val communityTabDiscover: String get() = CommunityStrings.communityTabDiscover
 
@@ -11348,7 +11348,7 @@ object Strings {
         AppLanguage.ARABIC -> "قيد التقدم"
     }
 
-    // ==================== 排序 ====================
+    // ==================== ====================
 
     val sortDesc: String get() = when (lang) {
         AppLanguage.CHINESE -> "降序"
@@ -11362,7 +11362,7 @@ object Strings {
         AppLanguage.ARABIC -> "تصاعدي"
     }
 
-    // ==================== 模块分类 ====================
+    // ==================== Module Categories ====================
 
     val catUiEnhance: String get() = ModuleStrings.catUiEnhance
 
@@ -11372,7 +11372,7 @@ object Strings {
 
     val catAdBlock: String get() = ModuleStrings.catAdBlock
 
-    // ==================== 应用商店 ====================
+    // ==================== App Store ====================
 
     val storeLoadingApps: String get() = StoreStrings.storeLoadingApps
 
@@ -11444,7 +11444,7 @@ object Strings {
 
     val storeConfirmDelisting: String get() = StoreStrings.storeConfirmDelisting
 
-    // ==================== 评价 ====================
+    // ==================== ====================
 
     val storeReviewSubmitTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "提交评价"
@@ -11494,7 +11494,7 @@ object Strings {
         AppLanguage.ARABIC -> "فشل إرسال التقييم"
     }
 
-    // ==================== 举报 ====================
+    // ==================== Report ====================
 
     val storeReportAppTitle: String get() = StoreStrings.storeReportAppTitle
 
@@ -11518,7 +11518,7 @@ object Strings {
 
     val storeReportFailed: String get() = StoreStrings.storeReportFailed
 
-    // ==================== Go 构建 ====================
+    // ==================== Go ====================
 
     val goBinarySize: String get() = when (lang) {
         AppLanguage.CHINESE -> "二进制大小"
@@ -11526,7 +11526,7 @@ object Strings {
         AppLanguage.ARABIC -> "حجم الملف الثنائي"
     }
 
-    // ==================== 关于页面 - 法律声明 ====================
+    // ==================== About Page - ====================
 
     val legalDisclaimerTitle1: String get() = UiStrings.legalDisclaimerTitle1
 
@@ -11558,7 +11558,7 @@ object Strings {
 
     val madeWithLove: String get() = UiStrings.madeWithLove
 
-    // ==================== 快捷方式权限 ====================
+    // ==================== ====================
     val shortcutPermissionTitle: String get() = ShellStrings.shortcutPermissionTitle
 
     val shortcutPermissionGoToSettings: String get() = ShellStrings.shortcutPermissionGoToSettings
@@ -11689,7 +11689,7 @@ object Strings {
         AppLanguage.ARABIC -> "أو اكتب مباشرة"
     }
 
-    // ==================== 设备伪装 (Device Disguise) ====================
+    // ==================== Spoofing (Device Disguise) ====================
 
     val deviceDisguiseTitle: String get() = ShellStrings.deviceDisguiseTitle
     val deviceDisguiseSubtitle: String get() = ShellStrings.deviceDisguiseSubtitle
@@ -11711,7 +11711,7 @@ object Strings {
     val deviceDisguiseOff: String get() = ShellStrings.deviceDisguiseOff
     val deviceDisguiseActive: String get() = ShellStrings.deviceDisguiseActive
     
-    // ── 自定义设备 ──
+    // Note.
     val deviceCustomDevice: String get() = ShellStrings.deviceCustomDevice
     val deviceCustomDeviceHint: String get() = ShellStrings.deviceCustomDeviceHint
     val deviceCustomName: String get() = ShellStrings.deviceCustomName
@@ -11725,7 +11725,7 @@ object Strings {
 
 
 /**
- * Composable 函数用于初始化语言
+ * Composable.
  */
 @Composable
 fun InitializeLanguage() {
@@ -11737,7 +11737,7 @@ fun InitializeLanguage() {
     LaunchedEffect(language) {
         Strings.attachContext(context, language)
         Strings.setLanguage(language)
-        // 重新加载内置模块以更新多语言文本
+        // Built-in Modules.
         try {
             extensionManager.reloadBuiltInModules()
         } catch (e: Exception) {

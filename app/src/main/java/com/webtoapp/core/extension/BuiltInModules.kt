@@ -3,14 +3,14 @@ package com.webtoapp.core.extension
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 内置扩展模块
- * 
- * 所有模块都使用统一面板系统，UI 整齐美观不重叠
+ * extension.
+ *
+ * use UI not.
  */
 object BuiltInModules {
     
     /**
-     * 获取所有内置模块
+     * Get.
      */
     fun getAll(): List<ExtensionModule> = listOf(
         videoDownloader(),
@@ -25,7 +25,6 @@ object BuiltInModules {
         elementBlocker()
     )
     
-    // ==================== 通用视频下载器 ====================
     
     private fun videoDownloader() = ExtensionModule(
         id = "builtin-video-downloader",
@@ -49,7 +48,6 @@ object BuiltInModules {
         )
     )
 
-    // ==================== B站视频提取 ====================
     
     private fun bilibiliVideoExtractor() = ExtensionModule(
         id = "builtin-bilibili-extractor",
@@ -74,7 +72,6 @@ object BuiltInModules {
         )
     )
     
-    // ==================== 抖音视频提取 ====================
     
     private fun douyinVideoExtractor() = ExtensionModule(
         id = "builtin-douyin-extractor",
@@ -99,7 +96,6 @@ object BuiltInModules {
         )
     )
     
-    // ==================== 小红书提取 ====================
     
     private fun xiaohongshuExtractor() = ExtensionModule(
         id = "builtin-xiaohongshu-extractor",
@@ -124,7 +120,6 @@ object BuiltInModules {
         )
     )
 
-    // ==================== 视频增强 ====================
     
     private fun videoEnhancer() = ExtensionModule(
         id = "builtin-video-enhancer",
@@ -156,7 +151,6 @@ object BuiltInModules {
         )
     )
     
-    // ==================== 网页分析 ====================
     
     private fun webAnalyzer() = ExtensionModule(
         id = "builtin-web-analyzer",
@@ -180,7 +174,6 @@ object BuiltInModules {
         )
     )
     
-    // ==================== 深色模式 ====================
     
     private fun advancedDarkMode() = ExtensionModule(
         id = "builtin-dark-mode",
@@ -204,7 +197,6 @@ object BuiltInModules {
         )
     )
 
-    // ==================== 隐私保护 ====================
     
     private fun privacyProtection() = ExtensionModule(
         id = "builtin-privacy-protection",
@@ -222,11 +214,10 @@ object BuiltInModules {
         code = PRIVACY_PROTECTION_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
         uiConfig = ModuleUiConfig(
-            type = ModuleUiType.FLOATING_BUTTON  // 保持默认，因为有设置面板
+            type = ModuleUiType.FLOATING_BUTTON  // Note.
         )
     )
     
-    // ==================== 元素屏蔽器 ====================
     
     private fun elementBlocker() = ExtensionModule(
         id = "builtin-element-blocker",
@@ -254,7 +245,6 @@ object BuiltInModules {
         )
     )
     
-    // ==================== 内容增强 ====================
     
     private fun contentEnhancer() = ExtensionModule(
         id = "builtin-content-enhancer",
@@ -286,13 +276,12 @@ object BuiltInModules {
     )
 
 
-    // ==================== 模块代码定义 ====================
     
     private const val VIDEO_DOWNLOADER_CODE = """
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -352,7 +341,7 @@ object BuiltInModules {
     'use strict';
     if (!location.hostname.includes('bilibili.com')) return;
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -414,7 +403,7 @@ object BuiltInModules {
     'use strict';
     if (!location.hostname.includes('douyin.com')) return;
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -480,7 +469,7 @@ object BuiltInModules {
     'use strict';
     if (!location.hostname.includes('xiaohongshu.com') && !location.hostname.includes('xhslink.com')) return;
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -564,7 +553,7 @@ object BuiltInModules {
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -628,7 +617,7 @@ object BuiltInModules {
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -693,7 +682,7 @@ object BuiltInModules {
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -780,7 +769,7 @@ object BuiltInModules {
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -851,7 +840,7 @@ object BuiltInModules {
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -923,7 +912,7 @@ object BuiltInModules {
 (function() {
     'use strict';
     
-    // 多语言支持
+    // multiple Supports.
     const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
@@ -979,7 +968,7 @@ object BuiltInModules {
     let hoveredElement = null;
     let highlightOverlay = null;
     
-    // Create高亮覆盖层
+    // Create.
     function createOverlay() {
         if (highlightOverlay) return;
         highlightOverlay = document.createElement('div');
@@ -988,7 +977,7 @@ object BuiltInModules {
         document.body.appendChild(highlightOverlay);
     }
     
-    // Generate元素的唯一选择器
+    // Generate.
     function getSelector(el) {
         if (!el || el === document.body || el === document.documentElement) return null;
         if (el.id) return '#' + CSS.escape(el.id);
@@ -1015,7 +1004,7 @@ object BuiltInModules {
         return path.join(' > ');
     }
     
-    // App屏蔽规则
+    // App rules.
     function applyBlockedRules() {
         let styleEl = document.getElementById('wta-blocked-styles');
         if (!styleEl) {
@@ -1030,13 +1019,12 @@ object BuiltInModules {
         }
     }
     
-    // Save屏蔽规则
+    // Save rules.
     function saveRules() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(blockedSelectors));
         applyBlockedRules();
     }
     
-    // 屏蔽元素
     function blockElement(selector) {
         if (!selector || blockedSelectors.includes(selector)) return;
         blockedSelectors.push(selector);
@@ -1044,7 +1032,7 @@ object BuiltInModules {
         __WTA_MODULE_UI__.toast(T.blocked);
     }
     
-    // Cancel屏蔽
+    // Cancel.
     function unblockElement(index) {
         blockedSelectors.splice(index, 1);
         saveRules();
@@ -1052,7 +1040,6 @@ object BuiltInModules {
         __WTA_MODULE_UI__.updatePanel(MODULE.id, getPanelHtml());
     }
     
-    // 鼠标移动事件
     function onMouseMove(e) {
         if (!selectMode) return;
         const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -1072,7 +1059,7 @@ object BuiltInModules {
         }
     }
     
-    // 单击选择
+    // single.
     function onClick(e) {
         if (!selectMode || !hoveredElement) return;
         e.preventDefault();
@@ -1083,7 +1070,6 @@ object BuiltInModules {
         }
     }
     
-    // 双击屏蔽
     function onDblClick(e) {
         if (!selectMode || !hoveredElement) return;
         e.preventDefault();
@@ -1095,7 +1081,6 @@ object BuiltInModules {
         }
     }
     
-    // 进入选择模式
     function enterSelectMode() {
         selectMode = true;
         createOverlay();
@@ -1106,7 +1091,7 @@ object BuiltInModules {
         __WTA_MODULE_UI__.toast(T.selectMode);
         __WTA_MODULE_UI__.closePanel();
         
-        // ESC 退出
+        // ESC.
         document.addEventListener('keydown', function escHandler(e) {
             if (e.key === 'Escape') {
                 exitSelectMode();
@@ -1115,7 +1100,6 @@ object BuiltInModules {
         });
     }
     
-    // 退出选择模式
     function exitSelectMode() {
         selectMode = false;
         hoveredElement = null;
@@ -1126,7 +1110,6 @@ object BuiltInModules {
         document.body.style.cursor = '';
     }
     
-    // 清除所有屏蔽
     function clearAll() {
         blockedSelectors = [];
         saveRules();

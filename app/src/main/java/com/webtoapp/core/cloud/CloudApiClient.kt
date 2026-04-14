@@ -26,9 +26,9 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * 云服务统一 API 客户端
+ * Note: brief English comment.
  *
- * 对接服务器端全部非认证 API（激活码、设备、公告、更新、远程配置、项目管理、分析等）
+ * Note: brief English comment.
  */
 class CloudApiClient(private val tokenManager: TokenManager, context: android.content.Context? = null) {
 
@@ -1061,7 +1061,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 val requestBuilder = Request.Builder()
                     .url("$BASE_URL/api/v1/community/users/$userId")
                     .get()
-                // 可选认证：有 token 时服务端可计算 is_following 字段
+                // Note: brief English comment.
                 tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
                 val response = client.newCall(requestBuilder.build()).execute()
                 val responseBody = response.body?.string() ?: ""
@@ -1227,12 +1227,12 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 下载模块（获取 share_code + 计数器 +1）
+    /** Note: brief English comment.
      *
-     * 优先级：
-     * 1. storage_url_github (gzip 压缩, 通过 gh-proxy 代理)
-     * 2. storage_url_gitee  (gzip 压缩)
-     * 3. share_code (原始数据, 数据库 fallback)
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun downloadStoreModule(moduleId: Int): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
@@ -1250,7 +1250,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 val storageUrlGitee = data?.get("storage_url_gitee")?.let { if (it.isJsonNull) null else it.asString }
                 val shareCode = data?.get("share_code")?.let { if (it.isJsonNull) null else it.asString }
 
-                // 优先从 GitHub/Gitee 下载 gzip 压缩的模块数据
+                // Note: brief English comment.
                 val downloadedCode = downloadGzipModule(storageUrlGithub)
                     ?: downloadGzipModule(storageUrlGitee)
                     ?: shareCode
@@ -1275,13 +1275,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             val response = client.newCall(request).execute()
             if (response.isSuccessful) {
                 val bytes = response.body?.bytes() ?: return null
-                // 检查是否是 gzip 格式 (magic bytes: 0x1f 0x8b)
+                // Note: brief English comment.
                 if (bytes.size >= 2 && bytes[0] == 0x1f.toByte() && bytes[1] == 0x8b.toByte()) {
                     java.util.zip.GZIPInputStream(java.io.ByteArrayInputStream(bytes)).use { gzis ->
                         gzis.bufferedReader(Charsets.UTF_8).readText()
                     }
                 } else {
-                    // 非 gzip，直接作为文本返回
+                    // Note: brief English comment.
                     String(bytes, Charsets.UTF_8)
                 }
             } else null
@@ -2344,7 +2344,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 search?.let { urlBuilder.append("&search=$it") }
                 postType?.let { urlBuilder.append("&post_type=$it") }
                 val requestBuilder = Request.Builder().url(urlBuilder.toString()).get()
-                // 可选认证：有 token 就带上（用于 is_liked 等个性化字段），没有也能正常请求
+                // Note: brief English comment.
                 tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
                 val response = client.newCall(requestBuilder.build()).execute()
                 val responseBody = response.body?.string() ?: ""

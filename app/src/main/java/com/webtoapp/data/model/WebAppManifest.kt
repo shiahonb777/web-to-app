@@ -4,13 +4,13 @@ import com.google.gson.JsonParser
 import com.webtoapp.data.converter.Converters
 
 /**
- * 将 WebApp 序列化为 Manifest JSON 字符串。
- * 用于云端同步、备份、跨设备迁移。
+ * Serialize a WebApp to the manifest JSON string.
+ * Used for cloud sync, backup, and cross-device migration.
  */
 fun WebApp.toManifestJson(): String = Converters.gson.toJson(this)
 
 /**
- * Manifest 工具类。
+ * Manifest utilities.
  */
 object ManifestUtils {
     fun fromManifestJson(json: String, overrideId: Long? = null): WebApp? {

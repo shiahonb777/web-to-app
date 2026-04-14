@@ -21,10 +21,8 @@ import com.webtoapp.util.threadLocalCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
-import java.util.*
-
-/**
- * 应用导出器 - 用于创建快捷方式和导出配置
+import java.util.*/**
+ * Note: brief English comment.
  */
 class AppExporter(private val context: Context) {
 
@@ -33,7 +31,7 @@ class AppExporter(private val context: Context) {
         private const val SHORTCUT_ICON_SIZE = 192
         private const val BUFFER_SIZE = 8192
         
-        // Gson 单例
+        // Note: brief English comment.
         private val gson: Gson by lazy {
             GsonBuilder().setPrettyPrinting().create()
         }
@@ -42,19 +40,19 @@ class AppExporter(private val context: Context) {
         private val SANITIZE_FILENAME_REGEX = Regex("[^a-zA-Z0-9_\\-\\u4e00-\\u9fa5]")
         private val SANITIZE_PACKAGE_REGEX = Regex("[^a-z0-9]")
         
-        // Date格式化器（线程安全）
+        // Note: brief English comment.
         private val dateFormat: ThreadLocal<SimpleDateFormat> = threadLocalCompat {
             SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         }
     }
 
     /**
-     * 创建桌面快捷方式 - 增强兼容性版本
-     * 支持 Android 7.0+ 及各厂商定制系统
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun createShortcut(webApp: WebApp): ShortcutResult {
         return try {
-            // 准备图标
+            // Note: brief English comment.
             val iconBitmap = prepareIconBitmap(webApp)
             val icon = if (iconBitmap != null) {
                 IconCompat.createWithBitmap(iconBitmap)
@@ -62,7 +60,7 @@ class AppExporter(private val context: Context) {
                 IconCompat.createWithResource(context, android.R.drawable.sym_def_app_icon)
             }
 
-            // Create启动Intent
+            // Note: brief English comment.
             val launchIntent = Intent(context, WebViewActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 putExtra("app_id", webApp.id)
@@ -70,14 +68,14 @@ class AppExporter(private val context: Context) {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
-            // 根据系统版本选择创建方式
+            // Note: brief English comment.
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
-                    // Android 8.0+ 使用 ShortcutManager API
+                    // Note: brief English comment.
                     createShortcutApi26(webApp, icon, launchIntent)
                 }
                 else -> {
-                    // Android 7.x 使用传统广播方式
+                    // Note: brief English comment.
                     createShortcutLegacy(webApp, iconBitmap, launchIntent)
                 }
             }
@@ -87,22 +85,22 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * Android 8.0+ 创建快捷方式
+     * Note: brief English comment.
      */
     private fun createShortcutApi26(
         webApp: WebApp,
         icon: IconCompat,
         launchIntent: Intent
     ): ShortcutResult {
-        // Check是否支持固定快捷方式
+        // Note: brief English comment.
         if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
-            // 尝试引导用户到设置页面
+            // Note: brief English comment.
             return tryOpenShortcutSettings() ?: ShortcutResult.Error(
                 "当前启动器不支持创建快捷方式，请尝试更换默认桌面或手动授权"
             )
         }
 
-        // Create快捷方式信息
+        // Note: brief English comment.
         val shortcutInfo = ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")
             .setShortLabel(webApp.name.take(10)) // 限制长度避免截断
             .setLongLabel(webApp.name.take(25))
@@ -111,7 +109,7 @@ class AppExporter(private val context: Context) {
             .setAlwaysBadged() // Show应用角标
             .build()
 
-        // Create回调 PendingIntent
+        // Note: brief English comment.
         val callbackIntent = Intent(ACTION_SHORTCUT_CREATED).apply {
             `package` = context.packageName
         }
@@ -122,7 +120,7 @@ class AppExporter(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Request创建快捷方式
+        // Note: brief English comment.
         val result = ShortcutManagerCompat.requestPinShortcut(
             context,
             shortcutInfo,
@@ -132,13 +130,13 @@ class AppExporter(private val context: Context) {
         return if (result) {
             ShortcutResult.Success
         } else {
-            // Check是否是权限问题
+            // Note: brief English comment.
             checkAndRequestPermission()
         }
     }
 
     /**
-     * Android 7.x 传统广播方式创建快捷方式
+     * Note: brief English comment.
      */
     @Suppress("DEPRECATION")
     private fun createShortcutLegacy(
@@ -166,20 +164,20 @@ class AppExporter(private val context: Context) {
 
         context.sendBroadcast(shortcutIntent)
         
-        // 传统方式无法确认是否成功，返回待确认状态
+        // Note: brief English comment.
         return ShortcutResult.Pending("快捷方式请求已发送，请检查桌面")
     }
 
     /**
-     * 准备图标 Bitmap
-     * 支持本地文件路径和 content:// URI
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun prepareIconBitmap(webApp: WebApp): Bitmap? {
         webApp.iconPath?.let { path ->
             var original: Bitmap? = null
             try {
                 original = when {
-                    // Local文件路径（绝对路径）
+                    // Note: brief English comment.
                     path.startsWith("/") -> {
                         val file = File(path)
                         if (file.exists()) {
@@ -203,7 +201,7 @@ class AppExporter(private val context: Context) {
                 }
                 
                 if (original != null) {
-                    // 调整为适合快捷方式的尺寸 (192x192)
+                    // Note: brief English comment.
                     val scaled = Bitmap.createScaledBitmap(original, SHORTCUT_ICON_SIZE, SHORTCUT_ICON_SIZE, true)
                     if (scaled !== original) {
                         original.recycle()
@@ -213,7 +211,7 @@ class AppExporter(private val context: Context) {
                     return null
                 }
             } catch (e: Exception) {
-                // Icon加载失败，确保回收
+                // Note: brief English comment.
                 original?.recycle()
             }
         }
@@ -221,7 +219,7 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 检查并请求快捷方式权限（针对国产 ROM）
+     * Note: brief English comment.
      */
     private fun checkAndRequestPermission(): ShortcutResult {
         val manufacturer = Build.MANUFACTURER.lowercase()
@@ -254,7 +252,7 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 尝试打开快捷方式设置页面
+     * Note: brief English comment.
      */
     private fun tryOpenShortcutSettings(): ShortcutResult? {
         return try {
@@ -270,7 +268,7 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 导出配置为JSON文件
+     * Note: brief English comment.
      */
     fun exportConfig(webApp: WebApp): ExportResult {
         return try {
@@ -283,14 +281,14 @@ class AppExporter(private val context: Context) {
             val fileName = "${webApp.name}_config_$timestamp.json"
             val file = File(exportDir, fileName)
 
-            // Create导出数据结构
+            // Note: brief English comment.
             val exportData = AppExportData(
                 version = 1,
                 exportTime = System.currentTimeMillis(),
                 app = webApp.toExportFormat()
             )
 
-            // 写入文件
+            // Note: brief English comment.
             FileOutputStream(file).buffered(BUFFER_SIZE).use { stream ->
                 stream.write(gson.toJson(exportData).toByteArray())
             }
@@ -302,7 +300,7 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 导出为完整项目模板
+     * Note: brief English comment.
      */
     fun exportAsTemplate(webApp: WebApp): ExportResult {
         return try {
@@ -314,7 +312,7 @@ class AppExporter(private val context: Context) {
             }
             projectDir.mkdirs()
 
-            // Create项目结构
+            // Note: brief English comment.
             createTemplateProject(projectDir, webApp)
 
             ExportResult.Success(projectDir.absolutePath)
@@ -324,7 +322,7 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 获取导出目录
+     * Note: brief English comment.
      */
     private fun getExportDirectory(): File {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -335,10 +333,10 @@ class AppExporter(private val context: Context) {
     }
 
     /**
-     * 创建模板项目
+     * Note: brief English comment.
      */
     private fun createTemplateProject(projectDir: File, webApp: WebApp) {
-        // Create目录结构
+        // Note: brief English comment.
         val appDir = File(projectDir, "app/src/main")
         appDir.mkdirs()
         File(appDir, "java/com/webtoapp/generated").mkdirs()
@@ -354,7 +352,7 @@ class AppExporter(private val context: Context) {
         // GenerateAndroidManifest.xml
         File(appDir, "AndroidManifest.xml").writeText(generateManifest())
 
-        // Generate配置类
+        // Note: brief English comment.
         File(appDir, "java/com/webtoapp/generated/AppConfig.kt")
             .writeText(generateAppConfig(webApp))
 
@@ -362,7 +360,7 @@ class AppExporter(private val context: Context) {
         File(appDir, "res/values/strings.xml").writeText(generateStrings(webApp))
         File(appDir, "res/xml/network_security_config.xml").writeText(generateNetworkSecurityConfig())
 
-        // Save图标
+        // Note: brief English comment.
         webApp.iconPath?.let { path ->
             try {
                 val uri = Uri.parse(path)
@@ -372,7 +370,7 @@ class AppExporter(private val context: Context) {
                     }
                 }
             } catch (e: Exception) {
-                // 忽略图标保存错误
+                // Note: brief English comment.
             }
         }
 
@@ -481,28 +479,28 @@ dependencies {
 package com.webtoapp.generated
 
 /**
- * 自动生成的应用配置
+ * Note: brief English comment.
  */
 object AppConfig {
     const val APP_NAME = "${webApp.name}"
     const val TARGET_URL = "${webApp.url}"
     
-    // Activation码配置
+    // Note: brief English comment.
     const val ACTIVATION_ENABLED = ${webApp.activationEnabled}
     val ACTIVATION_CODES = listOf(${webApp.activationCodes.joinToString { "\"$it\"" }})
     
-    // Ad拦截配置
+    // Note: brief English comment.
     const val AD_BLOCK_ENABLED = ${webApp.adBlockEnabled}
     val AD_BLOCK_RULES = listOf(${webApp.adBlockRules.joinToString { "\"$it\"" }})
     
-    // Announcement配置
+    // Note: brief English comment.
     const val ANNOUNCEMENT_ENABLED = ${webApp.announcementEnabled}
     const val ANNOUNCEMENT_TITLE = "${webApp.announcement?.title ?: ""}"
     const val ANNOUNCEMENT_CONTENT = "${webApp.announcement?.content ?: ""}"
     const val ANNOUNCEMENT_LINK = "${webApp.announcement?.linkUrl ?: ""}"
     const val ANNOUNCEMENT_SHOW_ONCE = ${webApp.announcement?.showOnce ?: true}
     
-    // WebView配置
+    // Note: brief English comment.
     const val JAVASCRIPT_ENABLED = ${webApp.webViewConfig.javaScriptEnabled}
     const val DOM_STORAGE_ENABLED = ${webApp.webViewConfig.domStorageEnabled}
     const val ZOOM_ENABLED = ${webApp.webViewConfig.zoomEnabled}
@@ -570,7 +568,7 @@ object AppConfig {
 }
 
 /**
- * 导出数据结构
+ * Note: brief English comment.
  */
 data class AppExportData(
     val version: Int,
@@ -579,24 +577,24 @@ data class AppExportData(
 )
 
 /**
- * 快捷方式创建结果
+ * Note: brief English comment.
  */
 sealed class ShortcutResult {
-    /** 创建成功 */
+    /** Note: brief English comment. */
     data object Success : ShortcutResult()
     
-    /** 请求已发送，等待用户确认（Android 7.x 传统方式） */
+    /** Note: brief English comment. */
     data class Pending(val message: String) : ShortcutResult()
     
-    /** 需要用户手动授予权限（国产 ROM 限制） */
+    /** Note: brief English comment. */
     data class PermissionRequired(val message: String) : ShortcutResult()
     
-    /** 创建失败 */
+    /** Note: brief English comment. */
     data class Error(val message: String) : ShortcutResult()
 }
 
 /**
- * 导出结果
+ * Note: brief English comment.
  */
 sealed class ExportResult {
     data class Success(val path: String) : ExportResult()

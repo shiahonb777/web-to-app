@@ -5,18 +5,18 @@ import android.util.Log
 import com.webtoapp.data.model.AdConfig
 
 /**
- * 广告管理器 - 预留广告集成接口
+ * Ad manager placeholder for wiring platform SDKs.
  *
- * 注意：实际的广告SDK集成需要：
- * 1. 在build.gradle中添加广告SDK依赖
- * 2. 在AndroidManifest.xml中添加广告配置
- * 3. 实现各广告平台的初始化和展示逻辑
+ * Full integration needs:
+ * 1. Add the SDK dependency in build.gradle
+ * 2. Add the ad configuration in AndroidManifest.xml
+ * 3. Implement initialization and display for each platform
  *
- * 支持的广告平台接口预留：
+ * Placeholder hooks preserved for:
  * - Google AdMob
- * - 穿山甲（字节跳动）
- * - 优量汇（腾讯）
- * - 快手联盟
+ * - Pangle (ByteDance)
+ * - Tencent Ad Exchange
+ * - Kuaishou Alliance
  */
 class AdManager(private val context: Context) {
 
@@ -24,29 +24,28 @@ class AdManager(private val context: Context) {
     private var adConfig: AdConfig? = null
 
     /**
-     * 初始化广告SDK
+     * Initialize ad SDKs
      */
     fun initialize(config: AdConfig) {
         if (isInitialized) return
         adConfig = config
 
-        // 广告 SDK 未集成，需要根据实际使用的广告平台进行初始化
-        // 示例：Google AdMob初始化
-        // MobileAds.initialize(context) {}
+        // Ad SDK wiring goes here per selected platform.
+        // Example: MobileAds.initialize(context) {}
         Log.d(TAG, "AdManager initialized with config: banner=${config.bannerEnabled}, interstitial=${config.interstitialEnabled}, splash=${config.splashEnabled}")
 
         isInitialized = true
     }
 
     /**
-     * 显示横幅广告
+     * Show banner ad
      */
     fun showBannerAd(container: android.view.ViewGroup) {
         val config = adConfig ?: return
         if (!config.bannerEnabled || config.bannerId.isBlank()) return
 
-        // 广告 SDK 未集成，跳过横幅广告展示
-        // 示例：
+        // Ad SDK not integrated, skip banner display
+        // Example:
         // val adView = AdView(context)
         // adView.adSize = AdSize.BANNER
         // adView.adUnitId = config.bannerId
@@ -56,7 +55,7 @@ class AdManager(private val context: Context) {
     }
 
     /**
-     * 加载插屏广告
+     * Load interstitial ad
      */
     fun loadInterstitialAd(onLoaded: () -> Unit, onFailed: (String) -> Unit) {
         val config = adConfig ?: return
@@ -65,8 +64,8 @@ class AdManager(private val context: Context) {
             return
         }
 
-        // 广告 SDK 未集成，跳过插屏广告加载
-        // 示例：
+        // Ad SDK not integrated, skip loading interstitials
+        // Example:
         // InterstitialAd.load(context, config.interstitialId, AdRequest.Builder().build(),
         //     object : InterstitialAdLoadCallback() {
         //         override fun onAdLoaded(ad: InterstitialAd) { onLoaded() }
@@ -77,23 +76,23 @@ class AdManager(private val context: Context) {
     }
 
     /**
-     * 显示插屏广告
+     * Show interstitial ad
      */
     fun showInterstitialAd(activity: android.app.Activity, onDismissed: () -> Unit) {
-        // 广告 SDK 未集成，直接回调
-        // 示例：
+        // Ad SDK not integrated, callback immediately
+        // Example:
         // interstitialAd?.show(activity)
         // interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
         //     override fun onAdDismissedFullScreenContent() { onDismissed() }
         // }
         Log.d(TAG, "showInterstitialAd called but ad SDK not integrated")
 
-        // 暂时直接回调
+        // Temporarily invoke the callback immediately
         onDismissed()
     }
 
     /**
-     * 显示开屏广告
+     * Show splash ad
      */
     fun showSplashAd(
         activity: android.app.Activity,
@@ -111,22 +110,22 @@ class AdManager(private val context: Context) {
             return
         }
 
-        // 广告 SDK 未集成，模拟延迟后回调
-        // 开屏广告通常需要：
-        // 1. 创建广告容器视图
-        // 2. 加载广告
-        // 3. 设置超时机制
-        // 4. 处理广告关闭回调
+        // Ad SDK not integrated, simulate delay before callback
+        // Splash ads typically require:
+        // 1. Create the ad container view
+        // 2. Load the ad
+        // 3. Set up a timeout
+        // 4. Handle the close callback
         Log.d(TAG, "showSplashAd called but ad SDK not integrated, duration=${config.splashDuration}s")
 
-        // 暂时模拟延迟后回调
+        // Simulate the delayed callback for now
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             onFinished()
         }, (config.splashDuration * 1000).toLong())
     }
 
     /**
-     * 释放资源
+     * Release resources
      */
     fun destroy() {
         Log.d(TAG, "AdManager destroyed")
@@ -139,7 +138,7 @@ class AdManager(private val context: Context) {
     }
 
     /**
-     * 检查广告是否就绪
+     * Check if the requested ad type is ready
      */
     fun isAdReady(adType: AdType): Boolean {
         val config = adConfig ?: return false
@@ -152,7 +151,7 @@ class AdManager(private val context: Context) {
 }
 
 /**
- * 广告类型
+ * Ad types
  */
 enum class AdType {
     BANNER,
@@ -161,7 +160,7 @@ enum class AdType {
 }
 
 /**
- * 广告回调接口
+ * Ad callback interface
  */
 interface AdCallback {
     fun onAdLoaded()

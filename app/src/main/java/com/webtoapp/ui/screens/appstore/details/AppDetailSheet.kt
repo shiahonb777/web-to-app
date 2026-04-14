@@ -988,7 +988,7 @@ internal fun AppDetailSheet(
 }
 
 /**
- * 举报对话框
+ * dialog
  */
 @Composable
 internal fun ReportDialog(
@@ -1119,7 +1119,7 @@ internal fun ReportDialog(
 }
 
 /**
- * Twitter/X 物理弹簧操作按钮 — 应用商店版
+ * Twitter/X spring button- appstore
  */
 @Composable
 internal fun AppPhysicsActionButton(
@@ -1290,5 +1290,5 @@ internal fun formatDownloads(n: Int): String = when {
 
 // ════════════════════════════════════════════════
 // ════════════════════════════════════════════════
-// 下载管理 Bottom Sheet (统一：活跃下载 + 已下载应用)
+// downloadmanagement Bottom Sheet( unified: download + downloadapp)
 // ════════════════════════════════════════════════

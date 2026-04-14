@@ -19,7 +19,7 @@ internal fun utilityFunctions() = CodeSnippetCategory(
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
 }
-// 使用示例
+// use.
 const debouncedSearch = debounce((query) => {
     console.log('搜索:', query);
 }, 500);""",
@@ -39,7 +39,7 @@ const debouncedSearch = debounce((query) => {
         }
     };
 }
-// 使用示例
+// use.
 const throttledScroll = throttle(() => {
     console.log('滚动位置:', window.scrollY);
 }, 100);""",
@@ -86,7 +86,7 @@ waitForElement('.target-class').then(el => console.log('找到元素:', el));"""
         console.log('复制成功');
         return true;
     } catch (err) {
-        // 降级方案
+        // level Approach.
         const textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.cssText = 'position: fixed; opacity: 0;';
@@ -142,7 +142,7 @@ console.log(randomString(16));""",
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 使用示例
+// use.
 async function example() {
     console.log('开始');
     await sleep(2000);
@@ -166,7 +166,7 @@ async function example() {
     }
 }
 
-// 使用示例
+// use.
 retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
                 tags = listOf(Strings.tagRetry, Strings.tagErrorHandle)
             )
@@ -207,11 +207,11 @@ autoClick('.close-btn', 2000);""",
         }
     };
     
-    click(); // 立即执行一次
+    click(); // Note.
     return setInterval(click, interval);
 }
 
-// 每5秒点击一次
+// 5.
 const timer = autoClickInterval('.refresh-btn', 5000);
 // Stop: clearInterval(timer);""",
                 tags = listOf(Strings.tagTimer, Strings.tagClick)
@@ -221,7 +221,7 @@ const timer = autoClickInterval('.refresh-btn', 5000);
                 name = Strings.snippetAutoFillSubmit,
                 description = Strings.snippetAutoFillSubmitDesc,
                 code = """async function autoFillAndSubmit(formData, submitSelector) {
-    // 填写表单
+    // single.
     for (const [name, value] of Object.entries(formData)) {
         const input = document.querySelector(`[name="${"$"}{name}"], #${"$"}{name}`);
         if (input) {
@@ -232,7 +232,6 @@ const timer = autoClickInterval('.refresh-btn', 5000);
         }
     }
     
-    // 点击提交
     if (submitSelector) {
         await new Promise(r => setTimeout(r, 500));
         document.querySelector(submitSelector)?.click();
@@ -401,7 +400,7 @@ function getSelector(el) {
     return el.tagName.toLowerCase();
 }
 
-// 按 Ctrl+Shift+I 切换
+// by Ctrl+Shift+I.
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'I') {
         inspecting = !inspecting;
@@ -443,7 +442,7 @@ showPerformance();""",
                 description = Strings.snippetNetworkLogDesc,
                 code = """const networkLog = [];
 
-// 拦截 Fetch
+// intercept Fetch.
 const originalFetch = window.fetch;
 window.fetch = async function(url, options = {}) {
     const start = Date.now();
@@ -458,7 +457,7 @@ window.fetch = async function(url, options = {}) {
     return response;
 };
 
-// 拦截 XHR
+// intercept XHR.
 const originalOpen = XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open = function(method, url) {
     this._logData = { type: 'xhr', url, method, start: Date.now() };
@@ -475,7 +474,6 @@ XMLHttpRequest.prototype.send = function() {
     return originalSend.apply(this, arguments);
 };
 
-// 查看日志
 window.showNetworkLog = () => console.table(networkLog);""",
                 tags = listOf(Strings.tagNetwork, Strings.tagLog)
             )

@@ -59,7 +59,7 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * ZIP 导入区域
+ * ZIP importarea
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -74,7 +74,7 @@ internal fun ZipImportSection(
     onReimport: () -> Unit
 ) {
     if (zipImporting) {
-        // 解压中
+        // Note
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -91,10 +91,10 @@ internal fun ZipImportSection(
             }
         }
     } else if (zipAnalysis != null) {
-        // 分析结果展示
+        // Note
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // 标题 + 重新导入按钮
+                // + importbutton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -134,7 +134,7 @@ internal fun ZipImportSection(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 入口文件
+                // file
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -178,7 +178,7 @@ internal fun ZipImportSection(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 资源统计
+                // Note
                 Text(
                     text = Strings.zipResourceStats,
                     style = MaterialTheme.typography.labelMedium,
@@ -186,7 +186,7 @@ internal fun ZipImportSection(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 资源类型标签
+                // typelabel
                 val stats = zipAnalysis.stats
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -209,7 +209,7 @@ internal fun ZipImportSection(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 文件总数和大小
+                // file
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -226,7 +226,7 @@ internal fun ZipImportSection(
                     )
                 }
                 
-                // 查看文件列表按钮
+                // filelistbutton
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onShowFileList,
@@ -243,7 +243,7 @@ internal fun ZipImportSection(
             }
         }
         
-        // 警告信息
+        // warning
         if (zipAnalysis.warnings.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -275,7 +275,7 @@ internal fun ZipImportSection(
             }
         }
     } else {
-        // 初始状态：选择 ZIP
+        // state: select ZIP
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -307,7 +307,7 @@ internal fun ZipImportSection(
                     Text(Strings.selectZipFile)
                 }
                 
-                // 错误信息
+                // error
                 if (zipError != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     EnhancedElevatedCard(
@@ -340,7 +340,7 @@ internal fun ZipImportSection(
 }
 
 /**
- * ZIP 入口文件选择对话框
+ * ZIP fileselectdialog
  */
 @Composable
 internal fun ZipEntryFileDialog(
@@ -424,7 +424,7 @@ internal fun ZipEntryFileDialog(
 }
 
 /**
- * ZIP 文件列表对话框
+ * ZIP filelistdialog
  */
 @Composable
 internal fun ZipFileListDialog(
@@ -459,7 +459,7 @@ internal fun ZipFileListDialog(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // 按资源类型分组展示
+                // type
                 analysis.stats.forEach { stat ->
                     item {
                         Text(

@@ -5,12 +5,12 @@ import com.webtoapp.data.model.WebApp
 import kotlinx.coroutines.flow.Flow
 
 /**
- * WebApp 数据仓库。
+ * WebApp repository.
  *
- * 这层现在只保留真正有业务意义的封装：
- * - 单条 CRUD
- * - 批量导入/批量更新
- * - 分类解绑
+ * Keeps only meaningful wrappers:
+ * - single-record CRUD
+ * - bulk import/update
+ * - category unlinking
  */
 class WebAppRepository(private val webAppDao: WebAppDao) {
 

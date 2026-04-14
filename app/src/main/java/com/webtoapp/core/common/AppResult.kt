@@ -1,10 +1,10 @@
 package com.webtoapp.core.common
 
 /**
- * 统一结果封装
- * 替代散落各处的 try-catch + nullable 返回值
+ * Note
+ * Note
  *
- * 用法：
+ * Note
  * ```
  * suspend fun fetchData(): AppResult<Data> = AppResult.runCatching {
  *     api.getData()
@@ -30,7 +30,7 @@ sealed class AppResult<out T> {
     val isError: Boolean get() = this is Error
 
     /**
-     * 成功时返回数据，失败时返回 null
+     * Note
      */
     fun getOrNull(): T? = when (this) {
         is Success -> data
@@ -38,7 +38,7 @@ sealed class AppResult<out T> {
     }
 
     /**
-     * 成功时返回数据，失败时返回默认值
+     * Note
      */
     fun getOrDefault(default: @UnsafeVariance T): T = when (this) {
         is Success -> data
@@ -46,7 +46,7 @@ sealed class AppResult<out T> {
     }
 
     /**
-     * 成功时返回数据，失败时抛出异常
+     * Note
      */
     fun getOrThrow(): T = when (this) {
         is Success -> data
@@ -54,7 +54,7 @@ sealed class AppResult<out T> {
     }
 
     /**
-     * 成功时映射数据
+     * Note
      */
     inline fun <R> map(transform: (T) -> R): AppResult<R> = when (this) {
         is Success -> Success(transform(data))
@@ -62,7 +62,7 @@ sealed class AppResult<out T> {
     }
 
     /**
-     * 成功时执行操作
+     * Note
      */
     inline fun onSuccess(action: (T) -> Unit): AppResult<T> {
         if (this is Success) action(data)
@@ -70,7 +70,7 @@ sealed class AppResult<out T> {
     }
 
     /**
-     * 失败时执行操作
+     * Note
      */
     inline fun onError(action: (Error) -> Unit): AppResult<T> {
         if (this is Error) action(this)
@@ -79,7 +79,7 @@ sealed class AppResult<out T> {
 
     companion object {
         /**
-         * 安全执行代码块，自动捕获异常
+         * Note
          */
         inline fun <T> runCatching(
             errorMessage: String = "Operation failed",
@@ -97,7 +97,7 @@ sealed class AppResult<out T> {
         }
 
         /**
-         * 安全执行挂起代码块
+         * Note
          */
         suspend inline fun <T> suspendRunCatching(
             errorMessage: String = "Operation failed",
@@ -117,7 +117,7 @@ sealed class AppResult<out T> {
 }
 
 /**
- * 统一错误码
+ * Note
  */
 enum class ErrorCode {
     UNKNOWN,

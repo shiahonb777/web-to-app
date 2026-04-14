@@ -10,7 +10,7 @@ import com.webtoapp.data.model.AppCategory
 import kotlinx.coroutines.flow.Flow
 
 /**
- * 应用分类 DAO。
+ * App category DAO.
  */
 @Dao
 interface AppCategoryDao {

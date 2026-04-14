@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 /**
- * 社区 ViewModel — 正确处理 AuthResult 包装类型
+ * Community ViewModel - handles wrapped AuthResult types correctly.
  */
 class CommunityViewModel(
     private val cloudApiClient: CloudApiClient
@@ -25,28 +25,28 @@ class CommunityViewModel(
         private const val TAG = "CommunityViewModel"
     }
 
-    // ─── 模块详情 ───
+    // --- Module Detail ---
     private val _moduleDetail = MutableStateFlow<CommunityModuleDetail?>(null)
     val moduleDetail: StateFlow<CommunityModuleDetail?> = _moduleDetail.asStateFlow()
 
     private val _moduleDetailLoading = MutableStateFlow(false)
     val moduleDetailLoading: StateFlow<Boolean> = _moduleDetailLoading.asStateFlow()
 
-    // ─── 评论 ───
+    // --- Comments ---
     private val _comments = MutableStateFlow<List<ModuleComment>>(emptyList())
     val comments: StateFlow<List<ModuleComment>> = _comments.asStateFlow()
 
     private val _commentsLoading = MutableStateFlow(false)
     val commentsLoading: StateFlow<Boolean> = _commentsLoading.asStateFlow()
 
-    // ─── 收藏列表 ───
+    // --- Favorites ---
     private val _favorites = MutableStateFlow<List<CommunityModuleDetail>>(emptyList())
     val favorites: StateFlow<List<CommunityModuleDetail>> = _favorites.asStateFlow()
 
     private val _favoritesLoading = MutableStateFlow(false)
     val favoritesLoading: StateFlow<Boolean> = _favoritesLoading.asStateFlow()
 
-    // ─── 用户主页 ───
+    // --- User Profile ---
     private val _userProfile = MutableStateFlow<CommunityUserProfile?>(null)
     val userProfile: StateFlow<CommunityUserProfile?> = _userProfile.asStateFlow()
 
@@ -56,15 +56,15 @@ class CommunityViewModel(
     private val _userProfileLoading = MutableStateFlow(false)
     val userProfileLoading: StateFlow<Boolean> = _userProfileLoading.asStateFlow()
 
-    // ─── 用户帖子 ───
+    // --- User Posts ---
     private val _userPosts = MutableStateFlow<List<CommunityPostItem>>(emptyList())
     val userPosts: StateFlow<List<CommunityPostItem>> = _userPosts.asStateFlow()
 
-    // ─── 用户在线活动 ───
+    // --- User Online Activity ---
     private val _userActivity = MutableStateFlow<UserActivityInfo?>(null)
     val userActivity: StateFlow<UserActivityInfo?> = _userActivity.asStateFlow()
 
-    // ─── 通知 ───
+    // --- Notifications ---
     private val _notifications = MutableStateFlow<List<NotificationItem>>(emptyList())
     val notifications: StateFlow<List<NotificationItem>> = _notifications.asStateFlow()
 
@@ -74,27 +74,27 @@ class CommunityViewModel(
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
 
-    // ─── 动态 Feed（占位，服务端尚未实现） ───
+    // --- Activity Feed (placeholder, backend not ready) ---
     private val _activityFeed = MutableStateFlow<List<FeedItem>>(emptyList())
     val activityFeed: StateFlow<List<FeedItem>> = _activityFeed.asStateFlow()
 
     private val _activityFeedLoading = MutableStateFlow(false)
     val activityFeedLoading: StateFlow<Boolean> = _activityFeedLoading.asStateFlow()
 
-    // ─── 通用消息 ───
+    // --- Common Message ---
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
     fun clearMessage() { _message.value = null }
 
-    // ── Phase 1 v2: Discover 页数据 ──
+    // -- Phase 1 v2: Discover page data --
     private val _discoverData = MutableStateFlow<DiscoverResponse?>(null)
     val discoverData: StateFlow<DiscoverResponse?> = _discoverData.asStateFlow()
 
     private val _discoverLoading = MutableStateFlow(true)
     val discoverLoading: StateFlow<Boolean> = _discoverLoading.asStateFlow()
 
-    // ── Phase 1 v2: 当前 Tab (discover / following / feed) ──
+    // -- Phase 1 v2: Current tab (discover / following / feed) --
     private val _selectedTab = MutableStateFlow("discover")
     val selectedTab: StateFlow<String> = _selectedTab.asStateFlow()
 
@@ -116,7 +116,7 @@ class CommunityViewModel(
         loadPosts(page = 1)
     }
 
-    // ─── 帖子 Feed ───
+    // --- Post Feed ---
     private val _posts = MutableStateFlow<List<CommunityPostItem>>(emptyList())
     val posts: StateFlow<List<CommunityPostItem>> = _posts.asStateFlow()
 
@@ -165,7 +165,7 @@ class CommunityViewModel(
         }
     }
 
-    /** Phase 1 v2: 加载发现页分区数据 */
+    /** Phase 1 v2: Load discover page sections. */
     fun loadDiscover() {
         viewModelScope.launch {
             _discoverLoading.value = true
@@ -186,7 +186,7 @@ class CommunityViewModel(
         }
     }
 
-    /** Phase 1 v2: 导入配方 */
+    /** Phase 1 v2: Import recipe. */
     fun importRecipe(postId: Int, onSuccess: (RecipeImportResult) -> Unit) {
         viewModelScope.launch {
             try {
@@ -281,14 +281,14 @@ class CommunityViewModel(
         }
     }
 
-    // CLI-01: 删除帖子
+    // CLI-01: Delete post
     fun deletePost(postId: Int, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 val result = cloudApiClient.deletePost(postId)
                 when (result) {
                     is AuthResult.Success -> {
-                        // 乐观移除
+                        // Optimistic removal
                         _posts.value = _posts.value.filter { it.id != postId }
                         _message.value = "帖子已删除"
                         onSuccess()
@@ -301,7 +301,7 @@ class CommunityViewModel(
         }
     }
 
-    // CLI-02: 编辑帖子
+    // CLI-02: Edit post
     fun editPost(postId: Int, content: String, onSuccess: (CommunityPostItem) -> Unit = {}) {
         viewModelScope.launch {
             try {
@@ -321,7 +321,7 @@ class CommunityViewModel(
         }
     }
 
-    // ═══ 辅助：解包 AuthResult ═══
+    // === Helper: unwrap AuthResult ===
     private inline fun <T> handleResult(
         result: AuthResult<T>,
         onSuccess: (T) -> Unit,
@@ -331,26 +331,26 @@ class CommunityViewModel(
             is AuthResult.Success -> onSuccess(result.data)
             is AuthResult.Error -> {
                 AppLogger.e(TAG, "API error: ${result.message}")
-                // 优先显示服务端返回的真实错误信息
+                // Prefer server-provided error message
                 _message.value = result.message ?: errorMessage ?: "操作失败"
             }
         }
     }
 
-    // ═══ 模块详情 ═══
+    // === Module Detail ===
 
     fun loadModuleDetail(moduleId: Int) {
         viewModelScope.launch {
             _moduleDetailLoading.value = true
             try {
-                // 直接查询单个模块（高效），失败时回退到搜索方式
+                // Query single module directly (efficient), fallback to search on failure
                 val result = cloudApiClient.getStoreModuleById(moduleId)
                 when (result) {
                     is AuthResult.Success -> {
                         _moduleDetail.value = result.data.toCommunityDetail()
                     }
                     is AuthResult.Error -> {
-                        // 回退：服务端可能未实现 GET /modules/{id}，用搜索兜底
+                        // Fallback: backend may not support GET /modules/{id}, use search as backup
                         val fallback = cloudApiClient.listStoreModules(page = 1, size = 1, search = moduleId.toString())
                         handleResult(fallback, { (modules, _) ->
                             val match = modules.firstOrNull { it.id == moduleId }
@@ -408,7 +408,7 @@ class CommunityViewModel(
         }
     }
 
-    // ═══ 评论 ═══
+    // === Comments ===
 
     fun loadComments(moduleId: Int) {
         viewModelScope.launch {
@@ -438,7 +438,7 @@ class CommunityViewModel(
         }
     }
 
-    // ═══ 收藏列表 ═══
+    // === Favorites ===
 
     fun loadFavorites() {
         viewModelScope.launch {
@@ -456,11 +456,11 @@ class CommunityViewModel(
         }
     }
 
-    // ─── 用户团队作品 ───
+    // --- User Team Works ---
     private val _userTeamWorks = MutableStateFlow<List<TeamWorkItem>>(emptyList())
     val userTeamWorks: StateFlow<List<TeamWorkItem>> = _userTeamWorks.asStateFlow()
 
-    // ═══ 用户主页 ═══
+    // === User Profile ===
 
     fun loadUserProfile(userId: Int) {
         viewModelScope.launch {
@@ -469,13 +469,13 @@ class CommunityViewModel(
                 val result = cloudApiClient.getUserProfile(userId)
                 handleResult(result, { profile ->
                     _userProfile.value = profile
-                    // 加载用户模块 — 使用精确接口
+                    // Load user modules via specific endpoint
                     loadUserModulesInternal(profile.id)
-                    // 加载用户团队作品
+                    // Load user team works
                     loadUserTeamWorks(userId)
-                    // 加载用户帖子
+                    // Load user posts
                     loadUserPosts(userId)
-                    // 加载用户在线活动
+                    // Load user online activity
                     loadUserActivity(userId)
                 }, "加载用户信息失败")
             } catch (e: Exception) {
@@ -545,7 +545,7 @@ class CommunityViewModel(
         }
     }
 
-    // CLI-07: 乐观更新关注状态，避免全量重载6个API
+    // CLI-07: Optimistically update follow state to avoid reloading 6 APIs
     fun toggleFollow(userId: Int) {
         viewModelScope.launch {
             try {
@@ -569,7 +569,7 @@ class CommunityViewModel(
         }
     }
 
-    // ═══ 通知 ═══
+    // === Notifications ===
 
     fun loadNotifications() {
         viewModelScope.launch {
@@ -619,13 +619,13 @@ class CommunityViewModel(
         }
     }
 
-    // ═══ 动态 Feed ═══
+    // === Activity Feed ===
 
     fun loadFeed() {
         viewModelScope.launch {
             _activityFeedLoading.value = true
             try {
-                // 使用帖子列表接口而非旧的模块 Feed 接口
+                // Use post list API instead of old module feed API
                 val result = cloudApiClient.listCommunityPosts(page = 1, size = 20)
                 handleResult(result, { response ->
                     _activityFeed.value = emptyList() // Feed items are separate
@@ -638,7 +638,7 @@ class CommunityViewModel(
         }
     }
 
-    // ─── 关注动态 Feed ───
+    // --- Following Feed ---
 
     private val _followingPosts = MutableStateFlow<List<CommunityPostItem>>(emptyList())
     val followingPosts: StateFlow<List<CommunityPostItem>> = _followingPosts.asStateFlow()
@@ -662,7 +662,7 @@ class CommunityViewModel(
         }
     }
 
-    // ─── 趋势 Feed ───
+    // --- Trending Feed ---
 
     private val _trendingPosts = MutableStateFlow<List<CommunityPostItem>>(emptyList())
     val trendingPosts: StateFlow<List<CommunityPostItem>> = _trendingPosts.asStateFlow()
@@ -686,7 +686,7 @@ class CommunityViewModel(
         }
     }
 
-    // ─── 粉丝/关注列表 ───
+    // --- Followers/Following Lists ---
 
     private val _followersList = MutableStateFlow<List<CommunityUserProfile>>(emptyList())
     val followersList: StateFlow<List<CommunityUserProfile>> = _followersList.asStateFlow()
@@ -716,7 +716,7 @@ class CommunityViewModel(
         }
     }
 
-    // ─── 用户搜索 ───
+    // --- User Search ---
 
     private val _searchResults = MutableStateFlow<List<CommunityUserProfile>>(emptyList())
     val searchResults: StateFlow<List<CommunityUserProfile>> = _searchResults.asStateFlow()
@@ -724,7 +724,7 @@ class CommunityViewModel(
     private val _searchLoading = MutableStateFlow(false)
     val searchLoading: StateFlow<Boolean> = _searchLoading.asStateFlow()
 
-    // CLI-03: 搜索防抖 — 使用 MutableStateFlow + debounce
+    // CLI-03: Debounced search using MutableStateFlow + debounce
     private val _searchQuery = MutableStateFlow("")
 
     @OptIn(FlowPreview::class)
@@ -757,7 +757,7 @@ class CommunityViewModel(
         _searchQuery.value = query
     }
 
-    // ─── 帖子搜索 ───
+    // --- Post Search ---
 
     private val _postSearchResults = MutableStateFlow<List<CommunityPostItem>>(emptyList())
     val postSearchResults: StateFlow<List<CommunityPostItem>> = _postSearchResults.asStateFlow()
@@ -797,7 +797,7 @@ class CommunityViewModel(
         _postSearchQuery.value = query
     }
 
-    // ─── @提及搜索 (用于评论/发帖输入框 @ 弹窗) ───
+    // --- @mention search (for comment/post input popup) ---
 
     private val _mentionResults = MutableStateFlow<List<CommunityUserProfile>>(emptyList())
     val mentionResults: StateFlow<List<CommunityUserProfile>> = _mentionResults.asStateFlow()
@@ -849,7 +849,7 @@ class CommunityViewModel(
         initMentionSearchDebounce()
     }
 
-    // ─── 高级帖子搜索（支持 postType + sort 过滤） ───
+    // --- Advanced post search (supports postType + sort filters) ---
 
     fun searchPostsFiltered(query: String, postType: String? = null, sortBy: String = "relevance") {
         if (query.isBlank()) {
@@ -881,7 +881,7 @@ class CommunityViewModel(
         }
     }
 
-    // ─── @mention 用户名解析（点击 @mention → 导航到用户） ───
+    // --- @mention username resolve (tap @mention -> navigate to user) ---
 
     fun resolveUserByUsername(username: String, onResolved: (Int) -> Unit) {
         viewModelScope.launch {
@@ -901,7 +901,7 @@ class CommunityViewModel(
         }
     }
 
-    // ─── 热门/精选模块 ───
+    // --- Popular/Featured Modules ---
 
     private val _trendingModules = MutableStateFlow<List<StoreModuleInfo>>(emptyList())
     val trendingModules: StateFlow<List<StoreModuleInfo>> = _trendingModules.asStateFlow()
@@ -932,7 +932,7 @@ class CommunityViewModel(
     }
 }
 
-// ═══ StoreModuleInfo → CommunityModuleDetail 转换 ═══
+// === StoreModuleInfo -> CommunityModuleDetail mapping ===
 private fun StoreModuleInfo.toCommunityDetail() = CommunityModuleDetail(
     id = this.id,
     name = this.name,
@@ -946,7 +946,7 @@ private fun StoreModuleInfo.toCommunityDetail() = CommunityModuleDetail(
     ratingCount = this.ratingCount,
     isFeatured = this.isFeatured,
     authorName = this.authorName,
-    authorId = 0, // StoreModuleInfo 暂无 authorId
+    authorId = 0, // StoreModuleInfo authorId
     shareCode = this.shareCode,
     userVote = null,
     isFavorited = false,

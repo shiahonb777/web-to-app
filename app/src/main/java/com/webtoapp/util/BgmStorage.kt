@@ -11,17 +11,17 @@ import java.io.FileOutputStream
 import java.util.UUID
 
 /**
- * 背景音乐存储工具
- * 管理预置音乐和用户上传的音乐
+ * Note.
+ * Note.
  */
 object BgmStorage {
     
     private const val TAG = "BgmStorage"
     
-    // User上传的音乐存储目录
+    // User
     private const val BGM_DIR = "bgm"
     
-    // 预置音乐资源目录（assets）
+    // （assets）
     private const val ASSETS_BGM_DIR = "bgm"
     
     // Pre-compiled regex for LRC parsing (avoid creating per file)
@@ -35,7 +35,7 @@ object BgmStorage {
     private val IMAGE_COVER_EXTENSIONS = setOf("png", "jpg", "jpeg")
     
     /**
-     * 获取用户音乐存储目录
+     * Note.
      */
     fun getBgmDir(context: Context): File {
         val dir = File(context.filesDir, BGM_DIR)
@@ -46,23 +46,23 @@ object BgmStorage {
     }
     
     /**
-     * 扫描所有可用的背景音乐（预置 + 用户上传）
+     * （ + ）
      */
     fun scanAllBgm(context: Context): List<BgmItem> {
         val result = mutableListOf<BgmItem>()
         
-        // 扫描预置音乐
+        // Note.
         result.addAll(scanAssetsBgm(context))
         
-        // 扫描用户上传的音乐
+        // Note.
         result.addAll(scanUserBgm(context))
         
         return result
     }
     
     /**
-     * 扫描预置音乐（assets/bgm/）
-     * 自动配对同名的 mp3 和 png 文件
+     * （assets/bgm/）
+     * mp3 png
      */
     fun scanAssetsBgm(context: Context): List<BgmItem> {
         val result = mutableListOf<BgmItem>()
@@ -71,27 +71,27 @@ object BgmStorage {
             val assetManager = context.assets
             val files = assetManager.list(ASSETS_BGM_DIR) ?: return emptyList()
             
-            // 找出所有 mp3 文件
+            // mp3
             val mp3Files = files.filter { it.lowercase().endsWith(".mp3") }
             
             for (mp3File in mp3Files) {
                 val nameWithoutExt = mp3File.substringBeforeLast(".")
                 
-                // Find同名封面图片（支持 png、jpg、jpeg）
+                // Find matching cover image (png/jpg/jpeg)
                 val coverFile = files.find { file ->
                     val fileNameWithoutExt = file.substringBeforeLast(".")
                     val ext = file.substringAfterLast(".").lowercase()
                     fileNameWithoutExt == nameWithoutExt && ext in IMAGE_COVER_EXTENSIONS
                 }
                 
-                // Find同名 LRC 文件（先检查用户目录，再检查 assets）
+                // Find matching LRC, prefer user file over assets
                 val bgmPath = "asset:///$ASSETS_BGM_DIR/$mp3File"
                 val userLrcFile = File(getBgmDir(context), "$nameWithoutExt.lrc")
                 val lrcData = if (userLrcFile.exists()) {
-                    // 优先加载用户目录的 LRC
+                    // LRC
                     loadLrcFromFile(userLrcFile)
                 } else {
-                    // No则尝试从 assets 加载
+                    // No assets
                     val assetLrcFile = files.find { file ->
                         val fileNameWithoutExt = file.substringBeforeLast(".")
                         val ext = file.substringAfterLast(".").lowercase()
@@ -116,8 +116,8 @@ object BgmStorage {
     }
     
     /**
-     * 扫描用户上传的音乐
-     * 自动配对同名的 mp3 和图片文件
+     * Note.
+     * mp3
      */
     fun scanUserBgm(context: Context): List<BgmItem> {
         val result = mutableListOf<BgmItem>()
@@ -127,25 +127,25 @@ object BgmStorage {
         
         val files = bgmDir.listFiles() ?: return emptyList()
         
-        // 找出所有 mp3 文件
+        // mp3
         val mp3Files = files.filter { it.extension.lowercase() == "mp3" }
         
         for (mp3File in mp3Files) {
             val nameWithoutExt = mp3File.nameWithoutExtension
             
-            // Find同名封面图片
+            // Find
             val coverFile = files.find { file ->
                 file.nameWithoutExtension == nameWithoutExt &&
                 file.extension.lowercase() in IMAGE_COVER_EXTENSIONS
             }
             
-            // Find同名 LRC 文件
+            // Find LRC
             val lrcFile = files.find { file ->
                 file.nameWithoutExtension == nameWithoutExt &&
                 file.extension.lowercase() == "lrc"
             }
             
-            // Load LRC 数据
+            // Load LRC
             val lrcData = lrcFile?.let { loadLrcFromFile(it) }
             
             result.add(BgmItem(
@@ -161,16 +161,16 @@ object BgmStorage {
     }
     
     /**
-     * 保存用户上传的 MP3 文件
-     * @param uri 音乐文件 URI
-     * @param customName 自定义名称（可选，为空则使用 UUID）
-     * @return 保存后的文件路径，失败返回 null
+     * MP3
+     * @param uri parameter
+     * @param customName parameter
+     * @return result
      */
     fun saveBgm(context: Context, uri: Uri, customName: String? = null): String? {
         return try {
             val bgmDir = getBgmDir(context)
             
-            // Cleanup文件名，移除特殊字符，避免路径问题
+            // Cleanup，，
             val safeName = if (customName.isNullOrBlank()) {
                 "bgm_${UUID.randomUUID()}"
             } else {
@@ -179,7 +179,7 @@ object BgmStorage {
             val fileName = "${safeName}.mp3"
             val destFile = File(bgmDir, fileName)
             
-            // Copy文件内容
+            // Copy
             val inputStream = context.contentResolver.openInputStream(uri)
             if (inputStream == null) {
                 AppLogger.e(TAG, "无法打开音频文件: $uri")
@@ -193,7 +193,7 @@ object BgmStorage {
                 }
             }
             
-            // Verify文件是否成功保存
+            // Verify
             if (!destFile.exists() || destFile.length() == 0L) {
                 AppLogger.e(TAG, "音频文件保存失败或为空: ${destFile.absolutePath}")
                 return null
@@ -207,16 +207,16 @@ object BgmStorage {
     }
     
     /**
-     * 保存用户上传的封面图片
-     * @param uri 图片文件 URI
-     * @param bgmName 对应的音乐名称（用于同名配对）
-     * @return 保存后的文件路径，失败返回 null
+     * Note.
+     * @param uri parameter
+     * @param bgmName parameter
+     * @return result
      */
     fun saveCover(context: Context, uri: Uri, bgmName: String): String? {
         return try {
             val bgmDir = getBgmDir(context)
             
-            // Get文件扩展名
+            // Get
             val mimeType = context.contentResolver.getType(uri)
             val extension = when {
                 mimeType?.contains("png") == true -> "png"
@@ -240,16 +240,16 @@ object BgmStorage {
     }
     
     /**
-     * 删除用户上传的音乐（同时删除封面）
+     * （）
      */
     fun deleteBgm(context: Context, bgmItem: BgmItem): Boolean {
-        if (bgmItem.isAsset) return false // 不能删除预置资源
+        if (bgmItem.isAsset) return false // Note.
         
         return try {
-            // Delete音乐文件
+            // Delete
             File(bgmItem.path).delete()
             
-            // Delete封面文件（如果存在）
+            // Delete（）
             bgmItem.coverPath?.let { File(it).delete() }
             
             true
@@ -260,7 +260,7 @@ object BgmStorage {
     }
     
     /**
-     * 获取音乐文件（处理 asset:// 协议）
+     * （ asset:// ）
      */
     fun getBgmInputStream(context: Context, path: String): java.io.InputStream? {
         return try {
@@ -277,7 +277,7 @@ object BgmStorage {
     }
     
     /**
-     * 复制音乐到指定目录（用于 APK 构建）
+     * （ APK ）
      */
     fun copyBgmToDir(context: Context, bgmItem: BgmItem, destDir: File): File? {
         return try {
@@ -297,21 +297,21 @@ object BgmStorage {
     }
     
     /**
-     * 保存 LRC 数据到文件
-     * @param bgmPath 音乐文件路径
-     * @param lrcData LRC 数据
-     * @return 保存是否成功
+     * LRC
+     * @param bgmPath parameter
+     * @param lrcData parameter
+     * @return result
      */
     fun saveLrc(context: Context, bgmPath: String, lrcData: LrcData): Boolean {
         return try {
-            // 确定 LRC 文件路径
+            // LRC
             val lrcPath = getLrcPathForBgm(context, bgmPath)
             val lrcFile = File(lrcPath)
             
-            // 确保目录存在
+            // Note.
             lrcFile.parentFile?.mkdirs()
             
-            // 将 LrcData 转换为 LRC 格式文本
+            // LrcData LRC
             val lrcContent = buildString {
                 appendLine("[ti:${lrcData.title ?: ""}]")
                 appendLine("[ar:${lrcData.artist ?: ""}]")
@@ -336,7 +336,7 @@ object BgmStorage {
     }
     
     /**
-     * 从文件加载 LRC 数据
+     * LRC
      */
     fun loadLrcFromFile(lrcFile: File): LrcData? {
         return try {
@@ -349,7 +349,7 @@ object BgmStorage {
     }
     
     /**
-     * 从 assets 加载 LRC 数据
+     * assets LRC
      */
     fun loadLrcFromAssets(context: Context, assetPath: String): LrcData? {
         return try {
@@ -362,7 +362,7 @@ object BgmStorage {
     }
     
     /**
-     * 解析 LRC 文本
+     * LRC
      */
     private fun parseLrcText(text: String): LrcData? {
         val lines = mutableListOf<LrcLine>()
@@ -374,7 +374,7 @@ object BgmStorage {
         val metaRegex = LRC_META_REGEX
         
         text.lines().forEach { line ->
-            // Parse元数据
+            // Parse
             metaRegex.find(line)?.let { match ->
                 when (match.groupValues[1].lowercase()) {
                     "ti" -> title = match.groupValues[2].trim()
@@ -384,7 +384,7 @@ object BgmStorage {
                 return@forEach
             }
             
-            // Parse时间戳行
+            // Parse
             timeRegex.find(line)?.let { match ->
                 val minutes = match.groupValues[1].toLongOrNull() ?: 0
                 val seconds = match.groupValues[2].toLongOrNull() ?: 0
@@ -400,7 +400,7 @@ object BgmStorage {
             }
         }
         
-        // 计算每行的结束时间（下一行的开始时间）
+        // （）
         for (i in 0 until lines.size - 1) {
             lines[i] = lines[i].copy(endTime = lines[i + 1].startTime)
         }
@@ -411,23 +411,23 @@ object BgmStorage {
     }
     
     /**
-     * 获取音乐对应的 LRC 文件路径
+     * LRC
      */
     fun getLrcPathForBgm(context: Context, bgmPath: String): String {
         return if (bgmPath.startsWith("asset:///")) {
-            // Assets 中的音乐，LRC 保存到用户目录
+            // Assets ，LRC
             val assetPath = bgmPath.removePrefix("asset:///")
             val name = File(assetPath).nameWithoutExtension
             File(getBgmDir(context), "$name.lrc").absolutePath
         } else {
-            // User目录的音乐，LRC 保存在同目录
+            // User，LRC
             val musicFile = File(bgmPath)
             File(musicFile.parent, "${musicFile.nameWithoutExtension}.lrc").absolutePath
         }
     }
     
     /**
-     * 检查音乐是否有 LRC 文件
+     * LRC
      */
     fun hasLrc(context: Context, bgmPath: String): Boolean {
         val lrcPath = getLrcPathForBgm(context, bgmPath)
@@ -435,7 +435,7 @@ object BgmStorage {
     }
     
     /**
-     * 加载音乐的 LRC 数据
+     * LRC
      */
     fun loadLrc(context: Context, bgmPath: String): LrcData? {
         val lrcPath = getLrcPathForBgm(context, bgmPath)

@@ -29,7 +29,7 @@ import com.webtoapp.core.forcedrun.ForcedRunManager
 import kotlinx.coroutines.delay
 
 /**
- * BGM 歌词显示覆盖层
+ * BGM display
  */
 @Composable
 fun BoxScope.ShellLyricsOverlay(
@@ -73,7 +73,7 @@ fun BoxScope.ShellLyricsOverlay(
 }
 
 /**
- * 强制运行倒计时覆盖层
+ * force- run
  */
 @Composable
 fun BoxScope.ShellForcedRunOverlay(
@@ -99,7 +99,7 @@ fun BoxScope.ShellForcedRunOverlay(
 }
 
 /**
- * 全屏模式下的悬浮返回按钮（自动淡出）
+ * mode backbutton( )
  */
 @Composable
 fun BoxScope.ShellFloatingBackButton(
@@ -113,7 +113,7 @@ fun BoxScope.ShellFloatingBackButton(
 ) {
     val context = LocalContext.current
 
-    // 仅在全屏模式下toolbar未显示时才显示悬浮返回按钮（且用户未禁用）
+    // only mode toolbar display display backbutton( user)
     if (showFloatingBackButton && hideToolbar && !showToolbar && canGoBack && !forcedRunActive) {
         var fabAlpha by remember { mutableFloatStateOf(0.9f) }
         var fadeKey by remember { mutableIntStateOf(0) }
@@ -161,7 +161,7 @@ fun BoxScope.ShellFloatingBackButton(
 }
 
 /**
- * 错误提示卡片
+ * errorhintcard
  */
 @Composable
 fun BoxScope.ShellErrorCard(
@@ -199,7 +199,7 @@ fun BoxScope.ShellErrorCard(
 }
 
 /**
- * 虚拟导航栏（强制运行模式下显示）
+ * ( force- runmode display)
  */
 @Composable
 fun BoxScope.ShellVirtualNavBar(
@@ -230,7 +230,7 @@ fun BoxScope.ShellVirtualNavBar(
         onForward = { webViewRef?.goForward() },
         onRefresh = { webViewRef?.reload() },
         onHome = {
-            // 返回主页
+            // backhome
             val homeUrl = when {
                 appType == "HTML" || appType == "FRONTEND" -> "file:///android_asset/html/${config.htmlConfig.getValidEntryFile()}"
                 else -> config.targetUrl
@@ -242,7 +242,7 @@ fun BoxScope.ShellVirtualNavBar(
 }
 
 /**
- * 广告拦截切换按钮
+ * interceptswitchbutton
  */
 @Composable
 fun BoxScope.ShellAdBlockToggle(

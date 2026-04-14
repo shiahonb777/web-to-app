@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object ExtensionStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 内置模块 ====================
+    // ==================== Built-in Modules ====================
     val builtinVideoDownloader: String get() = when (lang) {
         AppLanguage.CHINESE -> "视频下载"
         AppLanguage.ENGLISH -> "Video Download"
@@ -113,7 +113,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Click to select, double-click to block annoying elements"
         AppLanguage.ARABIC -> "انقر للتحديد، انقر مرتين لحظر العناصر المزعجة"
     }
-    // ==================== 模块触发条件 ====================
+    // ==================== Module Triggers ====================
     val triggerAuto: String get() = when (lang) {
         AppLanguage.CHINESE -> "自动执行"
         AppLanguage.ENGLISH -> "Auto Execute"
@@ -233,7 +233,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Execute when visibility changes"
         AppLanguage.ARABIC -> "التنفيذ عند تغيير الرؤية"
     }
-    // ==================== 扩展模块相关字符串 ====================
+    // ==================== Extension Module Strings ====================
     val noModuleSelected: String get() = when (lang) {
         AppLanguage.CHINESE -> "未选择模块"
         AppLanguage.ENGLISH -> "No module selected"
@@ -365,7 +365,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Only effective on %d matching sites"
         AppLanguage.ARABIC -> "فعال فقط على %d مواقع مطابقة"
     }
-    // ==================== 模块 Tags ====================
+    // ==================== Module Tags ====================
     val tagVideo: String get() = when (lang) {
         AppLanguage.CHINESE -> "视频"
         AppLanguage.ENGLISH -> "Video"
@@ -503,7 +503,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Screenshot"
         AppLanguage.ARABIC -> "لقطة شاشة"
     }
-    // ==================== 扩展模块卡片 ====================
+    // ==================== Extension Module Cards ====================
     val saveAsScheme: String get() = when (lang) {
         AppLanguage.CHINESE -> "存为方案"
         AppLanguage.ENGLISH -> "Save as Scheme"
@@ -605,7 +605,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "%d selected"
         AppLanguage.ARABIC -> "تم اختيار %d"
     }
-    // ==================== 模块编辑器补充 ====================
+    // ==================== Module Editor Extras ====================
     val urlPattern: String get() = when (lang) {
         AppLanguage.CHINESE -> "URL 模式"
         AppLanguage.ENGLISH -> "URL Pattern"
@@ -695,7 +695,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "/* Write CSS styles here */\n.ad-banner {\n    display: none !important;\n}"
         AppLanguage.ARABIC -> "/* اكتب أنماط CSS هنا */\n.ad-banner {\n    display: none !important;\n}"
     }
-    // ==================== 模块管理错误信息 ====================
+    // ==================== Module Management Errors ====================
     val errModuleNotFound: String get() = when (lang) {
         AppLanguage.CHINESE -> "模块不存在"
         AppLanguage.ENGLISH -> "Module not found"
@@ -779,7 +779,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "WebToApp Extension Module"
         AppLanguage.ARABIC -> "وحدة إضافية WebToApp"
     }
-    // ==================== 模块 UI 类型 ====================
+    // ==================== Module UI Types ====================
     val uiTypeFloatingButton: String get() = when (lang) {
         AppLanguage.CHINESE -> "悬浮按钮"
         AppLanguage.ENGLISH -> "Floating Button"
@@ -863,7 +863,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Fully customized with HTML/CSS/JS"
         AppLanguage.ARABIC -> "مخصص بالكامل باستخدام HTML/CSS/JS"
     }
-    // ==================== 模块执行时机 ====================
+    // ==================== Module Timing ====================
     val runTimeDocStart: String get() = when (lang) {
         AppLanguage.CHINESE -> "页面开始"
         AppLanguage.ENGLISH -> "Document Start"
@@ -923,7 +923,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Execute before page closes, suitable for saving data"
         AppLanguage.ARABIC -> "التنفيذ قبل إغلاق الصفحة، مناسب لحفظ البيانات"
     }
-    // ==================== 扩展模块相关 ====================
+    // ==================== Extension Module ====================
     val selectedCount2: String get() = when (lang) {
         AppLanguage.CHINESE -> "已选 %d 个"
         AppLanguage.ENGLISH -> "%d selected"
@@ -995,7 +995,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Configurable Items (%d)"
         AppLanguage.ARABIC -> "عناصر قابلة للتكوين (%d)"
     }
-    // ==================== 模板分类 ====================
+    // ==================== Template Categories ====================
     val templateModern: String get() = when (lang) {
         AppLanguage.CHINESE -> "现代简约"
         AppLanguage.ENGLISH -> "Modern Minimal"
@@ -1067,7 +1067,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Game Style"
         AppLanguage.ARABIC -> "أسلوب الألعاب"
     }
-    // ==================== 模块预设工厂 ====================
+    // ==================== Module Preset Factory ====================
     val presetBlockElements: String get() = when (lang) {
         AppLanguage.CHINESE -> "屏蔽指定元素"
         AppLanguage.ENGLISH -> "Block specified elements"
@@ -1139,7 +1139,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Built-in version"
         AppLanguage.ARABIC -> "الإصدار المدمج"
     }
-    // ==================== 模块方案预设 ====================
+    // ==================== Module Scheme Presets ====================
     val presetReading: String get() = when (lang) {
         AppLanguage.CHINESE -> "阅读增强"
         AppLanguage.ENGLISH -> "Reading Enhance"
@@ -1199,7 +1199,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Dark theme + eye protection"
         AppLanguage.ARABIC -> "سمة داكنة + حماية العين"
     }
-    // ==================== 模块配置项 ====================
+    // ==================== Module Config Items ====================
     val configCssSelector: String get() = when (lang) {
         AppLanguage.CHINESE -> "CSS 选择器"
         AppLanguage.ENGLISH -> "CSS Selector"
@@ -1271,7 +1271,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "Font Size (px)"
         AppLanguage.ARABIC -> "حجم الخط (بكسل)"
     }
-    // ==================== 扩展模块 Tab 管理 ====================
+    // ==================== Extension Tab Management ====================
     val userScriptsTab: String get() = when (lang) {
         AppLanguage.CHINESE -> "浏览器扩展"
         AppLanguage.ENGLISH -> "Browser Extensions"
@@ -1337,7 +1337,7 @@ internal object ExtensionStrings {
         AppLanguage.ENGLISH -> "%d modules"
         AppLanguage.ARABIC -> "%d وحدة"
     }
-    // ==================== 油猴脚本 / Chrome 扩展导入 ====================
+    // ==================== Userscript / Chrome Extension Import ====================
     val importUserScript: String get() = when (lang) {
         AppLanguage.CHINESE -> "导入油猴脚本"
         AppLanguage.ENGLISH -> "Import Userscript"

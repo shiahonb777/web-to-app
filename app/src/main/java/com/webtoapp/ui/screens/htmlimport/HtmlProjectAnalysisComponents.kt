@@ -59,7 +59,7 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 项目分析结果对话框
+ * item dialog
  */
 @Composable
 internal fun ProjectAnalysisDialog(
@@ -92,7 +92,7 @@ internal fun ProjectAnalysisDialog(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // File信息
+                // File
                 item {
                     Text(
                         text = Strings.fileInfo,
@@ -115,7 +115,7 @@ internal fun ProjectAnalysisDialog(
                     }
                 }
                 
-                // 问题列表
+                // list
                 if (analysis.issues.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -131,7 +131,7 @@ internal fun ProjectAnalysisDialog(
                     }
                 }
                 
-                // 建议
+                // Note
                 if (analysis.suggestions.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -163,7 +163,7 @@ internal fun ProjectAnalysisDialog(
                     }
                 }
                 
-                // Auto修复说明
+                // Auto
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     EnhancedElevatedCard(
@@ -201,7 +201,7 @@ internal fun ProjectAnalysisDialog(
 }
 
 /**
- * 文件信息行
+ * file
  */
 @Composable
 internal fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
@@ -244,7 +244,7 @@ internal fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
 }
 
 /**
- * 问题卡片
+ * card
  */
 @Composable
 internal fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
@@ -305,7 +305,7 @@ internal fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
 }
 
 /**
- * 格式化文件大小
+ * file
  */
 internal fun formatHtmlProjectFileSize(size: Long): String {
     return when {
@@ -316,5 +316,5 @@ internal fun formatHtmlProjectFileSize(size: Long): String {
 }
 
 /**
- * 文件槽位组件
+ * file
  */

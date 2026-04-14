@@ -61,7 +61,7 @@ class AiCodingStorage(private val context: Context) {
         
         context.aiCodingDataStore.edit { prefs ->
             val sessions = getSessions(prefs).toMutableList()
-            sessions.add(0, session)  // 新会话放在最前面
+            sessions.add(0, session)  // Note.
             prefs[KEY_SESSIONS] = gson.toJson(sessions)
             prefs[KEY_CURRENT_SESSION_ID] = session.id
         }
@@ -661,49 +661,49 @@ class AiCodingStorage(private val context: Context) {
     }
 
     private fun extractTitle(prompt: String): String {
-        // 从用户提问中提取标题
+        // Note.
         val firstLine = prompt.lines().firstOrNull()?.take(30) ?: "未命名项目"
         return if (firstLine.length < prompt.length) "$firstLine..." else firstLine
     }
 }
 
 /**
- * 从AI响应中解析代码块
+ * AI.
  * 
- * 修复问题：
- * 1. 正则表达式必须要求语言标识符后有换行符，避免语言和代码内容混淆
- * 2. 使用更精确的正则表达式匹配代码块
- * 3. 确保文件名不会和代码内容拼接
- * 4. 支持没有语言标识符的代码块
- * 5. 支持多种代码块格式（带/不带文件名注释）
+ * Note.
+ * Note.
+ * Note.
+ * Note.
+ * Note.
+ * Note.
  */
 object CodeBlockParser {
     
     /**
-     * 代码块正则表达式
+     * Note.
      * 
-     * 支持多种格式：
-     * 1. ```language\ncode``` (标准三反引号)
-     * 2. `language\ncode` (单反引号，某些AI会这样输出)
-     * 3. ```language code``` (语言后直接是代码)
-     * 4. ```\ncode``` (无语言标识)
+     * Note.
+     * 1. ```language\ncode``` ( ).
+     * 2. `language\ncode` ( AI ).
+     * 3. ```language code``` ( ).
+     * 4. ```\ncode``` ( ).
      * 
-     * 关键：使用非贪婪匹配，确保正确匹配结束的反引号
+     * Note.
      */
     private val codeBlockRegex = Regex(
         """```(\w*)[ \t]*\r?\n?([\s\S]*?)```""",
         RegexOption.MULTILINE
     )
     
-    // 单反引号代码块（备用）- 改进版，支持语言标识符后有或没有换行
+    // Note.
     private val singleBacktickRegex = Regex(
         """`\s*(html|css|js|javascript)\s*[\r\n]?([\s\S]*?)`(?!`)""",
         setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE)
     )
     
-    // File名注释的正则表达式（支持多种格式）
-    // 修复：使用贪婪匹配 [^\n]+ 而不是非贪婪 [^\n]+?，确保匹配完整的文件名
-    // File名必须以换行符结束
+    // File.
+    // [^\n]+ [^\n]+?
+    // File.
     private val filenameCommentRegex = Regex(
         """^(?:<!--\s*文件名[:：]\s*([^\n]+)\s*-->\s*\r?\n|/\*\s*文件名[:：]\s*([^\n]+)\s*\*/\s*\r?\n|//\s*文件名[:：]\s*([^\n]+)\s*\r?\n|#\s*文件名[:：]\s*([^\n]+)\s*\r?\n)""",
         setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE)
@@ -719,7 +719,7 @@ object CodeBlockParser {
         RegexOption.MULTILINE
     )
     
-    // --- 预编译 Regex 常量 ---
+    // --- Regex ---.
     
     // filenamePatterns (parseResponseLegacy per-code-block)
     private val FILENAME_PATTERNS = listOf(
@@ -790,7 +790,7 @@ object CodeBlockParser {
     // Gson singleton
     private val gson = com.webtoapp.util.GsonProvider.gson
     
-    // cleanCodeBlockContent 语言特定文件名清理 Regex
+    // cleanCodeBlockContent Regex.
     private val CLEAN_FILENAME_PATTERNS: Map<String, List<Regex>> = mapOf(
         "js" to listOf(
             Regex("""^//\s*文件名[:：]\s*[\w\-.]+\.js\s*""", RegexOption.IGNORE_CASE),
@@ -814,18 +814,18 @@ object CodeBlockParser {
     private val EXTERNAL_JS_SCRIPT_REGEX = Regex("""<script[^>]*src=["'](?!http)[^"']*\.js["'][^>]*></script>""", RegexOption.IGNORE_CASE)
     private val EXTERNAL_JS_REF_REGEX = Regex("""<script[^>]*src=["'](?!http)([^"']*\.js)["'][^>]*></script>""", RegexOption.IGNORE_CASE)
 
-    /** 供外部 (AiCodingStorage.saveForPreview) 复用 SCRIPT_TAG_REGEX */
+    /** (AiCodingStorage.saveForPreview) SCRIPT_TAG_REGEX.*/
     fun findScriptTags(html: String): List<MatchResult> = SCRIPT_TAG_REGEX.findAll(html).toList()
 
     /**
-     * 预处理：将各种非标准代码块格式转换为三反引号格式
+     * Note.
      * 
-     * 某些 AI 会输出非标准格式的代码块，如：
-     * 1. 单反引号格式：`js// File名: script.js...`
-     * 2. 反斜杠格式：\ html... \ 或 \html...\
-     * 3. 未闭合的代码块
+     * AI.
+     * 1. `js// File : script.js...`.
+     * 2. \ html... \ \html...\.
+     * Note.
      * 
-     * 这个函数将它们转换为标准的三反引号格式
+     * Note.
      */
     private fun preprocessSingleBackticks(response: String): String {
         var result = response
@@ -833,8 +833,8 @@ object CodeBlockParser {
         AppLogger.d("CodeBlockParser", "preprocessSingleBackticks: checking for non-standard code block patterns")
         AppLogger.d("CodeBlockParser", "Input preview: ${response.take(200).replace("\n", "\\n")}")
         
-        // 1. 处理反斜杠格式的代码块：\ html... \ 或 \html...\
-        // 这种情况可能是 AI 试图输出反引号但被转义了
+        // 1. \ html... \ \html...\.
+        // AI.
         val backslashMatches = BACKSLASH_CODE_BLOCK_REGEX.findAll(result).toList()
         if (backslashMatches.isNotEmpty()) {
             AppLogger.d("CodeBlockParser", "Found ${backslashMatches.size} backslash-style code blocks")
@@ -849,7 +849,7 @@ object CodeBlockParser {
             }
         }
         
-        // 2. 处理多个反斜杠格式：\\ \ html... \\ \ 或类似
+        // 2. \\ \ html... \\ \.
         val multiBackslashMatches = MULTI_BACKSLASH_CODE_BLOCK_REGEX.findAll(result).toList()
         if (multiBackslashMatches.isNotEmpty()) {
             AppLogger.d("CodeBlockParser", "Found ${multiBackslashMatches.size} multi-backslash code blocks")
@@ -864,52 +864,52 @@ object CodeBlockParser {
             }
         }
         
-        // 3. 匹配单反引号代码块：`language...` 或 `  language...`
+        // 3. `language...` ` language...`.
         val matches = SINGLE_BACKTICK_CODE_BLOCK_REGEX.findAll(result).toList()
         
         if (matches.isNotEmpty()) {
             AppLogger.d("CodeBlockParser", "Found ${matches.size} single-backtick code blocks, converting to triple-backtick format")
             
-            // 从后往前替换，避免索引偏移问题
+            // Note.
             matches.reversed().forEach { match ->
                 val language = match.groupValues[1].lowercase()
                 val content = match.groupValues[2].trim()
                 
                 AppLogger.d("CodeBlockParser", "Converting single-backtick block: language=$language, contentLength=${content.length}, preview=${content.take(50)}")
                 
-                // 转换为三反引号格式
+                // Note.
                 val replacement = "```$language\n$content\n```"
                 result = result.replaceRange(match.range, replacement)
             }
         } else {
             AppLogger.d("CodeBlockParser", "No single-backtick code blocks found")
             
-            // Check是否有未闭合的单反引号代码块
-            // 格式：`language... (没有结束的反引号)
+            // Check.
+            // `language... ( ).
             UNCLOSED_BACKTICK_REGEX.findAll(result).toList().reversed().forEach { match ->
                 val language = match.groupValues[1].lowercase()
                 val content = match.groupValues[2].trim()
                 
-                if (content.length > 50) { // 只处理有实际内容的代码块
+                if (content.length > 50) { // Note.
                     AppLogger.d("CodeBlockParser", "Found unclosed single-backtick block: language=$language, contentLength=${content.length}")
                     
-                    // 转换为三反引号格式
+                    // Note.
                     val replacement = "```$language\n$content\n```"
                     result = result.replaceRange(match.range, replacement)
                 }
             }
         }
         
-        // 4. 如果没有找到任何代码块标记，但内容包含完整的 HTML 结构，直接提取
+        // 4. HTML.
         if (!result.contains("```") && result.contains("<!DOCTYPE html", ignoreCase = true)) {
             AppLogger.d("CodeBlockParser", "No code block markers found, but HTML content detected, attempting direct extraction")
             
-            // 尝试提取 <!DOCTYPE html> 到 </html> 之间的内容
+            // <!DOCTYPE html> </html>.
             HTML_EXTRACT_REGEX.find(result)?.let { match ->
                 val htmlContent = match.groupValues[1]
                 AppLogger.d("CodeBlockParser", "Extracted HTML content directly, length=${htmlContent.length}")
                 
-                // 将提取的 HTML 包装成代码块
+                // HTML.
                 val beforeHtml = result.substring(0, match.range.first)
                 val afterHtml = if (match.range.last + 1 < result.length) result.substring(match.range.last + 1) else ""
                 result = "$beforeHtml\n```html\n$htmlContent\n```\n$afterHtml"
@@ -920,19 +920,19 @@ object CodeBlockParser {
     }
 
     /**
-     * 解析AI响应 - 简化版
-     * 注意：使用 Tool Calling 方式时，此方法不再需要
-     * 保留此方法仅用于backward compatible
+     * AI -.
+     * Tool Calling.
+     * backward compatible.
      */
     fun parseResponse(response: String): ParsedAiResponse {
         AppLogger.d("CodeBlockParser", "parseResponse: input length=${response.length}")
         
-        // 直接使用 Legacy 解析方法
+        // Legacy.
         return parseResponseLegacy(response)
     }
     
     /**
-     * 解析AI响应 - 完整版（保留旧逻辑作为备用）
+     * AI -.
      */
     fun parseResponseLegacy(response: String): ParsedAiResponse {
         var thinking: String? = null
@@ -941,52 +941,52 @@ object CodeBlockParser {
         
         AppLogger.d("CodeBlockParser", "parseResponseLegacy: input length=${response.length}")
         
-        // 预处理：将单反引号代码块转换为三反引号格式
+        // Note.
         val processedResponse = preprocessSingleBackticks(response)
         var textContent = processedResponse
         
-        // 提取思考内容
+        // Note.
         thinkingRegex.find(processedResponse)?.let { match ->
             thinking = match.groupValues[1].ifEmpty { match.groupValues[2] }.trim()
             textContent = textContent.replace(match.value, "")
         }
         
-        // 提取图像生成请求
+        // Note.
         imageGenRegex.findAll(processedResponse).forEach { match ->
             try {
                 val json = match.groupValues[1].trim()
                 val request = gson.fromJson(json, ImageGenerationRequest::class.java)
                 imageRequests.add(request)
             } catch (e: Exception) {
-                // 忽略解析错误
+                // Note.
             }
             textContent = textContent.replace(match.value, "[图像生成请求]")
         }
         
-        // 提取代码块 - 使用主正则
+        // Note.
         val matchedRanges = mutableListOf<IntRange>()
         codeBlockRegex.findAll(processedResponse).forEach { match ->
             matchedRanges.add(match.range)
             val rawLanguage = match.groupValues[1].trim().lowercase()
             var rawContent = match.groupValues[2]
             
-            // 跳过 thinking 和 image-gen 块
+            // thinking image-gen.
             if (rawLanguage == "thinking" || rawLanguage == "image-gen") {
                 return@forEach
             }
             
-            // 尝试从内容开头提取文件名注释
-            // 注意：文件名注释必须独占一行，后面必须有换行符
+            // Note.
+            // Note.
             var filename: String? = null
             
-            // Check是否有文件名注释（必须以换行符结束）
+            // Check.
             for (pattern in FILENAME_PATTERNS) {
                 pattern.find(rawContent)?.let { filenameMatch ->
                     val extractedFilename = filenameMatch.groupValues[1].trim()
-                    // Verify文件名格式（应该包含扩展名）
+                    // Verify.
                     if (extractedFilename.contains(".") && extractedFilename.length > 2) {
                         filename = extractedFilename
-                        // 移除文件名注释行
+                        // Note.
                         rawContent = rawContent.substring(filenameMatch.range.last + 1)
                         AppLogger.d("CodeBlockParser", "Extracted filename: $filename from pattern: ${pattern.pattern}")
                     }
@@ -998,10 +998,10 @@ object CodeBlockParser {
             val content = rawContent.trim()
             
             if (content.isNotEmpty()) {
-                // 根据语言标识符或内容推断语言类型
+                // Note.
                 val language = inferLanguage(rawLanguage, content)
                 
-                // Generate默认文件名
+                // Generate.
                 val actualFilename = filename?.takeIf { it.isNotBlank() } ?: getDefaultFilename(language)
                 
                 AppLogger.d("CodeBlockParser", "Parsed code block: language=$language, filename=$actualFilename, contentLength=${content.length}")
@@ -1018,14 +1018,14 @@ object CodeBlockParser {
             }
         }
         
-        // 如果主正则没有匹配到任何代码块，尝试备用解析
+        // Note.
         if (codeBlocks.isEmpty()) {
             parseCodeBlocksFallback(processedResponse, codeBlocks)
         }
         
-        // Cleanup文本内容中的代码块，避免重复输出
+        // Cleanup.
         textContent = codeBlockRegex.replace(textContent, "").trim()
-        // 移除多余的空行
+        // Note.
         textContent = textContent.replace(EXCESS_NEWLINES_REGEX, "\n\n")
         
         return ParsedAiResponse(
@@ -1037,15 +1037,15 @@ object CodeBlockParser {
     }
     
     /**
-     * 备用代码块解析方法
-     * 当主正则失败时使用，采用更宽松的匹配策略
+     * Note.
+     * Note.
      */
     private fun parseCodeBlocksFallback(response: String, codeBlocks: MutableList<CodeBlock>) {
         AppLogger.d("CodeBlockParser", "parseCodeBlocksFallback: trying fallback parsing")
         
         var foundAny = false
         
-        // 尝试备用正则1：更宽松的三反引号匹配
+        // Note.
         FALLBACK_TRIPLE_BACKTICK_REGEX.findAll(response).forEach { match ->
             val rawLanguage = match.groupValues[1].trim().lowercase()
             val rawContent = match.groupValues[2].trim()
@@ -1070,7 +1070,7 @@ object CodeBlockParser {
             }
         }
         
-        // 如果备用正则1没找到，尝试备用正则2（单反引号）
+        // Note.
         if (!foundAny) {
             FALLBACK_SINGLE_BACKTICK_REGEX.findAll(response).forEach { match ->
                 val rawLanguage = match.groupValues[1].trim().lowercase()
@@ -1094,7 +1094,7 @@ object CodeBlockParser {
             }
         }
         
-        // 如果备用正则2没找到，尝试备用正则3（处理没有结束标记的情况）
+        // Note.
         if (!foundAny) {
             AppLogger.d("CodeBlockParser", "Trying fallbackRegex3 for unclosed code blocks")
             FALLBACK_UNCLOSED_BACKTICK_REGEX.findAll(response).forEach { match ->
@@ -1119,7 +1119,7 @@ object CodeBlockParser {
             }
         }
         
-        // 如果还是没找到，尝试基于内容特征的智能分割
+        // Note.
         if (!foundAny) {
             AppLogger.d("CodeBlockParser", "Trying content-based parsing")
             parseCodeBlocksByContent(response, codeBlocks)
@@ -1127,14 +1127,14 @@ object CodeBlockParser {
     }
     
     /**
-     * 基于内容特征的智能代码块分割
-     * 当所有正则都失败时，尝试根据代码特征识别代码块
+     * Note.
+     * Note.
      */
     private fun parseCodeBlocksByContent(response: String, codeBlocks: MutableList<CodeBlock>) {
         AppLogger.d("CodeBlockParser", "parseCodeBlocksByContent: attempting content-based extraction")
         
-        // Find HTML 内容
-        // 1. 首先尝试完整的 HTML（以 <!DOCTYPE 或 <html 开头，以 </html> 结尾）
+        // Find HTML.
+        // 1. HTML <!DOCTYPE <html </html>.
         var htmlContent: String? = null
         
         COMPLETE_HTML_PATTERN.find(response)?.let { match ->
@@ -1142,26 +1142,26 @@ object CodeBlockParser {
             AppLogger.d("CodeBlockParser", "Found complete HTML, length=${htmlContent?.length}")
         }
         
-        // 2. 如果没有找到完整的 HTML，尝试提取不完整的 HTML（可能缺少结束标签）
+        // 2. HTML HTML.
         if (htmlContent == null) {
-            // Find以 <!DOCTYPE html> 开头的内容
+            // Find <!DOCTYPE html>.
             val doctypeIndex = response.indexOf("<!DOCTYPE", ignoreCase = true)
             if (doctypeIndex >= 0) {
-                // 从 <!DOCTYPE 开始，尝试找到 </html> 或 </body> 或 </script>
+                // <!DOCTYPE </html> </body> </script>.
                 val endHtmlIndex = response.indexOf("</html>", doctypeIndex, ignoreCase = true)
                 val endBodyIndex = response.indexOf("</body>", doctypeIndex, ignoreCase = true)
                 val lastScriptEndIndex = response.lastIndexOf("</script>", ignoreCase = true)
                 
                 val endIndex = when {
-                    endHtmlIndex >= 0 -> endHtmlIndex + 7 // </html> 长度
-                    endBodyIndex >= 0 -> endBodyIndex + 7 // </body> 长度，需要补充 </html>
-                    lastScriptEndIndex >= doctypeIndex -> lastScriptEndIndex + 9 // </script> 长度
+                    endHtmlIndex >= 0 -> endHtmlIndex + 7 // </html>.
+                    endBodyIndex >= 0 -> endBodyIndex + 7 // </body> </html>.
+                    lastScriptEndIndex >= doctypeIndex -> lastScriptEndIndex + 9 // </script>.
                     else -> response.length
                 }
                 
                 htmlContent = response.substring(doctypeIndex, endIndex).trim()
                 
-                // 如果缺少 </body> 或 </html>，补充它们
+                // </body> </html>.
                 htmlContent?.let { html ->
                     var fixed = html
                     if (!fixed.contains("</body>", ignoreCase = true)) {
@@ -1177,7 +1177,7 @@ object CodeBlockParser {
             }
         }
         
-        // 3. 如果还是没有，尝试查找 <html> 开头的内容
+        // 3. <html>.
         if (htmlContent == null) {
             val htmlTagIndex = response.indexOf("<html", ignoreCase = true)
             if (htmlTagIndex >= 0) {
@@ -1205,12 +1205,12 @@ object CodeBlockParser {
             }
         }
         
-        // Find CSS 内容（包含选择器和属性）
+        // Find CSS.
         val cssMatches = CSS_CONTENT_PATTERN.findAll(response)
         val cssContent = StringBuilder()
         cssMatches.forEach { match ->
             val content = match.value.trim()
-            // 确保是 CSS 而不是 JS 对象
+            // CSS JS.
             if (content.contains("{") && content.contains("}") && 
                 content.contains(":") && content.contains(";") &&
                 !content.contains("function") && !content.contains("=>") &&
@@ -1229,7 +1229,7 @@ object CodeBlockParser {
             )
         }
         
-        // Find JS 内容（包含函数定义或变量声明）
+        // Find JS.
         val jsMatches = JS_CONTENT_PATTERN.findAll(response)
         val jsContent = StringBuilder()
         jsMatches.forEach { match ->
@@ -1251,7 +1251,7 @@ object CodeBlockParser {
     }
     
     /**
-     * 推断语言类型
+     * Note.
      */
     private fun inferLanguage(rawLanguage: String, content: String): String {
         return when {
@@ -1261,24 +1261,24 @@ object CodeBlockParser {
                 "stylesheet" -> "css"
                 else -> rawLanguage
             }
-            // 如果没有语言标识，尝试从内容推断
+            // Note.
             content.contains("<!DOCTYPE", ignoreCase = true) || 
             content.contains("<html", ignoreCase = true) ||
             (content.trimStart().startsWith("<") && content.contains(">")) -> "html"
             content.trimStart().startsWith("{") && content.contains(":") -> {
-                // 可能是 CSS 或 JSON
+                // CSS JSON.
                 if (content.contains("\"") && !content.contains(";")) "json" else "css"
             }
             content.contains("function") || content.contains("const ") || 
             content.contains("let ") || content.contains("var ") ||
             content.contains("=>") -> "js"
             content.contains("{") && content.contains(";") -> "css"
-            else -> "html"  // Default为 html
+            else -> "html"  // Default html.
         }
     }
     
     /**
-     * 获取默认文件名
+     * Note.
      */
     private fun getDefaultFilename(language: String): String {
         return when (language) {
@@ -1292,31 +1292,31 @@ object CodeBlockParser {
     }
     
     /**
-     * 检查代码是否完整
+     * Note.
      */
     private fun isCompleteCode(language: String, content: String): Boolean {
         return when (language) {
             "html" -> content.contains("<!DOCTYPE", ignoreCase = true) || 
                      content.contains("<html", ignoreCase = true)
-            "css" -> true  // CSS片段通常都是完整的
+            "css" -> true  // CSS.
             "js" -> true
             else -> true
         }
     }
     
     /**
-     * 清理代码块内容，移除开头的文件名注释
+     * Note.
      * 
-     * 处理以下格式：
-     * - // File名: script.js (JS 单行注释，可能没有换行)
-     * - /* 文件名: styles.css */ (CSS 块注释)
-     * - <!-- 文件名: index.html --> (HTML 注释)
+     * Note.
+     * - // File : script.js (JS ).
+     * comment.
+     * file name comment.
      */
     private fun cleanCodeBlockContent(content: String, language: String): String {
         var cleaned = content.trim()
         
-        // 根据语言类型，移除开头的文件名注释
-        // 注意：文件名必须是有效格式（字母数字下划线横线 + 扩展名），避免误匹配代码
+        // Note.
+        // Note.
         val patterns = CLEAN_FILENAME_PATTERNS[language] ?: emptyList()
         
         for (pattern in patterns) {
@@ -1330,7 +1330,7 @@ object CodeBlockParser {
             }
         }
         
-        // 对于 JS 代码，修复缺失的换行符
+        // JS.
         if (language == "js" || language == "javascript") {
             cleaned = fixJsNewlines(cleaned)
         }
@@ -1339,46 +1339,46 @@ object CodeBlockParser {
     }
     
     /**
-     * 修复 JS 代码中缺失的换行符
+     * JS.
      * 
-     * AI 有时会输出没有换行的 JS 代码，导致单行注释 // 把后面的代码也注释掉
-     * 例如：//技能项点击效果 const skillItems = ...
+     * AI JS //.
+     * // const skillItems = ...
      * 
-     * 这个函数会在以下位置添加换行符：
-     * 1. 单行注释后面（如果后面紧跟代码）
-     * 2. 语句结束符后面（; } 等）
+     * Note.
+     * Note.
+     * Note.
      */
     private fun fixJsNewlines(code: String): String {
         var result = code
         
-        // Check代码是否缺少换行符（如果整个代码只有很少的换行符，说明需要修复）
+        // Check.
         val lineCount = result.count { it == '\n' }
         val codeLength = result.length
         
-        // 如果代码长度超过 200 但换行符少于 5 个，说明可能需要修复
+        // Note.
         if (codeLength > 200 && lineCount < 5) {
             AppLogger.d("CodeBlockParser", "fixJsNewlines: Code appears to be minified (length=$codeLength, lines=$lineCount), attempting to fix")
             
-            // 1. 在单行注释后添加换行（// 注释内容 后面如果紧跟代码）
-            // 匹配 // 开头的注释，后面紧跟非换行的代码
-            // 注意：要避免匹配 URL 中的 // (如 http://)
+            // Note.
+            // Note.
+            // URL // ( http://).
             result = result.replace(JS_COMMENT_NEWLINE_REGEX) { match ->
                 val comment = match.groupValues[1]
                 val code = match.groupValues[3]
                 "$comment\n$code"
             }
             
-            // 2. 在 }); 后添加换行（常见的回调结束）
+            // Note.
             result = result.replace(CALLBACK_END_REGEX) { "});\n" }
             
-            // 3. 在 }; 后添加换行
+            // Note.
             result = result.replace(BLOCK_END_SEMICOLON_REGEX) { "};\n" }
             
-            // 4. 在单独的 } 后添加换行（函数/块结束）
+            // Note.
             result = result.replace(BRACE_CLOSE_REGEX) { "}\n" }
             
-            // 5. 在 ; 后添加换行（语句结束，但不是 for 循环中的分号）
-            // 这个比较复杂，只处理明显的语句结束
+            // 5. ; for.
+            // Note.
             result = result.replace(STATEMENT_END_REGEX) { ";\n" }
             
             val newLineCount = result.count { it == '\n' }
@@ -1390,22 +1390,22 @@ object CodeBlockParser {
     }
     
     /**
-     * 修复 HTML 中内联 JS 的常见语法错误
+     * HTML JS.
      * 
-     * AI 有时会输出有语法错误的 JS 代码，比如：
-     * - alert(游戏结束) 应该是 alert('游戏结束')
-     * - 缺少字符串引号
+     * AI JS.
+     * - alert( ) alert(' ').
+     * Note.
      */
     private fun fixInlineJsSyntax(html: String): String {
         var result = html
         
-        // 找到所有 <script> 标签并修复其中的 JS
+        // <script> JS.
         result = SCRIPT_TAG_REGEX.replace(result) { match ->
             val openTag = match.groupValues[1]
             var jsContent = match.groupValues[2]
             val closeTag = match.groupValues[3]
             
-            // 只处理内联脚本（没有 src 属性的）
+            // src.
             if (!openTag.contains("src=", ignoreCase = true) && jsContent.isNotBlank()) {
                 jsContent = fixJsSyntaxErrors(jsContent)
             }
@@ -1417,28 +1417,28 @@ object CodeBlockParser {
     }
     
     /**
-     * 修复 JS 代码中的常见语法错误
+     * JS.
      */
     private fun fixJsSyntaxErrors(js: String): String {
         var result = js
         
-        // 1. 修复 alert/confirm/prompt 中缺少引号的中文字符串
-        // 例如：alert(游戏结束) -> alert('游戏结束')
+        // 1. alert/confirm/prompt.
+        // alert( ) -> alert(' ').
         result = result.replace(ALERT_CHINESE_REGEX) { match ->
             val func = match.groupValues[1]
             val content = match.groupValues[2].trim()
             "$func('$content')"
         }
         
-        // 2. 修复 console.log 中缺少引号的中文字符串
+        // 2. console.log.
         result = result.replace(CONSOLE_LOG_CHINESE_REGEX) { match ->
             val func = match.groupValues[1]
             val content = match.groupValues[2].trim()
             "$func('$content')"
         }
         
-        // 3. 修复模板字符串中的问题（如果有的话）
-        // 这个比较复杂，暂时跳过
+        // Note.
+        // Note.
         
         AppLogger.d("CodeBlockParser", "fixJsSyntaxErrors: Applied syntax fixes")
         
@@ -1446,9 +1446,9 @@ object CodeBlockParser {
     }
     
     /**
-     * 合并多个代码块为完整HTML文件
+     * HTML.
      * 
-     * 合并代码块为单个 HTML - 简化版
+     * HTML -.
      */
     fun mergeToSingleHtml(codeBlocks: List<CodeBlock>): String {
         AppLogger.d("CodeBlockParser", "mergeToSingleHtml: ${codeBlocks.size} blocks")
@@ -1457,17 +1457,17 @@ object CodeBlockParser {
         val css = codeBlocks.filter { it.language == "css" }.joinToString("\n\n") { it.content }
         val js = codeBlocks.filter { it.language == "js" || it.language == "javascript" }.joinToString("\n\n") { it.content }
         
-        // 如果有完整的 HTML，直接使用并插入 CSS/JS
+        // HTML CSS/JS.
         if (html != null && (html.contains("<html", ignoreCase = true) || html.contains("<!DOCTYPE", ignoreCase = true))) {
             var result = html
             
-            // 插入 CSS
+            // CSS.
             if (css.isNotBlank() && !html.contains(css.take(50))) {
                 val styleTag = "<style>\n$css\n</style>"
                 result = insertBefore(result, styleTag, "</head>", "<body")
             }
             
-            // 插入 JS
+            // JS.
             if (js.isNotBlank() && !html.contains(js.take(50))) {
                 val scriptTag = "<script>\n$js\n</script>"
                 result = insertBefore(result, scriptTag, "</body>", "</html>")
@@ -1476,7 +1476,7 @@ object CodeBlockParser {
             return result
         }
         
-        // 没有完整 HTML，构建一个
+        // HTML.
         return buildHtml(html ?: "", css, js)
     }
     
@@ -1509,7 +1509,7 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
     }
     
     /**
-     * 合并代码块为单个 HTML - 旧版（保留作为备用）
+     * HTML -.
      */
     fun mergeToSingleHtmlLegacy(codeBlocks: List<CodeBlock>): String {
         val htmlBlocks = codeBlocks.filter { it.language == "html" }
@@ -1519,17 +1519,17 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
         AppLogger.d("CodeBlockParser", "mergeToSingleHtmlLegacy: htmlBlocks=${htmlBlocks.size}, cssBlocks=${cssBlocks.size}, jsBlocks=${jsBlocks.size}")
         codeBlocks.forEach { block ->
             AppLogger.d("CodeBlockParser", "  Block: language=${block.language}, filename=${block.filename}, contentLength=${block.content.length}")
-            // 输出代码块内容的前200个字符用于调试
+            // Note.
             AppLogger.d("CodeBlockParser", "  Content preview: ${block.content.take(200).replace("\n", "\\n")}")
         }
         
-        // 如果有完整的HTML，尝试合并CSS和JS
+        // HTML CSS JS.
         val mainHtml = htmlBlocks.find { it.isComplete }?.content
         
         if (mainHtml != null) {
             var result = mainHtml
             
-            // 输出原始 HTML 中的 script 标签内容用于调试
+            // HTML script.
             val scriptMatches = SCRIPT_TAG_REGEX.findAll(mainHtml).toList()
             AppLogger.d("CodeBlockParser", "Original HTML has ${scriptMatches.size} script tags")
             scriptMatches.forEachIndexed { index, match ->
@@ -1537,14 +1537,14 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                 AppLogger.d("CodeBlockParser", "  Script $index: length=${scriptContent.length}, preview=${scriptContent.take(100).replace("\n", "\\n")}")
             }
             
-            // Check HTML 中是否已经有内联的 style 和 script 标签
+            // Check HTML style script.
             val hasInlineStyle = result.contains("<style", ignoreCase = true)
-            // Check是否有真正的内联脚本（有内容的 script 标签，而不是空的或只有 src 的）
-            // 匹配 <script>...</script> 但排除 <script src="..."></script>
+            // Check script src.
+            // <script>...</script> <script src="..."></script>.
             val inlineScriptMatches = INLINE_SCRIPT_REGEX.findAll(result).toList()
             val hasInlineScript = inlineScriptMatches.any { match ->
                 val scriptContent = match.groupValues[1].trim()
-                scriptContent.isNotEmpty() && scriptContent.length > 5  // 至少有一些实际代码
+                scriptContent.isNotEmpty() && scriptContent.length > 5  // Note.
             }
             
             AppLogger.d("CodeBlockParser", "hasInlineStyle=$hasInlineStyle, hasInlineScript=$hasInlineScript")
@@ -1554,8 +1554,8 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                 }
             }
             
-            // 只有当有对应的代码块时，才移除外部引用
-            // No则保留外部引用（虽然可能无法加载，但至少不会丢失信息）
+            // Note.
+            // No.
             if (cssBlocks.isNotEmpty()) {
                 result = result.replace(EXTERNAL_CSS_LINK_REGEX, "")
             }
@@ -1563,10 +1563,10 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                 result = result.replace(EXTERNAL_JS_SCRIPT_REGEX, "")
             }
             
-            // 在</head>前插入CSS（如果有独立的CSS块且HTML中没有相同内容）
-            // 注意：如果 HTML 已经有内联样式，仍然添加额外的 CSS 块（它们可能是补充样式）
+            // </head> CSS CSS HTML.
+            // HTML CSS.
             if (cssBlocks.isNotEmpty()) {
-                // Cleanup每个 CSS 代码块开头的文件名注释
+                // Cleanup CSS.
                 val cleanedCssBlocks = cssBlocks.map { block ->
                     cleanCodeBlockContent(block.content, block.language)
                 }
@@ -1581,7 +1581,7 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                         replaceFirstIgnoreCase(result, "<body", "$styleTag\n<body")
                     }
                     result.contains("<html", ignoreCase = true) -> {
-                        // 在 <html> 后插入 <head> 和样式 — 使用 indexOf 找到 <html...> 结束位置
+                        // <html> <head> — indexOf <html...>.
                         val htmlTagStart = result.indexOf("<html", ignoreCase = true)
                         val htmlTagEnd = result.indexOf(">", htmlTagStart)
                         if (htmlTagEnd >= 0) {
@@ -1591,29 +1591,29 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                         }
                     }
                     else -> {
-                        // 没有标准结构，在开头添加
+                        // Note.
                         "$styleTag\n$result"
                     }
                 }
             }
             
-            // 在</body>前插入JS（确保 DOM 加载完成后执行）
-            // 只有当有独立的 JS 代码块时才添加
+            // </body> JS DOM.
+            // JS.
             if (jsBlocks.isNotEmpty()) {
-                // Cleanup每个 JS 代码块开头的文件名注释
+                // Cleanup JS.
                 val cleanedJsBlocks = jsBlocks.map { block ->
                     cleanCodeBlockContent(block.content, block.language)
                 }
                 val jsContent = cleanedJsBlocks.joinToString("\n\n")
                 AppLogger.d("CodeBlockParser", "Adding JS content, length=${jsContent.length}")
                 AppLogger.d("CodeBlockParser", "JS content preview: ${jsContent.take(200)}...")
-                // 如果 HTML 中已经有内联脚本，不要包装 JS（避免重复包装）
-                // 直接添加额外的 JS 代码
+                // HTML JS.
+                // JS.
                 val finalJs = if (hasInlineScript) {
-                    // HTML 已有内联脚本，直接添加额外代码（不包装）
+                    // HTML.
                     jsContent
                 } else {
-                    // 没有内联脚本，包装 JS 确保 DOM 加载完成后执行
+                    // JS DOM.
                     wrapJsForDomReady(jsContent)
                 }
                 val scriptTag = "<script>\n$finalJs\n</script>"
@@ -1627,21 +1627,21 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                         replaceFirstIgnoreCase(result, "</html>", "$scriptTag\n</html>")
                     }
                     else -> {
-                        // 在末尾添加
+                        // Note.
                         "$result\n$scriptTag"
                     }
                 }
                 AppLogger.d("CodeBlockParser", "JS inserted, beforeLength=$beforeLength, afterLength=${result.length}")
             } else {
                 AppLogger.d("CodeBlockParser", "No JS blocks to add")
-                // Check HTML 中是否有外部 JS 引用但没有对应的代码块
+                // Check HTML JS.
                 val externalJsMatches = EXTERNAL_JS_REF_REGEX.findAll(result)
                 externalJsMatches.forEach { match ->
                     AppLogger.w("CodeBlockParser", "WARNING: HTML references external JS file '${match.groupValues[1]}' but no JS code block found!")
                 }
             }
             
-            // 输出最终结果中的 script 标签用于调试
+            // script.
             val finalScriptMatches = SCRIPT_TAG_REGEX.findAll(result).toList()
             AppLogger.d("CodeBlockParser", "Final HTML has ${finalScriptMatches.size} script tags")
             finalScriptMatches.forEachIndexed { index, match ->
@@ -1649,18 +1649,18 @@ ${if (js.isNotBlank()) "<script>\n$js\n</script>" else ""}
                 AppLogger.d("CodeBlockParser", "  Final Script $index: length=${scriptContent.length}")
             }
             
-            // 修复内联 JS 中的语法错误
+            // JS.
             result = fixInlineJsSyntax(result)
             
             return result
         }
         
-        // 没有完整HTML，构建一个标准的 HTML5 文档
+        // HTML HTML5.
         val css = cssBlocks.joinToString("\n\n") { it.content }
         val js = jsBlocks.joinToString("\n\n") { it.content }
         val htmlContent = htmlBlocks.joinToString("\n") { it.content }
         
-        // 包装 JS 确保 DOM 加载完成后执行
+        // JS DOM.
         val wrappedJs = if (js.isNotEmpty()) wrapJsForDomReady(js) else ""
         
         val builtHtml = """
@@ -1679,18 +1679,18 @@ ${if (wrappedJs.isNotEmpty()) "<script>\n$wrappedJs\n</script>" else ""}
 </html>
         """.trimIndent()
         
-        // 修复内联 JS 中的语法错误
+        // JS.
         return fixInlineJsSyntax(builtHtml)
     }
     
     /**
-     * 包装 JS 代码，确保在 DOM 加载完成后执行
-     * 避免 JS 执行时 DOM 元素还未创建的问题
+     * JS DOM.
+     * JS DOM.
      * 
-     * 修复：使用更安全的包装方式，保持全局作用域的函数可访问
+     * Note.
      */
     /**
-     * 大小写不敏感的 replaceFirst，避免为简单标签创建 Regex
+     * replaceFirst Regex.
      */
     private fun replaceFirstIgnoreCase(source: String, target: String, replacement: String): String {
         val index = source.indexOf(target, ignoreCase = true)
@@ -1702,7 +1702,7 @@ ${if (wrappedJs.isNotEmpty()) "<script>\n$wrappedJs\n</script>" else ""}
         val trimmedContent = jsContent.trim()
         if (trimmedContent.isEmpty()) return ""
         
-        // Check JS 是否已经有 DOMContentLoaded 或 window.onload 包装
+        // Check JS DOMContentLoaded window.onload.
         val hasWrapper = trimmedContent.contains("DOMContentLoaded", ignoreCase = true) ||
                         trimmedContent.contains("window.onload", ignoreCase = true) ||
                         trimmedContent.contains("addEventListener('load'", ignoreCase = true) ||
@@ -1713,9 +1713,9 @@ ${if (wrappedJs.isNotEmpty()) "<script>\n$wrappedJs\n</script>" else ""}
         return if (hasWrapper) {
             trimmedContent
         } else {
-            // 不再包装 JS 代码，直接返回原始内容
-            // 因为脚本标签放在 </body> 前，此时 DOM 已经加载完成
-            // 包装会导致函数定义不在全局作用域，无法被 onclick 等属性调用
+            // JS.
+            // </body> DOM.
+            // onclick.
             trimmedContent
         }
     }

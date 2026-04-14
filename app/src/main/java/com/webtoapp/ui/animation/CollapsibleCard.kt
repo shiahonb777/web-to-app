@@ -23,16 +23,16 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 可折叠配置卡片 — 带弹簧展开动画
+ * Collapsible settings card with spring expansion.
  * 
- * 默认折叠状态只显示标题栏 + 图标 + 可选的开关/摘要
- * 点击后弹簧展开内容区域
+ * Collapsed by default: header, icon, and optional trailing summary.
+ * Tap to expand content with a spring animation.
  *
- * @param title 卡片标题
- * @param icon 标题图标
- * @param startExpanded 是否默认展开
- * @param trailing 标题栏右侧内容（如 Switch）
- * @param content 可折叠的内容区域
+ * @param title Card title.
+ * @param icon Header icon.
+ * @param startExpanded Whether the card starts expanded.
+ * @param trailing Right-side header content (for example Switch).
+ * @param content Collapsible content area.
  */
 @Composable
 fun CollapsibleConfigCard(
@@ -45,7 +45,7 @@ fun CollapsibleConfigCard(
 ) {
     var expanded by remember { mutableStateOf(startExpanded) }
 
-    // 箭头旋转动画
+    // Arrow rotation animation
     val arrowRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = spring(
@@ -59,7 +59,7 @@ fun CollapsibleConfigCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column {
-            // 标题栏（始终可见，点击切换折叠状态）
+            // Header row (always visible, toggles expansion)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -70,7 +70,7 @@ fun CollapsibleConfigCard(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 图标
+                // Icon
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
@@ -80,20 +80,20 @@ fun CollapsibleConfigCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // 标题
+                // Title
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
 
-                // 右侧内容（Switch等）
+                // Trailing content (Switch, etc.)
                 if (trailing != null) {
                     trailing()
                     Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                // 折叠箭头
+                // Collapse arrow
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = if (expanded) "收起" else "展开",
@@ -104,7 +104,7 @@ fun CollapsibleConfigCard(
                 )
             }
 
-            // 可折叠内容区域
+            // Collapsible content area
             AnimatedVisibility(
                 visible = expanded,
                 enter = CardExpandTransition,

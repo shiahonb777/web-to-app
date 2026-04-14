@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object WebViewStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 下载桥接 ====================
+    // ==================== Download Bridge ====================
     val preparingDownload: String get() = when (lang) {
         AppLanguage.CHINESE -> "正在准备下载: "
         AppLanguage.ENGLISH -> "Preparing download: "
@@ -125,7 +125,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Image generation failed"
         AppLanguage.ARABIC -> "فشل إنشاء الصورة"
     }
-    // ==================== WebView 高级设置 ====================
+    // ==================== WebView Advanced Settings ====================
     val javaScriptSetting: String get() = when (lang) {
         AppLanguage.CHINESE -> "JavaScript"
         AppLanguage.ENGLISH -> "JavaScript"
@@ -233,7 +233,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Enable cross-origin isolation (COOP/COEP), supports FFmpeg.wasm and similar libraries"
         AppLanguage.ARABIC -> "تمكين العزل عبر الأصل (COOP/COEP)، يدعم FFmpeg.wasm والمكتبات المماثلة"
     }
-    // ==================== CreateAppScreen 翻译 ====================
+    // ==================== CreateAppScreen Translations ====================
     val showStatusBar: String get() = when (lang) {
         AppLanguage.CHINESE -> "显示状态栏"
         AppLanguage.ENGLISH -> "Show Status Bar"
@@ -353,7 +353,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Display splash screen in landscape orientation"
         AppLanguage.ARABIC -> "عرض شاشة البداية بالاتجاه الأفقي"
     }
-    // ==================== User-Agent 伪装相关字符串 ====================
+    // ==================== User-Agent Spoofing Strings ====================
     val userAgentMode: String get() = when (lang) {
         AppLanguage.CHINESE -> "浏览器伪装"
         AppLanguage.ENGLISH -> "Browser Disguise"
@@ -461,7 +461,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Some sites detect WebView and block access. Browser disguise can bypass detection"
         AppLanguage.ARABIC -> "تكتشف بعض المواقع WebView وتحظر الوصول. يمكن لتمويه المتصفح تجاوز الاكتشاف"
     }
-    // ==================== 悬浮小窗 ====================
+    // ==================== Floating Window ====================
     val floatingWindowTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "悬浮小窗"
         AppLanguage.ENGLISH -> "Floating Window"
@@ -581,7 +581,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Go to Settings"
         AppLanguage.ARABIC -> "الذهاب إلى الإعدادات"
     }
-    // ==================== 悬浮小窗 V2 新增 ====================
+    // ==================== Floating Window V2 ====================
     val fwSectionSize: String get() = when (lang) {
         AppLanguage.CHINESE -> "窗口尺寸"
         AppLanguage.ENGLISH -> "Window Size"
@@ -701,7 +701,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Prevents window from being dragged"
         AppLanguage.ARABIC -> "يمنع سحب النافذة لتجنب اللمس العرضي"
     }
-    // ==================== 长按菜单 ====================
+    // ==================== Long-Press Menu ====================
     val longPressMenuImage: String get() = when (lang) {
         AppLanguage.CHINESE -> "图片"
         AppLanguage.ENGLISH -> "Image"
@@ -767,7 +767,7 @@ internal object WebViewStrings {
         AppLanguage.ENGLISH -> "Image Preview"
         AppLanguage.ARABIC -> "معاينة الصورة"
     }
-    // ==================== 工具栏项 ====================
+    // ==================== Toolbar Items ====================
     val toolbarItems: String get() = when (lang) {
         AppLanguage.CHINESE -> "工具栏按钮"
         AppLanguage.ENGLISH -> "Toolbar Items"

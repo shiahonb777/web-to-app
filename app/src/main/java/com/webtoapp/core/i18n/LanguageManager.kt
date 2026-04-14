@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 import java.util.Locale
 
 /**
- * 支持的语言枚举
+ * Note.
  */
 enum class AppLanguage(
     val code: String,
@@ -35,8 +35,8 @@ enum class AppLanguage(
 private val Context.languageDataStore by preferencesDataStore(name = "language_settings")
 
 /**
- * 语言管理器
- * 管理应用的多语言设置
+ * Note.
+ * Note.
  */
 @SuppressLint("StaticFieldLeak")
 class LanguageManager(private val context: Context) {
@@ -47,7 +47,7 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 当前语言 Flow
+     * Flow.
      */
     val currentLanguageFlow: Flow<AppLanguage> = context.languageDataStore.data.map { prefs ->
         val code = prefs[LANGUAGE_KEY] ?: getSystemLanguageCode()
@@ -55,7 +55,7 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 获取系统语言代码
+     * Note.
      */
     private fun getSystemLanguageCode(): String {
         val systemLocale = Locale.getDefault()
@@ -67,21 +67,21 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 是否已选择过语言（首次启动检测）
+     * Note.
      */
     val hasSelectedLanguageFlow: Flow<Boolean> = context.languageDataStore.data.map { prefs ->
         prefs[LANGUAGE_SELECTED_KEY] == "true"
     }
     
     /**
-     * 检查是否已选择过语言
+     * Note.
      */
     suspend fun hasSelectedLanguage(): Boolean {
         return hasSelectedLanguageFlow.first()
     }
     
     /**
-     * 设置语言
+     * Note.
      */
     suspend fun setLanguage(language: AppLanguage) {
         context.languageDataStore.edit { prefs ->
@@ -91,14 +91,14 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 获取当前语言（同步）
+     * Note.
      */
     suspend fun getCurrentLanguage(): AppLanguage {
         return currentLanguageFlow.first()
     }
     
     /**
-     * 应用语言配置到 Context
+     * Context.
      */
     fun applyLanguage(context: Context, language: AppLanguage): Context {
         val locale = language.locale
@@ -112,7 +112,7 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 获取 AI 提示词管理器
+     * AI.
      */
     fun getPromptManager(): AiPromptManager {
         return AiPromptManager

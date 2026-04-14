@@ -30,13 +30,12 @@ import com.webtoapp.core.activation.ActivationCode
 import java.lang.reflect.Type
 
 /**
- * Room数据库类型转换器
- * 使用全局 Gson 单例，避免重复创建实例
+ * Room converters backed by a shared Gson instance.
  */
 class Converters {
     
     companion object {
-        // 全局 Gson 单例，线程安全
+        // Shared Gson instance, thread-safe
         @PublishedApi
         internal val gson: Gson by lazy {
             GsonBuilder()
@@ -56,7 +55,7 @@ class Converters {
                 .create()
         }
         
-        // Cache TypeToken，避免重复创建
+        // Cache TypeToken to avoid recreation
         private val stringListType: Type by lazy {
             object : TypeToken<List<String>>() {}.type
         }
@@ -66,12 +65,12 @@ class Converters {
         }
         
         /**
-         * 通用的 JSON 序列化方法
+         * Generic JSON serializer.
          */
         fun <T> toJson(value: T?): String = gson.toJson(value)
-        
+
         /**
-         * 通用的 JSON 反序列化方法
+         * Generic JSON deserializer.
          */
         inline fun <reified T> fromJson(value: String): T? {
             return try {
@@ -87,7 +86,7 @@ class Converters {
         internal val defaultJsonCache = java.util.concurrent.ConcurrentHashMap<Class<*>, JsonElement>()
         
         /**
-         * 带默认值的 JSON 反序列化方法
+         * JSON deserializer that merges defaults.
          */
         inline fun <reified T> fromJsonOrDefault(value: String, default: T): T {
             return try {
@@ -104,8 +103,7 @@ class Converters {
         }
 
         /**
-         * Recursively merge missing fields from [defaults] into [current].
-         * Existing fields in [current] always take priority.
+         * Fill missing fields from [defaults], keeping [current] values first.
          */
         @PublishedApi
         internal fun mergeMissingDefaults(defaults: JsonElement, current: JsonElement?): JsonElement {
@@ -121,13 +119,13 @@ class Converters {
                 merged.add(key, value)
             }
 
-            // Fill missing keys from defaults (recursive for nested object).
+                // Fill missing keys from defaults recursively.
             defaults.asJsonObject.entrySet().forEach { (key, defaultValue) ->
                 val currentValue = if (merged.has(key)) merged.get(key) else null
                 if (currentValue == null || currentValue.isJsonNull) {
                     merged.add(key, defaultValue.deepCopy())
                 } else if (!isTypeCompatible(defaultValue, currentValue)) {
-                    // 类型不兼容（如版本升级后字段类型变更），使用默认值
+                    // Type mismatch (e.g., field changed after upgrade), fall back to default
                     merged.add(key, defaultValue.deepCopy())
                 } else {
                     merged.add(key, mergeMissingDefaults(defaultValue, currentValue))
@@ -151,7 +149,7 @@ class Converters {
         }
     }
 
-    // List<String> 转换
+    // List<String> converter
     @TypeConverter
     fun fromStringList(value: List<String>?): String {
         return gson.toJson(value ?: emptyList<String>())
@@ -166,35 +164,35 @@ class Converters {
         }
     }
 
-    // AdConfig 转换
+    // AdConfig converter
     @TypeConverter
     fun fromAdConfig(value: AdConfig?): String = toJson(value)
 
     @TypeConverter
     fun toAdConfig(value: String): AdConfig? = fromJson(value)
 
-    // Announcement 转换
+    // Announcement converter
     @TypeConverter
     fun fromAnnouncement(value: Announcement?): String = toJson(value)
 
     @TypeConverter
     fun toAnnouncement(value: String): Announcement? = fromJson(value)
 
-    // WebViewConfig 转换
+    // WebViewConfig converter
     @TypeConverter
     fun fromWebViewConfig(value: WebViewConfig): String = toJson(value)
 
     @TypeConverter
     fun toWebViewConfig(value: String): WebViewConfig = fromJsonOrDefault(value, WebViewConfig())
 
-    // SplashConfig 转换
+    // SplashConfig converter
     @TypeConverter
     fun fromSplashConfig(value: SplashConfig?): String = toJson(value)
 
     @TypeConverter
     fun toSplashConfig(value: String): SplashConfig? = fromJson(value)
     
-    // AppType 转换
+    // AppType converter
     @TypeConverter
     fun fromAppType(value: AppType): String = value.name
 
@@ -205,49 +203,49 @@ class Converters {
         AppType.WEB
     }
     
-    // MediaConfig 转换
+    // MediaConfig converter
     @TypeConverter
     fun fromMediaConfig(value: MediaConfig?): String = toJson(value)
 
     @TypeConverter
     fun toMediaConfig(value: String): MediaConfig? = fromJson(value)
     
-    // GalleryConfig 转换（多媒体画廊）
+    // GalleryConfig converter (media gallery)
     @TypeConverter
     fun fromGalleryConfig(value: GalleryConfig?): String = toJson(value)
 
     @TypeConverter
     fun toGalleryConfig(value: String): GalleryConfig? = fromJson(value)
     
-    // BgmConfig 转换
+    // BgmConfig converter
     @TypeConverter
     fun fromBgmConfig(value: BgmConfig?): String = toJson(value)
 
     @TypeConverter
     fun toBgmConfig(value: String): BgmConfig? = fromJson(value)
     
-    // HtmlConfig 转换
+    // HtmlConfig converter
     @TypeConverter
     fun fromHtmlConfig(value: HtmlConfig?): String = toJson(value)
 
     @TypeConverter
     fun toHtmlConfig(value: String): HtmlConfig? = fromJson(value)
     
-    // ApkExportConfig 转换
+    // ApkExportConfig converter
     @TypeConverter
     fun fromApkExportConfig(value: ApkExportConfig?): String = toJson(value)
 
     @TypeConverter
     fun toApkExportConfig(value: String): ApkExportConfig? = fromJson(value)
     
-    // TranslateConfig 转换
+    // TranslateConfig converter
     @TypeConverter
     fun fromTranslateConfig(value: TranslateConfig?): String = toJson(value)
 
     @TypeConverter
     fun toTranslateConfig(value: String): TranslateConfig? = fromJson(value)
     
-    // List<ActivationCode> 转换
+    // List<ActivationCode> converter
     @TypeConverter
     fun fromActivationCodeList(value: List<ActivationCode>?): String {
         return gson.toJson(value ?: emptyList<ActivationCode>())
@@ -262,98 +260,98 @@ class Converters {
         }
     }
     
-    // ActivationDialogConfig 转换
+    // ActivationDialogConfig converter
     @TypeConverter
     fun fromActivationDialogConfig(value: ActivationDialogConfig?): String = toJson(value)
 
     @TypeConverter
     fun toActivationDialogConfig(value: String): ActivationDialogConfig? = fromJson(value)
     
-    // AutoStartConfig 转换
+    // AutoStartConfig converter
     @TypeConverter
     fun fromAutoStartConfig(value: AutoStartConfig?): String = toJson(value)
 
     @TypeConverter
     fun toAutoStartConfig(value: String): AutoStartConfig? = fromJson(value)
     
-    // ForcedRunConfig 转换
+    // ForcedRunConfig converter
     @TypeConverter
     fun fromForcedRunConfig(value: com.webtoapp.core.forcedrun.ForcedRunConfig?): String = toJson(value)
 
     @TypeConverter
     fun toForcedRunConfig(value: String): com.webtoapp.core.forcedrun.ForcedRunConfig? = fromJson(value)
     
-    // BlackTechConfig 转换（独立模块）
+    // BlackTechConfig converter (isolated module)
     @TypeConverter
     fun fromBlackTechConfig(value: com.webtoapp.core.blacktech.BlackTechConfig?): String = toJson(value)
 
     @TypeConverter
     fun toBlackTechConfig(value: String): com.webtoapp.core.blacktech.BlackTechConfig? = fromJson(value)
     
-    // DisguiseConfig 转换（独立模块）
+    // DisguiseConfig converter (isolated module)
     @TypeConverter
     fun fromDisguiseConfig(value: com.webtoapp.core.disguise.DisguiseConfig?): String = toJson(value)
 
     @TypeConverter
     fun toDisguiseConfig(value: String): com.webtoapp.core.disguise.DisguiseConfig? = fromJson(value)
     
-    // BrowserDisguiseConfig 转换（浏览器反指纹引擎）
+    // BrowserDisguiseConfig converter (browser spoofing)
     @TypeConverter
     fun fromBrowserDisguiseConfig(value: com.webtoapp.core.disguise.BrowserDisguiseConfig?): String = toJson(value)
 
     @TypeConverter
     fun toBrowserDisguiseConfig(value: String): com.webtoapp.core.disguise.BrowserDisguiseConfig? = fromJson(value)
     
-    // DeviceDisguiseConfig 转换（设备伪装引擎）
+    // DeviceDisguiseConfig converter (device spoofing)
     @TypeConverter
     fun fromDeviceDisguiseConfig(value: com.webtoapp.core.disguise.DeviceDisguiseConfig?): String = toJson(value)
 
     @TypeConverter
     fun toDeviceDisguiseConfig(value: String): com.webtoapp.core.disguise.DeviceDisguiseConfig? = fromJson(value)
     
-    // WordPressConfig 转换
+    // WordPressConfig converter
     @TypeConverter
     fun fromWordPressConfig(value: WordPressConfig?): String = toJson(value)
 
     @TypeConverter
     fun toWordPressConfig(value: String): WordPressConfig? = fromJson(value)
     
-    // NodeJsConfig 转换
+    // NodeJsConfig converter
     @TypeConverter
     fun fromNodeJsConfig(value: NodeJsConfig?): String = toJson(value)
 
     @TypeConverter
     fun toNodeJsConfig(value: String): NodeJsConfig? = fromJson(value)
     
-    // PhpAppConfig 转换
+    // PhpAppConfig converter
     @TypeConverter
     fun fromPhpAppConfig(value: PhpAppConfig?): String = toJson(value)
 
     @TypeConverter
     fun toPhpAppConfig(value: String): PhpAppConfig? = fromJson(value)
     
-    // PythonAppConfig 转换
+    // PythonAppConfig converter
     @TypeConverter
     fun fromPythonAppConfig(value: PythonAppConfig?): String = toJson(value)
 
     @TypeConverter
     fun toPythonAppConfig(value: String): PythonAppConfig? = fromJson(value)
     
-    // GoAppConfig 转换
+    // GoAppConfig converter
     @TypeConverter
     fun fromGoAppConfig(value: GoAppConfig?): String = toJson(value)
 
     @TypeConverter
     fun toGoAppConfig(value: String): GoAppConfig? = fromJson(value)
     
-    // MultiWebConfig 转换
+    // MultiWebConfig converter
     @TypeConverter
     fun fromMultiWebConfig(value: MultiWebConfig?): String = toJson(value)
 
     @TypeConverter
     fun toMultiWebConfig(value: String): MultiWebConfig? = fromJson(value)
 
-    // CloudAppConfig 转换
+    // CloudAppConfig converter
     @TypeConverter
     fun fromCloudAppConfig(value: com.webtoapp.data.model.CloudAppConfig?): String = toJson(value)
 

@@ -4,24 +4,24 @@ import com.webtoapp.core.logging.AppLogger
 import java.io.File
 
 /**
- * Native APK 体积优化器
+ * Note: brief English comment.
  * 
- * 使用 C 级别的底层 ZIP 操作实现极致 APK 压缩：
+ * Note: brief English comment.
  * 
- * 1. **条目级裁剪**: 移除 Shell 模式不需要的资源、Kotlin 元数据、
- *    编辑器专用 assets 等
- * 2. **DEFLATE 超压缩**: 使用 zlib 最高压缩级别 (9) 重压缩所有 DEFLATED 条目
- * 3. **CRC32 去重**: 检测并合并内容完全相同的条目
- * 4. **resources.arsc 对齐**: 确保满足 Android R+ 的 4 字节对齐要求
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  * 
- * 所有操作在 C 原生层完成，不占用 JVM 堆内存。
+ * Note: brief English comment.
  */
 object NativeApkOptimizer {
     
     private const val TAG = "NativeApkOptimizer"
     
     /**
-     * 优化结果数据类
+     * Note: brief English comment.
      */
     data class OptimizeResult(
         val success: Boolean,
@@ -39,14 +39,14 @@ object NativeApkOptimizer {
         val dedupSavings: Long,
         val unusedResSavings: Long
     ) {
-        /** 节省的总字节数 */
+        /** Note: brief English comment. */
         val totalSavings: Long get() = originalSize - optimizedSize
         
-        /** 压缩比 (百分比) */
+        /** Note: brief English comment. */
         val savingsPercent: Float 
             get() = if (originalSize > 0) totalSavings * 100f / originalSize else 0f
         
-        /** 格式化的报告 */
+        /** Note: brief English comment. */
         fun formatReport(): String = buildString {
             appendLine("═══ APK 优化报告 ═══")
             appendLine("原始大小: ${formatSize(originalSize)}")
@@ -73,7 +73,7 @@ object NativeApkOptimizer {
     }
     
     /**
-     * 体积分析结果
+     * Note: brief English comment.
      */
     data class SizeBreakdown(
         val nativeLibs: Long,
@@ -122,13 +122,13 @@ object NativeApkOptimizer {
     }
     
     /**
-     * 优化 APK 文件大小
+     * Note: brief English comment.
      * 
-     * 在签名之前对未签名的 APK 进行深度优化。
+     * Note: brief English comment.
      * 
-     * @param inputApk  输入 APK 文件（未签名）
-     * @param outputApk 输出优化后的 APK 文件
-     * @return 优化结果，null 表示 native 库未加载
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun optimizeApk(inputApk: File, outputApk: File): OptimizeResult? {
         if (!isLoaded) {
@@ -160,10 +160,10 @@ object NativeApkOptimizer {
     }
     
     /**
-     * 快速分析 APK 体积构成
+     * Note: brief English comment.
      * 
-     * @param apkFile APK 文件
-     * @return 体积分解，null 表示失败
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun analyzeSize(apkFile: File): SizeBreakdown? {
         if (!isLoaded) return null
@@ -190,11 +190,11 @@ object NativeApkOptimizer {
     }
     
     /**
-     * 检查 native 优化器是否可用
+     * Note: brief English comment.
      */
     fun isAvailable(): Boolean = isLoaded
     
-    // JNI 原生方法
+    // Note: brief English comment.
     private external fun nativeOptimizeApk(inputPath: String, outputPath: String): OptimizeResult?
     private external fun nativeAnalyzeApkSize(apkPath: String): LongArray?
 }

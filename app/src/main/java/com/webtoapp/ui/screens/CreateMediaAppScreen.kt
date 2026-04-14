@@ -39,17 +39,17 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 创建/编辑媒体应用页面（图片/视频转APP）
+ * create/edit app( / APP)
  * 
- * 增强功能：
- * - 媒体类型品牌化 Hero 区域（图片=紫蓝渐变, 视频=红橙渐变）
- * - 文件元数据显示（文件名、大小、格式）
- * - 图片调整面板（亮度、对比度、饱和度滑块）
- * - 视频播放速度选择器
- * - 背景颜色选择
- * - 屏幕常亮开关
- * - 手势设置（滑动退出、双击缩放）
- * - 增强的媒体预览区
+ * Note
+ * type Hero area( = gradient, = gradient)
+ * file display( file, , )
+ * panel( , , )
+ * select
+ * colorselect
+ * Note
+ * settings( , )
+ * preview
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -69,7 +69,7 @@ fun CreateMediaAppScreen(
     val context = LocalContext.current
     val isEditMode = existingAppId != null
     
-    // 编辑模式时加载已有应用数据
+    // editmodeload app
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -78,18 +78,18 @@ fun CreateMediaAppScreen(
     }
     val scrollState = rememberScrollState()
     
-    // App信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
     
-    // Media类型
+    // Mediatype
     var mediaType by remember { mutableStateOf(AppType.IMAGE) }
     
-    // 单媒体模式
+    // mode
     var mediaUri by remember { mutableStateOf<Uri?>(null) }
     
-    // Media配置
+    // Mediaconfig
     var enableAudio by remember { mutableStateOf(true) }
     var loop by remember { mutableStateOf(true) }
     var autoPlay by remember { mutableStateOf(true) }
@@ -97,30 +97,30 @@ fun CreateMediaAppScreen(
     var orientation by remember { mutableStateOf(SplashOrientation.PORTRAIT) }
     var backgroundColor by remember { mutableStateOf("#000000") }
     
-    // 增强：文件元数据
+    // file
     var fileName by remember { mutableStateOf<String?>(null) }
     var fileSize by remember { mutableStateOf<Long?>(null) }
     var fileMimeType by remember { mutableStateOf<String?>(null) }
     
-    // 增强：图片调整
+    // Note
     var brightness by remember { mutableFloatStateOf(1.0f) }
     var contrast by remember { mutableFloatStateOf(1.0f) }
     var saturation by remember { mutableFloatStateOf(1.0f) }
     
-    // 增强：视频播放速度
+    // Note
     var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
     
-    // 增强：屏幕常亮
+    // Note
     var keepScreenOn by remember { mutableStateOf(true) }
     
-    // 增强：手势配置
+    // config
     var swipeDismiss by remember { mutableStateOf(true) }
     var doubleTapZoom by remember { mutableStateOf(true) }
     
-    // Theme配置
+    // Themeconfig
     var themeType by remember { mutableStateOf("AURORA") }
     
-    // 品牌色
+    // Note
     val brandColor = remember(mediaType) {
         if (mediaType == AppType.IMAGE) Color(0xFF7C4DFF) else Color(0xFFFF5252)
     }
@@ -131,7 +131,7 @@ fun CreateMediaAppScreen(
             listOf(Color(0xFFFF5252).copy(alpha = 0.15f), Color(0xFFFF6E40).copy(alpha = 0.05f))
     }
     
-    // 编辑模式：加载现有应用数据到UI状态
+    // editmode: load app UIstate
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
             appName = app.name
@@ -158,7 +158,7 @@ fun CreateMediaAppScreen(
         }
     }
     
-    // 读取文件元数据
+    // file
     fun readFileMetadata(uri: Uri) {
         try {
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -171,11 +171,11 @@ fun CreateMediaAppScreen(
             }
             fileMimeType = context.contentResolver.getType(uri)
         } catch (e: Exception) {
-            // 元数据读取失败不影响主流程
+            // failed
         }
     }
     
-    // File选择器
+    // Fileselect
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { mediaUri = it; readFileMetadata(it) } }
@@ -188,7 +188,7 @@ fun CreateMediaAppScreen(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
     
-    // 判断是否可以创建
+    // create
     val canCreate = mediaUri != null
     
     Scaffold(
@@ -244,7 +244,7 @@ fun CreateMediaAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 媒体类型品牌化 Hero ==========
+            // ========== 1. type Hero ==========
             MediaHeroSection(
                 mediaType = mediaType,
                 brandColor = brandColor,
@@ -254,7 +254,7 @@ fun CreateMediaAppScreen(
                 fileMimeType = fileMimeType
             )
             
-            // ========== 2. 媒体类型选择 ==========
+            // ========== 2. typeselect ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -297,7 +297,7 @@ fun CreateMediaAppScreen(
                 }
             }
             
-            // ========== 3. 媒体文件选择（增强预览） ==========
+            // ========== 3. fileselect( preview) ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -370,7 +370,7 @@ fun CreateMediaAppScreen(
                                     )
                                 }
                             }
-                            // 文件名标签
+                            // Filename label
                             fileName?.let { name ->
                                 Box(
                                     modifier = Modifier
@@ -406,7 +406,7 @@ fun CreateMediaAppScreen(
                         }
                     }
                     
-                    // 增强：文件元数据
+                    // Enhanced: file metadata
                     if (mediaUri != null && (fileSize != null || fileMimeType != null)) {
                         Spacer(modifier = Modifier.height(8.dp))
                         MediaFileInfoRow(
@@ -418,7 +418,7 @@ fun CreateMediaAppScreen(
                 }
             }
             
-            // ========== 4. 应用信息 ==========
+            // ========== 4. App Info ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -446,7 +446,7 @@ fun CreateMediaAppScreen(
                 }
             }
             
-            // ========== 5. 显示配置 ==========
+            // ========== 5. Display Settings ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -476,7 +476,7 @@ fun CreateMediaAppScreen(
                         )
                     }
                     
-                    // 增强：屏幕常亮
+                    // Enhanced: keep screen on
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     SettingsRow(title = Strings.mediaScreenLock, subtitle = Strings.mediaScreenLockHint) {
                         PremiumSwitch(
@@ -510,7 +510,7 @@ fun CreateMediaAppScreen(
                 }
             }
             
-            // ========== 6. 视频播放速度（仅视频） ==========
+            // ========== 6. Video Speed (Video Only) ==========
             if (mediaType == AppType.VIDEO && mediaUri != null) {
                 MediaPlaybackSpeedCard(
                     speed = playbackSpeed,
@@ -519,7 +519,7 @@ fun CreateMediaAppScreen(
                 )
             }
             
-            // ========== 7. 图片调整（仅图片） ==========
+            // ========== 7. Image Adjustments (Image Only) ==========
             if (mediaType == AppType.IMAGE && mediaUri != null) {
                 MediaImageAdjustCard(
                     brightness = brightness,
@@ -533,7 +533,7 @@ fun CreateMediaAppScreen(
                 )
             }
             
-            // ========== 8. 背景颜色 ==========
+            // ========== 8. Background Color ==========
             if (mediaUri != null) {
                 MediaBackgroundColorCard(
                     selected = backgroundColor,
@@ -542,7 +542,7 @@ fun CreateMediaAppScreen(
                 )
             }
             
-            // ========== 9. 手势设置 ==========
+            // ========== 9. Gesture Settings ==========
             if (mediaUri != null) {
                 MediaGestureCard(
                     swipeDismiss = swipeDismiss,
@@ -554,7 +554,7 @@ fun CreateMediaAppScreen(
                 )
             }
             
-            // 提示信息
+            // Hint message
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = brandColor.copy(alpha = 0.08f))
@@ -582,10 +582,10 @@ fun CreateMediaAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * 媒体品牌化 Hero 区域
+ * Hero area
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -642,7 +642,7 @@ private fun MediaHeroSection(
                     if (fileName != null || fileSize != null) {
                         Spacer(modifier = Modifier.height(6.dp))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            // 格式标签
+                            // label
                             fileMimeType?.let { mime ->
                                 val ext = mime.substringAfter("/").uppercase()
                                 Surface(
@@ -658,7 +658,7 @@ private fun MediaHeroSection(
                                     )
                                 }
                             }
-                            // 大小标签
+                            // label
                             fileSize?.let { size ->
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
@@ -682,7 +682,7 @@ private fun MediaHeroSection(
 }
 
 /**
- * 文件信息行
+ * file
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -728,7 +728,7 @@ private fun MediaFileInfoRow(
 }
 
 /**
- * 视频播放速度卡片
+ * card
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -777,7 +777,7 @@ private fun MediaPlaybackSpeedCard(
 }
 
 /**
- * 图片调整卡片
+ * card
  */
 @Composable
 private fun MediaImageAdjustCard(
@@ -813,7 +813,7 @@ private fun MediaImageAdjustCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 亮度
+            // Note
             MediaSliderRow(
                 label = Strings.mediaBrightness,
                 value = brightness,
@@ -821,7 +821,7 @@ private fun MediaImageAdjustCard(
                 valueRange = 0.5f..2.0f,
                 brandColor = brandColor
             )
-            // 对比度
+            // Note
             MediaSliderRow(
                 label = Strings.mediaContrast,
                 value = contrast,
@@ -829,7 +829,7 @@ private fun MediaImageAdjustCard(
                 valueRange = 0.5f..2.0f,
                 brandColor = brandColor
             )
-            // 饱和度
+            // Note
             MediaSliderRow(
                 label = Strings.mediaSaturation,
                 value = saturation,
@@ -842,7 +842,7 @@ private fun MediaImageAdjustCard(
 }
 
 /**
- * 调整滑块行
+ * Note
  */
 @Composable
 private fun MediaSliderRow(
@@ -880,7 +880,7 @@ private fun MediaSliderRow(
 }
 
 /**
- * 背景颜色选择卡片
+ * colorselectcard
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -947,7 +947,7 @@ private fun MediaBackgroundColorCard(
 }
 
 /**
- * 手势设置卡片
+ * settingscard
  */
 @Composable
 private fun MediaGestureCard(
@@ -991,7 +991,7 @@ private fun MediaGestureCard(
 }
 
 /**
- * 媒体类型选项卡片
+ * type card
  */
 @Composable
 fun MediaTypeOption(
@@ -1039,7 +1039,7 @@ fun MediaTypeOption(
 }
 
 /**
- * 设置项行
+ * settings
  */
 @Composable
 fun SettingsRow(
@@ -1067,7 +1067,7 @@ fun SettingsRow(
 }
 
 /**
- * 格式化文件大小
+ * file
  */
 private fun formatFileSize(bytes: Long): String {
     return when {

@@ -30,14 +30,14 @@ import com.webtoapp.core.cloud.AnnouncementData
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 全局公告弹窗 — Premium 重构版
+ * announcementdialog- Premium refactored
  *
- * 用于在 HomeScreen 启动时展示从服务器拉取的公告
- * 增强亮点：
- *   • 基于 type 的渐变色标头
- *   • 脉冲动画图标
- *   • 独立内容卡片区域
- *   • Material 3 按钮组
+ * for HomeScreen from announcement
+ * Note
+ * • type gradient
+ * • animationicon
+ * • contentcardarea
+ * • Material 3 button
  */
 @Composable
 fun AnnouncementDialog(
@@ -45,7 +45,7 @@ fun AnnouncementDialog(
     onDismiss: () -> Unit,
     onAction: ((String) -> Unit)? = null
 ) {
-    // ─── 类型驱动的视觉配置 ───
+    // type config
     val typeConfig = remember(announcement.type) {
         when (announcement.type) {
             "warning" -> AnnouncementTypeConfig(
@@ -79,7 +79,7 @@ fun AnnouncementDialog(
         }
     }
 
-    // ─── 脉冲动画 ───
+    // animation
     val infiniteTransition = rememberInfiniteTransition(label = "announcement_pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -91,7 +91,7 @@ fun AnnouncementDialog(
         label = "pulse_scale"
     )
 
-    // ─── 入场动画 ───
+    // animation
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
     val entryScale by animateFloatAsState(
@@ -132,7 +132,7 @@ fun AnnouncementDialog(
         ) {
             Column {
                 // ═══════════════════════════════════════
-                // 顶部渐变标头
+                // topgradient
                 // ═══════════════════════════════════════
                 Box(
                     modifier = Modifier
@@ -150,7 +150,7 @@ fun AnnouncementDialog(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // 脉冲动画图标
+                        // animationicon
                         Box(
                             modifier = Modifier
                                 .size(64.dp)
@@ -169,7 +169,7 @@ fun AnnouncementDialog(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // 标题
+                        // Note
                         Text(
                             text = announcement.title,
                             style = MaterialTheme.typography.titleLarge,
@@ -179,7 +179,7 @@ fun AnnouncementDialog(
                         )
                     }
                     
-                    // 右上角关闭按钮
+                    // closebutton
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
@@ -197,12 +197,12 @@ fun AnnouncementDialog(
                 }
 
                 // ═══════════════════════════════════════
-                // 内容区域
+                // contentarea
                 // ═══════════════════════════════════════
                 Column(
                     modifier = Modifier.padding(24.dp)
                 ) {
-                    // 内容卡片
+                    // contentcard
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = typeConfig.surfaceTint.copy(alpha = 0.5f),
@@ -226,7 +226,7 @@ fun AnnouncementDialog(
                         }
                     }
                     
-                    // 优先级标签（高优先级时显示）
+                    // prefer label( prefer display)
                     if (announcement.priority >= 8) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Surface(
@@ -257,14 +257,14 @@ fun AnnouncementDialog(
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     // ═══════════════════════════════════════
-                    // 按钮组
+                    // button
                     // ═══════════════════════════════════════
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         if (announcement.actionUrl != null && announcement.actionText != null) {
-                            // 有 action 时：双按钮布局
+                            // action: button
                             PremiumOutlinedButton(
                                 onClick = onDismiss,
                                 modifier = Modifier
@@ -294,7 +294,7 @@ fun AnnouncementDialog(
                                 )
                             }
                         } else {
-                            // 无 action 时：单按钮全宽
+                            // action: button
                             PremiumButton(
                                 onClick = onDismiss,
                                 modifier = Modifier
@@ -316,7 +316,7 @@ fun AnnouncementDialog(
 }
 
 /**
- * 公告类型的视觉配置
+ * announcementtype config
  */
 private data class AnnouncementTypeConfig(
     val icon: ImageVector,

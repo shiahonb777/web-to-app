@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object ProjectStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== Node.js 功能字符串 ====================
+    // ==================== Node.js Strings ====================
     val njsCreateTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "创建 Node.js 应用"
         AppLanguage.ENGLISH -> "Create Node.js App"
@@ -143,7 +143,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Landscape Mode"
         AppLanguage.ARABIC -> "وضع أفقي"
     }
-    // ==================== 媒体应用页面 ====================
+    // ==================== Media App Page ====================
     val selectMediaType: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择媒体类型"
         AppLanguage.ENGLISH -> "Select Media Type"
@@ -269,7 +269,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "play your selected video in fullscreen"
         AppLanguage.ARABIC -> "تشغيل الفيديو المختار بملء الشاشة"
     }
-    // ==================== ZIP 导入 ====================
+    // ==================== ZIP Import ====================
     val zipImportMode: String get() = when (lang) {
         AppLanguage.CHINESE -> "ZIP 导入"
         AppLanguage.ENGLISH -> "ZIP Import"
@@ -377,7 +377,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "File List"
         AppLanguage.ARABIC -> "قائمة الملفات"
     }
-    // ==================== PHP 应用增强字符串 ====================
+    // ==================== PHP Enhanced Strings ====================
     val phpHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "PHP 应用"
         AppLanguage.ENGLISH -> "PHP Application"
@@ -509,7 +509,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Custom Path"
         AppLanguage.ARABIC -> "مسار مخصص"
     }
-    // ==================== Python 应用增强字符串 ====================
+    // ==================== Python Enhanced Strings ====================
     val pyHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "Python 应用"
         AppLanguage.ENGLISH -> "Python Application"
@@ -647,7 +647,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Uvicorn recommended as ASGI server"
         AppLanguage.ARABIC -> "يوصى باستخدام Uvicorn كخادم ASGI"
     }
-    // ==================== DocsSite 增强字符串 ====================
+    // ==================== DocsSite Enhanced Strings ====================
     val docsHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "文档站点"
         AppLanguage.ENGLISH -> "Documentation Site"
@@ -755,7 +755,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Config File"
         AppLanguage.ARABIC -> "ملف الإعداد"
     }
-    // ==================== WordPress 增强字符串 ====================
+    // ==================== WordPress Enhanced Strings ====================
     val wpHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "WordPress 应用"
         AppLanguage.ENGLISH -> "WordPress Application"
@@ -875,7 +875,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Using default theme"
         AppLanguage.ARABIC -> "استخدام السمة الافتراضية"
     }
-    // ==================== Media 应用增强字符串 ====================
+    // ==================== Media Enhanced Strings ====================
     val mediaImageInfo: String get() = when (lang) {
         AppLanguage.CHINESE -> "图片信息"
         AppLanguage.ENGLISH -> "Image Info"
@@ -1007,7 +1007,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Reset"
         AppLanguage.ARABIC -> "إعادة تعيين"
     }
-    // ==================== 通用项目字符串 ====================
+    // ==================== General ====================
     val dirNotExists: String get() = when (lang) {
         AppLanguage.CHINESE -> "目录不存在"
         AppLanguage.ENGLISH -> "Directory does not exist"
@@ -1097,7 +1097,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "History (/) - Requires server support"
         AppLanguage.ARABIC -> "History (/) - يتطلب دعم الخادم"
     }
-    // ==================== PHP 应用字符串 ====================
+    // ==================== PHP App Strings ====================
     val phpFrameworkDetected: String get() = when (lang) {
         AppLanguage.CHINESE -> "检测到框架"
         AppLanguage.ENGLISH -> "Framework Detected"
@@ -1193,7 +1193,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "No PHP project files found in ZIP"
         AppLanguage.ARABIC -> "لم يتم العثور على ملفات مشروع PHP في ZIP"
     }
-    // ==================== 创建应用 ====================
+    // ==================== Create App ====================
     val customPackageName: String get() = when (lang) {
         AppLanguage.CHINESE -> "自定义包名"
         AppLanguage.ENGLISH -> "Custom Package Name"
@@ -1289,7 +1289,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "When enabled, user can toggle ad blocking via floating button at runtime"
         AppLanguage.ARABIC -> "عند التفعيل، يمكن للمستخدم تبديل حظر الإعلانات عبر الزر العائم أثناء التشغيل"
     }
-    // ==================== Go 应用增强字符串 ====================
+    // ==================== Go Enhanced Strings ====================
     val goHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "Go 服务"
         AppLanguage.ENGLISH -> "Go Service"
@@ -1379,7 +1379,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Direct Dependencies"
         AppLanguage.ARABIC -> "التبعيات المباشرة"
     }
-    // ==================== PWA 自动感知 (PWA Auto-Detection) ====================
+    // ==================== PWA Auto Detection (PWA Auto-Detection) ====================
     val pwaAnalyzeButton: String get() = when (lang) {
         AppLanguage.CHINESE -> "分析网站"
         AppLanguage.ENGLISH -> "Analyze Site"
@@ -1481,7 +1481,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Icon download failed"
         AppLanguage.ARABIC -> "فشل تنزيل الأيقونة"
     }
-    // ==================== Node.js 增强字符串 ====================
+    // ==================== Node.js Enhanced Strings ====================
     val njsHeroTitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "Node.js 应用"
         AppLanguage.ENGLISH -> "Node.js Application"
@@ -1547,7 +1547,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Project Info"
         AppLanguage.ARABIC -> "معلومات المشروع"
     }
-    // ==================== PHP 示例项目 ====================
+    // ==================== PHP Sample Projects ====================
     val samplePhpSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速体验 PHP 项目导入"
         AppLanguage.ENGLISH -> "Quick experience PHP project import"
@@ -1613,7 +1613,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "No Framework"
         AppLanguage.ARABIC -> "بدون إطار"
     }
-    // ==================== Python 示例项目 ====================
+    // ==================== Python Sample Projects ====================
     val samplePythonSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速体验 Python 项目导入"
         AppLanguage.ENGLISH -> "Quick experience Python project import"
@@ -1685,7 +1685,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Admin Panel"
         AppLanguage.ARABIC -> "لوحة الإدارة"
     }
-    // ==================== Go 示例项目 ====================
+    // ==================== Go Sample Projects ====================
     val sampleGoSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速体验 Go 项目导入"
         AppLanguage.ENGLISH -> "Quick experience Go project import"
@@ -1745,7 +1745,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Minimal API"
         AppLanguage.ARABIC -> "API بسيط"
     }
-    // ==================== DocsSite 示例项目 ====================
+    // ==================== DocsSite Sample Projects ====================
     val sampleDocsSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速体验文档站点导入"
         AppLanguage.ENGLISH -> "Quick experience docs site import"
@@ -1811,7 +1811,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "Categories"
         AppLanguage.ARABIC -> "تصنيفات"
     }
-    // ==================== WordPress 示例项目 ====================
+    // ==================== WordPress Sample Projects ====================
     val sampleWpSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速体验 WordPress 站点创建"
         AppLanguage.ENGLISH -> "Quick experience WordPress site creation"
@@ -1883,7 +1883,7 @@ internal object ProjectStrings {
         AppLanguage.ENGLISH -> "SQLite"
         AppLanguage.ARABIC -> "SQLite"
     }
-    // ==================== HTML 项目优化（Linux 环境） ====================
+    // ==================== HTML Project Optimization（Linux ） ====================
     val optimizeCode: String get() = when (lang) {
         AppLanguage.CHINESE -> "代码优化"
         AppLanguage.ENGLISH -> "Code Optimization"

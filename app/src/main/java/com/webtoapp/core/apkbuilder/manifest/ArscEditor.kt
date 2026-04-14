@@ -3,36 +3,36 @@ package com.webtoapp.core.apkbuilder
 import com.webtoapp.core.logging.AppLogger
 
 /**
- * Android 资源表 (ARSC) 编辑器
- * 用于修改 resources.arsc 中的应用名称
+ * Note: brief English comment.
+ * Note: brief English comment.
  * 
- * 重要：ARSC 字符串池中的字符串带有长度前缀，简单替换必须保持字符串长度不变
- * 否则会导致 APK 解析失败
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class ArscEditor {
 
     companion object {
         private const val TAG = "ArscEditor"
-        // 使用空字符填充，空字符不会显示且作为字符串终止符
-        // 注意：不能使用普通空格，否则某些桌面启动器会显示空格或不显示应用名
+        // Note: brief English comment.
+        // Note: brief English comment.
         private const val PAD_CHAR = '\u0000'
     }
 
     /**
-     * 修改应用名称
+     * Note: brief English comment.
      * 
-     * 重要：按字节长度处理，确保替换后的字节数与原字符串完全相同
-     * 这是因为 ARSC 字符串池的结构限制，无法改变字符串的实际字节长度
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * @param arscData 原始 ARSC 数据
-     * @param oldAppName 原应用名（用于定位，包含不间断空格填充）
-     * @param newAppName 新应用名
-     * @return 修改后的 ARSC 数据
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun modifyAppName(arscData: ByteArray, oldAppName: String, newAppName: String): ByteArray {
         AppLogger.d(TAG, "modifyAppName: old length=${oldAppName.length}chars, new='$newAppName'")
         
-        // 尝试各种可能的原始名称格式
+        // Note: brief English comment.
         val oldNameVariants = listOf(
             oldAppName,                                                    // 当前版本
             "WebToApp - Convert Any Website to Android App",              // 当前版本明确值
@@ -50,7 +50,7 @@ class ArscEditor {
         for (oldName in oldNameVariants) {
             if (usedEncoding != "none") break
             
-            // 首先尝试 UTF-8 编码查找和替换
+            // Note: brief English comment.
             val utf8Result = replaceStringByBytes(result, oldName, newAppName, Charsets.UTF_8)
             val utf8Changed = !utf8Result.contentEquals(result)
             
@@ -60,7 +60,7 @@ class ArscEditor {
                 matchedVariant = "variant(${oldName.length}chars)"
                 AppLogger.d(TAG, "UTF-8 match found, oldBytes=${oldName.toByteArray(Charsets.UTF_8).size}")
             } else {
-                // 如果没找到，尝试 UTF-16LE 编码查找
+                // Note: brief English comment.
                 val utf16Result = replaceStringByBytes(result, oldName, newAppName, Charsets.UTF_16LE)
                 val utf16Changed = !utf16Result.contentEquals(result)
                 
@@ -79,13 +79,13 @@ class ArscEditor {
     }
     
     /**
-     * 按字节长度安全替换字符串
-     * 核心逻辑：确保替换后的字节数与原字符串完全相同
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * 策略：
-     * 1. 如果新字符串字节数 == 旧字符串字节数：直接替换
-     * 2. 如果新字符串字节数 < 旧字符串字节数：用空格填充
-     * 3. 如果新字符串字节数 > 旧字符串字节数：逐字符截断直到字节数合适
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replaceStringByBytes(
         data: ByteArray,
@@ -96,18 +96,18 @@ class ArscEditor {
         val oldBytes = oldStr.toByteArray(charset)
         val targetByteLen = oldBytes.size
         
-        // 按字节长度安全调整新字符串
+        // Note: brief English comment.
         val safeNewStr = adjustStringToByteLength(newStr, targetByteLen, charset)
         val newBytes = safeNewStr.toByteArray(charset)
         
-        // Build最终替换字节数组（确保长度完全匹配）
+        // Note: brief English comment.
         val replacement = when {
             newBytes.size == targetByteLen -> newBytes
             newBytes.size < targetByteLen -> {
-                // 用空格字符填充到目标长度
+                // Note: brief English comment.
                 val result = ByteArray(targetByteLen)
                 System.arraycopy(newBytes, 0, result, 0, newBytes.size)
-                // 用空格填充剩余字节
+                // Note: brief English comment.
                 val padBytes = PAD_CHAR.code.toByte()
                 for (i in newBytes.size until targetByteLen) {
                     result[i] = padBytes
@@ -115,7 +115,7 @@ class ArscEditor {
                 result
             }
             else -> {
-                // 理论上不应该到这里，因为 adjustStringToByteLength 已处理
+                // Note: brief English comment.
                 AppLogger.w(TAG, "字节长度调整异常: expected=$targetByteLen, got=${newBytes.size}")
                 newBytes.copyOf(targetByteLen)
             }
@@ -128,17 +128,17 @@ class ArscEditor {
     }
     
     /**
-     * 将字符串调整到指定的字节长度（按完整字符截断，不破坏编码）
+     * Note: brief English comment.
      */
     private fun adjustStringToByteLength(str: String, targetByteLen: Int, charset: java.nio.charset.Charset): String {
         val fullBytes = str.toByteArray(charset)
         
-        // 如果已经符合或更短，直接返回
+        // Note: brief English comment.
         if (fullBytes.size <= targetByteLen) {
             return str
         }
         
-        // 逐字符截断，确保不破坏多字节字符
+        // Note: brief English comment.
         val builder = StringBuilder()
         var currentByteLen = 0
         
@@ -148,7 +148,7 @@ class ArscEditor {
                 builder.append(char)
                 currentByteLen += charBytes.size
             } else {
-                // 无法再添加完整字符，停止
+                // Note: brief English comment.
                 break
             }
         }
@@ -158,15 +158,15 @@ class ArscEditor {
     }
 
     /**
-     * 将 ARSC 中 ic_launcher_foreground 的文件路径从 .xml/.jpg 改为 .png
-     * 这样 ic_launcher.xml 仍然是 adaptive icon，但前景图会从 PNG 资源加载
+     * Note: brief English comment.
+     * Note: brief English comment.
      *
-     * 【复刻 1.8.5】只修改 drawable 前景图路径，不触碰 mipmap-anydpi-v26 的
-     * adaptive icon 定义 XML。那些 XML 需要保留原始引用，由 addAdaptiveIconPngs
-     * 写入对应的前景 PNG 来提供图标内容。
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun modifyIconPathsToPng(arscData: ByteArray): ByteArray {
-        // 【复刻 1.8.5】只修改前景 drawable 路径，不触碰 mipmap-anydpi-v26
+        // Note: brief English comment.
         val candidates = listOf(
             "res/drawable/ic_launcher_foreground",
             "res/drawable/ic_launcher_foreground_new",
@@ -179,7 +179,7 @@ class ArscEditor {
         var result = arscData
         var changed = false
 
-        // 支持多种扩展名替换：.xml -> .png, .jpg -> .png
+        // Note: brief English comment.
         val extensionPairs = listOf(
             ".xml" to ".png",
             ".jpg" to ".png"
@@ -211,7 +211,7 @@ class ArscEditor {
 
 
     /**
-     * 字节数组替换
+     * Note: brief English comment.
      */
     private fun replaceBytes(data: ByteArray, pattern: ByteArray, replacement: ByteArray): ByteArray {
         val result = data.copyOf()

@@ -1,31 +1,31 @@
 package com.webtoapp.core.isolation
 
 /**
- * 隔离脚本注入器 — 综合反指纹 JavaScript 引擎
+ * script.
  *
- * 覆盖所有主要指纹向量:
- * - Navigator 属性 + navigator.userAgentData (Client Hints)
- * - 确定性 Canvas 噪声（seed-based, 会话内一致）
- * - WebGL vendor/renderer 伪装
- * - 确定性 AudioContext 噪声
- * - WebRTC IP 泄漏防护（不破坏功能）
- * - 完整字体指纹防护（FontFace API + 度量归一化）
- * - 屏幕/窗口尺寸伪装
- * - 时区伪装（Intl + Date）
- * - ClientRects / DOMRect 噪声
- * - performance.now() 精度降低
- * - navigator.plugins / mimeTypes 伪装
- * - Battery API 防护
- * - navigator.connection 伪装
- * - MediaDevices 枚举防护
- * - Storage 估计 API 归一化
- * - history.length 固定
- * - Permissions API 归一化
+ * Note.
+ * Navigator navigator.userAgentData Client Hints.
+ * session.
+ * WebGL vendor/renderer.
+ * AudioContext.
+ * WebRTC IP.
+ * FontFace API.
+ * Note.
+ * Intl Date.
+ * ClientRects DOMRect.
+ * performance.now.
+ * navigator.plugins mimeTypes.
+ * Battery API.
+ * navigator.connection.
+ * MediaDevices.
+ * Storage API.
+ * history.length.
+ * Permissions API.
  */
 object IsolationScriptInjector {
 
     /**
-     * 生成完整的隔离脚本
+     * generate script.
      */
     fun generateIsolationScript(
         config: IsolationConfig,

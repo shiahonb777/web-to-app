@@ -22,7 +22,7 @@ import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 
 /**
- * 分类标签栏
+ * label
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +44,7 @@ fun CategoryTabRow(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // "全部" 标签
+        // "all" label
         item {
             PremiumFilterChip(
                 selected = selectedCategoryId == null,
@@ -62,7 +62,7 @@ fun CategoryTabRow(
             )
         }
         
-        // "未分类" 标签
+        // " " label
         item {
             PremiumFilterChip(
                 selected = selectedCategoryId == -1L,
@@ -80,7 +80,7 @@ fun CategoryTabRow(
             )
         }
         
-        // User分类（支持长按弹出重命名/删除菜单）
+        // User( supportlong- press /delete)
         items(categories, key = { it.id }) { category ->
             Box {
                 PremiumFilterChip(
@@ -103,7 +103,7 @@ fun CategoryTabRow(
                         }
                     }
                 )
-                // 透明覆盖层 - 处理点击和长按（FilterChip 内部会拦截事件，导致 combinedClickable 长按失效）
+                // handle long- press( FilterChip intercept, combinedClickable long- press)
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -114,7 +114,7 @@ fun CategoryTabRow(
                         )
                 )
                 
-                // 长按菜单：重命名 / 删除
+                // long- press: / delete
                 DropdownMenu(
                     expanded = showCategoryMenu == category,
                     onDismissRequest = { showCategoryMenu = null }
@@ -145,7 +145,7 @@ fun CategoryTabRow(
             }
         }
         
-        // 添加分类按钮
+        // button
         item {
             AssistChip(
                 onClick = onAddCategory,
@@ -161,7 +161,7 @@ fun CategoryTabRow(
         }
     }
     
-    // Delete确认对话框
+    // Delete dialog
     showDeleteConfirm?.let { category ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
@@ -190,7 +190,7 @@ fun CategoryTabRow(
 }
 
 /**
- * 分类编辑对话框
+ * editdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -203,12 +203,12 @@ fun CategoryEditorDialog(
     var icon by remember(category) { mutableStateOf(category?.icon ?: "folder") }
     var selectedColor by remember(category) { 
         val hexColor = category?.color ?: "#6200EE"
-        // 将解析的颜色转换为无符号 Long，确保与预设颜色一致
+        // map color Long, ensurewith color
         val parsedColor = android.graphics.Color.parseColor(hexColor)
         mutableLongStateOf((parsedColor.toLong() and 0xFFFFFFFFL) or 0xFF000000L)
     }
     
-    // 预设颜色
+    // color
     val presetColors = listOf(
         0xFF6200EE, 0xFF3700B3, 0xFF03DAC6, 0xFF018786,
         0xFFBB86FC, 0xFF6200EA, 0xFFFF6D00, 0xFFFFAB00,
@@ -216,7 +216,7 @@ fun CategoryEditorDialog(
         0xFF2979FF, 0xFF304FFE, 0xFFFF4081, 0xFFC51162
     )
     
-    // 预设图标
+    // icon
     val presetIcons = listOf(
         "folder", "folder_open", "phone_android", "computer", "gaming", "music_note", "movie", "menu_book",
         "newspaper", "work", "shopping_bag", "heart", "star", "fire", "lightbulb", "auto_awesome",
@@ -235,7 +235,7 @@ fun CategoryEditorDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Name输入
+                // Nameinput
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -245,7 +245,7 @@ fun CategoryEditorDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // Icon选择
+                // Iconselect
                 Text(Strings.categoryIcon, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetIcons.chunked(8).forEach { rowIcons ->
@@ -279,7 +279,7 @@ fun CategoryEditorDialog(
                     }
                 }
                 
-                // Color选择
+                // Colorselect
                 Text(Strings.categoryColor, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetColors.chunked(8).forEach { rowColors ->
@@ -332,7 +332,7 @@ fun CategoryEditorDialog(
 }
 
 /**
- * Move to category对话框
+ * Move to categorydialog
  */
 @Composable
 fun MoveToCategoryDialog(
@@ -357,7 +357,7 @@ fun MoveToCategoryDialog(
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
-                // "未分类" 选项
+                // Note
                 Surface(
                     shape = MaterialTheme.shapes.small,
                     color = if (app.categoryId == null) 
@@ -392,7 +392,7 @@ fun MoveToCategoryDialog(
                     }
                 }
                 
-                // User分类列表
+                // User list
                 categories.forEach { category ->
                     Surface(
                         shape = MaterialTheme.shapes.small,

@@ -4,67 +4,65 @@ import android.net.Uri
 import com.webtoapp.core.logging.AppLogger
 
 /**
- * 通用 OAuth/登录/支付 WebView 兼容引擎 v3.0
+ * use OAuth/ / WebView v3.0.
  *
- * 覆盖国际用户 99% 的认证/登录/支付场景，确保在 WebView 内畅通无阻。
+ * use 99% / / in WebView .
  *
- * ## 覆盖范围 (v3.0)
+ * ## (v3.0)
  *
- * ### Tier 1: 全球级 (20亿+ 用户)
+ * ### Tier 1: level.
  * Google, Facebook/Meta, Apple, Microsoft, Amazon
  *
- * ### Tier 2: 社交/开发者 (5亿+ 用户)
+ * ### Tier 2: /.
  * Twitter/X, GitHub, Discord, Reddit, LinkedIn, Spotify, Twitch
  *
- * ### Tier 3: 亚太区域 (15亿+ 用户)
+ * ### Tier 3:
  * Line, Kakao, Naver, WeChat, QQ, Alipay, Douyin/TikTok, Yahoo Japan
  *
- * ### Tier 4: 其他区域 (5亿+ 用户)
- * VK, Yandex, Mail.ru (俄罗斯), Shopify, Dropbox, Notion, Slack, Zoom
+ * ### Tier 4:
+ * VK, Yandex, Mail.ru, Shopify, Dropbox, Notion, Slack, Zoom.
  *
- * ### Tier 5: 支付/金融 (全球覆盖)
+ * ### Tier 5: /.
  * PayPal, Stripe, Square, Braintree, Alipay, WeChat Pay
  *
- * ### Tier 6: CAPTCHA/安全 (全球覆盖)
+ * ### Tier 6: CAPTCHA/.
  * Google reCAPTCHA, hCaptcha, Cloudflare Turnstile
  *
- * ## 架构
+ * ##.
  *
  * ```
- * shouldOverrideUrlLoading() → isOAuthUrl() → 允许 WebView 内加载
- * onPageStarted()           → getAntiDetectionJs() → 注入反检测 JS
- * shouldInterceptRequest()  → sanitizeHeaders() → 清理 WebView 指纹头
- * onPageFinished()          → getOAuthBlockDetectionJs() → 错误页检测
+ * shouldOverrideUrlLoading() isOAuthUrl() WebView.
+ * onPageStarted() getAntiDetectionJs() JS.
+ * shouldInterceptRequest() sanitizeHeaders() WebView.
+ * onPageFinished() getOAuthBlockDetectionJs() .
  * ```
  */
 object OAuthCompatEngine {
 
     private const val TAG = "OAuthCompatEngine"
 
-    // ==================== 提供商类型 ====================
 
     enum class Provider {
-        // Tier 1: 全球级
+        // Tier 1: level.
         GOOGLE, FACEBOOK, APPLE, MICROSOFT, AMAZON,
-        // Tier 2: 社交/开发者
+        // Tier 2: /.
         TWITTER, GITHUB, DISCORD, REDDIT, LINKEDIN, SPOTIFY, TWITCH,
-        // Tier 3: 亚太
+        // Tier 3:
         LINE, KAKAO, NAVER, WECHAT, QQ, ALIPAY, TIKTOK, YAHOO_JAPAN,
-        // Tier 4: 其他区域
+        // Tier 4:
         VK, YANDEX, MAILRU, SHOPIFY, DROPBOX, NOTION, SLACK, ZOOM,
-        // Tier 5: 支付
+        // Tier 5:
         PAYPAL, STRIPE, SQUARE,
         // Tier 6: CAPTCHA
         RECAPTCHA, HCAPTCHA, CLOUDFLARE,
-        // 通用
+        // use.
         YAHOO,
         GENERIC_OAUTH
     }
 
-    // ==================== 提供商域名注册表 ====================
 
     private val HOST_TO_PROVIDER: Map<String, Provider> = mapOf(
-        // ── Tier 1: 全球级 ──
+        // Tier 1: level .
         // Google
         "accounts.google.com" to Provider.GOOGLE,
         "accounts.youtube.com" to Provider.GOOGLE,
@@ -96,7 +94,7 @@ object OAuthCompatEngine {
         "www.amazon.de" to Provider.AMAZON,
         "www.amazon.in" to Provider.AMAZON,
 
-        // ── Tier 2: 社交/开发者 ──
+        // Tier 2: / .
         // Twitter / X
         "api.twitter.com" to Provider.TWITTER,
         "twitter.com" to Provider.TWITTER,
@@ -120,7 +118,7 @@ object OAuthCompatEngine {
         "id.twitch.tv" to Provider.TWITCH,
         "www.twitch.tv" to Provider.TWITCH,
 
-        // ── Tier 3: 亚太 ──
+        // Tier 3: .
         // Line
         "access.line.me" to Provider.LINE,
         "liff.line.me" to Provider.LINE,
@@ -152,7 +150,7 @@ object OAuthCompatEngine {
         "login.yahoo.com" to Provider.YAHOO,
         "api.login.yahoo.com" to Provider.YAHOO,
 
-        // ── Tier 4: 其他区域 ──
+        // Tier 4: .
         // VK
         "oauth.vk.com" to Provider.VK,
         "id.vk.com" to Provider.VK,
@@ -179,7 +177,7 @@ object OAuthCompatEngine {
         "us04web.zoom.us" to Provider.ZOOM,
         "us05web.zoom.us" to Provider.ZOOM,
 
-        // ── Tier 5: 支付 ──
+        // Tier 5: .
         "www.paypal.com" to Provider.PAYPAL,
         "paypal.com" to Provider.PAYPAL,
         "checkout.stripe.com" to Provider.STRIPE,
@@ -187,7 +185,7 @@ object OAuthCompatEngine {
         "squareup.com" to Provider.SQUARE,
         "checkout.square.site" to Provider.SQUARE,
 
-        // ── Tier 6: CAPTCHA ──
+        // Tier 6: CAPTCHA
         "www.google.com" to Provider.RECAPTCHA, // /recaptcha 路径检测
         "www.gstatic.com" to Provider.RECAPTCHA,
         "hcaptcha.com" to Provider.HCAPTCHA,
@@ -196,10 +194,10 @@ object OAuthCompatEngine {
     )
 
     /**
-     * 域名 + 路径限制规则
+     * + rules.
      */
     private val HOST_PATH_RULES: Map<String, List<String>> = mapOf(
-        // Facebook/Meta — 仅登录/OAuth
+        // Facebook/Meta /OAuth.
         "www.facebook.com" to listOf("/login", "/v", "/dialog/oauth", "/oauth"),
         "m.facebook.com" to listOf("/login", "/v", "/dialog/oauth", "/oauth"),
         "web.facebook.com" to listOf("/login", "/v", "/dialog/oauth", "/oauth"),
@@ -260,13 +258,13 @@ object OAuthCompatEngine {
         // Twitch
         "www.twitch.tv" to listOf("/login"),
 
-        // CAPTCHA (www.google.com 仅 reCAPTCHA 路径)
+        // CAPTCHA.
         "www.google.com" to listOf("/recaptcha"),
         "www.gstatic.com" to listOf("/recaptcha")
     )
 
     /**
-     * 无需路径限制的域名 — 整个域名都是登录/OAuth 用途
+     * is /OAuth use.
      */
     private val FULL_DOMAIN_OAUTH_HOSTS: Set<String> = setOf(
         // Google
@@ -316,7 +314,7 @@ object OAuthCompatEngine {
     )
 
     /**
-     * 通用 OAuth/登录路径模式 (用于未知域名)
+     * use OAuth/.
      */
     private val GENERIC_OAUTH_PATH_PATTERNS = listOf(
         "/oauth", "/oauth2", "/o/oauth2", "/authorize", "/auth/login",
@@ -328,31 +326,30 @@ object OAuthCompatEngine {
     )
 
     /**
-     * 所有 OAuth 提供商域名集合（用于 AdBlocker 白名单等）
+     * OAuth.
      */
     val ALL_OAUTH_HOSTS: Set<String> = HOST_TO_PROVIDER.keys
 
-    // ==================== 公开 API ====================
 
     /**
-     * 检测 URL 是否为 OAuth/登录/支付/CAPTCHA 页面
+     * URL is as OAuth/ / /CAPTCHA.
      */
     fun isOAuthUrl(url: String): Boolean {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
         val host = uri.host?.lowercase() ?: return false
         val path = uri.path?.lowercase() ?: ""
 
-        // 1. 全域名匹配
+        // 1.
         if (host in FULL_DOMAIN_OAUTH_HOSTS) return true
 
-        // 2. 域名 + 路径规则
+        // 2. + rules.
         val pathRules = HOST_PATH_RULES[host]
         if (pathRules != null) {
             if (pathRules.any { prefix -> path.startsWith(prefix) }) return true
             return false
         }
 
-        // 3. Google 特殊子域名
+        // 3. Google.
         if (host.endsWith(".google.com") || host == "google.com") {
             if (path.startsWith("/o/oauth2") || path.startsWith("/signin/oauth") ||
                 path.startsWith("/servicelogin") || path.startsWith("/accounts") ||
@@ -361,29 +358,29 @@ object OAuthCompatEngine {
             }
         }
 
-        // 4. 微信/QQ 泛域名
+        // 4. /QQ.
         if (host.endsWith(".qq.com") && (path.startsWith("/oauth") || path.startsWith("/connect"))) {
             return true
         }
 
-        // 5. 支付宝泛域名
+        // 5.
         if (host.endsWith(".alipay.com") && (path.startsWith("/login") || path.startsWith("/oauth") || path.startsWith("/auth"))) {
             return true
         }
 
-        // 6. Yandex 泛域名
+        // 6. Yandex.
         if (host.endsWith(".yandex.ru") || host.endsWith(".yandex.com")) {
             if (path.startsWith("/passport") || path.startsWith("/oauth") || path.startsWith("/auth")) {
                 return true
             }
         }
 
-        // 7. Shopify 商户域名 (*.myshopify.com/account/login)
+        // 7. Shopify (*.myshopify.com/account/login)
         if (host.endsWith(".myshopify.com") && (path.startsWith("/account/login") || path.startsWith("/account"))) {
             return true
         }
 
-        // 8. 通用 OAuth 路径模式检测
+        // 8. use OAuth.
         if (GENERIC_OAUTH_PATH_PATTERNS.any { pattern -> path.startsWith(pattern) }) {
             val query = uri.query?.lowercase() ?: ""
             if (query.contains("client_id") || query.contains("redirect_uri") ||
@@ -397,14 +394,13 @@ object OAuthCompatEngine {
     }
 
     /**
-     * 获取 URL 对应的 OAuth 提供商类型
+     * Get URL OAuth.
      */
     fun getProviderType(url: String): Provider? {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return null
         val host = uri.host?.lowercase() ?: return null
         val path = uri.path?.lowercase() ?: ""
 
-        // 精确域名匹配
         HOST_TO_PROVIDER[host]?.let { provider ->
             val pathRules = HOST_PATH_RULES[host]
             if (pathRules != null) {
@@ -413,7 +409,7 @@ object OAuthCompatEngine {
             return provider
         }
 
-        // Google 子域名
+        // Google.
         if (host.endsWith(".google.com") || host == "google.com") {
             if (path.startsWith("/recaptcha")) return Provider.RECAPTCHA
             if (path.startsWith("/o/oauth2") || path.startsWith("/signin/oauth") ||
@@ -422,9 +418,8 @@ object OAuthCompatEngine {
             }
         }
 
-        // 微信/QQ 泛域名
+        // /QQ.
         if (host.endsWith(".qq.com")) return Provider.QQ
-        // 支付宝
         if (host.endsWith(".alipay.com")) return Provider.ALIPAY
         // Yandex
         if (host.endsWith(".yandex.ru") || host.endsWith(".yandex.com")) return Provider.YANDEX
@@ -436,9 +431,9 @@ object OAuthCompatEngine {
     }
 
     /**
-     * 获取指定 URL 对应的反检测 JavaScript
-     * 
-     * v3.0: 分层组合 = 通用基础层 + 提供商特定层
+     * Get URL JavaScript.
+     *
+     * v3.0: = use +.
      */
     fun getAntiDetectionJs(url: String): String? {
         val provider = getProviderType(url) ?: return null
@@ -462,7 +457,7 @@ object OAuthCompatEngine {
             Provider.LINKEDIN -> sb.append(LINKEDIN_ANTI_DETECTION_JS)
             Provider.SPOTIFY -> sb.append(SPOTIFY_ANTI_DETECTION_JS)
             Provider.TWITCH -> sb.append(TWITCH_ANTI_DETECTION_JS)
-            // Tier 3: 亚太
+            // Tier 3:
             Provider.LINE, Provider.KAKAO -> sb.append(LINE_KAKAO_ANTI_DETECTION_JS)
             Provider.NAVER -> sb.append(NAVER_ANTI_DETECTION_JS)
             Provider.WECHAT, Provider.QQ -> sb.append(WECHAT_QQ_ANTI_DETECTION_JS)
@@ -478,7 +473,7 @@ object OAuthCompatEngine {
             Provider.NOTION -> sb.append(NOTION_ANTI_DETECTION_JS)
             Provider.SLACK -> sb.append(SLACK_ANTI_DETECTION_JS)
             Provider.ZOOM -> sb.append(ZOOM_ANTI_DETECTION_JS)
-            // Tier 5: 支付
+            // Tier 5:
             Provider.PAYPAL -> sb.append(PAYPAL_ANTI_DETECTION_JS)
             Provider.STRIPE -> sb.append(STRIPE_ANTI_DETECTION_JS)
             Provider.SQUARE -> sb.append(STRIPE_ANTI_DETECTION_JS) // 类似策略
@@ -486,7 +481,7 @@ object OAuthCompatEngine {
             Provider.RECAPTCHA -> sb.append(RECAPTCHA_ANTI_DETECTION_JS)
             Provider.HCAPTCHA -> sb.append(HCAPTCHA_ANTI_DETECTION_JS)
             Provider.CLOUDFLARE -> sb.append(CLOUDFLARE_ANTI_DETECTION_JS)
-            // 通用
+            // use.
             Provider.YAHOO -> sb.append(YAHOO_ANTI_DETECTION_JS)
             Provider.GENERIC_OAUTH -> { /* 基础层已足够 */ }
         }
@@ -495,7 +490,7 @@ object OAuthCompatEngine {
     }
 
     /**
-     * 清理请求头
+     * request.
      */
     fun sanitizeHeaders(url: String, headers: Map<String, String>): Map<String, String> {
         if (!isOAuthUrl(url)) return headers
@@ -509,18 +504,17 @@ object OAuthCompatEngine {
     }
 
     /**
-     * 检查 HTTP 错误是否为 OAuth 封杀
+     * Check HTTP is as OAuth.
      */
     fun isOAuthBlockedError(statusCode: Int, url: String): Boolean {
         if (!isOAuthUrl(url)) return false
         return statusCode == 403 || (statusCode == 400 && getProviderType(url) == Provider.GOOGLE)
     }
 
-    // ==================== Chrome Custom Tab 重定向 ====================
 
     /**
-     * 判断此 URL 是否应该主动重定向到 Chrome Custom Tab
-     * 仅 Google OAuth 需要 CCT（其他提供商的反检测仍然有效）
+     * URL is to Chrome Custom Tab.
+     * Google OAuth CCT.
      */
     fun shouldRedirectToCustomTab(url: String): Boolean {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
@@ -541,7 +535,7 @@ object OAuthCompatEngine {
     }
 
     /**
-     * 错误页检测 JS (多语言)
+     * JS.
      */
     fun getOAuthBlockDetectionJs(): String {
         return """(function(){
@@ -575,21 +569,20 @@ object OAuthCompatEngine {
         })();""".trimIndent()
     }
 
-    // ==================== 反检测 JavaScript ====================
 
     /**
-     * 通用基础反检测层 — 所有提供商共享
+     * use .
      *
-     * 覆盖:
+     * :
      * - navigator.webdriver=false
-     * - window.chrome 完整对象
-     * - plugins/vendor/product 伪装
-     * - outerWidth/outerHeight 修正
-     * - Java Bridge / 自动化标志清除
+     * - window.chrome.
+     * - plugins/vendor/product.
+     * - outerWidth/outerHeight.
+     * - Java Bridge /.
      * - ServiceWorker stub
      * - BroadcastChannel stub
      * - Notification API stub
-     * - Error stack 清理
+     * - Error stack.
      */
     private val BASE_ANTI_DETECTION_JS = """(function(){'use strict';
         if(window.__wta_oauth_compat__)return;window.__wta_oauth_compat__=true;
@@ -597,7 +590,7 @@ object OAuthCompatEngine {
         // navigator.webdriver
         try{Object.defineProperty(navigator,'webdriver',{get:function(){return false},enumerable:true,configurable:true});}catch(e){}
 
-        // window.chrome (完整)
+        // window.chrome.
         try{
             if(!window.chrome)window.chrome={};
             if(!window.chrome.runtime)window.chrome.runtime={
@@ -614,7 +607,7 @@ object OAuthCompatEngine {
             if(!window.chrome.csi)window.chrome.csi=function(){return{onloadT:Date.now(),startE:Date.now()-300,pageT:performance.now(),tran:15};};
         }catch(e){}
 
-        //  plugins + mimeTypes
+        // plugins + mimeTypes
         try{Object.defineProperty(navigator,'plugins',{get:function(){return{length:5,0:{name:'PDF Viewer'},1:{name:'Chrome PDF Plugin'},2:{name:'Chrome PDF Viewer'},3:{name:'Native Client'},4:{name:'Chromium PDF Plugin'},item:function(i){return this[i]},namedItem:function(n){for(var i=0;i<5;i++){if(this[i].name===n)return this[i]}return null},refresh:function(){}}},enumerable:true});}catch(e){}
         try{Object.defineProperty(navigator,'mimeTypes',{get:function(){return{length:4,0:{type:'application/pdf',suffixes:'pdf'},1:{type:'application/x-google-chrome-pdf',suffixes:'pdf'},2:{type:'application/x-nacl',suffixes:''},3:{type:'application/x-pnacl',suffixes:''},item:function(i){return this[i]},namedItem:function(n){for(var i=0;i<4;i++){if(this[i].type===n)return this[i]}return null}}},enumerable:true});}catch(e){}
 
@@ -629,13 +622,12 @@ object OAuthCompatEngine {
             if(!window.outerHeight||window.outerHeight===0)Object.defineProperty(window,'outerHeight',{get:function(){return window.innerHeight+85},configurable:true});
         }catch(e){}
 
-        // Java Bridge 清除
+        // Java Bridge.
         try{
             var bn=[];for(var k in window){if(k.toLowerCase().indexOf('java')===0||k.indexOf('_')===0&&typeof window[k]==='object')bn.push(k);}
             bn.forEach(function(n){try{Object.defineProperty(window,n,{get:function(){return undefined},configurable:true})}catch(e){}});
         }catch(e){}
 
-        // 自动化标志清除
         try{
             ['__selenium_unwrapped','__webdriver_evaluate','__webdriver_script_function',
              '__webview_bridge','accessibility','accessibilityTraversal',
@@ -671,7 +663,7 @@ object OAuthCompatEngine {
         // document.hasFocus
         try{document.hasFocus=function(){return true}}catch(e){}
 
-        // Error stack 清理
+        // Error stack.
         try{
             var _ops=Error.prepareStackTrace;
             Error.prepareStackTrace=function(err,stack){
@@ -681,14 +673,13 @@ object OAuthCompatEngine {
         }catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 1: 全球级提供商 ====================
 
     private val GOOGLE_ANTI_DETECTION_JS = """(function(){'use strict';
-        // chrome.webstore (已弃用但 Google 仍检测)
+        // chrome.webstore.
         try{if(window.chrome&&!window.chrome.webstore)window.chrome.webstore={onInstallStageChanged:{},onDownloadProgress:{},install:function(){}};}catch(e){}
         // Battery API
         try{if(!navigator.getBattery)navigator.getBattery=function(){return Promise.resolve({charging:true,chargingTime:0,dischargingTime:Infinity,level:1,addEventListener:function(){},removeEventListener:function(){}})}}catch(e){}
-        // Permissions API (Google 检测 notification 权限状态)
+        // Permissions API.
         try{if(navigator.permissions){var _oq=navigator.permissions.query;navigator.permissions.query=function(d){
             if(d&&d.name==='notifications')return Promise.resolve({state:'prompt',onchange:null,addEventListener:function(){},removeEventListener:function(){}});
             return _oq.call(navigator.permissions,d)};}}catch(e){}
@@ -697,28 +688,28 @@ object OAuthCompatEngine {
             create:function(){return Promise.resolve(null)},get:function(){return Promise.resolve(null)},
             preventSilentAccess:function(){return Promise.resolve()},store:function(){return Promise.resolve()}
         }},enumerable:true,configurable:true})}}catch(e){}
-        // FedCM API (Federated Credential Management — Chrome 108+)
+        // FedCM API (Federated Credential Management Chrome 108+)
         try{if(!window.IdentityCredential){window.IdentityCredential=function(){};
             window.IdentityProvider={getUserInfo:function(){return Promise.resolve([])}};}}catch(e){}
     })();""".trimIndent()
 
     private val FACEBOOK_ANTI_DETECTION_JS = """(function(){'use strict';
-        // ReactNativeWebView / FBNative bridge 清除
+        // ReactNativeWebView / FBNative bridge.
         try{delete window.ReactNativeWebView;delete window.FBNative;delete window.__fbNative;}catch(e){}
-        // SharedWorker (FB 内部通信)
+        // SharedWorker.
         try{if(!window.SharedWorker){window.SharedWorker=function(){return{port:{start:function(){},postMessage:function(){},addEventListener:function(){},removeEventListener:function(){}}}}}}catch(e){}
-        // FB 检测 window.name 是否包含 "webview"
+        // FB window.name is "webview".
         try{if(window.name&&window.name.toLowerCase().indexOf('webview')!==-1)window.name=''}catch(e){}
-        // FB Pixel / conversion API cookie 支持
+        // FB Pixel / conversion API cookie Supports.
         try{Object.defineProperty(navigator,'cookieEnabled',{get:function(){return true},configurable:true})}catch(e){}
-        // IndexedDB (FB 存储 session)
+        // IndexedDB.
         try{if(!window.indexedDB)window.indexedDB=window.mozIndexedDB||window.webkitIndexedDB||window.msIndexedDB}catch(e){}
     })();""".trimIndent()
 
     private val MICROSOFT_ANTI_DETECTION_JS = """(function(){'use strict';
-        // 清除 IE/Edge 遗留标识
+        // IE/Edge.
         try{delete window.MSStream;delete navigator.msMaxTouchPoints}catch(e){}
-        // IndexedDB (MSAL token 缓存)
+        // IndexedDB.
         try{if(!window.indexedDB)window.indexedDB=window.mozIndexedDB||window.webkitIndexedDB||window.msIndexedDB}catch(e){}
         // Crypto.subtle (MSAL PKCE flow)
         try{if(!window.crypto||!window.crypto.subtle){
@@ -737,7 +728,7 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val APPLE_ANTI_DETECTION_JS = """(function(){'use strict';
-        // ApplePaySession (Safari 检测)
+        // ApplePaySession.
         try{if(!window.ApplePaySession){window.ApplePaySession={canMakePayments:function(){return false},supportsVersion:function(){return false}}}}catch(e){}
         // Safari-specific DOM features
         try{if(!document.requestStorageAccess)document.requestStorageAccess=function(){return Promise.resolve()}}catch(e){}
@@ -745,9 +736,9 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val AMAZON_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Amazon 检测 WebView 的 cookie 策略
+        // Amazon WebView cookie.
         try{Object.defineProperty(navigator,'cookieEnabled',{get:function(){return true},configurable:true})}catch(e){}
-        // Amazon Cognito SDK 依赖
+        // Amazon Cognito SDK.
         try{if(!window.crypto||!window.crypto.getRandomValues){
             if(!window.crypto)window.crypto={};
             window.crypto.getRandomValues=function(arr){for(var i=0;i<arr.length;i++)arr[i]=Math.floor(Math.random()*256);return arr}
@@ -756,10 +747,9 @@ object OAuthCompatEngine {
         try{if(!window.localStorage){var _s={};window.localStorage={getItem:function(k){return _s[k]||null},setItem:function(k,v){_s[k]=String(v)},removeItem:function(k){delete _s[k]},clear:function(){_s={}},key:function(i){return Object.keys(_s)[i]||null},get length(){return Object.keys(_s).length}}}}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 2: 社交/开发者 ====================
 
     private val TWITTER_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Twitter/X 使用 React 大量依赖 IntersectionObserver
+        // Twitter/X use React large IntersectionObserver.
         try{if(!window.IntersectionObserver){window.IntersectionObserver=function(cb,opt){this.observe=function(){};this.unobserve=function(){};this.disconnect=function(){};this.takeRecords=function(){return[]}};
             window.IntersectionObserverEntry=function(){}}}catch(e){}
         // ResizeObserver (Twitter cards)
@@ -769,7 +759,7 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val GITHUB_ANTI_DETECTION_JS = """(function(){'use strict';
-        // GitHub 使用 WebAuthn/FIDO2 for 2FA
+        // GitHub use WebAuthn/FIDO2 for 2FA.
         try{if(!navigator.credentials){Object.defineProperty(navigator,'credentials',{get:function(){return{
             create:function(opt){if(opt&&opt.publicKey)return Promise.reject(new DOMException('Not allowed','NotAllowedError'));return Promise.resolve(null)},
             get:function(opt){if(opt&&opt.publicKey)return Promise.reject(new DOMException('Not allowed','NotAllowedError'));return Promise.resolve(null)},
@@ -783,59 +773,57 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val DISCORD_ANTI_DETECTION_JS = """(function(){'use strict';
-        // 清除 Discord 客户端/覆盖层标识
+        // Discord /.
         try{delete window.DiscordNative;delete window.__OVERLAY__;delete window.__DISCORD_OVERLAY__}catch(e){}
-        // Brave 浏览器检测清除
+        // Brave.
         try{if(navigator.brave)delete navigator.brave}catch(e){}
         // WebSocket (Discord Gateway)
         try{if(!window.WebSocket){/* WebSocket 应该在 WebView 中可用, 只是确保 */}}catch(e){}
-        // AudioContext (Discord 语音)
+        // AudioContext.
         try{if(!window.AudioContext&&window.webkitAudioContext)window.AudioContext=window.webkitAudioContext}catch(e){}
     })();""".trimIndent()
 
     private val REDDIT_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Reddit 使用 IntersectionObserver 做无限滚动
+        // Reddit use IntersectionObserver.
         try{if(!window.IntersectionObserver){window.IntersectionObserver=function(cb,opt){this.observe=function(){};this.unobserve=function(){};this.disconnect=function(){};this.takeRecords=function(){return[]}}}}catch(e){}
         // Reddit Vault (crypto features)
         try{if(!window.crypto||!window.crypto.subtle){if(!window.crypto)window.crypto={};if(!window.crypto.subtle)window.crypto.subtle={digest:function(){return Promise.resolve(new ArrayBuffer(32))}}}}catch(e){}
     })();""".trimIndent()
 
     private val LINKEDIN_ANTI_DETECTION_JS = """(function(){'use strict';
-        // LinkedIn 严格检测 cookies
+        // LinkedIn cookies.
         try{Object.defineProperty(navigator,'cookieEnabled',{get:function(){return true},configurable:true})}catch(e){}
-        // LinkedIn 检测 window.name
+        // LinkedIn window.name.
         try{if(window.name&&window.name.toLowerCase().indexOf('webview')!==-1)window.name=''}catch(e){}
         // LinkedIn Insight Tag CSP
         try{if(!window.performance||!window.performance.getEntriesByType)if(window.performance)window.performance.getEntriesByType=function(){return[]}}catch(e){}
     })();""".trimIndent()
 
     private val SPOTIFY_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Spotify Web Playback SDK 需要 EME (Encrypted Media Extensions)
+        // Spotify Web Playback SDK EME (Encrypted Media Extensions)
         try{if(!navigator.requestMediaKeySystemAccess){navigator.requestMediaKeySystemAccess=function(){return Promise.reject(new DOMException('Not supported','NotSupportedError'))}}}catch(e){}
-        // Spotify 使用 Fetch API
+        // Spotify use Fetch API.
         try{if(!window.fetch){window.fetch=function(url,opt){return Promise.reject(new TypeError('NetworkError'))}}}catch(e){}
     })();""".trimIndent()
 
     private val TWITCH_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Twitch 使用 MutationObserver 大量DOM操作
+        // Twitch use MutationObserver large DOM.
         try{if(!window.MutationObserver&&window.WebKitMutationObserver)window.MutationObserver=window.WebKitMutationObserver}catch(e){}
-        // Twitch 检测 WebGL 
-        // (已由 BrowserDisguise 处理)
+        // Twitch WebGL.
     })();""".trimIndent()
 
-    // ==================== Tier 3: 亚太提供商 ====================
 
     private val LINE_KAKAO_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Line LIFF bridge 清除
+        // Line LIFF bridge.
         try{delete window.liff;delete window.__liff}catch(e){}
-        // Kakao SDK bridge 清除
+        // Kakao SDK bridge.
         try{delete window.Kakao;delete window.__kakao__}catch(e){}
-        // LIFF WebView UA 标识清除
+        // LIFF WebView UA.
         try{if(navigator.userAgent.indexOf('LIFF')>-1||navigator.userAgent.indexOf('Line')>-1){
             var ua=navigator.userAgent.replace(/\s*LIFF\/[\d.]+/g,'').replace(/\s*Line\/[\d.]+/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua},configurable:true});
         }}catch(e){}
-        // Kakao WebView UA 标识清除
+        // Kakao WebView UA.
         try{if(navigator.userAgent.indexOf('KAKAOTALK')>-1){
             var ua2=navigator.userAgent.replace(/\s*KAKAOTALK[\s\/][\d.]+/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua2},configurable:true});
@@ -843,9 +831,9 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val NAVER_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Naver InApp bridge 清除
+        // Naver InApp bridge.
         try{delete window.__naver__;delete window.NaverLogin;delete window.naver}catch(e){}
-        // Naver WebView UA 标识
+        // Naver WebView UA.
         try{if(navigator.userAgent.indexOf('NAVER')>-1){
             var ua=navigator.userAgent.replace(/\s*NAVER\([^\)]*\)/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua},configurable:true});
@@ -853,15 +841,15 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val WECHAT_QQ_ANTI_DETECTION_JS = """(function(){'use strict';
-        // 清除微信/QQ WebView bridge
+        // /QQ WebView bridge.
         try{delete window.WeixinJSBridge;delete window.__wxjs_environment;delete window.wx}catch(e){}
         try{delete window.mqq;delete window.QQBrowser;delete window.__qqmusic__;delete window.TencentGDT}catch(e){}
-        // 微信 UA 清理 (MicroMessenger/x.x.x)
+        // UA (MicroMessenger/x.x.x)
         try{if(navigator.userAgent.indexOf('MicroMessenger')>-1||navigator.userAgent.indexOf('miniProgram')>-1){
             var ua=navigator.userAgent.replace(/\s*MicroMessenger\/[\d.]+/g,'').replace(/\s*miniProgram\/[\d.]+/g,'').replace(/\s*NetType\/\w+/g,'').replace(/\s*Language\/\w+/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua},configurable:true});
         }}catch(e){}
-        // QQ UA 清理
+        // QQ UA.
         try{if(navigator.userAgent.indexOf('QQ/')>-1){
             var ua2=navigator.userAgent.replace(/\s*QQ\/[\d.]+/g,'').replace(/\s*MQQBrowser\/[\d.]+/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua2},configurable:true});
@@ -869,9 +857,9 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val ALIPAY_ANTI_DETECTION_JS = """(function(){'use strict';
-        // 支付宝 bridge 清除
+        // bridge.
         try{delete window.AlipayJSBridge;delete window.ap;delete window.my;delete window.AFAppScript}catch(e){}
-        // 支付宝 UA 清理
+        // UA.
         try{if(navigator.userAgent.indexOf('AlipayClient')>-1||navigator.userAgent.indexOf('AliApp')>-1){
             var ua=navigator.userAgent.replace(/\s*AlipayClient\/[\d.]+/g,'').replace(/\s*AliApp\([^\)]*\)/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua},configurable:true});
@@ -879,9 +867,9 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val TIKTOK_ANTI_DETECTION_JS = """(function(){'use strict';
-        // TikTok/Douyin WebView bridge 清除
+        // TikTok/Douyin WebView bridge.
         try{delete window.TikTok;delete window.bytedance;delete window.__bd__;delete window.JSBridge}catch(e){}
-        // TikTok UA 清理
+        // TikTok UA.
         try{if(navigator.userAgent.indexOf('musical_ly')>-1||navigator.userAgent.indexOf('BytedanceWebview')>-1||navigator.userAgent.indexOf('TikTok')>-1){
             var ua=navigator.userAgent.replace(/\s*musical_ly[\s\/][\d.]+/g,'').replace(/\s*BytedanceWebview\/[\d.]+/g,'').replace(/\s*TikTok[\s\/][\d.]+/g,'').replace(/\s*app_version\/[\d.]+/g,'');
             Object.defineProperty(navigator,'userAgent',{get:function(){return ua},configurable:true});
@@ -889,100 +877,96 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val YAHOO_JP_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Yahoo Japan 检测较简单, 补充基础 API
+        // Yahoo Japan single, API.
         try{if(!navigator.credentials){Object.defineProperty(navigator,'credentials',{get:function(){return{
             get:function(){return Promise.resolve(null)},store:function(){return Promise.resolve()},
             preventSilentAccess:function(){return Promise.resolve()},create:function(){return Promise.resolve(null)}
         }},enumerable:true,configurable:true})}}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 4: 其他区域 ====================
 
     private val VK_ANTI_DETECTION_JS = """(function(){'use strict';
-        // VK App bridge 清除
+        // VK App bridge.
         try{delete window.vkBridge;delete window.VK;delete window.vkConnect}catch(e){}
-        // VK 检测 Notification
-        // (已由 BASE 层处理)
+        // VK Notification.
     })();""".trimIndent()
 
     private val YANDEX_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Yandex 浏览器标识清除
+        // Yandex.
         try{if(navigator.brave)delete navigator.brave}catch(e){}
-        // Yandex 检测 window.yandex
+        // Yandex window.yandex.
         try{delete window.yandex;delete window.Ya}catch(e){}
     })();""".trimIndent()
 
     private val MAILRU_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Mail.ru SDK 清除
+        // Mail.ru SDK.
         try{delete window.mailru;delete window.mr}catch(e){}
     })();""".trimIndent()
 
     private val SHOPIFY_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Shopify 依赖 Fetch + Crypto
+        // Shopify Fetch + Crypto.
         try{if(!window.crypto||!window.crypto.subtle){if(!window.crypto)window.crypto={};
             window.crypto.subtle={digest:function(){return Promise.resolve(new ArrayBuffer(32))}}}}catch(e){}
-        // Shopify Checkout CSP 兼容
+        // Shopify Checkout CSP.
         try{Object.defineProperty(navigator,'cookieEnabled',{get:function(){return true},configurable:true})}catch(e){}
     })();""".trimIndent()
 
     private val DROPBOX_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Dropbox 使用 Sentry (error tracking)
+        // Dropbox use Sentry (error tracking)
         try{if(!window.fetch){window.fetch=function(){return Promise.reject(new TypeError('NetworkError'))}}}catch(e){}
     })();""".trimIndent()
 
     private val NOTION_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Notion 使用 WASM + Crypto
+        // Notion use WASM + Crypto.
         try{if(!window.crypto||!window.crypto.subtle){if(!window.crypto)window.crypto={};
             window.crypto.subtle={digest:function(a,d){return Promise.resolve(new ArrayBuffer(32))}}}}catch(e){}
-        // Notion 依赖 Clipboard API
+        // Notion Clipboard API.
         try{if(!navigator.clipboard){Object.defineProperty(navigator,'clipboard',{get:function(){return{
             writeText:function(){return Promise.resolve()},readText:function(){return Promise.resolve('')}
         }},enumerable:true,configurable:true})}}catch(e){}
     })();""".trimIndent()
 
     private val SLACK_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Slack 依赖 IndexedDB + BroadcastChannel
-        // (已由 BASE 层处理)
-        // Slack 检测 desktop app bridge
+        // Slack IndexedDB + BroadcastChannel.
+        // Slack desktop app bridge.
         try{delete window.desktop;delete window.slackElectron}catch(e){}
     })();""".trimIndent()
 
     private val ZOOM_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Zoom 检测 MediaDevices (摄像头/麦克风)
+        // Zoom MediaDevices.
         try{if(!navigator.mediaDevices){Object.defineProperty(navigator,'mediaDevices',{get:function(){return{
             enumerateDevices:function(){return Promise.resolve([])},
             getUserMedia:function(){return Promise.reject(new DOMException('NotAllowed'))},
             getSupportedConstraints:function(){return{width:true,height:true,aspectRatio:true,frameRate:true,facingMode:true,deviceId:true}}
         }},enumerable:true,configurable:true})}}catch(e){}
-        // Zoom Web SDK 依赖 AudioContext
+        // Zoom Web SDK AudioContext.
         try{if(!window.AudioContext&&window.webkitAudioContext)window.AudioContext=window.webkitAudioContext}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 5: 支付 ====================
 
     private val PAYPAL_ANTI_DETECTION_JS = """(function(){'use strict';
-        // PayPal Checkout SDK 极其严格的环境检测
-        // window.name 检查
+        // PayPal Checkout SDK.
+        // window.name Check.
         try{if(window.name&&window.name.toLowerCase().indexOf('webview')!==-1)window.name=''}catch(e){}
-        // PayPal 检测 window.opener
+        // PayPal window.opener.
         try{if(!window.opener)Object.defineProperty(window,'opener',{get:function(){return null},configurable:true,set:function(){}})}catch(e){}
-        // PayPal 依赖 postMessage origin 检查
+        // PayPal postMessage origin Check.
         try{window.postMessage=window.postMessage}catch(e){}
-        // Crypto (PayPal 安全)
+        // Crypto.
         try{if(!window.crypto||!window.crypto.getRandomValues){
             if(!window.crypto)window.crypto={};
             window.crypto.getRandomValues=function(arr){for(var i=0;i<arr.length;i++)arr[i]=Math.floor(Math.random()*256);return arr}
         }}catch(e){}
-        // PayPal 检测 indexedDB
+        // PayPal indexedDB.
         try{if(!window.indexedDB)window.indexedDB=window.mozIndexedDB||window.webkitIndexedDB||window.msIndexedDB}catch(e){}
     })();""".trimIndent()
 
     private val STRIPE_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Stripe.js 检测 __SENTRY__
+        // Stripe.js __SENTRY__.
         try{delete window.__SENTRY__}catch(e){}
-        // Stripe Elements 依赖 IntersectionObserver
+        // Stripe Elements IntersectionObserver.
         try{if(!window.IntersectionObserver){window.IntersectionObserver=function(cb,opt){this.observe=function(){};this.unobserve=function(){};this.disconnect=function(){};this.takeRecords=function(){return[]}}}}catch(e){}
-        // Stripe 3D Secure iframe 通信
+        // Stripe 3D Secure iframe.
         try{if(!window.crypto||!window.crypto.subtle){if(!window.crypto)window.crypto={};
             window.crypto.subtle={digest:function(){return Promise.resolve(new ArrayBuffer(32))},
                 generateKey:function(){return Promise.resolve({})},exportKey:function(){return Promise.resolve(new ArrayBuffer(32))}}
@@ -992,40 +976,40 @@ object OAuthCompatEngine {
     // ==================== Tier 6: CAPTCHA ====================
 
     private val RECAPTCHA_ANTI_DETECTION_JS = """(function(){'use strict';
-        // reCAPTCHA v2/v3 检测的关键信号
-        // 1. focus/blur 事件 (需要真实用户交互)
+        // reCAPTCHA v2/v3.
+        // 1. focus/blur.
         try{Object.defineProperty(document,'visibilityState',{get:function(){return'visible'},configurable:true});
             Object.defineProperty(document,'hidden',{get:function(){return false},configurable:true})}catch(e){}
-        // 2. Performance API (reCAPTCHA 使用 navigation timing)
+        // 2. Performance API.
         try{if(!window.PerformanceObserver){window.PerformanceObserver=function(cb){this.observe=function(){};this.disconnect=function(){};this.takeRecords=function(){return[]}}}}catch(e){}
-        // 3. reCAPTCHA Enterprise 检测 SharedArrayBuffer
+        // 3. reCAPTCHA Enterprise SharedArrayBuffer.
         try{if(typeof SharedArrayBuffer==='undefined'){window.SharedArrayBuffer=function(s){return new ArrayBuffer(s)}}}catch(e){}
     })();""".trimIndent()
 
     private val HCAPTCHA_ANTI_DETECTION_JS = """(function(){'use strict';
-        // hCaptcha 检测 WebGL + Canvas (已由 BrowserDisguise 处理)
-        // hCaptcha 检测 accessibility tree
+        // hCaptcha WebGL + Canvas.
+        // hCaptcha accessibility tree.
         try{if(!window.getComputedStyle){window.getComputedStyle=function(el){return el.style||{}}}}catch(e){}
-        // hCaptcha 使用 postMessage
+        // hCaptcha use postMessage.
         try{document.hasFocus=function(){return true}}catch(e){}
     })();""".trimIndent()
 
     private val CLOUDFLARE_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Cloudflare Turnstile 检测
-        // 1. 严格的 JS 执行环境检测
+        // Cloudflare Turnstile.
+        // 1. JS.
         try{Object.defineProperty(document,'visibilityState',{get:function(){return'visible'},configurable:true})}catch(e){}
-        // 2. Performance.now() 精度 (已由 BrowserDisguise 处理)
-        // 3. Canvas 指纹 (已由 BrowserDisguise 处理)
-        // 4. WebGL 指纹 (已由 BrowserDisguise 处理)
-        // 5. Cloudflare bot detection — screen properties
+        // 2. Performance.now()
+        // 3. Canvas.
+        // 4. WebGL.
+        // 5. Cloudflare bot detection screen properties
         try{if(screen.width===0)Object.defineProperty(screen,'width',{get:function(){return 1920},configurable:true})}catch(e){}
         try{if(screen.height===0)Object.defineProperty(screen,'height',{get:function(){return 1080},configurable:true})}catch(e){}
-        // 6. Worker 支持
+        // 6. Worker Supports.
         try{if(!window.Worker){window.Worker=function(url){this.postMessage=function(){};this.terminate=function(){};this.onmessage=null;this.onerror=null}}}catch(e){}
     })();""".trimIndent()
 
     private val YAHOO_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Yahoo 基础兼容
+        // Yahoo.
         try{Object.defineProperty(navigator,'cookieEnabled',{get:function(){return true},configurable:true})}catch(e){}
     })();""".trimIndent()
 }

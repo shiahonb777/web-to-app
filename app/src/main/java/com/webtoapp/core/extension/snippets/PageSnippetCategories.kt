@@ -52,12 +52,12 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// 移除事件监听
+// observe.
 ['copy', 'cut', 'paste', 'selectstart', 'contextmenu'].forEach(event => {
     document.addEventListener(event, e => e.stopPropagation(), true);
 });
 
-// 移除 oncopy 等属性
+// oncopy etc.
 document.querySelectorAll('*').forEach(el => {
     ['oncopy', 'oncut', 'onpaste', 'onselectstart', 'oncontextmenu'].forEach(attr => {
         el.removeAttribute(attr);
@@ -107,11 +107,11 @@ preparePrint();""",
     }
 }
 
-// 朗读选中文字
+// in.
 document.addEventListener('mouseup', () => {
     const selection = window.getSelection().toString().trim();
     if (selection.length > 0 && selection.length < 500) {
-        // Show朗读按钮
+        // Show by.
         const btn = document.createElement('button');
         btn.innerHTML = '🔊';
         btn.style.cssText = `
@@ -163,7 +163,7 @@ countWords();""",
                 name = Strings.snippetHighlightSearch,
                 description = Strings.snippetHighlightSearchDesc,
                 code = """function highlightText(keyword) {
-    // 清除之前的高亮
+    // before.
     document.querySelectorAll('.search-highlight').forEach(el => {
         el.outerHTML = el.textContent;
     });
@@ -237,12 +237,12 @@ removeEmptyElements();""",
     document.querySelectorAll(selector).forEach(comment => {
         const text = comment.textContent;
         
-        // Filter短评论
+        // Filter.
         if (text.length < minLength) {
             comment.style.opacity = '0.3';
         }
         
-        // Filter包含关键词的评论
+        // Filter.
         if (keywords.some(k => text.toLowerCase().includes(k.toLowerCase()))) {
             comment.style.display = 'none';
         }
@@ -320,12 +320,11 @@ window.open = function(url, name, features) {
     return null;
 };
 
-// 阻止 alert/confirm/prompt
+// alert/confirm/prompt.
 // window.alert = () => {};
 // window.confirm = () => false;
 // window.prompt = () => null;
 
-// 移除弹窗元素
 function removePopups() {
     document.querySelectorAll('[class*="popup"], [class*="modal"], [class*="overlay"]').forEach(el => {
         if (el.style.position === 'fixed' || el.style.position === 'absolute') {
@@ -341,13 +340,12 @@ setInterval(removePopups, 1000);""",
                 name = Strings.snippetRemoveOverlay,
                 description = Strings.snippetRemoveOverlayDesc,
                 code = """function removeOverlays() {
-    // 移除固定定位的遮罩
     document.querySelectorAll('*').forEach(el => {
         const style = getComputedStyle(el);
         if (style.position === 'fixed' && 
             (style.zIndex > 1000 || el.style.zIndex > 1000)) {
             const rect = el.getBoundingClientRect();
-            // 如果覆盖大部分屏幕
+            // large.
             if (rect.width > window.innerWidth * 0.5 && 
                 rect.height > window.innerHeight * 0.5) {
                 el.remove();
@@ -355,7 +353,7 @@ setInterval(removePopups, 1000);""",
         }
     });
     
-    // 恢复滚动
+    // restore.
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
 }
@@ -368,7 +366,7 @@ removeOverlays();""",
                 description = Strings.snippetCssAdBlockDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
-    /* 常见广告选择器 */
+    /* */
     [class*="ad-"], [class*="ads-"], [class*="advert"],
     [id*="ad-"], [id*="ads-"], [id*="advert"],
     [class*="banner"], [class*="popup"],
@@ -396,10 +394,9 @@ fakeAd.className = 'ad ads adsbox ad-placeholder';
 fakeAd.style.cssText = 'height: 1px; width: 1px; position: absolute; left: -9999px;';
 document.body.appendChild(fakeAd);
 
-// 覆盖检测函数
 Object.defineProperty(window, 'adBlockDetected', { value: false, writable: false });
 
-// 移除反广告拦截提示
+// intercept.
 const observer = new MutationObserver(() => {
     document.querySelectorAll('[class*="adblock"], [id*="adblock"]').forEach(el => {
         el.remove();
@@ -424,12 +421,12 @@ internal fun interceptors() = CodeSnippetCategory(
 window.fetch = async function(url, options = {}) {
     console.log('[Fetch]', url);
     
-    // 可以修改请求
+    // can request.
     // if (url.includes('ad')) return new Response('{}');
     
     const response = await originalFetch.call(this, url, options);
     
-    // 可以处理响应
+    // can.
     console.log('[Fetch Response]', response.status);
     
     return response;
@@ -488,7 +485,7 @@ window.WebSocket = function(url, protocols) {
                 description = Strings.snippetBlockRequestsDesc,
                 code = """const blockedKeywords = ['ad', 'analytics', 'tracking', 'beacon'];
 
-// 拦截 Fetch
+// intercept Fetch.
 const originalFetch = window.fetch;
 window.fetch = function(url, options) {
     if (blockedKeywords.some(k => url.toLowerCase().includes(k))) {
@@ -498,7 +495,7 @@ window.fetch = function(url, options) {
     return originalFetch.call(this, url, options);
 };
 
-// 拦截 XHR
+// intercept XHR.
 const originalOpen = XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open = function(method, url, ...args) {
     this._blocked = blockedKeywords.some(k => url.toLowerCase().includes(k));

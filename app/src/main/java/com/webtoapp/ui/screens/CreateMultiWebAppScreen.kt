@@ -66,14 +66,14 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 /**
- * 创建/编辑多站点聚合应用页面 — Multi-Site Hub
+ * create/edit app- Multi- Site Hub
  *
- * 设计要点（对标 mockup）：
- * 1. 深紫渐变 Hero 卡片 — dramatic, full-bleed indigo→purple
- * 2. 水平 pill 模式选择器 — 独立排列，不包在卡片里
- * 3. 站点列表 — 每个站点独立玻璃态卡片，左侧彩色渐变条
- * 4. Quick-Add 栏 — 底部固定，暗色圆角输入 + "+" 按钮
- * 5. 配置区域折叠在底部 — 不占用主视觉
+ * ( mockup)
+ * 1. gradient Hero card- dramatic, full- bleed indigo→purple
+ * 2. pill modeselect- , card
+ * 3. list- card, left gradient
+ * 4. Quick- Add- bottom, input + "+" button
+ * 5. configareacollapse bottom
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -91,21 +91,21 @@ fun CreateMultiWebAppScreen(
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
 
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var landscapeMode by remember { mutableStateOf(false) }
 
-    // 站点列表
+    // list
     var sites by remember { mutableStateOf<List<MultiWebSite>>(emptyList()) }
 
-    // 显示模式
+    // displaymode
     var displayMode by remember { mutableStateOf("TABS") }
 
-    // Feed 模式刷新间隔
+    // Feed moderefresh
     var refreshInterval by remember { mutableStateOf(30) }
 
-    // Dialog 状态
+    // Dialog state
     var showAddSiteDialog by remember { mutableStateOf(false) }
     var editingSite by remember { mutableStateOf<MultiWebSite?>(null) }
     var showBatchImport by remember { mutableStateOf(false) }
@@ -114,7 +114,7 @@ fun CreateMultiWebAppScreen(
     // Quick-Add URL
     var quickAddUrl by remember { mutableStateOf("") }
 
-    // 用于 AddSiteDialog 自动填充
+    // for AddSiteDialog
     var prefilledUrl by remember { mutableStateOf("") }
     var prefilledName by remember { mutableStateOf("") }
     var prefilledFavicon by remember { mutableStateOf("") }
@@ -124,7 +124,7 @@ fun CreateMultiWebAppScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebApp(existingAppId)
@@ -147,12 +147,12 @@ fun CreateMultiWebAppScreen(
 
     val canCreate = sites.isNotEmpty()
 
-    // 品牌色系
+    // Note
     val brandIndigo = Color(0xFF6366F1)
     val brandViolet = Color(0xFF8B5CF6)
     val brandPurple = Color(0xFFA855F7)
 
-    // 站点卡片渐变配色
+    // cardgradient
     val siteCardColors = remember {
         listOf(
             Color(0xFF6366F1) to Color(0xFF818CF8), // Indigo
@@ -177,7 +177,7 @@ fun CreateMultiWebAppScreen(
                     }
                 },
                 actions = {
-                    // 设置按钮
+                    // settingsbutton
                     IconButton(onClick = { showSettingsSection = !showSettingsSection }) {
                         Icon(
                             Icons.Outlined.Settings, null,
@@ -185,11 +185,11 @@ fun CreateMultiWebAppScreen(
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // 批量导入
+                    // import
                     IconButton(onClick = { showBatchImport = true }) {
                         Icon(Icons.Outlined.PlaylistAdd, null)
                     }
-                    // 创建/保存
+                    // create/save
                     TextButton(
                         onClick = {
                             onCreated(
@@ -227,7 +227,7 @@ fun CreateMultiWebAppScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // 可滚动主内容
+                // scroll content
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -236,7 +236,7 @@ fun CreateMultiWebAppScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // ═══════════════════════ 1. HERO CARD ═══════════════════════
-                    // 深紫色渐变 hero — dramatic, matching mockup
+                    // gradient hero- dramatic, matching mockup
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -287,7 +287,7 @@ fun CreateMultiWebAppScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.width(16.dp))
-                            // 发光地球 icon
+                            // icon
                             Box(
                                 modifier = Modifier
                                     .size(64.dp)
@@ -301,7 +301,7 @@ fun CreateMultiWebAppScreen(
                     }
 
                     // ═══════════════════════ 2. MODE SELECTOR ═══════════════════════
-                    // 独立 pill 按钮 — 不包在卡片里，直接排列
+                    // pill button- card,
                     val modes = listOf(
                         Triple("TABS", Strings.multiWebModeTabs, "📑"),
                         Triple("CARDS", Strings.multiWebModeCards, "🃏"),
@@ -366,7 +366,7 @@ fun CreateMultiWebAppScreen(
                         }
                     }
 
-                    // 当前模式描述（小字）
+                    // currentmode( )
                     Text(
                         modeDescriptions[displayMode] ?: "",
                         style = MaterialTheme.typography.bodySmall,
@@ -374,7 +374,7 @@ fun CreateMultiWebAppScreen(
                         modifier = Modifier.padding(start = 4.dp)
                     )
 
-                    // Feed 模式提示
+                    // Feed modehint
                     AnimatedVisibility(
                         visible = displayMode == "FEED",
                         enter = expandVertically() + fadeIn(),
@@ -396,7 +396,7 @@ fun CreateMultiWebAppScreen(
                     }
 
                     // ═══════════════════════ 3. SITE LIST ═══════════════════════
-                    // 标题行
+                    // Note
                     if (sites.isNotEmpty()) {
                         Row(
                             modifier = Modifier
@@ -418,9 +418,9 @@ fun CreateMultiWebAppScreen(
                         }
                     }
 
-                    // 站点卡片 — 每个独立的玻璃态卡片，左侧彩色渐变条
+                    // card- card, left gradient
                     if (sites.isEmpty()) {
-                        // 空状态 — 更优雅
+                        // state
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -569,7 +569,7 @@ fun CreateMultiWebAppScreen(
                 }
 
                 // ═══════════════════════ 5. BOTTOM QUICK-ADD BAR ═══════════════════════
-                // 固定底部 — 暗色圆角输入框 + "+" 按钮（matching mockup）
+                // Fixed bottom bar with rounded input and "+" button
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -583,7 +583,7 @@ fun CreateMultiWebAppScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // URL 输入框
+                        // URL input field
                         OutlinedTextField(
                             value = quickAddUrl,
                             onValueChange = { quickAddUrl = it },
@@ -605,7 +605,7 @@ fun CreateMultiWebAppScreen(
                             },
                             trailingIcon = {
                                 if (quickAddUrl.isBlank()) {
-                                    // 粘贴按钮
+                                    // Paste button
                                     IconButton(
                                         onClick = {
                                             val clipText = getClipboardText(context)
@@ -656,7 +656,7 @@ fun CreateMultiWebAppScreen(
                             )
                         )
 
-                        // "+" 添加按钮 — 发光 indigo
+                        // "+" add button with indigo glow
                         FilledIconButton(
                             onClick = {
                                 if (quickAddUrl.isNotBlank() && isValidUrl(quickAddUrl)) {
@@ -668,7 +668,7 @@ fun CreateMultiWebAppScreen(
                                     editingSite = null
                                     showAddSiteDialog = true
                                 } else {
-                                    // 空白时打开空白 dialog
+                                    // Open blank dialog when input is empty
                                     prefilledUrl = ""
                                     prefilledName = ""
                                     prefilledFavicon = ""
@@ -743,7 +743,7 @@ fun CreateMultiWebAppScreen(
 }
 
 // ══════════════════════════════════════════════════════
-// SITE CARD — 独立玻璃态卡片，左侧彩色渐变条
+// SITE CARD - standalone glass card with left gradient strip
 // ══════════════════════════════════════════════════════
 
 @Composable
@@ -775,7 +775,7 @@ private fun SiteCard(
         tonalElevation = 1.dp
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            // ★ 左侧彩色渐变条 — 视觉亮点
+            // Left gradient strip as visual highlight
             Box(
                 modifier = Modifier
                     .width(5.dp)
@@ -787,7 +787,7 @@ private fun SiteCard(
                     )
             )
 
-            // 拖拽手柄
+            // Drag handle
             Box(
                 modifier = Modifier
                     .padding(start = 6.dp)
@@ -800,14 +800,14 @@ private fun SiteCard(
                 )
             }
 
-            // 主内容
+            // Main content
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 10.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Favicon / emoji 图标
+                // Favicon / emoji icon
                 Box(
                     modifier = Modifier
                         .size(42.dp)
@@ -849,7 +849,7 @@ private fun SiteCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // 文本信息
+                // Text info
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         site.name.ifBlank { site.url },
@@ -878,7 +878,7 @@ private fun SiteCard(
                         )
                     }
 
-                    // 分类标签
+                    // Category tag
                     if (site.category.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Surface(
@@ -1198,7 +1198,7 @@ private fun BatchImportDialog(
             .map { it.trim() }
             .filter { it.isNotBlank() }
             .mapNotNull { line ->
-                // 支持格式: URL、名称|URL、emoji|名称|URL
+                // Supported formats: URL, name|URL, emoji|name|URL
                 val parts = line.split("|").map { it.trim() }
                 val url: String
                 val name: String

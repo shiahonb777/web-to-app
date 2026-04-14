@@ -5,7 +5,7 @@ import com.webtoapp.core.i18n.Strings
 
 internal object CompatStrings {
     private val lang: AppLanguage get() = Strings.delegateLanguage
-    // ==================== 增强公告 UI 新增字符串 ====================
+    // ==================== Enhanced Announcement UI Strings ====================
     val optional: String get() = when (lang) {
         AppLanguage.CHINESE -> "可选"
         AppLanguage.ENGLISH -> "Optional"

@@ -1,20 +1,4 @@
-/**
- * hardware_control.c — WebToApp 底层硬件控制原生库
- * 
- * 通过 Linux sysfs / ioctl / input 子系统实现底层硬件控制，
- * 绕过 Android Java API 的限制，在更多设备上生效。
- * 
- * 功能：
- * 1. 音量控制 — ALSA tinyalsa / sysfs
- * 2. 闪光灯/手电筒 — sysfs LED 子系统
- * 3. 震动马达 — sysfs / timed_output / ff-input
- * 4. 屏幕亮度 — sysfs backlight
- * 5. CPU 性能模式 — cpufreq governor
- * 6. 输入事件注入 — /dev/input/
- * 7. 进程优先级 — setpriority / ioprio
- * 
- * ⚠️ 警告：部分功能需要 root 或特殊权限，使用前会自动探测并降级。
- */
+/* Note. */
 
 #define _GNU_SOURCE   /* expose cpu_set_t / CPU_ZERO / CPU_SET / sched_setaffinity */
 
@@ -46,15 +30,12 @@
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
-// JNI 包名: com.webtoapp.core.forcedrun.NativeHardwareController
+// Note.
 #define JNI_FUNC(name) Java_com_webtoapp_core_forcedrun_NativeHardwareController_##name
 
-// ==================== 工具函数 ====================
+// Note.
 
-/**
- * 尝试向 sysfs 节点写入字符串值
- * @return 0 成功, -1 失败
- */
+/* Note. */
 static int sysfs_write(const char *path, const char *value) {
     int fd = open(path, O_WRONLY | O_NONBLOCK);
     if (fd < 0) {
@@ -76,10 +57,7 @@ static int sysfs_write(const char *path, const char *value) {
     return 0;
 }
 
-/**
- * 从 sysfs 节点读取字符串值
- * @return 读取的字节数, -1 失败
- */
+/* Note. */
 static int sysfs_read(const char *path, char *buf, size_t buf_len) {
     int fd = open(path, O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
@@ -92,7 +70,7 @@ static int sysfs_read(const char *path, char *buf, size_t buf_len) {
     if (n < 0) return -1;
     
     buf[n] = '\0';
-    // 去掉末尾换行
+    // Note.
     while (n > 0 && (buf[n - 1] == '\n' || buf[n - 1] == '\r')) {
         buf[--n] = '\0';
     }
@@ -100,24 +78,17 @@ static int sysfs_read(const char *path, char *buf, size_t buf_len) {
     return (int)n;
 }
 
-/**
- * 检查路径是否可写
- */
+/* Note. */
 static int is_writable(const char *path) {
     return access(path, W_OK) == 0;
 }
 
-/**
- * 检查路径是否存在
- */
+/* Note. */
 static int path_exists(const char *path) {
     return access(path, F_OK) == 0;
 }
 
-/**
- * 查找匹配模式的 sysfs 路径（从多个候选路径中选择第一个存在的）
- * @return 找到的路径索引, -1 表示未找到
- */
+/* Note. */
 static int find_sysfs_path(const char **candidates, int count) {
     for (int i = 0; i < count; i++) {
         if (path_exists(candidates[i])) {
@@ -127,9 +98,9 @@ static int find_sysfs_path(const char **candidates, int count) {
     return -1;
 }
 
-// ==================== 闪光灯(LED/手电筒)控制 ====================
+// Note.
 
-// 已知的闪光灯 sysfs 路径 (不同厂商/芯片)
+// Note.
 static const char *flashlight_brightness_paths[] = {
     "/sys/class/leds/flashlight/brightness",
     "/sys/class/leds/torch-light0/brightness",
@@ -172,20 +143,13 @@ static const char *flashlight_brightness_paths[] = {
 };
 static const int flashlight_path_count = sizeof(flashlight_brightness_paths) / sizeof(flashlight_brightness_paths[0]);
 
-static int cached_flash_path_idx = -2; // -2=未探测, -1=未找到, >=0=已找到
+static int cached_flash_path_idx = -2; // Note.
 static char cached_flash_max_brightness[16] = "255";
 
-// 动态探测发现的路径缓存
+// Note.
 static char dynamic_flash_path[256] = {0};
 
-/**
- * 探测可用的闪光灯 sysfs 路径
- * 
- * 策略：
- * 1. 优先匹配静态已知路径列表（快速）
- * 2. 失败时动态扫描 /sys/class/leds/ 目录，
- *    查找包含 "flash" / "torch" / "fled" 关键字的 LED 节点
- */
+/* Note. */
 static int probe_flashlight_path(void) {
     if (cached_flash_path_idx != -2) {
         return cached_flash_path_idx;
@@ -193,7 +157,7 @@ static int probe_flashlight_path(void) {
     
     cached_flash_path_idx = -1;
     
-    // 策略1: 静态路径匹配
+    // Note.
     for (int i = 0; i < flashlight_path_count; i++) {
         if (path_exists(flashlight_brightness_paths[i])) {
             char max_path[256];
@@ -215,13 +179,13 @@ static int probe_flashlight_path(void) {
         }
     }
     
-    // 策略2: 动态扫描 /sys/class/leds/ 目录
+    // Note.
     DIR *dir = opendir("/sys/class/leds");
     if (dir) {
         struct dirent *entry;
         while ((entry = readdir(dir)) != NULL) {
             const char *name = entry->d_name;
-            // 查找包含 flash/torch/fled 关键字的 LED 节点
+            // Note.
             if (strstr(name, "flash") || strstr(name, "torch") || 
                 strstr(name, "fled") || strstr(name, "Flash") || strstr(name, "Torch")) {
                 
@@ -229,7 +193,7 @@ static int probe_flashlight_path(void) {
                          "/sys/class/leds/%s/brightness", name);
                 
                 if (path_exists(dynamic_flash_path)) {
-                    // 读取 max_brightness
+                    // Note.
                     char max_path[256];
                     snprintf(max_path, sizeof(max_path),
                              "/sys/class/leds/%s/max_brightness", name);
@@ -238,7 +202,7 @@ static int probe_flashlight_path(void) {
                         strncpy(cached_flash_max_brightness, max_val, sizeof(cached_flash_max_brightness) - 1);
                     }
                     
-                    // 使用特殊索引 9999 表示动态发现
+                    // Note.
                     cached_flash_path_idx = 9999;
                     LOGI("Flashlight sysfs found (dynamic scan): %s (max=%s)", 
                          dynamic_flash_path, cached_flash_max_brightness);
@@ -256,18 +220,14 @@ static int probe_flashlight_path(void) {
     return cached_flash_path_idx;
 }
 
-/**
- * 获取闪光灯 sysfs 路径（支持静态列表 + 动态扫描）
- */
+/* Note. */
 static const char *get_flash_path(int idx) {
-    if (idx == 9999) return dynamic_flash_path; // 动态扫描发现
+    if (idx == 9999) return dynamic_flash_path; // Note.
     if (idx >= 0 && idx < flashlight_path_count) return flashlight_brightness_paths[idx];
     return NULL;
 }
 
-/**
- * 原生闪光灯开关
- */
+/* Note. */
 static int native_set_flashlight(int on) {
     int idx = probe_flashlight_path();
     if (idx < 0) return -1;
@@ -279,7 +239,7 @@ static int native_set_flashlight(int on) {
     return sysfs_write(path, value);
 }
 
-// 爆闪线程
+// Note.
 static volatile int strobe_running = 0;
 static pthread_t strobe_thread;
 
@@ -303,31 +263,28 @@ static void *strobe_thread_func(void *arg) {
         usleep(interval_us);
     }
     
-    // 退出时关闭
+    // Note.
     sysfs_write(path, "0");
     return NULL;
 
 }
 
-// ==================== 闪光灯模式引擎 (摩斯电码 / 自定义序列) ====================
+// Note.
 
-/**
- * 闪光灯序列元素: (亮持续ms, 灭持续ms)
- * 例如摩斯电码 "." = (dot_ms, gap_ms), "-" = (dash_ms, gap_ms)
- */
+/* Note. */
 typedef struct {
     int on_ms;
     int off_ms;
 } flash_element_t;
 
-// 模式播放线程
+// Note.
 static volatile int pattern_running = 0;
 static pthread_t pattern_thread;
 
-// 模式数据 (由 JNI 传入)
+// Note.
 static flash_element_t *pattern_data = NULL;
 static int pattern_length = 0;
-static int pattern_loop = 0; // 是否循环播放
+static int pattern_loop = 0; // Note.
 
 static void *flash_pattern_thread_func(void *arg) {
     (void)arg;
@@ -343,7 +300,7 @@ static void *flash_pattern_thread_func(void *arg) {
     
     do {
         for (int i = 0; i < pattern_length && pattern_running; i++) {
-            // 亮
+            // Note.
             if (pattern_data[i].on_ms > 0) {
                 sysfs_write(path, cached_flash_max_brightness);
                 usleep(pattern_data[i].on_ms * 1000);
@@ -351,7 +308,7 @@ static void *flash_pattern_thread_func(void *arg) {
             
             if (!pattern_running) break;
             
-            // 灭
+            // Note.
             if (pattern_data[i].off_ms > 0) {
                 sysfs_write(path, "0");
                 usleep(pattern_data[i].off_ms * 1000);
@@ -359,16 +316,14 @@ static void *flash_pattern_thread_func(void *arg) {
         }
     } while (pattern_running && pattern_loop);
     
-    // 退出时确保关闭
+    // Note.
     sysfs_write(path, "0");
     
     LOGI("Flash pattern playback finished");
     return NULL;
 }
 
-/**
- * 停止当前模式播放
- */
+/* Note. */
 static void stop_pattern_playback(void) {
     if (pattern_running) {
         pattern_running = 0;
@@ -381,20 +336,12 @@ static void stop_pattern_playback(void) {
     pattern_length = 0;
 }
 
-// ========== 摩斯电码编码表 (ITU 标准) ==========
+// Note.
 
-/**
- * 摩斯电码: "." = dit (短), "-" = dah (长)
- * ITU 标准时序比例:
- *   dit = 1 单位
- *   dah = 3 单位
- *   元素间隔 (dit/dah 之间) = 1 单位
- *   字符间隔 = 3 单位
- *   单词间隔 (空格) = 7 单位
- */
+/* Note. */
 static const char *morse_table[128] = {
-    // ASCII 0-47: 非字母数字
-    [' '] = " ",  // 单词间隔 (特殊处理)
+    // Note.
+    [' '] = " ",  // Note.
     ['!'] = "-.-.--",
     ['"'] = ".-..-.",
     ['#'] = NULL,
@@ -411,7 +358,7 @@ static const char *morse_table[128] = {
     ['.'] = ".-.-.-",
     ['/'] = "-..-.",
 
-    // 数字 0-9
+    // Note.
     ['0'] = "-----",
     ['1'] = ".----",
     ['2'] = "..---",
@@ -423,7 +370,7 @@ static const char *morse_table[128] = {
     ['8'] = "---..",
     ['9'] = "----.",
 
-    // 特殊符号
+    // Note.
     [':'] = "---...",
     [';'] = "-.-.-.",
     ['<'] = NULL,
@@ -432,7 +379,7 @@ static const char *morse_table[128] = {
     ['?'] = "..--..",
     ['@'] = ".--.-.",
 
-    // 大写字母 A-Z
+    // Note.
     ['A'] = ".-",
     ['B'] = "-...",
     ['C'] = "-.-.",
@@ -461,15 +408,7 @@ static const char *morse_table[128] = {
     ['Z'] = "--..",
 };
 
-/**
- * 将文本转换为摩斯电码闪烁序列
- * 
- * @param text 输入文本 (ASCII)
- * @param unit_ms 基本时间单位 (毫秒), 推荐 100-300ms
- * @param out_elements 输出序列数组 (调用者释放)
- * @param out_count 输出序列长度
- * @return 0 成功, -1 失败
- */
+/* Note. */
 static int encode_morse(const char *text, int unit_ms, 
                         flash_element_t **out_elements, int *out_count) {
     if (!text || !out_elements || !out_count) return -1;
@@ -477,35 +416,35 @@ static int encode_morse(const char *text, int unit_ms,
     int text_len = strlen(text);
     if (text_len == 0) return -1;
     
-    // 预分配足够大的数组 (每个字符最多 6 个元素 + 字符间隔)
+    // Note.
     int max_elements = text_len * 8;
     flash_element_t *elements = (flash_element_t *)calloc(max_elements, sizeof(flash_element_t));
     if (!elements) return -1;
     
-    int dit_ms = unit_ms;          // 短信号: 1 单位
-    int dah_ms = unit_ms * 3;      // 长信号: 3 单位
-    int element_gap = unit_ms;     // 元素间隔: 1 单位
-    int char_gap = unit_ms * 3;    // 字符间隔: 3 单位
-    int word_gap = unit_ms * 7;    // 单词间隔: 7 单位
+    int dit_ms = unit_ms;          // Note.
+    int dah_ms = unit_ms * 3;      // Note.
+    int element_gap = unit_ms;     // Note.
+    int char_gap = unit_ms * 3;    // Note.
+    int word_gap = unit_ms * 7;    // Note.
     
     int count = 0;
     
     for (int i = 0; i < text_len && count < max_elements - 2; i++) {
         char ch = text[i];
         
-        // 转为大写
+        // Note.
         if (ch >= 'a' && ch <= 'z') ch = ch - 'a' + 'A';
         
-        // 空格 = 单词间隔
+        // Note.
         if (ch == ' ') {
             if (count > 0) {
-                // 追加额外的间隔 (总共 7 单位, 已有 char_gap 3 单位)
+                // Note.
                 elements[count - 1].off_ms += (word_gap - char_gap);
             }
             continue;
         }
         
-        // 查找摩斯电码
+        // Note.
         if (ch < 0 || ch > 127) continue;
         const char *code = morse_table[(int)ch];
         if (!code) continue;
@@ -534,27 +473,22 @@ static int encode_morse(const char *text, int unit_ms,
     return 0;
 }
 
-// ===== 摩斯电码 / 自定义模式 JNI 函数 =====
+// Note.
 
-/**
- * 播放摩斯电码
- * @param text 摩斯电码文本 (ASCII 字母、数字、空格、标点)
- * @param unitMs 基本时间单位 (ms)
- * @param loop 是否循环播放
- */
+/* Note. */
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeStartMorseCode)(JNIEnv *env, jobject thiz, 
                                 jstring text, jint unitMs, jboolean loop) {
     (void)thiz;
     
-    // 停止之前的模式
+    // Note.
     stop_pattern_playback();
     
-    // 获取文本
+    // Note.
     const char *c_text = (*env)->GetStringUTFChars(env, text, NULL);
     if (!c_text) return JNI_FALSE;
     
-    // 编码
+    // Note.
     flash_element_t *elements = NULL;
     int count = 0;
     int ret = encode_morse(c_text, unitMs, &elements, &count);
@@ -563,13 +497,13 @@ JNI_FUNC(nativeStartMorseCode)(JNIEnv *env, jobject thiz,
     
     if (ret != 0) return JNI_FALSE;
     
-    // 设置模式数据
+    // Note.
     pattern_data = elements;
     pattern_length = count;
     pattern_loop = loop ? 1 : 0;
     pattern_running = 1;
     
-    // 启动播放线程
+    // Note.
     if (pthread_create(&pattern_thread, NULL, flash_pattern_thread_func, NULL) != 0) {
         pattern_running = 0;
         free(pattern_data);
@@ -580,13 +514,7 @@ JNI_FUNC(nativeStartMorseCode)(JNIEnv *env, jobject thiz,
     return JNI_TRUE;
 }
 
-/**
- * 播放自定义闪烁序列
- * @param onDurations 每个步骤的亮灯时长数组 (ms)
- * @param offDurations 每个步骤的灭灯时长数组 (ms)
- * @param count 序列长度
- * @param loop 是否循环
- */
+/* Note. */
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeStartCustomPattern)(JNIEnv *env, jobject thiz,
                                     jintArray onDurations, jintArray offDurations,
@@ -637,9 +565,7 @@ JNI_FUNC(nativeStartCustomPattern)(JNIEnv *env, jobject thiz,
     return JNI_TRUE;
 }
 
-/**
- * 停止模式播放
- */
+/* Note. */
 JNIEXPORT void JNICALL
 JNI_FUNC(nativeStopPattern)(JNIEnv *env, jobject thiz) {
     (void)env;
@@ -647,17 +573,17 @@ JNI_FUNC(nativeStopPattern)(JNIEnv *env, jobject thiz) {
     stop_pattern_playback();
 }
 
-// ==================== 震动马达控制 ====================
+// Note.
 
 static const char *vibrator_paths[] = {
-    // timed_output (旧版)
+    // Note.
     "/sys/class/timed_output/vibrator/enable",
-    // leds 类型 (新版)
+    // Note.
     "/sys/class/leds/vibrator/activate",
     "/sys/class/leds/vibrator/duration",
     // Qualcomm haptic
     "/sys/class/leds/vibrator/state",
-    // input force-feedback 设备 (最新 Android 设备)
+    // Note.
     "/dev/input/event0",
 };
 static const int vibrator_path_count = sizeof(vibrator_paths) / sizeof(vibrator_paths[0]);
@@ -665,7 +591,7 @@ static const int vibrator_path_count = sizeof(vibrator_paths) / sizeof(vibrator_
 static volatile int vibration_running = 0;
 static pthread_t vibration_thread;
 
-// 震动方式枚举
+// Note.
 typedef enum {
     VIB_TIMED_OUTPUT = 0,   // /sys/class/timed_output/vibrator/enable
     VIB_LEDS_ACTIVATE = 1,  // /sys/class/leds/vibrator/ (duration + activate)
@@ -681,7 +607,7 @@ static void probe_vibrator(void) {
     if (cached_vib_probed) return;
     cached_vib_probed = 1;
     
-    // 1. 检查 timed_output
+    // Note.
     if (path_exists("/sys/class/timed_output/vibrator/enable")) {
         cached_vib_type = VIB_TIMED_OUTPUT;
         strncpy(cached_vib_path, "/sys/class/timed_output/vibrator/enable", sizeof(cached_vib_path) - 1);
@@ -689,7 +615,7 @@ static void probe_vibrator(void) {
         return;
     }
     
-    // 2. 检查 leds 方式（标准路径）
+    // Note.
     if (path_exists("/sys/class/leds/vibrator/duration") && 
         path_exists("/sys/class/leds/vibrator/activate")) {
         cached_vib_type = VIB_LEDS_ACTIVATE;
@@ -698,7 +624,7 @@ static void probe_vibrator(void) {
         return;
     }
     
-    // 2.1 检查替代 leds 路径（不同厂商命名）
+    // Note.
     static const char *alt_vib_leds[] = {
         "/sys/class/leds/vibrator_aw8697/",   // Awinic haptic (OnePlus/OPPO/Realme)
         "/sys/class/leds/vibrator_cs40l25/",  // Cirrus Logic (Google Pixel 6/7)
@@ -719,7 +645,7 @@ static void probe_vibrator(void) {
         }
     }
     
-    // 2.2 动态扫描 /sys/class/leds/ 查找振动器节点
+    // Note.
     DIR *leds_dir = opendir("/sys/class/leds");
     if (leds_dir) {
         struct dirent *led_entry;
@@ -740,7 +666,7 @@ static void probe_vibrator(void) {
         closedir(leds_dir);
     }
     
-    // 3. 查找 force-feedback 输入设备
+    // Note.
     DIR *dir = opendir("/dev/input");
     if (dir) {
         struct dirent *entry;
@@ -753,10 +679,10 @@ static void probe_vibrator(void) {
             int fd = open(dev_path, O_RDWR);
             if (fd < 0) continue;
             
-            // 检查设备是否支持 force feedback
+            // Note.
             unsigned long features[4] = {0};
             if (ioctl(fd, EVIOCGBIT(EV_FF, sizeof(features)), features) >= 0) {
-                // 检查 FF_RUMBLE 位
+                // Note.
                 if (features[FF_RUMBLE / (sizeof(unsigned long) * 8)] & 
                     (1UL << (FF_RUMBLE % (sizeof(unsigned long) * 8)))) {
                     cached_vib_type = VIB_FORCE_FEEDBACK;
@@ -819,7 +745,7 @@ static int native_vibrate_ms(int duration_ms) {
             play.value = 1;
             write(fd, &play, sizeof(play));
             
-            // 等待震动完成后清理
+            // Note.
             usleep(duration_ms * 1000);
             
             play.value = 0;
@@ -839,16 +765,16 @@ static void *continuous_vibration_func(void *arg) {
     (void)arg;
     while (vibration_running) {
         if (native_vibrate_ms(1000) != 0) {
-            // 如果原生震动失败，退出线程让 Java 层接管
+            // Note.
             LOGW("Native vibration failed, thread exiting");
             break;
         }
-        usleep(50000); // 50ms 间隔防止出现间断
+        usleep(50000); // Note.
     }
     return NULL;
 }
 
-// ==================== 屏幕亮度控制 ====================
+// Note.
 
 static const char *brightness_paths[] = {
     "/sys/class/backlight/panel0-backlight/brightness",
@@ -889,7 +815,7 @@ static char dynamic_brightness_path[256] = {0};
 static int probe_brightness(void) {
     if (cached_brightness_idx != -2) return cached_brightness_idx;
     
-    // 策略1: 静态路径匹配
+    // Note.
     cached_brightness_idx = find_sysfs_path(brightness_paths, brightness_path_count);
     
     if (cached_brightness_idx >= 0) {
@@ -909,7 +835,7 @@ static int probe_brightness(void) {
         return cached_brightness_idx;
     }
     
-    // 策略2: 动态扫描 /sys/class/backlight/
+    // Note.
     DIR *dir = opendir("/sys/class/backlight");
     if (dir) {
         struct dirent *entry;
@@ -920,7 +846,7 @@ static int probe_brightness(void) {
                      "/sys/class/backlight/%s/brightness", entry->d_name);
             
             if (path_exists(dynamic_brightness_path)) {
-                // 读取 max_brightness
+                // Note.
                 char max_path[256];
                 snprintf(max_path, sizeof(max_path),
                          "/sys/class/backlight/%s/max_brightness", entry->d_name);
@@ -930,7 +856,7 @@ static int probe_brightness(void) {
                     if (cached_max_brightness <= 0) cached_max_brightness = 255;
                 }
                 
-                cached_brightness_idx = 9999; // 动态发现
+                cached_brightness_idx = 9999; // Note.
                 closedir(dir);
                 LOGI("Brightness sysfs (dynamic scan): %s (max=%d)", 
                      dynamic_brightness_path, cached_max_brightness);
@@ -940,7 +866,7 @@ static int probe_brightness(void) {
         closedir(dir);
     }
     
-    // 策略3: 动态扫描 /sys/class/leds/ 查找 backlight 节点
+    // Note.
     dir = opendir("/sys/class/leds");
     if (dir) {
         struct dirent *entry;
@@ -979,13 +905,13 @@ static int native_set_brightness(int level) {
     int idx = probe_brightness();
     if (idx < 0) return -1;
     
-    // 钳制到 [0, max]
+    // Note.
     if (level < 0) level = 0;
     if (level > cached_max_brightness) level = cached_max_brightness;
     
     const char *path;
     if (idx == 9999) {
-        path = dynamic_brightness_path; // 动态扫描发现
+        path = dynamic_brightness_path; // Note.
     } else if (idx >= 0 && idx < brightness_path_count) {
         path = brightness_paths[idx];
     } else {
@@ -997,7 +923,7 @@ static int native_set_brightness(int level) {
     return sysfs_write(path, buf);
 }
 
-// ==================== CPU 性能控制 ====================
+// Note.
 
 #define MAX_CPU_CORES 16
 
@@ -1015,26 +941,24 @@ static int get_cpu_count(void) {
     return count > 0 ? count : 1;
 }
 
-/**
- * 设置 CPU governor (performance / powersave / schedutil 等)
- */
+/* Note. */
 static int native_set_cpu_governor(const char *governor) {
     int count = get_cpu_count();
     int success = 0;
     
     char path[256];
     for (int i = 0; i < count; i++) {
-        // 确保 CPU 在线
+        // Note.
         snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/online", i);
         sysfs_write(path, "1");
         
-        // 设置 governor
+        // Note.
         snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_governor", i);
         if (sysfs_write(path, governor) == 0) {
             success++;
         }
         
-        // 如果设置 performance 模式，同时设置最大频率
+        // Note.
         if (strcmp(governor, "performance") == 0) {
             char max_freq[32] = {0};
             char max_path[256], cur_path[256];
@@ -1053,7 +977,7 @@ static int native_set_cpu_governor(const char *governor) {
     return success > 0 ? 0 : -1;
 }
 
-// 高性能线程
+// Note.
 static volatile int perf_mode_running = 0;
 static pthread_t *perf_threads = NULL;
 static int perf_thread_count = 0;
@@ -1062,16 +986,16 @@ static void *cpu_burn_thread_func(void *arg) {
     int core_id = *((int *)arg);
     free(arg);
     
-    // 尝试绑定到特定 CPU 核心 (提升缓存命中率)
+    // Note.
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(core_id, &cpuset);
     sched_setaffinity(0, sizeof(cpuset), &cpuset);
     
-    // 设置最高调度优先级
+    // Note.
     setpriority(PRIO_PROCESS, 0, -20);
     
-    // 分配内存块
+    // Note.
     volatile double *mem_block = (volatile double *)mmap(
         NULL, 1024 * 1024, // 1MB
         PROT_READ | PROT_WRITE,
@@ -1082,14 +1006,14 @@ static void *cpu_burn_thread_func(void *arg) {
     volatile long counter = 0;
     
     while (perf_mode_running) {
-        // 1. 浮点密集计算 (FPU stress)
+        // Note.
         for (int i = 0; i < 50000 && perf_mode_running; i++) {
             result += sin((double)i) * cos((double)i);
             result += sqrt(fabs(result));
             result *= 1.0000001;
         }
         
-        // 2. 整数运算 (ALU stress)
+        // Note.
         volatile int ival = (int)result;
         for (int i = 0; i < 100000 && perf_mode_running; i++) {
             ival ^= (i * 31 + 7);
@@ -1097,7 +1021,7 @@ static void *cpu_burn_thread_func(void *arg) {
             counter++;
         }
         
-        // 3. 内存带宽压力
+        // Note.
         if (mem_block) {
             for (int i = 0; i < 1024 * 1024 / (int)sizeof(double) && perf_mode_running; i += 8) {
                 mem_block[i] = result + (double)i;
@@ -1105,7 +1029,7 @@ static void *cpu_burn_thread_func(void *arg) {
             }
         }
         
-        // 防止编译器优化
+        // Note.
         if (result == 0.0 && counter == 0) {
             LOGD("perf: %f %ld", result, counter);
         }
@@ -1118,12 +1042,9 @@ static void *cpu_burn_thread_func(void *arg) {
     return NULL;
 }
 
-// ==================== 输入事件注入 ====================
+// Note.
 
-/**
- * 列举可用的 input 设备
- * 用于查找键盘/触摸屏设备
- */
+/* Note. */
 typedef enum {
     INPUT_DEV_KEYBOARD = 0,
     INPUT_DEV_TOUCHSCREEN = 1,
@@ -1155,7 +1076,7 @@ static int find_input_device(input_dev_type_t type, char *out_path, size_t out_l
         int found = 0;
         switch (type) {
             case INPUT_DEV_TOUCHSCREEN:
-                // 触摸屏支持 EV_ABS + ABS_MT_POSITION_X
+                // Note.
                 if ((absbits[ABS_MT_POSITION_X / (sizeof(unsigned long) * 8)] & 
                      (1UL << (ABS_MT_POSITION_X % (sizeof(unsigned long) * 8))))) {
                     found = 1;
@@ -1163,7 +1084,7 @@ static int find_input_device(input_dev_type_t type, char *out_path, size_t out_l
                 break;
                 
             case INPUT_DEV_POWER:
-                // 电源键
+                // Note.
                 if ((keybits[KEY_POWER / (sizeof(unsigned long) * 8)] & 
                      (1UL << (KEY_POWER % (sizeof(unsigned long) * 8))))) {
                     found = 1;
@@ -1171,7 +1092,7 @@ static int find_input_device(input_dev_type_t type, char *out_path, size_t out_l
                 break;
                 
             case INPUT_DEV_KEYBOARD:
-                // 音量键
+                // Note.
                 if ((keybits[KEY_VOLUMEUP / (sizeof(unsigned long) * 8)] & 
                      (1UL << (KEY_VOLUMEUP % (sizeof(unsigned long) * 8))))) {
                     found = 1;
@@ -1194,9 +1115,7 @@ static int find_input_device(input_dev_type_t type, char *out_path, size_t out_l
     return -1;
 }
 
-/**
- * 向 input 设备注入事件
- */
+/* Note. */
 static int inject_input_event(const char *dev_path, __u16 type, __u16 code, __s32 value) {
     int fd = open(dev_path, O_WRONLY);
     if (fd < 0) return -1;
@@ -1222,7 +1141,7 @@ static int inject_input_event(const char *dev_path, __u16 type, __u16 code, __s3
     return n == sizeof(struct input_event) ? 0 : -1;
 }
 
-// ==================== 能力探测结果缓存 ====================
+// Note.
 
 typedef struct {
     int flashlight_available;
@@ -1238,12 +1157,12 @@ static hw_capabilities_t hw_caps = {0, 0, 0, 0, 0, 0};
 static void probe_all_capabilities(void) {
     if (hw_caps.probed) return;
     
-    // 闪光灯
+    // Note.
     int f_idx = probe_flashlight_path();
     const char *flash_path = get_flash_path(f_idx);
     hw_caps.flashlight_available = (f_idx >= 0 && flash_path && is_writable(flash_path));
     
-    // 震动
+    // Note.
     probe_vibrator();
     if (cached_vib_type == VIB_TIMED_OUTPUT || cached_vib_type == VIB_LEDS_ACTIVATE) {
         hw_caps.vibrator_available = is_writable(cached_vib_path);
@@ -1251,7 +1170,7 @@ static void probe_all_capabilities(void) {
         hw_caps.vibrator_available = (access(cached_vib_path, R_OK | W_OK) == 0);
     }
     
-    // 亮度
+    // Note.
     int b_idx = probe_brightness();
     if (b_idx == 9999) {
         hw_caps.brightness_available = is_writable(dynamic_brightness_path);
@@ -1263,7 +1182,7 @@ static void probe_all_capabilities(void) {
     hw_caps.cpu_governor_available = is_writable(
         "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
     
-    // 输入注入
+    // Note.
     char vol_dev[256];
     hw_caps.input_injection_available = (find_input_device(INPUT_DEV_KEYBOARD, vol_dev, sizeof(vol_dev)) == 0
                                           && access(vol_dev, W_OK) == 0);
@@ -1276,16 +1195,9 @@ static void probe_all_capabilities(void) {
          hw_caps.input_injection_available);
 }
 
-// ==================== JNI 导出函数 ====================
+// Note.
 
-/**
- * 探测硬件能力 — 返回位掩码
- * bit 0: 闪光灯 sysfs
- * bit 1: 震动器 sysfs  
- * bit 2: 屏幕亮度 sysfs
- * bit 3: CPU governor
- * bit 4: 输入事件注入
- */
+/* Note. */
 JNIEXPORT jint JNICALL
 JNI_FUNC(nativeProbeCapabilities)(JNIEnv *env, jobject thiz) {
     (void)env;
@@ -1303,7 +1215,7 @@ JNI_FUNC(nativeProbeCapabilities)(JNIEnv *env, jobject thiz) {
     return flags;
 }
 
-// ===== 闪光灯 =====
+// Note.
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeSetFlashlight)(JNIEnv *env, jobject thiz, jboolean on) {
@@ -1346,7 +1258,7 @@ JNI_FUNC(nativeStopStrobe)(JNIEnv *env, jobject thiz) {
     }
 }
 
-// ===== 震动 =====
+// Note.
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeVibrate)(JNIEnv *env, jobject thiz, jint durationMs) {
@@ -1383,7 +1295,7 @@ JNI_FUNC(nativeStopVibration)(JNIEnv *env, jobject thiz) {
     }
 }
 
-// ===== 屏幕亮度 =====
+// Note.
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeSetBrightness)(JNIEnv *env, jobject thiz, jint level) {
@@ -1400,7 +1312,7 @@ JNI_FUNC(nativeGetMaxBrightness)(JNIEnv *env, jobject thiz) {
     return cached_max_brightness;
 }
 
-// ===== CPU 性能 =====
+// Note.
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeSetCpuPerformanceMode)(JNIEnv *env, jobject thiz, jboolean enable) {
@@ -1449,7 +1361,7 @@ JNI_FUNC(nativeStopCpuBurn)(JNIEnv *env, jobject thiz) {
     LOGI("CPU burn stopped");
 }
 
-// ===== 输入事件注入 =====
+// Note.
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeInjectVolumeKey)(JNIEnv *env, jobject thiz, jboolean volumeUp) {
@@ -1487,14 +1399,14 @@ JNI_FUNC(nativeInjectPowerKey)(JNIEnv *env, jobject thiz) {
     return inject_input_event(dev_path, EV_KEY, KEY_POWER, 0) == 0;
 }
 
-// ===== 进程优先级 =====
+// Note.
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeSetProcessPriority)(JNIEnv *env, jobject thiz, jint priority) {
     (void)env;
     (void)thiz;
     
-    // priority: -20 (最高) 到 19 (最低)
+    // Note.
     int clamped = priority;
     if (clamped < -20) clamped = -20;
     if (clamped > 19) clamped = 19;
@@ -1508,11 +1420,7 @@ JNI_FUNC(nativeSetProcessPriority)(JNIEnv *env, jobject thiz, jint priority) {
     return ret == 0;
 }
 
-/**
- * 设置 I/O 调度优先级 (Android/Linux)
- * class: 1=RT(实时), 2=BE(最佳努力), 3=IDLE
- * priority: 0-7 (RT/BE), 与 class 搭配
- */
+/* Note. */
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeSetIoPriority)(JNIEnv *env, jobject thiz, jint ioClass, jint ioPriority) {
     (void)env;
@@ -1533,7 +1441,7 @@ JNI_FUNC(nativeSetIoPriority)(JNIEnv *env, jobject thiz, jint ioClass, jint ioPr
     return ret == 0;
 }
 
-// ===== 清理 =====
+// Note.
 
 JNIEXPORT void JNICALL
 JNI_FUNC(nativeCleanup)(JNIEnv *env, jobject thiz) {
@@ -1542,22 +1450,22 @@ JNI_FUNC(nativeCleanup)(JNIEnv *env, jobject thiz) {
     
     LOGI("Native cleanup started");
     
-    // 停止爆闪
+    // Note.
     if (strobe_running) {
         strobe_running = 0;
         pthread_join(strobe_thread, NULL);
     }
     
-    // 停止模式播放 (摩斯电码 / 自定义序列)
+    // Note.
     stop_pattern_playback();
     
-    // 停止震动
+    // Note.
     if (vibration_running) {
         vibration_running = 0;
         pthread_join(vibration_thread, NULL);
     }
     
-    // 停止 CPU burn
+    // Note.
     if (perf_mode_running) {
         perf_mode_running = 0;
         for (int i = 0; i < perf_thread_count; i++) {
@@ -1568,8 +1476,9 @@ JNI_FUNC(nativeCleanup)(JNIEnv *env, jobject thiz) {
         perf_thread_count = 0;
     }
     
-    // 恢复闪光灯
+    // Note.
     native_set_flashlight(0);
     
     LOGI("Native cleanup completed");
 }
+

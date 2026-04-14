@@ -43,8 +43,8 @@ import org.koin.compose.koinInject
 import java.io.File
 
 /**
- * 启动画面中转 Activity
- * 用于本地应用快捷方式，先显示启动画面再启动目标应用
+ * Splash handoff Activity.
+ * Used by local app shortcuts: show splash first, then open target app.
  */
 class SplashLauncherActivity : AppCompatActivity() {
 
@@ -52,18 +52,18 @@ class SplashLauncherActivity : AppCompatActivity() {
         const val EXTRA_TARGET_PACKAGE = "target_package"
         const val EXTRA_SPLASH_TYPE = "splash_type"       // "IMAGE" or "VIDEO"
         const val EXTRA_SPLASH_PATH = "splash_path"
-        const val EXTRA_SPLASH_DURATION = "splash_duration"  // 秒
+        const val EXTRA_SPLASH_DURATION = "splash_duration"  // Comment
         const val EXTRA_SPLASH_CLICK_SKIP = "splash_click_skip"
         const val EXTRA_VIDEO_START_MS = "video_start_ms"
         const val EXTRA_VIDEO_END_MS = "video_end_ms"
         const val EXTRA_SPLASH_LANDSCAPE = "splash_landscape"
         const val EXTRA_SPLASH_FILL_SCREEN = "splash_fill_screen"
         const val EXTRA_SPLASH_ENABLE_AUDIO = "splash_enable_audio"
-        // Activation码配置
+        // Activation code config
         const val EXTRA_ACTIVATION_ENABLED = "activation_enabled"
         const val EXTRA_ACTIVATION_CODES = "activation_codes"
         const val EXTRA_ACTIVATION_REQUIRE_EVERY_TIME = "activation_require_every_time"
-        // Announcement配置
+        // Announcement config
         const val EXTRA_ANNOUNCEMENT_ENABLED = "announcement_enabled"
         const val EXTRA_ANNOUNCEMENT_TITLE = "announcement_title"
         const val EXTRA_ANNOUNCEMENT_CONTENT = "announcement_content"
@@ -86,7 +86,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         val isLandscape = intent.getBooleanExtra(EXTRA_SPLASH_LANDSCAPE, false)
         val fillScreen = intent.getBooleanExtra(EXTRA_SPLASH_FILL_SCREEN, true)
         val enableAudio = intent.getBooleanExtra(EXTRA_SPLASH_ENABLE_AUDIO, false)
-        // Activation码配置（从逗号分隔的字符串解析）
+        // Activation code config (parsed from comma-separated string)
         val activationEnabled = intent.getBooleanExtra(EXTRA_ACTIVATION_ENABLED, false)
         val activationRequireEveryTime = intent.getBooleanExtra(EXTRA_ACTIVATION_REQUIRE_EVERY_TIME, false)
         val activationCodesStr = intent.getStringExtra(EXTRA_ACTIVATION_CODES) ?: ""
@@ -95,7 +95,7 @@ class SplashLauncherActivity : AppCompatActivity() {
         } else {
             emptyList()
         }
-        // Announcement配置
+        // Announcement config
         val announcementEnabled = intent.getBooleanExtra(EXTRA_ANNOUNCEMENT_ENABLED, false)
         val announcementTitle = intent.getStringExtra(EXTRA_ANNOUNCEMENT_TITLE) ?: ""
         val announcementContent = intent.getStringExtra(EXTRA_ANNOUNCEMENT_CONTENT) ?: ""
@@ -104,16 +104,16 @@ class SplashLauncherActivity : AppCompatActivity() {
         val announcementShowEmoji = intent.getBooleanExtra(EXTRA_ANNOUNCEMENT_SHOW_EMOJI, true)
         val announcementAnimation = intent.getBooleanExtra(EXTRA_ANNOUNCEMENT_ANIMATION, true)
 
-        // Verify参数
+        // Verify params
         if (targetPackage.isNullOrBlank()) {
             finish()
             return
         }
 
-        // Verify启动画面媒体是否存在
+        // Verify splash media exists
         val hasValidSplash = splashPath != null && File(splashPath).exists()
         
-        // Handle横屏显示
+        // Handle landscape mode
         if (hasValidSplash && isLandscape) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
@@ -155,14 +155,14 @@ class SplashLauncherActivity : AppCompatActivity() {
         } catch (e: Exception) {
             AppLogger.e("SplashLauncherActivity", "Operation failed", e)
         }
-        // 使用 finishAndRemoveTask 彻底移除当前任务
-        // 这样在最近应用中不会留下 SplashLauncherActivity 的任务
+        // Use finishAndRemoveTask to fully remove current task
+        // This prevents SplashLauncherActivity from staying in recents
         finishAndRemoveTask()
     }
 }
 
 /**
- * 启动画面中转屏幕
+ * Splash handoff screen.
  */
 @Composable
 fun SplashLauncherScreen(
@@ -190,37 +190,37 @@ fun SplashLauncherScreen(
     val context = LocalContext.current
     val activation: ActivationManager = koinInject()
     
-    // Activation状态 - 如果配置为每次都需要验证，则始终显示激活对话框
+    // Activation state - always show dialog if configured to verify every launch
     var isActivated by remember { mutableStateOf(!activationEnabled) }
     var showActivationDialog by remember { mutableStateOf(activationEnabled) }
     
-    // 如果配置为每次都需要验证，在启动时重置激活状态
+    // Reset activation state on launch if verify-on-every-launch is enabled
     LaunchedEffect(activationRequireEveryTime) {
         if (activationEnabled && activationRequireEveryTime) {
-            // 使用固定 ID -2 表示 SplashLauncher 的激活状态
+            // Use fixed ID -2 for SplashLauncher activation state
             activation.resetActivation(-2L)
             isActivated = false
             showActivationDialog = true
         }
     }
     
-    // Announcement状态
+    // Announcement state
     var showAnnouncementDialog by remember { mutableStateOf(false) }
     
-    // Start画面状态
+    // Start screen state
     var showSplash by remember { mutableStateOf(false) }
     var countdown by remember { mutableIntStateOf(
         if (splashType == "VIDEO") ((videoEndMs - videoStartMs) / 1000).toInt() else splashDuration
     ) }
     
-    // Activation成功后检查公告和启动画面
+    // Check announcement and splash screen after activation succeeds
     LaunchedEffect(isActivated) {
         if (isActivated) {
-            // Check公告
+            // Check announcement
             if (announcementEnabled && announcementTitle.isNotEmpty()) {
                 showAnnouncementDialog = true
             } else {
-                // Check启动画面
+                // Check start screen
                 if (hasValidSplash && splashPath != null) {
                     showSplash = true
                 } else {
@@ -230,7 +230,7 @@ fun SplashLauncherScreen(
         }
     }
     
-    // Announcement关闭后显示启动画面
+    // Show start screen after announcement closes
     fun onAnnouncementDismiss() {
         showAnnouncementDialog = false
         if (hasValidSplash && splashPath != null) {
@@ -240,14 +240,14 @@ fun SplashLauncherScreen(
         }
     }
     
-    // 如果不需要激活也不需要公告也不需要启动画面，直接启动目标应用
+    // If activation/announcement/splash are all unnecessary, launch target app directly
     LaunchedEffect(Unit) {
         if (!activationEnabled && !announcementEnabled && !hasValidSplash) {
             onLaunchTarget()
         }
     }
 
-    // 倒计时逻辑（仅对图片）
+    // Countdown logic (images only)
     if (showSplash && splashType == "IMAGE") {
         LaunchedEffect(countdown) {
             if (countdown > 0) {
@@ -260,14 +260,14 @@ fun SplashLauncherScreen(
         }
     }
     
-    // 主UI
+    // Main UI
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        // 未激活状态显示激活界面
+        // Show activation UI when not activated
         if (!isActivated) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -285,7 +285,7 @@ fun SplashLauncherScreen(
             }
         }
 
-        // Start画面
+        // Start screen
         AnimatedVisibility(
             visible = showSplash && splashPath != null,
             enter = fadeIn(animationSpec = tween(200)),
@@ -307,13 +307,13 @@ fun SplashLauncherScreen(
             )
         }
         
-        // Load指示器（非激活非启动画面状态）
+        // Loading indicator (when not in activation/start-screen state)
         if (!showActivationDialog && !showAnnouncementDialog && !showSplash && isActivated) {
             CircularProgressIndicator(color = Color.White)
         }
     }
     
-    // Activation码对话框
+    // Activation code dialog
     if (showActivationDialog) {
         ActivationDialog(
             onDismiss = { showActivationDialog = false },
@@ -326,7 +326,7 @@ fun SplashLauncherScreen(
         )
     }
     
-    // Announcement对话框
+    // Announcement dialog
     if (showAnnouncementDialog) {
         AnnouncementDialog(
             title = announcementTitle,
@@ -415,8 +415,8 @@ fun ActivationDialog(
 }
 
 /**
- * Announcement dialog — 模板感知版
- * 根据配置的模板类型显示对应风格的公告弹窗
+ * Announcement dialog - template-aware version.
+ * Renders dialog style based on configured template type.
  */
 @Composable
 fun AnnouncementDialog(
@@ -429,7 +429,7 @@ fun AnnouncementDialog(
     onDismiss: () -> Unit,
     onLinkClick: (String) -> Unit
 ) {
-    // 构建 AnnouncementConfig
+    // Build AnnouncementConfig
     val template = try {
         com.webtoapp.ui.components.announcement.AnnouncementTemplate.valueOf(templateName)
     } catch (e: Exception) {
@@ -475,7 +475,7 @@ fun SplashContent(
     val videoDurationMs = videoEndMs - videoStartMs
     val contentScaleMode = if (fillScreen) ContentScale.Crop else ContentScale.Fit
     
-    // Video剩余时间（用于动态倒计时显示）
+    // Remaining video time (for dynamic countdown display)
     var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
     Box(
@@ -512,27 +512,27 @@ fun SplashContent(
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
                 var isPlayerReady by remember { mutableStateOf(false) }
                 
-                // 监控播放进度
-                // 仅在播放器准备就绪后开始监控
+                // Monitor playback progress
+                // Start monitoring only after player is ready
                 LaunchedEffect(isPlayerReady) {
                     if (!isPlayerReady) return@LaunchedEffect
                     mediaPlayer?.let { mp ->
-                        // 等待播放器真正开始播放
+                        // Wait until playback actually starts
                         while (!mp.isPlaying) {
                             delay(50)
                             if (mediaPlayer == null) return@LaunchedEffect
                         }
-                        // 监控播放进度并更新剩余时间
+                        // Monitor progress and update remaining time
                         while (mp.isPlaying) {
                             val currentPos = mp.currentPosition
-                            // Update剩余时间用于倒计时显示
+                            // Update remaining time for countdown UI
                             videoRemainingMs = (videoEndMs - currentPos).coerceAtLeast(0L)
                             if (currentPos >= videoEndMs) {
                                 mp.pause()
                                 onSkip()
                                 break
                             }
-                            delay(100) // 100ms 更新一次倒计时显示
+                            delay(100) // 100ms
                         }
                     }
                 }
@@ -546,7 +546,7 @@ fun SplashContent(
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(splashPath)
                                             setSurface(holder.surface)
-                                            // 根据配置决定是否启用音频
+                                            // Enable audio based on config
                                             val volume = if (enableAudio) 1f else 0f
                                             setVolume(volume, volume)
                                             isLooping = false
@@ -583,7 +583,7 @@ fun SplashContent(
             }
         }
 
-        // 倒计时/跳过提示
+        // Countdown/skip hint
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -595,7 +595,7 @@ fun SplashContent(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Video使用动态剩余时间，图片使用传入的 countdown
+                // Video uses dynamic remaining time; image uses input countdown
                 val displayTime = if (splashType == "VIDEO") ((videoRemainingMs + 999) / 1000).toInt() else countdown
                 if (displayTime > 0) {
                     Text(

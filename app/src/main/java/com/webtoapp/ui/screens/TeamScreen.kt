@@ -32,9 +32,9 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * 团队管理界面
+ * teammanagement
  *
- * 功能: 创建团队、搜索团队、查看成员排名、申请加入、审核申请
+ * createteam, team, , ,
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -29,8 +29,8 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
 /**
- * Hosts 广告拦截管理界面
- * 支持从文件和 URL 导入 hosts 规则
+ * Hosts interceptmanagement
+ * supportfromfile URL import hosts
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,20 +41,20 @@ fun HostsAdBlockScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // Get AdBlocker 实例（通过 Koin 注入）
+    // Get AdBlocker( Koin)
     val adBlocker = remember { org.koin.java.KoinJavaComponent.get<com.webtoapp.core.adblock.AdBlocker>(com.webtoapp.core.adblock.AdBlocker::class.java) }
     
-    // 状态
+    // state
     var hostsRulesCount by remember { mutableIntStateOf(adBlocker.getHostsFileRuleCount()) }
     var isImporting by remember { mutableStateOf(false) }
     var showUrlDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
     var importUrl by remember { mutableStateOf("") }
     
-    // 已启用的源
+    // Note
     var enabledSources by remember { mutableStateOf(adBlocker.getEnabledHostsSources()) }
     
-    // File选择器
+    // Fileselect
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -81,7 +81,7 @@ fun HostsAdBlockScreen(
         }
     }
     
-    // Load已保存的规则
+    // Load save
     LaunchedEffect(Unit) {
         adBlocker.loadHostsRules(context)
         hostsRulesCount = adBlocker.getHostsFileRuleCount()
@@ -125,7 +125,7 @@ fun HostsAdBlockScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 统计卡片
+            // card
             item {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -167,7 +167,7 @@ fun HostsAdBlockScreen(
                 }
             }
             
-            // Import选项
+            // Import
             item {
                 Text(
                     Strings.importFromFile,
@@ -181,7 +181,7 @@ fun HostsAdBlockScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 从文件导入
+                    // fromfileimport
                     EnhancedElevatedCard(
                         onClick = { filePickerLauncher.launch("*/*") },
                         modifier = Modifier.weight(weight = 1f, fill = true),
@@ -206,7 +206,7 @@ fun HostsAdBlockScreen(
                         }
                     }
                     
-                    // 从 URL 导入
+                    // Import from URL
                     EnhancedElevatedCard(
                         onClick = { showUrlDialog = true },
                         modifier = Modifier.weight(weight = 1f, fill = true),
@@ -233,7 +233,7 @@ fun HostsAdBlockScreen(
                 }
             }
             
-            // 常用 hosts 源
+            // Common hosts sources
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -273,7 +273,7 @@ fun HostsAdBlockScreen(
                 )
             }
             
-            // 清空按钮
+            // Clear button
             if (hostsRulesCount > 0) {
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -291,7 +291,7 @@ fun HostsAdBlockScreen(
                 }
             }
             
-            // 说明
+            // Description
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 EnhancedElevatedCard(
@@ -320,7 +320,7 @@ fun HostsAdBlockScreen(
             }
         }
         
-        // Load指示器
+        // Loading indicator
         if (isImporting) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -340,7 +340,7 @@ fun HostsAdBlockScreen(
         }
     }
     
-    // URL 导入对话框
+    // URL import dialog
     if (showUrlDialog) {
         AlertDialog(
             onDismissRequest = { if (!isImporting) showUrlDialog = false },
@@ -402,7 +402,7 @@ fun HostsAdBlockScreen(
         )
     }
     
-    // 清空确认对话框
+    // Clear confirmation dialog
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
@@ -438,7 +438,7 @@ fun HostsAdBlockScreen(
 }
 
 /**
- * Hosts 源卡片
+ * Hosts card
  */
 @Composable
 private fun HostsSourceCard(

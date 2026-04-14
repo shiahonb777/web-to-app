@@ -59,14 +59,14 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 创建/编辑HTML应用页面
- * 支持单个HTML文件、HTML+CSS+JS项目
+ * create/editHTMLapp
+ * support HTMLfile, HTML+CSS+JSitem
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateHtmlAppScreen(
     webAppRepository: com.webtoapp.data.repository.WebAppRepository,
-    existingAppId: Long? = null,  // 编辑模式时传入已有应用ID
+    existingAppId: Long? = null,  // editmode appID
     onBack: () -> Unit,
     onCreated: (
         name: String,
@@ -83,17 +83,17 @@ fun CreateHtmlAppScreen(
         enableLocalStorage: Boolean,
         landscapeMode: Boolean
     ) -> Unit = { _, _, _, _, _, _, _ -> },
-    importDir: String? = null,  // 从AI编程导入的目录
-    importProjectName: String? = null  // Import的项目名称
+    importDir: String? = null,  // fromAI import directory
+    importProjectName: String? = null  // Import item
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val isEditMode = existingAppId != null
     
-    // 导入模式切换: 0=手动选择, 1=ZIP导入
+    // importmodeswitch: 0= select, 1=ZIPimport
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     
-    // 编辑模式时加载已有应用数据
+    // editmodeload app
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -102,12 +102,12 @@ fun CreateHtmlAppScreen(
     }
     val scrollState = rememberScrollState()
     
-    // App信息
+    // App
     var appName by remember { mutableStateOf(importProjectName ?: "") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
     
-    // ==================== ZIP 导入状态 ====================
+    // ==================== ZIP importstate ====================
     var zipAnalysis by remember { mutableStateOf<ZipProjectImporter.ZipProjectAnalysis?>(null) }
     var zipImporting by remember { mutableStateOf(false) }
     var zipError by remember { mutableStateOf<String?>(null) }
@@ -115,7 +115,7 @@ fun CreateHtmlAppScreen(
     var showEntryFileDialog by remember { mutableStateOf(false) }
     var showFileListDialog by remember { mutableStateOf(false) }
     
-    // ==================== 文件夹导入状态 ====================
+    // ==================== file importstate ====================
     var folderAnalysis by remember { mutableStateOf<ZipProjectImporter.ZipProjectAnalysis?>(null) }
     var folderImporting by remember { mutableStateOf(false) }
     var folderError by remember { mutableStateOf<String?>(null) }
@@ -123,39 +123,39 @@ fun CreateHtmlAppScreen(
     var showFolderEntryFileDialog by remember { mutableStateOf(false) }
     var showFolderFileListDialog by remember { mutableStateOf(false) }
     
-    // 单HTML模式 - 三个独立的文件槽位
+    // HTMLmode- file
     var htmlFile by remember { mutableStateOf<HtmlFile?>(null) }
     var cssFile by remember { mutableStateOf<HtmlFile?>(null) }
     var jsFile by remember { mutableStateOf<HtmlFile?>(null) }
     
-    // Configure选项（需要在 LaunchedEffect 之前声明）
+    // Configure( LaunchedEffect)
     var enableJavaScript by remember { mutableStateOf(true) }
     var enableLocalStorage by remember { mutableStateOf(true) }
     var landscapeMode by remember { mutableStateOf(false) }
     
-    // Theme配置（需要在 LaunchedEffect 之前声明）
+    // Themeconfig( LaunchedEffect)
     var themeType by remember { mutableStateOf("AURORA") }
     
-    // 代码优化（Linux 环境）
+    // code( Linux)
     var enableOptimize by remember { mutableStateOf(false) }
     var isOptimizing by remember { mutableStateOf(false) }
     var optimizeResult by remember { mutableStateOf<HtmlProjectOptimizer.OptimizeResult?>(null) }
     val esbuildAvailable = remember { NativeNodeEngine.isAvailable(context) }
     
-    // 编辑模式：加载现有应用数据到UI状态
+    // editmode: load app UIstate
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
-            // 加载基本信息
+            // load
             appName = app.name
             appIconPath = app.iconPath
             
-            // 加载 HTML 配置
+            // load HTML config
             app.htmlConfig?.let { config ->
-                // 尝试从文件列表中恢复文件槽位
+                // fromfilelist file
                 config.files.forEach { file ->
                     when (file.type) {
                         HtmlFileType.HTML -> {
-                            // 检查文件是否存在
+                            // checkfile
                             if (java.io.File(file.path).exists()) {
                                 htmlFile = file
                             }
@@ -170,11 +170,11 @@ fun CreateHtmlAppScreen(
                                 jsFile = file
                             }
                         }
-                        else -> { /* 忽略其他类型 */ }
+                        else -> { /* type */ }
                     }
                 }
                 
-                // 如果文件列表为空但 projectId 存在，尝试从目录中加载
+                // iffilelist projectId, fromdirectory load
                 if (htmlFile == null && config.projectId.isNotBlank()) {
                     val projectDir = java.io.File(context.filesDir, "html_projects/${config.projectId}")
                     if (projectDir.exists()) {
@@ -207,18 +207,18 @@ fun CreateHtmlAppScreen(
                     }
                 }
                 
-                // 加载配置选项
+                // loadconfig
                 enableJavaScript = config.enableJavaScript
                 enableLocalStorage = config.enableLocalStorage
                 landscapeMode = config.landscapeMode
             }
             
-            // 加载主题
+            // load
             themeType = app.themeType
         }
     }
     
-    // 从AI编程导入文件
+    // fromAI importfile
     LaunchedEffect(importDir) {
         if (importDir != null) {
             val dir = java.io.File(importDir)
@@ -253,11 +253,11 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // 项目分析结果
+    // item
     var projectAnalysis by remember { mutableStateOf<HtmlProjectProcessor.ProjectAnalysis?>(null) }
     var showAnalysisDialog by remember { mutableStateOf(false) }
     
-    // 当文件变化时重新分析
+    // whenfile
     LaunchedEffect(htmlFile, cssFile, jsFile) {
         if (htmlFile != null) {
             projectAnalysis = withContext(Dispatchers.IO) {
@@ -272,7 +272,7 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // 判断是否可以创建
+    // create
     val canCreate = when (selectedTabIndex) {
         0 -> htmlFile != null
         1 -> zipAnalysis != null && zipAnalysis!!.htmlFiles.isNotEmpty()
@@ -280,13 +280,13 @@ fun CreateHtmlAppScreen(
         else -> false
     }
     
-    // Yes否有问题需要关注
+    // Yes
     val hasIssues = projectAnalysis?.issues?.any { 
         it.severity == HtmlProjectProcessor.IssueSeverity.ERROR || 
         it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
     } == true
     
-    // ZIP 文件选择器
+    // ZIP fileselect
     val zipPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -318,7 +318,7 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // 文件夹选择器 (OpenDocumentTree)
+    // file select( OpenDocumentTree)
     val folderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -348,7 +348,7 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // HTML文件选择器
+    // HTMLfileselect
     val htmlPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -361,7 +361,7 @@ fun CreateHtmlAppScreen(
                     path = tempFile.absolutePath,
                     type = HtmlFileType.HTML
                 )
-                // Auto设置应用名
+                // Autosettingsapp
                 if (appName.isBlank()) {
                     appName = fileName.substringBeforeLast(".")
                 }
@@ -369,7 +369,7 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // CSS文件选择器
+    // CSSfileselect
     val cssPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -386,7 +386,7 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // JS文件选择器
+    // JSfileselect
     val jsPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -403,16 +403,16 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // Build文件列表
+    // Buildfilelist
     val htmlFiles = remember(htmlFile, cssFile, jsFile) {
         listOfNotNull(htmlFile, cssFile, jsFile)
     }
-    // Verify entryFile：必须有文件名部分（不能只是 .html）
+    // Verify entryFile: file( . html)
     val entryFile = htmlFile?.name?.takeIf { 
         it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
     } ?: "index.html"
     
-    // Icon选择器
+    // Iconselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -524,7 +524,7 @@ fun CreateHtmlAppScreen(
                             
                             when (selectedTabIndex) {
                                 0 -> {
-                                    // 手动模式
+                                    // mode
                                     if (enableOptimize && !isOptimizing) {
                                         isOptimizing = true
                                         scope.launch {
@@ -567,7 +567,7 @@ fun CreateHtmlAppScreen(
                                     }
                                 }
                                 1 -> {
-                                    // ZIP 导入模式
+                                    // ZIP importmode
                                     zipAnalysis?.let { analysis ->
                                         if (enableOptimize && !isOptimizing) {
                                             isOptimizing = true
@@ -603,7 +603,7 @@ fun CreateHtmlAppScreen(
                                     }
                                 }
                                 2 -> {
-                                    // 文件夹导入模式
+                                    // file importmode
                                     folderAnalysis?.let { analysis ->
                                         if (enableOptimize && !isOptimizing) {
                                             isOptimizing = true
@@ -668,7 +668,7 @@ fun CreateHtmlAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ==================== 导入模式 Tab ====================
+            // ==================== importmode Tab ====================
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     ScrollableTabRow(
@@ -727,9 +727,9 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // ==================== 手动选择模式 ====================
+            // ==================== selectmode ====================
             if (selectedTabIndex == 0) {
-                // Select文件
+                // Selectfile
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
@@ -744,7 +744,7 @@ fun CreateHtmlAppScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // HTML文件槽位（必选）
+                        // HTMLfile( )
                         FileSlotWithEditor(
                             label = Strings.htmlFile,
                             icon = Icons.Outlined.Code,
@@ -763,7 +763,7 @@ fun CreateHtmlAppScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // CSS文件槽位（可选）
+                        // CSSfile( optional)
                         FileSlotWithEditor(
                             label = Strings.cssFile,
                             icon = Icons.Outlined.Palette,
@@ -782,7 +782,7 @@ fun CreateHtmlAppScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // JS文件槽位（可选）
+                        // JSfile( optional)
                         FileSlotWithEditor(
                             label = Strings.jsFile,
                             icon = Icons.Outlined.Javascript,
@@ -801,7 +801,7 @@ fun CreateHtmlAppScreen(
                     }
                 }
                 
-                // ==================== 直接编写代码 ====================
+                // ==================== Direct Code Editing ====================
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -831,7 +831,7 @@ fun CreateHtmlAppScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // HTML 编写按钮
+                            // HTML edit button
                             PremiumOutlinedButton(
                                 onClick = {
                                     codeEditorType = HtmlFileType.HTML
@@ -846,7 +846,7 @@ fun CreateHtmlAppScreen(
                                 Spacer(Modifier.width(4.dp))
                                 Text("HTML", maxLines = 1)
                             }
-                            // CSS 编写按钮
+                            // CSS edit button
                             PremiumOutlinedButton(
                                 onClick = {
                                     codeEditorType = HtmlFileType.CSS
@@ -861,7 +861,7 @@ fun CreateHtmlAppScreen(
                                 Spacer(Modifier.width(4.dp))
                                 Text("CSS", maxLines = 1)
                             }
-                            // JS 编写按钮
+                            // JS button
                             PremiumOutlinedButton(
                                 onClick = {
                                     codeEditorType = HtmlFileType.JS
@@ -881,7 +881,7 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // ==================== ZIP 导入模式 ====================
+            // ==================== ZIP importmode ====================
             if (selectedTabIndex == 1) {
                 ZipImportSection(
                     zipAnalysis = zipAnalysis,
@@ -899,7 +899,7 @@ fun CreateHtmlAppScreen(
                 )
             }
             
-            // ==================== 文件夹导入模式 ====================
+            // ==================== file importmode ====================
             if (selectedTabIndex == 2) {
                 FolderImportSection(
                     folderAnalysis = folderAnalysis,
@@ -917,7 +917,7 @@ fun CreateHtmlAppScreen(
                 )
             }
             
-            // App信息
+            // App
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -926,7 +926,7 @@ fun CreateHtmlAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // App名称（带随机按钮）
+                    // App( button)
                     AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it }
@@ -934,7 +934,7 @@ fun CreateHtmlAppScreen(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // App图标（带图标库功能）
+                    // Appicon( icon)
                     IconPickerWithLibrary(
                         iconUri = appIcon,
                         iconPath = appIconPath,
@@ -947,7 +947,7 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // 高级配置
+            // Advanced settings
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -956,7 +956,7 @@ fun CreateHtmlAppScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // JavaScript 开关
+                    // JavaScript toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -980,7 +980,7 @@ fun CreateHtmlAppScreen(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Local存储开关
+                    // Local storage toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1004,7 +1004,7 @@ fun CreateHtmlAppScreen(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Landscape模式开关
+                    // Landscape mode toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1028,7 +1028,7 @@ fun CreateHtmlAppScreen(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // 代码优化开关
+                    // Code optimization toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1068,7 +1068,7 @@ fun CreateHtmlAppScreen(
                         )
                     }
                     
-                    // 优化结果展示
+                    // Optimization result
                     if (optimizeResult != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         val result = optimizeResult!!
@@ -1131,7 +1131,7 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // 项目问题警告卡片
+            // Project issue warning card
             if (hasIssues && projectAnalysis != null) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -1197,7 +1197,7 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // 提示信息（根据模式显示不同提示）
+            // Mode-based hint
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -1227,7 +1227,7 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // 功能提示
+            // Feature hint
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -1252,7 +1252,7 @@ fun CreateHtmlAppScreen(
                 }
             }
             
-            // Path引用提示（仅手动模式）
+            // Path reference hint (manual mode only)
             if (selectedTabIndex == 0) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -1289,7 +1289,7 @@ fun CreateHtmlAppScreen(
         }
     }
     
-    // 项目分析结果对话框
+    // Project analysis dialog
     if (showAnalysisDialog && projectAnalysis != null) {
         ProjectAnalysisDialog(
             analysis = projectAnalysis!!,
@@ -1297,7 +1297,7 @@ fun CreateHtmlAppScreen(
         )
     }
     
-    // ZIP 入口文件选择对话框
+    // ZIP entry file dialog
     if (showEntryFileDialog && zipAnalysis != null) {
         ZipEntryFileDialog(
             htmlFiles = zipAnalysis!!.htmlFiles.map { it.relativePath },
@@ -1310,7 +1310,7 @@ fun CreateHtmlAppScreen(
         )
     }
     
-    // ZIP 文件列表对话框
+    // ZIP file list dialog
     if (showFileListDialog && zipAnalysis != null) {
         ZipFileListDialog(
             analysis = zipAnalysis!!,
@@ -1318,7 +1318,7 @@ fun CreateHtmlAppScreen(
         )
     }
     
-    // 文件夹导入 - 入口文件选择对话框
+    // Folder import - entry file dialog
     if (showFolderEntryFileDialog && folderAnalysis != null) {
         ZipEntryFileDialog(
             htmlFiles = folderAnalysis!!.htmlFiles.map { it.relativePath },
@@ -1331,7 +1331,7 @@ fun CreateHtmlAppScreen(
         )
     }
     
-    // 文件夹导入 - 文件列表对话框
+    // Folder import - file list dialog
     if (showFolderFileListDialog && folderAnalysis != null) {
         ZipFileListDialog(
             analysis = folderAnalysis!!,

@@ -15,10 +15,10 @@ import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
 
 /**
- * 根据 appType 路由到不同的内容显示组件
+ * appType contentdisplay
  *
- * 支持的类型：IMAGE, VIDEO, GALLERY, WORDPRESS, NODEJS_APP, PHP_APP,
- * PYTHON_APP, GO_APP, HTML, FRONTEND, 以及默认的 WEB 模式
+ * support type: IMAGE, VIDEO, GALLERY, WORDPRESS, NODEJS_APP, PHP_APP,
+ * PYTHON_APP, GO_APP, HTML, FRONTEND, anddefault WEB mode
  */
 @Composable
 fun ShellContentRouter(
@@ -28,7 +28,7 @@ fun ShellContentRouter(
     webViewCallbacks: WebViewCallbacks,
     webViewManager: com.webtoapp.core.webview.WebViewManager,
     deepLinkUrl: String?,
-    // 下拉刷新
+    // pull- to- refresh
     swipeRefreshEnabled: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
@@ -38,14 +38,14 @@ fun ShellContentRouter(
 ) {
     when {
         appType == "IMAGE" || appType == "VIDEO" -> {
-            // 单媒体应用模式
+            // appmode
             MediaContentDisplay(
                 isVideo = appType == "VIDEO",
                 mediaConfig = config.mediaConfig
             )
         }
         appType == "GALLERY" -> {
-            // Gallery 画廊应用模式
+            // Gallery appmode
             AppLogger.d("ShellScreen", "进入 GALLERY 分支，显示 ShellGalleryPlayer")
             ShellGalleryPlayer(
                 galleryConfig = config.galleryConfig,
@@ -53,7 +53,7 @@ fun ShellContentRouter(
             )
         }
         appType == "WORDPRESS" -> {
-            // WordPress 应用模式 - 从 assets 提取到私有目录，启动 PHP 服务器
+            // WordPress appmode- from assets directory, PHP
             WordPressShellMode(
                 config = config,
                 webViewConfig = webViewConfig,
@@ -68,7 +68,7 @@ fun ShellContentRouter(
         appType == "NODEJS_APP" -> {
             val nodejsMode = config.nodejsConfig.mode
             if (nodejsMode == "STATIC") {
-                // 静态模式：直接加载 assets 中的静态文件
+                // mode: load assets in file
                 ShellLocalFileWebView(
                     config = config,
                     webViewConfig = webViewConfig,
@@ -84,7 +84,7 @@ fun ShellContentRouter(
                     onWebViewRefUpdated = onWebViewRefUpdated
                 )
             } else {
-                // 后端/全栈模式：提取并启动 Node.js 服务器
+                // / mode: and Node. js
                 NodeJsShellMode(
                     config = config,
                     webViewConfig = webViewConfig,
@@ -150,7 +150,7 @@ fun ShellContentRouter(
             )
         }
         appType == "HTML" || appType == "FRONTEND" -> {
-            // HTML/前端应用模式 - 加载嵌入在 APK assets 中的 HTML 文件
+            // HTML/ appmode- load APK assets in HTML file
             val htmlEntryFile = config.htmlConfig.getValidEntryFile()
             val htmlUrl = "file:///android_asset/html/$htmlEntryFile"
             ShellLocalFileWebView(
@@ -169,10 +169,10 @@ fun ShellContentRouter(
             )
         }
         else -> {
-            // WebView（网页应用）
+            // WebView( app)
             val resolvedUrl = normalizeShellTargetUrlForSecurity(deepLinkUrl ?: config.targetUrl)
             AppLogger.d("ShellScreen", "进入 WebView 分支 (else)，加载 URL: $resolvedUrl")
-            // 用于 setOnChildScrollUpCallback 的 WebView 引用
+            // for setOnChildScrollUpCallback WebView
             var swipeChildWebView: WebView? = null
             AndroidView(
                 factory = { ctx ->
@@ -206,8 +206,8 @@ fun ShellContentRouter(
                                 config.embeddedExtensionModules,
                                 config.extensionFabIcon, allowGlobalModuleFallback = false)
 
-                            // 添加长按监听器
-                            // 持续跟踪触摸位置，确保长按时使用最新坐标
+                            // long- press
+                            // , ensurelong- press
                             var lastTouchX = 0f
                             var lastTouchY = 0f
                             setOnTouchListener { view, event ->
@@ -219,7 +219,7 @@ fun ShellContentRouter(
                                     }
                                     MotionEvent.ACTION_UP -> view.performClick()
                                 }
-                                false // 不消费事件，让 WebView 继续处理
+                                false // , WebView handle
                             }
                             setOnLongClickListener {
                                 webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
@@ -249,8 +249,8 @@ fun ShellContentRouter(
 }
 
 /**
- * 本地文件 WebView - 用于 HTML/前端应用和 Node.js 静态模式
- * 共享相同的文件访问权限配置和长按监听器逻辑
+ * localfile WebView- for HTML/ app Node. js mode
+ * file config long- press
  */
 @Composable
 fun ShellLocalFileWebView(
@@ -261,14 +261,14 @@ fun ShellLocalFileWebView(
     targetUrl: String,
     enableJavaScript: Boolean,
     enableLocalStorage: Boolean,
-    // 下拉刷新
+    // pull- to- refresh
     swipeRefreshEnabled: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onWebViewCreated: (WebView) -> Unit,
     onWebViewRefUpdated: (WebView) -> Unit
 ) {
-    // 用于 setOnChildScrollUpCallback 的 WebView 引用
+    // for setOnChildScrollUpCallback WebView
     var swipeChildWebView: WebView? = null
     AndroidView(
         factory = { ctx ->
@@ -294,7 +294,7 @@ fun ShellLocalFileWebView(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    // 先调用 configureWebView 进行基础配置
+                    // call configureWebView config
                     webViewManager.configureWebView(
                         this,
                         webViewConfig,
@@ -302,24 +302,24 @@ fun ShellLocalFileWebView(
                         config.extensionModuleIds,
                         config.embeddedExtensionModules,
                         config.extensionFabIcon, allowGlobalModuleFallback = false)
-                    // 然后覆盖本地文件特定的设置（必须在 configureWebView 之后）
-                    // 因为 configureWebView 会将 allowFileAccessFromFileURLs 设为 false
+                    // localfile settings( configureWebView)
+                    // configureWebView map allowFileAccessFromFileURLs false
                     settings.apply {
                         javaScriptEnabled = enableJavaScript
                         domStorageEnabled = enableLocalStorage
                         allowFileAccess = true
                         allowContentAccess = true
-                        // Allow本地文件访问（HTML中的相对路径资源，如 JS/CSS 文件）
+                        // Allowlocalfile( HTMLin path, JS/CSS file)
                         @Suppress("DEPRECATION")
                         allowFileAccessFromFileURLs = true
                         @Suppress("DEPRECATION")
                         allowUniversalAccessFromFileURLs = true
-                        // Allow混合内容（HTTPS 页面加载 HTTP 资源，以及 file:// Page访问网络）
+                        // Allow content( HTTPS load HTTP, and file: // Page network)
                         mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     }
 
-                    // 添加长按监听器
-                    // 持续跟踪触摸位置，确保长按时使用最新坐标
+                    // long- press
+                    // , ensurelong- press
                     var lastTouchX = 0f
                     var lastTouchY = 0f
                     setOnTouchListener { view, event ->

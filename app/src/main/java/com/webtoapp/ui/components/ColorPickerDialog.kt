@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 预设的 Base 颜色
+ * Base color
  */
 data class PresetColor(
     val hex: String,
@@ -77,7 +77,7 @@ fun ColorPickerDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 当前选中颜色预览
+                // current colorpreview
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -105,7 +105,7 @@ fun ColorPickerDialog(
                 
                 HorizontalDivider()
                 
-                // 预设颜色网格
+                // color
                 Text(
                     text = Strings.presetColors,
                     style = MaterialTheme.typography.labelMedium,
@@ -132,7 +132,7 @@ fun ColorPickerDialog(
                 
                 HorizontalDivider()
                 
-                // Custom颜色输入
+                // Customcolorinput
                 Text(
                     text = Strings.customColor,
                     style = MaterialTheme.typography.labelMedium,
@@ -142,10 +142,10 @@ fun ColorPickerDialog(
                 OutlinedTextField(
                     value = customColorInput,
                     onValueChange = { input ->
-                        // 只允许输入有效的十六进制字符
+                        // input
                         val filtered = input.filter { it in "0123456789ABCDEFabcdef" }.take(8)
                         customColorInput = filtered
-                        // If it is有效的颜色值，更新选中颜色
+                        // If it is color, update color
                         if (filtered.length == 6 || filtered.length == 8) {
                             selectedColor = "#$filtered"
                         }
@@ -183,7 +183,7 @@ fun ColorPickerDialog(
 }
 
 /**
- * 单个颜色项
+ * color
  */
 @Composable
 private fun ColorItem(
@@ -229,7 +229,7 @@ private fun ColorItem(
 }
 
 /**
- * 解析颜色字符串为 Color
+ * color Color
  */
 fun parseColor(colorString: String): Color {
     return try {
@@ -245,7 +245,7 @@ fun parseColor(colorString: String): Color {
 }
 
 /**
- * 判断颜色是否为浅色
+ * color
  */
 fun isColorLight(color: Color): Boolean {
     val luminance = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue

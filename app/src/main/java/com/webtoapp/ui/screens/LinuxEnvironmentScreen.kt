@@ -37,7 +37,7 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // Get主题主色调
+    // Get
     val themeAccentColor = MaterialTheme.colorScheme.primary
     
     val envManager: LinuxEnvironmentManager = koinInject()
@@ -153,7 +153,7 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
 }
 
 /**
- * 通用卡片容器 - 完全不使用 Card 组件
+ * card- Card
  */
 @Composable
 private fun CardContainer(
@@ -185,7 +185,7 @@ private fun StatusCard(
     val isReady = state is EnvironmentState.Ready
     val isInstalling = state is EnvironmentState.Downloading || state is EnvironmentState.Installing
     
-    // 使用主题色作为就绪状态的颜色
+    // state color
     val readyColor = themeColor
     
     val cardColor = when {
@@ -197,7 +197,7 @@ private fun StatusCard(
     CardContainer(backgroundColor = cardColor) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 状态图标 - 使用主题色
+                // stateicon
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -418,7 +418,7 @@ private fun StorageCard(info: EnvironmentInfo, themeColor: Color, onClearCache: 
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Storage项
+            // Storage
             StorageRow(Strings.buildTools, formatSize(info.storageUsed))
             Spacer(modifier = Modifier.height(8.dp))
             StorageRow(Strings.cache, formatSize(info.cacheSize))

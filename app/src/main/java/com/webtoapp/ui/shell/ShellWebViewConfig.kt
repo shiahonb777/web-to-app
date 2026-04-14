@@ -6,12 +6,12 @@ import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.WebViewConfig
 
 /**
- * 从 ShellConfig 构建 WebViewConfig
- * 将 Shell 配置中的 WebView 相关设置转换为 WebViewConfig 数据类
+ * from ShellConfig WebViewConfig
+ * map Shell configin WebView relatedsettings WebViewConfig
  */
 fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
-    // HTML/FRONTEND 应用需要允许本地文件访问（加载 CSS/JS 等资源）
-    // WEB 应用加载远程 URL，必须保持 false 以防止恶意网页读取本地文件
+    // HTML/FRONTEND app localfile( load CSS/JS)
+    // WEB apploadremote URL, false localfile
     val isLocalFileApp = config.appType.trim().uppercase() in setOf("HTML", "FRONTEND")
 
     val webViewConfig = WebViewConfig(
@@ -33,7 +33,7 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         },
         customUserAgent = config.webViewConfig.customUserAgent,
         openExternalLinks = config.webViewConfig.openExternalLinks,
-        downloadEnabled = true, // 确保下载功能始终启用
+        downloadEnabled = true, // ensuredownload always
         hideToolbar = config.webViewConfig.hideToolbar,
         hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar,
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen,
@@ -46,7 +46,7 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
             if (config.webViewConfig.landscapeMode) com.webtoapp.data.model.OrientationMode.LANDSCAPE
             else com.webtoapp.data.model.OrientationMode.PORTRAIT
         },
-        // 状态栏配置
+        // status barconfig
         statusBarColorMode = try { com.webtoapp.data.model.StatusBarColorMode.valueOf(config.webViewConfig.statusBarColorMode) } catch (e: Exception) { com.webtoapp.data.model.StatusBarColorMode.THEME },
         statusBarColor = config.webViewConfig.statusBarColor,
         statusBarDarkIcons = config.webViewConfig.statusBarDarkIcons,
@@ -54,20 +54,20 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         statusBarBackgroundImage = config.webViewConfig.statusBarBackgroundImage,
         statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha,
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp,
-        // 状态栏深色模式配置
+        // status bar modeconfig
         statusBarColorModeDark = try { com.webtoapp.data.model.StatusBarColorMode.valueOf(config.webViewConfig.statusBarColorModeDark) } catch (e: Exception) { com.webtoapp.data.model.StatusBarColorMode.THEME },
         statusBarColorDark = config.webViewConfig.statusBarColorDark,
         statusBarDarkIconsDark = config.webViewConfig.statusBarDarkIconsDark,
         statusBarBackgroundTypeDark = try { com.webtoapp.data.model.StatusBarBackgroundType.valueOf(config.webViewConfig.statusBarBackgroundTypeDark) } catch (e: Exception) { com.webtoapp.data.model.StatusBarBackgroundType.COLOR },
         statusBarBackgroundImageDark = config.webViewConfig.statusBarBackgroundImageDark,
         statusBarBackgroundAlphaDark = config.webViewConfig.statusBarBackgroundAlphaDark,
-        // 长按菜单配置
+        // long- press config
         longPressMenuEnabled = config.webViewConfig.longPressMenuEnabled,
         longPressMenuStyle = try { com.webtoapp.data.model.LongPressMenuStyle.valueOf(config.webViewConfig.longPressMenuStyle) } catch (e: Exception) { com.webtoapp.data.model.LongPressMenuStyle.FULL },
         adBlockToggleEnabled = config.webViewConfig.adBlockToggleEnabled,
         popupBlockerEnabled = config.webViewConfig.popupBlockerEnabled,
         popupBlockerToggleEnabled = config.webViewConfig.popupBlockerToggleEnabled,
-        // 浏览器兼容性增强配置
+        // compatibility config
         initialScale = config.webViewConfig.initialScale,
         viewportMode = try { com.webtoapp.data.model.ViewportMode.valueOf(config.webViewConfig.viewportMode) } catch (e: Exception) { com.webtoapp.data.model.ViewportMode.DEFAULT },
         newWindowBehavior = try { com.webtoapp.data.model.NewWindowBehavior.valueOf(config.webViewConfig.newWindowBehavior) } catch (e: Exception) { com.webtoapp.data.model.NewWindowBehavior.SAME_WINDOW },
@@ -79,14 +79,14 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         keepScreenOn = config.webViewConfig.keepScreenOn,
         showFloatingBackButton = config.webViewConfig.showFloatingBackButton,
         blockSystemNavigationGesture = config.webViewConfig.blockSystemNavigationGesture,
-        // 键盘调整模式
+        // keyboard mode
         keyboardAdjustMode = try {
             com.webtoapp.data.model.KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
         } catch (e: Exception) {
             AppLogger.w("ShellActivity", "KeyboardAdjustMode parse failed: '${config.webViewConfig.keyboardAdjustMode}', falling back to RESIZE", e)
             com.webtoapp.data.model.KeyboardAdjustMode.RESIZE
         },
-        // 悬浮小窗配置
+        // floating windowconfig
         floatingWindowConfig = com.webtoapp.data.model.FloatingWindowConfig(
             enabled = config.webViewConfig.floatingWindowConfig.enabled,
             windowSizePercent = config.webViewConfig.floatingWindowConfig.windowSizePercent,
@@ -108,14 +108,14 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
             showResizeHandle = config.webViewConfig.floatingWindowConfig.showResizeHandle,
             lockPosition = config.webViewConfig.floatingWindowConfig.lockPosition
         ),
-        // 下拉刷新 / 视频全屏
+        // pull- to- refresh / video fullscreen
         swipeRefreshEnabled = config.webViewConfig.swipeRefreshEnabled,
         fullscreenEnabled = config.webViewConfig.fullscreenEnabled,
-        // 性能优化 / PWA 离线
+        // performance / PWA offline
         performanceOptimization = config.webViewConfig.performanceOptimization,
         pwaOfflineEnabled = config.webViewConfig.pwaOfflineEnabled,
         pwaOfflineStrategy = config.webViewConfig.pwaOfflineStrategy,
-        // 网络错误页配置
+        // networkerror config
         errorPageConfig = com.webtoapp.core.errorpage.ErrorPageConfig(
             mode = try { com.webtoapp.core.errorpage.ErrorPageMode.valueOf(config.webViewConfig.errorPageConfig.mode) } catch (e: Exception) { com.webtoapp.core.errorpage.ErrorPageMode.BUILTIN_STYLE },
             builtInStyle = try { com.webtoapp.core.errorpage.ErrorPageStyle.valueOf(config.webViewConfig.errorPageConfig.builtInStyle) } catch (e: Exception) { com.webtoapp.core.errorpage.ErrorPageStyle.MATERIAL },
@@ -123,7 +123,7 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
             miniGameType = try { com.webtoapp.core.errorpage.MiniGameType.valueOf(config.webViewConfig.errorPageConfig.miniGameType) } catch (e: Exception) { com.webtoapp.core.errorpage.MiniGameType.RANDOM },
             autoRetrySeconds = config.webViewConfig.errorPageConfig.autoRetrySeconds
         ),
-        // 本地文件访问配置 - HTML/FRONTEND 应用必须启用
+        // localfile config- HTML/FRONTEND app
         allowFileAccessFromFileURLs = isLocalFileApp,
         allowUniversalAccessFromFileURLs = isLocalFileApp,
         injectScripts = config.webViewConfig.injectScripts.map { shellScript ->

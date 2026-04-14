@@ -4,42 +4,42 @@ import android.graphics.Bitmap
 import android.view.View
 
 /**
- * 浏览器引擎统一回调接口
- * 引擎无关的回调抽象，SystemWebView 和 GeckoView 都通过此接口通知上层
+ * Note.
+ * SystemWebView GeckoView.
  */
 interface BrowserEngineCallback {
 
-    /** 页面开始加载 */
+    /** load page. */
     fun onPageStarted(url: String?)
 
-    /** 页面加载完成 */
+    /** load page. */
     fun onPageFinished(url: String?)
 
-    /** 加载进度变化 (0-100) */
+    /** load. */
     fun onProgressChanged(progress: Int)
 
-    /** 页面标题变化 */
+    /** page. */
     fun onTitleChanged(title: String?)
 
-    /** 收到页面图标 */
+    /** page. */
     fun onIconReceived(icon: Bitmap?)
 
-    /** 页面加载错误 */
+    /** load page error. */
     fun onError(errorCode: Int, description: String)
 
-    /** SSL 证书错误 */
+    /** error. */
     fun onSslError(error: String)
 
-    /** 外部链接（需要在外部浏览器打开） */
+    /** Note. */
     fun onExternalLink(url: String)
 
-    /** 进入视频全屏 */
+    /** Note. */
     fun onShowCustomView(view: View?, callback: Any?)
 
-    /** 退出视频全屏 */
+    /** Note. */
     fun onHideCustomView()
 
-    /** 下载请求 */
+    /** download. */
     fun onDownloadStart(
         url: String,
         userAgent: String,
@@ -48,9 +48,9 @@ interface BrowserEngineCallback {
         contentLength: Long
     )
 
-    /** 控制台消息 */
+    /** Note. */
     fun onConsoleMessage(level: Int, message: String, sourceId: String, lineNumber: Int) {}
 
-    /** 新窗口请求 */
+    /** Note. */
     fun onNewWindow(resultMsg: android.os.Message?) {}
 }

@@ -13,13 +13,13 @@ import com.webtoapp.core.i18n.RandomAppNameGenerator
 import com.webtoapp.core.i18n.Strings
 
 /**
- * 带随机按钮的应用名称输入框
+ * button app input
  * 
- * @param value 当前输入值
- * @param onValueChange 值变化回调
- * @param modifier 修饰符
- * @param placeholder 占位文字（可选，默认使用 Strings.inputAppName）
- * @param imeAction 键盘动作（可选，默认 ImeAction.Next）
+ * @param value currentinput
+ * @param onValueChange
+ * @param modifier
+ * @param placeholder( optional, default Strings. inputAppName)
+ * @param imeAction keyboard( optional, default ImeAction. Next)
  */
 @Composable
 fun AppNameTextField(
@@ -55,7 +55,7 @@ fun AppNameTextField(
 }
 
 /**
- * 简化版应用名称输入框（无前导图标）
+ * app input( icon)
  */
 @Composable
 fun AppNameTextFieldSimple(

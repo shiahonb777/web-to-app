@@ -15,51 +15,51 @@ import java.security.MessageDigest
 import java.util.Locale
 
 /**
- * WordPress 依赖管理器
+ * Note: brief English comment.
  * 
- * 负责按需下载 PHP 二进制、WordPress 核心、SQLite 插件等大体积依赖。
- * 根据设备语言自动选择国内镜像或国际源。
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 object WordPressDependencyManager {
     
     private const val TAG = "DependencyManager"
     
-    /** PHP 版本 (pmmp/PHP-Binaries 提供 Android ARM64 预编译) */
+    /** Note: brief English comment. */
     const val PHP_VERSION = "8.4"
     
-    /** WordPress 版本 (2026-02-03 维护更新) */
+    /** Note: brief English comment. */
     const val WORDPRESS_VERSION = "6.9.1"
     
-    /** SQLite 插件版本 (2026-02 验证) */
+    /** Note: brief English comment. */
     const val SQLITE_PLUGIN_VERSION = "2.2.17"
     
-    // ==================== 镜像源配置 ====================
+    // Note: brief English comment.
     
     enum class MirrorRegion { CN, GLOBAL }
     
-    /** 国内 GitHub 代理加速列表（按优先级排序，失败自动 fallback） */
+    /** Note: brief English comment. */
     private val GITHUB_CN_PROXIES = listOf(
         "https://ghfast.top/",
         "https://gh-proxy.com/",
         "https://ghproxy.cc/"
     )
     
-    /** GitHub 原始 PHP 下载地址 */
+    /** Note: brief English comment. */
     private val PHP_GITHUB_URL = "https://github.com/pmmp/PHP-Binaries/releases/download/pm5-php-${PHP_VERSION}-latest/PHP-${PHP_VERSION}-Android-arm64-PM5.tar.gz"
     
     data class MirrorConfig(
-        /** PHP 二进制下载 URL 列表（按优先级排序，支持多源 fallback） */
+        /** Note: brief English comment. */
         val phpUrls: List<String>,
-        /** WordPress 核心下载 URL 列表（按优先级排序，支持多源 fallback） */
+        /** Note: brief English comment. */
         val wordpressUrls: List<String>,
         val sqlitePluginUrl: String
     )
     
     /**
-     * 国内镜像源
-     * - PHP: GitHub 代理加速（多个代理源 + 原始 GitHub 地址 fallback）
-     * - WordPress: cn.wordpress.org 中文版 → cn.wordpress.org latest → wordpress.org 国际版
-     * - SQLite 插件: WordPress 官方插件仓库
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private val CN_MIRROR = MirrorConfig(
         phpUrls = GITHUB_CN_PROXIES.map { proxy -> "${proxy}${PHP_GITHUB_URL}" } + PHP_GITHUB_URL,
@@ -73,10 +73,10 @@ object WordPressDependencyManager {
     )
     
     /**
-     * 国际源
-     * - PHP: GitHub pmmp/PHP-Binaries 直连
-     * - WordPress: wordpress.org 指定版本 → latest
-     * - SQLite 插件: downloads.wordpress.org
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private val GLOBAL_MIRROR = MirrorConfig(
         phpUrls = listOf(PHP_GITHUB_URL),
@@ -87,7 +87,7 @@ object WordPressDependencyManager {
         sqlitePluginUrl = "https://downloads.wordpress.org/plugin/"
     )
     
-    // ==================== 下载状态 ====================
+    // Note: brief English comment.
     
     sealed class DownloadState {
         object Idle : DownloadState()
@@ -96,27 +96,27 @@ object WordPressDependencyManager {
         data class Extracting(val fileName: String) : DownloadState()
         object Complete : DownloadState()
         data class Error(val message: String, val retryable: Boolean = true) : DownloadState()
-        /** 暂停状态 */
+        /** Note: brief English comment. */
         data class Paused(val progress: Float, val currentFile: String, val bytesDownloaded: Long, val totalBytes: Long) : DownloadState()
     }
     
     private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadState: StateFlow<DownloadState> = _downloadState
     
-    /** 用户手动设置的镜像区域（null = 自动检测） */
+    /** Note: brief English comment. */
     private var _userMirrorRegion: MirrorRegion? = null
     
-    // ==================== 公开 API ====================
+    // Note: brief English comment.
     
     /**
-     * 手动设置镜像区域
+     * Note: brief English comment.
      */
     fun setMirrorRegion(region: MirrorRegion?) {
         _userMirrorRegion = region
     }
     
     /**
-     * 获取当前镜像区域（自动检测或用户设置）
+     * Note: brief English comment.
      */
     fun getMirrorRegion(): MirrorRegion {
         _userMirrorRegion?.let { return it }
@@ -125,7 +125,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 获取当前镜像配置
+     * Note: brief English comment.
      */
     fun getMirrorConfig(): MirrorConfig {
         return when (getMirrorRegion()) {
@@ -135,14 +135,14 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 获取依赖缓存目录
+     * Note: brief English comment.
      */
     fun getDepsDir(context: Context): File {
         return File(context.filesDir, "wordpress_deps").also { it.mkdirs() }
     }
     
     /**
-     * 获取 PHP 二进制存储目录
+     * Note: brief English comment.
      */
     fun getPhpDir(context: Context): File {
         val abi = getDeviceAbi()
@@ -150,37 +150,37 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 获取 WordPress 项目根目录
+     * Note: brief English comment.
      */
     fun getWordPressProjectsDir(context: Context): File {
         return File(context.filesDir, "wordpress_projects").also { it.mkdirs() }
     }
     
     /**
-     * 检查 PHP 二进制是否可用
-     * 优先检查 nativeLibraryDir（有 SELinux execute_no_trans 权限），再检查下载目录。
-     * Android 15+ (API 35) 强制要求 execute_no_trans 权限，只有 nativeLibraryDir 中的
-     * 二进制才有 apk_data_file SELinux 标签可以执行；下载目录 (app_data_file) 无法执行。
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun isPhpReady(context: Context): Boolean {
-        // 检查 nativeLibraryDir (bundled via jniLibs, SELinux apk_data_file label)
+        // Note: brief English comment.
         val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
         if (nativePhp.exists()) return true
-        // Android 15+ (API 35): 下载目录的 PHP 二进制无法通过 SELinux execute_no_trans 检查
+        // Note: brief English comment.
         if (Build.VERSION.SDK_INT >= 35) return false
-        // Android 14 及以下: 下载目录仍可执行
+        // Note: brief English comment.
         val phpBinary = File(getPhpDir(context), "php")
         return phpBinary.exists() && phpBinary.canExecute()
     }
     
     /**
-     * 获取 PHP 二进制执行路径
+     * Note: brief English comment.
      * 
-     * 优先使用 nativeLibraryDir 中的 libphp.so（有 SELinux execute_no_trans 权限），
-     * 回退到 wordpress_deps 下载目录中的 php 二进制（Android 14 及以下可用）。
+     * Note: brief English comment.
+     * Note: brief English comment.
      *
-     * 在 Android 15+ 上，app_data_file 目录下的二进制被 SELinux 禁止 execute_no_trans，
-     * 而 nativeLibraryDir 下的文件具有 apk_data_file 标签，允许 execute_no_trans。
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun getPhpExecutablePath(context: Context): String {
         val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
@@ -188,14 +188,14 @@ object WordPressDependencyManager {
             AppLogger.d(TAG, "使用 nativeLibraryDir PHP: ${nativePhp.absolutePath}")
             return nativePhp.absolutePath
         }
-        // 回退到下载目录
+        // Note: brief English comment.
         val downloaded = File(getPhpDir(context), "php")
         AppLogger.d(TAG, "使用下载目录 PHP: ${downloaded.absolutePath}")
         return downloaded.absolutePath
     }
     
     /**
-     * 检查 WordPress 核心是否已下载
+     * Note: brief English comment.
      */
     fun isWordPressReady(context: Context): Boolean {
         val wpDir = File(getDepsDir(context), "wordpress")
@@ -203,7 +203,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 检查 SQLite 插件是否已下载
+     * Note: brief English comment.
      */
     fun isSqlitePluginReady(context: Context): Boolean {
         val pluginDir = File(getDepsDir(context), "sqlite-database-integration")
@@ -211,38 +211,38 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 检查所有依赖是否就绪
+     * Note: brief English comment.
      */
     fun isAllReady(context: Context): Boolean {
         return isPhpReady(context) && isWordPressReady(context) && isSqlitePluginReady(context)
     }
     
     /**
-     * 下载所有缺失的依赖
+     * Note: brief English comment.
      * 
-     * @return true 如果所有依赖就绪
+     * Note: brief English comment.
      */
     suspend fun downloadAllDependencies(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
             _downloadState.value = DownloadState.Idle
-            // 初始化通知管理器
+            // Note: brief English comment.
             DependencyDownloadNotification.getInstance(context)
             DependencyDownloadEngine.reset()
             val mirror = getMirrorConfig()
             
-            // 1. 下载 PHP 二进制
+            // Note: brief English comment.
             if (!isPhpReady(context)) {
                 val success = downloadPhp(context, mirror)
                 if (!success) return@withContext false
             }
             
-            // 2. 下载 WordPress 核心
+            // Note: brief English comment.
             if (!isWordPressReady(context)) {
                 val success = downloadWordPress(context, mirror)
                 if (!success) return@withContext false
             }
             
-            // 3. 下载 SQLite 插件
+            // Note: brief English comment.
             if (!isSqlitePluginReady(context)) {
                 val success = downloadSqlitePlugin(context, mirror)
                 if (!success) return@withContext false
@@ -259,9 +259,9 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 仅下载 PHP 二进制依赖（供 PHP_APP 预览使用，不下载 WordPress/SQLite）
+     * Note: brief English comment.
      *
-     * @return true 如果 PHP 二进制已就绪
+     * Note: brief English comment.
      */
     suspend fun downloadPhpDependency(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -285,7 +285,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 清理所有依赖缓存
+     * Note: brief English comment.
      */
     fun clearCache(context: Context) {
         getDepsDir(context).deleteRecursively()
@@ -293,32 +293,32 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 获取缓存占用大小（字节）
+     * Note: brief English comment.
      */
     fun getCacheSize(context: Context): Long {
         return getDepsDir(context).walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
     
-    // ==================== 内部方法 ====================
+    // Note: brief English comment.
     
     /**
-     * 获取设备主 ABI
+     * Note: brief English comment.
      */
     fun getDeviceAbi(): String {
         return Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
     }
     
-    /** 每个 URL 最大重试次数 */
+    /** Note: brief English comment. */
     private const val MAX_RETRY_PER_URL = 2
     
-    /** 重试延迟（毫秒） */
+    /** Note: brief English comment. */
     private const val RETRY_DELAY_MS = 2000L
     
     /**
-     * 带多源 fallback + 重试的下载封装
+     * Note: brief English comment.
      * 
-     * 对每个 URL 重试 [MAX_RETRY_PER_URL] 次，失败则切换到下一个 URL。
-     * 断点续传 .tmp 文件在切换源时清除（不同源的 Content-Length 可能不同）。
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private suspend fun downloadWithRetry(
         urls: List<String>,
@@ -341,7 +341,7 @@ object WordPressDependencyManager {
                 }
             }
             
-            // 切换到下一个源前清除 tmp 文件（不同源断点不兼容）
+            // Note: brief English comment.
             if (urlIndex < urls.lastIndex) {
                 val tmpFile = File(destFile.parentFile, "${destFile.name}.tmp")
                 tmpFile.delete()
@@ -352,7 +352,7 @@ object WordPressDependencyManager {
         return false
     }
     
-    /** 单源重试封装（用于 WordPress / SQLite 等非 GitHub 下载） */
+    /** Note: brief English comment. */
     private suspend fun downloadWithRetry(
         url: String,
         destFile: File,
@@ -361,8 +361,8 @@ object WordPressDependencyManager {
     ): Boolean = downloadWithRetry(listOf(url), destFile, displayName, context)
     
     /**
-     * 下载 PHP 二进制
-     * 来源: github.com/pmmp/PHP-Binaries (Android ARM64 预编译)
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private suspend fun downloadPhp(context: Context, mirror: MirrorConfig): Boolean {
         val abi = getDeviceAbi()
@@ -379,30 +379,30 @@ object WordPressDependencyManager {
         
         AppLogger.i(TAG, "下载 PHP 二进制 (共 ${phpUrls.size} 个源)")
         
-        // 下载压缩包（多源 fallback + 重试，断点续传自动恢复）
+        // Note: brief English comment.
         val downloaded = downloadWithRetry(phpUrls, archiveFile, "PHP $PHP_VERSION ($abi)", context)
         syncEngineState()
         if (!downloaded) return false
         
-        // 解压
+        // Note: brief English comment.
         _downloadState.value = DownloadState.Extracting("PHP")
         DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Extracting("PHP")
         try {
             extractTarGz(archiveFile, destDir)
             
-            // pmmp 的 tar.gz 内部结构: bin/php — 尝试多种路径查找
+            // Note: brief English comment.
             var phpBinary = File(destDir, "php")
             if (!phpBinary.exists()) {
                 phpBinary = File(destDir, "bin/php")
             }
-            // 递归查找 php 可执行文件
+            // Note: brief English comment.
             if (!phpBinary.exists()) {
                 phpBinary = destDir.walkTopDown().firstOrNull { it.name == "php" && it.isFile } ?: phpBinary
             }
             
             if (phpBinary.exists()) {
                 phpBinary.setExecutable(true, false)
-                // 如果不在 destDir 根目录，复制到根目录以保持兼容
+                // Note: brief English comment.
                 val targetBinary = File(destDir, "php")
                 if (phpBinary.absolutePath != targetBinary.absolutePath) {
                     phpBinary.copyTo(targetBinary, overwrite = true)
@@ -415,7 +415,7 @@ object WordPressDependencyManager {
                 return false
             }
             
-            // 清理压缩包
+            // Note: brief English comment.
             archiveFile.delete()
             return true
         } catch (e: Exception) {
@@ -426,12 +426,12 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 下载 WordPress 核心
+     * Note: brief English comment.
      */
     private suspend fun downloadWordPress(context: Context, mirror: MirrorConfig): Boolean {
         val wpUrls = mirror.wordpressUrls
         val destDir = getDepsDir(context)
-        // 统一缓存文件名（不同 URL 可能产生不同文件名，使用固定名称避免混乱）
+        // Note: brief English comment.
         val archiveFile = File(destDir, "wordpress-core.tar.gz")
         
         AppLogger.i(TAG, "下载 WordPress 核心 (共 ${wpUrls.size} 个源)")
@@ -446,7 +446,7 @@ object WordPressDependencyManager {
             extractTarGz(archiveFile, destDir)
             archiveFile.delete()
             
-            // 验证解压结果
+            // Note: brief English comment.
             val wpDir = File(destDir, "wordpress")
             if (!wpDir.exists() || !File(wpDir, "wp-includes/version.php").exists()) {
                 _downloadState.value = DownloadState.Error("WordPress 解压不完整")
@@ -463,7 +463,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 下载 SQLite Database Integration 插件
+     * Note: brief English comment.
      */
     private suspend fun downloadSqlitePlugin(context: Context, mirror: MirrorConfig): Boolean {
         val fileName = "sqlite-database-integration.${SQLITE_PLUGIN_VERSION}.zip"
@@ -499,7 +499,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 同步引擎状态到本地 DownloadState
+     * Note: brief English comment.
      */
     private fun syncEngineState() {
         when (val es = DependencyDownloadEngine.state.value) {
@@ -527,7 +527,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 解压 tar.gz 文件
+     * Note: brief English comment.
      */
     private fun extractTarGz(archiveFile: File, destDir: File) {
         val processBuilder = ProcessBuilder("tar", "-xzf", archiveFile.absolutePath, "-C", destDir.absolutePath)
@@ -536,13 +536,13 @@ object WordPressDependencyManager {
         val output = process.inputStream.bufferedReader().readText()
         val exitCode = process.waitFor()
         if (exitCode != 0) {
-            // Fallback：使用 Apache Commons Compress
+            // Note: brief English comment.
             extractTarGzWithCommons(archiveFile, destDir)
         }
     }
     
     /**
-     * 使用 Apache Commons Compress 解压 tar.gz（fallback）
+     * Note: brief English comment.
      */
     private fun extractTarGzWithCommons(archiveFile: File, destDir: File) {
         val gzIn = java.util.zip.GZIPInputStream(archiveFile.inputStream().buffered())
@@ -558,7 +558,7 @@ object WordPressDependencyManager {
                 FileOutputStream(outFile).use { fos ->
                     tarIn.copyTo(fos)
                 }
-                // 保留可执行权限
+                // Note: brief English comment.
                 if (entry.mode and 0b001_000_000 != 0) {
                     outFile.setExecutable(true, false)
                 }
@@ -569,7 +569,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 解压 zip 文件
+     * Note: brief English comment.
      */
     private fun extractZip(zipFile: File, destDir: File) {
         val zipInputStream = java.util.zip.ZipInputStream(zipFile.inputStream().buffered())
@@ -591,7 +591,7 @@ object WordPressDependencyManager {
     }
     
     /**
-     * 计算文件 SHA-256 哈希
+     * Note: brief English comment.
      */
     fun sha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
