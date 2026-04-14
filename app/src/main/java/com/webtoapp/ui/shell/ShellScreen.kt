@@ -19,7 +19,7 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.core.webview.LongPressHandler
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.Announcement
 import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.util.TvUtils
@@ -137,21 +137,26 @@ fun ShellScreen(
     var longPressTouchY by remember { mutableFloatStateOf(0f) }
     val longPressHandler = remember { LongPressHandler(context, scope) }
 
-    // Initializeconfig
-    LaunchedEffect(Unit) {
-        // settings( APK config)
+    DisposableEffect(config.language) {
         try {
             val appLanguage = when (config.language.uppercase()) {
                 "ENGLISH" -> com.webtoapp.core.i18n.AppLanguage.ENGLISH
                 "ARABIC" -> com.webtoapp.core.i18n.AppLanguage.ARABIC
                 else -> com.webtoapp.core.i18n.AppLanguage.CHINESE
             }
-            Strings.setLanguage(appLanguage)
+            AppStringsProvider.setRuntimeLanguage(appLanguage)
             AppLogger.d("ShellActivity", "设置界面语言: ${config.language} -> $appLanguage")
         } catch (e: Exception) {
             AppLogger.e("ShellActivity", "设置语言失败", e)
         }
-        
+
+        onDispose {
+            AppStringsProvider.clearRuntimeLanguage()
+        }
+    }
+
+    // Initializeconfig
+    LaunchedEffect(Unit) {
         // Configure intercept
         if (config.adBlockEnabled) {
             adBlocker.initialize(config.adBlockRules, useDefaultRules = true)

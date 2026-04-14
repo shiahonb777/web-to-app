@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import android.os.Environment
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.io.InputStream
 
@@ -368,7 +368,7 @@ class ExtensionManager(private val context: Context) {
                 return Result.success(updatedModule.enabled)
             }
             
-            Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+            Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to toggle module", e)
             Result.failure(e)
@@ -381,7 +381,7 @@ class ExtensionManager(private val context: Context) {
     suspend fun updateModuleConfig(moduleId: String, configValues: Map<String, String>): Result<Unit> {
         return try {
             val module = _modules.value.find { it.id == moduleId }
-                ?: return Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             val updatedModule = module.copy(
                 configValues = configValues,
@@ -406,7 +406,7 @@ class ExtensionManager(private val context: Context) {
     suspend fun exportModule(moduleId: String): Result<File> = withContext(Dispatchers.IO) {
         try {
             val module = getAllModules().find { it.id == moduleId }
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             val fileName = "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
             val file = File(context.cacheDir, fileName)
@@ -431,7 +431,7 @@ class ExtensionManager(private val context: Context) {
         try {
             val modulesToExport = getAllModules().filter { it.id in moduleIds }
             if (modulesToExport.isEmpty()) {
-                return@withContext Result.failure(IllegalArgumentException(Strings.errNoModulesToExport))
+                return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errNoModulesToExport))
             }
             
             val pkg = ModulePackage(
@@ -459,7 +459,7 @@ class ExtensionManager(private val context: Context) {
         try {
             val json = inputStream.bufferedReader().readText()
             val module = ExtensionModule.fromJson(json)
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errInvalidModuleFile))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errInvalidModuleFile))
             
             // Generate ID.
             val importedModule = module.copy(
@@ -482,7 +482,7 @@ class ExtensionManager(private val context: Context) {
     suspend fun importFromShareCode(shareCode: String): Result<ExtensionModule> {
         return try {
             val module = ExtensionModule.fromShareCode(shareCode)
-                ?: return Result.failure(IllegalArgumentException(Strings.errInvalidShareCode))
+                ?: return Result.failure(IllegalArgumentException(AppStringsProvider.current().errInvalidShareCode))
             
             val importedModule = module.copy(
                 id = java.util.UUID.randomUUID().toString(),
@@ -505,7 +505,7 @@ class ExtensionManager(private val context: Context) {
         try {
             val json = inputStream.bufferedReader().readText()
             val pkg = ModulePackage.fromJson(json)
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errInvalidModulePackage))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errInvalidModulePackage))
             
             val importedModules = mutableListOf<ExtensionModule>()
             for (module in pkg.modules) {
@@ -533,22 +533,22 @@ class ExtensionManager(private val context: Context) {
         val module = getAllModules().find { it.id == moduleId } ?: return null
         
         val shareText = """
-            ${Strings.shareModuleTitle}
+            ${AppStringsProvider.current().shareModuleTitle}
             
-            ${Strings.shareModuleName}：${module.name}
-            ${if (module.description.isNotBlank()) "${Strings.shareModuleDesc}：${module.description}" else ""}
-            ${Strings.shareModuleCategory}：${module.category.getDisplayName()}
-            ${Strings.shareModuleVersion}：${module.version.name}
+            ${AppStringsProvider.current().shareModuleName}：${module.name}
+            ${if (module.description.isNotBlank()) "${AppStringsProvider.current().shareModuleDesc}：${module.description}" else ""}
+            ${AppStringsProvider.current().shareModuleCategory}：${module.category.getDisplayName()}
+            ${AppStringsProvider.current().shareModuleVersion}：${module.version.name}
             
-            ${Strings.shareModuleCode}：
+            ${AppStringsProvider.current().shareModuleCode}：
             ${module.toShareCode()}
             
-            ${Strings.shareModuleHowTo}
+            ${AppStringsProvider.current().shareModuleHowTo}
         """.trimIndent()
         
         return Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "${Strings.shareModuleSubject} - ${module.name}")
+            putExtra(Intent.EXTRA_SUBJECT, "${AppStringsProvider.current().shareModuleSubject} - ${module.name}")
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
     }
@@ -578,7 +578,7 @@ class ExtensionManager(private val context: Context) {
     suspend fun exportModuleToDownloads(moduleId: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             val module = getAllModules().find { it.id == moduleId }
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             val fileName = "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -605,11 +605,11 @@ class ExtensionManager(private val context: Context) {
     suspend fun exportModuleToUri(moduleId: String, uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val module = getAllModules().find { it.id == moduleId }
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.write(module.toJson().toByteArray())
-            } ?: return@withContext Result.failure(IllegalStateException(Strings.errCannotOpenOutputStream))
+            } ?: return@withContext Result.failure(IllegalStateException(AppStringsProvider.current().errCannotOpenOutputStream))
             
             Result.success(Unit)
         } catch (e: Exception) {
@@ -713,11 +713,11 @@ class ExtensionManager(private val context: Context) {
      */
     suspend fun duplicateModule(moduleId: String): Result<ExtensionModule> {
         val module = _modules.value.find { it.id == moduleId }
-            ?: return Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+            ?: return Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
         
         val duplicated = module.copy(
             id = java.util.UUID.randomUUID().toString(),
-            name = "${module.name} (${Strings.moduleCopySuffix})",
+            name = "${module.name} (${AppStringsProvider.current().moduleCopySuffix})",
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )

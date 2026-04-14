@@ -1,27 +1,27 @@
 package com.webtoapp.core.extension.snippets
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal fun nativeBridgeOperations() = CodeSnippetCategory(
         id = "native",
-        name = Strings.snippetNative,
+        name = AppStringsProvider.current().snippetNative,
         icon = "📱",
-        description = Strings.snippetNativeDesc,
+        description = AppStringsProvider.current().snippetNativeDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "native-toast",
-                name = Strings.snippetShowToast,
-                description = Strings.snippetShowToastDesc,
+                name = AppStringsProvider.current().snippetShowToast,
+                description = AppStringsProvider.current().snippetShowToastDesc,
                 code = """// 短提示
 NativeBridge.showToast('操作成功');
 
 NativeBridge.showToast('请稍候，正在处理...', 'long');""",
-                tags = listOf(Strings.tagToast, Strings.tagToast, Strings.tagMessage)
+                tags = listOf(AppStringsProvider.current().tagToast, AppStringsProvider.current().tagToast, AppStringsProvider.current().tagMessage)
             ),
             CodeSnippet(
                 id = "native-vibrate",
-                name = Strings.snippetVibrate,
-                description = Strings.snippetVibrateDesc,
+                name = AppStringsProvider.current().snippetVibrate,
+                description = AppStringsProvider.current().snippetVibrateDesc,
                 code = """// 短震动（100ms）
 NativeBridge.vibrate();
 
@@ -29,12 +29,12 @@ NativeBridge.vibrate();
 NativeBridge.vibrate(500);
 
 NativeBridge.vibratePattern('100,200,100,200');""",
-                tags = listOf(Strings.tagVibrate, Strings.tagFeedback, Strings.tagHaptic)
+                tags = listOf(AppStringsProvider.current().tagVibrate, AppStringsProvider.current().tagFeedback, AppStringsProvider.current().tagHaptic)
             ),
             CodeSnippet(
                 id = "native-copy",
-                name = Strings.snippetCopyToClipboard,
-                description = Strings.snippetCopyToClipboardDesc,
+                name = AppStringsProvider.current().snippetCopyToClipboard,
+                description = AppStringsProvider.current().snippetCopyToClipboardDesc,
                 code = """function copyText(text) {
     const success = NativeBridge.copyToClipboard(text);
     if (success) {
@@ -52,12 +52,12 @@ document.addEventListener('click', (e) => {
         copyText(text);
     }
 });""",
-                tags = listOf(Strings.tagCopy, Strings.tagClipboard, Strings.tagClipboard)
+                tags = listOf(AppStringsProvider.current().tagCopy, AppStringsProvider.current().tagClipboard, AppStringsProvider.current().tagClipboard)
             ),
             CodeSnippet(
                 id = "native-share",
-                name = Strings.snippetShareContent,
-                description = Strings.snippetShareContentDesc,
+                name = AppStringsProvider.current().snippetShareContent,
+                description = AppStringsProvider.current().snippetShareContentDesc,
                 code = """// 分享文本和链接
 function shareContent(title, text, url) {
     NativeBridge.share(title, text, url);
@@ -76,12 +76,12 @@ function shareCurrentPage() {
 const shareBtn = document.createElement('button');
 shareBtn.textContent = '分享';
 shareBtn.onclick = shareCurrentPage;""",
-                tags = listOf(Strings.tagShare, Strings.tagShare, Strings.tagSocial)
+                tags = listOf(AppStringsProvider.current().tagShare, AppStringsProvider.current().tagShare, AppStringsProvider.current().tagSocial)
             ),
             CodeSnippet(
                 id = "native-save-image",
-                name = Strings.snippetSaveImageToGallery,
-                description = Strings.snippetSaveImageToGalleryDesc,
+                name = AppStringsProvider.current().snippetSaveImageToGallery,
+                description = AppStringsProvider.current().snippetSaveImageToGalleryDesc,
                 code = """// Save图片到相册
 function saveImage(imageUrl, filename) {
     NativeBridge.saveImageToGallery(imageUrl, filename || '');
@@ -96,12 +96,12 @@ document.querySelectorAll('img').forEach(img => {
         }
     });
 });""",
-                tags = listOf(Strings.tagSave, Strings.tagImage, Strings.tagGallery, Strings.tagDownload)
+                tags = listOf(AppStringsProvider.current().tagSave, AppStringsProvider.current().tagImage, AppStringsProvider.current().tagGallery, AppStringsProvider.current().tagDownload)
             ),
             CodeSnippet(
                 id = "native-save-video",
-                name = Strings.snippetSaveVideoToGallery,
-                description = Strings.snippetSaveVideoToGalleryDesc,
+                name = AppStringsProvider.current().snippetSaveVideoToGallery,
+                description = AppStringsProvider.current().snippetSaveVideoToGalleryDesc,
                 code = """// Save视频到相册
 function saveVideo(videoUrl, filename) {
     NativeBridge.saveVideoToGallery(videoUrl, filename || '');
@@ -116,12 +116,12 @@ document.querySelectorAll('video').forEach(video => {
     video.parentElement.style.position = 'relative';
     video.parentElement.appendChild(btn);
 });""",
-                tags = listOf(Strings.tagSave, Strings.tagVideo, Strings.tagGallery, Strings.tagDownload)
+                tags = listOf(AppStringsProvider.current().tagSave, AppStringsProvider.current().tagVideo, AppStringsProvider.current().tagGallery, AppStringsProvider.current().tagDownload)
             ),
             CodeSnippet(
                 id = "native-open-url",
-                name = Strings.snippetOpenInBrowser,
-                description = Strings.snippetOpenInBrowserDesc,
+                name = AppStringsProvider.current().snippetOpenInBrowser,
+                description = AppStringsProvider.current().snippetOpenInBrowserDesc,
                 code = """// 用系统浏览器打开链接
 function openInBrowser(url) {
     NativeBridge.openUrl(url);
@@ -135,12 +135,12 @@ document.addEventListener('click', (e) => {
         openInBrowser(link.href);
     }
 });""",
-                tags = listOf(Strings.tagBrowser, Strings.tagLink, Strings.tagExternal)
+                tags = listOf(AppStringsProvider.current().tagBrowser, AppStringsProvider.current().tagLink, AppStringsProvider.current().tagExternal)
             ),
             CodeSnippet(
                 id = "native-device-info",
-                name = Strings.snippetDeviceInfo,
-                description = Strings.snippetDeviceInfoDesc,
+                name = AppStringsProvider.current().snippetDeviceInfo,
+                description = AppStringsProvider.current().snippetDeviceInfoDesc,
                 code = """// Get设备信息
 const deviceInfo = JSON.parse(NativeBridge.getDeviceInfo());
 console.log('设备型号:', deviceInfo.model);
@@ -154,12 +154,12 @@ console.log('应用版本:', appInfo.versionName);
 if (deviceInfo.screenWidth < 400) {
     document.body.classList.add('small-screen');
 }""",
-                tags = listOf(Strings.tagDevice, Strings.tagInfo, Strings.tagScreen)
+                tags = listOf(AppStringsProvider.current().tagDevice, AppStringsProvider.current().tagInfo, AppStringsProvider.current().tagScreen)
             ),
             CodeSnippet(
                 id = "native-network",
-                name = Strings.snippetNetworkStatus,
-                description = Strings.snippetNetworkStatusDesc,
+                name = AppStringsProvider.current().snippetNetworkStatus,
+                description = AppStringsProvider.current().snippetNetworkStatusDesc,
                 code = """// Check网络是否可用
 if (NativeBridge.isNetworkAvailable()) {
     console.log('网络可用');
@@ -176,12 +176,12 @@ if (networkType === 'mobile') {
     // use.
     document.querySelectorAll('video').forEach(v => v.preload = 'none');
 }""",
-                tags = listOf(Strings.tagNetwork, Strings.tagWiFi, Strings.tagData)
+                tags = listOf(AppStringsProvider.current().tagNetwork, AppStringsProvider.current().tagWiFi, AppStringsProvider.current().tagData)
             ),
             CodeSnippet(
                 id = "native-save-file",
-                name = Strings.snippetSaveFile,
-                description = Strings.snippetSaveFileDesc,
+                name = AppStringsProvider.current().snippetSaveFile,
+                description = AppStringsProvider.current().snippetSaveFileDesc,
                 code = """// Save文本文件
 function saveTextFile(content, filename) {
     NativeBridge.saveToFile(content, filename, 'text/plain');
@@ -200,12 +200,12 @@ const pageData = {
     content: document.body.innerText.substring(0, 1000)
 };
 saveJsonFile(pageData, 'page_data.json');""",
-                tags = listOf(Strings.tagSave, Strings.tagFile, Strings.tagExport)
+                tags = listOf(AppStringsProvider.current().tagSave, AppStringsProvider.current().tagFile, AppStringsProvider.current().tagExport)
             ),
             CodeSnippet(
                 id = "native-image-download-btn",
-                name = Strings.snippetImageDownloadBtn,
-                description = Strings.snippetImageDownloadBtnDesc,
+                name = AppStringsProvider.current().snippetImageDownloadBtn,
+                description = AppStringsProvider.current().snippetImageDownloadBtnDesc,
                 code = """// 为所有图片添加下载按钮
 function addImageDownloadButtons() {
     document.querySelectorAll('img').forEach(img => {
@@ -249,125 +249,125 @@ function addImageDownloadButtons() {
 addImageDownloadButtons();
 new MutationObserver(addImageDownloadButtons)
     .observe(document.body, { childList: true, subtree: true });""",
-                tags = listOf(Strings.tagImage, Strings.tagDownload, Strings.tagButton, Strings.tagFloating)
+                tags = listOf(AppStringsProvider.current().tagImage, AppStringsProvider.current().tagDownload, AppStringsProvider.current().tagButton, AppStringsProvider.current().tagFloating)
             )
         )
 )
 internal fun domOperations() = CodeSnippetCategory(
         id = "dom",
-        name = Strings.snippetDom,
+        name = AppStringsProvider.current().snippetDom,
         icon = "🔧",
-        description = Strings.snippetDomDesc,
+        description = AppStringsProvider.current().snippetDomDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "dom-query-single",
-                name = Strings.snippetQuerySingle,
-                description = Strings.snippetQuerySingleDesc,
+                name = AppStringsProvider.current().snippetQuerySingle,
+                description = AppStringsProvider.current().snippetQuerySingleDesc,
                 code = """const element = document.querySelector('选择器');
 if (element) {
 }""",
-                tags = listOf(Strings.tagQuery, Strings.tagSelector)
+                tags = listOf(AppStringsProvider.current().tagQuery, AppStringsProvider.current().tagSelector)
             ),
             CodeSnippet(
                 id = "dom-query-all",
-                name = Strings.snippetQueryAll,
-                description = Strings.snippetQueryAllDesc,
+                name = AppStringsProvider.current().snippetQueryAll,
+                description = AppStringsProvider.current().snippetQueryAllDesc,
                 code = """document.querySelectorAll('选择器').forEach(el => {
 });""",
-                tags = listOf(Strings.tagQuery, Strings.tagIterate)
+                tags = listOf(AppStringsProvider.current().tagQuery, AppStringsProvider.current().tagIterate)
             ),
             CodeSnippet(
                 id = "dom-hide-element",
-                name = Strings.snippetHideElement,
-                description = Strings.snippetHideElementDesc,
+                name = AppStringsProvider.current().snippetHideElement,
+                description = AppStringsProvider.current().snippetHideElementDesc,
                 code = """function hideElement(selector) {
     document.querySelectorAll(selector).forEach(el => {
         el.style.setProperty('display', 'none', 'important');
     });
 }
 hideElement('选择器');""",
-                tags = listOf(Strings.tagHide, Strings.tagStyle)
+                tags = listOf(AppStringsProvider.current().tagHide, AppStringsProvider.current().tagStyle)
             ),
             CodeSnippet(
                 id = "dom-remove-element",
-                name = Strings.snippetRemoveElement,
-                description = Strings.snippetRemoveElementDesc,
+                name = AppStringsProvider.current().snippetRemoveElement,
+                description = AppStringsProvider.current().snippetRemoveElementDesc,
                 code = """function removeElement(selector) {
     document.querySelectorAll(selector).forEach(el => el.remove());
 }
 removeElement('选择器');""",
-                tags = listOf(Strings.tagDelete, Strings.tagRemove)
+                tags = listOf(AppStringsProvider.current().tagDelete, AppStringsProvider.current().tagRemove)
             ),
             CodeSnippet(
                 id = "dom-create-element",
-                name = Strings.snippetCreateElement,
-                description = Strings.snippetCreateElementDesc,
+                name = AppStringsProvider.current().snippetCreateElement,
+                description = AppStringsProvider.current().snippetCreateElementDesc,
                 code = """const newElement = document.createElement('div');
 newElement.id = 'my-element';
 newElement.className = 'my-class';
 newElement.textContent = '内容';
 newElement.style.cssText = 'color: red; font-size: 14px;';
 document.body.appendChild(newElement);""",
-                tags = listOf(Strings.tagCreate, Strings.tagAdd)
+                tags = listOf(AppStringsProvider.current().tagCreate, AppStringsProvider.current().tagAdd)
             ),
             CodeSnippet(
                 id = "dom-modify-text",
-                name = Strings.snippetModifyText,
-                description = Strings.snippetModifyTextDesc,
+                name = AppStringsProvider.current().snippetModifyText,
+                description = AppStringsProvider.current().snippetModifyTextDesc,
                 code = """const element = document.querySelector('选择器');
 if (element) {
     element.textContent = '新的文本内容';
     // or use innerHTML Supports HTML.
     // element.innerHTML = '<strong> </strong>';.
 }""",
-                tags = listOf(Strings.tagText, Strings.tagModify)
+                tags = listOf(AppStringsProvider.current().tagText, AppStringsProvider.current().tagModify)
             ),
             CodeSnippet(
                 id = "dom-modify-attribute",
-                name = Strings.snippetModifyAttr,
-                description = Strings.snippetModifyAttrDesc,
+                name = AppStringsProvider.current().snippetModifyAttr,
+                description = AppStringsProvider.current().snippetModifyAttrDesc,
                 code = """const element = document.querySelector('选择器');
 if (element) {
     element.setAttribute('属性名', '属性值');
     const value = element.getAttribute('属性名');
     element.removeAttribute('属性名');
 }""",
-                tags = listOf(Strings.tagAttribute, Strings.tagModify)
+                tags = listOf(AppStringsProvider.current().tagAttribute, AppStringsProvider.current().tagModify)
             ),
             CodeSnippet(
                 id = "dom-insert-before",
-                name = Strings.snippetInsertBefore,
-                description = Strings.snippetInsertBeforeDesc,
+                name = AppStringsProvider.current().snippetInsertBefore,
+                description = AppStringsProvider.current().snippetInsertBeforeDesc,
                 code = """const target = document.querySelector('目标选择器');
 const newEl = document.createElement('div');
 newEl.textContent = '新内容';
 target.parentNode.insertBefore(newEl, target);""",
-                tags = listOf(Strings.tagInsert, Strings.tagPosition)
+                tags = listOf(AppStringsProvider.current().tagInsert, AppStringsProvider.current().tagPosition)
             ),
             CodeSnippet(
                 id = "dom-insert-after",
-                name = Strings.snippetInsertAfter,
-                description = Strings.snippetInsertAfterDesc,
+                name = AppStringsProvider.current().snippetInsertAfter,
+                description = AppStringsProvider.current().snippetInsertAfterDesc,
                 code = """const target = document.querySelector('目标选择器');
 const newEl = document.createElement('div');
 newEl.textContent = '新内容';
 target.parentNode.insertBefore(newEl, target.nextSibling);""",
-                tags = listOf(Strings.tagInsert, Strings.tagPosition)
+                tags = listOf(AppStringsProvider.current().tagInsert, AppStringsProvider.current().tagPosition)
             ),
             CodeSnippet(
                 id = "dom-clone-element",
-                name = Strings.snippetCloneElement,
-                description = Strings.snippetCloneElementDesc,
+                name = AppStringsProvider.current().snippetCloneElement,
+                description = AppStringsProvider.current().snippetCloneElementDesc,
                 code = """const original = document.querySelector('选择器');
 const clone = original.cloneNode(true);
 clone.id = 'cloned-element';
 document.body.appendChild(clone);""",
-                tags = listOf(Strings.tagClone, Strings.tagCopy)
+                tags = listOf(AppStringsProvider.current().tagClone, AppStringsProvider.current().tagCopy)
             ),
             CodeSnippet(
                 id = "dom-wrap-element",
-                name = Strings.snippetWrapElement,
-                description = Strings.snippetWrapElementDesc,
+                name = AppStringsProvider.current().snippetWrapElement,
+                description = AppStringsProvider.current().snippetWrapElementDesc,
                 code = """function wrapElement(selector, wrapperTag = 'div') {
     document.querySelectorAll(selector).forEach(el => {
         const wrapper = document.createElement(wrapperTag);
@@ -376,12 +376,12 @@ document.body.appendChild(clone);""",
     });
 }
 wrapElement('img', 'figure');""",
-                tags = listOf(Strings.tagWrap, Strings.tagStructure)
+                tags = listOf(AppStringsProvider.current().tagWrap, AppStringsProvider.current().tagStructure)
             ),
             CodeSnippet(
                 id = "dom-replace-element",
-                name = Strings.snippetReplaceElement,
-                description = Strings.snippetReplaceElementDesc,
+                name = AppStringsProvider.current().snippetReplaceElement,
+                description = AppStringsProvider.current().snippetReplaceElementDesc,
                 code = """function replaceElement(selector, newHtml) {
     document.querySelectorAll(selector).forEach(el => {
         const temp = document.createElement('div');
@@ -390,20 +390,20 @@ wrapElement('img', 'figure');""",
     });
 }
 replaceElement('.old-class', '<div class="new-class">新内容</div>');""",
-                tags = listOf(Strings.tagReplace, Strings.tagModify)
+                tags = listOf(AppStringsProvider.current().tagReplace, AppStringsProvider.current().tagModify)
             )
         )
 )
 internal fun styleOperations() = CodeSnippetCategory(
         id = "style",
-        name = Strings.snippetStyle,
+        name = AppStringsProvider.current().snippetStyle,
         icon = "🎨",
-        description = Strings.snippetStyleDesc,
+        description = AppStringsProvider.current().snippetStyleDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "style-inject-css",
-                name = Strings.snippetInjectCss,
-                description = Strings.snippetInjectCssDesc,
+                name = AppStringsProvider.current().snippetInjectCss,
+                description = AppStringsProvider.current().snippetInjectCssDesc,
                 code = """const style = document.createElement('style');
 style.id = 'my-custom-style';
 style.textContent = `
@@ -413,24 +413,24 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagCSS, Strings.tagInject)
+                tags = listOf(AppStringsProvider.current().tagCSS, AppStringsProvider.current().tagInject)
             ),
             CodeSnippet(
                 id = "style-modify-inline",
-                name = Strings.snippetModifyInline,
-                description = Strings.snippetModifyInlineDesc,
+                name = AppStringsProvider.current().snippetModifyInline,
+                description = AppStringsProvider.current().snippetModifyInlineDesc,
                 code = """const element = document.querySelector('选择器');
 if (element) {
     element.style.color = 'red';
     element.style.fontSize = '16px';
     element.style.setProperty('display', 'block', 'important');
 }""",
-                tags = listOf(Strings.tagStyle, Strings.tagInline)
+                tags = listOf(AppStringsProvider.current().tagStyle, AppStringsProvider.current().tagInline)
             ),
             CodeSnippet(
                 id = "style-add-class",
-                name = Strings.snippetAddClass,
-                description = Strings.snippetAddClassDesc,
+                name = AppStringsProvider.current().snippetAddClass,
+                description = AppStringsProvider.current().snippetAddClassDesc,
                 code = """const element = document.querySelector('选择器');
 if (element) {
     element.classList.add('new-class');
@@ -438,12 +438,12 @@ if (element) {
     element.classList.toggle('toggle-class');
     const hasClass = element.classList.contains('some-class');
 }""",
-                tags = listOf(Strings.tagClassName, Strings.tagClassName)
+                tags = listOf(AppStringsProvider.current().tagClassName, AppStringsProvider.current().tagClassName)
             ),
             CodeSnippet(
                 id = "style-dark-mode",
-                name = Strings.snippetDarkMode,
-                description = Strings.snippetDarkModeDesc,
+                name = AppStringsProvider.current().snippetDarkMode,
+                description = AppStringsProvider.current().snippetDarkModeDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     html {
@@ -455,12 +455,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagDark, Strings.tagTheme)
+                tags = listOf(AppStringsProvider.current().tagDark, AppStringsProvider.current().tagTheme)
             ),
             CodeSnippet(
                 id = "style-sepia-mode",
-                name = Strings.snippetSepiaMode,
-                description = Strings.snippetSepiaModeDesc,
+                name = AppStringsProvider.current().snippetSepiaMode,
+                description = AppStringsProvider.current().snippetSepiaModeDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     html {
@@ -468,12 +468,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagEyeCare, Strings.tagWarm)
+                tags = listOf(AppStringsProvider.current().tagEyeCare, AppStringsProvider.current().tagWarm)
             ),
             CodeSnippet(
                 id = "style-grayscale",
-                name = Strings.snippetGrayscale,
-                description = Strings.snippetGrayscaleDesc,
+                name = AppStringsProvider.current().snippetGrayscale,
+                description = AppStringsProvider.current().snippetGrayscaleDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     html {
@@ -481,12 +481,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagGrayscale, Strings.tagFilter)
+                tags = listOf(AppStringsProvider.current().tagGrayscale, AppStringsProvider.current().tagFilter)
             ),
             CodeSnippet(
                 id = "style-custom-font",
-                name = Strings.snippetCustomFont,
-                description = Strings.snippetCustomFontDesc,
+                name = AppStringsProvider.current().snippetCustomFont,
+                description = AppStringsProvider.current().snippetCustomFontDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     * {
@@ -494,12 +494,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagFont, Strings.tagStyle)
+                tags = listOf(AppStringsProvider.current().tagFont, AppStringsProvider.current().tagStyle)
             ),
             CodeSnippet(
                 id = "style-font-size",
-                name = Strings.snippetFontSize,
-                description = Strings.snippetFontSizeDesc,
+                name = AppStringsProvider.current().snippetFontSize,
+                description = AppStringsProvider.current().snippetFontSizeDesc,
                 code = """function setFontSize(size) {
     const style = document.createElement('style');
     style.textContent = `
@@ -510,24 +510,24 @@ document.head.appendChild(style);""",
     document.head.appendChild(style);
 }
 setFontSize(16);""",
-                tags = listOf(Strings.tagFont, Strings.tagSize)
+                tags = listOf(AppStringsProvider.current().tagFont, AppStringsProvider.current().tagSize)
             ),
             CodeSnippet(
                 id = "style-hide-scrollbar",
-                name = Strings.snippetHideScrollbar,
-                description = Strings.snippetHideScrollbarDesc,
+                name = AppStringsProvider.current().snippetHideScrollbar,
+                description = AppStringsProvider.current().snippetHideScrollbarDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     ::-webkit-scrollbar { display: none !important; }
     * { scrollbar-width: none !important; }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagScrollbar, Strings.tagHide)
+                tags = listOf(AppStringsProvider.current().tagScrollbar, AppStringsProvider.current().tagHide)
             ),
             CodeSnippet(
                 id = "style-highlight-links",
-                name = Strings.snippetHighlightLinks,
-                description = Strings.snippetHighlightLinksDesc,
+                name = AppStringsProvider.current().snippetHighlightLinks,
+                description = AppStringsProvider.current().snippetHighlightLinksDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     a {
@@ -537,12 +537,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagLink, Strings.tagHighlight)
+                tags = listOf(AppStringsProvider.current().tagLink, AppStringsProvider.current().tagHighlight)
             ),
             CodeSnippet(
                 id = "style-max-width",
-                name = Strings.snippetMaxWidth,
-                description = Strings.snippetMaxWidthDesc,
+                name = AppStringsProvider.current().snippetMaxWidth,
+                description = AppStringsProvider.current().snippetMaxWidthDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     body > * {
@@ -552,12 +552,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagWidth, Strings.tagReading)
+                tags = listOf(AppStringsProvider.current().tagWidth, AppStringsProvider.current().tagReading)
             ),
             CodeSnippet(
                 id = "style-line-height",
-                name = Strings.snippetLineHeight,
-                description = Strings.snippetLineHeightDesc,
+                name = AppStringsProvider.current().snippetLineHeight,
+                description = AppStringsProvider.current().snippetLineHeightDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     p, li, span, div {
@@ -565,7 +565,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagLineHeight, Strings.tagReading)
+                tags = listOf(AppStringsProvider.current().tagLineHeight, AppStringsProvider.current().tagReading)
             )
         )
 )

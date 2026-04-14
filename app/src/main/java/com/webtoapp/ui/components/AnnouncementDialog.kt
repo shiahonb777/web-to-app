@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.cloud.AnnouncementData
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * announcementdialog- Premium refactored
@@ -189,7 +189,7 @@ fun AnnouncementDialog(
                     ) {
                         Icon(
                             Icons.Filled.Close,
-                            contentDescription = Strings.close,
+                            contentDescription = AppStringsProvider.current().close,
                             tint = Color.White,
                             modifier = Modifier.size(18.dp)
                         )
@@ -245,7 +245,7 @@ fun AnnouncementDialog(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    Strings.announcementHighPriority,
+                                    AppStringsProvider.current().announcementHighPriority,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color(0xFFFF5722),
                                     fontWeight = FontWeight.SemiBold
@@ -273,7 +273,7 @@ fun AnnouncementDialog(
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text(
-                                    Strings.cloudDismiss,
+                                    AppStringsProvider.current().cloudDismiss,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -303,7 +303,7 @@ fun AnnouncementDialog(
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text(
-                                    Strings.gotIt,
+                                    AppStringsProvider.current().gotIt,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }

@@ -18,7 +18,7 @@ import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -38,7 +38,7 @@ class DownloadNotificationManager(private val context: Context) {
     companion object {
         private const val TAG = "DownloadNotification"
         private const val CHANNEL_ID = "download_channel"
-        private val CHANNEL_NAME get() = Strings.notifDownloadChannel
+        private val CHANNEL_NAME get() = AppStringsProvider.current().notifDownloadChannel
         private const val PROGRESS_NOTIFICATION_ID = 1001
         private const val COMPLETE_NOTIFICATION_ID_BASE = 2000
         private const val CUSTOM_NOTIFICATION_ID_BASE = 3000
@@ -92,7 +92,7 @@ class DownloadNotificationManager(private val context: Context) {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = Strings.notifDownloadChannelDesc
+                description = AppStringsProvider.current().notifDownloadChannelDesc
                 setShowBadge(false)
             }
             notificationManager.createNotificationChannel(channel)
@@ -326,14 +326,14 @@ class DownloadNotificationManager(private val context: Context) {
             PendingIntent.getActivity(
                 context,
                 notificationId + 10000,
-                Intent.createChooser(shareIntent, Strings.notifShare),
+                Intent.createChooser(shareIntent, AppStringsProvider.current().notifShare),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         } else null
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.notifDownloadComplete)
+            .setContentTitle(AppStringsProvider.current().notifDownloadComplete)
             .setContentText(fileName)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -343,7 +343,7 @@ class DownloadNotificationManager(private val context: Context) {
             builder.setContentIntent(openPendingIntent)
             builder.addAction(
                 android.R.drawable.ic_menu_view,
-                Strings.notifOpen,
+                AppStringsProvider.current().notifOpen,
                 openPendingIntent
             )
         }
@@ -352,7 +352,7 @@ class DownloadNotificationManager(private val context: Context) {
         if (sharePendingIntent != null) {
             builder.addAction(
                 android.R.drawable.ic_menu_share,
-                Strings.notifShare,
+                AppStringsProvider.current().notifShare,
                 sharePendingIntent
             )
         }
@@ -368,7 +368,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle(Strings.notifDownloadFailed)
+            .setContentTitle(AppStringsProvider.current().notifDownloadFailed)
             .setContentText(fileName)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -433,7 +433,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle(Strings.notifDownloading)
+            .setContentTitle(AppStringsProvider.current().notifDownloading)
             .setContentText(fileName)
             .setProgress(0, 0, true)
             .setOngoing(true)
@@ -476,7 +476,7 @@ class DownloadNotificationManager(private val context: Context) {
         notificationManager.cancel(progressNotificationId)
         
         val notificationId = CUSTOM_NOTIFICATION_ID_BASE + customNotificationIdCounter.incrementAndGet()
-        val typeText = if (isImage) Strings.image else Strings.video
+        val typeText = if (isImage) AppStringsProvider.current().image else AppStringsProvider.current().video
         
         val viewIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, mimeType)
@@ -490,7 +490,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.savedToGallery.replace("%s", typeText))
+            .setContentTitle(AppStringsProvider.current().savedToGallery.replace("%s", typeText))
             .setContentText(fileName)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
@@ -523,7 +523,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.notifDownloadComplete)
+            .setContentTitle(AppStringsProvider.current().notifDownloadComplete)
             .setContentText(fileName)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -545,7 +545,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle(Strings.notifDownloadFailed)
+            .setContentTitle(AppStringsProvider.current().notifDownloadFailed)
             .setContentText("$fileName: $reason")
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

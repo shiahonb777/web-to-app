@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.ui.components.PremiumFilterChip
 import com.webtoapp.ui.components.SettingsSwitch
@@ -36,8 +36,8 @@ fun KeyboardAdjustModeCard(
 
     Column {
         SettingsSwitch(
-            title = Strings.keyboardAdjustModeLabel,
-            subtitle = Strings.keyboardAdjustModeHint,
+            title = AppStringsProvider.current().keyboardAdjustModeLabel,
+            subtitle = AppStringsProvider.current().keyboardAdjustModeHint,
             checked = isCustomized,
             onCheckedChange = { checked ->
                 onModeChange(if (checked) KeyboardAdjustMode.NOTHING else KeyboardAdjustMode.RESIZE)
@@ -52,8 +52,8 @@ fun KeyboardAdjustModeCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     listOf(
-                        KeyboardAdjustMode.NOTHING to Strings.keyboardAdjustNothing,
-                        KeyboardAdjustMode.RESIZE to Strings.keyboardAdjustResize
+                        KeyboardAdjustMode.NOTHING to AppStringsProvider.current().keyboardAdjustNothing,
+                        KeyboardAdjustMode.RESIZE to AppStringsProvider.current().keyboardAdjustResize
                     ).forEach { (value, label) ->
                         PremiumFilterChip(
                             selected = mode == value,
@@ -64,8 +64,8 @@ fun KeyboardAdjustModeCard(
                 }
 
                 val hintText = when (mode) {
-                    KeyboardAdjustMode.RESIZE -> Strings.keyboardAdjustResizeHint
-                    KeyboardAdjustMode.NOTHING -> Strings.keyboardAdjustNothingHint
+                    KeyboardAdjustMode.RESIZE -> AppStringsProvider.current().keyboardAdjustResizeHint
+                    KeyboardAdjustMode.NOTHING -> AppStringsProvider.current().keyboardAdjustNothingHint
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

@@ -43,7 +43,7 @@ import com.webtoapp.core.engine.shields.ShieldsConfig
 import com.webtoapp.core.engine.shields.ShieldsReferrerPolicy
 import com.webtoapp.core.engine.shields.SslErrorPolicy
 import com.webtoapp.core.engine.shields.ThirdPartyCookiePolicy
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.openUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -105,9 +105,9 @@ fun BrowserKernelScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(Strings.browserKernelTitle, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        Text(AppStringsProvider.current().browserKernelTitle, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                         Text(
-                            Strings.browserKernelSubtitle,
+                            AppStringsProvider.current().browserKernelSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -115,7 +115,7 @@ fun BrowserKernelScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -138,18 +138,18 @@ fun BrowserKernelScreen(
             // ===== area =====
             item {
                 SectionHeader(
-                    title = Strings.embeddedEngineTitle,
-                    subtitle = Strings.embeddedEngineDesc
+                    title = AppStringsProvider.current().embeddedEngineTitle,
+                    subtitle = AppStringsProvider.current().embeddedEngineDesc
                 )
             }
             
             // System WebView card( default, always)
             item {
                 EngineCard(
-                    name = Strings.engineSystemWebView,
-                    description = Strings.engineSystemWebViewDesc,
+                    name = AppStringsProvider.current().engineSystemWebView,
+                    description = AppStringsProvider.current().engineSystemWebViewDesc,
                     icon = Icons.Outlined.WebAsset,
-                    statusText = Strings.engineReady,
+                    statusText = AppStringsProvider.current().engineReady,
                     statusColor = MaterialTheme.colorScheme.primary,
                     isDefault = true,
                     actions = {}
@@ -183,8 +183,8 @@ fun BrowserKernelScreen(
             // ===== Shields settings =====
             item {
                 SectionHeader(
-                    title = Strings.shieldsPrivacyProtection,
-                    subtitle = Strings.shieldsPrivacySubtitle
+                    title = AppStringsProvider.current().shieldsPrivacyProtection,
+                    subtitle = AppStringsProvider.current().shieldsPrivacySubtitle
                 )
             }
             
@@ -222,8 +222,8 @@ fun BrowserKernelScreen(
             // Note
             item {
                 SectionHeader(
-                    title = Strings.installedBrowsers,
-                    subtitle = Strings.installedBrowsersDesc
+                    title = AppStringsProvider.current().installedBrowsers,
+                    subtitle = AppStringsProvider.current().installedBrowsersDesc
                 )
             }
             
@@ -252,7 +252,7 @@ fun BrowserKernelScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    Strings.noBrowserInstalled,
+                                    AppStringsProvider.current().noBrowserInstalled,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -276,8 +276,8 @@ fun BrowserKernelScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SectionHeader(
-                    title = Strings.recommendedBrowsers,
-                    subtitle = Strings.recommendedBrowsersDesc
+                    title = AppStringsProvider.current().recommendedBrowsers,
+                    subtitle = AppStringsProvider.current().recommendedBrowsersDesc
                 )
             }
             
@@ -312,8 +312,8 @@ fun BrowserKernelScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(Strings.engineDeleteBtn) },
-            text = { Text(Strings.engineDeleteConfirm) },
+            title = { Text(AppStringsProvider.current().engineDeleteBtn) },
+            text = { Text(AppStringsProvider.current().engineDeleteConfirm) },
             confirmButton = {
                 TextButton(onClick = {
                     engineManager.deleteEngine(EngineType.GECKOVIEW)
@@ -322,12 +322,12 @@ fun BrowserKernelScreen(
                     geckoDownloader.resetState()
                     showDeleteDialog = false
                 }) {
-                    Text(Strings.confirm, color = MaterialTheme.colorScheme.error)
+                    Text(AppStringsProvider.current().confirm, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(Strings.cancel)
+                    Text(AppStringsProvider.current().cancel)
                 }
             }
         )
@@ -363,7 +363,7 @@ private fun CurrentWebViewCard(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    Strings.currentWebViewInfo,
+                    AppStringsProvider.current().currentWebViewInfo,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -373,9 +373,9 @@ private fun CurrentWebViewCard(
             Spacer(modifier = Modifier.height(16.dp))
             
             if (webViewInfo != null) {
-                InfoRow(Strings.webViewProvider, webViewInfo.providerName)
-                InfoRow(Strings.webViewVersion, webViewInfo.version)
-                InfoRow(Strings.webViewPackage, webViewInfo.packageName)
+                InfoRow(AppStringsProvider.current().webViewProvider, webViewInfo.providerName)
+                InfoRow(AppStringsProvider.current().webViewVersion, webViewInfo.version)
+                InfoRow(AppStringsProvider.current().webViewPackage, webViewInfo.packageName)
             } else {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
@@ -391,13 +391,13 @@ private fun CurrentWebViewCard(
             ) {
                 Icon(Icons.Outlined.Settings, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.changeWebViewProvider)
+                Text(AppStringsProvider.current().changeWebViewProvider)
             }
             
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                Strings.changeWebViewProviderDesc,
+                AppStringsProvider.current().changeWebViewProviderDesc,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
@@ -513,7 +513,7 @@ private fun EngineCard(
                                 color = MaterialTheme.colorScheme.secondaryContainer
                             ) {
                                 Text(
-                                    Strings.engineDefault,
+                                    AppStringsProvider.current().engineDefault,
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -561,9 +561,9 @@ private fun GeckoViewEngineCard(
     onRetry: () -> Unit
 ) {
     val statusText = when (status) {
-        is EngineStatus.READY -> Strings.engineReady
-        is EngineStatus.DOWNLOADED -> Strings.engineDownloaded
-        is EngineStatus.NOT_DOWNLOADED -> Strings.engineNotDownloaded
+        is EngineStatus.READY -> AppStringsProvider.current().engineReady
+        is EngineStatus.DOWNLOADED -> AppStringsProvider.current().engineDownloaded
+        is EngineStatus.NOT_DOWNLOADED -> AppStringsProvider.current().engineNotDownloaded
     }
     val statusColor = when (status) {
         is EngineStatus.READY -> MaterialTheme.colorScheme.primary
@@ -572,10 +572,10 @@ private fun GeckoViewEngineCard(
     }
     
     EngineCard(
-        name = Strings.engineGeckoView,
-        description = Strings.engineGeckoViewDesc,
+        name = AppStringsProvider.current().engineGeckoView,
+        description = AppStringsProvider.current().engineGeckoViewDesc,
         icon = Icons.Outlined.LocalFireDepartment,
-        statusText = if (downloadState is DownloadState.Downloading) Strings.engineDownloading else statusText,
+        statusText = if (downloadState is DownloadState.Downloading) AppStringsProvider.current().engineDownloading else statusText,
         statusColor = if (downloadState is DownloadState.Downloading) MaterialTheme.colorScheme.tertiary else statusColor,
         isDefault = false
     ) {
@@ -605,7 +605,7 @@ private fun GeckoViewEngineCard(
                         onClick = onCancel,
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                     ) {
-                        Text(Strings.engineCancelDownload, style = MaterialTheme.typography.labelSmall)
+                        Text(AppStringsProvider.current().engineCancelDownload, style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
@@ -639,7 +639,7 @@ private fun GeckoViewEngineCard(
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                     TextButton(onClick = onRetry) {
-                        Text(Strings.engineRetry)
+                        Text(AppStringsProvider.current().engineRetry)
                     }
                 }
             }
@@ -653,13 +653,13 @@ private fun GeckoViewEngineCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "${Strings.engineVersionLabel}: ${status.version}",
+                    "${AppStringsProvider.current().engineVersionLabel}: ${status.version}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (diskSize > 0) {
                     Text(
-                        "${Strings.engineCurrentSize}: ${formatFileSize(diskSize)}",
+                        "${AppStringsProvider.current().engineCurrentSize}: ${formatFileSize(diskSize)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -683,12 +683,12 @@ private fun GeckoViewEngineCard(
                     ) {
                         Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.engineDeleteBtn, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().engineDeleteBtn, style = MaterialTheme.typography.labelMedium)
                     }
                 } else if (status is EngineStatus.NOT_DOWNLOADED) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "${Strings.engineEstimatedSize}: ~${EngineType.GECKOVIEW.estimatedSizeMb} MB",
+                            "${AppStringsProvider.current().engineEstimatedSize}: ~${EngineType.GECKOVIEW.estimatedSizeMb} MB",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -696,7 +696,7 @@ private fun GeckoViewEngineCard(
                         FilledTonalButton(onClick = onDownload) {
                             Icon(Icons.Outlined.Download, null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.engineDownloadBtn, style = MaterialTheme.typography.labelMedium)
+                            Text(AppStringsProvider.current().engineDownloadBtn, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -777,7 +777,7 @@ private fun InstalledBrowserCard(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                Strings.currentlyUsing,
+                                AppStringsProvider.current().currentlyUsing,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -793,7 +793,7 @@ private fun InstalledBrowserCard(
                 )
                 if (browser.canBeWebViewProvider) {
                     Text(
-                        Strings.canBeWebViewProvider,
+                        AppStringsProvider.current().canBeWebViewProvider,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -868,7 +868,7 @@ private fun RecommendedBrowserCard(
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Text(
-                        Strings.installed,
+                        AppStringsProvider.current().installed,
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -887,7 +887,7 @@ private fun RecommendedBrowserCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.download, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().download, style = MaterialTheme.typography.labelMedium)
                     }
                     
                     // Web pagedownloadbutton( if download)
@@ -899,7 +899,7 @@ private fun RecommendedBrowserCard(
                         ) {
                             Icon(
                                 Icons.Outlined.Language,
-                                contentDescription = Strings.openInBrowser,
+                                contentDescription = AppStringsProvider.current().openInBrowser,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -934,7 +934,7 @@ private fun HelpCard() {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    Strings.howToEnableDeveloperOptions,
+                    AppStringsProvider.current().howToEnableDeveloperOptions,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -944,7 +944,7 @@ private fun HelpCard() {
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                Strings.developerOptionsSteps,
+                AppStringsProvider.current().developerOptionsSteps,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )
@@ -952,7 +952,7 @@ private fun HelpCard() {
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                Strings.webViewNote,
+                AppStringsProvider.current().webViewNote,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
             )
@@ -1018,12 +1018,12 @@ private fun ShieldsSettingsCard(
                 
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        Strings.shieldsMasterSwitch,
+                        AppStringsProvider.current().shieldsMasterSwitch,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        if (config.enabled) Strings.shieldsEnabledWithRules.replace("%d", trackerRuleCount.toString()) else Strings.shieldsDisabled,
+                        if (config.enabled) AppStringsProvider.current().shieldsEnabledWithRules.replace("%d", trackerRuleCount.toString()) else AppStringsProvider.current().shieldsDisabled,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1049,8 +1049,8 @@ private fun ShieldsSettingsCard(
                             .padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        ShieldStatItem(Strings.shieldsStatAds, sessionStats.totalAdsBlocked)
-                        ShieldStatItem(Strings.shieldsStatTrackers, sessionStats.totalTrackersBlocked)
+                        ShieldStatItem(AppStringsProvider.current().shieldsStatAds, sessionStats.totalAdsBlocked)
+                        ShieldStatItem(AppStringsProvider.current().shieldsStatTrackers, sessionStats.totalTrackersBlocked)
                         ShieldStatItem("HTTPS↑", sessionStats.totalHttpsUpgrades)
                         ShieldStatItem("Cookie", sessionStats.totalCookieConsentsBlocked)
                     }
@@ -1064,7 +1064,7 @@ private fun ShieldsSettingsCard(
                     onClick = onExpandToggle,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (expanded) Strings.shieldsCollapseSettings else Strings.shieldsExpandSettings)
+                    Text(if (expanded) AppStringsProvider.current().shieldsCollapseSettings else AppStringsProvider.current().shieldsExpandSettings)
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -1080,7 +1080,7 @@ private fun ShieldsSettingsCard(
                         // HTTPS
                         ShieldToggleRow(
                             title = "HTTPS Everywhere",
-                            subtitle = Strings.shieldsHttpsUpgradeDesc,
+                            subtitle = AppStringsProvider.current().shieldsHttpsUpgradeDesc,
                             icon = Icons.Outlined.Lock,
                             checked = config.httpsUpgrade,
                             onCheckedChange = onToggleHttpsUpgrade
@@ -1088,7 +1088,7 @@ private fun ShieldsSettingsCard(
 
                         // SSL errorhandle
                         ShieldPolicySelector(
-                            title = Strings.sslErrorPolicyTitle,
+                            title = AppStringsProvider.current().sslErrorPolicyTitle,
                             currentValue = config.sslErrorPolicy.displayName,
                             options = SslErrorPolicy.entries.map { it.displayName },
                             onSelect = { index ->
@@ -1098,8 +1098,8 @@ private fun ShieldsSettingsCard(
 
                         // intercept
                         ShieldToggleRow(
-                            title = Strings.shieldsTrackerBlocking,
-                            subtitle = Strings.shieldsTrackerBlockingDesc,
+                            title = AppStringsProvider.current().shieldsTrackerBlocking,
+                            subtitle = AppStringsProvider.current().shieldsTrackerBlockingDesc,
                             icon = Icons.Outlined.RemoveCircleOutline,
                             checked = config.trackerBlocking,
                             onCheckedChange = onToggleTrackerBlocking
@@ -1107,8 +1107,8 @@ private fun ShieldsSettingsCard(
                         
                         // Cookie dialog close
                         ShieldToggleRow(
-                            title = Strings.shieldsCookiePopup,
-                            subtitle = Strings.shieldsCookiePopupDesc,
+                            title = AppStringsProvider.current().shieldsCookiePopup,
+                            subtitle = AppStringsProvider.current().shieldsCookiePopupDesc,
                             icon = Icons.Outlined.DoNotDisturbOn,
                             checked = config.cookieConsentBlock,
                             onCheckedChange = onToggleCookieConsent
@@ -1117,7 +1117,7 @@ private fun ShieldsSettingsCard(
                         // GPC
                         ShieldToggleRow(
                             title = "Global Privacy Control",
-                            subtitle = Strings.shieldsGpcDesc,
+                            subtitle = AppStringsProvider.current().shieldsGpcDesc,
                             icon = Icons.Outlined.PrivacyTip,
                             checked = config.gpcEnabled,
                             onCheckedChange = onToggleGpc
@@ -1125,8 +1125,8 @@ private fun ShieldsSettingsCard(
                         
                         // mode
                         ShieldToggleRow(
-                            title = Strings.shieldsReaderMode,
-                            subtitle = Strings.shieldsReaderModeDesc,
+                            title = AppStringsProvider.current().shieldsReaderMode,
+                            subtitle = AppStringsProvider.current().shieldsReaderModeDesc,
                             icon = Icons.Outlined.AutoStories,
                             checked = config.readerModeEnabled,
                             onCheckedChange = onToggleReaderMode
@@ -1136,7 +1136,7 @@ private fun ShieldsSettingsCard(
                         
                         // Cookie
                         ShieldPolicySelector(
-                            title = Strings.shieldsThirdPartyCookiePolicy,
+                            title = AppStringsProvider.current().shieldsThirdPartyCookiePolicy,
                             currentValue = config.thirdPartyCookiePolicy.displayName,
                             options = ThirdPartyCookiePolicy.entries.map { it.displayName },
                             onSelect = { index ->
@@ -1148,7 +1148,7 @@ private fun ShieldsSettingsCard(
                         
                         // Referrer
                         ShieldPolicySelector(
-                            title = Strings.shieldsReferrerPolicy,
+                            title = AppStringsProvider.current().shieldsReferrerPolicy,
                             currentValue = config.referrerPolicy.displayName,
                             options = ShieldsReferrerPolicy.entries.map { it.displayName },
                             onSelect = { index ->
@@ -1350,7 +1350,7 @@ private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     RecommendedBrowser(
         name = "Google Chrome",
         packageName = "com.android.chrome",
-        description = Strings.browserChromeDesc,
+        description = AppStringsProvider.current().browserChromeDesc,
         downloadUrl = "market://details?id=com.android.chrome",
         icon = Icons.Outlined.Language,
         brandColor = androidx.compose.ui.graphics.Color(0xFF4285F4)
@@ -1358,7 +1358,7 @@ private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     RecommendedBrowser(
         name = "Microsoft Edge",
         packageName = "com.microsoft.emmx",
-        description = Strings.browserEdgeDesc,
+        description = AppStringsProvider.current().browserEdgeDesc,
         downloadUrl = "market://details?id=com.microsoft.emmx",
         icon = Icons.Outlined.Explore,
         brandColor = androidx.compose.ui.graphics.Color(0xFF0078D4)
@@ -1366,7 +1366,7 @@ private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     RecommendedBrowser(
         name = "Mozilla Firefox",
         packageName = "org.mozilla.firefox",
-        description = Strings.browserFirefoxDesc,
+        description = AppStringsProvider.current().browserFirefoxDesc,
         downloadUrl = "market://details?id=org.mozilla.firefox",
         icon = Icons.Outlined.LocalFireDepartment,
         brandColor = androidx.compose.ui.graphics.Color(0xFFFF7139)
@@ -1374,7 +1374,7 @@ private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     RecommendedBrowser(
         name = "Brave",
         packageName = "com.brave.browser",
-        description = Strings.browserBraveDesc,
+        description = AppStringsProvider.current().browserBraveDesc,
         downloadUrl = "market://details?id=com.brave.browser",
         icon = Icons.Outlined.Shield,
         brandColor = androidx.compose.ui.graphics.Color(0xFFFB542B)
@@ -1382,7 +1382,7 @@ private fun getRecommendedBrowsers(): List<RecommendedBrowser> = listOf(
     RecommendedBrowser(
         name = "Via Browser",
         packageName = "mark.via.gp",
-        description = Strings.browserViaDesc,
+        description = AppStringsProvider.current().browserViaDesc,
         downloadUrl = "market://details?id=mark.via.gp",
         icon = Icons.Outlined.Speed,
         brandColor = androidx.compose.ui.graphics.Color(0xFF5C6BC0)

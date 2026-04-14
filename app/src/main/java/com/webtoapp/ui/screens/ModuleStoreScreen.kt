@@ -30,7 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.StoreModuleInfo
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard

@@ -2,12 +2,15 @@ package com.webtoapp
 
 import android.app.Application
 import android.content.ComponentCallbacks2
+import com.webtoapp.core.i18n.AppStringsProvider
+import com.webtoapp.core.i18n.LanguageManager
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.startup.AppStartupManager
 import com.webtoapp.di.appModules
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -24,6 +27,7 @@ class WebToAppApplication : Application() {
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val startupManager: AppStartupManager by inject()
+    private val languageManager: LanguageManager by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -34,6 +38,7 @@ class WebToAppApplication : Application() {
                 androidContext(this@WebToAppApplication)
                 modules(appModules)
             }
+            AppStringsProvider.initialize(runBlocking { languageManager.getCurrentLanguage() })
             startupManager.initialize(appScope)
         } else {
             AppLogger.w("WebToAppApplication", "Koin already started, skip duplicate application initialization")

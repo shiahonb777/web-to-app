@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.IconLibraryItem
 import com.webtoapp.util.IconLibraryStorage
 import kotlinx.coroutines.launch
@@ -77,17 +77,17 @@ fun IconLibraryDialog(
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.iconLibrary, style = MaterialTheme.typography.headlineSmall)
+                        Text(AppStringsProvider.current().iconLibrary, style = MaterialTheme.typography.headlineSmall)
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, Strings.closeDialog)
+                        Icon(Icons.Default.Close, AppStringsProvider.current().closeDialog)
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    Strings.selectIconOrGenerate,
+                    AppStringsProvider.current().selectIconOrGenerate,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -117,11 +117,11 @@ fun IconLibraryDialog(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.aiGenerateIcon,
+                                AppStringsProvider.current().aiGenerateIcon,
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Text(
-                                Strings.useAiToGenerateIcon,
+                                AppStringsProvider.current().useAiToGenerateIcon,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -153,13 +153,13 @@ fun IconLibraryDialog(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                Strings.iconLibraryEmpty,
+                                AppStringsProvider.current().iconLibraryEmpty,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                Strings.iconLibraryEmptyHint,
+                                AppStringsProvider.current().iconLibraryEmptyHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -167,7 +167,7 @@ fun IconLibraryDialog(
                     }
                 } else {
                     Text(
-                        "${Strings.savedIcons} (${icons.size})",
+                        "${AppStringsProvider.current().savedIcons} (${icons.size})",
                         style = MaterialTheme.typography.labelMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -202,7 +202,7 @@ fun IconLibraryDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                 }
             }
@@ -268,7 +268,7 @@ private fun IconGridItem(
         ) {
             Icon(
                 Icons.Default.Close,
-                Strings.deleteAction,
+                AppStringsProvider.current().deleteAction,
                 modifier = Modifier.size(14.dp),
                 tint = MaterialTheme.colorScheme.error
             )
@@ -279,8 +279,8 @@ private fun IconGridItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(Strings.deleteIcon) },
-            text = { Text(Strings.deleteIconConfirm) },
+            title = { Text(AppStringsProvider.current().deleteIcon) },
+            text = { Text(AppStringsProvider.current().deleteIconConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -288,12 +288,12 @@ private fun IconGridItem(
                         showDeleteConfirm = false
                     }
                 ) {
-                    Text(Strings.deleteAction, color = MaterialTheme.colorScheme.error)
+                    Text(AppStringsProvider.current().deleteAction, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )

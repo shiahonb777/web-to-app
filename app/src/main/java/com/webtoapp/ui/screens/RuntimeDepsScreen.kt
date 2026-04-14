@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.download.DependencyDownloadEngine
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.golang.GoDependencyManager
 import com.webtoapp.core.nodejs.NodeDependencyManager
 import com.webtoapp.core.python.PythonDependencyManager
@@ -214,8 +214,8 @@ fun RuntimeDepsScreen(
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             icon = { Icon(Icons.Outlined.DeleteSweep, null) },
-            title = { Text(Strings.depClearAll) },
-            text = { Text(Strings.depClearConfirm) },
+            title = { Text(AppStringsProvider.current().depClearAll) },
+            text = { Text(AppStringsProvider.current().depClearConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -238,17 +238,17 @@ fun RuntimeDepsScreen(
                             sqliteReady = false
                             nodeReady = false
                             pythonReady = false
-                            snackbarHostState.showSnackbar(Strings.depClearDone)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().depClearDone)
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text(Strings.btnConfirm) }
+                ) { Text(AppStringsProvider.current().btnConfirm) }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -261,11 +261,11 @@ fun RuntimeDepsScreen(
                 title = {
                     Column {
                         Text(
-                            Strings.runtimeDepsTitle,
+                            AppStringsProvider.current().runtimeDepsTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            Strings.runtimeDepsSubtitle,
+                            AppStringsProvider.current().runtimeDepsSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -273,7 +273,7 @@ fun RuntimeDepsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -315,7 +315,7 @@ fun RuntimeDepsScreen(
             // ============ 2. run ============
             SectionHeader(
                 icon = Icons.Outlined.Memory,
-                title = Strings.depSectionRuntimes
+                title = AppStringsProvider.current().depSectionRuntimes
             )
             
             // unifieddownload WordPress( PHP/WP/SQLite)
@@ -339,8 +339,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Code,
                 iconColor = Color(0xFF777BB3),
-                title = Strings.depPhpRuntime,
-                description = Strings.depPhpDesc,
+                title = AppStringsProvider.current().depPhpRuntime,
+                description = AppStringsProvider.current().depPhpDesc,
                 isReady = phpReady,
                 onInstall = installWpDeps
             )
@@ -349,8 +349,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Language,
                 iconColor = Color(0xFF21759B),
-                title = Strings.depWpCore,
-                description = Strings.depWpCoreDesc,
+                title = AppStringsProvider.current().depWpCore,
+                description = AppStringsProvider.current().depWpCoreDesc,
                 isReady = wpReady,
                 onInstall = installWpDeps
             )
@@ -359,8 +359,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Javascript,
                 iconColor = Color(0xFF68A063),
-                title = Strings.depNodeRuntime,
-                description = Strings.depNodeDesc,
+                title = AppStringsProvider.current().depNodeRuntime,
+                description = AppStringsProvider.current().depNodeDesc,
                 isReady = nodeReady,
                 onInstall = {
                     scope.launch {
@@ -379,8 +379,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Terminal,
                 iconColor = Color(0xFF3776AB),
-                title = Strings.depPythonRuntime,
-                description = Strings.depPythonDesc,
+                title = AppStringsProvider.current().depPythonRuntime,
+                description = AppStringsProvider.current().depPythonDesc,
                 isReady = pythonReady,
                 onInstall = {
                     scope.launch {
@@ -399,8 +399,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.RocketLaunch,
                 iconColor = Color(0xFF00ADD8),
-                title = Strings.depGoInfo,
-                description = Strings.depGoDesc,
+                title = AppStringsProvider.current().depGoInfo,
+                description = AppStringsProvider.current().depGoDesc,
                 isReady = true,
                 onInstall = {}
             )
@@ -408,15 +408,15 @@ fun RuntimeDepsScreen(
             // ============ run ============
             SectionHeader(
                 icon = Icons.Outlined.Extension,
-                title = Strings.depSectionRuntimePlugins
+                title = AppStringsProvider.current().depSectionRuntimePlugins
             )
 
             // SQLite Plugin( , callunified)
             RuntimeItemCard(
                 icon = Icons.Outlined.Storage,
                 iconColor = Color(0xFF003B57),
-                title = Strings.depSqlitePlugin,
-                description = Strings.depSqliteDesc,
+                title = AppStringsProvider.current().depSqlitePlugin,
+                description = AppStringsProvider.current().depSqliteDesc,
                 isReady = sqliteReady,
                 onInstall = installWpDeps
             )
@@ -424,23 +424,23 @@ fun RuntimeDepsScreen(
             // ============ 3. itemfile ============
             SectionHeader(
                 icon = Icons.Outlined.Folder,
-                title = Strings.depSectionProjects
+                title = AppStringsProvider.current().depSectionProjects
             )
             
             ProjectFilesCard(
                 items = listOf(
-                    ProjectEntry(Strings.depWpProjects, wpProjectCount, Color(0xFF21759B)),
-                    ProjectEntry(Strings.depNodeProjects, nodeProjectCount, Color(0xFF68A063)),
-                    ProjectEntry(Strings.depPythonProjects, pythonProjectCount, Color(0xFF3776AB)),
-                    ProjectEntry(Strings.depGoProjects, goProjectCount, Color(0xFF00ADD8)),
-                    ProjectEntry(Strings.depDocsProjects, docsProjectCount, Color(0xFFE97627))
+                    ProjectEntry(AppStringsProvider.current().depWpProjects, wpProjectCount, Color(0xFF21759B)),
+                    ProjectEntry(AppStringsProvider.current().depNodeProjects, nodeProjectCount, Color(0xFF68A063)),
+                    ProjectEntry(AppStringsProvider.current().depPythonProjects, pythonProjectCount, Color(0xFF3776AB)),
+                    ProjectEntry(AppStringsProvider.current().depGoProjects, goProjectCount, Color(0xFF00ADD8)),
+                    ProjectEntry(AppStringsProvider.current().depDocsProjects, docsProjectCount, Color(0xFFE97627))
                 )
             )
             
             // ============ 4. & download ============
             SectionHeader(
                 icon = Icons.Outlined.CloudDownload,
-                title = Strings.depSectionDownload
+                title = AppStringsProvider.current().depSectionDownload
             )
             
             MirrorAndDownloadCard(
@@ -491,7 +491,7 @@ fun RuntimeDepsScreen(
                         }
                         isDownloading = false
                         if (wpSuccess && nodeSuccess && pythonSuccess) {
-                            snackbarHostState.showSnackbar(Strings.depAllReady)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().depAllReady)
                         }
                     }
                 }
@@ -500,7 +500,7 @@ fun RuntimeDepsScreen(
             // ============ 5. ============
             SectionHeader(
                 icon = Icons.Outlined.PieChart,
-                title = Strings.depSectionStorage
+                title = AppStringsProvider.current().depSectionStorage
             )
             
             StorageCard(
@@ -642,7 +642,7 @@ private fun StatusOverviewCard(
                     
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = if (allReady) Strings.depAllReady else Strings.depSomeNotReady,
+                            text = if (allReady) AppStringsProvider.current().depAllReady else AppStringsProvider.current().depSomeNotReady,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold
@@ -664,7 +664,7 @@ private fun StatusOverviewCard(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = Strings.depTotalStorage,
+                            text = AppStringsProvider.current().depTotalStorage,
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.75f)
                         )
@@ -682,7 +682,7 @@ private fun StatusOverviewCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (isPaused) "${Strings.depDlPaused} · $downloadLabel" else downloadLabel,
+                                text = if (isPaused) "${AppStringsProvider.current().depDlPaused} · $downloadLabel" else downloadLabel,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.9f),
                                 modifier = Modifier.weight(weight = 1f, fill = true)
@@ -693,7 +693,7 @@ private fun StatusOverviewCard(
                             ) {
                                 Icon(
                                     imageVector = if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-                                    contentDescription = if (isPaused) Strings.depDlResume else Strings.depDlPause,
+                                    contentDescription = if (isPaused) AppStringsProvider.current().depDlResume else AppStringsProvider.current().depDlPause,
                                     tint = Color.White,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -735,7 +735,7 @@ private fun StatusOverviewCard(
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
                                 Text(
-                                    text = "${Strings.depDlEta} ${DependencyDownloadEngine.formatEta(dlState.etaSeconds)}",
+                                    text = "${AppStringsProvider.current().depDlEta} ${DependencyDownloadEngine.formatEta(dlState.etaSeconds)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
@@ -743,7 +743,7 @@ private fun StatusOverviewCard(
                             // + download
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${Strings.depDlStartTime} ${DependencyDownloadEngine.formatTime(dlState.startTimeMillis)}",
+                                text = "${AppStringsProvider.current().depDlStartTime} ${DependencyDownloadEngine.formatTime(dlState.startTimeMillis)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.65f)
                             )
@@ -757,7 +757,7 @@ private fun StatusOverviewCard(
                         } else if (dlState is DependencyDownloadEngine.State.Paused) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "${DependencyDownloadEngine.formatSize(dlState.bytesDownloaded)} / ${DependencyDownloadEngine.formatSize(dlState.totalBytes)} · ${Strings.depDlPaused}",
+                                text = "${DependencyDownloadEngine.formatSize(dlState.bytesDownloaded)} / ${DependencyDownloadEngine.formatSize(dlState.totalBytes)} · ${AppStringsProvider.current().depDlPaused}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
@@ -891,7 +891,7 @@ private fun RuntimeItemCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            Strings.depStatusReady,
+                            AppStringsProvider.current().depStatusReady,
                             style = MaterialTheme.typography.labelSmall,
                             color = AppColors.Success,
                             fontWeight = FontWeight.Medium
@@ -912,7 +912,7 @@ private fun RuntimeItemCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        Strings.depInstall,
+                        AppStringsProvider.current().depInstall,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
@@ -922,7 +922,7 @@ private fun RuntimeItemCard(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                 ) {
                     Text(
-                        Strings.depStatusNotInstalled,
+                        AppStringsProvider.current().depStatusNotInstalled,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
@@ -976,7 +976,7 @@ private fun ProjectFilesCard(items: List<ProjectEntry>) {
                     )
                     
                     Text(
-                        text = Strings.depProjectCount(entry.count),
+                        text = AppStringsProvider.current().depProjectCount(entry.count),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (entry.count > 0) {
                             MaterialTheme.colorScheme.onSurface
@@ -1020,13 +1020,13 @@ private fun MirrorAndDownloadCard(
         Column(modifier = Modifier.padding(16.dp)) {
             // Note
             Text(
-                text = Strings.depMirrorSource,
+                text = AppStringsProvider.current().depMirrorSource,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = Strings.depMirrorDesc,
+                text = AppStringsProvider.current().depMirrorDesc,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1043,7 +1043,7 @@ private fun MirrorAndDownloadCard(
                 PremiumFilterChip(
                     selected = currentRegion == WordPressDependencyManager.MirrorRegion.CN,
                     onClick = { onWpMirrorChange("cn") },
-                    label = { Text(Strings.depMirrorCN) },
+                    label = { Text(AppStringsProvider.current().depMirrorCN) },
                     leadingIcon = if (currentRegion == WordPressDependencyManager.MirrorRegion.CN) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -1051,7 +1051,7 @@ private fun MirrorAndDownloadCard(
                 PremiumFilterChip(
                     selected = currentRegion == WordPressDependencyManager.MirrorRegion.GLOBAL,
                     onClick = { onWpMirrorChange("global") },
-                    label = { Text(Strings.depMirrorGlobal) },
+                    label = { Text(AppStringsProvider.current().depMirrorGlobal) },
                     leadingIcon = if (currentRegion == WordPressDependencyManager.MirrorRegion.GLOBAL) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -1060,7 +1060,7 @@ private fun MirrorAndDownloadCard(
                     selected = currentRegion != WordPressDependencyManager.MirrorRegion.CN
                             && currentRegion != WordPressDependencyManager.MirrorRegion.GLOBAL,
                     onClick = { onWpMirrorChange("auto") },
-                    label = { Text(Strings.depMirrorAuto) }
+                    label = { Text(AppStringsProvider.current().depMirrorAuto) }
                 )
             }
             
@@ -1084,16 +1084,16 @@ private fun MirrorAndDownloadCard(
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.depStatusDownloading)
+                        Text(AppStringsProvider.current().depStatusDownloading)
                     } else {
                         Icon(Icons.Outlined.CloudDownload, null, Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.depDownloadAll)
+                        Text(AppStringsProvider.current().depDownloadAll)
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = Strings.depDownloadAllDesc,
+                    text = AppStringsProvider.current().depDownloadAllDesc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp)
@@ -1146,7 +1146,7 @@ private fun StorageCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = Strings.depTotalStorage,
+                    text = AppStringsProvider.current().depTotalStorage,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -1231,7 +1231,7 @@ private fun StorageCard(
                     enabled = wpCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearWpCache,
+                        AppStringsProvider.current().depClearWpCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1244,7 +1244,7 @@ private fun StorageCard(
                     enabled = nodeCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearNodeCache,
+                        AppStringsProvider.current().depClearNodeCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1257,7 +1257,7 @@ private fun StorageCard(
                     enabled = phpCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearPhpCache,
+                        AppStringsProvider.current().depClearPhpCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1279,7 +1279,7 @@ private fun StorageCard(
                     enabled = pythonCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearPythonCache,
+                        AppStringsProvider.current().depClearPythonCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1292,7 +1292,7 @@ private fun StorageCard(
                     enabled = goCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearGoCache,
+                        AppStringsProvider.current().depClearGoCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1305,7 +1305,7 @@ private fun StorageCard(
                     enabled = sqliteCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearSqliteCache,
+                        AppStringsProvider.current().depClearSqliteCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1326,7 +1326,7 @@ private fun StorageCard(
             ) {
                 Icon(Icons.Outlined.DeleteSweep, null, Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.depClearAll)
+                Text(AppStringsProvider.current().depClearAll)
             }
         }
     }

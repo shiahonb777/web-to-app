@@ -14,7 +14,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.webkit.JavascriptInterface
 import android.widget.Toast
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.MediaSaver
 import com.webtoapp.util.getUrlScheme
 import com.webtoapp.util.isAllowedUrlScheme
@@ -398,15 +398,15 @@ if (NativeBridge.isFullscreen()) {
                 })
             } catch (e: Exception) {
                 AppLogger.e("NativeBridge", "Share failed", e)
-                Toast.makeText(context, Strings.shareFailed, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().shareFailed, Toast.LENGTH_SHORT).show()
             }
         }
     }
     
     @JavascriptInterface
-    fun shareImage(imageUrl: String, title: String = Strings.shareImage) {
+    fun shareImage(imageUrl: String, title: String = AppStringsProvider.current().shareImage) {
         scope.launch(Dispatchers.Main) {
-            Toast.makeText(context, Strings.preparingShare, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().preparingShare, Toast.LENGTH_SHORT).show()
         }
         // Image分享需要先下载，这里简化处理
         share(title, imageUrl)
@@ -424,13 +424,13 @@ if (NativeBridge.isFullscreen()) {
                 val safeUrl = normalizeExternalIntentUrl(url)
                 if (safeUrl.isEmpty()) {
                     AppLogger.w("NativeBridge", "Blocked invalid or dangerous URL in openUrl: $url")
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     return@launch
                 }
                 val scheme = getUrlScheme(safeUrl)
                 if (!isAllowedUrlScheme(safeUrl, ALLOWED_SCHEMES)) {
                     AppLogger.w("NativeBridge", "Blocked openUrl with disallowed scheme: $scheme")
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     return@launch
                 }
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(safeUrl)).apply {
@@ -439,7 +439,7 @@ if (NativeBridge.isFullscreen()) {
                 context.startActivity(intent)
             } catch (e: Exception) {
                 AppLogger.e("NativeBridge", "打开链接失败", e)
-                Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -469,7 +469,7 @@ if (NativeBridge.isFullscreen()) {
         
         scope.launch {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, Strings.savingImage, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().savingImage, Toast.LENGTH_SHORT).show()
             }
             
             val result = MediaSaver.saveFromUrl(context, imageUrl, finalFilename, "image/jpeg")
@@ -477,10 +477,10 @@ if (NativeBridge.isFullscreen()) {
             withContext(Dispatchers.Main) {
                 when (result) {
                     is MediaSaver.SaveResult.Success -> {
-                        Toast.makeText(context, Strings.imageSavedToGallery, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().imageSavedToGallery, Toast.LENGTH_SHORT).show()
                     }
                     is MediaSaver.SaveResult.Error -> {
-                        Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -493,7 +493,7 @@ if (NativeBridge.isFullscreen()) {
         
         scope.launch {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, Strings.savingVideo, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().savingVideo, Toast.LENGTH_SHORT).show()
             }
             
             val result = MediaSaver.saveFromUrl(context, videoUrl, finalFilename, "video/mp4")
@@ -501,10 +501,10 @@ if (NativeBridge.isFullscreen()) {
             withContext(Dispatchers.Main) {
                 when (result) {
                     is MediaSaver.SaveResult.Success -> {
-                        Toast.makeText(context, Strings.videoSavedToGallery, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().videoSavedToGallery, Toast.LENGTH_SHORT).show()
                     }
                     is MediaSaver.SaveResult.Error -> {
-                        Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -595,7 +595,7 @@ if (NativeBridge.isFullscreen()) {
             } catch (e: Exception) {
                 AppLogger.e("NativeBridge", "保存文件失败", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, Strings.saveFailed, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().saveFailed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -701,7 +701,7 @@ if (NativeBridge.isFullscreen()) {
     fun downloadVideo(url: String, filename: String) {
         scope.launch {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, Strings.startDownload.replace("%s", filename), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().startDownload.replace("%s", filename), Toast.LENGTH_SHORT).show()
             }
             
             try {
@@ -709,17 +709,17 @@ if (NativeBridge.isFullscreen()) {
                 withContext(Dispatchers.Main) {
                     when (result) {
                         is MediaSaver.SaveResult.Success -> {
-                            Toast.makeText(context, Strings.downloadComplete.replace("%s", filename), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().downloadComplete.replace("%s", filename), Toast.LENGTH_SHORT).show()
                         }
                         is MediaSaver.SaveResult.Error -> {
-                            Toast.makeText(context, Strings.downloadFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().downloadFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } catch (e: Exception) {
                 AppLogger.e("NativeBridge", "下载视频失败", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, Strings.downloadFailed, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().downloadFailed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -735,7 +735,7 @@ if (NativeBridge.isFullscreen()) {
     fun downloadWithHeaders(url: String, filename: String, headersJson: String) {
         scope.launch {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, Strings.startDownload.replace("%s", filename), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().startDownload.replace("%s", filename), Toast.LENGTH_SHORT).show()
             }
             
             try {
@@ -755,17 +755,17 @@ if (NativeBridge.isFullscreen()) {
                 withContext(Dispatchers.Main) {
                     when (result) {
                         is MediaSaver.SaveResult.Success -> {
-                            Toast.makeText(context, Strings.downloadComplete.replace("%s", filename), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().downloadComplete.replace("%s", filename), Toast.LENGTH_SHORT).show()
                         }
                         is MediaSaver.SaveResult.Error -> {
-                            Toast.makeText(context, Strings.downloadFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().downloadFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } catch (e: Exception) {
                 AppLogger.e("NativeBridge", "Download failed", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, Strings.downloadFailed, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().downloadFailed, Toast.LENGTH_SHORT).show()
                 }
             }
         }

@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.disguise.DisguiseConfig
 import com.webtoapp.core.disguise.DisguiseConfig.IconStormMode
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * app configcard v2. 0
@@ -111,19 +111,19 @@ fun DisguiseConfigCard(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                         Text(
-                            Strings.disguiseMultiIconTitle,
+                            AppStringsProvider.current().disguiseMultiIconTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (enabled && multiLauncherIcons > 1) {
                             Text(
-                                "${multiLauncherIcons} ${Strings.iconStormIcons} · ${Strings.iconStormImpactPrefix}${
+                                "${multiLauncherIcons} ${AppStringsProvider.current().iconStormIcons} · ${AppStringsProvider.current().iconStormImpactPrefix}${
                                     when (impactLevel) {
-                                        0 -> Strings.iconStormImpactNone
-                                        1 -> Strings.iconStormImpactLight
-                                        2 -> Strings.iconStormImpactMedium
-                                        3 -> Strings.iconStormImpactHeavy
-                                        4 -> Strings.iconStormImpactExtreme
-                                        else -> Strings.iconStormImpactDangerous
+                                        0 -> AppStringsProvider.current().iconStormImpactNone
+                                        1 -> AppStringsProvider.current().iconStormImpactLight
+                                        2 -> AppStringsProvider.current().iconStormImpactMedium
+                                        3 -> AppStringsProvider.current().iconStormImpactHeavy
+                                        4 -> AppStringsProvider.current().iconStormImpactExtreme
+                                        else -> AppStringsProvider.current().iconStormImpactDangerous
                                     }
                                 }",
                                 style = MaterialTheme.typography.bodySmall,
@@ -131,7 +131,7 @@ fun DisguiseConfigCard(
                             )
                         } else if (!enabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -154,11 +154,11 @@ fun DisguiseConfigCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.disguiseEnableMultiIcon,
+                                AppStringsProvider.current().disguiseEnableMultiIcon,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.disguiseEnableMultiIconDesc,
+                                AppStringsProvider.current().disguiseEnableMultiIconDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -183,7 +183,7 @@ fun DisguiseConfigCard(
                             
                             // ===== ICON STORM modeselect =====
                             Text(
-                                Strings.iconStormMode,
+                                AppStringsProvider.current().iconStormMode,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -254,12 +254,12 @@ fun DisguiseConfigCard(
                             
                             // ===== input( only Custom modeoradvancedmodedisplay) =====
                             Text(
-                                Strings.disguiseIconCountTitle,
+                                AppStringsProvider.current().disguiseIconCountTitle,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             Text(
-                                Strings.iconStormNoLimit,
+                                AppStringsProvider.current().iconStormNoLimit,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 8.dp)
@@ -271,7 +271,7 @@ fun DisguiseConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    Strings.disguiseCountLabel,
+                                    AppStringsProvider.current().disguiseCountLabel,
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.width(60.dp)
                                 )
@@ -295,7 +295,7 @@ fun DisguiseConfigCard(
                                     modifier = Modifier.weight(weight = 1f, fill = true),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
-                                    supportingText = { Text(Strings.iconStormUnlimited) }
+                                    supportingText = { Text(AppStringsProvider.current().iconStormUnlimited) }
                                 )
                             }
                             
@@ -318,11 +318,11 @@ fun DisguiseConfigCard(
                             ) {
                                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                     Text(
-                                        Strings.iconStormRandomNames,
+                                        AppStringsProvider.current().iconStormRandomNames,
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Text(
-                                        Strings.iconStormRandomNamesDesc,
+                                        AppStringsProvider.current().iconStormRandomNamesDesc,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -346,8 +346,8 @@ fun DisguiseConfigCard(
                                             updateConfig()
                                         },
                                         modifier = Modifier.fillMaxWidth(),
-                                        label = { Text(Strings.iconStormNamePrefix) },
-                                        supportingText = { Text(Strings.iconStormNamePrefixHint) },
+                                        label = { Text(AppStringsProvider.current().iconStormNamePrefix) },
+                                        supportingText = { Text(AppStringsProvider.current().iconStormNamePrefixHint) },
                                         singleLine = true
                                     )
                                 }
@@ -371,7 +371,7 @@ fun DisguiseConfigCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.iconStormTip,
+                                        AppStringsProvider.current().iconStormTip,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -398,7 +398,7 @@ fun DisguiseConfigCard(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                Strings.iconStormWarning,
+                                                AppStringsProvider.current().iconStormWarning,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = Color(0xFFE53935)
                                             )
@@ -492,7 +492,7 @@ private fun ImpactDashboard(
             ) {
                 Column {
                     Text(
-                        Strings.iconStormImpactAssessment,
+                        AppStringsProvider.current().iconStormImpactAssessment,
                         style = MaterialTheme.typography.labelMedium,
                         color = impactColor
                     )
@@ -527,7 +527,7 @@ private fun ImpactDashboard(
             ) {
                 Column {
                     Text(
-                        Strings.iconStormAliasCount,
+                        AppStringsProvider.current().iconStormAliasCount,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -540,7 +540,7 @@ private fun ImpactDashboard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        Strings.iconStormManifestOverhead,
+                        AppStringsProvider.current().iconStormManifestOverhead,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -557,12 +557,12 @@ private fun ImpactDashboard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 when (impactLevel) {
-                    0 -> Strings.iconStormEffectNone
-                    1 -> Strings.iconStormEffectLight
-                    2 -> Strings.iconStormEffectMedium
-                    3 -> Strings.iconStormEffectHeavy
-                    4 -> Strings.iconStormEffectExtreme
-                    else -> Strings.iconStormEffectDangerous
+                    0 -> AppStringsProvider.current().iconStormEffectNone
+                    1 -> AppStringsProvider.current().iconStormEffectLight
+                    2 -> AppStringsProvider.current().iconStormEffectMedium
+                    3 -> AppStringsProvider.current().iconStormEffectHeavy
+                    4 -> AppStringsProvider.current().iconStormEffectExtreme
+                    else -> AppStringsProvider.current().iconStormEffectDangerous
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = impactColor

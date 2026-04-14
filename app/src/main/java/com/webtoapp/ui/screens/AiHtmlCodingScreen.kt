@@ -33,7 +33,7 @@ import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.ai.AiGenerationService
 import com.webtoapp.core.ai.coding.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AiFeature
 import com.webtoapp.ui.components.coding.*
 import com.webtoapp.ui.codepreview.HtmlPreviewActivity
@@ -229,7 +229,7 @@ fun AiHtmlCodingScreen(
             
             // Check config
             if (config.textModelId == null) {
-                Toast.makeText(context, Strings.pleaseSelectTextModel, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().pleaseSelectTextModel, Toast.LENGTH_SHORT).show()
                 showConfigSheet = true
                 return@launch
             }
@@ -261,7 +261,7 @@ fun AiHtmlCodingScreen(
                 // Get
                 val textModel = savedModels.find { it.id == config.textModelId }
                 if (textModel == null) {
-                    throw Exception(Strings.modelConfigInvalid)
+                    throw Exception(AppStringsProvider.current().modelConfigInvalid)
                 }
                 
                 // SetcurrentHTML( foredit_html)
@@ -343,7 +343,7 @@ fun AiHtmlCodingScreen(
                                     }
                                     is HtmlAgentEvent.CodeDelta -> {
                                         if (shouldUpdateUI()) {
-                                            streamingContent = "${Strings.generatingCode}\n\n```html\n${event.accumulated}\n```"
+                                            streamingContent = "${AppStringsProvider.current().generatingCode}\n\n```html\n${event.accumulated}\n```"
                                         }
                                     }
                                     is HtmlAgentEvent.ToolExecuted -> {
@@ -351,7 +351,7 @@ fun AiHtmlCodingScreen(
                                         // if executefailed, displayerror( failed)
                                         if (!event.result.success && shouldUpdateUI()) {
                                             val toolError = when (event.result.toolName) {
-                                                "generate_image" -> "\uD83D\uDDBC\uFE0F ${Strings.imageGenerationFailed}: ${event.result.result}"
+                                                "generate_image" -> "\uD83D\uDDBC\uFE0F ${AppStringsProvider.current().imageGenerationFailed}: ${event.result.result}"
                                                 else -> "\u26A0\uFE0F ${event.result.toolName}: ${event.result.result}"
                                             }
                                             streamingContent = toolError
@@ -396,23 +396,23 @@ fun AiHtmlCodingScreen(
                                         // Show helpuser
                                         val messageContent = when {
                                             finalTextContent.isNotBlank() -> finalTextContent
-                                            codeBlocks.isNotEmpty() -> Strings.codeGenerated
+                                            codeBlocks.isNotEmpty() -> AppStringsProvider.current().codeGenerated
                                             else -> {
                                                 val debugInfo = buildString {
-                                                    appendLine(Strings.aiNoValidResponse)
+                                                    appendLine(AppStringsProvider.current().aiNoValidResponse)
                                                     appendLine()
-                                                    appendLine(Strings.debugInfo)
-                                                    appendLine("• ${Strings.textContent}: ${if (event.textContent.isBlank()) Strings.emptyText else "'${event.textContent.take(100)}...'"}")
-                                                    appendLine("• ${Strings.streamContent}: ${if (textContent.isBlank()) Strings.emptyText else "'${textContent.take(100)}...'"}")
-                                                    appendLine("• ${Strings.thinkingContent}: ${if (thinkingContent.isBlank()) Strings.emptyText else "'${thinkingContent.take(100)}...'"}")
-                                                    appendLine("• ${Strings.htmlCode}: ${if (finalHtmlContent == null) Strings.emptyText else "${finalHtmlContent!!.length}${Strings.characters}"}")
+                                                    appendLine(AppStringsProvider.current().debugInfo)
+                                                    appendLine("• ${AppStringsProvider.current().textContent}: ${if (event.textContent.isBlank()) AppStringsProvider.current().emptyText else "'${event.textContent.take(100)}...'"}")
+                                                    appendLine("• ${AppStringsProvider.current().streamContent}: ${if (textContent.isBlank()) AppStringsProvider.current().emptyText else "'${textContent.take(100)}...'"}")
+                                                    appendLine("• ${AppStringsProvider.current().thinkingContent}: ${if (thinkingContent.isBlank()) AppStringsProvider.current().emptyText else "'${thinkingContent.take(100)}...'"}")
+                                                    appendLine("• ${AppStringsProvider.current().htmlCode}: ${if (finalHtmlContent == null) AppStringsProvider.current().emptyText else "${finalHtmlContent!!.length}${AppStringsProvider.current().characters}"}")
                                                     appendLine()
-                                                    appendLine(Strings.possibleReasons)
-                                                    appendLine(Strings.apiFormatIncompatible)
-                                                    appendLine(Strings.modelNotSupported)
-                                                    appendLine(Strings.apiKeyQuotaInsufficient)
+                                                    appendLine(AppStringsProvider.current().possibleReasons)
+                                                    appendLine(AppStringsProvider.current().apiFormatIncompatible)
+                                                    appendLine(AppStringsProvider.current().modelNotSupported)
+                                                    appendLine(AppStringsProvider.current().apiKeyQuotaInsufficient)
                                                     appendLine()
-                                                    appendLine(Strings.suggestionChangeModel)
+                                                    appendLine(AppStringsProvider.current().suggestionChangeModel)
                                                 }
                                                 AppLogger.w("AiHtmlCodingScreen", debugInfo)
                                                 debugInfo
@@ -448,7 +448,7 @@ fun AiHtmlCodingScreen(
                                         
                                         storage.createConversationCheckpoint(
                                             sessionId = targetSessionId,
-                                            name = Strings.conversationCheckpoint.replace("%d", "${(finalSession?.messages?.size ?: 0) / 2}")
+                                            name = AppStringsProvider.current().conversationCheckpoint.replace("%d", "${(finalSession?.messages?.size ?: 0) / 2}")
                                         )
                                         
                                         // Cleanup state
@@ -484,7 +484,7 @@ fun AiHtmlCodingScreen(
                                         // maperrormessagesave session, user
                                         val errorMessage = AiCodingMessage(
                                             role = MessageRole.ASSISTANT,
-                                            content = "${Strings.errorPrefix}: ${event.message}",
+                                            content = "${AppStringsProvider.current().errorPrefix}: ${event.message}",
                                             thinking = null,
                                             codeBlocks = emptyList()
                                         )
@@ -538,8 +538,8 @@ fun AiHtmlCodingScreen(
                 context.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
                 
             } catch (e: Exception) {
-                chatState = ChatState.Error(e.message ?: Strings.sendFailed)
-                Toast.makeText(context, "${Strings.errorPrefix}: ${e.message}", Toast.LENGTH_LONG).show()
+                chatState = ChatState.Error(e.message ?: AppStringsProvider.current().sendFailed)
+                Toast.makeText(context, "${AppStringsProvider.current().errorPrefix}: ${e.message}", Toast.LENGTH_LONG).show()
                 chatState = ChatState.Idle
             }
         }
@@ -557,11 +557,11 @@ fun AiHtmlCodingScreen(
                 // StartpreviewActivity
                 val intent = Intent(context, HtmlPreviewActivity::class.java).apply {
                     putExtra(HtmlPreviewActivity.EXTRA_FILE_PATH, file.absolutePath)
-                    putExtra(HtmlPreviewActivity.EXTRA_TITLE, codeBlock.filename?.takeIf { it.isNotBlank() } ?: Strings.preview)
+                    putExtra(HtmlPreviewActivity.EXTRA_TITLE, codeBlock.filename?.takeIf { it.isNotBlank() } ?: AppStringsProvider.current().preview)
                 }
                 context.startActivity(intent)
             } catch (e: Exception) {
-                Toast.makeText(context, "${Strings.previewFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${AppStringsProvider.current().previewFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -576,7 +576,7 @@ fun AiHtmlCodingScreen(
                 }
                 context.startActivity(intent)
             } catch (e: Exception) {
-                Toast.makeText(context, "${Strings.previewFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${AppStringsProvider.current().previewFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -610,9 +610,9 @@ fun AiHtmlCodingScreen(
                 }
                 
                 actualFile.writeText(codeBlock.content)
-                Toast.makeText(context, Strings.savedToPath.replace("%s", actualFile.absolutePath), Toast.LENGTH_LONG).show()
+                Toast.makeText(context, AppStringsProvider.current().savedToPath.replace("%s", actualFile.absolutePath), Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                Toast.makeText(context, "${Strings.downloadFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${AppStringsProvider.current().downloadFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -626,7 +626,7 @@ fun AiHtmlCodingScreen(
                     ?: emptyList()
                 
                 if (allCodeBlocks.isEmpty()) {
-                    Toast.makeText(context, Strings.noCodeToExport, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().noCodeToExport, Toast.LENGTH_SHORT).show()
                     return@launch
                 }
                 
@@ -649,12 +649,12 @@ fun AiHtmlCodingScreen(
                 
                 // export HTMLitem
                 if (onExportToHtmlProject != null) {
-                    val projectName = currentSession?.title?.take(20) ?: Strings.aiGeneratedProject
+                    val projectName = currentSession?.title?.take(20) ?: AppStringsProvider.current().aiGeneratedProject
                     onExportToHtmlProject.invoke(files, projectName)
-                    Toast.makeText(context, Strings.exportedToHtmlProject, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().exportedToHtmlProject, Toast.LENGTH_SHORT).show()
                 } else {
                     // if, save localitemdirectory
-                    val projectName = currentSession?.title?.take(20) ?: "${Strings.aiGeneratedProject}_${System.currentTimeMillis()}"
+                    val projectName = currentSession?.title?.take(20) ?: "${AppStringsProvider.current().aiGeneratedProject}_${System.currentTimeMillis()}"
                     val result = storage.saveProject(
                         SaveConfig(
                             directory = storage.getProjectsDir().absolutePath,
@@ -665,13 +665,13 @@ fun AiHtmlCodingScreen(
                         files
                     )
                     result.onSuccess { dir ->
-                        Toast.makeText(context, Strings.savedToPath.replace("%s", dir.absolutePath), Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, AppStringsProvider.current().savedToPath.replace("%s", dir.absolutePath), Toast.LENGTH_LONG).show()
                     }.onFailure { e ->
-                        Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -693,12 +693,12 @@ fun AiHtmlCodingScreen(
                 title = {
                     Column {
                         Text(
-                            currentSession?.title ?: Strings.htmlCodingAssistant,
+                            currentSession?.title ?: AppStringsProvider.current().htmlCodingAssistant,
                             style = MaterialTheme.typography.titleMedium
                         )
                         currentSession?.let {
                             Text(
-                                Strings.messagesCount.replace("%d", "${it.messages.size}"),
+                                AppStringsProvider.current().messagesCount.replace("%d", "${it.messages.size}"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -713,29 +713,29 @@ fun AiHtmlCodingScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     // repository
                     IconButton(onClick = { showCodeLibrarySheet = true }) {
-                        Icon(Icons.Outlined.Folder, Strings.codeLibrary)
+                        Icon(Icons.Outlined.Folder, AppStringsProvider.current().codeLibrary)
                     }
                     // Check fallback
                     IconButton(onClick = { showConversationCheckpointsSheet = true }) {
-                        Icon(Icons.Outlined.Restore, Strings.rollback)
+                        Icon(Icons.Outlined.Restore, AppStringsProvider.current().rollback)
                     }
                     // Note
                     IconButton(onClick = { showTemplatesSheet = true }) {
-                        Icon(Icons.Outlined.Palette, Strings.templates)
+                        Icon(Icons.Outlined.Palette, AppStringsProvider.current().templates)
                     }
                     // Set
                     IconButton(onClick = { showConfigSheet = true }) {
-                        Icon(Icons.Outlined.Settings, Strings.settings)
+                        Icon(Icons.Outlined.Settings, AppStringsProvider.current().settings)
                     }
                     // sidebar( switch)
                     IconButton(onClick = { showDrawer = !showDrawer }) {
-                        Icon(Icons.Default.Menu, Strings.sessionList)
+                        Icon(Icons.Default.Menu, AppStringsProvider.current().sessionList)
                     }
                 }
             )
@@ -769,7 +769,7 @@ fun AiHtmlCodingScreen(
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            Strings.msgLoading,
+                            AppStringsProvider.current().msgLoading,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -814,7 +814,7 @@ fun AiHtmlCodingScreen(
                                 },
                                 onPreviewCode = { codeBlock -> previewHtml(codeBlock) },
                                 onCopyCode = {
-                                    Toast.makeText(context, Strings.msgCopied, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().msgCopied, Toast.LENGTH_SHORT).show()
                                 },
                                 onDownloadCode = { codeBlock -> downloadCode(codeBlock) },
                                 onExportToProject = { exportAllToHtmlProject() }
@@ -1043,7 +1043,7 @@ fun AiHtmlCodingScreen(
                     },
                     onCreateCheckpoint = {
                         scope.launch {
-                            storage.createCheckpoint(session.id, Strings.manualSave.replace("%d", "${session.checkpoints.size + 1}"))
+                            storage.createCheckpoint(session.id, AppStringsProvider.current().manualSave.replace("%d", "${session.checkpoints.size + 1}"))
                             currentSession = storage.getSession(session.id)
                         }
                     },
@@ -1083,7 +1083,7 @@ fun AiHtmlCodingScreen(
             files = currentSession?.checkpoints?.lastOrNull()?.files ?: emptyList(),
             onDismiss = { showSaveDialog = false },
             onSaved = { path ->
-                Toast.makeText(context, Strings.savedToPath.replace("%s", path), Toast.LENGTH_LONG).show()
+                Toast.makeText(context, AppStringsProvider.current().savedToPath.replace("%s", path), Toast.LENGTH_LONG).show()
                 showSaveDialog = false
             }
         )
@@ -1113,7 +1113,7 @@ fun AiHtmlCodingScreen(
                 },
                 onUseContent = { item ->
                     // Comment
-                    inputText = "${Strings.continueDevBasedOnCode}\n${item.userPrompt}"
+                    inputText = "${AppStringsProvider.current().continueDevBasedOnCode}\n${item.userPrompt}"
                     showCodeLibrarySheet = false
                 },
                 onExportToProject = { item ->
@@ -1121,9 +1121,9 @@ fun AiHtmlCodingScreen(
                     scope.launch {
                         val result = storage.exportToProjectLibrary(item, item.title.take(20))
                         if (result.isSuccess) {
-                            Toast.makeText(context, Strings.exportedToProjectLibrary, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().exportedToProjectLibrary, Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(context, "${Strings.exportFailed}: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
@@ -1193,16 +1193,16 @@ fun AiHtmlCodingScreen(
                                 storage.updateSession(sessionWithoutLastUserMessage)
                                 AppLogger.d("AiHtmlCodingScreen", "Updated currentSession, messages: ${sessionWithoutLastUserMessage.messages.size}")
                                 
-                                Toast.makeText(context, Strings.rolledBackWithInputHint.replace("%s", checkpoint.name), Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, AppStringsProvider.current().rolledBackWithInputHint.replace("%s", checkpoint.name), Toast.LENGTH_LONG).show()
                             } else {
                                 currentSession = restoredSession
-                                Toast.makeText(context, Strings.rolledBackTo.replace("%s", checkpoint.name), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().rolledBackTo.replace("%s", checkpoint.name), Toast.LENGTH_SHORT).show()
                             }
                             
                             AppLogger.d("AiHtmlCodingScreen", "After rollback: chatState=$chatState, inputText='${inputText.take(50)}'")
                         } ?: run {
                             AppLogger.e("AiHtmlCodingScreen", "Rollback failed: rollbackToConversationCheckpoint returned null")
-                            Toast.makeText(context, Strings.rollbackFailed, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().rollbackFailed, Toast.LENGTH_SHORT).show()
                         }
                         showConversationCheckpointsSheet = false
                     }

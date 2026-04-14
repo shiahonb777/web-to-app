@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.FloatingWindowConfig
 import com.webtoapp.data.model.FloatingBorderStyle
 import com.webtoapp.ui.animation.CardExpandTransition
@@ -94,7 +94,7 @@ fun FloatingWindowConfigCard(
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.floatingWindowTitle,
+                            AppStringsProvider.current().floatingWindowTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -119,12 +119,12 @@ fun FloatingWindowConfigCard(
                     // ════════════════════════════════════════
                     SectionHeader(
                         icon = Icons.Outlined.Straighten,
-                        title = Strings.fwSectionSize
+                        title = AppStringsProvider.current().fwSectionSize
                     )
 
                     // Note
                     SliderWithLabel(
-                        label = Strings.fwWidthLabel,
+                        label = AppStringsProvider.current().fwWidthLabel,
                         value = config.widthPercent,
                         valueRange = 30f..100f,
                         steps = 13,
@@ -151,7 +151,7 @@ fun FloatingWindowConfigCard(
                         exit = fadeOut(tween(200)) + shrinkVertically(tween(300))
                     ) {
                         SliderWithLabel(
-                            label = Strings.fwHeightLabel,
+                            label = AppStringsProvider.current().fwHeightLabel,
                             value = config.heightPercent,
                             valueRange = 30f..100f,
                             steps = 13,
@@ -178,7 +178,7 @@ fun FloatingWindowConfigCard(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                Strings.fwLockAspectRatio,
+                                AppStringsProvider.current().fwLockAspectRatio,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -207,12 +207,12 @@ fun FloatingWindowConfigCard(
                     // ════════════════════════════════════════
                     SectionHeader(
                         icon = Icons.Outlined.Palette,
-                        title = Strings.fwSectionAppearance
+                        title = AppStringsProvider.current().fwSectionAppearance
                     )
 
                     // Note
                     SliderWithLabel(
-                        label = Strings.floatingWindowOpacity,
+                        label = AppStringsProvider.current().floatingWindowOpacity,
                         value = config.opacity,
                         valueRange = 30f..100f,
                         steps = 6,
@@ -221,7 +221,7 @@ fun FloatingWindowConfigCard(
 
                     // Note
                     SliderWithLabel(
-                        label = Strings.fwCornerRadius,
+                        label = AppStringsProvider.current().fwCornerRadius,
                         value = config.cornerRadius,
                         valueRange = 0f..32f,
                         steps = 7,
@@ -232,7 +232,7 @@ fun FloatingWindowConfigCard(
                     // select
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = Strings.fwBorderStyle,
+                        text = AppStringsProvider.current().fwBorderStyle,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
@@ -246,10 +246,10 @@ fun FloatingWindowConfigCard(
                             val label: String
                         )
                         val borderOptions = listOf(
-                            BorderOption(FloatingBorderStyle.NONE, Icons.Outlined.DoNotDisturb, Strings.fwBorderNone),
-                            BorderOption(FloatingBorderStyle.SUBTLE, Icons.Outlined.CropSquare, Strings.fwBorderSubtle),
-                            BorderOption(FloatingBorderStyle.GLOW, Icons.Outlined.AutoAwesome, Strings.fwBorderGlow),
-                            BorderOption(FloatingBorderStyle.ACCENT, Icons.Outlined.Palette, Strings.fwBorderAccent)
+                            BorderOption(FloatingBorderStyle.NONE, Icons.Outlined.DoNotDisturb, AppStringsProvider.current().fwBorderNone),
+                            BorderOption(FloatingBorderStyle.SUBTLE, Icons.Outlined.CropSquare, AppStringsProvider.current().fwBorderSubtle),
+                            BorderOption(FloatingBorderStyle.GLOW, Icons.Outlined.AutoAwesome, AppStringsProvider.current().fwBorderGlow),
+                            BorderOption(FloatingBorderStyle.ACCENT, Icons.Outlined.Palette, AppStringsProvider.current().fwBorderAccent)
                         )
                         borderOptions.forEach { option ->
                             val isSelected = config.borderStyle == option.style
@@ -277,13 +277,13 @@ fun FloatingWindowConfigCard(
                     // ════════════════════════════════════════
                     SectionHeader(
                         icon = Icons.Outlined.Tune,
-                        title = Strings.fwSectionBehavior
+                        title = AppStringsProvider.current().fwSectionBehavior
                     )
 
                     // display
                     ToggleRow(
-                        title = Strings.floatingWindowShowTitleBar,
-                        subtitle = Strings.floatingWindowShowTitleBarDesc,
+                        title = AppStringsProvider.current().floatingWindowShowTitleBar,
+                        subtitle = AppStringsProvider.current().floatingWindowShowTitleBarDesc,
                         checked = config.showTitleBar,
                         onCheckedChange = { onConfigChange(config.copy(showTitleBar = it)) }
                     )
@@ -295,8 +295,8 @@ fun FloatingWindowConfigCard(
                         exit = fadeOut(tween(200)) + shrinkVertically(tween(200))
                     ) {
                         ToggleRow(
-                            title = Strings.fwAutoHideTitleBar,
-                            subtitle = Strings.fwAutoHideTitleBarDesc,
+                            title = AppStringsProvider.current().fwAutoHideTitleBar,
+                            subtitle = AppStringsProvider.current().fwAutoHideTitleBarDesc,
                             checked = config.autoHideTitleBar,
                             onCheckedChange = { onConfigChange(config.copy(autoHideTitleBar = it)) },
                             modifier = Modifier.padding(start = 16.dp)
@@ -305,16 +305,16 @@ fun FloatingWindowConfigCard(
 
                     // Note
                     ToggleRow(
-                        title = Strings.fwEdgeSnapping,
-                        subtitle = Strings.fwEdgeSnappingDesc,
+                        title = AppStringsProvider.current().fwEdgeSnapping,
+                        subtitle = AppStringsProvider.current().fwEdgeSnappingDesc,
                         checked = config.edgeSnapping,
                         onCheckedChange = { onConfigChange(config.copy(edgeSnapping = it)) }
                     )
 
                     // Note
                     ToggleRow(
-                        title = Strings.fwResizeHandle,
-                        subtitle = Strings.fwResizeHandleDesc,
+                        title = AppStringsProvider.current().fwResizeHandle,
+                        subtitle = AppStringsProvider.current().fwResizeHandleDesc,
                         checked = config.showResizeHandle,
                         onCheckedChange = { onConfigChange(config.copy(showResizeHandle = it)) }
                     )
@@ -337,7 +337,7 @@ fun FloatingWindowConfigCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (showAdvanced) Strings.hideAdvanced else Strings.showAdvanced,
+                                text = if (showAdvanced) AppStringsProvider.current().hideAdvanced else AppStringsProvider.current().showAdvanced,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = primary
                             )
@@ -364,24 +364,24 @@ fun FloatingWindowConfigCard(
                         ) {
                             // Note
                             ToggleRow(
-                                title = Strings.floatingWindowStartMinimized,
-                                subtitle = Strings.floatingWindowStartMinimizedDesc,
+                                title = AppStringsProvider.current().floatingWindowStartMinimized,
+                                subtitle = AppStringsProvider.current().floatingWindowStartMinimizedDesc,
                                 checked = config.startMinimized,
                                 onCheckedChange = { onConfigChange(config.copy(startMinimized = it)) }
                             )
 
                             // Note
                             ToggleRow(
-                                title = Strings.floatingWindowRememberPosition,
-                                subtitle = Strings.floatingWindowRememberPositionDesc,
+                                title = AppStringsProvider.current().floatingWindowRememberPosition,
+                                subtitle = AppStringsProvider.current().floatingWindowRememberPositionDesc,
                                 checked = config.rememberPosition,
                                 onCheckedChange = { onConfigChange(config.copy(rememberPosition = it)) }
                             )
 
                             // Note
                             ToggleRow(
-                                title = Strings.fwLockPosition,
-                                subtitle = Strings.fwLockPositionDesc,
+                                title = AppStringsProvider.current().fwLockPosition,
+                                subtitle = AppStringsProvider.current().fwLockPositionDesc,
                                 checked = config.lockPosition,
                                 onCheckedChange = { onConfigChange(config.copy(lockPosition = it)) }
                             )

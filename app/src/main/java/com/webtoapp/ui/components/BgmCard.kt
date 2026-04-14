@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.data.model.BgmPlayMode
 
@@ -84,12 +84,12 @@ fun BgmCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.bgmTitle,
+                            text = AppStringsProvider.current().bgmTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (enabled && config.playlist.isNotEmpty()) {
                             Text(
-                                text = "${config.playlist.size} ${Strings.selectedMusic}",
+                                text = "${config.playlist.size} ${AppStringsProvider.current().selectedMusic}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontSize = 11.sp
@@ -110,7 +110,7 @@ fun BgmCard(
             ) {
               Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = Strings.bgmDescription,
+                    text = AppStringsProvider.current().bgmDescription,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -168,7 +168,7 @@ fun BgmCard(
                             if (config.playlist.size > 3) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    Strings.andMoreTracks.format(config.playlist.size - 3),
+                                    AppStringsProvider.current().andMoreTracks.format(config.playlist.size - 3),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                     modifier = Modifier.padding(start = 30.dp)
@@ -194,9 +194,9 @@ fun BgmCard(
                                         BgmPlayMode.SHUFFLE -> Icons.Outlined.Shuffle
                                     },
                                     label = when (config.playMode) {
-                                        BgmPlayMode.LOOP -> Strings.loopPlayback
-                                        BgmPlayMode.SEQUENTIAL -> Strings.sequentialPlayback
-                                        BgmPlayMode.SHUFFLE -> Strings.shufflePlayback
+                                        BgmPlayMode.LOOP -> AppStringsProvider.current().loopPlayback
+                                        BgmPlayMode.SEQUENTIAL -> AppStringsProvider.current().sequentialPlayback
+                                        BgmPlayMode.SHUFFLE -> AppStringsProvider.current().shufflePlayback
                                     }
                                 )
                                 
@@ -211,7 +211,7 @@ fun BgmCard(
                                 if (config.showLyrics) {
                                     StatusChip(
                                         icon = Icons.Outlined.Subtitles,
-                                        label = Strings.showLyrics
+                                        label = AppStringsProvider.current().showLyrics
                                     )
                                 }
                             }
@@ -230,7 +230,7 @@ fun BgmCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (config.playlist.isEmpty()) Strings.selectMusic else Strings.modifyConfig)
+                    Text(if (config.playlist.isEmpty()) AppStringsProvider.current().selectMusic else AppStringsProvider.current().modifyConfig)
                 }
               }
             }

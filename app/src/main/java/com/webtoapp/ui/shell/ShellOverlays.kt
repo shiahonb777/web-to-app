@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.shell.ShellRuntimeServices
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ForcedRunCountdownOverlay
 import com.webtoapp.ui.components.VirtualNavigationBar
 import com.webtoapp.core.forcedrun.ForcedRunManager
@@ -155,7 +155,7 @@ fun BoxScope.ShellFloatingBackButton(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
             contentColor = MaterialTheme.colorScheme.onSurface
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.cdBack)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().cdBack)
         }
     }
 }
@@ -191,7 +191,7 @@ fun BoxScope.ShellErrorCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(error, modifier = Modifier.weight(weight = 1f, fill = true))
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.cdClose)
+                    Text(AppStringsProvider.current().cdClose)
                 }
             }
         }
@@ -262,9 +262,9 @@ fun BoxScope.ShellAdBlockToggle(
                 adBlocker.setEnabled(adBlockCurrentlyEnabled)
                 webViewRef?.reload()
                 val message = if (adBlockCurrentlyEnabled)
-                    Strings.adBlockEnabled
+                    AppStringsProvider.current().adBlockEnabled
                 else
-                    Strings.adBlockDisabled
+                    AppStringsProvider.current().adBlockDisabled
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier
@@ -287,9 +287,9 @@ fun BoxScope.ShellAdBlockToggle(
                 else
                     Icons.Outlined.Shield,
                 contentDescription = if (adBlockCurrentlyEnabled)
-                    Strings.adBlockEnabled
+                    AppStringsProvider.current().adBlockEnabled
                 else
-                    Strings.adBlockDisabled,
+                    AppStringsProvider.current().adBlockDisabled,
                 tint = if (adBlockCurrentlyEnabled)
                     MaterialTheme.colorScheme.primary
                 else

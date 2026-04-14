@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import com.webtoapp.core.golang.GoRuntime
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.nodejs.NodeRuntime
 import com.webtoapp.core.php.PhpAppRuntime
@@ -45,7 +45,7 @@ internal fun WordPressPreviewCoordinator(
             onStateChanged(WordPressPreviewState.Downloading)
             val success = WordPressDependencyManager.downloadAllDependencies(context)
             if (!success) {
-                onStateChanged(WordPressPreviewState.Error(Strings.wpDownloadFailed))
+                onStateChanged(WordPressPreviewState.Error(AppStringsProvider.current().wpDownloadFailed))
                 return@LaunchedEffect
             }
         }
@@ -66,7 +66,7 @@ internal fun WordPressPreviewCoordinator(
                 adminEmail = app.wordpressConfig?.adminEmail ?: ""
             )
             if (newId == null) {
-                onStateChanged(WordPressPreviewState.Error(Strings.wpProjectCreateFailed))
+                onStateChanged(WordPressPreviewState.Error(AppStringsProvider.current().wpProjectCreateFailed))
                 return@LaunchedEffect
             }
             projectId = newId
@@ -93,7 +93,7 @@ internal fun WordPressPreviewCoordinator(
             delay(200)
             loadUrl(url)
         } else {
-            onStateChanged(WordPressPreviewState.Error(Strings.wpServerError))
+            onStateChanged(WordPressPreviewState.Error(AppStringsProvider.current().wpServerError))
         }
     }
 
@@ -126,7 +126,7 @@ internal fun PhpAppPreviewCoordinator(
         val config = app.phpAppConfig
         if (config == null) {
             AppLogger.e("PhpAppPreview", "phpAppConfig 为 null，无法启动预览")
-            onStateChanged(PhpAppPreviewState.Error(Strings.phpAppProjectNotFound))
+            onStateChanged(PhpAppPreviewState.Error(AppStringsProvider.current().phpAppProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -137,7 +137,7 @@ internal fun PhpAppPreviewCoordinator(
             onStateChanged(PhpAppPreviewState.Downloading)
             val success = WordPressDependencyManager.downloadPhpDependency(context)
             if (!success) {
-                onStateChanged(PhpAppPreviewState.Error(Strings.phpAppDownloadFailed))
+                onStateChanged(PhpAppPreviewState.Error(AppStringsProvider.current().phpAppDownloadFailed))
                 return@LaunchedEffect
             }
         }
@@ -146,13 +146,13 @@ internal fun PhpAppPreviewCoordinator(
         AppLogger.i("PhpAppPreview", "projectId='$projectId', docRoot='${config.documentRoot}', entry='${config.entryFile}'")
         if (projectId.isBlank()) {
             AppLogger.e("PhpAppPreview", "projectId 为空")
-            onStateChanged(PhpAppPreviewState.Error(Strings.phpAppProjectNotFound))
+            onStateChanged(PhpAppPreviewState.Error(AppStringsProvider.current().phpAppProjectNotFound))
             return@LaunchedEffect
         }
         val projectDir = phpAppRuntime.getProjectDir(projectId)
         AppLogger.i("PhpAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
         if (!projectDir.exists()) {
-            onStateChanged(PhpAppPreviewState.Error(Strings.phpAppProjectNotFound))
+            onStateChanged(PhpAppPreviewState.Error(AppStringsProvider.current().phpAppProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -212,7 +212,7 @@ internal fun PhpAppPreviewCoordinator(
             AppLogger.e("PhpAppPreview", "PHP 服务器启动失败, port=$port, serverState=${phpAppRuntime.serverState.value}")
             val errorDetail = when (val state = phpAppRuntime.serverState.value) {
                 is PhpAppRuntime.ServerState.Error -> state.message
-                else -> Strings.phpAppServerError
+                else -> AppStringsProvider.current().phpAppServerError
             }
             onStateChanged(PhpAppPreviewState.Error(errorDetail))
         }
@@ -245,7 +245,7 @@ internal fun PythonAppPreviewCoordinator(
         val config = app.pythonAppConfig
         if (config == null) {
             AppLogger.e("PythonAppPreview", "pythonAppConfig 为 null")
-            onStateChanged(PythonAppPreviewState.Error(Strings.pyProjectNotFound))
+            onStateChanged(PythonAppPreviewState.Error(AppStringsProvider.current().pyProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -256,13 +256,13 @@ internal fun PythonAppPreviewCoordinator(
         AppLogger.i("PythonAppPreview", "projectId='$projectId', framework='${config.framework}', entry='${config.entryFile}'")
         if (projectId.isBlank()) {
             AppLogger.e("PythonAppPreview", "projectId 为空")
-            onStateChanged(PythonAppPreviewState.Error(Strings.pyProjectNotFound))
+            onStateChanged(PythonAppPreviewState.Error(AppStringsProvider.current().pyProjectNotFound))
             return@LaunchedEffect
         }
         val projectDir = pythonRuntime.getProjectDir(projectId)
         AppLogger.i("PythonAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
         if (!projectDir.exists()) {
-            onStateChanged(PythonAppPreviewState.Error(Strings.pyProjectNotFound))
+            onStateChanged(PythonAppPreviewState.Error(AppStringsProvider.current().pyProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -398,7 +398,7 @@ internal fun PythonAppPreviewCoordinator(
             }
         } catch (e: Exception) {
             AppLogger.e("PythonAppPreview", "启动预览失败", e)
-            onStateChanged(PythonAppPreviewState.Error(e.message ?: Strings.pyPreviewFailed))
+            onStateChanged(PythonAppPreviewState.Error(e.message ?: AppStringsProvider.current().pyPreviewFailed))
         }
     }
 
@@ -430,7 +430,7 @@ internal fun NodeJsAppPreviewCoordinator(
         val config = app.nodejsConfig
         if (config == null) {
             AppLogger.e("NodeJsAppPreview", "nodejsConfig 为 null")
-            onStateChanged(NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound))
+            onStateChanged(NodeJsAppPreviewState.Error(AppStringsProvider.current().nodeProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -441,13 +441,13 @@ internal fun NodeJsAppPreviewCoordinator(
         AppLogger.i("NodeJsAppPreview", "projectId='$projectId', framework='${config.framework}', entry='${config.entryFile}'")
         if (projectId.isBlank()) {
             AppLogger.e("NodeJsAppPreview", "projectId 为空")
-            onStateChanged(NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound))
+            onStateChanged(NodeJsAppPreviewState.Error(AppStringsProvider.current().nodeProjectNotFound))
             return@LaunchedEffect
         }
         val projectDir = nodeRuntime.getProjectDir(projectId)
         AppLogger.i("NodeJsAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
         if (!projectDir.exists()) {
-            onStateChanged(NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound))
+            onStateChanged(NodeJsAppPreviewState.Error(AppStringsProvider.current().nodeProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -512,7 +512,7 @@ internal fun NodeJsAppPreviewCoordinator(
             }
         } catch (e: Exception) {
             AppLogger.e("NodeJsAppPreview", "启动预览失败", e)
-            onStateChanged(NodeJsAppPreviewState.Error(e.message ?: Strings.nodePreviewFailed))
+            onStateChanged(NodeJsAppPreviewState.Error(e.message ?: AppStringsProvider.current().nodePreviewFailed))
         }
     }
 
@@ -543,7 +543,7 @@ internal fun GoAppPreviewCoordinator(
         val config = app.goAppConfig
         if (config == null) {
             AppLogger.e("GoAppPreview", "goAppConfig 为 null")
-            onStateChanged(GoAppPreviewState.Error(Strings.goProjectNotFound))
+            onStateChanged(GoAppPreviewState.Error(AppStringsProvider.current().goProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -554,13 +554,13 @@ internal fun GoAppPreviewCoordinator(
         AppLogger.i("GoAppPreview", "projectId='$projectId', framework='${config.framework}', binary='${config.binaryName}'")
         if (projectId.isBlank()) {
             AppLogger.e("GoAppPreview", "projectId 为空")
-            onStateChanged(GoAppPreviewState.Error(Strings.goProjectNotFound))
+            onStateChanged(GoAppPreviewState.Error(AppStringsProvider.current().goProjectNotFound))
             return@LaunchedEffect
         }
         val projectDir = goRuntime.getProjectDir(projectId)
         AppLogger.i("GoAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
         if (!projectDir.exists()) {
-            onStateChanged(GoAppPreviewState.Error(Strings.goProjectNotFound))
+            onStateChanged(GoAppPreviewState.Error(AppStringsProvider.current().goProjectNotFound))
             return@LaunchedEffect
         }
 
@@ -653,7 +653,7 @@ internal fun GoAppPreviewCoordinator(
             }
         } catch (e: Exception) {
             AppLogger.e("GoAppPreview", "启动预览失败", e)
-            onStateChanged(GoAppPreviewState.Error(e.message ?: Strings.goPreviewFailed))
+            onStateChanged(GoAppPreviewState.Error(e.message ?: AppStringsProvider.current().goPreviewFailed))
         }
     }
 

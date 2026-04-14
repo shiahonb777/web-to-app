@@ -1,17 +1,17 @@
 package com.webtoapp.core.extension.snippets
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal fun pageEnhance() = CodeSnippetCategory(
         id = "enhance",
-        name = Strings.snippetEnhance,
+        name = AppStringsProvider.current().snippetEnhance,
         icon = "✨",
-        description = Strings.snippetEnhanceDesc,
+        description = AppStringsProvider.current().snippetEnhanceDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "enhance-reading-mode",
-                name = Strings.snippetReadingMode,
-                description = Strings.snippetReadingModeDesc,
+                name = AppStringsProvider.current().snippetReadingMode,
+                description = AppStringsProvider.current().snippetReadingModeDesc,
                 code = """function enableReadingMode() {
     const article = document.querySelector('article') || 
                    document.querySelector('[class*="content"]') ||
@@ -35,12 +35,12 @@ internal fun pageEnhance() = CodeSnippetCategory(
     `;
 }
 enableReadingMode();""",
-                tags = listOf(Strings.tagReading, Strings.tagSimplify)
+                tags = listOf(AppStringsProvider.current().tagReading, AppStringsProvider.current().tagSimplify)
             ),
             CodeSnippet(
                 id = "enhance-copy-unlock",
-                name = Strings.snippetCopyUnlock,
-                description = Strings.snippetCopyUnlockDesc,
+                name = AppStringsProvider.current().snippetCopyUnlock,
+                description = AppStringsProvider.current().snippetCopyUnlockDesc,
                 code = """// Inject样式
 const style = document.createElement('style');
 style.textContent = `
@@ -65,12 +65,12 @@ document.querySelectorAll('*').forEach(el => {
 });
 
 console.log('复制限制已解除');""",
-                tags = listOf(Strings.tagCopy, Strings.tagUnlock)
+                tags = listOf(AppStringsProvider.current().tagCopy, AppStringsProvider.current().tagUnlock)
             ),
             CodeSnippet(
                 id = "enhance-print-friendly",
-                name = Strings.snippetPrintFriendly,
-                description = Strings.snippetPrintFriendlyDesc,
+                name = AppStringsProvider.current().snippetPrintFriendly,
+                description = AppStringsProvider.current().snippetPrintFriendlyDesc,
                 code = """function preparePrint() {
     const style = document.createElement('style');
     style.textContent = `
@@ -92,12 +92,12 @@ console.log('复制限制已解除');""",
     window.print();
 }
 preparePrint();""",
-                tags = listOf(Strings.tagPrint, Strings.tagOptimize)
+                tags = listOf(AppStringsProvider.current().tagPrint, AppStringsProvider.current().tagOptimize)
             ),
             CodeSnippet(
                 id = "enhance-text-to-speech",
-                name = Strings.snippetTextToSpeech,
-                description = Strings.snippetTextToSpeechDesc,
+                name = AppStringsProvider.current().snippetTextToSpeech,
+                description = AppStringsProvider.current().snippetTextToSpeechDesc,
                 code = """function speakText(text) {
     if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -129,12 +129,12 @@ document.addEventListener('mouseup', () => {
         setTimeout(() => btn.remove(), 5000);
     }
 });""",
-                tags = listOf(Strings.tagVoice, Strings.tagReadAloud)
+                tags = listOf(AppStringsProvider.current().tagVoice, AppStringsProvider.current().tagReadAloud)
             ),
             CodeSnippet(
                 id = "enhance-word-count",
-                name = Strings.snippetWordCount,
-                description = Strings.snippetWordCountDesc,
+                name = AppStringsProvider.current().snippetWordCount,
+                description = AppStringsProvider.current().snippetWordCountDesc,
                 code = """function countWords() {
     const text = document.body.innerText;
     const chinese = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
@@ -156,12 +156,12 @@ document.addEventListener('mouseup', () => {
     return { chinese, english, numbers, total };
 }
 countWords();""",
-                tags = listOf(Strings.tagStats, Strings.tagWordCount)
+                tags = listOf(AppStringsProvider.current().tagStats, AppStringsProvider.current().tagWordCount)
             ),
             CodeSnippet(
                 id = "enhance-highlight-search",
-                name = Strings.snippetHighlightSearch,
-                description = Strings.snippetHighlightSearchDesc,
+                name = AppStringsProvider.current().snippetHighlightSearch,
+                description = AppStringsProvider.current().snippetHighlightSearchDesc,
                 code = """function highlightText(keyword) {
     // before.
     document.querySelectorAll('.search-highlight').forEach(el => {
@@ -186,20 +186,20 @@ countWords();""",
     });
 }
 highlightText('搜索关键词');""",
-                tags = listOf(Strings.tagSearch, Strings.tagHighlight)
+                tags = listOf(AppStringsProvider.current().tagSearch, AppStringsProvider.current().tagHighlight)
             )
         )
 )
 internal fun contentFilter() = CodeSnippetCategory(
         id = "filter",
-        name = Strings.snippetFilter,
+        name = AppStringsProvider.current().snippetFilter,
         icon = "🔍",
-        description = Strings.snippetFilterDesc,
+        description = AppStringsProvider.current().snippetFilterDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "filter-keywords",
-                name = Strings.snippetKeywordFilter,
-                description = Strings.snippetKeywordFilterDesc,
+                name = AppStringsProvider.current().snippetKeywordFilter,
+                description = AppStringsProvider.current().snippetKeywordFilterDesc,
                 code = """function filterByKeywords(keywords, selector = '*') {
     const keywordList = keywords.map(k => k.toLowerCase());
     
@@ -211,12 +211,12 @@ internal fun contentFilter() = CodeSnippetCategory(
     });
 }
 filterByKeywords(['广告', '推广', '赞助'], 'div, article, section');""",
-                tags = listOf(Strings.tagKeyword, Strings.tagFilter)
+                tags = listOf(AppStringsProvider.current().tagKeyword, AppStringsProvider.current().tagFilter)
             ),
             CodeSnippet(
                 id = "filter-empty",
-                name = Strings.snippetRemoveEmpty,
-                description = Strings.snippetRemoveEmptyDesc,
+                name = AppStringsProvider.current().snippetRemoveEmpty,
+                description = AppStringsProvider.current().snippetRemoveEmptyDesc,
                 code = """function removeEmptyElements(selector = 'div, p, span') {
     document.querySelectorAll(selector).forEach(el => {
         if (!el.textContent.trim() && !el.querySelector('img, video, iframe')) {
@@ -225,12 +225,12 @@ filterByKeywords(['广告', '推广', '赞助'], 'div, article, section');""",
     });
 }
 removeEmptyElements();""",
-                tags = listOf(Strings.tagEmptyElement, Strings.tagClean)
+                tags = listOf(AppStringsProvider.current().tagEmptyElement, AppStringsProvider.current().tagClean)
             ),
             CodeSnippet(
                 id = "filter-comments",
-                name = Strings.snippetFilterComments,
-                description = Strings.snippetFilterCommentsDesc,
+                name = AppStringsProvider.current().snippetFilterComments,
+                description = AppStringsProvider.current().snippetFilterCommentsDesc,
                 code = """function filterComments(options = {}) {
     const { minLength = 0, keywords = [], selector = '[class*="comment"]' } = options;
     
@@ -249,12 +249,12 @@ removeEmptyElements();""",
     });
 }
 filterComments({ minLength: 10, keywords: ['广告', '推广'] });""",
-                tags = listOf(Strings.tagComment, Strings.tagFilter)
+                tags = listOf(AppStringsProvider.current().tagComment, AppStringsProvider.current().tagFilter)
             ),
             CodeSnippet(
                 id = "filter-images-size",
-                name = Strings.snippetFilterSmallImages,
-                description = Strings.snippetFilterSmallImagesDesc,
+                name = AppStringsProvider.current().snippetFilterSmallImages,
+                description = AppStringsProvider.current().snippetFilterSmallImagesDesc,
                 code = """function filterSmallImages(minWidth = 100, minHeight = 100) {
     document.querySelectorAll('img').forEach(img => {
         if (img.complete) {
@@ -271,20 +271,20 @@ filterComments({ minLength: 10, keywords: ['广告', '推广'] });""",
     });
 }
 filterSmallImages(100, 100);""",
-                tags = listOf(Strings.tagImage, Strings.tagFilter)
+                tags = listOf(AppStringsProvider.current().tagImage, AppStringsProvider.current().tagFilter)
             )
         )
 )
 internal fun adBlocker() = CodeSnippetCategory(
         id = "adblocker",
-        name = Strings.snippetAdBlock,
+        name = AppStringsProvider.current().snippetAdBlock,
         icon = "🛡️",
-        description = Strings.snippetAdBlockDesc,
+        description = AppStringsProvider.current().snippetAdBlockDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "ad-hide-common",
-                name = Strings.snippetHideAds,
-                description = Strings.snippetHideAdsDesc,
+                name = AppStringsProvider.current().snippetHideAds,
+                description = AppStringsProvider.current().snippetHideAdsDesc,
                 code = """const adSelectors = [
     '[class*="ad-"]', '[class*="ads-"]', '[class*="advert"]',
     '[id*="ad-"]', '[id*="ads-"]', '[id*="advert"]',
@@ -307,12 +307,12 @@ function hideAds() {
 hideAds();
 const observer = new MutationObserver(hideAds);
 observer.observe(document.body, { childList: true, subtree: true });""",
-                tags = listOf(Strings.tagAd, Strings.tagHide)
+                tags = listOf(AppStringsProvider.current().tagAd, AppStringsProvider.current().tagHide)
             ),
             CodeSnippet(
                 id = "ad-block-popup",
-                name = Strings.snippetBlockPopup,
-                description = Strings.snippetBlockPopupDesc,
+                name = AppStringsProvider.current().snippetBlockPopup,
+                description = AppStringsProvider.current().snippetBlockPopupDesc,
                 code = """// 阻止 window.open
 const originalOpen = window.open;
 window.open = function(url, name, features) {
@@ -333,12 +333,12 @@ function removePopups() {
     });
 }
 setInterval(removePopups, 1000);""",
-                tags = listOf(Strings.tagPopup, Strings.tagPrevent)
+                tags = listOf(AppStringsProvider.current().tagPopup, AppStringsProvider.current().tagPrevent)
             ),
             CodeSnippet(
                 id = "ad-remove-overlay",
-                name = Strings.snippetRemoveOverlay,
-                description = Strings.snippetRemoveOverlayDesc,
+                name = AppStringsProvider.current().snippetRemoveOverlay,
+                description = AppStringsProvider.current().snippetRemoveOverlayDesc,
                 code = """function removeOverlays() {
     document.querySelectorAll('*').forEach(el => {
         const style = getComputedStyle(el);
@@ -358,12 +358,12 @@ setInterval(removePopups, 1000);""",
     document.documentElement.style.overflow = 'auto';
 }
 removeOverlays();""",
-                tags = listOf(Strings.tagMask, Strings.tagRemove)
+                tags = listOf(AppStringsProvider.current().tagMask, AppStringsProvider.current().tagRemove)
             ),
             CodeSnippet(
                 id = "ad-css-blocker",
-                name = Strings.snippetCssAdBlock,
-                description = Strings.snippetCssAdBlockDesc,
+                name = AppStringsProvider.current().snippetCssAdBlock,
+                description = AppStringsProvider.current().snippetCssAdBlockDesc,
                 code = """const style = document.createElement('style');
 style.textContent = `
     /* */
@@ -382,12 +382,12 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);""",
-                tags = listOf(Strings.tagCSS, Strings.tagAd)
+                tags = listOf(AppStringsProvider.current().tagCSS, AppStringsProvider.current().tagAd)
             ),
             CodeSnippet(
                 id = "ad-anti-adblock",
-                name = Strings.snippetAntiAdblock,
-                description = Strings.snippetAntiAdblockDesc,
+                name = AppStringsProvider.current().snippetAntiAdblock,
+                description = AppStringsProvider.current().snippetAntiAdblockDesc,
                 code = """// 伪装广告元素存在
 const fakeAd = document.createElement('div');
 fakeAd.className = 'ad ads adsbox ad-placeholder';
@@ -403,20 +403,20 @@ const observer = new MutationObserver(() => {
     });
 });
 observer.observe(document.body, { childList: true, subtree: true });""",
-                tags = listOf(Strings.tagAntiDetect, Strings.tagAd)
+                tags = listOf(AppStringsProvider.current().tagAntiDetect, AppStringsProvider.current().tagAd)
             )
         )
 )
 internal fun interceptors() = CodeSnippetCategory(
         id = "intercept",
-        name = Strings.snippetIntercept,
+        name = AppStringsProvider.current().snippetIntercept,
         icon = "🔀",
-        description = Strings.snippetInterceptDesc,
+        description = AppStringsProvider.current().snippetInterceptDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "intercept-fetch",
-                name = Strings.snippetInterceptFetch,
-                description = Strings.snippetInterceptFetchDesc,
+                name = AppStringsProvider.current().snippetInterceptFetch,
+                description = AppStringsProvider.current().snippetInterceptFetchDesc,
                 code = """const originalFetch = window.fetch;
 window.fetch = async function(url, options = {}) {
     console.log('[Fetch]', url);
@@ -431,12 +431,12 @@ window.fetch = async function(url, options = {}) {
     
     return response;
 };""",
-                tags = listOf(Strings.tagIntercept, Strings.tagFetch)
+                tags = listOf(AppStringsProvider.current().tagIntercept, AppStringsProvider.current().tagFetch)
             ),
             CodeSnippet(
                 id = "intercept-xhr",
-                name = Strings.snippetInterceptXhr,
-                description = Strings.snippetInterceptXhrDesc,
+                name = AppStringsProvider.current().snippetInterceptXhr,
+                description = AppStringsProvider.current().snippetInterceptXhrDesc,
                 code = """const originalOpen = XMLHttpRequest.prototype.open;
 const originalSend = XMLHttpRequest.prototype.send;
 
@@ -453,12 +453,12 @@ XMLHttpRequest.prototype.send = function(body) {
     });
     return originalSend.call(this, body);
 };""",
-                tags = listOf(Strings.tagIntercept, Strings.tagXHR)
+                tags = listOf(AppStringsProvider.current().tagIntercept, AppStringsProvider.current().tagXHR)
             ),
             CodeSnippet(
                 id = "intercept-websocket",
-                name = Strings.snippetInterceptWebSocket,
-                description = Strings.snippetInterceptWebSocketDesc,
+                name = AppStringsProvider.current().snippetInterceptWebSocket,
+                description = AppStringsProvider.current().snippetInterceptWebSocketDesc,
                 code = """const OriginalWebSocket = window.WebSocket;
 window.WebSocket = function(url, protocols) {
     console.log('[WebSocket]', url);
@@ -477,12 +477,12 @@ window.WebSocket = function(url, protocols) {
     
     return ws;
 };""",
-                tags = listOf(Strings.tagIntercept, Strings.tagWebSocket)
+                tags = listOf(AppStringsProvider.current().tagIntercept, AppStringsProvider.current().tagWebSocket)
             ),
             CodeSnippet(
                 id = "intercept-block-requests",
-                name = Strings.snippetBlockRequests,
-                description = Strings.snippetBlockRequestsDesc,
+                name = AppStringsProvider.current().snippetBlockRequests,
+                description = AppStringsProvider.current().snippetBlockRequestsDesc,
                 code = """const blockedKeywords = ['ad', 'analytics', 'tracking', 'beacon'];
 
 // intercept Fetch.
@@ -508,7 +508,7 @@ XMLHttpRequest.prototype.send = function(body) {
     if (this._blocked) return;
     return originalSend.call(this, body);
 };""",
-                tags = listOf(Strings.tagPrevent, Strings.tagRequest)
+                tags = listOf(AppStringsProvider.current().tagPrevent, AppStringsProvider.current().tagRequest)
             )
         )
 )

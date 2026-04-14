@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.php.PhpSampleManager
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 import com.webtoapp.ui.components.TypedSampleProjectsCard
@@ -188,24 +188,24 @@ fun CreatePhpAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.copyingProjectFiles
+                creationPhase = AppStringsProvider.current().copyingProjectFiles
                 errorMessage = null
                 
                 try {
                     val tempDir = File(context.cacheDir, "php_saf_import_${System.currentTimeMillis()}").apply { mkdirs() }
                     try {
                         val stagedDir = sourceLoader.copyDocumentTreeToTempDir(context, treeUri, tempDir)
-                        creationPhase = Strings.phpFrameworkDetected
+                        creationPhase = AppStringsProvider.current().phpFrameworkDetected
                         val imported = projectImporter.importProject(stagedDir) { downloading ->
                             showDownloadDialog = downloading
                         }
                         applyImportAnalysis(imported)
-                        creationPhase = Strings.phpProjectReady
+                        creationPhase = AppStringsProvider.current().phpProjectReady
                     } finally {
                         tempDir.deleteRecursively()
                     }
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.projectImportFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().projectImportFailed
                 } finally {
                     isCreating = false
                 }
@@ -220,24 +220,24 @@ fun CreatePhpAppScreen(
         uri?.let { zipUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.phpExtractingZip
+                creationPhase = AppStringsProvider.current().phpExtractingZip
                 errorMessage = null
                 
                 try {
                     val extractDir = File(context.cacheDir, "php_zip_extract_${System.currentTimeMillis()}").apply { mkdirs() }
                     try {
                         val stagedDir = sourceLoader.extractZipToTempDir(context, zipUri, extractDir)
-                        creationPhase = Strings.phpFrameworkDetected
+                        creationPhase = AppStringsProvider.current().phpFrameworkDetected
                         val imported = projectImporter.importProject(stagedDir) { downloading ->
                             showDownloadDialog = downloading
                         }
                         applyImportAnalysis(imported)
-                        creationPhase = Strings.phpProjectReady
+                        creationPhase = AppStringsProvider.current().phpProjectReady
                     } finally {
                         extractDir.deleteRecursively()
                     }
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.phpZipExtractFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().phpZipExtractFailed
                 } finally {
                     isCreating = false
                 }
@@ -262,10 +262,10 @@ fun CreatePhpAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createPhpApp) },
+                title = { Text(AppStringsProvider.current().createPhpApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -291,7 +291,7 @@ fun CreatePhpAppScreen(
                         },
                         enabled = canCreate && !isCreating
                     ) {
-                        Text(if (isEdit) Strings.btnSave else Strings.btnCreate)
+                        Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -318,22 +318,22 @@ fun CreatePhpAppScreen(
             // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.samplePhpSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().samplePhpSubtitle,
                     samples = remember { PhpSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = PhpSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
                                 isCreating = true
-                                creationPhase = Strings.phpFrameworkDetected
+                                creationPhase = AppStringsProvider.current().phpFrameworkDetected
                                 try {
-                                    creationPhase = Strings.copyingProjectFiles
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                                     val imported = projectImporter.importProject(File(path)) { downloading ->
                                         showDownloadDialog = downloading
                                     }
                                     applyImportAnalysis(imported, appNameOverride = sample.name)
-                                    creationPhase = Strings.phpProjectReady
+                                    creationPhase = AppStringsProvider.current().phpProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -355,13 +355,13 @@ fun CreatePhpAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -371,7 +371,7 @@ fun CreatePhpAppScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
@@ -393,11 +393,11 @@ fun CreatePhpAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.phpSelectProject, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().phpSelectProject, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.phpSupportedFrameworks,
+                        text = AppStringsProvider.current().phpSupportedFrameworks,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -413,17 +413,17 @@ fun CreatePhpAppScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.phpProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(AppStringsProvider.current().phpProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(selectedProjectDir!!.substringAfterLast("/"), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                                 if (detectedFramework != null && detectedFramework != "raw") {
-                                    Text("${Strings.phpFrameworkDetected}: $detectedFramework", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${AppStringsProvider.current().phpFrameworkDetected}: $detectedFramework", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                Text("${Strings.phpDocumentRoot}: ${documentRoot.ifBlank { "/" }}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${Strings.phpEntryFile}: $entryFile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${AppStringsProvider.current().phpDocumentRoot}: ${documentRoot.ifBlank { "/" }}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${AppStringsProvider.current().phpEntryFile}: $entryFile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 if (frameworkVersion != null) {
-                                    Text("${Strings.phpVersion}: $frameworkVersion", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${AppStringsProvider.current().phpVersion}: $frameworkVersion", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -437,7 +437,7 @@ fun CreatePhpAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.phpSelectProject)
+                        Text(AppStringsProvider.current().phpSelectProject)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     PremiumOutlinedButton(
@@ -447,7 +447,7 @@ fun CreatePhpAppScreen(
                     ) {
                         Icon(Icons.Default.Archive, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.phpImportZip)
+                        Text(AppStringsProvider.current().phpImportZip)
                     }
                 }
             }
@@ -537,28 +537,28 @@ fun CreatePhpAppScreen(
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text(Strings.wpDownloadDeps) },
+            title = { Text(AppStringsProvider.current().wpDownloadDeps) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     when (val state = downloadState) {
                         is WordPressDependencyManager.DownloadState.Downloading -> {
-                            Text(Strings.wpDownloading)
+                            Text(AppStringsProvider.current().wpDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
                         }
                         is WordPressDependencyManager.DownloadState.Extracting -> {
-                            Text("${Strings.wpExtracting} ${state.fileName}...")
+                            Text("${AppStringsProvider.current().wpExtracting} ${state.fileName}...")
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                         is WordPressDependencyManager.DownloadState.Complete -> {
-                            Text(Strings.wpDepsReady)
+                            Text(AppStringsProvider.current().wpDepsReady)
                         }
                         is WordPressDependencyManager.DownloadState.Error -> {
                             Text(state.message, color = MaterialTheme.colorScheme.error)
                         }
                         else -> {
-                            Text(Strings.wpDownloading)
+                            Text(AppStringsProvider.current().wpDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -612,14 +612,14 @@ private fun PhpHeroSection(
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = if (detectedFramework != null && detectedFramework != "raw")
-                            "$detectedFramework ${Strings.phpHeroTitle}"
-                        else Strings.phpHeroTitle,
+                            "$detectedFramework ${AppStringsProvider.current().phpHeroTitle}"
+                        else AppStringsProvider.current().phpHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.phpHeroDesc,
+                        text = AppStringsProvider.current().phpHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -666,7 +666,7 @@ private fun PhpComposerDepsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpComposerDeps, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpComposerDeps, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -684,7 +684,7 @@ private fun PhpComposerDepsCard(
             
             if (deps.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("${Strings.phpRequireDeps} (${deps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text("${AppStringsProvider.current().phpRequireDeps} (${deps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
                 
                 val visibleDeps = if (showAllDeps) deps.entries.toList() else deps.entries.take(5).toList()
@@ -700,7 +700,7 @@ private fun PhpComposerDepsCard(
                 }
                 if (deps.size > 5) {
                     TextButton(onClick = onToggleDeps, modifier = Modifier.fillMaxWidth()) {
-                        Text(if (showAllDeps) Strings.close else "${Strings.more} (${deps.size - 5})")
+                        Text(if (showAllDeps) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${deps.size - 5})")
                     }
                 }
             }
@@ -709,7 +709,7 @@ private fun PhpComposerDepsCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("${Strings.phpRequireDevDeps} (${devDeps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text("${AppStringsProvider.current().phpRequireDevDeps} (${devDeps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
                 
                 val visibleDevDeps = if (showAllDevDeps) devDeps.entries.toList() else devDeps.entries.take(3).toList()
@@ -725,7 +725,7 @@ private fun PhpComposerDepsCard(
                 }
                 if (devDeps.size > 3) {
                     TextButton(onClick = onToggleDevDeps, modifier = Modifier.fillMaxWidth()) {
-                        Text(if (showAllDevDeps) Strings.close else "${Strings.more} (${devDeps.size - 3})")
+                        Text(if (showAllDevDeps) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${devDeps.size - 3})")
                     }
                 }
             }
@@ -757,14 +757,14 @@ private fun PhpDocRootCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.FolderOpen, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpDocRootSelect, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpDocRootSelect, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(Strings.phpDocRootHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().phpDocRootHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
             
             if (detectedWebDirs.isNotEmpty()) {
-                Text(Strings.phpDetectedDirs, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(AppStringsProvider.current().phpDetectedDirs, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -773,7 +773,7 @@ private fun PhpDocRootCard(
                     PremiumFilterChip(
                         selected = currentDocRoot.isBlank() && !useCustom,
                         onClick = { onSelectDir("") },
-                        label = { Text("/ (${Strings.phpProjectRoot})") },
+                        label = { Text("/ (${AppStringsProvider.current().phpProjectRoot})") },
                         leadingIcon = if (currentDocRoot.isBlank() && !useCustom) {
                             { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -791,7 +791,7 @@ private fun PhpDocRootCard(
                     PremiumFilterChip(
                         selected = useCustom,
                         onClick = { onToggleCustom(true) },
-                        label = { Text(Strings.phpCustomPath) },
+                        label = { Text(AppStringsProvider.current().phpCustomPath) },
                         leadingIcon = if (useCustom) {
                             { Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -805,7 +805,7 @@ private fun PhpDocRootCard(
                     PremiumTextField(
                         value = currentDocRoot,
                         onValueChange = onCustomPathChange,
-                        label = { Text(Strings.phpDocumentRoot) },
+                        label = { Text(AppStringsProvider.current().phpDocumentRoot) },
                         placeholder = { Text("public") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -817,7 +817,7 @@ private fun PhpDocRootCard(
             PremiumTextField(
                 value = entryFile,
                 onValueChange = onEntryFileChange,
-                label = { Text(Strings.phpEntryFile) },
+                label = { Text(AppStringsProvider.current().phpEntryFile) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -843,10 +843,10 @@ private fun PhpExtensionsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpExtensions, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpExtensions, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(Strings.phpExtensionsHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().phpExtensionsHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
             
             FlowRow(
@@ -886,7 +886,7 @@ private fun PhpDatabaseCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Storage, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpDatabaseConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpDatabaseConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -899,7 +899,7 @@ private fun PhpDatabaseCard(
                     Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("${Strings.phpDbDetected} (${detectedDbFiles.size})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        Text("${AppStringsProvider.current().phpDbDetected} (${detectedDbFiles.size})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                         detectedDbFiles.take(3).forEach { path ->
                             Text(path, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -911,7 +911,7 @@ private fun PhpDatabaseCard(
             PremiumTextField(
                 value = sqlitePath,
                 onValueChange = onPathChange,
-                label = { Text(Strings.phpSqlitePath) },
+                label = { Text(AppStringsProvider.current().phpSqlitePath) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -925,10 +925,10 @@ private fun PhpDatabaseCard(
 @Composable
 private fun PhpFrameworkTipCard(framework: String?) {
     val tip = when (framework?.lowercase()) {
-        "laravel" -> Strings.phpLaravelTip
-        "thinkphp" -> Strings.phpThinkPhpTip
-        "codeigniter" -> Strings.phpCodeIgniterTip
-        "slim" -> Strings.phpSlimTip
+        "laravel" -> AppStringsProvider.current().phpLaravelTip
+        "thinkphp" -> AppStringsProvider.current().phpThinkPhpTip
+        "codeigniter" -> AppStringsProvider.current().phpCodeIgniterTip
+        "slim" -> AppStringsProvider.current().phpSlimTip
         else -> null
     }
     
@@ -950,7 +950,7 @@ private fun PhpFrameworkTipCard(framework: String?) {
                 Icon(Icons.Outlined.Lightbulb, null, tint = tipColor, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text(Strings.phpFrameworkTip, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = tipColor)
+                    Text(AppStringsProvider.current().phpFrameworkTip, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = tipColor)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(tip, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }

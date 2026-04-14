@@ -45,7 +45,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.OrientationMode
 import com.webtoapp.ui.components.CollapsibleCardHeader
 import com.webtoapp.ui.components.EnhancedElevatedCard
@@ -76,7 +76,7 @@ fun LandscapeModeCard(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.ScreenRotation,
-                title = Strings.orientationModeLabel,
+                title = AppStringsProvider.current().orientationModeLabel,
                 checked = isCustomOrientation,
                 onCheckedChange = { checked ->
                     onOrientationModeChange(if (checked) OrientationMode.LANDSCAPE else OrientationMode.PORTRAIT)
@@ -90,29 +90,29 @@ fun LandscapeModeCard(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = Strings.orientationModeHint,
+                        text = AppStringsProvider.current().orientationModeHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = Strings.orientationBasicLabel,
+                        text = AppStringsProvider.current().orientationBasicLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
                     listOf(
-                        Triple(OrientationMode.LANDSCAPE, Icons.Outlined.StayCurrentLandscape, Strings.orientationLandscape),
-                        Triple(OrientationMode.AUTO, Icons.Outlined.ScreenRotation, Strings.orientationAuto)
+                        Triple(OrientationMode.LANDSCAPE, Icons.Outlined.StayCurrentLandscape, AppStringsProvider.current().orientationLandscape),
+                        Triple(OrientationMode.AUTO, Icons.Outlined.ScreenRotation, AppStringsProvider.current().orientationAuto)
                     ).forEachIndexed { index, (mode, icon, label) ->
                         OrientationModeItem(
                             icon = icon,
                             title = label,
                             subtitle = when (mode) {
-                                OrientationMode.LANDSCAPE -> Strings.orientationLandscapeDesc
-                                OrientationMode.AUTO -> Strings.orientationAutoDesc
+                                OrientationMode.LANDSCAPE -> AppStringsProvider.current().orientationLandscapeDesc
+                                OrientationMode.AUTO -> AppStringsProvider.current().orientationAutoDesc
                                 else -> ""
                             },
                             selected = orientationMode == mode,
@@ -147,7 +147,7 @@ fun LandscapeModeCard(
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 Text(
-                                    text = Strings.orientationAdvancedLabel,
+                                    text = AppStringsProvider.current().orientationAdvancedLabel,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
@@ -170,15 +170,15 @@ fun LandscapeModeCard(
                         Column {
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = Strings.orientationReversedLabel,
+                                text = AppStringsProvider.current().orientationReversedLabel,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentPortrait,
-                                title = Strings.orientationReversePortrait,
-                                subtitle = Strings.orientationReversePortraitDesc,
+                                title = AppStringsProvider.current().orientationReversePortrait,
+                                subtitle = AppStringsProvider.current().orientationReversePortraitDesc,
                                 selected = orientationMode == OrientationMode.REVERSE_PORTRAIT,
                                 onClick = { onOrientationModeChange(OrientationMode.REVERSE_PORTRAIT) },
                                 iconRotation = 180f
@@ -186,8 +186,8 @@ fun LandscapeModeCard(
                             Spacer(modifier = Modifier.height(6.dp))
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentLandscape,
-                                title = Strings.orientationReverseLandscape,
-                                subtitle = Strings.orientationReverseLandscapeDesc,
+                                title = AppStringsProvider.current().orientationReverseLandscape,
+                                subtitle = AppStringsProvider.current().orientationReverseLandscapeDesc,
                                 selected = orientationMode == OrientationMode.REVERSE_LANDSCAPE,
                                 onClick = { onOrientationModeChange(OrientationMode.REVERSE_LANDSCAPE) },
                                 iconRotation = 180f
@@ -195,23 +195,23 @@ fun LandscapeModeCard(
 
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = Strings.orientationSensorLabel,
+                                text = AppStringsProvider.current().orientationSensorLabel,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentPortrait,
-                                title = Strings.orientationSensorPortrait,
-                                subtitle = Strings.orientationSensorPortraitDesc,
+                                title = AppStringsProvider.current().orientationSensorPortrait,
+                                subtitle = AppStringsProvider.current().orientationSensorPortraitDesc,
                                 selected = orientationMode == OrientationMode.SENSOR_PORTRAIT,
                                 onClick = { onOrientationModeChange(OrientationMode.SENSOR_PORTRAIT) }
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentLandscape,
-                                title = Strings.orientationSensorLandscape,
-                                subtitle = Strings.orientationSensorLandscapeDesc,
+                                title = AppStringsProvider.current().orientationSensorLandscape,
+                                subtitle = AppStringsProvider.current().orientationSensorLandscapeDesc,
                                 selected = orientationMode == OrientationMode.SENSOR_LANDSCAPE,
                                 onClick = { onOrientationModeChange(OrientationMode.SENSOR_LANDSCAPE) }
                             )
@@ -219,9 +219,9 @@ fun LandscapeModeCard(
                     }
 
                     val currentModeHint = when (orientationMode) {
-                        OrientationMode.AUTO -> Strings.orientationAutoHint
-                        OrientationMode.SENSOR_PORTRAIT -> Strings.orientationSensorPortraitHint
-                        OrientationMode.SENSOR_LANDSCAPE -> Strings.orientationSensorLandscapeHint
+                        OrientationMode.AUTO -> AppStringsProvider.current().orientationAutoHint
+                        OrientationMode.SENSOR_PORTRAIT -> AppStringsProvider.current().orientationSensorPortraitHint
+                        OrientationMode.SENSOR_LANDSCAPE -> AppStringsProvider.current().orientationSensorLandscapeHint
                         else -> null
                     }
 

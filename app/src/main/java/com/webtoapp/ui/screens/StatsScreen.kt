@@ -26,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.core.stats.*
 import com.webtoapp.data.model.AppType
@@ -49,13 +49,13 @@ fun StatsScreen(
     onCheckAllHealth: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf(Strings.statsTitle, Strings.healthTitle)
+    val tabs = listOf(AppStringsProvider.current().statsTitle, AppStringsProvider.current().healthTitle)
     
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.statsTitle) },
+                title = { Text(AppStringsProvider.current().statsTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -64,7 +64,7 @@ fun StatsScreen(
                 actions = {
                     if (selectedTab == 1) {
                         IconButton(onClick = onCheckAllHealth) {
-                            Icon(Icons.Outlined.Refresh, contentDescription = Strings.healthCheckNow)
+                            Icon(Icons.Outlined.Refresh, contentDescription = AppStringsProvider.current().healthCheckNow)
                         }
                     }
                 }
@@ -134,7 +134,7 @@ private fun UsageStatsTab(
         // Note
         item {
             Text(
-                Strings.statsMostUsed,
+                AppStringsProvider.current().statsMostUsed,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -160,7 +160,7 @@ private fun UsageStatsTab(
         // Note
         item {
             Text(
-                Strings.statsMostTime,
+                AppStringsProvider.current().statsMostTime,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -204,19 +204,19 @@ private fun OverallStatsCard(stats: OverallStats) {
             StatItem(
                 icon = Icons.Outlined.TouchApp,
                 value = stats.totalLaunchCount.toString(),
-                label = Strings.statsTotalLaunches,
+                label = AppStringsProvider.current().statsTotalLaunches,
                 color = MaterialTheme.colorScheme.primary
             )
             StatItem(
                 icon = Icons.Outlined.Timer,
                 value = stats.formattedTotalUsage,
-                label = Strings.statsTotalUsage,
+                label = AppStringsProvider.current().statsTotalUsage,
                 color = MaterialTheme.colorScheme.tertiary
             )
             StatItem(
                 icon = Icons.Outlined.Apps,
                 value = stats.activeAppCount.toString(),
-                label = Strings.statsActiveApps,
+                label = AppStringsProvider.current().statsActiveApps,
                 color = MaterialTheme.colorScheme.secondary
             )
         }
@@ -326,7 +326,7 @@ private fun UsageStatsCard(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    Strings.statsLaunches,
+                    AppStringsProvider.current().statsLaunches,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -421,7 +421,7 @@ private fun HealthMonitorTab(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            Strings.statsNoData,
+                            AppStringsProvider.current().statsNoData,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -454,10 +454,10 @@ private fun HealthOverviewCard(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            HealthStatItem(online, Strings.healthOnline, AppColors.Success)
-            HealthStatItem(slow, Strings.healthSlow, Color(0xFFFFC107))
-            HealthStatItem(offline, Strings.healthOffline, Color(0xFFF44336))
-            HealthStatItem(unknown, Strings.healthUnknown, Color(0xFF9E9E9E))
+            HealthStatItem(online, AppStringsProvider.current().healthOnline, AppColors.Success)
+            HealthStatItem(slow, AppStringsProvider.current().healthSlow, Color(0xFFFFC107))
+            HealthStatItem(offline, AppStringsProvider.current().healthOffline, Color(0xFFF44336))
+            HealthStatItem(unknown, AppStringsProvider.current().healthUnknown, Color(0xFF9E9E9E))
         }
     }
 }
@@ -502,10 +502,10 @@ private fun HealthStatusCard(
         else -> Color(0xFF9E9E9E)
     }
     val statusText = when (record?.status) {
-        HealthStatus.ONLINE -> Strings.healthOnline
-        HealthStatus.SLOW -> Strings.healthSlow
-        HealthStatus.OFFLINE -> Strings.healthOffline
-        else -> Strings.healthUnknown
+        HealthStatus.ONLINE -> AppStringsProvider.current().healthOnline
+        HealthStatus.SLOW -> AppStringsProvider.current().healthSlow
+        HealthStatus.OFFLINE -> AppStringsProvider.current().healthOffline
+        else -> AppStringsProvider.current().healthUnknown
     }
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -570,7 +570,7 @@ private fun HealthStatusCard(
                 ) {
                     if (record.responseTimeMs > 0) {
                         Text(
-                            "${Strings.healthResponseTime}: ${record.responseTimeMs}ms",
+                            "${AppStringsProvider.current().healthResponseTime}: ${record.responseTimeMs}ms",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -618,7 +618,7 @@ private fun EmptyStatsCard() {
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    Strings.statsNoData,
+                    AppStringsProvider.current().statsNoData,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

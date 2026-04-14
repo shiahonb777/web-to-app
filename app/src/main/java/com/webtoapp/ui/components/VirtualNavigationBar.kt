@@ -1,6 +1,6 @@
 package com.webtoapp.ui.components
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -92,7 +92,7 @@ fun VirtualNavigationBar(
                     if (config.showBackButton) {
                         NavButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = Strings.cdBack,
+                            contentDescription = AppStringsProvider.current().cdBack,
                             enabled = canGoBack,
                             onClick = onBack,
                             iconColor = config.iconColor,
@@ -104,7 +104,7 @@ fun VirtualNavigationBar(
                     if (config.showForwardButton) {
                         NavButton(
                             icon = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = Strings.cdForward,
+                            contentDescription = AppStringsProvider.current().cdForward,
                             enabled = canGoForward,
                             onClick = onForward,
                             iconColor = config.iconColor,
@@ -116,7 +116,7 @@ fun VirtualNavigationBar(
                     if (config.showRefreshButton) {
                         NavButton(
                             icon = Icons.Filled.Refresh,
-                            contentDescription = Strings.cdRefresh,
+                            contentDescription = AppStringsProvider.current().cdRefresh,
                             enabled = true,
                             onClick = onRefresh,
                             iconColor = config.iconColor,
@@ -128,7 +128,7 @@ fun VirtualNavigationBar(
                     if (config.showHomeButton) {
                         NavButton(
                             icon = Icons.Filled.Home,
-                            contentDescription = Strings.cdHome,
+                            contentDescription = AppStringsProvider.current().cdHome,
                             enabled = true,
                             onClick = onHome,
                             iconColor = config.iconColor,

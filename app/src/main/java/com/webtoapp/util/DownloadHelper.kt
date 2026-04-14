@@ -9,7 +9,7 @@ import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.widget.Toast
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -217,11 +217,11 @@ object DownloadHelper {
         if (url.startsWith("blob:")) {
             val filename = parseFileName(url, contentDisposition, mimeType)
             if (onBlobDownload != null) {
-                Toast.makeText(context, Strings.blobDownloadProcessing, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadProcessing, Toast.LENGTH_SHORT).show()
                 onBlobDownload(url, filename)
             } else {
                 // ，
-                Toast.makeText(context, Strings.blobDownloadFailed, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadFailed, Toast.LENGTH_SHORT).show()
             }
             return
         }
@@ -230,10 +230,10 @@ object DownloadHelper {
         if (url.startsWith("data:")) {
             val filename = parseFileName(url, contentDisposition, mimeType)
             if (onBlobDownload != null) {
-                Toast.makeText(context, Strings.blobDownloadProcessing, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadProcessing, Toast.LENGTH_SHORT).show()
                 onBlobDownload(url, filename)
             } else {
-                Toast.makeText(context, Strings.blobDownloadFailed, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadFailed, Toast.LENGTH_SHORT).show()
             }
             return
         }
@@ -241,7 +241,7 @@ object DownloadHelper {
         val safeUrl = sanitizeDownloadUrl(url)
         if (safeUrl.isEmpty()) {
             AppLogger.w(TAG, "Blocked unsafe download URL: $url")
-            Toast.makeText(context, Strings.downloadFailed, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadFailed, Toast.LENGTH_SHORT).show()
             return
         }
         
@@ -274,19 +274,13 @@ object DownloadHelper {
         scope: CoroutineScope
     ) {
         val mediaType = MediaSaver.getMediaType(mimeType) ?: MediaSaver.getMediaTypeByExtension(fileName)
-        val typeText = when (mediaType) {
-            MediaSaver.MediaType.IMAGE -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "图片" else "image"
-            MediaSaver.MediaType.VIDEO -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "视频" else "video"
-            else -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "文件" else "file"
-        }
-        
         val notificationManager = DownloadNotificationManager.getInstance(context)
         val progressNotificationId = notificationManager.showIndeterminateProgress(fileName)
         
         val savingMsg = when (mediaType) {
-            MediaSaver.MediaType.IMAGE -> Strings.savingImageToGallery
-            MediaSaver.MediaType.VIDEO -> Strings.savingVideoToGallery
-            else -> Strings.savingToGallery
+            MediaSaver.MediaType.IMAGE -> AppStringsProvider.current().savingImageToGallery
+            MediaSaver.MediaType.VIDEO -> AppStringsProvider.current().savingVideoToGallery
+            else -> AppStringsProvider.current().savingToGallery
         }
         Toast.makeText(context, savingMsg, Toast.LENGTH_SHORT).show()
         
@@ -296,9 +290,9 @@ object DownloadHelper {
             when (result) {
                 is MediaSaver.SaveResult.Success -> {
                     val savedMsg = when (mediaType) {
-                        MediaSaver.MediaType.IMAGE -> Strings.imageSavedToGallery
-                        MediaSaver.MediaType.VIDEO -> Strings.videoSavedToGallery
-                        else -> Strings.imageSavedToGallery
+                        MediaSaver.MediaType.IMAGE -> AppStringsProvider.current().imageSavedToGallery
+                        MediaSaver.MediaType.VIDEO -> AppStringsProvider.current().videoSavedToGallery
+                        else -> AppStringsProvider.current().imageSavedToGallery
                     }
                     Toast.makeText(context, savedMsg, Toast.LENGTH_SHORT).show()
                     
@@ -312,7 +306,7 @@ object DownloadHelper {
                     )
                 }
                 is MediaSaver.SaveResult.Error -> {
-                    Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                     notificationManager.showSaveFailed(fileName, result.message, progressNotificationId)
                 }
             }
@@ -334,7 +328,7 @@ object DownloadHelper {
         val safeUrl = sanitizeDownloadUrl(url)
         if (safeUrl.isEmpty()) {
             AppLogger.w(TAG, "Blocked unsafe download URL in downloadWithManager: $url")
-            Toast.makeText(context, Strings.downloadFailed, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadFailed, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -399,7 +393,7 @@ object DownloadHelper {
             // Note.
             retryCountMap.remove(safeUrl)
             
-            Toast.makeText(context, Strings.startDownload.replace("%s", fileName), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().startDownload.replace("%s", fileName), Toast.LENGTH_SHORT).show()
             
         } catch (e: Exception) {
             AppLogger.e(TAG, "Operation failed", e)
@@ -411,7 +405,7 @@ object DownloadHelper {
                     retryCountMap[safeUrl] = currentRetry + 1
                     Toast.makeText(
                         context, 
-                        "${Strings.downloadFailed}, ${Strings.retry} (${currentRetry + 1}/$MAX_RETRY_COUNT)...", 
+                        "${AppStringsProvider.current().downloadFailed}, ${AppStringsProvider.current().retry} (${currentRetry + 1}/$MAX_RETRY_COUNT)...", 
                         Toast.LENGTH_SHORT
                     ).show()
                     
@@ -425,7 +419,7 @@ object DownloadHelper {
             
             // ，
             retryCountMap.remove(safeUrl)
-            Toast.makeText(context, Strings.downloadFailedTryBrowser, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadFailedTryBrowser, Toast.LENGTH_SHORT).show()
             openInBrowser(context, safeUrl)
         }
     }
@@ -438,7 +432,7 @@ object DownloadHelper {
             context.openUrl(url)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Operation failed", e)
-            Toast.makeText(context, Strings.cannotOpenBrowser, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().cannotOpenBrowser, Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -33,7 +33,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.theme.WebToAppTheme
 
@@ -269,7 +269,7 @@ fun ImageDisplay(
     
     Image(
         painter = painter,
-        contentDescription = Strings.mediaContent,
+        contentDescription = AppStringsProvider.current().mediaContent,
         modifier = Modifier.fillMaxSize(),
         contentScale = if (fillScreen) ContentScale.Crop else ContentScale.Fit
     )

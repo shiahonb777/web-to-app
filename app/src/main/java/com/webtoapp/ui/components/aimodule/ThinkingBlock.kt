@@ -1,6 +1,6 @@
 package com.webtoapp.ui.components.aimodule
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -128,7 +128,7 @@ fun ThinkingBlock(
                     // Expand/collapsebutton
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (expanded) Strings.cdCollapse else Strings.cdExpand,
+                        contentDescription = if (expanded) AppStringsProvider.current().cdCollapse else AppStringsProvider.current().cdExpand,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )

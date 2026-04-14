@@ -45,7 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.agent.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.aimodule.*
 import kotlinx.coroutines.flow.collectLatest
 
@@ -124,7 +124,7 @@ fun AiModuleDeveloperScreen(
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Text(Strings.aiModuleDeveloper, fontWeight = FontWeight.Bold)
+                        Text(AppStringsProvider.current().aiModuleDeveloper, fontWeight = FontWeight.Bold)
                         // state
                         if (uiState.isDeveloping) {
                             Spacer(modifier = Modifier.width(4.dp))
@@ -134,19 +134,19 @@ fun AiModuleDeveloperScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     // Resetbutton
                     if (uiState.messages.isNotEmpty() || uiState.generatedModule != null) {
                         IconButton(onClick = { viewModel.resetState() }) {
-                            Icon(Icons.Default.Refresh, Strings.btnReset)
+                            Icon(Icons.Default.Refresh, AppStringsProvider.current().btnReset)
                         }
                     }
                     // helpbutton
                     IconButton(onClick = { viewModel.toggleHelpDialog(true) }) {
-                        Icon(Icons.Outlined.Help, Strings.help)
+                        Icon(Icons.Outlined.Help, AppStringsProvider.current().help)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -394,7 +394,7 @@ private fun InputSection(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    Strings.categoryLabel,
+                    AppStringsProvider.current().categoryLabel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -404,7 +404,7 @@ private fun InputSection(
                     onClick = onCategoryClick,
                     label = { 
                         Text(
-                            selectedCategory?.let { "${it.icon} ${it.getDisplayName()}" } ?: Strings.autoDetectCategory,
+                            selectedCategory?.let { "${it.icon} ${it.getDisplayName()}" } ?: AppStringsProvider.current().autoDetectCategory,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -417,7 +417,7 @@ private fun InputSection(
                     ) {
                         Icon(
                             Icons.Default.Clear,
-                            contentDescription = Strings.clear,
+                            contentDescription = AppStringsProvider.current().clear,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -432,7 +432,7 @@ private fun InputSection(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { 
                     Text(
-                        Strings.inputPlaceholder,
+                        AppStringsProvider.current().inputPlaceholder,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 },
@@ -448,7 +448,7 @@ private fun InputSection(
                         } else {
                             Icon(
                                 Icons.Default.Send,
-                                contentDescription = Strings.startDevelopment,
+                                contentDescription = AppStringsProvider.current().startDevelopment,
                                 tint = if (userInput.isNotBlank()) 
                                     MaterialTheme.colorScheme.primary 
                                 else 
@@ -519,7 +519,7 @@ private fun GeneratedModuleSection(
                         tint = MaterialTheme.colorScheme.tertiary
                     )
                     Text(
-                        Strings.codeModifiedHint,
+                        AppStringsProvider.current().codeModifiedHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary
                     )
@@ -559,7 +559,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        Strings.moduleGeneratedSuccess,
+                        AppStringsProvider.current().moduleGeneratedSuccess,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -605,10 +605,10 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
             // statelabel
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (module.syntaxValid) {
-                    StatusChip(iconVector = Icons.Outlined.CheckCircle, text = Strings.syntaxCorrect, color = MaterialTheme.colorScheme.primary)
+                    StatusChip(iconVector = Icons.Outlined.CheckCircle, text = AppStringsProvider.current().syntaxCorrect, color = MaterialTheme.colorScheme.primary)
                 }
                 if (module.securitySafe) {
-                    StatusChip(iconVector = Icons.Outlined.Lock, text = Strings.secureStatus, color = MaterialTheme.colorScheme.secondary)
+                    StatusChip(iconVector = Icons.Outlined.Lock, text = AppStringsProvider.current().secureStatus, color = MaterialTheme.colorScheme.secondary)
                 }
             }
             
@@ -670,13 +670,13 @@ private fun StreamingStatusCard(state: AgentState) {
         else -> Icons.Outlined.HourglassEmpty
     }
     val stateText = when (state) {
-        AgentState.THINKING -> Strings.analyzingRequirements
-        AgentState.GENERATING -> Strings.generatingCodeStatus
-        AgentState.TOOL_CALLING -> Strings.executingToolCalls
-        AgentState.SYNTAX_CHECKING -> Strings.syntaxCheckingStatus
-        AgentState.FIXING -> Strings.fixingIssuesStatus
-        AgentState.SECURITY_SCANNING -> Strings.securityScanningStatus
-        else -> Strings.processing
+        AgentState.THINKING -> AppStringsProvider.current().analyzingRequirements
+        AgentState.GENERATING -> AppStringsProvider.current().generatingCodeStatus
+        AgentState.TOOL_CALLING -> AppStringsProvider.current().executingToolCalls
+        AgentState.SYNTAX_CHECKING -> AppStringsProvider.current().syntaxCheckingStatus
+        AgentState.FIXING -> AppStringsProvider.current().fixingIssuesStatus
+        AgentState.SECURITY_SCANNING -> AppStringsProvider.current().securityScanningStatus
+        else -> AppStringsProvider.current().processing
     }
     val color = when (state) {
         AgentState.THINKING, AgentState.GENERATING -> MaterialTheme.colorScheme.primary
@@ -719,13 +719,13 @@ private fun StreamingStatusCard(state: AgentState) {
 @Composable
 private fun StreamingStatusBadge(state: AgentState) {
     val text = when (state) {
-        AgentState.THINKING -> Strings.statusAnalyzing
-        AgentState.GENERATING -> Strings.statusGenerating
-        AgentState.TOOL_CALLING -> Strings.statusExecuting
-        AgentState.SYNTAX_CHECKING -> Strings.statusChecking
-        AgentState.FIXING -> Strings.statusFixing
-        AgentState.SECURITY_SCANNING -> Strings.statusScanning
-        else -> Strings.statusProcessing
+        AgentState.THINKING -> AppStringsProvider.current().statusAnalyzing
+        AgentState.GENERATING -> AppStringsProvider.current().statusGenerating
+        AgentState.TOOL_CALLING -> AppStringsProvider.current().statusExecuting
+        AgentState.SYNTAX_CHECKING -> AppStringsProvider.current().statusChecking
+        AgentState.FIXING -> AppStringsProvider.current().statusFixing
+        AgentState.SECURITY_SCANNING -> AppStringsProvider.current().statusScanning
+        else -> AppStringsProvider.current().statusProcessing
     }
     
     val infiniteTransition = rememberInfiniteTransition(label = "badge")
@@ -880,7 +880,7 @@ private fun WelcomeCard() {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                Strings.aiAssistant,
+                AppStringsProvider.current().aiAssistant,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -890,7 +890,7 @@ private fun WelcomeCard() {
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                Strings.aiAssistantDesc,
+                AppStringsProvider.current().aiAssistantDesc,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -911,11 +911,11 @@ private fun FeatureChips() {
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FeatureChip(iconVector = Icons.Outlined.Search, text = Strings.syntaxCheck)
-        FeatureChip(iconVector = Icons.Outlined.Lock, text = Strings.securityScan)
-        FeatureChip(iconVector = Icons.Outlined.Healing, text = Strings.autoFix)
-        FeatureChip(iconVector = Icons.Outlined.Inventory2, text = Strings.codeTemplate)
-        FeatureChip(iconVector = Icons.Outlined.Science, text = Strings.instantTest)
+        FeatureChip(iconVector = Icons.Outlined.Search, text = AppStringsProvider.current().syntaxCheck)
+        FeatureChip(iconVector = Icons.Outlined.Lock, text = AppStringsProvider.current().securityScan)
+        FeatureChip(iconVector = Icons.Outlined.Healing, text = AppStringsProvider.current().autoFix)
+        FeatureChip(iconVector = Icons.Outlined.Inventory2, text = AppStringsProvider.current().codeTemplate)
+        FeatureChip(iconVector = Icons.Outlined.Science, text = AppStringsProvider.current().instantTest)
     }
 }
 
@@ -951,12 +951,12 @@ private fun FeatureChip(iconVector: ImageVector, text: String) {
 @Composable
 private fun ExampleRequirements(onSelect: (String) -> Unit) {
     val examples = listOf(
-        Icons.Outlined.Block to Strings.exampleBlockAds,
-        Icons.Outlined.DarkMode to Strings.exampleDarkMode,
-        Icons.Outlined.SwipeDown to Strings.exampleAutoScroll,
-        Icons.Outlined.ContentCopy to Strings.exampleUnlockCopy,
-        Icons.Outlined.FastForward to Strings.exampleVideoSpeed,
-        Icons.Outlined.KeyboardArrowUp to Strings.exampleBackToTop
+        Icons.Outlined.Block to AppStringsProvider.current().exampleBlockAds,
+        Icons.Outlined.DarkMode to AppStringsProvider.current().exampleDarkMode,
+        Icons.Outlined.SwipeDown to AppStringsProvider.current().exampleAutoScroll,
+        Icons.Outlined.ContentCopy to AppStringsProvider.current().exampleUnlockCopy,
+        Icons.Outlined.FastForward to AppStringsProvider.current().exampleVideoSpeed,
+        Icons.Outlined.KeyboardArrowUp to AppStringsProvider.current().exampleBackToTop
     )
     
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -971,7 +971,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                Strings.tryTheseExamples,
+                AppStringsProvider.current().tryTheseExamples,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -1050,7 +1050,7 @@ private fun CategorySelectorDialog(
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Text(Strings.selectModuleCategory)
+                Text(AppStringsProvider.current().selectModuleCategory)
             }
         },
         text = {
@@ -1060,8 +1060,8 @@ private fun CategorySelectorDialog(
                 item {
                     CategoryItem(
                         iconVector = Icons.Outlined.SmartToy,
-                        name = Strings.autoDetect,
-                        description = Strings.autoDetectCategoryHint,
+                        name = AppStringsProvider.current().autoDetect,
+                        description = AppStringsProvider.current().autoDetectCategoryHint,
                         selected = selectedCategory == null,
                         onClick = { onSelect(null) }
                     )
@@ -1081,7 +1081,7 @@ private fun CategorySelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -1168,7 +1168,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Text(Strings.usageHelp)
+                Text(AppStringsProvider.current().usageHelp)
             }
         },
         text = {
@@ -1178,56 +1178,56 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Chat,
-                        title = Strings.helpHowToUse,
-                        content = Strings.helpHowToUseContent
+                        title = AppStringsProvider.current().helpHowToUse,
+                        content = AppStringsProvider.current().helpHowToUseContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Edit,
-                        title = Strings.helpRequirementTips,
-                        content = Strings.helpRequirementTipsContent
+                        title = AppStringsProvider.current().helpRequirementTips,
+                        content = AppStringsProvider.current().helpRequirementTipsContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.SmartToy,
-                        title = Strings.helpModelSelection,
-                        content = Strings.helpModelSelectionContent
+                        title = AppStringsProvider.current().helpModelSelection,
+                        content = AppStringsProvider.current().helpModelSelectionContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.FolderOpen,
-                        title = Strings.helpCategorySelection,
-                        content = Strings.helpCategorySelectionContent
+                        title = AppStringsProvider.current().helpCategorySelection,
+                        content = AppStringsProvider.current().helpCategorySelectionContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Search,
-                        title = Strings.helpAutoCheck,
-                        content = Strings.helpAutoCheckContent
+                        title = AppStringsProvider.current().helpAutoCheck,
+                        content = AppStringsProvider.current().helpAutoCheckContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Edit,
-                        title = Strings.helpCodeEdit,
-                        content = Strings.helpCodeEditContent
+                        title = AppStringsProvider.current().helpCodeEdit,
+                        content = AppStringsProvider.current().helpCodeEditContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Save,
-                        title = Strings.helpSaveModule,
-                        content = Strings.helpSaveModuleContent
+                        title = AppStringsProvider.current().helpSaveModule,
+                        content = AppStringsProvider.current().helpSaveModuleContent
                     )
                 }
             }
@@ -1237,7 +1237,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                 onClick = onDismiss,
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(Strings.iUnderstand)
+                Text(AppStringsProvider.current().iUnderstand)
             }
         }
     )

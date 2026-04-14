@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -184,11 +184,11 @@ internal fun PublishAppSheet(
     }
 
     val categories = listOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
+        "tools" to AppStringsProvider.current().catTools, "social" to AppStringsProvider.current().catSocial, "education" to "教育",
         "entertainment" to "娱乐", "productivity" to "效率",
         "lifestyle" to "生活", "business" to "商务",
         "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "health" to "健康", "other" to AppStringsProvider.current().catOther
     )
 
     ModalBottomSheet(
@@ -231,7 +231,7 @@ internal fun PublishAppSheet(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    Strings.storePublishApp,
+                                    AppStringsProvider.current().storePublishApp,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = (-0.3).sp
@@ -1132,7 +1132,7 @@ internal fun PublishAppSheet(
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-                            Text(Strings.teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(AppStringsProvider.current().teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
@@ -1166,7 +1166,7 @@ internal fun PublishAppSheet(
                                 value = selectedTeam?.name ?: "",
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(Strings.teamSelectTeam) },
+                                label = { Text(AppStringsProvider.current().teamSelectTeam) },
                                 placeholder = { Text("点击选择团队") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -1275,7 +1275,7 @@ internal fun PublishAppSheet(
                                                             it[index] = entry.copy(role = "lead")
                                                         }
                                                     },
-                                                    label = { Text(Strings.teamLead, fontSize = 11.sp) },
+                                                    label = { Text(AppStringsProvider.current().teamLead, fontSize = 11.sp) },
                                                     modifier = Modifier.height(28.dp)
                                                 )
                                                 FilterChip(
@@ -1285,7 +1285,7 @@ internal fun PublishAppSheet(
                                                             it[index] = entry.copy(role = "member")
                                                         }
                                                     },
-                                                    label = { Text(Strings.teamMemberRole, fontSize = 11.sp) },
+                                                    label = { Text(AppStringsProvider.current().teamMemberRole, fontSize = 11.sp) },
                                                     modifier = Modifier.height(28.dp)
                                                 )
                                             }
@@ -1303,7 +1303,7 @@ internal fun PublishAppSheet(
                                                         it[index] = entry.copy(points = p)
                                                     }
                                                 },
-                                                label = { Text(Strings.teamContributionPoints, fontSize = 11.sp) },
+                                                label = { Text(AppStringsProvider.current().teamContributionPoints, fontSize = 11.sp) },
                                                 modifier = Modifier.width(100.dp),
                                                 shape = RoundedCornerShape(8.dp),
                                                 singleLine = true,
@@ -1316,7 +1316,7 @@ internal fun PublishAppSheet(
                                                         it[index] = entry.copy(desc = value)
                                                     }
                                                 },
-                                                label = { Text(Strings.teamContributionDesc, fontSize = 11.sp) },
+                                                label = { Text(AppStringsProvider.current().teamContributionDesc, fontSize = 11.sp) },
                                                 modifier = Modifier.weight(1f),
                                                 shape = RoundedCornerShape(8.dp),
                                                 singleLine = true,
@@ -1342,11 +1342,11 @@ internal fun PublishAppSheet(
                                 return@Button
                             }
                             if (name.isBlank() || description.isBlank()) {
-                                scope.launch { snackbarHostState.showSnackbar(Strings.storeFillRequired) }
+                                scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().storeFillRequired) }
                                 return@Button
                             }
                             if (screenshotUrls.isEmpty() && screenshotUris.isEmpty()) {
-                                scope.launch { snackbarHostState.showSnackbar(Strings.storeAddScreenshot) }
+                                scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().storeAddScreenshot) }
                                 return@Button
                             }
                             scope.launch {
@@ -1466,20 +1466,20 @@ internal fun PublishAppSheet(
                                                 )
                                                 when (teamResult) {
                                                     is com.webtoapp.core.auth.AuthResult.Success ->
-                                                        snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队已关联")
+                                                        snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishSuccess} · 团队已关联")
                                                     is com.webtoapp.core.auth.AuthResult.Error ->
-                                                        snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队关联失败: ${teamResult.message}")
+                                                        snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishSuccess} · 团队关联失败: ${teamResult.message}")
                                                 }
                                             } else {
-                                                snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队关联需至少一位主负责人")
+                                                snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishSuccess} · 团队关联需至少一位主负责人")
                                             }
                                         } else {
-                                            snackbarHostState.showSnackbar(Strings.storePublishSuccess)
+                                            snackbarHostState.showSnackbar(AppStringsProvider.current().storePublishSuccess)
                                         }
                                         onPublished()
                                     }
                                     is com.webtoapp.core.auth.AuthResult.Error -> {
-                                        snackbarHostState.showSnackbar("${Strings.storePublishFailed}: ${result.message}")
+                                        snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishFailed}: ${result.message}")
                                     }
                                 }
                             }
@@ -1500,7 +1500,7 @@ internal fun PublishAppSheet(
                         } else {
                             Icon(Icons.Outlined.Publish, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.storePublishApp, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
+                            Text(AppStringsProvider.current().storePublishApp, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
                         }
                     }
                 }
@@ -1662,7 +1662,7 @@ internal fun PublishAppSheet(
             },
             confirmButton = {
                 TextButton(onClick = { showProjectPicker = false }) {
-                    Text(Strings.storeReviewCancel)
+                    Text(AppStringsProvider.current().storeReviewCancel)
                 }
             }
         )

@@ -193,12 +193,12 @@ class AdBlocker {
             HostsSource(
                 name = "StevenBlack Hosts",
                 url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-                description = com.webtoapp.core.i18n.Strings.hostsStevenBlackDesc
+                description = com.webtoapp.core.i18n.AppStringsProvider.current().hostsStevenBlackDesc
             ),
             HostsSource(
                 name = "AdAway Default",
                 url = "https://adaway.org/hosts.txt",
-                description = com.webtoapp.core.i18n.Strings.hostsAdAwayDesc
+                description = com.webtoapp.core.i18n.AppStringsProvider.current().hostsAdAwayDesc
             ),
             HostsSource(
                 name = "Peter Lowe's List",
@@ -208,7 +208,7 @@ class AdBlocker {
             HostsSource(
                 name = "1Hosts Lite",
                 url = "https://o0.pages.dev/Lite/hosts.txt",
-                description = com.webtoapp.core.i18n.Strings.hosts1HostsLiteDesc
+                description = com.webtoapp.core.i18n.AppStringsProvider.current().hosts1HostsLiteDesc
             ),
             // ── Regional lists (Europe) ──
             HostsSource(
@@ -265,12 +265,12 @@ class AdBlocker {
             HostsSource(
                 name = "AdGuard DNS Filter",
                 url = "https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt",
-                description = com.webtoapp.core.i18n.Strings.hostsAdGuardDesc
+                description = com.webtoapp.core.i18n.AppStringsProvider.current().hostsAdGuardDesc
             ),
             HostsSource(
                 name = "Anti-AD",
                 url = "https://anti-ad.net/hosts.txt",
-                description = com.webtoapp.core.i18n.Strings.hostsAntiADDesc
+                description = com.webtoapp.core.i18n.AppStringsProvider.current().hostsAntiADDesc
             )
         )
 

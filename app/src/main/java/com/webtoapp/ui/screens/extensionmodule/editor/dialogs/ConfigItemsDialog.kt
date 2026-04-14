@@ -41,7 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.extension.ConfigItemType
 import com.webtoapp.core.extension.ModuleConfigItem
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumTextField
 
@@ -55,12 +55,12 @@ fun ConfigItemsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.userConfigItems) },
+        title = { Text(AppStringsProvider.current().userConfigItems) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 if (configItems.isEmpty()) {
                     Text(
-                        Strings.noConfigItemsHint,
+                        AppStringsProvider.current().noConfigItemsHint,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -119,7 +119,7 @@ fun ConfigItemsDialog(
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        contentDescription = Strings.delete,
+                                        contentDescription = AppStringsProvider.current().delete,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
                                     )
@@ -135,10 +135,10 @@ fun ConfigItemsDialog(
                 TextButton(onClick = { showAddDialog = true }) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.size(4.dp))
-                    Text(Strings.add)
+                    Text(AppStringsProvider.current().add)
                 }
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.done)
+                    Text(AppStringsProvider.current().done)
                 }
             }
         }
@@ -170,7 +170,7 @@ fun AddConfigItemDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.addConfigItem) },
+        title = { Text(AppStringsProvider.current().addConfigItem) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -180,8 +180,8 @@ fun AddConfigItemDialog(
                     value = key,
                     onValueChange = { key = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(Strings.keyNameRequired) },
-                    placeholder = { Text(Strings.keyNamePlaceholder) },
+                    label = { Text(AppStringsProvider.current().keyNameRequired) },
+                    placeholder = { Text(AppStringsProvider.current().keyNamePlaceholder) },
                     singleLine = true
                 )
 
@@ -189,8 +189,8 @@ fun AddConfigItemDialog(
                     value = name,
                     onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(Strings.displayNameRequired) },
-                    placeholder = { Text(Strings.displayNamePlaceholder) },
+                    label = { Text(AppStringsProvider.current().displayNameRequired) },
+                    placeholder = { Text(AppStringsProvider.current().displayNamePlaceholder) },
                     singleLine = true
                 )
 
@@ -198,8 +198,8 @@ fun AddConfigItemDialog(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(Strings.explanationLabel) },
-                    placeholder = { Text(Strings.configExplanationPlaceholder) },
+                    label = { Text(AppStringsProvider.current().explanationLabel) },
+                    placeholder = { Text(AppStringsProvider.current().configExplanationPlaceholder) },
                     singleLine = true
                 )
 
@@ -214,7 +214,7 @@ fun AddConfigItemDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(),
-                        label = { Text(Strings.typeLabel) },
+                        label = { Text(AppStringsProvider.current().typeLabel) },
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
                     )
@@ -238,13 +238,13 @@ fun AddConfigItemDialog(
                     value = defaultValue,
                     onValueChange = { defaultValue = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(Strings.defaultValueLabel) },
+                    label = { Text(AppStringsProvider.current().defaultValueLabel) },
                     singleLine = true
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = required, onCheckedChange = { required = it })
-                    Text(Strings.requiredField)
+                    Text(AppStringsProvider.current().requiredField)
                 }
             }
         },
@@ -264,12 +264,12 @@ fun AddConfigItemDialog(
                 },
                 enabled = key.isNotBlank() && name.isNotBlank()
             ) {
-                Text(Strings.add)
+                Text(AppStringsProvider.current().add)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )

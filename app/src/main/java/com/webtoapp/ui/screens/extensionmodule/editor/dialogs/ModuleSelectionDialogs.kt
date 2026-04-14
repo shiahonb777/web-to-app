@@ -34,7 +34,7 @@ import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.ModulePermission
 import com.webtoapp.core.extension.ModuleRunMode
 import com.webtoapp.core.extension.ModuleRunTime
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.SvgIconMapper
 
 @Composable
@@ -45,7 +45,7 @@ fun ModuleCategoryDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectCategory) },
+        title = { Text(AppStringsProvider.current().selectCategory) },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(ModuleCategory.values().toList()) { cat ->
@@ -124,7 +124,7 @@ fun ModuleRunAtDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.runTime) },
+        title = { Text(AppStringsProvider.current().runTime) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -217,7 +217,7 @@ fun ModuleRunModeDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.runModeLabel) },
+        title = { Text(AppStringsProvider.current().runModeLabel) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -303,7 +303,7 @@ fun ModulePermissionsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.requiredPermissions) },
+        title = { Text(AppStringsProvider.current().requiredPermissions) },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(ModulePermission.values().toList()) { perm ->
@@ -390,7 +390,7 @@ fun ModulePermissionsDialog(
                                                 .padding(horizontal = 6.dp, vertical = 1.dp)
                                         ) {
                                             Text(
-                                                Strings.sensitive,
+                                                AppStringsProvider.current().sensitive,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.error,
                                                 fontWeight = FontWeight.Medium
@@ -418,7 +418,7 @@ fun ModulePermissionsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.confirm)
+                Text(AppStringsProvider.current().confirm)
             }
         }
     )

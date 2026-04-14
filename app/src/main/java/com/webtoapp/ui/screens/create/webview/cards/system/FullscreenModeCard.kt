@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.CollapsibleCardHeader
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumSwitch
@@ -37,7 +37,7 @@ fun FullscreenModeCard(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Fullscreen,
-                title = Strings.fullscreenMode,
+                title = AppStringsProvider.current().fullscreenMode,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -48,22 +48,22 @@ fun FullscreenModeCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     FullscreenToggleRow(
-                        title = Strings.showStatusBar,
-                        subtitle = Strings.showStatusBarHint,
+                        title = AppStringsProvider.current().showStatusBar,
+                        subtitle = AppStringsProvider.current().showStatusBarHint,
                         checked = showStatusBar,
                         onCheckedChange = onShowStatusBarChange
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     FullscreenToggleRow(
-                        title = Strings.showNavigationBar,
-                        subtitle = Strings.showNavigationBarHint,
+                        title = AppStringsProvider.current().showNavigationBar,
+                        subtitle = AppStringsProvider.current().showNavigationBarHint,
                         checked = showNavigationBar,
                         onCheckedChange = onShowNavigationBarChange
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     FullscreenToggleRow(
-                        title = Strings.showToolbar,
-                        subtitle = Strings.showToolbarHint,
+                        title = AppStringsProvider.current().showToolbar,
+                        subtitle = AppStringsProvider.current().showToolbarHint,
                         checked = showToolbar,
                         onCheckedChange = onShowToolbarChange
                     )

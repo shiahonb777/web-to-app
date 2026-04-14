@@ -8,15 +8,15 @@ enum class ApkArchitecture(
     ARM32(listOf("armeabi-v7a", "x86"));
     
     val displayName: String get() = when (this) {
-        UNIVERSAL -> com.webtoapp.core.i18n.Strings.archUniversal
-        ARM64 -> com.webtoapp.core.i18n.Strings.archArm64
-        ARM32 -> com.webtoapp.core.i18n.Strings.archArm32
+        UNIVERSAL -> com.webtoapp.core.i18n.AppStringsProvider.current().archUniversal
+        ARM64 -> com.webtoapp.core.i18n.AppStringsProvider.current().archArm64
+        ARM32 -> com.webtoapp.core.i18n.AppStringsProvider.current().archArm32
     }
     
     val description: String get() = when (this) {
-        UNIVERSAL -> com.webtoapp.core.i18n.Strings.archUniversalDesc
-        ARM64 -> com.webtoapp.core.i18n.Strings.archArm64Desc
-        ARM32 -> com.webtoapp.core.i18n.Strings.archArm32Desc
+        UNIVERSAL -> com.webtoapp.core.i18n.AppStringsProvider.current().archUniversalDesc
+        ARM64 -> com.webtoapp.core.i18n.AppStringsProvider.current().archArm64Desc
+        ARM32 -> com.webtoapp.core.i18n.AppStringsProvider.current().archArm32Desc
     }
     
     companion object {
@@ -105,10 +105,10 @@ data class ApkEncryptionConfig(
         PARANOID(100000);
         
         val description: String get() = when (this) {
-            FAST -> com.webtoapp.core.i18n.Strings.encryptLevelFast
-            STANDARD -> com.webtoapp.core.i18n.Strings.encryptLevelStandard
-            HIGH -> com.webtoapp.core.i18n.Strings.encryptLevelHigh
-            PARANOID -> com.webtoapp.core.i18n.Strings.encryptLevelParanoid
+            FAST -> com.webtoapp.core.i18n.AppStringsProvider.current().encryptLevelFast
+            STANDARD -> com.webtoapp.core.i18n.AppStringsProvider.current().encryptLevelStandard
+            HIGH -> com.webtoapp.core.i18n.AppStringsProvider.current().encryptLevelHigh
+            PARANOID -> com.webtoapp.core.i18n.AppStringsProvider.current().encryptLevelParanoid
         }
     }
     
@@ -227,17 +227,17 @@ data class AppHardeningConfig(
         FORTRESS;
         
         val displayName: String get() = when (this) {
-            BASIC -> com.webtoapp.core.i18n.Strings.hardeningLevelBasic
-            STANDARD -> com.webtoapp.core.i18n.Strings.hardeningLevelStandard
-            ADVANCED -> com.webtoapp.core.i18n.Strings.hardeningLevelAdvanced
-            FORTRESS -> com.webtoapp.core.i18n.Strings.hardeningLevelFortress
+            BASIC -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelBasic
+            STANDARD -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelStandard
+            ADVANCED -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelAdvanced
+            FORTRESS -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelFortress
         }
         
         val description: String get() = when (this) {
-            BASIC -> com.webtoapp.core.i18n.Strings.hardeningLevelBasicDesc
-            STANDARD -> com.webtoapp.core.i18n.Strings.hardeningLevelStandardDesc
-            ADVANCED -> com.webtoapp.core.i18n.Strings.hardeningLevelAdvancedDesc
-            FORTRESS -> com.webtoapp.core.i18n.Strings.hardeningLevelFortressDesc
+            BASIC -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelBasicDesc
+            STANDARD -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelStandardDesc
+            ADVANCED -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelAdvancedDesc
+            FORTRESS -> com.webtoapp.core.i18n.AppStringsProvider.current().hardeningLevelFortressDesc
         }
     }
     
@@ -249,11 +249,11 @@ data class AppHardeningConfig(
         FAKE_DATA;
         
         val displayName: String get() = when (this) {
-            LOG_ONLY -> com.webtoapp.core.i18n.Strings.threatResponseLogOnly
-            SILENT_EXIT -> com.webtoapp.core.i18n.Strings.threatResponseSilentExit
-            CRASH_RANDOM -> com.webtoapp.core.i18n.Strings.threatResponseCrashRandom
-            DATA_WIPE -> com.webtoapp.core.i18n.Strings.threatResponseDataWipe
-            FAKE_DATA -> com.webtoapp.core.i18n.Strings.threatResponseFakeData
+            LOG_ONLY -> com.webtoapp.core.i18n.AppStringsProvider.current().threatResponseLogOnly
+            SILENT_EXIT -> com.webtoapp.core.i18n.AppStringsProvider.current().threatResponseSilentExit
+            CRASH_RANDOM -> com.webtoapp.core.i18n.AppStringsProvider.current().threatResponseCrashRandom
+            DATA_WIPE -> com.webtoapp.core.i18n.AppStringsProvider.current().threatResponseDataWipe
+            FAKE_DATA -> com.webtoapp.core.i18n.AppStringsProvider.current().threatResponseFakeData
         }
     }
     

@@ -1,6 +1,6 @@
 package com.webtoapp.core.errorpage
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * 错误页内嵌小游戏生成器
@@ -75,8 +75,8 @@ object ErrorPageGames {
             ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(bx-1.5,by-1.5,br*0.4,0,Math.PI*2);ctx.fill();
             // HUD
             ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='12px sans-serif';
-            ctx.fillText('${Strings.gameScore}: '+score,8,18);
-            ctx.fillText('${Strings.gameLives}: '+lives,W-60,18);
+            ctx.fillText('${AppStringsProvider.current().gameScore}: '+score,8,18);
+            ctx.fillText('${AppStringsProvider.current().gameLives}: '+lives,W-60,18);
         }
         
         function update(){
@@ -111,9 +111,9 @@ object ErrorPageGames {
         function loop(){draw();update();if(running)requestAnimationFrame(loop);else{
             ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,W,H);
             ctx.fillStyle='#fff';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
-            ctx.fillText(lives<=0?'${Strings.gameOver}':'${Strings.gameYouWin}',W/2,H/2-10);
-            ctx.font='13px sans-serif';ctx.fillText('${Strings.gameScore}: '+score,W/2,H/2+15);
-            ctx.fillText('${Strings.gameTapToRestart}',W/2,H/2+38);ctx.textAlign='left';
+            ctx.fillText(lives<=0?'${AppStringsProvider.current().gameOver}':'${AppStringsProvider.current().gameYouWin}',W/2,H/2-10);
+            ctx.font='13px sans-serif';ctx.fillText('${AppStringsProvider.current().gameScore}: '+score,W/2,H/2+15);
+            ctx.fillText('${AppStringsProvider.current().gameTapToRestart}',W/2,H/2+38);ctx.textAlign='left';
             C.onclick=function(){location.reload();};
         }}
         loop();
@@ -213,10 +213,10 @@ object ErrorPageGames {
             if(won){
                 ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,W,H);
                 ctx.fillStyle='#4ade80';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
-                ctx.fillText('${Strings.gameMazeComplete}',W/2,H/2-5);
+                ctx.fillText('${AppStringsProvider.current().gameMazeComplete}',W/2,H/2-5);
                 ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='13px sans-serif';
-                ctx.fillText('${Strings.gameSteps}: '+trail.length,W/2,H/2+18);
-                ctx.fillText('${Strings.gameTapToRestart}',W/2,H/2+40);ctx.textAlign='left';
+                ctx.fillText('${AppStringsProvider.current().gameSteps}: '+trail.length,W/2,H/2+18);
+                ctx.fillText('${AppStringsProvider.current().gameTapToRestart}',W/2,H/2+40);ctx.textAlign='left';
                 C.onclick=function(){location.reload();};
             }
         }
@@ -307,17 +307,17 @@ object ErrorPageGames {
             ctx.globalAlpha=1;
             // HUD
             ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='12px sans-serif';
-            ctx.fillText('${Strings.gameCollected}: '+score,8,18);
+            ctx.fillText('${AppStringsProvider.current().gameCollected}: '+score,8,18);
             var hearts='';for(var i=0;i<maxMissed-missed;i++)hearts+='♥';
             ctx.fillStyle='#ff6b6b';ctx.fillText(hearts,W-70,18);
             
             if(running)requestAnimationFrame(loop);else{
                 ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,W,H);
                 ctx.fillStyle='#ffd700';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
-                ctx.fillText('${Strings.gameOver}',W/2,H/2-10);
+                ctx.fillText('${AppStringsProvider.current().gameOver}',W/2,H/2-10);
                 ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='13px sans-serif';
-                ctx.fillText('${Strings.gameCollected} '+score+' stars',W/2,H/2+15);
-                ctx.fillText('${Strings.gameTapToRestart}',W/2,H/2+38);ctx.textAlign='left';
+                ctx.fillText('${AppStringsProvider.current().gameCollected} '+score+' stars',W/2,H/2+15);
+                ctx.fillText('${AppStringsProvider.current().gameTapToRestart}',W/2,H/2+38);ctx.textAlign='left';
                 C.onclick=function(){location.reload();};
             }
         }
@@ -399,8 +399,8 @@ object ErrorPageGames {
         
         // 提示文字
         ctx.fillStyle='rgba(0,0,0,0.12)';ctx.font='14px serif';ctx.textAlign='center';
-        ctx.fillText('${Strings.gameTouchToPaint}',W/2,H/2);
-        ctx.fillText('${Strings.gameZen}',W/2,H/2+25);ctx.textAlign='left';
+        ctx.fillText('${AppStringsProvider.current().gameTouchToPaint}',W/2,H/2);
+        ctx.fillText('${AppStringsProvider.current().gameZen}',W/2,H/2+25);ctx.textAlign='left';
         
         // 墨滴动画
         function animate(){updateDrops();requestAnimationFrame(animate);}

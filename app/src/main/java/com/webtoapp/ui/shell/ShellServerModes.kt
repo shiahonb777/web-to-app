@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
 import com.webtoapp.data.model.WebViewConfig
@@ -98,12 +98,12 @@ fun WordPressShellMode(
                     AppLogger.i("WordPressShell", "WordPress 就绪: $serverUrl")
                 } else {
                     phase = "error"
-                    errorMsg = Strings.phpStartFailed
+                    errorMsg = AppStringsProvider.current().phpStartFailed
                 }
             } catch (e: Exception) {
                 AppLogger.e("WordPressShell", "WordPress Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -202,8 +202,8 @@ fun WordPressShellMode(
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (phase == "extracting") Strings.wpCheckingDeps
-                                   else Strings.wpStartingServer,
+                            text = if (phase == "extracting") AppStringsProvider.current().wpCheckingDeps
+                                   else AppStringsProvider.current().wpStartingServer,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -224,7 +224,7 @@ fun WordPressShellMode(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = errorMsg ?: Strings.wpStartFailed,
+                            text = errorMsg ?: AppStringsProvider.current().wpStartFailed,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -272,7 +272,7 @@ fun NodeJsShellMode(
                     AppLogger.e("NodeJsShell", "libnode.so 未找到")
                     com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "libnode.so 未找到")
                     phase = "error"
-                    errorMsg = Strings.nodeRuntimeNotFound
+                    errorMsg = AppStringsProvider.current().nodeRuntimeNotFound
                     return@withContext
                 }
                 
@@ -323,14 +323,14 @@ fun NodeJsShellMode(
                     phase = "error"
                     errorMsg = (nodeRuntime.serverState.value as? com.webtoapp.core.nodejs.NodeRuntime.ServerState.Error)
                         ?.message
-                        ?: Strings.nodeServerStartFailed
+                        ?: AppStringsProvider.current().nodeServerStartFailed
                     com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "Node.js 服务器启动失败")
                 }
             } catch (e: Exception) {
                 AppLogger.e("NodeJsShell", "Node.js Shell 启动失败", e)
                 com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "Node.js Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -422,8 +422,8 @@ fun NodeJsShellMode(
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (phase == "extracting") Strings.preparingNodeEnv
-                                   else Strings.startingNodeServer,
+                            text = if (phase == "extracting") AppStringsProvider.current().preparingNodeEnv
+                                   else AppStringsProvider.current().startingNodeServer,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -444,7 +444,7 @@ fun NodeJsShellMode(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = errorMsg ?: Strings.nodeStartFailed,
+                            text = errorMsg ?: AppStringsProvider.current().nodeStartFailed,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -528,11 +528,11 @@ fun PhpAppShellMode(
                     phase = "ready"
                 } else {
                     phase = "error"
-                    errorMsg = Strings.phpStartFailed
+                    errorMsg = AppStringsProvider.current().phpStartFailed
                 }
             } catch (e: Exception) {
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -599,7 +599,7 @@ fun PhpAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(if (phase == "extracting") Strings.wpCheckingDeps else Strings.wpStartingServer)
+                        Text(if (phase == "extracting") AppStringsProvider.current().wpCheckingDeps else AppStringsProvider.current().wpStartingServer)
                     }
                 }
             }
@@ -608,7 +608,7 @@ fun PhpAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(errorMsg ?: Strings.phpStartFailed, color = MaterialTheme.colorScheme.error)
+                        Text(errorMsg ?: AppStringsProvider.current().phpStartFailed, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -694,7 +694,7 @@ fun PythonAppShellMode(
                         AppLogger.i("PythonShell", "回退到预览模式: $serverUrl")
                     } else {
                         phase = "error"
-                        errorMsg = Strings.pythonRuntimeNotFound
+                        errorMsg = AppStringsProvider.current().pythonRuntimeNotFound
                     }
                     return@withContext
                 }
@@ -740,13 +740,13 @@ fun PythonAppShellMode(
                     phase = "error"
                     errorMsg = (pythonRuntime.serverState.value as? com.webtoapp.core.python.PythonRuntime.ServerState.Error)
                         ?.message
-                        ?: Strings.pythonServerStartFailed
+                        ?: AppStringsProvider.current().pythonServerStartFailed
                     AppLogger.e("PythonShell", "Python 服务器启动失败: $errorMsg")
                 }
             } catch (e: Exception) {
                 AppLogger.e("PythonShell", "Python Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -830,8 +830,8 @@ fun PythonAppShellMode(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = when (phase) {
-                                "extracting" -> Strings.preparingPythonEnv
-                                else -> Strings.startingPythonServer
+                                "extracting" -> AppStringsProvider.current().preparingPythonEnv
+                                else -> AppStringsProvider.current().startingPythonServer
                             },
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -849,13 +849,13 @@ fun PythonAppShellMode(
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            Strings.pythonServerTimeout,
+                            AppStringsProvider.current().pythonServerTimeout,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            errorMsg ?: Strings.pythonStartFailed,
+                            errorMsg ?: AppStringsProvider.current().pythonStartFailed,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
@@ -927,7 +927,7 @@ fun GoAppShellMode(
                         AppLogger.i("GoShell", "回退到预览模式: $serverUrl")
                     } else {
                         phase = "error"
-                        errorMsg = Strings.goBinaryNotFound
+                        errorMsg = AppStringsProvider.current().goBinaryNotFound
                     }
                     return@withContext
                 }
@@ -950,13 +950,13 @@ fun GoAppShellMode(
                     phase = "error"
                     errorMsg = (goRuntime.serverState.value as? com.webtoapp.core.golang.GoRuntime.ServerState.Error)
                         ?.message
-                        ?: Strings.goServerStartFailed
+                        ?: AppStringsProvider.current().goServerStartFailed
                     AppLogger.e("GoShell", "Go 服务器启动失败: $errorMsg")
                 }
             } catch (e: Exception) {
                 AppLogger.e("GoShell", "Go Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -1040,8 +1040,8 @@ fun GoAppShellMode(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = when (phase) {
-                                "extracting" -> Strings.preparingGoEnv
-                                else -> Strings.startingGoServer
+                                "extracting" -> AppStringsProvider.current().preparingGoEnv
+                                else -> AppStringsProvider.current().startingGoServer
                             },
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -1053,7 +1053,7 @@ fun GoAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(errorMsg ?: Strings.goStartFailed, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                        Text(errorMsg ?: AppStringsProvider.current().goStartFailed, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -1176,7 +1176,7 @@ fun ServerAppShellMode(
                         AppLogger.i("ServerAppShellMode", "回退到 file:// 模式: $serverUrl")
                     } else {
                         phase = "error"
-                        errorMsg = Strings.serverStartFailed
+                        errorMsg = AppStringsProvider.current().serverStartFailed
                         AppLogger.e("ServerAppShellMode", "最终失败: siteDir 中也没有 index.html")
                         AppLogger.e("ServerAppShellMode", "Python/Go 后端应用需要对应运行时才能提供页面，当前实现仅支持静态前端产物")
                     }
@@ -1185,7 +1185,7 @@ fun ServerAppShellMode(
                 AppLogger.i("ServerAppShellMode", "========== 最终状态: phase=$phase, serverUrl=$serverUrl, error=$errorMsg ==========")
             } catch (e: Exception) {
                 phase = "error"
-                errorMsg = e.message ?: Strings.serverStartFailed
+                errorMsg = e.message ?: AppStringsProvider.current().serverStartFailed
                 AppLogger.e("ServerAppShellMode", "启动异常", e)
             }
         }
@@ -1274,7 +1274,7 @@ fun ServerAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(if (phase == "extracting") Strings.preparingEnv else Strings.startingServer)
+                        Text(if (phase == "extracting") AppStringsProvider.current().preparingEnv else AppStringsProvider.current().startingServer)
                     }
                 }
             }
@@ -1283,7 +1283,7 @@ fun ServerAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(errorMsg ?: Strings.serverStartFailed, color = MaterialTheme.colorScheme.error)
+                        Text(errorMsg ?: AppStringsProvider.current().serverStartFailed, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }

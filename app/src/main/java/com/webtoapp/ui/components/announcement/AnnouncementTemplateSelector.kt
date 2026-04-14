@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
@@ -160,7 +160,7 @@ fun AnnouncementTemplateSelector(
             }
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = Strings.selectAnnouncementStyle,
+                text = AppStringsProvider.current().selectAnnouncementStyle,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -365,7 +365,7 @@ fun AnnouncementPreviewDialog(
         },
         title = {
             Text(
-                Strings.previewAnnouncementEffect,
+                AppStringsProvider.current().previewAnnouncementEffect,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -449,12 +449,12 @@ fun AnnouncementPreviewDialog(
             ) {
                 Icon(Icons.Filled.Visibility, null, Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.btnPreview)
+                Text(AppStringsProvider.current().btnPreview)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -531,12 +531,12 @@ fun EnhancedAnnouncementCard(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = Strings.popupAnnouncement,
+                            text = AppStringsProvider.current().popupAnnouncement,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = Strings.announcementSubtitle,
+                            text = AppStringsProvider.current().announcementSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -564,8 +564,8 @@ fun EnhancedAnnouncementCard(
                     PremiumTextField(
                         value = title,
                         onValueChange = onTitleChange,
-                        label = { Text(Strings.announcementTitle) },
-                        placeholder = { Text(Strings.inputAnnouncementTitle) },
+                        label = { Text(AppStringsProvider.current().announcementTitle) },
+                        placeholder = { Text(AppStringsProvider.current().inputAnnouncementTitle) },
                         leadingIcon = {
                             Icon(Icons.Outlined.Title, null, Modifier.size(20.dp))
                         },
@@ -577,8 +577,8 @@ fun EnhancedAnnouncementCard(
                     PremiumTextField(
                         value = content,
                         onValueChange = onContentChange,
-                        label = { Text(Strings.announcementContent) },
-                        placeholder = { Text(Strings.inputAnnouncementContent) },
+                        label = { Text(AppStringsProvider.current().announcementContent) },
+                        placeholder = { Text(AppStringsProvider.current().inputAnnouncementContent) },
                         leadingIcon = {
                             Icon(Icons.AutoMirrored.Outlined.Article, null, Modifier.size(20.dp))
                         },
@@ -611,7 +611,7 @@ fun EnhancedAnnouncementCard(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.announcementLinkSection,
+                                    AppStringsProvider.current().announcementLinkSection,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -621,7 +621,7 @@ fun EnhancedAnnouncementCard(
                             PremiumTextField(
                                 value = linkUrl ?: "",
                                 onValueChange = { onLinkUrlChange(it.ifBlank { null }) },
-                                label = { Text(Strings.linkUrl) },
+                                label = { Text(AppStringsProvider.current().linkUrl) },
                                 placeholder = { Text("https://...") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -633,8 +633,8 @@ fun EnhancedAnnouncementCard(
                                     PremiumTextField(
                                         value = linkText ?: "",
                                         onValueChange = { onLinkTextChange(it.ifBlank { null }) },
-                                        label = { Text(Strings.linkText) },
-                                        placeholder = { Text(Strings.viewDetails) },
+                                        label = { Text(AppStringsProvider.current().linkText) },
+                                        placeholder = { Text(AppStringsProvider.current().viewDetails) },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -651,7 +651,7 @@ fun EnhancedAnnouncementCard(
                         PremiumFilterChip(
                             selected = showOnce,
                             onClick = { onShowOnceChange(true) },
-                            label = { Text(Strings.showOnceOnly) },
+                            label = { Text(AppStringsProvider.current().showOnceOnly) },
                             leadingIcon = if (showOnce) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -659,7 +659,7 @@ fun EnhancedAnnouncementCard(
                         PremiumFilterChip(
                             selected = !showOnce,
                             onClick = { onShowOnceChange(false) },
-                            label = { Text(Strings.everyLaunch) },
+                            label = { Text(AppStringsProvider.current().everyLaunch) },
                             leadingIcon = if (!showOnce) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -674,7 +674,7 @@ fun EnhancedAnnouncementCard(
                     ) {
                         Icon(Icons.Outlined.Preview, null, Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.previewAnnouncementEffect)
+                        Text(AppStringsProvider.current().previewAnnouncementEffect)
                     }
                 }
             }

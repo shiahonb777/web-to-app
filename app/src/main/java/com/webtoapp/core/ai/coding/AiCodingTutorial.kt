@@ -734,13 +734,13 @@ AI对人类文化有广泛的理解，你只需要说出一个它知道的名字
      * 快速提示词示例（用于快速复制）
      */
     val quickPrompts: List<String> get() = listOf(
-        com.webtoapp.core.i18n.Strings.quickPrompt1,
-        com.webtoapp.core.i18n.Strings.quickPrompt2,
-        com.webtoapp.core.i18n.Strings.quickPrompt3,
-        com.webtoapp.core.i18n.Strings.quickPrompt4,
-        com.webtoapp.core.i18n.Strings.quickPrompt5,
-        com.webtoapp.core.i18n.Strings.quickPrompt6,
-        com.webtoapp.core.i18n.Strings.quickPrompt7,
-        com.webtoapp.core.i18n.Strings.quickPrompt8
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt1,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt2,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt3,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt4,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt5,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt6,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt7,
+        com.webtoapp.core.i18n.AppStringsProvider.current().quickPrompt8
     )
 }

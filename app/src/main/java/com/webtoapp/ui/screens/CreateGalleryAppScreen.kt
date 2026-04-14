@@ -35,7 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import com.webtoapp.util.MediaStorage
@@ -183,10 +183,10 @@ fun CreateGalleryAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.galleryCreateTitle) },
+                title = { Text(AppStringsProvider.current().galleryCreateTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -197,7 +197,7 @@ fun CreateGalleryAppScreen(
                             selectedItems = emptySet()
                             isSelectionMode = false
                         }) {
-                            Icon(Icons.Default.Delete, Strings.delete)
+                            Icon(Icons.Default.Delete, AppStringsProvider.current().delete)
                         }
                     }
                     
@@ -224,7 +224,7 @@ fun CreateGalleryAppScreen(
                                 rememberPosition = rememberPosition
                             )
                             onCreated(
-                                appName.ifBlank { Strings.galleryApp },
+                                appName.ifBlank { AppStringsProvider.current().galleryApp },
                                 config,
                                 finalIconUri,
                                 themeType
@@ -232,7 +232,7 @@ fun CreateGalleryAppScreen(
                         },
                         enabled = canCreate
                     ) {
-                        Text(Strings.btnCreate)
+                        Text(AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -254,19 +254,19 @@ fun CreateGalleryAppScreen(
                 Tab(
                     selected = selectedTabIndex == 0,
                     onClick = { selectedTabIndex = 0 },
-                    text = { Text(Strings.galleryTabMedia) },
+                    text = { Text(AppStringsProvider.current().galleryTabMedia) },
                     icon = { Icon(Icons.Outlined.PhotoLibrary, null) }
                 )
                 Tab(
                     selected = selectedTabIndex == 1,
                     onClick = { selectedTabIndex = 1 },
-                    text = { Text(Strings.galleryTabPlayback) },
+                    text = { Text(AppStringsProvider.current().galleryTabPlayback) },
                     icon = { Icon(Icons.Outlined.PlayArrow, null) }
                 )
                 Tab(
                     selected = selectedTabIndex == 2,
                     onClick = { selectedTabIndex = 2 },
-                    text = { Text(Strings.galleryTabDisplay) },
+                    text = { Text(AppStringsProvider.current().galleryTabDisplay) },
                     icon = { Icon(Icons.Outlined.Tune, null) }
                 )
             }
@@ -451,7 +451,7 @@ private fun MediaManagementTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.labelAppInfo,
+                    text = AppStringsProvider.current().labelAppInfo,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -459,7 +459,7 @@ private fun MediaManagementTab(
                 AppNameTextFieldSimple(
                     value = appName,
                     onValueChange = onAppNameChange,
-                    placeholder = Strings.galleryApp
+                    placeholder = AppStringsProvider.current().galleryApp
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -483,13 +483,13 @@ private fun MediaManagementTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = Strings.galleryCategories,
+                            text = AppStringsProvider.current().galleryCategories,
                             style = MaterialTheme.typography.titleMedium
                         )
                         TextButton(onClick = onAddCategory) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.add)
+                            Text(AppStringsProvider.current().add)
                         }
                     }
                     
@@ -522,11 +522,11 @@ private fun MediaManagementTab(
                 ) {
                     Column {
                         Text(
-                            text = Strings.galleryMediaList,
+                            text = AppStringsProvider.current().galleryMediaList,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "${items.size} ${Strings.galleryItemCount}",
+                            text = "${items.size} ${AppStringsProvider.current().galleryItemCount}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -534,7 +534,7 @@ private fun MediaManagementTab(
                     FilledTonalButton(onClick = onAddMedia) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.galleryAddMedia)
+                        Text(AppStringsProvider.current().galleryAddMedia)
                     }
                 }
                 
@@ -569,12 +569,12 @@ private fun MediaManagementTab(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = Strings.galleryClickToAdd,
+                                text = AppStringsProvider.current().galleryClickToAdd,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = Strings.gallerySupportTypes,
+                                text = AppStringsProvider.current().gallerySupportTypes,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -610,17 +610,17 @@ private fun MediaManagementTab(
                     StatItem(
                         icon = Icons.Outlined.Image,
                         value = items.count { it.type == GalleryItemType.IMAGE }.toString(),
-                        label = Strings.galleryImages
+                        label = AppStringsProvider.current().galleryImages
                     )
                     StatItem(
                         icon = Icons.Outlined.Videocam,
                         value = items.count { it.type == GalleryItemType.VIDEO }.toString(),
-                        label = Strings.galleryVideos
+                        label = AppStringsProvider.current().galleryVideos
                     )
                     StatItem(
                         icon = Icons.Outlined.Storage,
                         value = formatFileSize(items.sumOf { it.fileSize }),
-                        label = Strings.galleryTotalSize
+                        label = AppStringsProvider.current().galleryTotalSize
                     )
                 }
             }
@@ -776,7 +776,7 @@ private fun PlaybackSettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryPlayMode,
+                    text = AppStringsProvider.current().galleryPlayMode,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -787,21 +787,21 @@ private fun PlaybackSettingsTab(
                 ) {
                     PlayModeOption(
                         icon = Icons.Outlined.ArrowForward,
-                        label = Strings.galleryModeSequential,
+                        label = AppStringsProvider.current().galleryModeSequential,
                         selected = playMode == GalleryPlayMode.SEQUENTIAL,
                         onClick = { onPlayModeChange(GalleryPlayMode.SEQUENTIAL) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     PlayModeOption(
                         icon = Icons.Outlined.Shuffle,
-                        label = Strings.galleryModeShuffle,
+                        label = AppStringsProvider.current().galleryModeShuffle,
                         selected = playMode == GalleryPlayMode.SHUFFLE,
                         onClick = { onPlayModeChange(GalleryPlayMode.SHUFFLE) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     PlayModeOption(
                         icon = Icons.Outlined.Repeat,
-                        label = Strings.galleryModeSingleLoop,
+                        label = AppStringsProvider.current().galleryModeSingleLoop,
                         selected = playMode == GalleryPlayMode.SINGLE_LOOP,
                         onClick = { onPlayModeChange(GalleryPlayMode.SINGLE_LOOP) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
@@ -814,14 +814,14 @@ private fun PlaybackSettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryImageSettings,
+                    text = AppStringsProvider.current().galleryImageSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 // Image
                 Text(
-                    text = "${Strings.galleryImageInterval}: ${imageInterval}s",
+                    text = "${AppStringsProvider.current().galleryImageInterval}: ${imageInterval}s",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Slider(
@@ -838,14 +838,14 @@ private fun PlaybackSettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryVideoSettings,
+                    text = AppStringsProvider.current().galleryVideoSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 SettingsRow(
-                    title = Strings.enableAudio,
-                    subtitle = Strings.galleryEnableAudioHint
+                    title = AppStringsProvider.current().enableAudio,
+                    subtitle = AppStringsProvider.current().galleryEnableAudioHint
                 ) {
                     PremiumSwitch(
                         checked = enableAudio,
@@ -854,8 +854,8 @@ private fun PlaybackSettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.galleryVideoAutoNext,
-                    subtitle = Strings.galleryVideoAutoNextHint
+                    title = AppStringsProvider.current().galleryVideoAutoNext,
+                    subtitle = AppStringsProvider.current().galleryVideoAutoNextHint
                 ) {
                     PremiumSwitch(
                         checked = videoAutoNext,
@@ -869,14 +869,14 @@ private fun PlaybackSettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryGeneralSettings,
+                    text = AppStringsProvider.current().galleryGeneralSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 SettingsRow(
-                    title = Strings.galleryAutoPlay,
-                    subtitle = Strings.galleryAutoPlayHint
+                    title = AppStringsProvider.current().galleryAutoPlay,
+                    subtitle = AppStringsProvider.current().galleryAutoPlayHint
                 ) {
                     PremiumSwitch(
                         checked = autoPlay,
@@ -885,8 +885,8 @@ private fun PlaybackSettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.loopPlay,
-                    subtitle = Strings.galleryLoopHint
+                    title = AppStringsProvider.current().loopPlay,
+                    subtitle = AppStringsProvider.current().galleryLoopHint
                 ) {
                     PremiumSwitch(
                         checked = loop,
@@ -896,8 +896,8 @@ private fun PlaybackSettingsTab(
                 
                 AnimatedVisibility(visible = loop) {
                     SettingsRow(
-                        title = Strings.galleryShuffleOnLoop,
-                        subtitle = Strings.galleryShuffleOnLoopHint
+                        title = AppStringsProvider.current().galleryShuffleOnLoop,
+                        subtitle = AppStringsProvider.current().galleryShuffleOnLoopHint
                     ) {
                         PremiumSwitch(
                             checked = shuffleOnLoop,
@@ -907,8 +907,8 @@ private fun PlaybackSettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.galleryRememberPosition,
-                    subtitle = Strings.galleryRememberPositionHint
+                    title = AppStringsProvider.current().galleryRememberPosition,
+                    subtitle = AppStringsProvider.current().galleryRememberPositionHint
                 ) {
                     PremiumSwitch(
                         checked = rememberPosition,
@@ -952,7 +952,7 @@ private fun DisplaySettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryViewMode,
+                    text = AppStringsProvider.current().galleryViewMode,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -963,21 +963,21 @@ private fun DisplaySettingsTab(
                 ) {
                     ViewModeOption(
                         icon = Icons.Outlined.GridView,
-                        label = Strings.galleryViewGrid,
+                        label = AppStringsProvider.current().galleryViewGrid,
                         selected = defaultView == GalleryViewMode.GRID,
                         onClick = { onDefaultViewChange(GalleryViewMode.GRID) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     ViewModeOption(
                         icon = Icons.Outlined.ViewList,
-                        label = Strings.galleryViewList,
+                        label = AppStringsProvider.current().galleryViewList,
                         selected = defaultView == GalleryViewMode.LIST,
                         onClick = { onDefaultViewChange(GalleryViewMode.LIST) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     ViewModeOption(
                         icon = Icons.Outlined.Timeline,
-                        label = Strings.galleryViewTimeline,
+                        label = AppStringsProvider.current().galleryViewTimeline,
                         selected = defaultView == GalleryViewMode.TIMELINE,
                         onClick = { onDefaultViewChange(GalleryViewMode.TIMELINE) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
@@ -989,7 +989,7 @@ private fun DisplaySettingsTab(
                     Column {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "${Strings.galleryGridColumns}: $gridColumns",
+                            text = "${AppStringsProvider.current().galleryGridColumns}: $gridColumns",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Slider(
@@ -1008,7 +1008,7 @@ private fun DisplaySettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.gallerySortOrder,
+                    text = AppStringsProvider.current().gallerySortOrder,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1050,14 +1050,14 @@ private fun DisplaySettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryPlayerSettings,
+                    text = AppStringsProvider.current().galleryPlayerSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 SettingsRow(
-                    title = Strings.galleryShowThumbnailBar,
-                    subtitle = Strings.galleryShowThumbnailBarHint
+                    title = AppStringsProvider.current().galleryShowThumbnailBar,
+                    subtitle = AppStringsProvider.current().galleryShowThumbnailBarHint
                 ) {
                     PremiumSwitch(
                         checked = showThumbnailBar,
@@ -1066,8 +1066,8 @@ private fun DisplaySettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.galleryShowMediaInfo,
-                    subtitle = Strings.galleryShowMediaInfoHint
+                    title = AppStringsProvider.current().galleryShowMediaInfo,
+                    subtitle = AppStringsProvider.current().galleryShowMediaInfoHint
                 ) {
                     PremiumSwitch(
                         checked = showMediaInfo,
@@ -1076,8 +1076,8 @@ private fun DisplaySettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.landscapeMode,
-                    subtitle = Strings.landscapeModeHint
+                    title = AppStringsProvider.current().landscapeMode,
+                    subtitle = AppStringsProvider.current().landscapeModeHint
                 ) {
                     PremiumSwitch(
                         checked = orientation == SplashOrientation.LANDSCAPE,
@@ -1095,7 +1095,7 @@ private fun DisplaySettingsTab(
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryBackgroundColor,
+                    text = AppStringsProvider.current().galleryBackgroundColor,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1219,7 +1219,7 @@ private fun CategoryChip(
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 Icons.Default.Close,
-                contentDescription = Strings.delete,
+                contentDescription = AppStringsProvider.current().delete,
                 modifier = Modifier
                     .size(16.dp)
                     .clickable(onClick = onDelete),
@@ -1275,19 +1275,19 @@ private fun CategoryEditDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (category != null) Strings.galleryEditCategory else Strings.galleryAddCategory) },
+        title = { Text(if (category != null) AppStringsProvider.current().galleryEditCategory else AppStringsProvider.current().galleryAddCategory) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 PremiumTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.galleryCategoryName) },
+                    label = { Text(AppStringsProvider.current().galleryCategoryName) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text(Strings.galleryCategoryIcon, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().galleryCategoryIcon, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(availableIcons) { iconId ->
@@ -1310,7 +1310,7 @@ private fun CategoryEditDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text(Strings.galleryCategoryColor, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().galleryCategoryColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(availableColors) { colorStr ->
@@ -1339,12 +1339,12 @@ private fun CategoryEditDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.save)
+                Text(AppStringsProvider.current().save)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -1368,7 +1368,7 @@ private fun MediaItemDetailDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.galleryMediaDetail) },
+        title = { Text(AppStringsProvider.current().galleryMediaDetail) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 // preview
@@ -1407,7 +1407,7 @@ private fun MediaItemDetailDialog(
                 PremiumTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.name) },
+                    label = { Text(AppStringsProvider.current().name) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -1415,7 +1415,7 @@ private fun MediaItemDetailDialog(
                 
                 // select
                 if (categories.isNotEmpty()) {
-                    Text(Strings.galleryCategory, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().galleryCategory, style = MaterialTheme.typography.labelMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     var expanded by remember { mutableStateOf(false) }
@@ -1424,7 +1424,7 @@ private fun MediaItemDetailDialog(
                         onExpandedChange = { expanded = it }
                     ) {
                         PremiumTextField(
-                            value = categories.find { it.id == categoryId }?.name ?: Strings.galleryNoCategory,
+                            value = categories.find { it.id == categoryId }?.name ?: AppStringsProvider.current().galleryNoCategory,
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
@@ -1437,7 +1437,7 @@ private fun MediaItemDetailDialog(
                             onDismissRequest = { expanded = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text(Strings.galleryNoCategory) },
+                                text = { Text(AppStringsProvider.current().galleryNoCategory) },
                                 onClick = {
                                     categoryId = null
                                     expanded = false
@@ -1466,22 +1466,22 @@ private fun MediaItemDetailDialog(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "${Strings.galleryType}: ${if (item.type == GalleryItemType.IMAGE) Strings.image else Strings.video}",
+                            text = "${AppStringsProvider.current().galleryType}: ${if (item.type == GalleryItemType.IMAGE) AppStringsProvider.current().image else AppStringsProvider.current().video}",
                             style = MaterialTheme.typography.bodySmall
                         )
                         if (item.duration > 0) {
                             Text(
-                                text = "${Strings.galleryDuration}: ${item.formattedDuration}",
+                                text = "${AppStringsProvider.current().galleryDuration}: ${item.formattedDuration}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                         Text(
-                            text = "${Strings.gallerySize}: ${item.formattedFileSize}",
+                            text = "${AppStringsProvider.current().gallerySize}: ${item.formattedFileSize}",
                             style = MaterialTheme.typography.bodySmall
                         )
                         if (item.width > 0 && item.height > 0) {
                             Text(
-                                text = "${Strings.galleryDimensions}: ${item.width} × ${item.height}",
+                                text = "${AppStringsProvider.current().galleryDimensions}: ${item.width} × ${item.height}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -1495,7 +1495,7 @@ private fun MediaItemDetailDialog(
                     onUpdate(item.copy(name = name, categoryId = categoryId))
                 }
             ) {
-                Text(Strings.save)
+                Text(AppStringsProvider.current().save)
             }
         },
         dismissButton = {
@@ -1506,10 +1506,10 @@ private fun MediaItemDetailDialog(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.delete)
+                    Text(AppStringsProvider.current().delete)
                 }
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.cancel)
+                    Text(AppStringsProvider.current().cancel)
                 }
             }
         }
@@ -1520,12 +1520,12 @@ private fun MediaItemDetailDialog(
 
 private fun GallerySortOrder.toDisplayString(): String {
     return when (this) {
-        GallerySortOrder.CUSTOM -> Strings.gallerySortCustom
-        GallerySortOrder.NAME_ASC -> Strings.gallerySortNameAsc
-        GallerySortOrder.NAME_DESC -> Strings.gallerySortNameDesc
-        GallerySortOrder.DATE_ASC -> Strings.gallerySortDateAsc
-        GallerySortOrder.DATE_DESC -> Strings.gallerySortDateDesc
-        GallerySortOrder.TYPE -> Strings.gallerySortType
+        GallerySortOrder.CUSTOM -> AppStringsProvider.current().gallerySortCustom
+        GallerySortOrder.NAME_ASC -> AppStringsProvider.current().gallerySortNameAsc
+        GallerySortOrder.NAME_DESC -> AppStringsProvider.current().gallerySortNameDesc
+        GallerySortOrder.DATE_ASC -> AppStringsProvider.current().gallerySortDateAsc
+        GallerySortOrder.DATE_DESC -> AppStringsProvider.current().gallerySortDateDesc
+        GallerySortOrder.TYPE -> AppStringsProvider.current().gallerySortType
     }
 }
 
@@ -1641,10 +1641,10 @@ fun CreateGalleryAppScreenV2(
             ) { selecting ->
                 if (selecting) {
                     TopAppBar(
-                        title = { Text("${selectedItems.size} ${Strings.galleryItemCount}") },
+                        title = { Text("${selectedItems.size} ${AppStringsProvider.current().galleryItemCount}") },
                         navigationIcon = {
                             IconButton(onClick = { selectedItems = emptySet() }) {
-                                Icon(Icons.Default.Close, Strings.btnCancel)
+                                Icon(Icons.Default.Close, AppStringsProvider.current().btnCancel)
                             }
                         },
                         actions = {
@@ -1663,8 +1663,8 @@ fun CreateGalleryAppScreenV2(
                     )
                 } else {
                     TopAppBar(
-                        title = { Text(if (existingAppId != null) Strings.editApp else Strings.galleryCreateTitle) },
-                        navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back) } },
+                        title = { Text(if (existingAppId != null) AppStringsProvider.current().editApp else AppStringsProvider.current().galleryCreateTitle) },
+                        navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back) } },
                         actions = {
                             IconButton(onClick = { showSettingsSheet = true }) { Icon(Icons.Outlined.Settings, null) }
                             TextButton(
@@ -1689,10 +1689,10 @@ fun CreateGalleryAppScreenV2(
                                         videoAutoNext = videoAutoNext,
                                         rememberPosition = false
                                     )
-                                    onCreated(appName.ifBlank { Strings.galleryApp }, config, finalIconUri, "AURORA")
+                                    onCreated(appName.ifBlank { AppStringsProvider.current().galleryApp }, config, finalIconUri, "AURORA")
                                 },
                                 enabled = canCreate
-                            ) { Text(if (existingAppId != null) Strings.btnSave else Strings.btnCreate) }
+                            ) { Text(if (existingAppId != null) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate) }
                         }
                     )
                 }
@@ -1703,7 +1703,7 @@ fun CreateGalleryAppScreenV2(
                 ExtendedFloatingActionButton(
                     onClick = { mediaPickerLauncher.launch(arrayOf("image/*", "video/*")) },
                     icon = { Icon(Icons.Default.Add, null) },
-                    text = { Text(Strings.galleryAddMedia) }
+                    text = { Text(AppStringsProvider.current().galleryAddMedia) }
                 )
             }
         }
@@ -1736,7 +1736,7 @@ fun CreateGalleryAppScreenV2(
                         PremiumTextField(
                             value = appName,
                             onValueChange = { appName = it },
-                            placeholder = { Text(Strings.galleryApp) },
+                            placeholder = { Text(AppStringsProvider.current().galleryApp) },
                             modifier = Modifier.weight(weight = 1f, fill = true),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
@@ -1850,9 +1850,9 @@ private fun EmptyGalleryState(onAddMedia: () -> Unit) {
     ) {
         Icon(Icons.Outlined.AddPhotoAlternate, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = Strings.galleryClickToAdd, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = AppStringsProvider.current().galleryClickToAdd, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = Strings.gallerySupportTypes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), textAlign = TextAlign.Center)
+        Text(text = AppStringsProvider.current().gallerySupportTypes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), textAlign = TextAlign.Center)
     }
 }
 
@@ -1917,25 +1917,25 @@ private fun GallerySettingsSheet(
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SettingsSection(title = Strings.galleryGeneralSettings) {
-            SettingsSwitch(title = Strings.loopPlay, subtitle = Strings.galleryLoopHint, checked = loop, onCheckedChange = onLoopChange)
-            SettingsSwitch(title = Strings.galleryAutoPlay, subtitle = Strings.galleryAutoPlayHint, checked = autoPlay, onCheckedChange = onAutoPlayChange)
+        SettingsSection(title = AppStringsProvider.current().galleryGeneralSettings) {
+            SettingsSwitch(title = AppStringsProvider.current().loopPlay, subtitle = AppStringsProvider.current().galleryLoopHint, checked = loop, onCheckedChange = onLoopChange)
+            SettingsSwitch(title = AppStringsProvider.current().galleryAutoPlay, subtitle = AppStringsProvider.current().galleryAutoPlayHint, checked = autoPlay, onCheckedChange = onAutoPlayChange)
         }
-        SettingsSection(title = Strings.galleryImageSettings) {
+        SettingsSection(title = AppStringsProvider.current().galleryImageSettings) {
             Column {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(Strings.galleryImageInterval, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStringsProvider.current().galleryImageInterval, style = MaterialTheme.typography.bodyMedium)
                     Text("${imageInterval}s", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
                 Slider(value = imageInterval.toFloat(), onValueChange = { onImageIntervalChange(it.toInt()) }, valueRange = 1f..15f, steps = 13, modifier = Modifier.fillMaxWidth())
             }
         }
-        SettingsSection(title = Strings.galleryVideoSettings) {
-            SettingsSwitch(title = Strings.enableAudio, subtitle = Strings.galleryEnableAudioHint, checked = enableAudio, onCheckedChange = onEnableAudioChange)
-            SettingsSwitch(title = Strings.galleryVideoAutoNext, subtitle = Strings.galleryVideoAutoNextHint, checked = videoAutoNext, onCheckedChange = onVideoAutoNextChange)
+        SettingsSection(title = AppStringsProvider.current().galleryVideoSettings) {
+            SettingsSwitch(title = AppStringsProvider.current().enableAudio, subtitle = AppStringsProvider.current().galleryEnableAudioHint, checked = enableAudio, onCheckedChange = onEnableAudioChange)
+            SettingsSwitch(title = AppStringsProvider.current().galleryVideoAutoNext, subtitle = AppStringsProvider.current().galleryVideoAutoNextHint, checked = videoAutoNext, onCheckedChange = onVideoAutoNextChange)
         }
         Spacer(modifier = Modifier.height(16.dp))
-        PremiumButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(Strings.btnConfirm) }
+        PremiumButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(AppStringsProvider.current().btnConfirm) }
     }
 }
 
@@ -1964,13 +1964,13 @@ private fun MediaPreviewDialog(item: GalleryItem, onDismiss: () -> Unit, onDelet
                 Text(text = item.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    InfoChip(label = if (item.type == GalleryItemType.IMAGE) Strings.image else Strings.video, icon = if (item.type == GalleryItemType.IMAGE) Icons.Outlined.Image else Icons.Outlined.Videocam)
+                    InfoChip(label = if (item.type == GalleryItemType.IMAGE) AppStringsProvider.current().image else AppStringsProvider.current().video, icon = if (item.type == GalleryItemType.IMAGE) Icons.Outlined.Image else Icons.Outlined.Videocam)
                     if (item.duration > 0) { InfoChip(label = item.formattedDuration, icon = Icons.Outlined.Timer) }
                     InfoChip(label = item.formattedFileSize, icon = Icons.Outlined.Storage)
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.btnOk) } },
-        dismissButton = { TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(Strings.delete) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(AppStringsProvider.current().btnOk) } },
+        dismissButton = { TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(AppStringsProvider.current().delete) } }
     )
 }

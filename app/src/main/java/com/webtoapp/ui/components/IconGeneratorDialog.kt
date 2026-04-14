@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AiFeature
 import com.webtoapp.data.model.SavedModel
 import com.webtoapp.util.IconLibraryStorage
@@ -105,7 +105,7 @@ fun IconGeneratorDialog(
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.aiGenerateIcon)
+                Text(AppStringsProvider.current().aiGenerateIcon)
             }
         },
         text = {
@@ -123,20 +123,20 @@ fun IconGeneratorDialog(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                Strings.noImageGenModel,
+                                AppStringsProvider.current().noImageGenModel,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.error
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                Strings.addImageGenModelHint,
+                                AppStringsProvider.current().addImageGenModelHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 } else {
-                    Text(Strings.selectModel, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().selectModel, style = MaterialTheme.typography.labelMedium)
                     
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
@@ -170,19 +170,19 @@ fun IconGeneratorDialog(
                 }
                 
                 // hint input
-                Text(Strings.describeIcon, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().describeIcon, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value = prompt,
                     onValueChange = { prompt = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(Strings.iconDescriptionExample) },
+                    placeholder = { Text(AppStringsProvider.current().iconDescriptionExample) },
                     minLines = 2,
                     maxLines = 4
                 )
                 
                 // Note
                 Text(
-                    Strings.referenceImages,
+                    AppStringsProvider.current().referenceImages,
                     style = MaterialTheme.typography.labelMedium
                 )
                 
@@ -234,7 +234,7 @@ fun IconGeneratorDialog(
                             ) {
                                 Icon(
                                     Icons.Default.Add,
-                                    Strings.addImage,
+                                    AppStringsProvider.current().addImage,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -244,7 +244,7 @@ fun IconGeneratorDialog(
                 
                 // Generate
                 generatedIcon?.let { base64 ->
-                    Text(Strings.generationResult, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().generationResult, style = MaterialTheme.typography.labelMedium)
                     Box(
                         modifier = Modifier
                             .size(128.dp)
@@ -261,7 +261,7 @@ fun IconGeneratorDialog(
                         bitmap?.let {
                             Image(
                                 bitmap = it.asImageBitmap(),
-                                contentDescription = Strings.generatedIcon,
+                                contentDescription = AppStringsProvider.current().generatedIcon,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
@@ -293,14 +293,14 @@ fun IconGeneratorDialog(
         confirmButton = {
             if (generatedIcon != null && savedIconPath != null) {
                 PremiumButton(onClick = { onIconGenerated(savedIconPath!!) }) {
-                    Text(Strings.useThisIcon)
+                    Text(AppStringsProvider.current().useThisIcon)
                 }
             } else if (generatedIcon != null) {
                 // Comment
                 PremiumButton(enabled = false, onClick = {}) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.saving)
+                    Text(AppStringsProvider.current().saving)
                 }
             } else {
                 PremiumButton(
@@ -338,7 +338,7 @@ fun IconGeneratorDialog(
                     },
                     enabled = selectedModel != null && prompt.isNotBlank() && !isGenerating
                 ) {
-                    Text(Strings.generateIcon)
+                    Text(AppStringsProvider.current().generateIcon)
                 }
             }
         },
@@ -348,11 +348,11 @@ fun IconGeneratorDialog(
                     generatedIcon = null 
                     savedIconPath = null
                 }) {
-                    Text(Strings.regenerate)
+                    Text(AppStringsProvider.current().regenerate)
                 }
             } else {
                 TextButton(onClick = onDismiss, enabled = !isGenerating) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         }

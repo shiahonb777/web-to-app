@@ -68,7 +68,7 @@ object RandomAppNameGenerator {
      * Note.
      */
     fun generate(): String {
-        return when (Strings.currentLanguage.value) {
+        return when (AppStringsProvider.currentLanguage) {
             AppLanguage.CHINESE -> generateChinese()
             AppLanguage.ENGLISH -> generateEnglish()
             AppLanguage.ARABIC -> generateArabic()

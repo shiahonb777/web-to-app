@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.webtoapp.core.appmodifier.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.ui.components.*
 import com.webtoapp.util.SplashStorage
@@ -81,13 +81,13 @@ fun AppModifierScreen(
                 scope.launch {
                     when (result) {
                         is AppModifyResult.ShortcutSuccess -> {
-                            snackbarHostState.showSnackbar(Strings.shortcutCreated)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().shortcutCreated)
                         }
                         is AppModifyResult.CloneSuccess -> {
-                            snackbarHostState.showSnackbar(Strings.cloneSuccess)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().cloneSuccess)
                         }
                         is AppModifyResult.Error -> {
-                            snackbarHostState.showSnackbar("${Strings.failed}: ${result.message}")
+                            snackbarHostState.showSnackbar("${AppStringsProvider.current().failed}: ${result.message}")
                         }
                     }
                 }
@@ -100,10 +100,10 @@ fun AppModifierScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.appIconModifier) },
+                title = { Text(AppStringsProvider.current().appIconModifier) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 }
             )
@@ -122,12 +122,12 @@ fun AppModifierScreen(
             PremiumTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text(Strings.searchApps) },
+                placeholder = { Text(AppStringsProvider.current().searchApps) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, Strings.clear)
+                            Icon(Icons.Default.Clear, AppStringsProvider.current().clear)
                         }
                     }
                 },
@@ -147,7 +147,7 @@ fun AppModifierScreen(
                 PremiumFilterChip(
                     selected = filterType == AppFilterType.USER,
                     onClick = { filterType = AppFilterType.USER },
-                    label = { Text(Strings.userApps) },
+                    label = { Text(AppStringsProvider.current().userApps) },
                     leadingIcon = if (filterType == AppFilterType.USER) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -155,7 +155,7 @@ fun AppModifierScreen(
                 PremiumFilterChip(
                     selected = filterType == AppFilterType.SYSTEM,
                     onClick = { filterType = AppFilterType.SYSTEM },
-                    label = { Text(Strings.systemApps) },
+                    label = { Text(AppStringsProvider.current().systemApps) },
                     leadingIcon = if (filterType == AppFilterType.SYSTEM) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -163,7 +163,7 @@ fun AppModifierScreen(
                 PremiumFilterChip(
                     selected = filterType == AppFilterType.ALL,
                     onClick = { filterType = AppFilterType.ALL },
-                    label = { Text(Strings.all) },
+                    label = { Text(AppStringsProvider.current().all) },
                     leadingIcon = if (filterType == AppFilterType.ALL) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -174,7 +174,7 @@ fun AppModifierScreen(
             
             // App
             Text(
-                text = Strings.totalFilesCount.replace("%d", apps.size.toString()),
+                text = AppStringsProvider.current().totalFilesCount.replace("%d", apps.size.toString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -413,10 +413,10 @@ fun AppModifyFullScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.modifyApp) },
+                title = { Text(AppStringsProvider.current().modifyApp) },
                 navigationIcon = {
                     IconButton(onClick = { if (!isProcessing) onBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -436,13 +436,13 @@ fun AppModifyFullScreen(
                                             }
                                             onResult(result)
                                         } catch (e: Exception) {
-                                            onResult(AppModifyResult.Error(e.message ?: Strings.failed))
+                                            onResult(AppModifyResult.Error(e.message ?: AppStringsProvider.current().failed))
                                         }
                                     }
                                 },
                                 enabled = newAppName.isNotBlank()
                             ) {
-                                Text(Strings.cloneInstall)
+                                Text(AppStringsProvider.current().cloneInstall)
                             }
                         }
                         // button
@@ -459,13 +459,13 @@ fun AppModifyFullScreen(
                                         }
                                         onResult(result)
                                     } catch (e: Exception) {
-                                        onResult(AppModifyResult.Error(e.message ?: Strings.failed))
+                                        onResult(AppModifyResult.Error(e.message ?: AppStringsProvider.current().failed))
                                     }
                                 }
                             },
                             enabled = newAppName.isNotBlank()
                         ) {
-                            Text(Strings.btnShortcut)
+                            Text(AppStringsProvider.current().btnShortcut)
                         }
                     } else {
                         CircularProgressIndicator(
@@ -529,7 +529,7 @@ fun AppModifyFullScreen(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(Strings.originalApp, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text(AppStringsProvider.current().originalApp, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         Text(app.appName, style = MaterialTheme.typography.titleMedium)
                         Text(
                             "${app.packageName} · v${app.versionName}",
@@ -546,7 +546,7 @@ fun AppModifyFullScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(Strings.labelBasicInfo, style = MaterialTheme.typography.titleMedium)
+                    Text(AppStringsProvider.current().labelBasicInfo, style = MaterialTheme.typography.titleMedium)
                     
                     // Iconselect( icon)
                     IconPickerWithLibrary(
@@ -570,7 +570,7 @@ fun AppModifyFullScreen(
                         ) {
                             Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text(Strings.useOriginalIcon, style = MaterialTheme.typography.labelMedium)
+                            Text(AppStringsProvider.current().useOriginalIcon, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                     
@@ -645,7 +645,7 @@ fun AppModifyFullScreen(
             )
             
             // Hint message
-            WarningCard(message = Strings.cloneInstallWarning)
+            WarningCard(message = AppStringsProvider.current().cloneInstallWarning)
             
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -670,7 +670,7 @@ private fun ActivationCard(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Key,
-                title = Strings.activationCodeVerify,
+                title = AppStringsProvider.current().activationCodeVerify,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -678,7 +678,7 @@ private fun ActivationCard(
             if (enabled) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    Strings.activationCodeHint,
+                    AppStringsProvider.current().activationCodeHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -691,9 +691,9 @@ private fun ActivationCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                        Text(Strings.requireEveryLaunch, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().requireEveryLaunch, style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            if (requireEveryTime) Strings.requireEveryLaunchHintOn else Strings.requireEveryLaunchHintOff,
+                            if (requireEveryTime) AppStringsProvider.current().requireEveryLaunchHintOn else AppStringsProvider.current().requireEveryLaunchHintOff,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -710,7 +710,7 @@ private fun ActivationCard(
                     PremiumTextField(
                         value = newCode,
                         onValueChange = { newCode = it },
-                        placeholder = { Text(Strings.inputActivationCode) },
+                        placeholder = { Text(AppStringsProvider.current().inputActivationCode) },
                         singleLine = true,
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
@@ -723,7 +723,7 @@ private fun ActivationCard(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Add, Strings.add)
+                        Icon(Icons.Default.Add, AppStringsProvider.current().add)
                     }
                 }
                 
@@ -737,7 +737,7 @@ private fun ActivationCard(
                     ) {
                         Text(code, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(weight = 1f, fill = true))
                         IconButton(onClick = { onCodesChange(codes.filterIndexed { i, _ -> i != index }) }) {
-                            Icon(Icons.Outlined.Delete, Strings.btnDelete, tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Outlined.Delete, AppStringsProvider.current().btnDelete, tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -764,7 +764,7 @@ private fun AnnouncementCardForModifier(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Campaign,
-                title = Strings.popupAnnouncement,
+                title = AppStringsProvider.current().popupAnnouncement,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -775,7 +775,7 @@ private fun AnnouncementCardForModifier(
                 PremiumTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    label = { Text(Strings.announcementTitle) },
+                    label = { Text(AppStringsProvider.current().announcementTitle) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -785,7 +785,7 @@ private fun AnnouncementCardForModifier(
                 PremiumTextField(
                     value = content,
                     onValueChange = onContentChange,
-                    label = { Text(Strings.announcementContent) },
+                    label = { Text(AppStringsProvider.current().announcementContent) },
                     minLines = 2,
                     maxLines = 4,
                     modifier = Modifier.fillMaxWidth()
@@ -796,7 +796,7 @@ private fun AnnouncementCardForModifier(
                 PremiumTextField(
                     value = link,
                     onValueChange = onLinkChange,
-                    label = { Text(Strings.linkUrl) },
+                    label = { Text(AppStringsProvider.current().linkUrl) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -836,7 +836,7 @@ private fun SplashCardForModifier(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.PlayCircle,
-                title = Strings.splashScreen,
+                title = AppStringsProvider.current().splashScreen,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -851,12 +851,12 @@ private fun SplashCardForModifier(
                     PremiumOutlinedButton(onClick = onSelectImage, modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(Strings.selectImage)
+                        Text(AppStringsProvider.current().selectImage)
                     }
                     PremiumOutlinedButton(onClick = onSelectVideo, modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Icon(Icons.Outlined.VideoFile, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(Strings.selectVideo)
+                        Text(AppStringsProvider.current().selectVideo)
                     }
                 }
                 
@@ -886,11 +886,11 @@ private fun SplashCardForModifier(
                             }
                             Spacer(Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                                Text(if (splashType == "IMAGE") Strings.image else Strings.video, style = MaterialTheme.typography.bodyMedium)
+                                Text(if (splashType == "IMAGE") AppStringsProvider.current().image else AppStringsProvider.current().video, style = MaterialTheme.typography.bodyMedium)
                                 Text(File(splashPath).name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                             }
                             IconButton(onClick = onClearMedia) {
-                                Icon(Icons.Default.Clear, Strings.clear)
+                                Icon(Icons.Default.Clear, AppStringsProvider.current().clear)
                             }
                         }
                     }
@@ -907,7 +907,7 @@ private fun SplashCardForModifier(
                     
                     if (splashType == "IMAGE") {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("${Strings.splashScreen}: $duration ${Strings.seconds}", style = MaterialTheme.typography.bodyMedium)
+                        Text("${AppStringsProvider.current().splashScreen}: $duration ${AppStringsProvider.current().seconds}", style = MaterialTheme.typography.bodyMedium)
                         Slider(
                             value = duration.toFloat(),
                             onValueChange = { onDurationChange(it.toInt()) },
@@ -917,11 +917,11 @@ private fun SplashCardForModifier(
                         )
                     }
                     
-                    SettingsSwitchRow(Strings.allowClickToSkip, clickToSkip, onClickToSkipChange)
-                    SettingsSwitchRow(Strings.landscapeMode, landscape, onLandscapeChange)
-                    SettingsSwitchRow(Strings.fillScreen, fillScreen, onFillScreenChange)
+                    SettingsSwitchRow(AppStringsProvider.current().allowClickToSkip, clickToSkip, onClickToSkipChange)
+                    SettingsSwitchRow(AppStringsProvider.current().landscapeMode, landscape, onLandscapeChange)
+                    SettingsSwitchRow(AppStringsProvider.current().fillScreen, fillScreen, onFillScreenChange)
                     if (splashType == "VIDEO") {
-                        SettingsSwitchRow(Strings.enableAudioLabel, enableAudio, onEnableAudioChange)
+                        SettingsSwitchRow(AppStringsProvider.current().enableAudioLabel, enableAudio, onEnableAudioChange)
                     }
                 }
             }

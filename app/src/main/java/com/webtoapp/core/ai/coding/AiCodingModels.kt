@@ -1,6 +1,6 @@
 package com.webtoapp.core.ai.coding
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 import java.util.UUID
 
@@ -13,7 +13,7 @@ import java.util.UUID
  */
 data class AiCodingSession(
     val id: String = UUID.randomUUID().toString(),
-    val title: String = "",  // UI Strings.newConversation.
+    val title: String = "",  // UI AppStringsProvider.current().newConversation.
     val messages: List<AiCodingMessage> = emptyList(),
     val checkpoints: List<ProjectCheckpoint> = emptyList(),  // Version.
     val currentCheckpointIndex: Int = -1,                     // Note.
@@ -42,7 +42,7 @@ data class SessionConfig(
      */
     fun getEffectiveRules(): List<String> {
         return if (rules.isEmpty()) {
-            listOf(Strings.ruleUseChinese)
+            listOf(AppStringsProvider.current().ruleUseChinese)
         } else {
             rules
         }
@@ -65,23 +65,23 @@ enum class AiCodingToolType(
     AUTO_FIX("wrench");
     
     fun getDisplayName(): String = when (this) {
-        WRITE_HTML -> Strings.toolWriteHtml
-        EDIT_HTML -> Strings.toolEditHtml
-        READ_CURRENT_CODE -> Strings.toolReadCurrentCode
-        GENERATE_IMAGE -> Strings.toolGenerateImage
-        GET_CONSOLE_LOGS -> Strings.toolGetConsoleLogs
-        CHECK_SYNTAX -> Strings.toolCheckSyntax
-        AUTO_FIX -> Strings.toolAutoFix
+        WRITE_HTML -> AppStringsProvider.current().toolWriteHtml
+        EDIT_HTML -> AppStringsProvider.current().toolEditHtml
+        READ_CURRENT_CODE -> AppStringsProvider.current().toolReadCurrentCode
+        GENERATE_IMAGE -> AppStringsProvider.current().toolGenerateImage
+        GET_CONSOLE_LOGS -> AppStringsProvider.current().toolGetConsoleLogs
+        CHECK_SYNTAX -> AppStringsProvider.current().toolCheckSyntax
+        AUTO_FIX -> AppStringsProvider.current().toolAutoFix
     }
     
     fun getDescription(): String = when (this) {
-        WRITE_HTML -> Strings.toolWriteHtmlDesc
-        EDIT_HTML -> Strings.toolEditHtmlDesc
-        READ_CURRENT_CODE -> Strings.toolReadCurrentCodeDesc
-        GENERATE_IMAGE -> Strings.toolGenerateImageDesc
-        GET_CONSOLE_LOGS -> Strings.toolGetConsoleLogsDesc
-        CHECK_SYNTAX -> Strings.toolCheckSyntaxDesc
-        AUTO_FIX -> Strings.toolAutoFixDesc
+        WRITE_HTML -> AppStringsProvider.current().toolWriteHtmlDesc
+        EDIT_HTML -> AppStringsProvider.current().toolEditHtmlDesc
+        READ_CURRENT_CODE -> AppStringsProvider.current().toolReadCurrentCodeDesc
+        GENERATE_IMAGE -> AppStringsProvider.current().toolGenerateImageDesc
+        GET_CONSOLE_LOGS -> AppStringsProvider.current().toolGetConsoleLogsDesc
+        CHECK_SYNTAX -> AppStringsProvider.current().toolCheckSyntaxDesc
+        AUTO_FIX -> AppStringsProvider.current().toolAutoFixDesc
     }
 }
 
@@ -199,18 +199,18 @@ enum class TemplateCategory {
     GAME;
     
     fun getDisplayName(): String = when (this) {
-        MODERN -> Strings.templateModern
-        GLASSMORPHISM -> Strings.templateGlassmorphism
-        NEUMORPHISM -> Strings.templateNeumorphism
-        GRADIENT -> Strings.templateGradient
-        DARK -> Strings.templateDark
-        MINIMAL -> Strings.templateMinimal
-        RETRO -> Strings.templateRetro
-        CYBERPUNK -> Strings.templateCyberpunk
-        NATURE -> Strings.templateNature
-        BUSINESS -> Strings.templateBusiness
-        CREATIVE -> Strings.templateCreative
-        GAME -> Strings.templateGame
+        MODERN -> AppStringsProvider.current().templateModern
+        GLASSMORPHISM -> AppStringsProvider.current().templateGlassmorphism
+        NEUMORPHISM -> AppStringsProvider.current().templateNeumorphism
+        GRADIENT -> AppStringsProvider.current().templateGradient
+        DARK -> AppStringsProvider.current().templateDark
+        MINIMAL -> AppStringsProvider.current().templateMinimal
+        RETRO -> AppStringsProvider.current().templateRetro
+        CYBERPUNK -> AppStringsProvider.current().templateCyberpunk
+        NATURE -> AppStringsProvider.current().templateNature
+        BUSINESS -> AppStringsProvider.current().templateBusiness
+        CREATIVE -> AppStringsProvider.current().templateCreative
+        GAME -> AppStringsProvider.current().templateGame
     }
 }
 
@@ -253,14 +253,14 @@ enum class StyleReferenceCategory {
     CULTURE;
     
     fun getDisplayName(): String = when (this) {
-        MOVIE -> Strings.styleRefMovie
-        BOOK -> Strings.styleRefBook
-        ANIME -> Strings.styleRefAnime
-        GAME -> Strings.styleRefGame
-        BRAND -> Strings.styleRefBrand
-        ART -> Strings.styleRefArt
-        ERA -> Strings.styleRefEra
-        CULTURE -> Strings.styleRefCulture
+        MOVIE -> AppStringsProvider.current().styleRefMovie
+        BOOK -> AppStringsProvider.current().styleRefBook
+        ANIME -> AppStringsProvider.current().styleRefAnime
+        GAME -> AppStringsProvider.current().styleRefGame
+        BRAND -> AppStringsProvider.current().styleRefBrand
+        ART -> AppStringsProvider.current().styleRefArt
+        ERA -> AppStringsProvider.current().styleRefEra
+        CULTURE -> AppStringsProvider.current().styleRefCulture
     }
 }
 
@@ -363,13 +363,13 @@ data class ConversationCheckpoint(
  */
 fun AiCodingToolType.getLocalizedDisplayName(): String {
     return when (this) {
-        AiCodingToolType.WRITE_HTML -> com.webtoapp.core.i18n.Strings.featureWriteHtml
-        AiCodingToolType.EDIT_HTML -> com.webtoapp.core.i18n.Strings.featureEditHtml
-        AiCodingToolType.READ_CURRENT_CODE -> com.webtoapp.core.i18n.Strings.featureReadCurrentCode
-        AiCodingToolType.GENERATE_IMAGE -> com.webtoapp.core.i18n.Strings.aiImageGeneration
-        AiCodingToolType.GET_CONSOLE_LOGS -> com.webtoapp.core.i18n.Strings.featureGetConsoleLogs
-        AiCodingToolType.CHECK_SYNTAX -> com.webtoapp.core.i18n.Strings.featureCheckSyntax
-        AiCodingToolType.AUTO_FIX -> com.webtoapp.core.i18n.Strings.featureAutoFix
+        AiCodingToolType.WRITE_HTML -> com.webtoapp.core.i18n.AppStringsProvider.current().featureWriteHtml
+        AiCodingToolType.EDIT_HTML -> com.webtoapp.core.i18n.AppStringsProvider.current().featureEditHtml
+        AiCodingToolType.READ_CURRENT_CODE -> com.webtoapp.core.i18n.AppStringsProvider.current().featureReadCurrentCode
+        AiCodingToolType.GENERATE_IMAGE -> com.webtoapp.core.i18n.AppStringsProvider.current().aiImageGeneration
+        AiCodingToolType.GET_CONSOLE_LOGS -> com.webtoapp.core.i18n.AppStringsProvider.current().featureGetConsoleLogs
+        AiCodingToolType.CHECK_SYNTAX -> com.webtoapp.core.i18n.AppStringsProvider.current().featureCheckSyntax
+        AiCodingToolType.AUTO_FIX -> com.webtoapp.core.i18n.AppStringsProvider.current().featureAutoFix
     }
 }
 
@@ -378,13 +378,13 @@ fun AiCodingToolType.getLocalizedDisplayName(): String {
  */
 fun AiCodingToolType.getLocalizedDescription(): String {
     return when (this) {
-        AiCodingToolType.WRITE_HTML -> com.webtoapp.core.i18n.Strings.writeHtmlDesc
-        AiCodingToolType.EDIT_HTML -> com.webtoapp.core.i18n.Strings.editHtmlDesc
-        AiCodingToolType.READ_CURRENT_CODE -> com.webtoapp.core.i18n.Strings.readCurrentCodeDesc
-        AiCodingToolType.GENERATE_IMAGE -> com.webtoapp.core.i18n.Strings.generateImageDesc
-        AiCodingToolType.GET_CONSOLE_LOGS -> com.webtoapp.core.i18n.Strings.getConsoleLogsDesc
-        AiCodingToolType.CHECK_SYNTAX -> com.webtoapp.core.i18n.Strings.checkSyntaxDesc
-        AiCodingToolType.AUTO_FIX -> com.webtoapp.core.i18n.Strings.autoFixDesc
+        AiCodingToolType.WRITE_HTML -> com.webtoapp.core.i18n.AppStringsProvider.current().writeHtmlDesc
+        AiCodingToolType.EDIT_HTML -> com.webtoapp.core.i18n.AppStringsProvider.current().editHtmlDesc
+        AiCodingToolType.READ_CURRENT_CODE -> com.webtoapp.core.i18n.AppStringsProvider.current().readCurrentCodeDesc
+        AiCodingToolType.GENERATE_IMAGE -> com.webtoapp.core.i18n.AppStringsProvider.current().generateImageDesc
+        AiCodingToolType.GET_CONSOLE_LOGS -> com.webtoapp.core.i18n.AppStringsProvider.current().getConsoleLogsDesc
+        AiCodingToolType.CHECK_SYNTAX -> com.webtoapp.core.i18n.AppStringsProvider.current().checkSyntaxDesc
+        AiCodingToolType.AUTO_FIX -> com.webtoapp.core.i18n.AppStringsProvider.current().autoFixDesc
     }
 }
 
@@ -393,18 +393,18 @@ fun AiCodingToolType.getLocalizedDescription(): String {
  */
 fun TemplateCategory.getLocalizedDisplayName(): String {
     return when (this) {
-        TemplateCategory.MODERN -> com.webtoapp.core.i18n.Strings.templateModern
-        TemplateCategory.GLASSMORPHISM -> com.webtoapp.core.i18n.Strings.templateGlassmorphism
-        TemplateCategory.NEUMORPHISM -> com.webtoapp.core.i18n.Strings.templateNeumorphism
-        TemplateCategory.GRADIENT -> com.webtoapp.core.i18n.Strings.templateGradient
-        TemplateCategory.DARK -> com.webtoapp.core.i18n.Strings.templateDark
-        TemplateCategory.MINIMAL -> com.webtoapp.core.i18n.Strings.templateMinimal
-        TemplateCategory.RETRO -> com.webtoapp.core.i18n.Strings.templateRetro
-        TemplateCategory.CYBERPUNK -> com.webtoapp.core.i18n.Strings.templateCyberpunk
-        TemplateCategory.NATURE -> com.webtoapp.core.i18n.Strings.templateNature
-        TemplateCategory.BUSINESS -> com.webtoapp.core.i18n.Strings.templateBusiness
-        TemplateCategory.CREATIVE -> com.webtoapp.core.i18n.Strings.templateCreative
-        TemplateCategory.GAME -> com.webtoapp.core.i18n.Strings.templateGame
+        TemplateCategory.MODERN -> com.webtoapp.core.i18n.AppStringsProvider.current().templateModern
+        TemplateCategory.GLASSMORPHISM -> com.webtoapp.core.i18n.AppStringsProvider.current().templateGlassmorphism
+        TemplateCategory.NEUMORPHISM -> com.webtoapp.core.i18n.AppStringsProvider.current().templateNeumorphism
+        TemplateCategory.GRADIENT -> com.webtoapp.core.i18n.AppStringsProvider.current().templateGradient
+        TemplateCategory.DARK -> com.webtoapp.core.i18n.AppStringsProvider.current().templateDark
+        TemplateCategory.MINIMAL -> com.webtoapp.core.i18n.AppStringsProvider.current().templateMinimal
+        TemplateCategory.RETRO -> com.webtoapp.core.i18n.AppStringsProvider.current().templateRetro
+        TemplateCategory.CYBERPUNK -> com.webtoapp.core.i18n.AppStringsProvider.current().templateCyberpunk
+        TemplateCategory.NATURE -> com.webtoapp.core.i18n.AppStringsProvider.current().templateNature
+        TemplateCategory.BUSINESS -> com.webtoapp.core.i18n.AppStringsProvider.current().templateBusiness
+        TemplateCategory.CREATIVE -> com.webtoapp.core.i18n.AppStringsProvider.current().templateCreative
+        TemplateCategory.GAME -> com.webtoapp.core.i18n.AppStringsProvider.current().templateGame
     }
 }
 
@@ -413,13 +413,13 @@ fun TemplateCategory.getLocalizedDisplayName(): String {
  */
 fun StyleReferenceCategory.getLocalizedDisplayName(): String {
     return when (this) {
-        StyleReferenceCategory.MOVIE -> com.webtoapp.core.i18n.Strings.styleMovie
-        StyleReferenceCategory.BOOK -> com.webtoapp.core.i18n.Strings.styleBook
-        StyleReferenceCategory.ANIME -> com.webtoapp.core.i18n.Strings.styleAnime
-        StyleReferenceCategory.GAME -> com.webtoapp.core.i18n.Strings.styleGame
-        StyleReferenceCategory.BRAND -> com.webtoapp.core.i18n.Strings.styleBrand
-        StyleReferenceCategory.ART -> com.webtoapp.core.i18n.Strings.styleArt
-        StyleReferenceCategory.ERA -> com.webtoapp.core.i18n.Strings.styleEra
-        StyleReferenceCategory.CULTURE -> com.webtoapp.core.i18n.Strings.styleCulture
+        StyleReferenceCategory.MOVIE -> com.webtoapp.core.i18n.AppStringsProvider.current().styleMovie
+        StyleReferenceCategory.BOOK -> com.webtoapp.core.i18n.AppStringsProvider.current().styleBook
+        StyleReferenceCategory.ANIME -> com.webtoapp.core.i18n.AppStringsProvider.current().styleAnime
+        StyleReferenceCategory.GAME -> com.webtoapp.core.i18n.AppStringsProvider.current().styleGame
+        StyleReferenceCategory.BRAND -> com.webtoapp.core.i18n.AppStringsProvider.current().styleBrand
+        StyleReferenceCategory.ART -> com.webtoapp.core.i18n.AppStringsProvider.current().styleArt
+        StyleReferenceCategory.ERA -> com.webtoapp.core.i18n.AppStringsProvider.current().styleEra
+        StyleReferenceCategory.CULTURE -> com.webtoapp.core.i18n.AppStringsProvider.current().styleCulture
     }
 }

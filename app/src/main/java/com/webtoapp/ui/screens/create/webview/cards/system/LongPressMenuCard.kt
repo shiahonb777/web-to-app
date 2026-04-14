@@ -61,7 +61,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -100,12 +100,12 @@ fun LongPressMenuCard(
     )
 
     val styleOptions = listOf(
-        StyleOption(LongPressMenuStyle.FULL, Strings.longPressMenuStyleFull, Icons.Outlined.ViewList, Color(0xFF6366F1)),
-        StyleOption(LongPressMenuStyle.SIMPLE, Strings.longPressMenuStyleSimple, Icons.Outlined.ViewAgenda, Color(0xFF22C55E)),
-        StyleOption(LongPressMenuStyle.IOS, Strings.longPressMenuStyleIos, Icons.Outlined.PhoneIphone, Color(0xFF3B82F6)),
-        StyleOption(LongPressMenuStyle.FLOATING, Strings.longPressMenuStyleFloating, Icons.Outlined.BubbleChart, Color(0xFFF97316)),
-        StyleOption(LongPressMenuStyle.CONTEXT, Strings.longPressMenuStyleContext, Icons.Outlined.Mouse, Color(0xFF8B5CF6)),
-        StyleOption(LongPressMenuStyle.DISABLED, Strings.longPressMenuStyleDisabled, Icons.Outlined.Block, Color(0xFF9CA3AF))
+        StyleOption(LongPressMenuStyle.FULL, AppStringsProvider.current().longPressMenuStyleFull, Icons.Outlined.ViewList, Color(0xFF6366F1)),
+        StyleOption(LongPressMenuStyle.SIMPLE, AppStringsProvider.current().longPressMenuStyleSimple, Icons.Outlined.ViewAgenda, Color(0xFF22C55E)),
+        StyleOption(LongPressMenuStyle.IOS, AppStringsProvider.current().longPressMenuStyleIos, Icons.Outlined.PhoneIphone, Color(0xFF3B82F6)),
+        StyleOption(LongPressMenuStyle.FLOATING, AppStringsProvider.current().longPressMenuStyleFloating, Icons.Outlined.BubbleChart, Color(0xFFF97316)),
+        StyleOption(LongPressMenuStyle.CONTEXT, AppStringsProvider.current().longPressMenuStyleContext, Icons.Outlined.Mouse, Color(0xFF8B5CF6)),
+        StyleOption(LongPressMenuStyle.DISABLED, AppStringsProvider.current().longPressMenuStyleDisabled, Icons.Outlined.Block, Color(0xFF9CA3AF))
     )
 
     val selectedOption = styleOptions.find { it.style == style } ?: styleOptions[0]
@@ -131,7 +131,7 @@ fun LongPressMenuCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.longPressMenuSettings,
+                            text = AppStringsProvider.current().longPressMenuSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
                         AnimatedContent(

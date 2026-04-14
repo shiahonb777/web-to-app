@@ -44,7 +44,7 @@ import com.webtoapp.core.forcedrun.ForcedRunAccessibilityService
 import com.webtoapp.core.forcedrun.ForcedRunGuardService
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.forcedrun.ProtectionLevel
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 
 @Composable
@@ -93,13 +93,13 @@ fun ForcedRunPermissionGuide(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = Strings.forcedRunPermissionTitle,
+                text = AppStringsProvider.current().forcedRunPermissionTitle,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = Strings.forcedRunPermissionDesc,
+                text = AppStringsProvider.current().forcedRunPermissionDesc,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -108,8 +108,8 @@ fun ForcedRunPermissionGuide(
 
             if (protectionLevel != ProtectionLevel.BASIC) {
                 PermissionItem(
-                    title = Strings.accessibilityService,
-                    description = Strings.accessibilityServiceDesc,
+                    title = AppStringsProvider.current().accessibilityService,
+                    description = AppStringsProvider.current().accessibilityServiceDesc,
                     isGranted = hasAccessibility,
                     onRequestPermission = {
                         ForcedRunAccessibilityService.openAccessibilitySettings(context)
@@ -119,8 +119,8 @@ fun ForcedRunPermissionGuide(
 
             if (protectionLevel == ProtectionLevel.MAXIMUM) {
                 PermissionItem(
-                    title = Strings.usageAccess,
-                    description = Strings.usageAccessDesc,
+                    title = AppStringsProvider.current().usageAccess,
+                    description = AppStringsProvider.current().usageAccessDesc,
                     isGranted = hasUsageStats,
                     onRequestPermission = {
                         ForcedRunGuardService.openUsageAccessSettings(context)
@@ -135,7 +135,7 @@ fun ForcedRunPermissionGuide(
                 onClick = { refreshPermissions() },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(Strings.refreshPermissionStatus)
+                Text(AppStringsProvider.current().refreshPermissionStatus)
             }
         }
     }
@@ -184,11 +184,11 @@ private fun PermissionItem(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text(Strings.grant, fontSize = 14.sp)
+                Text(AppStringsProvider.current().grant, fontSize = 14.sp)
             }
         } else {
             Text(
-                text = Strings.granted,
+                text = AppStringsProvider.current().granted,
                 color = AppColors.Success,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp
@@ -201,18 +201,18 @@ private fun PermissionItem(
 private fun ProtectionLevelInfo(level: ProtectionLevel) {
     val (levelName, levelDescription, levelColor) = when (level) {
         ProtectionLevel.BASIC -> Triple(
-            Strings.protectionBasic,
-            Strings.protectionBasicDesc,
+            AppStringsProvider.current().protectionBasic,
+            AppStringsProvider.current().protectionBasicDesc,
             Color(0xFF9E9E9E)
         )
         ProtectionLevel.STANDARD -> Triple(
-            Strings.protectionStandard,
-            Strings.protectionStandardDesc,
+            AppStringsProvider.current().protectionStandard,
+            AppStringsProvider.current().protectionStandardDesc,
             Color(0xFF2196F3)
         )
         ProtectionLevel.MAXIMUM -> Triple(
-            Strings.protectionMaximum,
-            Strings.protectionMaximumDesc,
+            AppStringsProvider.current().protectionMaximum,
+            AppStringsProvider.current().protectionMaximumDesc,
             AppColors.Success
         )
     }
@@ -258,7 +258,7 @@ fun ForcedRunPermissionDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (permissionStatus.isFullyGranted) Strings.permissionsReady else Strings.permissionsNeeded,
+                text = if (permissionStatus.isFullyGranted) AppStringsProvider.current().permissionsReady else AppStringsProvider.current().permissionsNeeded,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -271,17 +271,17 @@ fun ForcedRunPermissionDialog(
         confirmButton = {
             if (permissionStatus.isFullyGranted) {
                 Button(onClick = onAllPermissionsGranted) {
-                    Text(Strings.start)
+                    Text(AppStringsProvider.current().start)
                 }
             } else {
                 TextButton(onClick = onContinueAnyway) {
-                    Text(Strings.skipDegradedProtection)
+                    Text(AppStringsProvider.current().skipDegradedProtection)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

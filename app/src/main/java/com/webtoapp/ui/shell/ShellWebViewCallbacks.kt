@@ -10,7 +10,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
@@ -134,7 +134,7 @@ fun createShellWebViewCallbacks(
                 AppLogger.w("ShellActivity", "No app to handle external link: $url", e)
                 Toast.makeText(
                     context,
-                    Strings.cannotOpenLink,
+                    AppStringsProvider.current().cannotOpenLink,
                     Toast.LENGTH_SHORT
                 ).show()
             }

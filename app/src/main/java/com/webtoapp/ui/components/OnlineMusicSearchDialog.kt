@@ -46,7 +46,7 @@ import com.webtoapp.core.bgm.MusicChannel
 import com.webtoapp.core.bgm.OnlineMusicApi
 import com.webtoapp.core.bgm.OnlineMusicDownloader
 import com.webtoapp.core.bgm.OnlineMusicTrack
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.BgmItem
@@ -170,7 +170,7 @@ fun OnlineMusicSearchDialog(
             result.onSuccess { response ->
                 searchResults = response.tracks
                 if (response.tracks.isEmpty()) {
-                    searchError = Strings.noMusicResults
+                    searchError = AppStringsProvider.current().noMusicResults
                 }
                 // check download
                 val downloaded = mutableSetOf<String>()
@@ -182,7 +182,7 @@ fun OnlineMusicSearchDialog(
                 downloadedTrackIds = downloaded
             }.onFailure { e ->
                 searchResults = emptyList()
-                searchError = "${Strings.searchFailed}: ${e.message}"
+                searchError = "${AppStringsProvider.current().searchFailed}: ${e.message}"
             }
             isSearching = false
         }
@@ -226,7 +226,7 @@ fun OnlineMusicSearchDialog(
                 val playUrl = detailedTrack?.playUrl
                 if (playUrl.isNullOrBlank()) {
                     AppLogger.e("OnlineMusicSearch", "No play URL for: ${track.name}")
-                    snackbarHostState.showSnackbar(Strings.searchFailed)
+                    snackbarHostState.showSnackbar(AppStringsProvider.current().searchFailed)
                     isLoadingPreview = false
                     loadingPreviewTrackId = null
                     return@launch
@@ -268,7 +268,7 @@ fun OnlineMusicSearchDialog(
                             loadingPreviewTrackId = null
                             previewingTrack = null
                             scope.launch {
-                                snackbarHostState.showSnackbar(Strings.playbackFailedWithCode.format(what))
+                                snackbarHostState.showSnackbar(AppStringsProvider.current().playbackFailedWithCode.format(what))
                             }
                             true
                         }
@@ -284,12 +284,12 @@ fun OnlineMusicSearchDialog(
                                 AppLogger.w("OnlineMusicSearch", "Preview load timeout for: ${track.name}")
                                 isLoadingPreview = false
                                 loadingPreviewTrackId = null
-                                snackbarHostState.showSnackbar(Strings.loadingTimeout)
+                                snackbarHostState.showSnackbar(AppStringsProvider.current().loadingTimeout)
                             }
                         }
                     } catch (e: Exception) {
                         AppLogger.e("OnlineMusicSearch", "Preview failed: ${e.message}", e)
-                        snackbarHostState.showSnackbar("${Strings.playbackFailed}: ${e.message}")
+                        snackbarHostState.showSnackbar("${AppStringsProvider.current().playbackFailed}: ${e.message}")
                         isLoadingPreview = false
                         loadingPreviewTrackId = null
                     }
@@ -298,7 +298,7 @@ fun OnlineMusicSearchDialog(
                 AppLogger.e("OnlineMusicSearch", "Preview failed: ${e.message}", e)
                 isLoadingPreview = false
                 loadingPreviewTrackId = null
-                snackbarHostState.showSnackbar("${Strings.loadFailed}: ${e.message}")
+                snackbarHostState.showSnackbar("${AppStringsProvider.current().loadFailed}: ${e.message}")
             }
         }
     }
@@ -317,12 +317,12 @@ fun OnlineMusicSearchDialog(
             showDownloadLog = true
             downloadSpeed = ""
 
-            addLog("${Strings.startDownload}: ${track.name} - ${track.artist}")
-            addLog("${Strings.musicChannelLabel}: ${OnlineMusicApi.getChannel(track.sourceChannelId)?.displayName ?: track.sourceChannelId}")
+            addLog("${AppStringsProvider.current().startDownload}: ${track.name} - ${track.artist}")
+            addLog("${AppStringsProvider.current().musicChannelLabel}: ${OnlineMusicApi.getChannel(track.sourceChannelId)?.displayName ?: track.sourceChannelId}")
 
             try {
                 // Note
-                addLog(Strings.gettingMusicDetails)
+                addLog(AppStringsProvider.current().gettingMusicDetails)
                 val detailedTrack = if (track.playUrl.isNullOrBlank()) {
                     val detailResult = OnlineMusicApi.getTrackDetail(track)
                     detailResult.getOrNull()
@@ -331,14 +331,14 @@ fun OnlineMusicSearchDialog(
                 }
 
                 if (detailedTrack?.playUrl.isNullOrBlank()) {
-                    addLog(Strings.getPlayUrlFailed, DownloadLogEntry.LogType.ERROR)
-                    snackbarHostState.showSnackbar(Strings.searchFailed)
+                    addLog(AppStringsProvider.current().getPlayUrlFailed, DownloadLogEntry.LogType.ERROR)
+                    snackbarHostState.showSnackbar(AppStringsProvider.current().searchFailed)
                     downloadingTrackId = null
                     return@launch
                 }
 
-                addLog(Strings.getPlayUrlSuccess, DownloadLogEntry.LogType.SUCCESS)
-                addLog(Strings.startDownloadMusic)
+                addLog(AppStringsProvider.current().getPlayUrlSuccess, DownloadLogEntry.LogType.SUCCESS)
+                addLog(AppStringsProvider.current().startDownloadMusic)
 
                 // update
                 searchResults = searchResults.map {
@@ -361,10 +361,10 @@ fun OnlineMusicSearchDialog(
                     val percent = (progress * 100).toInt()
                     if (percent > 0 && percent % 20 == 0) {
                         val logMsg = when {
-                            progress <= 0.8f -> "${Strings.musicDownloading} ${percent}%"
-                            progress <= 0.85f -> Strings.downloadingCoverImage
-                            progress <= 0.95f -> "${Strings.coverDownloading} ${((progress - 0.8f) / 0.2f * 100).toInt()}%"
-                            else -> Strings.finishing
+                            progress <= 0.8f -> "${AppStringsProvider.current().musicDownloading} ${percent}%"
+                            progress <= 0.85f -> AppStringsProvider.current().downloadingCoverImage
+                            progress <= 0.95f -> "${AppStringsProvider.current().coverDownloading} ${((progress - 0.8f) / 0.2f * 100).toInt()}%"
+                            else -> AppStringsProvider.current().finishing
                         }
                         // Avoid duplicate logs
                         if (downloadLogs.lastOrNull()?.message != logMsg) {
@@ -375,20 +375,20 @@ fun OnlineMusicSearchDialog(
 
                 if (bgmItem != null) {
                     downloadedTrackIds = downloadedTrackIds + track.id
-                    addLog(Strings.downloadCompleteSaved, DownloadLogEntry.LogType.SUCCESS)
+                    addLog(AppStringsProvider.current().downloadCompleteSaved, DownloadLogEntry.LogType.SUCCESS)
                     if (bgmItem.coverPath != null) {
-                        addLog(Strings.coverImageSaved, DownloadLogEntry.LogType.SUCCESS)
+                        addLog(AppStringsProvider.current().coverImageSaved, DownloadLogEntry.LogType.SUCCESS)
                     }
                     onMusicDownloaded(bgmItem)
-                    snackbarHostState.showSnackbar(Strings.downloadSuccess)
+                    snackbarHostState.showSnackbar(AppStringsProvider.current().downloadSuccess)
                 } else {
-                    addLog(Strings.downloadFailed, DownloadLogEntry.LogType.ERROR)
-                    snackbarHostState.showSnackbar(Strings.searchFailed)
+                    addLog(AppStringsProvider.current().downloadFailed, DownloadLogEntry.LogType.ERROR)
+                    snackbarHostState.showSnackbar(AppStringsProvider.current().searchFailed)
                 }
             } catch (e: Exception) {
                 AppLogger.e("OnlineMusicSearch", "Download failed", e)
-                addLog("${Strings.downloadError}: ${e.message}", DownloadLogEntry.LogType.ERROR)
-                snackbarHostState.showSnackbar("${Strings.searchFailed}: ${e.message}")
+                addLog("${AppStringsProvider.current().downloadError}: ${e.message}", DownloadLogEntry.LogType.ERROR)
+                snackbarHostState.showSnackbar("${AppStringsProvider.current().searchFailed}: ${e.message}")
             }
             downloadingTrackId = null
         }
@@ -414,13 +414,13 @@ fun OnlineMusicSearchDialog(
                 modifier = Modifier.systemBarsPadding().padding(bottom = 64.dp),
                 topBar = {
                     TopAppBar(
-                        title = { Text(Strings.onlineMusic) },
+                        title = { Text(AppStringsProvider.current().onlineMusic) },
                         navigationIcon = {
                             IconButton(onClick = {
                                 mediaPlayer?.release()
                                 onDismiss()
                             }) {
-                                Icon(Icons.Default.Close, Strings.close)
+                                Icon(Icons.Default.Close, AppStringsProvider.current().close)
                             }
                         },
                         actions = {
@@ -436,7 +436,7 @@ fun OnlineMusicSearchDialog(
                                     ) {
                                         Icon(
                                             Icons.Outlined.Terminal,
-                                            Strings.downloadLog,
+                                            AppStringsProvider.current().downloadLog,
                                             tint = if (showDownloadLog)
                                                 MaterialTheme.colorScheme.primary
                                             else
@@ -464,7 +464,7 @@ fun OnlineMusicSearchDialog(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                 }
-                                Text(Strings.testAllChannels)
+                                Text(AppStringsProvider.current().testAllChannels)
                             }
                         }
                     )
@@ -478,7 +478,7 @@ fun OnlineMusicSearchDialog(
                 ) {
                     // ===== select =====
                     Text(
-                        Strings.musicChannel,
+                        AppStringsProvider.current().musicChannel,
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
@@ -521,7 +521,7 @@ fun OnlineMusicSearchDialog(
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text(Strings.searchSongName) },
+                            placeholder = { Text(AppStringsProvider.current().searchSongName) },
                             modifier = Modifier.weight(weight = 1f, fill = true),
                             singleLine = true,
                             leadingIcon = {
@@ -552,7 +552,7 @@ fun OnlineMusicSearchDialog(
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                             } else {
-                                Icon(Icons.Default.Search, Strings.search)
+                                Icon(Icons.Default.Search, AppStringsProvider.current().search)
                             }
                         }
                     }
@@ -586,7 +586,7 @@ fun OnlineMusicSearchDialog(
                                 CircularProgressIndicator()
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    Strings.searchingText,
+                                    AppStringsProvider.current().searchingText,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -630,7 +630,7 @@ fun OnlineMusicSearchDialog(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    Strings.searchOnlineMusic,
+                                    AppStringsProvider.current().searchOnlineMusic,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -662,7 +662,7 @@ fun OnlineMusicSearchDialog(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            "${channel.displayName} · ${searchResults.size} ${Strings.results}",
+                                            "${channel.displayName} · ${searchResults.size} ${AppStringsProvider.current().results}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -752,10 +752,10 @@ private fun ChannelChip(
     }
 
     val statusText = when {
-        isTesting -> Strings.channelTesting
-        status == null -> Strings.channelUntested
-        status.isAvailable -> "${Strings.channelAvailable} ${status.latencyMs}ms"
-        else -> Strings.channelUnavailable
+        isTesting -> AppStringsProvider.current().channelTesting
+        status == null -> AppStringsProvider.current().channelUntested
+        status.isAvailable -> "${AppStringsProvider.current().channelAvailable} ${status.latencyMs}ms"
+        else -> AppStringsProvider.current().channelUnavailable
     }
 
     val isRecommended = channel.id == "netease_official"
@@ -775,7 +775,7 @@ private fun ChannelChip(
                             modifier = Modifier.padding(start = 2.dp)
                         ) {
                             Text(
-                                Strings.recommendedLabel,
+                                AppStringsProvider.current().recommendedLabel,
                                 fontSize = 8.sp,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -938,7 +938,7 @@ private fun OnlineMusicTrackItem(
                     }
                     if (isItunes) {
                         Text(
-                            Strings.previewListen,
+                            AppStringsProvider.current().previewListen,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary,
                             fontSize = 10.sp
@@ -965,7 +965,7 @@ private fun OnlineMusicTrackItem(
                                 isPaused -> Icons.Filled.PlayCircle
                                 else -> Icons.Filled.PlayCircle
                             },
-                            Strings.previewListen,
+                            AppStringsProvider.current().previewListen,
                             tint = when {
                                 isPlaying -> MaterialTheme.colorScheme.primary
                                 isPaused -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
@@ -980,7 +980,7 @@ private fun OnlineMusicTrackItem(
                 if (isDownloaded) {
                     Icon(
                         Icons.Filled.CheckCircle,
-                        Strings.downloadSuccess,
+                        AppStringsProvider.current().downloadSuccess,
                         tint = AppColors.Success,
                         modifier = Modifier
                             .size(24.dp)
@@ -1009,7 +1009,7 @@ private fun OnlineMusicTrackItem(
                     IconButton(onClick = onDownload) {
                         Icon(
                             Icons.Outlined.Download,
-                            Strings.downloadToBgm,
+                            AppStringsProvider.current().downloadToBgm,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -1123,7 +1123,7 @@ private fun EnhancedMiniPlayer(
                 IconButton(onClick = onStop) {
                     Icon(
                         Icons.Filled.StopCircle,
-                        Strings.stop,
+                        AppStringsProvider.current().stop,
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(28.dp)
                     )
@@ -1211,7 +1211,7 @@ private fun DownloadLogPanel(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    Strings.downloadLog,
+                    AppStringsProvider.current().downloadLog,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -1235,7 +1235,7 @@ private fun DownloadLogPanel(
                     ) {
                         Icon(
                             Icons.Outlined.Delete,
-                            Strings.clearText,
+                            AppStringsProvider.current().clearText,
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1248,7 +1248,7 @@ private fun DownloadLogPanel(
                 ) {
                     Icon(
                         Icons.Default.ExpandLess,
-                        Strings.collapseText,
+                        AppStringsProvider.current().collapseText,
                         modifier = Modifier.size(16.dp)
                     )
                 }

@@ -31,7 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.UserAgentMode
 import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.components.EnhancedElevatedCard
@@ -64,11 +64,11 @@ fun UserAgentCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.userAgentMode,
+                            text = AppStringsProvider.current().userAgentMode,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = if (isEnabled) config.userAgentMode.displayName else Strings.userAgentDefault,
+                            text = if (isEnabled) config.userAgentMode.displayName else AppStringsProvider.current().userAgentDefault,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -98,7 +98,7 @@ fun UserAgentCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = Strings.bypassWebViewDetection,
+                                text = AppStringsProvider.current().bypassWebViewDetection,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
@@ -107,7 +107,7 @@ fun UserAgentCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = Strings.mobileVersion,
+                        text = AppStringsProvider.current().mobileVersion,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -118,7 +118,7 @@ fun UserAgentCard(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
-                            UserAgentMode.DEFAULT to Strings.userAgentDefault,
+                            UserAgentMode.DEFAULT to AppStringsProvider.current().userAgentDefault,
                             UserAgentMode.CHROME_MOBILE to "Chrome",
                             UserAgentMode.SAFARI_MOBILE to "Safari",
                             UserAgentMode.FIREFOX_MOBILE to "Firefox",
@@ -134,7 +134,7 @@ fun UserAgentCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = Strings.desktopVersion,
+                        text = AppStringsProvider.current().desktopVersion,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.tertiary
                     )
@@ -162,7 +162,7 @@ fun UserAgentCard(
                     PremiumFilterChip(
                         selected = config.userAgentMode == UserAgentMode.CUSTOM,
                         onClick = { onConfigChange(config.copy(userAgentMode = UserAgentMode.CUSTOM)) },
-                        label = { Text(Strings.userAgentCustom) },
+                        label = { Text(AppStringsProvider.current().userAgentCustom) },
                         leadingIcon = {
                             Icon(
                                 Icons.Outlined.Edit,
@@ -178,7 +178,7 @@ fun UserAgentCard(
                             value = config.customUserAgent ?: "",
                             onValueChange = { onConfigChange(config.copy(customUserAgent = it.ifBlank { null })) },
                             label = { Text("User-Agent") },
-                            placeholder = { Text(Strings.userAgentCustomHint) },
+                            placeholder = { Text(AppStringsProvider.current().userAgentCustomHint) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = false,
                             minLines = 2,
@@ -194,7 +194,7 @@ fun UserAgentCard(
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
-                                    text = Strings.currentUserAgent,
+                                    text = AppStringsProvider.current().currentUserAgent,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

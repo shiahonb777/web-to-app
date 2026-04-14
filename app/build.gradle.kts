@@ -1,4 +1,6 @@
 import java.util.Properties
+import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
 
 plugins {
     id("com.android.application")
@@ -18,7 +20,195 @@ val localProperties = Properties().apply {
     }
 }
 
+data class AppStringsProperty(
+    val propertyName: String,
+    val translations: Map<String, String>
+)
+
+data class AppStringsGroup(
+    val groupId: String,
+    val properties: List<AppStringsProperty>
+)
+
+fun snakeToCamel(value: String): String {
+    val parts = value.split("_").filter { it.isNotBlank() }
+    if (parts.isEmpty()) return value
+    return buildString {
+        append(parts.first())
+        parts.drop(1).forEach { part ->
+            append(part.replaceFirstChar { char -> char.uppercase() })
+        }
+    }
+}
+
+fun snakeToPascal(value: String): String =
+    value.split("_")
+        .filter { it.isNotBlank() }
+        .joinToString("") { part -> part.replaceFirstChar { char -> char.uppercase() } }
+
+fun kotlinStringLiteral(value: String): String = buildString {
+    append('"')
+    value.forEach { char ->
+        when (char) {
+            '\\' -> append("\\\\")
+            '"' -> append("\\\"")
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '\t' -> append("\\t")
+            '$' -> append("\\$")
+            else -> append(char)
+        }
+    }
+    append('"')
+}
+
+fun decodeAndroidStringValue(value: String): String {
+    val result = StringBuilder()
+    var index = 0
+    while (index < value.length) {
+        val char = value[index]
+        if (char == '\\' && index + 1 < value.length) {
+            when (val next = value[index + 1]) {
+                '\\', '\'', '"', '@', '?' -> {
+                    result.append(next)
+                    index += 2
+                    continue
+                }
+                'n' -> {
+                    result.append('\n')
+                    index += 2
+                    continue
+                }
+                'r' -> {
+                    result.append('\r')
+                    index += 2
+                    continue
+                }
+                't' -> {
+                    result.append('\t')
+                    index += 2
+                    continue
+                }
+            }
+        }
+        result.append(char)
+        index++
+    }
+    return result.toString()
+}
+
+fun parseStringXml(file: File): Map<String, String> {
+    val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+    val strings = linkedMapOf<String, String>()
+    val nodes = document.getElementsByTagName("string")
+    for (index in 0 until nodes.length) {
+        val element = nodes.item(index) as? Element ?: continue
+        strings[element.getAttribute("name")] = decodeAndroidStringValue(element.textContent.orEmpty())
+    }
+    return strings
+}
+
+val generatedAppStringsDir = layout.buildDirectory.dir("generated/source/appStrings/main/kotlin")
+
+val generateAppStringsAccessors = tasks.register("generateAppStringsAccessors") {
+    val valuesDir = project.file("src/main/res/values")
+    val valuesZhDir = project.file("src/main/res/values-zh")
+    inputs.files(fileTree(valuesDir) { include("app_strings_*.xml") })
+    inputs.files(fileTree(valuesZhDir) { include("app_strings_*.xml") })
+    inputs.files(fileTree(project.file("src/main/res/values-en")) { include("app_strings_*.xml") })
+    inputs.files(fileTree(project.file("src/main/res/values-ar")) { include("app_strings_*.xml") })
+    outputs.dir(generatedAppStringsDir)
+
+    doLast {
+        val groups = fileTree(valuesDir)
+            .matching { include("app_strings_*.xml") }
+            .files
+            .sortedBy { it.name }
+            .map { defaultFile ->
+                val groupId = defaultFile.name.removePrefix("app_strings_").removeSuffix(".xml")
+                val prefix = "appstr_${groupId}_"
+                val zhMap = parseStringXml(defaultFile)
+                val zhFile = project.file("src/main/res/values-zh/${defaultFile.name}")
+                val enFile = project.file("src/main/res/values-en/${defaultFile.name}")
+                val arFile = project.file("src/main/res/values-ar/${defaultFile.name}")
+                require(zhFile.exists()) { "Missing Chinese locale file for ${defaultFile.name}" }
+                require(enFile.exists()) { "Missing English locale file for ${defaultFile.name}" }
+                require(arFile.exists()) { "Missing Arabic locale file for ${defaultFile.name}" }
+                val zhVariantMap = parseStringXml(zhFile)
+                val enMap = parseStringXml(enFile)
+                val arMap = parseStringXml(arFile)
+                require(zhMap.keys == zhVariantMap.keys) { "Key mismatch between values and values-zh for ${defaultFile.name}" }
+                require(zhMap.keys == enMap.keys) { "Key mismatch between values and values-en for ${defaultFile.name}" }
+                require(zhMap.keys == arMap.keys) { "Key mismatch between values and values-ar for ${defaultFile.name}" }
+
+                val properties = zhMap.keys.sorted().map { key ->
+                    require(key.startsWith(prefix)) { "Unexpected key '$key' in ${defaultFile.name}" }
+                    AppStringsProperty(
+                        propertyName = snakeToCamel(key.removePrefix(prefix)),
+                        translations = mapOf(
+                            "zh" to zhMap.getValue(key),
+                            "en" to enMap.getValue(key),
+                            "ar" to arMap.getValue(key)
+                        )
+                    )
+                }
+                AppStringsGroup(groupId = groupId, properties = properties)
+            }
+
+        val outputFile = generatedAppStringsDir.get()
+            .file("com/webtoapp/core/i18n/generated/GeneratedAppStrings.kt")
+            .asFile
+        outputFile.parentFile.mkdirs()
+
+        outputFile.writeText(
+            buildString {
+                appendLine("package com.webtoapp.core.i18n.generated")
+                appendLine()
+                appendLine("import com.webtoapp.core.i18n.AppLanguage")
+                appendLine()
+                groups.forEach { group ->
+                    val interfaceName = "${snakeToPascal(group.groupId)}AppStrings"
+                    appendLine("public interface $interfaceName {")
+                    group.properties.forEach { property ->
+                        appendLine("    public val ${property.propertyName}: String")
+                    }
+                    appendLine("}")
+                    appendLine()
+                }
+
+                val superInterfaces = groups.joinToString(", ") { "${snakeToPascal(it.groupId)}AppStrings" }
+                appendLine("public interface GeneratedAppStrings : $superInterfaces {")
+                groups.forEach { group ->
+                    val interfaceName = "${snakeToPascal(group.groupId)}AppStrings"
+                    val propertyName = snakeToCamel(group.groupId)
+                    appendLine("    public val $propertyName: $interfaceName")
+                    appendLine("        get() = this")
+                }
+                appendLine("}")
+                appendLine()
+                appendLine("public abstract class BaseGeneratedAppStrings : GeneratedAppStrings {")
+                appendLine("    protected abstract val currentLanguage: AppLanguage")
+                appendLine()
+                groups.forEach { group ->
+                    group.properties.forEach { property ->
+                        appendLine("    override val ${property.propertyName}: String")
+                        appendLine("        get() = when (currentLanguage) {")
+                        appendLine("            AppLanguage.CHINESE -> ${kotlinStringLiteral(property.translations.getValue("zh"))}")
+                        appendLine("            AppLanguage.ENGLISH -> ${kotlinStringLiteral(property.translations.getValue("en"))}")
+                        appendLine("            AppLanguage.ARABIC -> ${kotlinStringLiteral(property.translations.getValue("ar"))}")
+                        appendLine("        }")
+                        appendLine()
+                    }
+                }
+                appendLine("}")
+            },
+            Charsets.UTF_8
+        )
+    }
+}
+
 android {
+    sourceSets.getByName("main").java.srcDir(generatedAppStringsDir)
 
     signingConfigs {
         create("shiaho") {
@@ -137,6 +327,10 @@ android {
             excludes += "**/libmozavcodec.so"
         }
     }
+}
+
+tasks.named("preBuild") {
+    dependsOn(generateAppStringsAccessors)
 }
 
 dependencies {

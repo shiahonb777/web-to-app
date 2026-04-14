@@ -797,7 +797,7 @@ class WebViewManager(
             browserDisguiseConfig = browserDisguiseConfig,
             deviceDisguiseConfig = deviceDisguiseConfig,
             shields = shields,
-            currentLanguage = com.webtoapp.core.i18n.Strings.currentLanguage.value.name,
+            currentLanguage = com.webtoapp.core.i18n.AppStringsProvider.currentLanguage.name,
             resolveUserAgent = ::resolveUserAgent,
             onErrorPageManagerChange = { errorPageManager = it }
         )

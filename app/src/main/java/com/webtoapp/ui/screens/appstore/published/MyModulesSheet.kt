@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -123,10 +123,10 @@ internal fun MyModulesSheet(
     val totalLikes = remember(myModules) { myModules.sumOf { it.likeCount } }
 
     val moduleCategoryLabels = mapOf(
-        "UI_ENHANCE" to Strings.catUiEnhance, "MEDIA" to Strings.catMedia,
-        "PRIVACY" to Strings.catPrivacySecurity, "TOOLS" to Strings.catTools,
-        "AD_BLOCK" to Strings.catAdBlock, "SOCIAL" to Strings.catSocial,
-        "DEVELOPER" to Strings.catDeveloper, "OTHER" to Strings.catOther
+        "UI_ENHANCE" to AppStringsProvider.current().catUiEnhance, "MEDIA" to AppStringsProvider.current().catMedia,
+        "PRIVACY" to AppStringsProvider.current().catPrivacySecurity, "TOOLS" to AppStringsProvider.current().catTools,
+        "AD_BLOCK" to AppStringsProvider.current().catAdBlock, "SOCIAL" to AppStringsProvider.current().catSocial,
+        "DEVELOPER" to AppStringsProvider.current().catDeveloper, "OTHER" to AppStringsProvider.current().catOther
     )
 
     val moduleCategoryColors = mapOf(
@@ -171,7 +171,7 @@ internal fun MyModulesSheet(
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
             // Header( )
             MyPublishedItemsHeader(
-                title = Strings.storeMyModules,
+                title = AppStringsProvider.current().storeMyModules,
                 isRefreshing = isRefreshing,
                 onRefresh = { loadMyModules(showRefresh = true) }
             ) {
@@ -210,7 +210,7 @@ internal fun MyModulesSheet(
             } else if (myModules.isEmpty()) {
                 PublishedItemEmptyState(
                     icon = Icons.Outlined.Extension,
-                    title = Strings.storeNoPublishedModules,
+                    title = AppStringsProvider.current().storeNoPublishedModules,
                     subtitle = "将你开发的扩展模块发布到市场\n让更多用户体验你的创意",
                     onAction = onDismiss
                 )

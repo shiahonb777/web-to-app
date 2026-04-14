@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.extension.ModuleTemplate
 import com.webtoapp.core.extension.ModuleTemplates
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.SvgIconMapper
 
 @Composable
@@ -44,7 +44,7 @@ fun TemplateSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectTemplate) },
+        title = { Text(AppStringsProvider.current().selectTemplate) },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(templates) { template ->
@@ -122,7 +122,7 @@ fun TemplateSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )

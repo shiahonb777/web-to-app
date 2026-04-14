@@ -1,17 +1,17 @@
 package com.webtoapp.core.extension.snippets
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal fun utilityFunctions() = CodeSnippetCategory(
         id = "utility",
-        name = Strings.snippetUtility,
+        name = AppStringsProvider.current().snippetUtility,
         icon = "🔨",
-        description = Strings.snippetUtilityDesc,
+        description = AppStringsProvider.current().snippetUtilityDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "util-debounce",
-                name = Strings.snippetDebounce,
-                description = Strings.snippetDebounceDesc,
+                name = AppStringsProvider.current().snippetDebounce,
+                description = AppStringsProvider.current().snippetDebounceDesc,
                 code = """function debounce(func, wait = 300) {
     let timeout;
     return function(...args) {
@@ -23,12 +23,12 @@ internal fun utilityFunctions() = CodeSnippetCategory(
 const debouncedSearch = debounce((query) => {
     console.log('搜索:', query);
 }, 500);""",
-                tags = listOf(Strings.tagDebounce, Strings.tagPerformance)
+                tags = listOf(AppStringsProvider.current().tagDebounce, AppStringsProvider.current().tagPerformance)
             ),
             CodeSnippet(
                 id = "util-throttle",
-                name = Strings.snippetThrottle,
-                description = Strings.snippetThrottleDesc,
+                name = AppStringsProvider.current().snippetThrottle,
+                description = AppStringsProvider.current().snippetThrottleDesc,
                 code = """function throttle(func, limit = 300) {
     let inThrottle;
     return function(...args) {
@@ -43,12 +43,12 @@ const debouncedSearch = debounce((query) => {
 const throttledScroll = throttle(() => {
     console.log('滚动位置:', window.scrollY);
 }, 100);""",
-                tags = listOf(Strings.tagThrottle, Strings.tagPerformance)
+                tags = listOf(AppStringsProvider.current().tagThrottle, AppStringsProvider.current().tagPerformance)
             ),
             CodeSnippet(
                 id = "util-wait-element",
-                name = Strings.snippetWaitElement,
-                description = Strings.snippetWaitElementDesc,
+                name = AppStringsProvider.current().snippetWaitElement,
+                description = AppStringsProvider.current().snippetWaitElementDesc,
                 code = """function waitForElement(selector, timeout = 10000) {
     return new Promise((resolve, reject) => {
         const element = document.querySelector(selector);
@@ -74,12 +74,12 @@ const throttledScroll = throttle(() => {
     });
 }
 waitForElement('.target-class').then(el => console.log('找到元素:', el));""",
-                tags = listOf(Strings.tagWait, Strings.tagAsync)
+                tags = listOf(AppStringsProvider.current().tagWait, AppStringsProvider.current().tagAsync)
             ),
             CodeSnippet(
                 id = "util-copy-text",
-                name = Strings.snippetCopyText,
-                description = Strings.snippetCopyTextDesc,
+                name = AppStringsProvider.current().snippetCopyText,
+                description = AppStringsProvider.current().snippetCopyTextDesc,
                 code = """async function copyToClipboard(text) {
     try {
         await navigator.clipboard.writeText(text);
@@ -98,12 +98,12 @@ waitForElement('.target-class').then(el => console.log('找到元素:', el));"""
     }
 }
 copyToClipboard('要复制的文本');""",
-                tags = listOf(Strings.tagCopy, Strings.tagClipboard)
+                tags = listOf(AppStringsProvider.current().tagCopy, AppStringsProvider.current().tagClipboard)
             ),
             CodeSnippet(
                 id = "util-format-date",
-                name = Strings.snippetFormatDate,
-                description = Strings.snippetFormatDateDesc,
+                name = AppStringsProvider.current().snippetFormatDate,
+                description = AppStringsProvider.current().snippetFormatDateDesc,
                 code = """function formatDate(date, format = 'YYYY-MM-DD HH:mm:ss') {
     const d = new Date(date);
     const map = {
@@ -117,12 +117,12 @@ copyToClipboard('要复制的文本');""",
     return format.replace(/YYYY|MM|DD|HH|mm|ss/g, match => map[match]);
 }
 console.log(formatDate(new Date())); // 2024-01-01 12:00:00""",
-                tags = listOf(Strings.tagDate, Strings.tagFormat)
+                tags = listOf(AppStringsProvider.current().tagDate, AppStringsProvider.current().tagFormat)
             ),
             CodeSnippet(
                 id = "util-random-string",
-                name = Strings.snippetRandomString,
-                description = Strings.snippetRandomStringDesc,
+                name = AppStringsProvider.current().snippetRandomString,
+                description = AppStringsProvider.current().snippetRandomStringDesc,
                 code = """function randomString(length = 8) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -132,12 +132,12 @@ console.log(formatDate(new Date())); // 2024-01-01 12:00:00""",
     return result;
 }
 console.log(randomString(16));""",
-                tags = listOf(Strings.tagRandom, Strings.tagString)
+                tags = listOf(AppStringsProvider.current().tagRandom, AppStringsProvider.current().tagString)
             ),
             CodeSnippet(
                 id = "util-sleep",
-                name = Strings.snippetSleep,
-                description = Strings.snippetSleepDesc,
+                name = AppStringsProvider.current().snippetSleep,
+                description = AppStringsProvider.current().snippetSleepDesc,
                 code = """function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -148,12 +148,12 @@ async function example() {
     await sleep(2000);
     console.log('2秒后');
 }""",
-                tags = listOf(Strings.tagDelay, Strings.tagAsync)
+                tags = listOf(AppStringsProvider.current().tagDelay, AppStringsProvider.current().tagAsync)
             ),
             CodeSnippet(
                 id = "util-retry",
-                name = Strings.snippetRetry,
-                description = Strings.snippetRetryDesc,
+                name = AppStringsProvider.current().snippetRetry,
+                description = AppStringsProvider.current().snippetRetryDesc,
                 code = """async function retry(fn, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -168,20 +168,20 @@ async function example() {
 
 // use.
 retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
-                tags = listOf(Strings.tagRetry, Strings.tagErrorHandle)
+                tags = listOf(AppStringsProvider.current().tagRetry, AppStringsProvider.current().tagErrorHandle)
             )
         )
 )
 internal fun automation() = CodeSnippetCategory(
         id = "automation",
-        name = Strings.snippetAutomation,
+        name = AppStringsProvider.current().snippetAutomation,
         icon = "🤖",
-        description = Strings.snippetAutomationDesc,
+        description = AppStringsProvider.current().snippetAutomationDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "auto-click",
-                name = Strings.snippetAutoClick,
-                description = Strings.snippetAutoClickDesc,
+                name = AppStringsProvider.current().snippetAutoClick,
+                description = AppStringsProvider.current().snippetAutoClickDesc,
                 code = """function autoClick(selector, delay = 1000) {
     setTimeout(() => {
         const element = document.querySelector(selector);
@@ -192,12 +192,12 @@ internal fun automation() = CodeSnippetCategory(
     }, delay);
 }
 autoClick('.close-btn', 2000);""",
-                tags = listOf(Strings.tagAuto, Strings.tagClick)
+                tags = listOf(AppStringsProvider.current().tagAuto, AppStringsProvider.current().tagClick)
             ),
             CodeSnippet(
                 id = "auto-click-interval",
-                name = Strings.snippetAutoClickInterval,
-                description = Strings.snippetAutoClickIntervalDesc,
+                name = AppStringsProvider.current().snippetAutoClickInterval,
+                description = AppStringsProvider.current().snippetAutoClickIntervalDesc,
                 code = """function autoClickInterval(selector, interval = 5000) {
     const click = () => {
         const element = document.querySelector(selector);
@@ -214,12 +214,12 @@ autoClick('.close-btn', 2000);""",
 // 5.
 const timer = autoClickInterval('.refresh-btn', 5000);
 // Stop: clearInterval(timer);""",
-                tags = listOf(Strings.tagTimer, Strings.tagClick)
+                tags = listOf(AppStringsProvider.current().tagTimer, AppStringsProvider.current().tagClick)
             ),
             CodeSnippet(
                 id = "auto-fill-form",
-                name = Strings.snippetAutoFillSubmit,
-                description = Strings.snippetAutoFillSubmitDesc,
+                name = AppStringsProvider.current().snippetAutoFillSubmit,
+                description = AppStringsProvider.current().snippetAutoFillSubmitDesc,
                 code = """async function autoFillAndSubmit(formData, submitSelector) {
     // single.
     for (const [name, value] of Object.entries(formData)) {
@@ -242,12 +242,12 @@ autoFillAndSubmit({
     username: 'user',
     password: 'pass'
 }, 'button[type="submit"]');""",
-                tags = listOf(Strings.tagForm, Strings.tagAuto)
+                tags = listOf(AppStringsProvider.current().tagForm, AppStringsProvider.current().tagAuto)
             ),
             CodeSnippet(
                 id = "auto-refresh",
-                name = Strings.snippetAutoRefresh,
-                description = Strings.snippetAutoRefreshDesc,
+                name = AppStringsProvider.current().snippetAutoRefresh,
+                description = AppStringsProvider.current().snippetAutoRefreshDesc,
                 code = """function autoRefresh(seconds = 60) {
     let countdown = seconds;
     
@@ -276,12 +276,12 @@ autoFillAndSubmit({
     return timer;
 }
 autoRefresh(60);""",
-                tags = listOf(Strings.tagRefresh, Strings.tagTimer)
+                tags = listOf(AppStringsProvider.current().tagRefresh, AppStringsProvider.current().tagTimer)
             ),
             CodeSnippet(
                 id = "auto-scroll-load",
-                name = Strings.snippetAutoScrollLoad,
-                description = Strings.snippetAutoScrollLoadDesc,
+                name = AppStringsProvider.current().snippetAutoScrollLoad,
+                description = AppStringsProvider.current().snippetAutoScrollLoadDesc,
                 code = """async function autoScrollLoad(maxScrolls = 10, delay = 2000) {
     let scrollCount = 0;
     
@@ -305,12 +305,12 @@ autoRefresh(60);""",
     console.log('加载完成');
 }
 autoScrollLoad(10, 2000);""",
-                tags = listOf(Strings.tagScroll, Strings.tagLoading)
+                tags = listOf(AppStringsProvider.current().tagScroll, AppStringsProvider.current().tagLoading)
             ),
             CodeSnippet(
                 id = "auto-login-check",
-                name = Strings.snippetAutoLoginCheck,
-                description = Strings.snippetAutoLoginCheckDesc,
+                name = AppStringsProvider.current().snippetAutoLoginCheck,
+                description = AppStringsProvider.current().snippetAutoLoginCheckDesc,
                 code = """function checkLoginStatus(loggedInSelector, loginUrl) {
     const isLoggedIn = !!document.querySelector(loggedInSelector);
     
@@ -324,20 +324,20 @@ autoScrollLoad(10, 2000);""",
     return isLoggedIn;
 }
 checkLoginStatus('.user-avatar', '/login');""",
-                tags = listOf(Strings.tagLogin, Strings.tagDetect)
+                tags = listOf(AppStringsProvider.current().tagLogin, AppStringsProvider.current().tagDetect)
             )
         )
 )
 internal fun debugging() = CodeSnippetCategory(
         id = "debug",
-        name = Strings.snippetDebug,
+        name = AppStringsProvider.current().snippetDebug,
         icon = "🐛",
-        description = Strings.snippetDebugDesc,
+        description = AppStringsProvider.current().snippetDebugDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "debug-console-panel",
-                name = Strings.snippetConsolePanel,
-                description = Strings.snippetConsolePanelDesc,
+                name = AppStringsProvider.current().snippetConsolePanel,
+                description = AppStringsProvider.current().snippetConsolePanelDesc,
                 code = """const panel = document.createElement('div');
 panel.style.cssText = `
     position: fixed; bottom: 0; left: 0; right: 0; height: 200px;
@@ -356,12 +356,12 @@ console.log = function(...args) {
     panel.appendChild(line);
     panel.scrollTop = panel.scrollHeight;
 };""",
-                tags = listOf(Strings.tagConsole, Strings.tagLog)
+                tags = listOf(AppStringsProvider.current().tagConsole, AppStringsProvider.current().tagLog)
             ),
             CodeSnippet(
                 id = "debug-element-info",
-                name = Strings.snippetElementInfo,
-                description = Strings.snippetElementInfoDesc,
+                name = AppStringsProvider.current().snippetElementInfo,
+                description = AppStringsProvider.current().snippetElementInfoDesc,
                 code = """let inspecting = false;
 const overlay = document.createElement('div');
 overlay.style.cssText = `
@@ -408,12 +408,12 @@ document.addEventListener('keydown', (e) => {
         console.log('Inspector:', inspecting ? 'ON' : 'OFF');
     }
 });""",
-                tags = listOf(Strings.tagInspect, Strings.tagElement)
+                tags = listOf(AppStringsProvider.current().tagInspect, AppStringsProvider.current().tagElement)
             ),
             CodeSnippet(
                 id = "debug-performance",
-                name = Strings.snippetPerformance,
-                description = Strings.snippetPerformanceDesc,
+                name = AppStringsProvider.current().snippetPerformance,
+                description = AppStringsProvider.current().snippetPerformanceDesc,
                 code = """function showPerformance() {
     const perf = performance.timing;
     const loadTime = perf.loadEventEnd - perf.navigationStart;
@@ -434,12 +434,12 @@ document.addEventListener('keydown', (e) => {
     alert(info);
 }
 showPerformance();""",
-                tags = listOf(Strings.tagPerformance, Strings.tagMonitor)
+                tags = listOf(AppStringsProvider.current().tagPerformance, AppStringsProvider.current().tagMonitor)
             ),
             CodeSnippet(
                 id = "debug-network-log",
-                name = Strings.snippetNetworkLog,
-                description = Strings.snippetNetworkLogDesc,
+                name = AppStringsProvider.current().snippetNetworkLog,
+                description = AppStringsProvider.current().snippetNetworkLogDesc,
                 code = """const networkLog = [];
 
 // intercept Fetch.
@@ -475,7 +475,7 @@ XMLHttpRequest.prototype.send = function() {
 };
 
 window.showNetworkLog = () => console.table(networkLog);""",
-                tags = listOf(Strings.tagNetwork, Strings.tagLog)
+                tags = listOf(AppStringsProvider.current().tagNetwork, AppStringsProvider.current().tagLog)
             )
         )
 )

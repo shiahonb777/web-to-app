@@ -36,7 +36,7 @@ import androidx.core.content.FileProvider
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.QrCodeUtils
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.io.FileOutputStream
 
@@ -59,8 +59,8 @@ fun QrCodeShareDialog(
     val contentSize = QrCodeUtils.getContentSize(shareCode)
     
     // Getcurrent text
-    val scanText = Strings.scanToImportModule
-    val subtitleText = Strings.extensionModuleSubtitle
+    val scanText = AppStringsProvider.current().scanToImportModule
+    val subtitleText = AppStringsProvider.current().extensionModuleSubtitle
     
     // Generate
     val posterBitmap = remember(shareCode, module, scanText, subtitleText) {
@@ -98,14 +98,14 @@ fun QrCodeShareDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = Strings.shareModule,
+                        text = AppStringsProvider.current().shareModule,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = Strings.close
+                            contentDescription = AppStringsProvider.current().close
                         )
                     }
                 }
@@ -123,7 +123,7 @@ fun QrCodeShareDialog(
                     ) {
                         Image(
                             bitmap = posterBitmap.asImageBitmap(),
-                            contentDescription = Strings.sharePoster,
+                            contentDescription = AppStringsProvider.current().sharePoster,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp)
@@ -152,7 +152,7 @@ fun QrCodeShareDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.savePoster)
+                            Text(AppStringsProvider.current().savePoster)
                         }
                         
                         // Note
@@ -172,7 +172,7 @@ fun QrCodeShareDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.sharePosterBtn)
+                            Text(AppStringsProvider.current().sharePosterBtn)
                         }
                     }
                     
@@ -180,7 +180,7 @@ fun QrCodeShareDialog(
                     
                     // hint
                     Text(
-                        text = Strings.scanQrToImport,
+                        text = AppStringsProvider.current().scanQrToImport,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -203,7 +203,7 @@ fun QrCodeShareDialog(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            text = Strings.moduleTooLargeTitle,
+                            text = AppStringsProvider.current().moduleTooLargeTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -211,7 +211,7 @@ fun QrCodeShareDialog(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            text = Strings.moduleTooLargeDesc.format(contentSize),
+                            text = AppStringsProvider.current().moduleTooLargeDesc.format(contentSize),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -233,13 +233,13 @@ fun QrCodeShareDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.shareModuleFile)
+                            Text(AppStringsProvider.current().shareModuleFile)
                         }
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         Text(
-                            text = Strings.shareFileHint,
+                            text = AppStringsProvider.current().shareFileHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
@@ -558,10 +558,10 @@ private fun savePosterToGallery(context: Context, bitmap: Bitmap, moduleName: St
             }
         }
         
-        Toast.makeText(context, Strings.posterSavedToGallery, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().posterSavedToGallery, Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
         AppLogger.e("QrCodeShareDialog", "Operation failed", e)
-        Toast.makeText(context, Strings.saveFailed.format(e.message), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().saveFailed.format(e.message), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -588,14 +588,14 @@ private fun sharePoster(context: Context, bitmap: Bitmap, moduleName: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "image/png"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_TEXT, Strings.shareModuleText.format(moduleName))
+            putExtra(Intent.EXTRA_TEXT, AppStringsProvider.current().shareModuleText.format(moduleName))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         
-        context.startActivity(Intent.createChooser(shareIntent, Strings.shareModule))
+        context.startActivity(Intent.createChooser(shareIntent, AppStringsProvider.current().shareModule))
     } catch (e: Exception) {
         AppLogger.e("QrCodeShareDialog", "Operation failed", e)
-        Toast.makeText(context, Strings.shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -626,14 +626,14 @@ private fun shareModuleFile(context: Context, module: ExtensionModule) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, Strings.shareModuleFileSubject.format(module.name))
-            putExtra(Intent.EXTRA_TEXT, Strings.shareModuleFileText.format(module.name))
+            putExtra(Intent.EXTRA_SUBJECT, AppStringsProvider.current().shareModuleFileSubject.format(module.name))
+            putExtra(Intent.EXTRA_TEXT, AppStringsProvider.current().shareModuleFileText.format(module.name))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         
-        context.startActivity(Intent.createChooser(shareIntent, Strings.shareModuleFile))
+        context.startActivity(Intent.createChooser(shareIntent, AppStringsProvider.current().shareModuleFile))
     } catch (e: Exception) {
         AppLogger.e("QrCodeShareDialog", "Operation failed", e)
-        Toast.makeText(context, Strings.shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
     }
 }

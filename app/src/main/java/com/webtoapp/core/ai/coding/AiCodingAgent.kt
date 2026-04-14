@@ -7,7 +7,7 @@ import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.ai.ToolStreamEvent
 import com.webtoapp.core.ai.ToolCallInfo
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -310,7 +310,7 @@ class AiCodingAgent(private val context: Context) {
                             unclosed.forEach { (tag, ln) ->
                                 errors.add(SyntaxError(
                                     type = "html",
-                                    message = Strings.tagNotProperlyClosed.replace("%s", tag),
+                                    message = AppStringsProvider.current().tagNotProperlyClosed.replace("%s", tag),
                                     line = ln + 1,
                                     column = 0,
                                     severity = ErrorSeverity.ERROR
@@ -320,7 +320,7 @@ class AiCodingAgent(private val context: Context) {
                         } else {
                             errors.add(SyntaxError(
                                 type = "html",
-                                message = Strings.unexpectedClosingTag.replace("%s", tagName),
+                                message = AppStringsProvider.current().unexpectedClosingTag.replace("%s", tagName),
                                 line = lineNum + 1,
                                 column = matcher.start(),
                                 severity = ErrorSeverity.ERROR
@@ -337,7 +337,7 @@ class AiCodingAgent(private val context: Context) {
         tagStack.forEach { (tag, lineNum) ->
             errors.add(SyntaxError(
                 type = "html",
-                message = Strings.tagNotClosed.replace("%s", tag),
+                message = AppStringsProvider.current().tagNotClosed.replace("%s", tag),
                 line = lineNum + 1,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -380,7 +380,7 @@ class AiCodingAgent(private val context: Context) {
                             if (braceCount < 0) {
                                 errors.add(SyntaxError(
                                     type = "css",
-                                    message = Strings.extraClosingBrace,
+                                    message = AppStringsProvider.current().extraClosingBrace,
                                     line = lineNum + 1,
                                     column = i,
                                     severity = ErrorSeverity.ERROR
@@ -397,7 +397,7 @@ class AiCodingAgent(private val context: Context) {
         if (braceCount > 0) {
             errors.add(SyntaxError(
                 type = "css",
-                message = Strings.missingClosingBraces.replace("%d", braceCount.toString()),
+                message = AppStringsProvider.current().missingClosingBraces.replace("%d", braceCount.toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -475,7 +475,7 @@ class AiCodingAgent(private val context: Context) {
         if (braceCount != 0) {
             errors.add(SyntaxError(
                 type = "javascript",
-                message = if (braceCount > 0) Strings.missingClosingBraces.replace("%d", braceCount.toString()) else Strings.extraClosingBraces.replace("%d", (-braceCount).toString()),
+                message = if (braceCount > 0) AppStringsProvider.current().missingClosingBraces.replace("%d", braceCount.toString()) else AppStringsProvider.current().extraClosingBraces.replace("%d", (-braceCount).toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -485,7 +485,7 @@ class AiCodingAgent(private val context: Context) {
         if (parenCount != 0) {
             errors.add(SyntaxError(
                 type = "javascript",
-                message = if (parenCount > 0) Strings.missingClosingParens.replace("%d", parenCount.toString()) else Strings.extraClosingParens.replace("%d", (-parenCount).toString()),
+                message = if (parenCount > 0) AppStringsProvider.current().missingClosingParens.replace("%d", parenCount.toString()) else AppStringsProvider.current().extraClosingParens.replace("%d", (-parenCount).toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -495,7 +495,7 @@ class AiCodingAgent(private val context: Context) {
         if (bracketCount != 0) {
             errors.add(SyntaxError(
                 type = "javascript",
-                message = if (bracketCount > 0) Strings.missingClosingBrackets.replace("%d", bracketCount.toString()) else Strings.extraClosingBrackets.replace("%d", (-bracketCount).toString()),
+                message = if (bracketCount > 0) AppStringsProvider.current().missingClosingBrackets.replace("%d", bracketCount.toString()) else AppStringsProvider.current().extraClosingBrackets.replace("%d", (-bracketCount).toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -1192,9 +1192,9 @@ class AiCodingAgent(private val context: Context) {
                             .collect { event -> emit(event) }
                     }
                 } catch (e: TimeoutCancellationException) {
-                    emit(HtmlAgentEvent.Error(Strings.requestTimeoutRetry))
+                    emit(HtmlAgentEvent.Error(AppStringsProvider.current().requestTimeoutRetry))
                 } catch (e: Exception) {
-                    emit(HtmlAgentEvent.Error(Strings.errorOccurredPrefix.replace("%s", e.message ?: toolCallError ?: Strings.unknownError)))
+                    emit(HtmlAgentEvent.Error(AppStringsProvider.current().errorOccurredPrefix.replace("%s", e.message ?: toolCallError ?: AppStringsProvider.current().unknownError)))
                 }
             }
             
@@ -1202,7 +1202,7 @@ class AiCodingAgent(private val context: Context) {
             throw e  // Note.
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error in developWithStream", e)
-            emit(HtmlAgentEvent.Error(Strings.errorOccurredPrefix.replace("%s", e.message ?: Strings.unknownError)))
+            emit(HtmlAgentEvent.Error(AppStringsProvider.current().errorOccurredPrefix.replace("%s", e.message ?: AppStringsProvider.current().unknownError)))
         }
     }.flowOn(Dispatchers.IO)
     
@@ -1441,7 +1441,7 @@ class AiCodingAgent(private val context: Context) {
             }
             
             if (!streamCompleted) {
-                throw Exception(Strings.streamResponseIncomplete)
+                throw Exception(AppStringsProvider.current().streamResponseIncomplete)
             }
             
             val finalHtmlFromStream = htmlBuilder.toString().trim()
@@ -1769,7 +1769,7 @@ class AiCodingAgent(private val context: Context) {
         val hasCheckSyntax = enabledTools.any { it.name == "check_syntax" }
         val hasGenerateImage = enabledTools.any { it.name == "generate_image" }
         val hasExistingCode = !currentHtml.isNullOrBlank()
-        val currentLang = Strings.currentLanguage.value
+        val currentLang = AppStringsProvider.currentLanguage
         val isEnglish = currentLang == com.webtoapp.core.i18n.AppLanguage.ENGLISH
         val isArabic = currentLang == com.webtoapp.core.i18n.AppLanguage.ARABIC
         
@@ -2098,7 +2098,7 @@ class AiCodingAgent(private val context: Context) {
         }
         
         if (!streamCompleted) {
-            throw Exception(Strings.streamResponseIncomplete)
+            throw Exception(AppStringsProvider.current().streamResponseIncomplete)
         }
     }
     
@@ -2108,7 +2108,7 @@ class AiCodingAgent(private val context: Context) {
      * SimplePrompts.
      */
     private fun buildSimpleSystemPrompt(config: SessionConfig?, currentHtml: String?): String {
-        val currentLang = Strings.currentLanguage.value
+        val currentLang = AppStringsProvider.currentLanguage
         val isEnglish = currentLang == com.webtoapp.core.i18n.AppLanguage.ENGLISH
         val isArabic = currentLang == com.webtoapp.core.i18n.AppLanguage.ARABIC
         

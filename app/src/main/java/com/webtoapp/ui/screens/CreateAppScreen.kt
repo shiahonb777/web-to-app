@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.ActivationCodeCard
 import com.webtoapp.ui.components.AppNameTextField
@@ -107,10 +107,10 @@ fun CreateAppScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(if (isEdit) Strings.editApp else Strings.createApp) },
+                title = { Text(if (isEdit) AppStringsProvider.current().editApp else AppStringsProvider.current().createApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -124,10 +124,10 @@ fun CreateAppScreen(
                                     if (appId != null && appId > 0) {
                                         WebViewActivity.start(context, appId)
                                     } else {
-                                        snackbarHostState.showSnackbar(Strings.saveFailed)
+                                        snackbarHostState.showSnackbar(AppStringsProvider.current().saveFailed)
                                     }
                                 } catch (e: Exception) {
-                                    snackbarHostState.showSnackbar(Strings.saveFailed)
+                                    snackbarHostState.showSnackbar(AppStringsProvider.current().saveFailed)
                                 } finally {
                                     isPreviewSaving = false
                                 }
@@ -143,7 +143,7 @@ fun CreateAppScreen(
                         } else {
                             Icon(
                                 Icons.Filled.PlayArrow,
-                                contentDescription = Strings.btnPreview
+                                contentDescription = AppStringsProvider.current().btnPreview
                             )
                         }
                     }
@@ -157,7 +157,7 @@ fun CreateAppScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(Strings.btnSave)
+                            Text(AppStringsProvider.current().btnSave)
                         }
                     }
                 },

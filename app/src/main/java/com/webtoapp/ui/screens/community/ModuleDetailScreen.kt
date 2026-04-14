@@ -35,7 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.ModuleComment
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * module- Jobs- style frosted glass + spring physics
@@ -73,7 +73,7 @@ fun ModuleDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp))
@@ -92,7 +92,7 @@ fun ModuleDetailScreen(
                         value = commentText,
                         onValueChange = { commentText = it },
                         placeholder = {
-                             Text(Strings.communityPostYourReply, fontSize = 14.sp,
+                             Text(AppStringsProvider.current().communityPostYourReply, fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         },
                         modifier = Modifier.weight(weight = 1f, fill = true).heightIn(max = 96.dp),
@@ -194,7 +194,7 @@ fun ModuleDetailScreen(
                                 Text(
                                     buildAnnotatedString {
                                         mod.versionName?.let { append("v$it  ·  ") }
-                                        append("${String.format(Strings.communityDownloads, mod.downloads)}  ·  ${String.format(Strings.communityRatings, mod.ratingCount)}")
+                                        append("${String.format(AppStringsProvider.current().communityDownloads, mod.downloads)}  ·  ${String.format(AppStringsProvider.current().communityRatings, mod.ratingCount)}")
                                     },
                                     fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
@@ -257,9 +257,9 @@ fun ModuleDetailScreen(
                         item {
                             Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(Strings.communityNoRepliesYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(AppStringsProvider.current().communityNoRepliesYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                     Spacer(Modifier.height(2.dp))
-                                    Text(Strings.communityBeFirstReply, fontSize = 14.sp,
+                                    Text(AppStringsProvider.current().communityBeFirstReply, fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
                                 }
                             }
@@ -401,7 +401,7 @@ private fun CommentRow(comment: ModuleComment, onUserClick: () -> Unit) {
                     }
                 }
                 if (comment.replies.size > 3) {
-                    Text(Strings.communityShowMoreReplies, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary,
+                    Text(AppStringsProvider.current().communityShowMoreReplies, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 2.dp))
                 }
             }
@@ -465,15 +465,15 @@ private fun DetailShimmer(modifier: Modifier = Modifier) {
 private fun ReportSheet(onDismiss: () -> Unit, onReport: (String) -> Unit) {
     var selected by remember { mutableStateOf("") }
     val reasons = listOf(
-        "spam" to Strings.communityReportSpam, "inappropriate" to Strings.communityReportInappropriate,
-        "malicious" to Strings.communityReportMalicious, "copyright" to Strings.communityReportCopyright, "other" to Strings.communityReportOther
+        "spam" to AppStringsProvider.current().communityReportSpam, "inappropriate" to AppStringsProvider.current().communityReportInappropriate,
+        "malicious" to AppStringsProvider.current().communityReportMalicious, "copyright" to AppStringsProvider.current().communityReportCopyright, "other" to AppStringsProvider.current().communityReportOther
     )
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp)) {
-            Text(Strings.communityReportTitle, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(AppStringsProvider.current().communityReportTitle, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Spacer(Modifier.height(4.dp))
-            Text(Strings.communityReportWhy, fontSize = 14.sp,
+            Text(AppStringsProvider.current().communityReportWhy, fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f))
             Spacer(Modifier.height(16.dp))
             reasons.forEach { (key, label) ->
@@ -492,7 +492,7 @@ private fun ReportSheet(onDismiss: () -> Unit, onReport: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 enabled = selected.isNotBlank()
-            ) { Text(Strings.communityReportSubmit, fontWeight = FontWeight.Bold) }
+            ) { Text(AppStringsProvider.current().communityReportSubmit, fontWeight = FontWeight.Bold) }
             Spacer(Modifier.height(28.dp))
         }
     }

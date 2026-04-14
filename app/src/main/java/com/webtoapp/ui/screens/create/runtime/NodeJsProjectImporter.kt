@@ -1,7 +1,7 @@
 package com.webtoapp.ui.screens.create.runtime
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.nodejs.NodeDependencyManager
 import com.webtoapp.core.nodejs.NodeRuntime
 import com.webtoapp.ui.screens.create.common.ImportedProject
@@ -32,7 +32,7 @@ class NodeJsProjectImporter(
                 onDependencyDownloadStateChange(false)
             }
             if (!success) {
-                throw ProjectImportException(Strings.njsDownloadFailed)
+                throw ProjectImportException(AppStringsProvider.current().njsDownloadFailed)
             }
         }
 

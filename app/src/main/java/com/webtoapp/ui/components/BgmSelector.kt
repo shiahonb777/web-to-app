@@ -35,7 +35,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.util.BgmStorage
 import kotlinx.coroutines.Dispatchers
@@ -192,10 +192,10 @@ fun BgmSelectorDialog(
                 Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
                     // Note
                     TopAppBar(
-                    title = { Text(Strings.selectBgm) },
+                    title = { Text(AppStringsProvider.current().selectBgm) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     },
                     actions = {
@@ -213,7 +213,7 @@ fun BgmSelectorDialog(
                                 ))
                             }
                         ) {
-                            Text(Strings.btnOk)
+                            Text(AppStringsProvider.current().btnOk)
                         }
                     }
                 )
@@ -232,12 +232,12 @@ fun BgmSelectorDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "${Strings.selectedMusic} (${selectedPlaylist.size})",
+                                "${AppStringsProvider.current().selectedMusic} (${selectedPlaylist.size})",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                Strings.clickArrowToReorder,
+                                AppStringsProvider.current().clickArrowToReorder,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -302,7 +302,7 @@ fun BgmSelectorDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.availableMusic,
+                            AppStringsProvider.current().availableMusic,
                             style = MaterialTheme.typography.labelMedium
                         )
                         Row {
@@ -314,7 +314,7 @@ fun BgmSelectorDialog(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.onlineMusic)
+                                Text(AppStringsProvider.current().onlineMusic)
                             }
                             // Upload button
                             TextButton(onClick = { showUploadDialog = true }) {
@@ -324,7 +324,7 @@ fun BgmSelectorDialog(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.uploadMusic)
+                                Text(AppStringsProvider.current().uploadMusic)
                             }
                         }
                     }
@@ -338,7 +338,7 @@ fun BgmSelectorDialog(
                             PremiumFilterChip(
                                 selected = selectedTagFilter == null,
                                 onClick = { selectedTagFilter = null },
-                                label = { Text(Strings.allTag) }
+                                label = { Text(AppStringsProvider.current().allTag) }
                             )
                         }
                         items(BgmTag.entries.take(10)) { tag ->
@@ -370,12 +370,12 @@ fun BgmSelectorDialog(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    Strings.noMusicAvailable,
+                                    AppStringsProvider.current().noMusicAvailable,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    Strings.clickToUploadMusic,
+                                    AppStringsProvider.current().clickToUploadMusic,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -397,7 +397,7 @@ fun BgmSelectorDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    Strings.noMusicWithTag,
+                                    AppStringsProvider.current().noMusicWithTag,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -466,22 +466,22 @@ fun BgmSelectorDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.playMode, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().playMode, style = MaterialTheme.typography.bodyMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             PremiumFilterChip(
                                 selected = playMode == BgmPlayMode.LOOP,
                                 onClick = { playMode = BgmPlayMode.LOOP },
-                                label = { Text(Strings.loopMode, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(AppStringsProvider.current().loopMode, style = MaterialTheme.typography.labelSmall) }
                             )
                             PremiumFilterChip(
                                 selected = playMode == BgmPlayMode.SEQUENTIAL,
                                 onClick = { playMode = BgmPlayMode.SEQUENTIAL },
-                                label = { Text(Strings.sequentialMode, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(AppStringsProvider.current().sequentialMode, style = MaterialTheme.typography.labelSmall) }
                             )
                             PremiumFilterChip(
                                 selected = playMode == BgmPlayMode.SHUFFLE,
                                 onClick = { playMode = BgmPlayMode.SHUFFLE },
-                                label = { Text(Strings.shuffleMode, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(AppStringsProvider.current().shuffleMode, style = MaterialTheme.typography.labelSmall) }
                             )
                         }
                     }
@@ -491,7 +491,7 @@ fun BgmSelectorDialog(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.volume, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().volume, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.width(16.dp))
                         Slider(
                             value = volume,
@@ -511,7 +511,7 @@ fun BgmSelectorDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.autoPlay, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().autoPlay, style = MaterialTheme.typography.bodyMedium)
                         PremiumSwitch(checked = autoPlay, onCheckedChange = { autoPlay = it })
                     }
                     
@@ -521,7 +521,7 @@ fun BgmSelectorDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.showLyrics, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().showLyrics, style = MaterialTheme.typography.bodyMedium)
                         PremiumSwitch(checked = showLyrics, onCheckedChange = { showLyrics = it })
                     }
                     
@@ -535,7 +535,7 @@ fun BgmSelectorDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(Strings.lyricsTheme, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().lyricsTheme, style = MaterialTheme.typography.bodyMedium)
                                 Text(
                                     selectedTheme.name,
                                     style = MaterialTheme.typography.bodySmall,
@@ -670,7 +670,7 @@ fun BgmSelectorDialog(
                 // Showsuccesshint
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = Strings.lyricsSaved,
+                        message = AppStringsProvider.current().lyricsSaved,
                         duration = SnackbarDuration.Short
                     )
                 }
@@ -701,7 +701,7 @@ fun BgmSelectorDialog(
                 // Showsuccesshint
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = Strings.lyricsUpdated,
+                        message = AppStringsProvider.current().lyricsUpdated,
                         duration = SnackbarDuration.Short
                     )
                 }
@@ -745,14 +745,14 @@ private fun SelectedBgmItem(
             IconButton(onClick = onPlay) {
                 Icon(
                     if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) Strings.stop else Strings.play,
+                    contentDescription = if (isPlaying) AppStringsProvider.current().stop else AppStringsProvider.current().play,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = Strings.remove,
+                    contentDescription = AppStringsProvider.current().remove,
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -799,7 +799,7 @@ private fun SelectedBgmItemWithReorder(
                 ) {
                     Icon(
                         Icons.Default.KeyboardArrowUp,
-                        contentDescription = Strings.moveUp,
+                        contentDescription = AppStringsProvider.current().moveUp,
                         modifier = Modifier.size(20.dp),
                         tint = if (onMoveUp != null) MaterialTheme.colorScheme.primary 
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -812,7 +812,7 @@ private fun SelectedBgmItemWithReorder(
                 ) {
                     Icon(
                         Icons.Default.KeyboardArrowDown,
-                        contentDescription = Strings.moveDown,
+                        contentDescription = AppStringsProvider.current().moveDown,
                         modifier = Modifier.size(20.dp),
                         tint = if (onMoveDown != null) MaterialTheme.colorScheme.primary 
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -843,7 +843,7 @@ private fun SelectedBgmItemWithReorder(
                 IconButton(onClick = onPreviewLrc, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Outlined.Subtitles,
-                        contentDescription = Strings.previewLyrics,
+                        contentDescription = AppStringsProvider.current().previewLyrics,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -851,7 +851,7 @@ private fun SelectedBgmItemWithReorder(
             } else if (bgm.lrcData != null) {
                 Icon(
                     Icons.Outlined.Subtitles,
-                    contentDescription = Strings.hasLyrics,
+                    contentDescription = AppStringsProvider.current().hasLyrics,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -859,7 +859,7 @@ private fun SelectedBgmItemWithReorder(
             IconButton(onClick = onGenerateLrc, modifier = Modifier.size(32.dp)) {
                 Icon(
                     com.webtoapp.ui.icons.LrcAlignIcon,
-                    contentDescription = Strings.aiGenerateLyrics,
+                    contentDescription = AppStringsProvider.current().aiGenerateLyrics,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -867,7 +867,7 @@ private fun SelectedBgmItemWithReorder(
             IconButton(onClick = onEditTags, modifier = Modifier.size(32.dp)) {
                 Icon(
                     Icons.Outlined.Label,
-                    contentDescription = Strings.editTags,
+                    contentDescription = AppStringsProvider.current().editTags,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -875,14 +875,14 @@ private fun SelectedBgmItemWithReorder(
             IconButton(onClick = onPlay) {
                 Icon(
                     if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) Strings.stop else Strings.play,
+                    contentDescription = if (isPlaying) AppStringsProvider.current().stop else AppStringsProvider.current().play,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = Strings.remove,
+                    contentDescription = AppStringsProvider.current().remove,
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -936,7 +936,7 @@ private fun AvailableBgmItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    if (bgm.isAsset) Strings.presetMusic else Strings.userUploaded,
+                    if (bgm.isAsset) AppStringsProvider.current().presetMusic else AppStringsProvider.current().userUploaded,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -946,7 +946,7 @@ private fun AvailableBgmItem(
                 IconButton(onClick = onPreviewLrc, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Outlined.Subtitles,
-                        contentDescription = Strings.previewLyrics,
+                        contentDescription = AppStringsProvider.current().previewLyrics,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -954,7 +954,7 @@ private fun AvailableBgmItem(
             } else if (bgm.lrcData != null) {
                 Icon(
                     Icons.Outlined.Subtitles,
-                    contentDescription = Strings.hasLyrics,
+                    contentDescription = AppStringsProvider.current().hasLyrics,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -962,7 +962,7 @@ private fun AvailableBgmItem(
             IconButton(onClick = onGenerateLrc, modifier = Modifier.size(32.dp)) {
                 Icon(
                     com.webtoapp.ui.icons.LrcAlignIcon,
-                    contentDescription = Strings.aiGenerateLyrics,
+                    contentDescription = AppStringsProvider.current().aiGenerateLyrics,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -970,7 +970,7 @@ private fun AvailableBgmItem(
             IconButton(onClick = onPlay) {
                 Icon(
                     if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) Strings.stop else Strings.preview,
+                    contentDescription = if (isPlaying) AppStringsProvider.current().stop else AppStringsProvider.current().preview,
                     tint = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -978,7 +978,7 @@ private fun AvailableBgmItem(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = Strings.btnDelete,
+                        contentDescription = AppStringsProvider.current().btnDelete,
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -1007,7 +1007,7 @@ private fun BgmCover(bgm: BgmItem, context: android.content.Context, modifier: M
                     .data(coverData)
                     .crossfade(true)
                     .build(),
-                contentDescription = Strings.cdCover,
+                contentDescription = AppStringsProvider.current().cdCover,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -1046,7 +1046,7 @@ private fun BgmCoverAdaptive(bgm: BgmItem, context: android.content.Context, mod
                     .data(coverData)
                     .crossfade(true)
                     .build(),
-                contentDescription = Strings.cdCover,
+                contentDescription = AppStringsProvider.current().cdCover,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -1100,13 +1100,13 @@ private fun UploadBgmDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.uploadMusicTitle) },
+        title = { Text(AppStringsProvider.current().uploadMusicTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 PremiumTextField(
                     value = bgmName,
                     onValueChange = { bgmName = it },
-                    label = { Text(Strings.musicName) },
+                    label = { Text(AppStringsProvider.current().musicName) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1121,11 +1121,11 @@ private fun UploadBgmDialog(
                     ) {
                         Icon(Icons.Outlined.AudioFile, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(if (bgmUri != null) Strings.selected else Strings.selectMusic)
+                        Text(if (bgmUri != null) AppStringsProvider.current().selected else AppStringsProvider.current().selectMusic)
                     }
                     if (bgmUri != null) {
                         IconButton(onClick = { bgmUri = null }) {
-                            Icon(Icons.Default.Close, Strings.clear)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().clear)
                         }
                     }
                 }
@@ -1140,17 +1140,17 @@ private fun UploadBgmDialog(
                     ) {
                         Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(if (coverUri != null) Strings.selected else Strings.selectCoverOptional)
+                        Text(if (coverUri != null) AppStringsProvider.current().selected else AppStringsProvider.current().selectCoverOptional)
                     }
                     if (coverUri != null) {
                         IconButton(onClick = { coverUri = null }) {
-                            Icon(Icons.Default.Close, Strings.clear)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().clear)
                         }
                     }
                 }
                 
                 Text(
-                    Strings.coverTip,
+                    AppStringsProvider.current().coverTip,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1198,13 +1198,13 @@ private fun UploadBgmDialog(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(Strings.upload)
+                    Text(AppStringsProvider.current().upload)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -1224,7 +1224,7 @@ private fun EditTagsDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.editTagsTitle) },
+        title = { Text(AppStringsProvider.current().editTagsTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
@@ -1234,7 +1234,7 @@ private fun EditTagsDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    Strings.selectTagsHint,
+                    AppStringsProvider.current().selectTagsHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1267,12 +1267,12 @@ private fun EditTagsDialog(
                     onConfirm(bgm.copy(tags = selectedTags.toList()))
                 }
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -1298,11 +1298,11 @@ private fun LrcThemeDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    Strings.selectLyricsTheme,
+                    AppStringsProvider.current().selectLyricsTheme,
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    Strings.selectLyricsThemeHint,
+                    AppStringsProvider.current().selectLyricsThemeHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1329,7 +1329,7 @@ private fun LrcThemeDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                 }
             }
@@ -1403,7 +1403,7 @@ private fun LrcThemePreviewCard(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        Strings.sampleLyricsText,
+                        AppStringsProvider.current().sampleLyricsText,
                         color = highlightColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -1531,7 +1531,7 @@ private fun LrcPreviewDialog(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            "${Strings.lyricsPreview} · ${lrcData.lines.size} ${Strings.lines}",
+                            "${AppStringsProvider.current().lyricsPreview} · ${lrcData.lines.size} ${AppStringsProvider.current().lines}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1543,7 +1543,7 @@ private fun LrcPreviewDialog(
                             mediaPlayer = null
                             onEdit()
                         }) {
-                            Icon(Icons.Outlined.Edit, Strings.edit)
+                            Icon(Icons.Outlined.Edit, AppStringsProvider.current().edit)
                         }
                     }
                     
@@ -1552,7 +1552,7 @@ private fun LrcPreviewDialog(
                         mediaPlayer = null
                         onDismiss()
                     }) {
-                        Icon(Icons.Default.Close, Strings.close)
+                        Icon(Icons.Default.Close, AppStringsProvider.current().close)
                     }
                 }
                 
@@ -1637,7 +1637,7 @@ private fun LrcPreviewDialog(
                                 currentPosition = newPos.toLong()
                             }
                         }) {
-                            Icon(Icons.Default.Replay10, Strings.backward10s)
+                            Icon(Icons.Default.Replay10, AppStringsProvider.current().backward10s)
                         }
                         
                         Spacer(modifier = Modifier.width(16.dp))
@@ -1658,7 +1658,7 @@ private fun LrcPreviewDialog(
                         ) {
                             Icon(
                                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) Strings.pause else Strings.play,
+                                contentDescription = if (isPlaying) AppStringsProvider.current().pause else AppStringsProvider.current().play,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -1673,7 +1673,7 @@ private fun LrcPreviewDialog(
                                 currentPosition = newPos.toLong()
                             }
                         }) {
-                            Icon(Icons.Default.Forward10, Strings.forward10s)
+                            Icon(Icons.Default.Forward10, AppStringsProvider.current().forward10s)
                         }
                     }
                 }

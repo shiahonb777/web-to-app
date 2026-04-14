@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,7 +66,7 @@ object IconLibraryStorage {
     suspend fun saveFromBase64(
         context: Context,
         base64Data: String,
-        name: String = Strings.aiIcon
+        name: String = AppStringsProvider.current().aiIcon
     ): IconLibraryItem? = withContext(Dispatchers.IO) {
         try {
             val bytes = Base64.decode(base64Data, Base64.DEFAULT)
@@ -100,7 +100,7 @@ object IconLibraryStorage {
     suspend fun saveFromUri(
         context: Context,
         uri: Uri,
-        name: String = Strings.icon
+        name: String = AppStringsProvider.current().icon
     ): IconLibraryItem? = withContext(Dispatchers.IO) {
         try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext null

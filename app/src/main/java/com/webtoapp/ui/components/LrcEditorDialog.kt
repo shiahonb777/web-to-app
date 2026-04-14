@@ -1,7 +1,7 @@
 package com.webtoapp.ui.components
 
 import android.media.MediaPlayer
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
@@ -401,7 +401,7 @@ fun LrcEditorDialog(
                             ) {
                                 Icon(
                                     if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                    contentDescription = if (isPlaying) Strings.cdPause else Strings.cdPlay,
+                                    contentDescription = if (isPlaying) AppStringsProvider.current().cdPause else AppStringsProvider.current().cdPlay,
                                     modifier = Modifier.size(32.dp)
                                 )
                             }

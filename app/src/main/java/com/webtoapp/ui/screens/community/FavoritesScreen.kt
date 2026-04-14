@@ -25,7 +25,7 @@ import com.webtoapp.core.cloud.CommunityModuleDetail
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Favorites screen with state-driven UI.
@@ -52,7 +52,7 @@ fun FavoritesScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(Strings.communityBookmarks, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(AppStringsProvider.current().communityBookmarks, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                         if (favorites.isNotEmpty()) {
                             Text("@me", fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
@@ -79,10 +79,10 @@ fun FavoritesScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 40.dp)
                 ) {
-                    Text(Strings.communitySaveForLater, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 34.sp)
+                    Text(AppStringsProvider.current().communitySaveForLater, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 34.sp)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        Strings.communitySaveForLaterHint,
+                        AppStringsProvider.current().communitySaveForLaterHint,
                         fontSize = 14.sp, lineHeight = 20.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
                     )

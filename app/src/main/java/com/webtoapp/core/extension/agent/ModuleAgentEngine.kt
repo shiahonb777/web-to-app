@@ -6,7 +6,7 @@ import com.google.gson.JsonParser
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -83,7 +83,7 @@ class ModuleAgentEngine(private val context: Context) {
             val savedModels = aiConfigManager.savedModelsFlow.first()
             
             if (apiKeys.isEmpty()) {
-                emit(AgentEvent.Error(Strings.aiErrorNoApiKey))
+                emit(AgentEvent.Error(AppStringsProvider.current().aiErrorNoApiKey))
                 return@flow
             }
             
@@ -97,13 +97,13 @@ class ModuleAgentEngine(private val context: Context) {
                 ?: savedModels.firstOrNull()
             
             if (savedModel == null) {
-                emit(AgentEvent.Error(Strings.aiErrorNoModel))
+                emit(AgentEvent.Error(AppStringsProvider.current().aiErrorNoModel))
                 return@flow
             }
             
             val apiKey = apiKeys.find { it.id == savedModel.apiKeyId }
             if (apiKey == null) {
-                emit(AgentEvent.Error(Strings.aiErrorNoApiKeyForModel))
+                emit(AgentEvent.Error(AppStringsProvider.current().aiErrorNoApiKeyForModel))
                 return@flow
             }
             
@@ -112,7 +112,7 @@ class ModuleAgentEngine(private val context: Context) {
             _sessionState.value = AgentSessionState.THINKING
             
             // .
-            emit(AgentEvent.Thought(AgentThought(1, ThoughtType.ANALYSIS, "${Strings.agentAnalyzing}: $requirement")))
+            emit(AgentEvent.Thought(AgentThought(1, ThoughtType.ANALYSIS, "${AppStringsProvider.current().agentAnalyzing}: $requirement")))
             
             // Build.
             val systemPrompt = buildSystemPrompt(category, existingCode)
@@ -120,29 +120,29 @@ class ModuleAgentEngine(private val context: Context) {
             // Step.
             emit(AgentEvent.StateChange(AgentSessionState.PLANNING))
             _sessionState.value = AgentSessionState.PLANNING
-            emit(AgentEvent.Thought(AgentThought(2, ThoughtType.PLANNING, Strings.agentPlanning)))
+            emit(AgentEvent.Thought(AgentThought(2, ThoughtType.PLANNING, AppStringsProvider.current().agentPlanning)))
             
             // use AI.
             // Requirements: 2.5, 3.1, 3.2 - use use.
             emit(AgentEvent.StateChange(AgentSessionState.GENERATING))
             _sessionState.value = AgentSessionState.GENERATING
-            emit(AgentEvent.Thought(AgentThought(3, ThoughtType.GENERATION, Strings.agentCallingAi)))
+            emit(AgentEvent.Thought(AgentThought(3, ThoughtType.GENERATION, AppStringsProvider.current().agentCallingAi)))
             
             val messages = buildMessages(systemPrompt, requirement, category, existingCode)
             val aiResponse = aiClient.chat(apiKey, savedModel.model, messages)
             
             if (aiResponse.isFailure) {
-                emit(AgentEvent.Error("${Strings.agentAiCallFailed}: ${aiResponse.exceptionOrNull()?.message}"))
+                emit(AgentEvent.Error("${AppStringsProvider.current().agentAiCallFailed}: ${aiResponse.exceptionOrNull()?.message}"))
                 return@flow
             }
             
             val responseText = aiResponse.getOrNull() ?: ""
-            emit(AgentEvent.Thought(AgentThought(4, ThoughtType.GENERATION, Strings.agentParsing)))
+            emit(AgentEvent.Thought(AgentThought(4, ThoughtType.GENERATION, AppStringsProvider.current().agentParsing)))
             
             // Parse.
             val generatedModule = parseGeneratedModule(responseText)
             if (generatedModule == null) {
-                emit(AgentEvent.Error(Strings.agentParseFailed))
+                emit(AgentEvent.Error(AppStringsProvider.current().agentParseFailed))
                 return@flow
             }
             
@@ -152,7 +152,7 @@ class ModuleAgentEngine(private val context: Context) {
             // syntax check.
             emit(AgentEvent.StateChange(AgentSessionState.REVIEWING))
             _sessionState.value = AgentSessionState.REVIEWING
-            emit(AgentEvent.Thought(AgentThought(5, ThoughtType.REVIEW, Strings.agentSyntaxChecking)))
+            emit(AgentEvent.Thought(AgentThought(5, ThoughtType.REVIEW, AppStringsProvider.current().agentSyntaxChecking)))
             
             val syntaxResult = toolExecutor.execute(ToolCallRequest(
                 toolName = "syntax_check",
@@ -164,25 +164,25 @@ class ModuleAgentEngine(private val context: Context) {
             val syntaxCheck = syntaxResult.result as? SyntaxCheckResult
             if (syntaxCheck != null && !syntaxCheck.valid) {
                 emit(AgentEvent.Thought(AgentThought(6, ThoughtType.REVIEW, 
-                    String.format(Strings.agentFoundErrors, syntaxCheck.errors.size, syntaxCheck.warnings.size))))
+                    String.format(AppStringsProvider.current().agentFoundErrors, syntaxCheck.errors.size, syntaxCheck.warnings.size))))
                 
                 // auto-fix.
                 emit(AgentEvent.StateChange(AgentSessionState.FIXING))
                 _sessionState.value = AgentSessionState.FIXING
-                emit(AgentEvent.Thought(AgentThought(7, ThoughtType.FIX, Strings.agentAutoFixing)))
+                emit(AgentEvent.Thought(AgentThought(7, ThoughtType.FIX, AppStringsProvider.current().agentAutoFixing)))
                 
                 val fixedModule = tryFixErrors(generatedModule, syntaxCheck, apiKey, savedModel)
                 if (fixedModule != null) {
                     session.workingModule = fixedModule
                     emit(AgentEvent.ModuleGenerated(fixedModule))
-                    emit(AgentEvent.Thought(AgentThought(8, ThoughtType.FIX, Strings.agentErrorsFixed)))
+                    emit(AgentEvent.Thought(AgentThought(8, ThoughtType.FIX, AppStringsProvider.current().agentErrorsFixed)))
                 }
             } else {
-                emit(AgentEvent.Thought(AgentThought(6, ThoughtType.REVIEW, Strings.agentSyntaxPassed)))
+                emit(AgentEvent.Thought(AgentThought(6, ThoughtType.REVIEW, AppStringsProvider.current().agentSyntaxPassed)))
             }
 
             // .
-            emit(AgentEvent.Thought(AgentThought(9, ThoughtType.REVIEW, Strings.agentSecurityScanning)))
+            emit(AgentEvent.Thought(AgentThought(9, ThoughtType.REVIEW, AppStringsProvider.current().agentSecurityScanning)))
             
             val securityResult = toolExecutor.execute(ToolCallRequest(
                 toolName = "security_scan",
@@ -202,9 +202,9 @@ class ModuleAgentEngine(private val context: Context) {
                 
                 if (!securityScan.safe) {
                     emit(AgentEvent.Thought(AgentThought(10, ThoughtType.REVIEW, 
-                        String.format(Strings.agentSecurityIssues, securityScan.issues.size, securityScan.riskLevel))))
+                        String.format(AppStringsProvider.current().agentSecurityIssues, securityScan.issues.size, securityScan.riskLevel))))
                 } else {
-                    emit(AgentEvent.Thought(AgentThought(10, ThoughtType.REVIEW, Strings.agentSecurityPassed)))
+                    emit(AgentEvent.Thought(AgentThought(10, ThoughtType.REVIEW, AppStringsProvider.current().agentSecurityPassed)))
                 }
             }
             
@@ -215,12 +215,12 @@ class ModuleAgentEngine(private val context: Context) {
             val finalModule = session.workingModule
             if (finalModule != null) {
                 emit(AgentEvent.Thought(AgentThought(11, ThoughtType.CONCLUSION, 
-                    Strings.agentModuleCompleted.replace("%s", finalModule.name))))
+                    AppStringsProvider.current().agentModuleCompleted.replace("%s", finalModule.name))))
                 emit(AgentEvent.Completed(finalModule))
                 
                 // Save to.
                 session.addAssistantMessage(
-                    content = Strings.agentModuleGenerated.replace("%s", finalModule.name),
+                    content = AppStringsProvider.current().agentModuleGenerated.replace("%s", finalModule.name),
                     thoughts = session.currentThoughts.toList(),
                     generatedModule = finalModule
                 )
@@ -229,7 +229,7 @@ class ModuleAgentEngine(private val context: Context) {
         } catch (e: Exception) {
             emit(AgentEvent.StateChange(AgentSessionState.ERROR))
             _sessionState.value = AgentSessionState.ERROR
-            emit(AgentEvent.Error(e.message ?: Strings.aiErrorUnknown))
+            emit(AgentEvent.Error(e.message ?: AppStringsProvider.current().aiErrorUnknown))
         }
     }.flowOn(Dispatchers.IO)
     
@@ -432,8 +432,8 @@ $existingCodeHint
         }
         
         return GeneratedModuleData(
-            name = Strings.aiGeneratedModule,
-            description = Strings.aiGeneratedModuleDesc,
+            name = AppStringsProvider.current().aiGeneratedModule,
+            description = AppStringsProvider.current().aiGeneratedModuleDesc,
             icon = "smart_toy",
             category = "OTHER",
             jsCode = jsCode,

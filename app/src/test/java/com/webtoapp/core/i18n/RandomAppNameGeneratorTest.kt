@@ -18,18 +18,18 @@ class RandomAppNameGeneratorTest {
     }
 
     @Test
-    fun `generate uses current language from Strings state`() {
-        val original = Strings.currentLanguage.value
+    fun `generate uses current language from app strings provider state`() {
+        val original = AppStringsProvider.currentLanguage
         try {
-            Strings.setLanguage(AppLanguage.ENGLISH)
+            AppStringsProvider.setRuntimeLanguage(AppLanguage.ENGLISH)
             val english = RandomAppNameGenerator.generate()
 
-            Strings.setLanguage(AppLanguage.CHINESE)
+            AppStringsProvider.setRuntimeLanguage(AppLanguage.CHINESE)
             val chinese = RandomAppNameGenerator.generate()
 
             assertThat(english).isNotEqualTo(chinese)
         } finally {
-            Strings.setLanguage(original)
+            AppStringsProvider.setRuntimeLanguage(original)
         }
     }
 }

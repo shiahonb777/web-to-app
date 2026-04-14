@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppType
 
 @Composable
@@ -63,62 +63,62 @@ fun AppTypeChip(appType: AppType) {
     val (icon, label, containerColor) = when (appType) {
         AppType.WEB -> Triple(
             Icons.Outlined.Public,
-            Strings.appTypeWeb,
+            AppStringsProvider.current().appTypeWeb,
             MaterialTheme.colorScheme.primaryContainer
         )
         AppType.IMAGE -> Triple(
             Icons.Outlined.Image,
-            Strings.appTypeImage,
+            AppStringsProvider.current().appTypeImage,
             MaterialTheme.colorScheme.tertiaryContainer
         )
         AppType.VIDEO -> Triple(
             Icons.Outlined.VideoLibrary,
-            Strings.appTypeVideo,
+            AppStringsProvider.current().appTypeVideo,
             MaterialTheme.colorScheme.tertiaryContainer
         )
         AppType.HTML -> Triple(
             Icons.Outlined.Html,
-            Strings.appTypeHtml,
+            AppStringsProvider.current().appTypeHtml,
             MaterialTheme.colorScheme.secondaryContainer
         )
         AppType.GALLERY -> Triple(
             Icons.Outlined.PhotoLibrary,
-            Strings.appTypeGallery,
+            AppStringsProvider.current().appTypeGallery,
             MaterialTheme.colorScheme.tertiaryContainer
         )
         AppType.FRONTEND -> Triple(
             Icons.Outlined.Rocket,
-            Strings.appTypeFrontend,
+            AppStringsProvider.current().appTypeFrontend,
             MaterialTheme.colorScheme.primaryContainer
         )
         AppType.WORDPRESS -> Triple(
             Icons.Outlined.Newspaper,
-            Strings.appTypeWordPress,
+            AppStringsProvider.current().appTypeWordPress,
             MaterialTheme.colorScheme.primaryContainer
         )
         AppType.NODEJS_APP -> Triple(
             Icons.Outlined.Terminal,
-            Strings.appTypeNodeJs,
+            AppStringsProvider.current().appTypeNodeJs,
             MaterialTheme.colorScheme.secondaryContainer
         )
         AppType.PHP_APP -> Triple(
             Icons.Outlined.DataObject,
-            Strings.appTypePhp,
+            AppStringsProvider.current().appTypePhp,
             MaterialTheme.colorScheme.secondaryContainer
         )
         AppType.PYTHON_APP -> Triple(
             Icons.Outlined.Psychology,
-            Strings.appTypePython,
+            AppStringsProvider.current().appTypePython,
             MaterialTheme.colorScheme.secondaryContainer
         )
         AppType.GO_APP -> Triple(
             Icons.Outlined.Speed,
-            Strings.appTypeGo,
+            AppStringsProvider.current().appTypeGo,
             MaterialTheme.colorScheme.primaryContainer
         )
         AppType.MULTI_WEB -> Triple(
             Icons.Outlined.Language,
-            Strings.appTypeMultiWeb,
+            AppStringsProvider.current().appTypeMultiWeb,
             MaterialTheme.colorScheme.primaryContainer
         )
     }

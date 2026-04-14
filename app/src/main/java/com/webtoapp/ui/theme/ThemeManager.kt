@@ -8,7 +8,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -48,9 +48,9 @@ class ThemeManager(private val context: Context) {
         DARK;
         
         fun getDisplayName(): String = when (this) {
-            SYSTEM -> Strings.followSystem
-            LIGHT -> Strings.alwaysLight
-            DARK -> Strings.alwaysDark
+            SYSTEM -> AppStringsProvider.current().followSystem
+            LIGHT -> AppStringsProvider.current().alwaysLight
+            DARK -> AppStringsProvider.current().alwaysDark
         }
     }
     
@@ -64,10 +64,10 @@ class ThemeManager(private val context: Context) {
         INSTANT(0.3f);
         
         fun getDisplayName(): String = when (this) {
-            SLOW -> Strings.speedSlow
-            NORMAL -> Strings.speedNormal
-            FAST -> Strings.speedFast
-            INSTANT -> Strings.speedInstant
+            SLOW -> AppStringsProvider.current().speedSlow
+            NORMAL -> AppStringsProvider.current().speedNormal
+            FAST -> AppStringsProvider.current().speedFast
+            INSTANT -> AppStringsProvider.current().speedInstant
         }
     }
     

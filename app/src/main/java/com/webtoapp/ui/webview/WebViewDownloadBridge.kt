@@ -2,7 +2,7 @@ package com.webtoapp.ui.webview
 
 import android.content.Context
 import android.webkit.WebView
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.DownloadHelper
 import kotlinx.coroutines.CoroutineScope
 import org.json.JSONObject
@@ -111,7 +111,7 @@ private fun buildBlobDownloadJavascript(
                         .catch(function(err) {
                             console.error('[DownloadHelper] Blob fetch failed:', err);
                             if (window.AndroidDownload && window.AndroidDownload.showToast) {
-                                window.AndroidDownload.showToast('${Strings.downloadFailedWithReason}' + err.message);
+                                window.AndroidDownload.showToast('${AppStringsProvider.current().downloadFailedWithReason}' + err.message);
                             }
                         });
                 }

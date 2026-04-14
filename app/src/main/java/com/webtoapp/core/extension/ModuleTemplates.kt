@@ -1,6 +1,6 @@
 package com.webtoapp.core.extension
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * template.
@@ -62,22 +62,22 @@ object ModuleTemplates {
     
     private fun elementHider() = ModuleTemplate(
         id = "template-element-hider",
-        name = Strings.tplElementHider,
-        description = Strings.tplElementHiderDesc,
+        name = AppStringsProvider.current().tplElementHider,
+        description = AppStringsProvider.current().tplElementHiderDesc,
         icon = "block",
         category = ModuleCategory.CONTENT_FILTER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "selectors",
-                name = Strings.configCssSelector,
-                description = Strings.configCssSelectorDesc,
+                name = AppStringsProvider.current().configCssSelector,
+                description = AppStringsProvider.current().configCssSelectorDesc,
                 type = ConfigItemType.TEXTAREA,
                 defaultValue = ".ad-banner\n#popup\n[class*=\"advertisement\"]",
-                placeholder = Strings.configCssSelectorPlaceholder
+                placeholder = AppStringsProvider.current().configCssSelectorPlaceholder
             ),
             ModuleConfigItem(
                 key = "hideMethod",
-                name = Strings.configHideMethod,
+                name = AppStringsProvider.current().configHideMethod,
                 type = ConfigItemType.SELECT,
                 defaultValue = "display",
                 options = listOf("display", "visibility", "opacity", "remove")
@@ -111,20 +111,20 @@ observer.observe(document.body, { childList: true, subtree: true });
     
     private fun adBlockerPro() = ModuleTemplate(
         id = "template-adblocker-pro",
-        name = Strings.tplAdBlocker,
-        description = Strings.tplAdBlockerDesc,
+        name = AppStringsProvider.current().tplAdBlocker,
+        description = AppStringsProvider.current().tplAdBlockerDesc,
         icon = "shield",
         category = ModuleCategory.CONTENT_FILTER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "blockPopups",
-                name = Strings.configBlockPopups,
+                name = AppStringsProvider.current().configBlockPopups,
                 type = ConfigItemType.BOOLEAN,
                 defaultValue = "true"
             ),
             ModuleConfigItem(
                 key = "blockOverlays",
-                name = Strings.configBlockOverlays,
+                name = AppStringsProvider.current().configBlockOverlays,
                 type = ConfigItemType.BOOLEAN,
                 defaultValue = "true"
             )
@@ -172,14 +172,14 @@ ins.adsbygoogle, .adsbygoogle, [data-ad] {
 
     private fun popupBlocker() = ModuleTemplate(
         id = "template-popup-blocker",
-        name = Strings.tplPopupBlocker,
-        description = Strings.tplPopupBlockerDesc,
+        name = AppStringsProvider.current().tplPopupBlocker,
+        description = AppStringsProvider.current().tplPopupBlockerDesc,
         icon = "notifications_off",
         category = ModuleCategory.CONTENT_FILTER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "autoClose",
-                name = Strings.configAutoCloseDelay,
+                name = AppStringsProvider.current().configAutoCloseDelay,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "500"
             )
@@ -215,8 +215,8 @@ new MutationObserver(() => setTimeout(closePopups, 100))
     
     private fun cookieBannerRemover() = ModuleTemplate(
         id = "template-cookie-banner",
-        name = Strings.tplCookieBanner,
-        description = Strings.tplCookieBannerDesc,
+        name = AppStringsProvider.current().tplCookieBanner,
+        description = AppStringsProvider.current().tplCookieBannerDesc,
         icon = "cookie",
         category = ModuleCategory.CONTENT_FILTER,
         configItems = emptyList(),
@@ -250,14 +250,14 @@ new MutationObserver(removeCookieBanners).observe(document.body, { childList: tr
     
     private fun cssInjector() = ModuleTemplate(
         id = "template-css-injector",
-        name = Strings.tplCssInjector,
-        description = Strings.tplCssInjectorDesc,
+        name = AppStringsProvider.current().tplCssInjector,
+        description = AppStringsProvider.current().tplCssInjectorDesc,
         icon = "palette",
         category = ModuleCategory.STYLE_MODIFIER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "customCss",
-                name = Strings.configCssCode,
+                name = AppStringsProvider.current().configCssCode,
                 type = ConfigItemType.TEXTAREA,
                 defaultValue = "body { font-size: 16px !important; }"
             )
@@ -275,20 +275,20 @@ if (customCss) {
     
     private fun darkModeForce() = ModuleTemplate(
         id = "template-dark-mode",
-        name = Strings.tplDarkMode,
-        description = Strings.tplDarkModeDesc,
+        name = AppStringsProvider.current().tplDarkMode,
+        description = AppStringsProvider.current().tplDarkModeDesc,
         icon = "dark_mode",
         category = ModuleCategory.STYLE_MODIFIER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "brightness",
-                name = Strings.configBrightness,
+                name = AppStringsProvider.current().configBrightness,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "90"
             ),
             ModuleConfigItem(
                 key = "contrast",
-                name = Strings.configContrast,
+                name = AppStringsProvider.current().configContrast,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "100"
             )
@@ -306,21 +306,21 @@ img, video, canvas, svg, [style*="background-image"] { filter: invert(1) hue-rot
 
     private fun fontChanger() = ModuleTemplate(
         id = "template-font-changer",
-        name = Strings.tplFontChanger,
-        description = Strings.tplFontChangerDesc,
+        name = AppStringsProvider.current().tplFontChanger,
+        description = AppStringsProvider.current().tplFontChangerDesc,
         icon = "font_download",
         category = ModuleCategory.STYLE_MODIFIER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "fontFamily",
-                name = Strings.configFont,
+                name = AppStringsProvider.current().configFont,
                 type = ConfigItemType.SELECT,
                 defaultValue = "system-ui",
                 options = listOf("system-ui", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Arial", "Georgia")
             ),
             ModuleConfigItem(
                 key = "fontSize",
-                name = Strings.configFontSize,
+                name = AppStringsProvider.current().configFontSize,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "16"
             )
@@ -337,26 +337,26 @@ document.head.appendChild(style);
     
     private fun colorTheme() = ModuleTemplate(
         id = "template-color-theme",
-        name = Strings.templateColorTheme,
-        description = Strings.templateColorThemeDesc,
+        name = AppStringsProvider.current().templateColorTheme,
+        description = AppStringsProvider.current().templateColorThemeDesc,
         icon = "theater_comedy",
         category = ModuleCategory.STYLE_MODIFIER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "bgColor",
-                name = Strings.templateBgColor,
+                name = AppStringsProvider.current().templateBgColor,
                 type = ConfigItemType.COLOR,
                 defaultValue = "#ffffff"
             ),
             ModuleConfigItem(
                 key = "textColor",
-                name = Strings.templateTextColor,
+                name = AppStringsProvider.current().templateTextColor,
                 type = ConfigItemType.COLOR,
                 defaultValue = "#333333"
             ),
             ModuleConfigItem(
                 key = "linkColor",
-                name = Strings.templateLinkColor,
+                name = AppStringsProvider.current().templateLinkColor,
                 type = ConfigItemType.COLOR,
                 defaultValue = "#0066cc"
             )
@@ -377,20 +377,20 @@ document.head.appendChild(style);
     
     private fun layoutFixer() = ModuleTemplate(
         id = "template-layout-fixer",
-        name = Strings.templateLayoutFixer,
-        description = Strings.templateLayoutFixerDesc,
+        name = AppStringsProvider.current().templateLayoutFixer,
+        description = AppStringsProvider.current().templateLayoutFixerDesc,
         icon = "straighten",
         category = ModuleCategory.STYLE_MODIFIER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "maxWidth",
-                name = Strings.templateMaxWidth,
+                name = AppStringsProvider.current().templateMaxWidth,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "1200"
             ),
             ModuleConfigItem(
                 key = "centerContent",
-                name = Strings.templateCenterContent,
+                name = AppStringsProvider.current().templateCenterContent,
                 type = ConfigItemType.BOOLEAN,
                 defaultValue = "true"
             )
@@ -404,27 +404,27 @@ body > * { max-width: var(--max-width, 1200px) !important; margin-left: auto !im
     
     private fun autoClicker() = ModuleTemplate(
         id = "template-auto-clicker",
-        name = Strings.templateAutoClicker,
-        description = Strings.templateAutoClickerDesc,
+        name = AppStringsProvider.current().templateAutoClicker,
+        description = AppStringsProvider.current().templateAutoClickerDesc,
         icon = "mouse",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "selector",
-                name = Strings.templateClickTarget,
+                name = AppStringsProvider.current().templateClickTarget,
                 type = ConfigItemType.TEXT,
                 defaultValue = ".close-btn",
                 placeholder = "CSS Selector"
             ),
             ModuleConfigItem(
                 key = "delay",
-                name = Strings.templateDelay,
+                name = AppStringsProvider.current().templateDelay,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "1000"
             ),
             ModuleConfigItem(
                 key = "repeat",
-                name = Strings.templateRepeatClick,
+                name = AppStringsProvider.current().templateRepeatClick,
                 type = ConfigItemType.BOOLEAN,
                 defaultValue = "false"
             )
@@ -452,20 +452,20 @@ new MutationObserver(autoClick).observe(document.body, { childList: true, subtre
 
     private fun formFiller() = ModuleTemplate(
         id = "template-form-filler",
-        name = Strings.templateFormFiller,
-        description = Strings.templateFormFillerDesc,
+        name = AppStringsProvider.current().templateFormFiller,
+        description = AppStringsProvider.current().templateFormFillerDesc,
         icon = "edit_note",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "fieldSelector",
-                name = Strings.templateFieldSelector,
+                name = AppStringsProvider.current().templateFieldSelector,
                 type = ConfigItemType.TEXT,
                 defaultValue = "input[name=\"username\"]"
             ),
             ModuleConfigItem(
                 key = "fieldValue",
-                name = Strings.templateFieldValue,
+                name = AppStringsProvider.current().templateFieldValue,
                 type = ConfigItemType.TEXT,
                 defaultValue = ""
             )
@@ -491,26 +491,26 @@ new MutationObserver(fillForm).observe(document.body, { childList: true, subtree
     
     private fun pageModifier() = ModuleTemplate(
         id = "template-page-modifier",
-        name = Strings.templatePageModifier,
-        description = Strings.templatePageModifierDesc,
+        name = AppStringsProvider.current().templatePageModifier,
+        description = AppStringsProvider.current().templatePageModifierDesc,
         icon = "edit",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "selector",
-                name = Strings.templateTargetSelector,
+                name = AppStringsProvider.current().templateTargetSelector,
                 type = ConfigItemType.TEXT,
                 defaultValue = "h1"
             ),
             ModuleConfigItem(
                 key = "newText",
-                name = Strings.templateNewText,
+                name = AppStringsProvider.current().templateNewText,
                 type = ConfigItemType.TEXT,
                 defaultValue = ""
             ),
             ModuleConfigItem(
                 key = "newStyle",
-                name = Strings.templateNewStyle,
+                name = AppStringsProvider.current().templateNewStyle,
                 type = ConfigItemType.TEXT,
                 defaultValue = "color: red;"
             )
@@ -535,26 +535,26 @@ new MutationObserver(modifyPage).observe(document.body, { childList: true, subtr
     
     private fun customButton() = ModuleTemplate(
         id = "template-custom-button",
-        name = Strings.templateCustomButton,
-        description = Strings.templateCustomButtonDesc,
+        name = AppStringsProvider.current().templateCustomButton,
+        description = AppStringsProvider.current().templateCustomButtonDesc,
         icon = "radio_button",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "buttonText",
-                name = Strings.templateButtonText,
+                name = AppStringsProvider.current().templateButtonText,
                 type = ConfigItemType.TEXT,
                 defaultValue = "⬆️"
             ),
             ModuleConfigItem(
                 key = "action",
-                name = Strings.templateClickAction,
+                name = AppStringsProvider.current().templateClickAction,
                 type = ConfigItemType.TEXTAREA,
                 defaultValue = "window.scrollTo({ top: 0, behavior: 'smooth' });"
             ),
             ModuleConfigItem(
                 key = "position",
-                name = Strings.templatePosition,
+                name = AppStringsProvider.current().templatePosition,
                 type = ConfigItemType.SELECT,
                 defaultValue = "bottom-right",
                 options = listOf("bottom-right", "bottom-left", "top-right", "top-left")
@@ -582,15 +582,15 @@ document.body.appendChild(btn);
     
     private fun keyboardShortcuts() = ModuleTemplate(
         id = "template-keyboard-shortcuts",
-        name = Strings.templateKeyboardShortcuts,
-        description = Strings.templateKeyboardShortcutsDesc,
+        name = AppStringsProvider.current().templateKeyboardShortcuts,
+        description = AppStringsProvider.current().templateKeyboardShortcutsDesc,
         icon = "keyboard",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "shortcuts",
-                name = Strings.templateShortcutsConfig,
-                description = Strings.templateShortcutsConfigDesc,
+                name = AppStringsProvider.current().templateShortcutsConfig,
+                description = AppStringsProvider.current().templateShortcutsConfigDesc,
                 type = ConfigItemType.TEXTAREA,
                 defaultValue = "t=window.scrollTo({top:0,behavior:'smooth'})\nb=window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})"
             )
@@ -614,20 +614,20 @@ document.addEventListener('keydown', e => {
 
     private fun autoRefresh() = ModuleTemplate(
         id = "template-auto-refresh",
-        name = Strings.templateAutoRefresh,
-        description = Strings.templateAutoRefreshDesc,
+        name = AppStringsProvider.current().templateAutoRefresh,
+        description = AppStringsProvider.current().templateAutoRefreshDesc,
         icon = "refresh",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "interval",
-                name = Strings.templateRefreshInterval,
+                name = AppStringsProvider.current().templateRefreshInterval,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "60"
             ),
             ModuleConfigItem(
                 key = "showCountdown",
-                name = Strings.templateShowCountdown,
+                name = AppStringsProvider.current().templateShowCountdown,
                 type = ConfigItemType.BOOLEAN,
                 defaultValue = "true"
             )
@@ -656,14 +656,14 @@ if (showCountdown) {
     
     private fun scrollToTop() = ModuleTemplate(
         id = "template-scroll-to-top",
-        name = Strings.templateScrollToTop,
-        description = Strings.templateScrollToTopDesc,
+        name = AppStringsProvider.current().templateScrollToTop,
+        description = AppStringsProvider.current().templateScrollToTopDesc,
         icon = "arrow_upward",
         category = ModuleCategory.FUNCTION_ENHANCE,
         configItems = listOf(
             ModuleConfigItem(
                 key = "showAfter",
-                name = Strings.templateShowAfterScroll,
+                name = AppStringsProvider.current().templateShowAfterScroll,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "300"
             )
@@ -686,21 +686,21 @@ window.addEventListener('scroll', () => {
     
     private fun dataExtractor() = ModuleTemplate(
         id = "template-data-extractor",
-        name = Strings.templateDataExtractor,
-        description = Strings.templateDataExtractorDesc,
+        name = AppStringsProvider.current().templateDataExtractor,
+        description = AppStringsProvider.current().templateDataExtractorDesc,
         icon = "analytics",
         category = ModuleCategory.DATA_EXTRACT,
         configItems = listOf(
             ModuleConfigItem(
                 key = "selector",
-                name = Strings.templateDataSelector,
+                name = AppStringsProvider.current().templateDataSelector,
                 type = ConfigItemType.TEXT,
                 defaultValue = "table tr"
             ),
             ModuleConfigItem(
                 key = "attribute",
-                name = Strings.templateExtractAttribute,
-                description = Strings.templateExtractAttrDesc,
+                name = AppStringsProvider.current().templateExtractAttribute,
+                description = AppStringsProvider.current().templateExtractAttrDesc,
                 type = ConfigItemType.TEXT,
                 defaultValue = ""
             )
@@ -728,15 +728,15 @@ window.__extractedData = extractData();
     
     private fun linkCollector() = ModuleTemplate(
         id = "template-link-collector",
-        name = Strings.templateLinkCollector,
-        description = Strings.templateLinkCollectorDesc,
+        name = AppStringsProvider.current().templateLinkCollector,
+        description = AppStringsProvider.current().templateLinkCollectorDesc,
         icon = "link",
         category = ModuleCategory.DATA_EXTRACT,
         configItems = listOf(
             ModuleConfigItem(
                 key = "filter",
-                name = Strings.templateFilterKeyword,
-                description = Strings.templateFilterKeywordDesc,
+                name = AppStringsProvider.current().templateFilterKeyword,
+                description = AppStringsProvider.current().templateFilterKeywordDesc,
                 type = ConfigItemType.TEXT,
                 defaultValue = ""
             )
@@ -756,14 +756,14 @@ window.__collectedLinks = links;
     
     private fun imageGrabber() = ModuleTemplate(
         id = "template-image-grabber",
-        name = Strings.templateImageGrabber,
-        description = Strings.templateImageGrabberDesc,
+        name = AppStringsProvider.current().templateImageGrabber,
+        description = AppStringsProvider.current().templateImageGrabberDesc,
         icon = "image",
         category = ModuleCategory.DATA_EXTRACT,
         configItems = listOf(
             ModuleConfigItem(
                 key = "minSize",
-                name = Strings.templateMinSize,
+                name = AppStringsProvider.current().templateMinSize,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "100"
             )
@@ -784,21 +784,21 @@ window.__grabbedImages = images;
     
     private fun videoEnhancer() = ModuleTemplate(
         id = "template-video-enhancer",
-        name = Strings.templateVideoEnhancer,
-        description = Strings.templateVideoEnhancerDesc,
+        name = AppStringsProvider.current().templateVideoEnhancer,
+        description = AppStringsProvider.current().templateVideoEnhancerDesc,
         icon = "movie",
         category = ModuleCategory.MEDIA,
         configItems = listOf(
             ModuleConfigItem(
                 key = "defaultSpeed",
-                name = Strings.templateDefaultSpeed,
+                name = AppStringsProvider.current().templateDefaultSpeed,
                 type = ConfigItemType.SELECT,
                 defaultValue = "1",
                 options = listOf("0.5", "0.75", "1", "1.25", "1.5", "1.75", "2", "2.5", "3")
             ),
             ModuleConfigItem(
                 key = "showControls",
-                name = Strings.templateShowControlPanel,
+                name = AppStringsProvider.current().templateShowControlPanel,
                 type = ConfigItemType.BOOLEAN,
                 defaultValue = "true"
             )
@@ -841,8 +841,8 @@ new MutationObserver(muts => {
     
     private fun imageZoomer() = ModuleTemplate(
         id = "template-image-zoomer",
-        name = Strings.templateImageZoomer,
-        description = Strings.templateImageZoomerDesc,
+        name = AppStringsProvider.current().templateImageZoomer,
+        description = AppStringsProvider.current().templateImageZoomerDesc,
         icon = "search",
         category = ModuleCategory.MEDIA,
         configItems = emptyList(),
@@ -868,14 +868,14 @@ document.addEventListener('click', e => {
     
     private fun audioController() = ModuleTemplate(
         id = "template-audio-controller",
-        name = Strings.templateAudioController,
-        description = Strings.templateAudioControllerDesc,
+        name = AppStringsProvider.current().templateAudioController,
+        description = AppStringsProvider.current().templateAudioControllerDesc,
         icon = "music_note",
         category = ModuleCategory.MEDIA,
         configItems = listOf(
             ModuleConfigItem(
                 key = "defaultVolume",
-                name = Strings.templateDefaultVolume,
+                name = AppStringsProvider.current().templateDefaultVolume,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "50"
             )
@@ -903,8 +903,8 @@ new MutationObserver(muts => {
     
     private fun notificationBlocker() = ModuleTemplate(
         id = "template-notification-blocker",
-        name = Strings.templateNotificationBlocker,
-        description = Strings.templateNotificationBlockerDesc,
+        name = AppStringsProvider.current().templateNotificationBlocker,
+        description = AppStringsProvider.current().templateNotificationBlockerDesc,
         icon = "notifications_off",
         category = ModuleCategory.SECURITY,
         configItems = emptyList(),
@@ -920,8 +920,8 @@ console.log('[NotificationBlocker] Notifications blocked');
     
     private fun trackingBlocker() = ModuleTemplate(
         id = "template-tracking-blocker",
-        name = Strings.templateTrackingBlocker,
-        description = Strings.templateTrackingBlockerDesc,
+        name = AppStringsProvider.current().templateTrackingBlocker,
+        description = AppStringsProvider.current().templateTrackingBlockerDesc,
         icon = "person_search",
         category = ModuleCategory.SECURITY,
         configItems = emptyList(),
@@ -944,8 +944,8 @@ navigator.sendBeacon = () => { console.log('[TrackingBlocker] Beacon blocked'); 
     
     private fun fingerprintProtector() = ModuleTemplate(
         id = "template-fingerprint-protector",
-        name = Strings.templateFingerprintProtector,
-        description = Strings.templateFingerprintProtectorDesc,
+        name = AppStringsProvider.current().templateFingerprintProtector,
+        description = AppStringsProvider.current().templateFingerprintProtectorDesc,
         icon = "shield",
         category = ModuleCategory.SECURITY,
         configItems = emptyList(),
@@ -974,14 +974,14 @@ Object.defineProperty(screen, 'height', { get: () => 1080 + Math.floor(Math.rand
     
     private fun consoleLogger() = ModuleTemplate(
         id = "template-console-logger",
-        name = Strings.templateConsoleLogger,
-        description = Strings.templateConsoleLoggerDesc,
+        name = AppStringsProvider.current().templateConsoleLogger,
+        description = AppStringsProvider.current().templateConsoleLoggerDesc,
         icon = "clipboard",
         category = ModuleCategory.DEVELOPER,
         configItems = listOf(
             ModuleConfigItem(
                 key = "maxLogs",
-                name = Strings.templateMaxLogs,
+                name = AppStringsProvider.current().templateMaxLogs,
                 type = ConfigItemType.NUMBER,
                 defaultValue = "50"
             )
@@ -1018,8 +1018,8 @@ function addLog(type, args) {
     
     private fun networkMonitor() = ModuleTemplate(
         id = "template-network-monitor",
-        name = Strings.templateNetworkMonitor,
-        description = Strings.templateNetworkMonitorDesc,
+        name = AppStringsProvider.current().templateNetworkMonitor,
+        description = AppStringsProvider.current().templateNetworkMonitorDesc,
         icon = "globe",
         category = ModuleCategory.DEVELOPER,
         configItems = emptyList(),
@@ -1059,8 +1059,8 @@ function addRequest(url, status, time) {
     
     private fun domInspector() = ModuleTemplate(
         id = "template-dom-inspector",
-        name = Strings.templateDomInspector,
-        description = Strings.templateDomInspectorDesc,
+        name = AppStringsProvider.current().templateDomInspector,
+        description = AppStringsProvider.current().templateDomInspectorDesc,
         icon = "search",
         category = ModuleCategory.DEVELOPER,
         configItems = emptyList(),

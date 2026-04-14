@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.frontend.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.*
 import com.webtoapp.ui.components.*
 import kotlinx.coroutines.flow.first
@@ -179,16 +179,16 @@ fun CreateFrontendAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditMode) Strings.editFrontendApp else Strings.createFrontendApp) },
+                title = { Text(if (isEditMode) AppStringsProvider.current().editFrontendApp else AppStringsProvider.current().createFrontendApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     if (currentLogs.isNotEmpty()) {
                         IconButton(onClick = { showLogsDialog = true }) {
-                            Icon(Icons.Outlined.Terminal, Strings.logs)
+                            Icon(Icons.Outlined.Terminal, AppStringsProvider.current().logs)
                         }
                     }
                 }
@@ -251,7 +251,7 @@ fun CreateFrontendAppScreen(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            Strings.selectProject,
+                            AppStringsProvider.current().selectProject,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -266,13 +266,13 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Outlined.FolderOpen, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.selectProjectFolder)
+                            Text(AppStringsProvider.current().selectProjectFolder)
                         }
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            Strings.selectProjectHint,
+                            AppStringsProvider.current().selectProjectHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -313,7 +313,7 @@ fun CreateFrontendAppScreen(
                                     importBuilder.reset()
                                     nodeBuilder.reset()
                                 }) {
-                                    Icon(Icons.Default.Close, Strings.remove)
+                                    Icon(Icons.Default.Close, AppStringsProvider.current().remove)
                                 }
                             }
                         }
@@ -342,7 +342,7 @@ fun CreateFrontendAppScreen(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                Strings.projectAnalysis,
+                                AppStringsProvider.current().projectAnalysis,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -362,7 +362,7 @@ fun CreateFrontendAppScreen(
                             // Note
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Code,
-                                label = Strings.frameworkLabel,
+                                label = AppStringsProvider.current().frameworkLabel,
                                 value = getFrameworkDisplayName(detectionResult!!.framework),
                                 valueColor = getFrameworkColor(detectionResult!!.framework)
                             )
@@ -370,14 +370,14 @@ fun CreateFrontendAppScreen(
                             if (detectionResult!!.frameworkVersion != null) {
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Tag,
-                                    label = Strings.versionLabel,
+                                    label = AppStringsProvider.current().versionLabel,
                                     value = detectionResult!!.frameworkVersion!!
                                 )
                             }
                             
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Inventory,
-                                label = Strings.packageManagerLabel,
+                                label = AppStringsProvider.current().packageManagerLabel,
                                 value = detectionResult!!.packageManager.name
                             )
                             
@@ -385,7 +385,7 @@ fun CreateFrontendAppScreen(
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Code,
                                     label = "TypeScript",
-                                    value = Strings.enabled,
+                                    value = AppStringsProvider.current().enabled,
                                     valueColor = Color(0xFF3178C6)
                                 )
                             }
@@ -396,15 +396,15 @@ fun CreateFrontendAppScreen(
                             if (totalDeps > 0) {
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Extension,
-                                    label = Strings.dependencyCountLabel,
-                                    value = Strings.dependencyCountValue.format(totalDeps)
+                                    label = AppStringsProvider.current().dependencyCountLabel,
+                                    value = AppStringsProvider.current().dependencyCountValue.format(totalDeps)
                                 )
                             }
                             
                             // outputdirectory
                             DetectionInfoRow(
                                 icon = Icons.Outlined.FolderOpen,
-                                label = Strings.outputDirLabel,
+                                label = AppStringsProvider.current().outputDirLabel,
                                 value = File(detectionResult!!.outputDir).name
                             )
 
@@ -459,7 +459,7 @@ fun CreateFrontendAppScreen(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                Strings.appConfig,
+                                AppStringsProvider.current().appConfig,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -481,7 +481,7 @@ fun CreateFrontendAppScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                Strings.labelIcon,
+                                AppStringsProvider.current().labelIcon,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
@@ -524,7 +524,7 @@ fun CreateFrontendAppScreen(
                 ) {
                     Icon(Icons.Default.Save, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.btnSave)
+                    Text(AppStringsProvider.current().btnSave)
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -552,7 +552,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Default.Download, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (isEditMode) Strings.reimportProject else Strings.importProject)
+                            Text(if (isEditMode) AppStringsProvider.current().reimportProject else AppStringsProvider.current().importProject)
                         }
                     } else {
                         PremiumButton(
@@ -574,7 +574,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Default.Build, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (isEditMode) Strings.rebuildProject else Strings.buildProject)
+                            Text(if (isEditMode) AppStringsProvider.current().rebuildProject else AppStringsProvider.current().buildProject)
                         }
                     }
                 }
@@ -592,7 +592,7 @@ fun CreateFrontendAppScreen(
                     ) {
                         Icon(Icons.Default.Check, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isEditMode) Strings.btnSave else Strings.btnCreate)
+                        Text(if (isEditMode) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate)
                     }
                 }
                 is BuildState.Error -> {
@@ -606,7 +606,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Default.Refresh, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.btnRetry)
+                            Text(AppStringsProvider.current().btnRetry)
                         }
                     }
                 }
@@ -618,7 +618,7 @@ fun CreateFrontendAppScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                 }
             }
@@ -668,12 +668,12 @@ private fun BuildModeSelector(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        Strings.importFrontendProject,
+                        AppStringsProvider.current().importFrontendProject,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        Strings.supportVueReactVite,
+                        AppStringsProvider.current().supportVueReactVite,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -690,13 +690,13 @@ private fun BuildModeSelector(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        Strings.usageSteps,
+                        AppStringsProvider.current().usageSteps,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.usageStepsContent,
+                        AppStringsProvider.current().usageStepsContent,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -723,7 +723,7 @@ private fun BuildModeSelector(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        Strings.builtInEngineReady,
+                        AppStringsProvider.current().builtInEngineReady,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -838,7 +838,7 @@ private fun BuildStatusCard(
                     is BuildState.Scanning -> {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.scanningProject)
+                        Text(AppStringsProvider.current().scanningProject)
                     }
                     is BuildState.Importing -> {
                         CircularProgressIndicator(
@@ -847,7 +847,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.importing)
+                            Text(AppStringsProvider.current().importing)
                             Text(
                                 state.message,
                                 style = MaterialTheme.typography.bodySmall,
@@ -858,7 +858,7 @@ private fun BuildStatusCard(
                     is BuildState.CheckingEnvironment -> {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.checkingEnv)
+                        Text(AppStringsProvider.current().checkingEnv)
                     }
                     is BuildState.CopyingProject -> {
                         CircularProgressIndicator(
@@ -867,7 +867,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.copyingProjectFiles)
+                            Text(AppStringsProvider.current().copyingProjectFiles)
                             Text(
                                 "${(state.progress * 100).toInt()}%",
                                 style = MaterialTheme.typography.bodySmall,
@@ -882,7 +882,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.installingDeps)
+                            Text(AppStringsProvider.current().installingDeps)
                             if (state.currentPackage.isNotEmpty()) {
                                 Text(
                                     state.currentPackage,
@@ -901,7 +901,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.building)
+                            Text(AppStringsProvider.current().building)
                             Text(
                                 state.stage,
                                 style = MaterialTheme.typography.bodySmall,
@@ -912,7 +912,7 @@ private fun BuildStatusCard(
                     is BuildState.ProcessingOutput -> {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.processingOutput)
+                        Text(AppStringsProvider.current().processingOutput)
                     }
                     is BuildState.Success -> {
                         Icon(
@@ -923,9 +923,9 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.completed, color = AppColors.Success)
+                            Text(AppStringsProvider.current().completed, color = AppColors.Success)
                             Text(
-                                Strings.totalFiles.replace("%d", state.fileCount.toString()),
+                                AppStringsProvider.current().totalFiles.replace("%d", state.fileCount.toString()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -940,7 +940,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.failed, color = AppColors.Error)
+                            Text(AppStringsProvider.current().failed, color = AppColors.Error)
                             Text(
                                 state.message,
                                 style = MaterialTheme.typography.bodySmall,
@@ -956,7 +956,7 @@ private fun BuildStatusCard(
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 
                 TextButton(onClick = onViewLogs) {
-                    Text("${Strings.logs} ($logCount)")
+                    Text("${AppStringsProvider.current().logs} ($logCount)")
                 }
             }
         }
@@ -974,7 +974,7 @@ private fun BuildLogsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.importLogs) },
+        title = { Text(AppStringsProvider.current().importLogs) },
         text = {
             LazyColumn(
                 modifier = Modifier
@@ -1001,7 +1001,7 @@ private fun BuildLogsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.close)
+                Text(AppStringsProvider.current().close)
             }
         }
     )

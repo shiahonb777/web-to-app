@@ -10,7 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import com.webtoapp.core.i18n.RandomAppNameGenerator
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * button app input
@@ -18,7 +18,7 @@ import com.webtoapp.core.i18n.Strings
  * @param value currentinput
  * @param onValueChange
  * @param modifier
- * @param placeholder( optional, default Strings. inputAppName)
+ * @param placeholder( optional, default AppStringsProvider.current(). inputAppName)
  * @param imeAction keyboard( optional, default ImeAction. Next)
  */
 @Composable
@@ -32,8 +32,8 @@ fun AppNameTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(Strings.labelAppName) },
-        placeholder = { Text(placeholder ?: Strings.inputAppName) },
+        label = { Text(AppStringsProvider.current().labelAppName) },
+        placeholder = { Text(placeholder ?: AppStringsProvider.current().inputAppName) },
         leadingIcon = { Icon(Icons.Outlined.Badge, null) },
         trailingIcon = {
             IconButton(
@@ -43,7 +43,7 @@ fun AppNameTextField(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Casino,
-                    contentDescription = Strings.randomNameTooltip,
+                    contentDescription = AppStringsProvider.current().randomNameTooltip,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -67,8 +67,8 @@ fun AppNameTextFieldSimple(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(Strings.labelAppName) },
-        placeholder = { Text(placeholder ?: Strings.inputAppName) },
+        label = { Text(AppStringsProvider.current().labelAppName) },
+        placeholder = { Text(placeholder ?: AppStringsProvider.current().inputAppName) },
         trailingIcon = {
             IconButton(
                 onClick = {
@@ -77,7 +77,7 @@ fun AppNameTextFieldSimple(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Casino,
-                    contentDescription = Strings.randomNameTooltip,
+                    contentDescription = AppStringsProvider.current().randomNameTooltip,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

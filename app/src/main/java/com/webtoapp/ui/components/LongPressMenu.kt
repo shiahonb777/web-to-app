@@ -29,7 +29,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.core.webview.LongPressHandler
 import kotlin.math.cos
@@ -135,7 +135,7 @@ private fun ImageMenuContent(
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = Strings.longPressMenuImagePreview,
+                    contentDescription = AppStringsProvider.current().longPressMenuImagePreview,
                     modifier = Modifier
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp)),
@@ -161,7 +161,7 @@ private fun ImageMenuContent(
         // button
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = Strings.longPressMenuSaveImage,
+            text = AppStringsProvider.current().longPressMenuSaveImage,
             onClick = {
                 onSaveImage()
                 onDismiss()
@@ -170,7 +170,7 @@ private fun ImageMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyImageLink,
+            text = AppStringsProvider.current().longPressMenuCopyImageLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -210,7 +210,7 @@ private fun VideoMenuContent(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = Strings.longPressMenuVideo,
+                text = AppStringsProvider.current().longPressMenuVideo,
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -231,7 +231,7 @@ private fun VideoMenuContent(
         // button
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = Strings.longPressMenuDownloadVideo,
+            text = AppStringsProvider.current().longPressMenuDownloadVideo,
             onClick = {
                 onDownload()
                 onDismiss()
@@ -240,7 +240,7 @@ private fun VideoMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyVideoLink,
+            text = AppStringsProvider.current().longPressMenuCopyVideoLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -304,7 +304,7 @@ private fun LinkMenuContent(
         // button
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyLink,
+            text = AppStringsProvider.current().longPressMenuCopyLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -313,7 +313,7 @@ private fun LinkMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.OpenInBrowser,
-            text = Strings.longPressMenuOpenInBrowser,
+            text = AppStringsProvider.current().longPressMenuOpenInBrowser,
             onClick = {
                 onOpenInBrowser()
                 onDismiss()
@@ -349,7 +349,7 @@ private fun ImageLinkMenuContent(
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = Strings.longPressMenuImagePreview,
+                    contentDescription = AppStringsProvider.current().longPressMenuImagePreview,
                     modifier = Modifier
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp)),
@@ -363,7 +363,7 @@ private fun ImageLinkMenuContent(
         
         // Image
         Text(
-            text = Strings.longPressMenuImage,
+            text = AppStringsProvider.current().longPressMenuImage,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
@@ -371,7 +371,7 @@ private fun ImageLinkMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = Strings.longPressMenuSaveImage,
+            text = AppStringsProvider.current().longPressMenuSaveImage,
             onClick = {
                 onSaveImage()
                 onDismiss()
@@ -380,7 +380,7 @@ private fun ImageLinkMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyImageLink,
+            text = AppStringsProvider.current().longPressMenuCopyImageLink,
             onClick = {
                 onCopyImageLink()
                 onDismiss()
@@ -392,7 +392,7 @@ private fun ImageLinkMenuContent(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
             Text(
-                text = Strings.longPressMenuLink,
+                text = AppStringsProvider.current().longPressMenuLink,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
@@ -400,7 +400,7 @@ private fun ImageLinkMenuContent(
             
             MenuItemButton(
                 icon = Icons.Default.ContentCopy,
-                text = Strings.longPressMenuCopyLinkAddress,
+                text = AppStringsProvider.current().longPressMenuCopyLinkAddress,
                 onClick = {
                     onCopyLink()
                     onDismiss()
@@ -409,7 +409,7 @@ private fun ImageLinkMenuContent(
             
             MenuItemButton(
                 icon = Icons.Default.OpenInBrowser,
-                text = Strings.longPressMenuOpenInBrowser,
+                text = AppStringsProvider.current().longPressMenuOpenInBrowser,
                 onClick = {
                     onOpenInBrowser()
                     onDismiss()
@@ -457,7 +457,7 @@ fun SimpleLongPressMenuSheet(
                     // mode support download, only
                     SimpleLinkOnlyContent(
                         url = result.url,
-                        title = Strings.longPressMenuVideo,
+                        title = AppStringsProvider.current().longPressMenuVideo,
                         icon = Icons.Default.VideoFile,
                         onCopyLink = { onCopyLink(result.url) },
                         onDismiss = onDismiss
@@ -517,7 +517,7 @@ private fun SimpleImageMenuContent(
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = Strings.longPressMenuImagePreview,
+                    contentDescription = AppStringsProvider.current().longPressMenuImagePreview,
                     modifier = Modifier
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp)),
@@ -532,7 +532,7 @@ private fun SimpleImageMenuContent(
         // button( onlysave)
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = Strings.longPressMenuSaveImage,
+            text = AppStringsProvider.current().longPressMenuSaveImage,
             onClick = {
                 onSaveImage()
                 onDismiss()
@@ -541,7 +541,7 @@ private fun SimpleImageMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyImageLink,
+            text = AppStringsProvider.current().longPressMenuCopyImageLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -605,7 +605,7 @@ private fun SimpleLinkOnlyContent(
         // only
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyLink,
+            text = AppStringsProvider.current().longPressMenuCopyLink,
             onClick = {
                 onCopyLink()
                 onDismiss()
@@ -640,7 +640,7 @@ private fun SimpleImageLinkMenuContent(
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = Strings.longPressMenuImagePreview,
+                    contentDescription = AppStringsProvider.current().longPressMenuImagePreview,
                     modifier = Modifier
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp)),
@@ -654,7 +654,7 @@ private fun SimpleImageLinkMenuContent(
         
         // Image
         Text(
-            text = Strings.longPressMenuImage,
+            text = AppStringsProvider.current().longPressMenuImage,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
@@ -662,7 +662,7 @@ private fun SimpleImageLinkMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.Download,
-            text = Strings.longPressMenuSaveImage,
+            text = AppStringsProvider.current().longPressMenuSaveImage,
             onClick = {
                 onSaveImage()
                 onDismiss()
@@ -671,7 +671,7 @@ private fun SimpleImageLinkMenuContent(
         
         MenuItemButton(
             icon = Icons.Default.ContentCopy,
-            text = Strings.longPressMenuCopyImageLink,
+            text = AppStringsProvider.current().longPressMenuCopyImageLink,
             onClick = {
                 onCopyImageLink()
                 onDismiss()
@@ -683,7 +683,7 @@ private fun SimpleImageLinkMenuContent(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
             Text(
-                text = Strings.longPressMenuLink,
+                text = AppStringsProvider.current().longPressMenuLink,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
@@ -691,7 +691,7 @@ private fun SimpleImageLinkMenuContent(
             
             MenuItemButton(
                 icon = Icons.Default.ContentCopy,
-                text = Strings.longPressMenuCopyLinkAddress,
+                text = AppStringsProvider.current().longPressMenuCopyLinkAddress,
                 onClick = {
                     onCopyLink()
                     onDismiss()
@@ -856,9 +856,9 @@ private fun IosImageMenuContent(
                 )
             }
         }
-        IosMenuItem(Icons.Default.Download, Strings.longPressMenuSaveImage, onSaveImage)
+        IosMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuSaveImage, onSaveImage)
         IosHorizontalDivider()
-        IosMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyImageLink, onCopyLink, isLast = true)
+        IosMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyImageLink, onCopyLink, isLast = true)
     }
 }
 
@@ -883,9 +883,9 @@ private fun IosVideoMenuContent(
                 modifier = Modifier.size(48.dp)
             )
         }
-        IosMenuItem(Icons.Default.Download, Strings.longPressMenuDownloadVideo, onDownload)
+        IosMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuDownloadVideo, onDownload)
         IosHorizontalDivider()
-        IosMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyVideoLink, onCopyLink, isLast = true)
+        IosMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyVideoLink, onCopyLink, isLast = true)
     }
 }
 
@@ -922,9 +922,9 @@ private fun IosLinkMenuContent(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        IosMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyLink, onCopyLink)
+        IosMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyLink, onCopyLink)
         IosHorizontalDivider()
-        IosMenuItem(Icons.Default.OpenInBrowser, Strings.longPressMenuOpenInBrowser, onOpenInBrowser, isLast = true)
+        IosMenuItem(Icons.Default.OpenInBrowser, AppStringsProvider.current().longPressMenuOpenInBrowser, onOpenInBrowser, isLast = true)
     }
 }
 
@@ -958,13 +958,13 @@ private fun IosImageLinkMenuContent(
                 )
             }
         }
-        IosMenuItem(Icons.Default.Download, Strings.longPressMenuSaveImage, onSaveImage)
+        IosMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuSaveImage, onSaveImage)
         IosHorizontalDivider()
-        IosMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyImageLink, onCopyImageLink)
+        IosMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyImageLink, onCopyImageLink)
         IosHorizontalDivider()
-        IosMenuItem(Icons.Default.Link, Strings.longPressMenuCopyLink, onCopyLink)
+        IosMenuItem(Icons.Default.Link, AppStringsProvider.current().longPressMenuCopyLink, onCopyLink)
         IosHorizontalDivider()
-        IosMenuItem(Icons.Default.OpenInBrowser, Strings.longPressMenuOpenInBrowser, onOpenInBrowser, isLast = true)
+        IosMenuItem(Icons.Default.OpenInBrowser, AppStringsProvider.current().longPressMenuOpenInBrowser, onOpenInBrowser, isLast = true)
     }
 }
 
@@ -1045,22 +1045,22 @@ fun FloatingBubbleLongPressMenu(
     val menuItems = remember(result) {
         when (result) {
             is LongPressHandler.LongPressResult.Image -> listOf(
-                BubbleMenuItem(Icons.Default.Download, Strings.longPressMenuSaveImage, AppColors.Success) { onSaveImage(result.url); onDismiss() },
-                BubbleMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyImageLink, Color(0xFF2196F3)) { onCopyLink(result.url); onDismiss() }
+                BubbleMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuSaveImage, AppColors.Success) { onSaveImage(result.url); onDismiss() },
+                BubbleMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyImageLink, Color(0xFF2196F3)) { onCopyLink(result.url); onDismiss() }
             )
             is LongPressHandler.LongPressResult.Video -> listOf(
-                BubbleMenuItem(Icons.Default.Download, Strings.longPressMenuDownloadVideo, Color(0xFF9C27B0)) { onDownloadVideo(result.url); onDismiss() },
-                BubbleMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyVideoLink, Color(0xFF2196F3)) { onCopyLink(result.url); onDismiss() }
+                BubbleMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuDownloadVideo, Color(0xFF9C27B0)) { onDownloadVideo(result.url); onDismiss() },
+                BubbleMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyVideoLink, Color(0xFF2196F3)) { onCopyLink(result.url); onDismiss() }
             )
             is LongPressHandler.LongPressResult.Link -> listOf(
-                BubbleMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyLink, Color(0xFF2196F3)) { onCopyLink(result.url); onDismiss() },
-                BubbleMenuItem(Icons.Default.OpenInBrowser, Strings.longPressMenuOpenInBrowser, AppColors.Warning) { onOpenInBrowser(result.url); onDismiss() }
+                BubbleMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyLink, Color(0xFF2196F3)) { onCopyLink(result.url); onDismiss() },
+                BubbleMenuItem(Icons.Default.OpenInBrowser, AppStringsProvider.current().longPressMenuOpenInBrowser, AppColors.Warning) { onOpenInBrowser(result.url); onDismiss() }
             )
             is LongPressHandler.LongPressResult.ImageLink -> listOf(
-                BubbleMenuItem(Icons.Default.Download, Strings.longPressMenuSaveImage, AppColors.Success) { onSaveImage(result.imageUrl); onDismiss() },
-                BubbleMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyImageLink, Color(0xFF2196F3)) { onCopyLink(result.imageUrl); onDismiss() },
-                BubbleMenuItem(Icons.Default.Link, Strings.longPressMenuCopyLink, Color(0xFF00BCD4)) { onCopyLink(result.linkUrl); onDismiss() },
-                BubbleMenuItem(Icons.Default.OpenInBrowser, Strings.longPressMenuOpenInBrowser, AppColors.Warning) { onOpenInBrowser(result.linkUrl); onDismiss() }
+                BubbleMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuSaveImage, AppColors.Success) { onSaveImage(result.imageUrl); onDismiss() },
+                BubbleMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyImageLink, Color(0xFF2196F3)) { onCopyLink(result.imageUrl); onDismiss() },
+                BubbleMenuItem(Icons.Default.Link, AppStringsProvider.current().longPressMenuCopyLink, Color(0xFF00BCD4)) { onCopyLink(result.linkUrl); onDismiss() },
+                BubbleMenuItem(Icons.Default.OpenInBrowser, AppStringsProvider.current().longPressMenuOpenInBrowser, AppColors.Warning) { onOpenInBrowser(result.linkUrl); onDismiss() }
             )
             else -> emptyList()
         }
@@ -1138,7 +1138,7 @@ fun FloatingBubbleLongPressMenu(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = Strings.btnCancel,
+                        contentDescription = AppStringsProvider.current().btnCancel,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(24.dp)
                     )
@@ -1239,23 +1239,23 @@ fun ContextMenuLongPressMenu(
     val menuItems = remember(result) {
         when (result) {
             is LongPressHandler.LongPressResult.Image -> listOf(
-                ContextMenuItem(Icons.Default.Download, Strings.longPressMenuSaveImage) { onSaveImage(result.url); onDismiss() },
-                ContextMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyImageLink) { onCopyLink(result.url); onDismiss() }
+                ContextMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuSaveImage) { onSaveImage(result.url); onDismiss() },
+                ContextMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyImageLink) { onCopyLink(result.url); onDismiss() }
             )
             is LongPressHandler.LongPressResult.Video -> listOf(
-                ContextMenuItem(Icons.Default.Download, Strings.longPressMenuDownloadVideo) { onDownloadVideo(result.url); onDismiss() },
-                ContextMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyVideoLink) { onCopyLink(result.url); onDismiss() }
+                ContextMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuDownloadVideo) { onDownloadVideo(result.url); onDismiss() },
+                ContextMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyVideoLink) { onCopyLink(result.url); onDismiss() }
             )
             is LongPressHandler.LongPressResult.Link -> listOf(
-                ContextMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyLink) { onCopyLink(result.url); onDismiss() },
-                ContextMenuItem(Icons.Default.OpenInBrowser, Strings.longPressMenuOpenInBrowser) { onOpenInBrowser(result.url); onDismiss() }
+                ContextMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyLink) { onCopyLink(result.url); onDismiss() },
+                ContextMenuItem(Icons.Default.OpenInBrowser, AppStringsProvider.current().longPressMenuOpenInBrowser) { onOpenInBrowser(result.url); onDismiss() }
             )
             is LongPressHandler.LongPressResult.ImageLink -> listOf(
-                ContextMenuItem(Icons.Default.Download, Strings.longPressMenuSaveImage) { onSaveImage(result.imageUrl); onDismiss() },
-                ContextMenuItem(Icons.Default.ContentCopy, Strings.longPressMenuCopyImageLink) { onCopyLink(result.imageUrl); onDismiss() },
+                ContextMenuItem(Icons.Default.Download, AppStringsProvider.current().longPressMenuSaveImage) { onSaveImage(result.imageUrl); onDismiss() },
+                ContextMenuItem(Icons.Default.ContentCopy, AppStringsProvider.current().longPressMenuCopyImageLink) { onCopyLink(result.imageUrl); onDismiss() },
                 null, // Note
-                ContextMenuItem(Icons.Default.Link, Strings.longPressMenuCopyLink) { onCopyLink(result.linkUrl); onDismiss() },
-                ContextMenuItem(Icons.Default.OpenInBrowser, Strings.longPressMenuOpenInBrowser) { onOpenInBrowser(result.linkUrl); onDismiss() }
+                ContextMenuItem(Icons.Default.Link, AppStringsProvider.current().longPressMenuCopyLink) { onCopyLink(result.linkUrl); onDismiss() },
+                ContextMenuItem(Icons.Default.OpenInBrowser, AppStringsProvider.current().longPressMenuOpenInBrowser) { onOpenInBrowser(result.linkUrl); onDismiss() }
             )
             else -> emptyList()
         }

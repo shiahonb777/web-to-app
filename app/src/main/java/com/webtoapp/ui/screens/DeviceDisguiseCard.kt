@@ -25,7 +25,7 @@ import com.webtoapp.core.disguise.DeviceType
 import com.webtoapp.core.disguise.DeviceOS
 import com.webtoapp.core.disguise.DeviceBrand
 import com.webtoapp.core.disguise.DevicePresets
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import com.webtoapp.ui.components.EnhancedElevatedCard
@@ -101,13 +101,13 @@ fun DeviceDisguiseCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.deviceDisguiseTitle,
+                            text = AppStringsProvider.current().deviceDisguiseTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
                             text = if (isEnabled && config.deviceModelName.isNotBlank())
-                                "${Strings.deviceDisguiseActive} ${config.deviceModelName}"
-                            else Strings.notEnabled,
+                                "${AppStringsProvider.current().deviceDisguiseActive} ${config.deviceModelName}"
+                            else AppStringsProvider.current().notEnabled,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -137,12 +137,12 @@ fun DeviceDisguiseCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = Strings.deviceDisguiseTitle,
+                                text = AppStringsProvider.current().deviceDisguiseTitle,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = if (isEnabled) Strings.deviceDisguiseActive else Strings.deviceDisguiseOff,
+                                text = if (isEnabled) AppStringsProvider.current().deviceDisguiseActive else AppStringsProvider.current().deviceDisguiseOff,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -178,7 +178,7 @@ fun DeviceDisguiseCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = Strings.deviceDisguiseHint,
+                                        text = AppStringsProvider.current().deviceDisguiseHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                                         lineHeight = 18.sp
@@ -190,18 +190,18 @@ fun DeviceDisguiseCard(
 
                             // typeselect( only emoji)
                             Text(
-                                text = Strings.deviceQuickSelect,
+                                text = AppStringsProvider.current().deviceQuickSelect,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.height(8.dp))
 
                             val deviceTypes = listOf(
-                                DeviceType.PHONE to Strings.deviceTypePhone,
-                                DeviceType.TABLET to Strings.deviceTypeTablet,
-                                DeviceType.DESKTOP to Strings.deviceTypeDesktop,
-                                DeviceType.LAPTOP to Strings.deviceTypeLaptop,
-                                DeviceType.WATCH to Strings.deviceTypeWatch
+                                DeviceType.PHONE to AppStringsProvider.current().deviceTypePhone,
+                                DeviceType.TABLET to AppStringsProvider.current().deviceTypeTablet,
+                                DeviceType.DESKTOP to AppStringsProvider.current().deviceTypeDesktop,
+                                DeviceType.LAPTOP to AppStringsProvider.current().deviceTypeLaptop,
+                                DeviceType.WATCH to AppStringsProvider.current().deviceTypeWatch
                             )
 
                             FlowRow(
@@ -267,7 +267,7 @@ fun DeviceDisguiseCard(
 
                             // list( , emoji)
                             Text(
-                                text = Strings.devicePopularPresets,
+                                text = AppStringsProvider.current().devicePopularPresets,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
@@ -348,7 +348,7 @@ fun DeviceDisguiseCard(
                             // current preview
                             if (config.deviceModelName.isNotBlank()) {
                                 Text(
-                                    text = Strings.deviceCurrentDisguise,
+                                    text = AppStringsProvider.current().deviceCurrentDisguise,
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -393,7 +393,7 @@ fun DeviceDisguiseCard(
                                             ) {
                                                 Column(modifier = Modifier.padding(10.dp)) {
                                                     Text(
-                                                        text = Strings.deviceGeneratedUA,
+                                                        text = AppStringsProvider.current().deviceGeneratedUA,
                                                         style = MaterialTheme.typography.labelSmall,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                                     )
@@ -436,8 +436,8 @@ fun DeviceDisguiseCard(
                             // Note
                             if (config.deviceType !in listOf(DeviceType.DESKTOP, DeviceType.LAPTOP)) {
                                 SettingsSwitch(
-                                    title = Strings.deviceDesktopViewport,
-                                    subtitle = Strings.deviceDesktopViewportHint,
+                                    title = AppStringsProvider.current().deviceDesktopViewport,
+                                    subtitle = AppStringsProvider.current().deviceDesktopViewportHint,
                                     checked = config.isDesktopViewport,
                                     onCheckedChange = {
                                         onConfigChange(config.copy(isDesktopViewport = it))
@@ -451,8 +451,8 @@ fun DeviceDisguiseCard(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             SettingsSwitch(
-                                title = Strings.deviceCustomDevice,
-                                subtitle = Strings.deviceCustomDeviceHint,
+                                title = AppStringsProvider.current().deviceCustomDevice,
+                                subtitle = AppStringsProvider.current().deviceCustomDeviceHint,
                                 checked = showCustomDevice || config.isCustomDevice,
                                 onCheckedChange = {
                                     showCustomDevice = it
@@ -477,7 +477,7 @@ fun DeviceDisguiseCard(
                                     PremiumTextField(
                                         value = customModelName,
                                         onValueChange = { customModelName = it },
-                                        label = { Text(Strings.deviceCustomName) },
+                                        label = { Text(AppStringsProvider.current().deviceCustomName) },
                                         placeholder = { Text("Galaxy S26 Ultra") },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
@@ -488,7 +488,7 @@ fun DeviceDisguiseCard(
                                     PremiumTextField(
                                         value = customModelId,
                                         onValueChange = { customModelId = it },
-                                        label = { Text(Strings.deviceCustomModelId) },
+                                        label = { Text(AppStringsProvider.current().deviceCustomModelId) },
                                         placeholder = { Text("SM-S938B") },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
@@ -503,7 +503,7 @@ fun DeviceDisguiseCard(
                                         PremiumTextField(
                                             value = customScreenW,
                                             onValueChange = { customScreenW = it.filter { c -> c.isDigit() } },
-                                            label = { Text(Strings.deviceCustomWidth) },
+                                            label = { Text(AppStringsProvider.current().deviceCustomWidth) },
                                             placeholder = { Text("1920") },
                                             modifier = Modifier.weight(1f),
                                             singleLine = true
@@ -511,7 +511,7 @@ fun DeviceDisguiseCard(
                                         PremiumTextField(
                                             value = customScreenH,
                                             onValueChange = { customScreenH = it.filter { c -> c.isDigit() } },
-                                            label = { Text(Strings.deviceCustomHeight) },
+                                            label = { Text(AppStringsProvider.current().deviceCustomHeight) },
                                             placeholder = { Text("1080") },
                                             modifier = Modifier.weight(1f),
                                             singleLine = true
@@ -523,7 +523,7 @@ fun DeviceDisguiseCard(
                                     PremiumTextField(
                                         value = customDensity,
                                         onValueChange = { customDensity = it },
-                                        label = { Text(Strings.deviceCustomDensity) },
+                                        label = { Text(AppStringsProvider.current().deviceCustomDensity) },
                                         placeholder = { Text("2.0") },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
@@ -552,7 +552,7 @@ fun DeviceDisguiseCard(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(Strings.deviceCustomApply)
+                                        Text(AppStringsProvider.current().deviceCustomApply)
                                     }
                                 }
                             }
@@ -564,8 +564,8 @@ fun DeviceDisguiseCard(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             SettingsSwitch(
-                                title = Strings.deviceCustomUA,
-                                subtitle = Strings.deviceCustomUAHint,
+                                title = AppStringsProvider.current().deviceCustomUA,
+                                subtitle = AppStringsProvider.current().deviceCustomUAHint,
                                 checked = showCustomUA || !config.customUserAgent.isNullOrBlank(),
                                 onCheckedChange = {
                                     showCustomUA = it

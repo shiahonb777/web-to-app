@@ -34,7 +34,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.view.WindowCompat
 import com.webtoapp.core.i18n.LanguageManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellModeManager
 import com.webtoapp.ui.components.FirstLaunchLanguageScreen
@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
                 if (showShortcutPermissionDialog) {
                     AlertDialog(
                         onDismissRequest = { showShortcutPermissionDialog = false },
-                        title = { Text(Strings.shortcutPermissionTitle) },
+                        title = { Text(AppStringsProvider.current().shortcutPermissionTitle) },
                         text = { Text(shortcutPermissionMessage) },
                         confirmButton = {
                             TextButton(
@@ -181,14 +181,14 @@ class MainActivity : ComponentActivity() {
                                     openAppSettings()
                                 }
                             ) {
-                                Text(Strings.shortcutPermissionGoToSettings)
+                                Text(AppStringsProvider.current().shortcutPermissionGoToSettings)
                             }
                         },
                         dismissButton = {
                             TextButton(
                                 onClick = { showShortcutPermissionDialog = false }
                             ) {
-                                Text(Strings.shortcutPermissionLater)
+                                Text(AppStringsProvider.current().shortcutPermissionLater)
                             }
                         }
                     )
@@ -220,25 +220,25 @@ class MainActivity : ComponentActivity() {
         
         return when {
             manufacturer.contains("xiaomi") || manufacturer.contains("redmi") -> {
-                Strings.shortcutPermissionXiaomi
+                AppStringsProvider.current().shortcutPermissionXiaomi
             }
             manufacturer.contains("huawei") || manufacturer.contains("honor") -> {
-                Strings.shortcutPermissionHuawei
+                AppStringsProvider.current().shortcutPermissionHuawei
             }
             manufacturer.contains("oppo") -> {
-                Strings.shortcutPermissionOppo
+                AppStringsProvider.current().shortcutPermissionOppo
             }
             manufacturer.contains("vivo") -> {
-                Strings.shortcutPermissionVivo
+                AppStringsProvider.current().shortcutPermissionVivo
             }
             manufacturer.contains("meizu") -> {
-                Strings.shortcutPermissionMeizu
+                AppStringsProvider.current().shortcutPermissionMeizu
             }
             manufacturer.contains("samsung") -> {
-                Strings.shortcutPermissionSamsung
+                AppStringsProvider.current().shortcutPermissionSamsung
             }
             else -> {
-                Strings.shortcutPermissionGeneric
+                AppStringsProvider.current().shortcutPermissionGeneric
             }
         }
     }

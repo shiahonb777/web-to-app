@@ -22,7 +22,7 @@ import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.viewmodel.EditState
@@ -87,7 +87,7 @@ fun SplashScreenCard(
             // Note
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Wallpaper,
-                title = Strings.splashScreen,
+                title = AppStringsProvider.current().splashScreen,
                 checked = editState.splashEnabled,
                 onCheckedChange = onEnabledChange
             )
@@ -99,7 +99,7 @@ fun SplashScreenCard(
             ) {
               Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = Strings.splashHint,
+                    text = AppStringsProvider.current().splashHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -115,13 +115,13 @@ fun SplashScreenCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    Strings.videoCrop,
+                                    AppStringsProvider.current().videoCrop,
                                     style = MaterialTheme.typography.labelMedium
                                 )
                                 TextButton(onClick = onClearMedia) {
                                     Icon(Icons.Default.Close, null, Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
-                                    Text(Strings.remove, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().remove, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                             
@@ -153,7 +153,7 @@ fun SplashScreenCard(
                                         .data(editState.splashMediaUri)
                                         .crossfade(true)
                                         .build(),
-                                    contentDescription = Strings.splashPreview,
+                                    contentDescription = AppStringsProvider.current().splashPreview,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
@@ -166,7 +166,7 @@ fun SplashScreenCard(
                                 ) {
                                     Icon(
                                         Icons.Default.Close,
-                                        Strings.remove,
+                                        AppStringsProvider.current().remove,
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -200,7 +200,7 @@ fun SplashScreenCard(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = Strings.clickToSelectImageOrVideo,
+                                text = AppStringsProvider.current().clickToSelectImageOrVideo,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -219,7 +219,7 @@ fun SplashScreenCard(
                     ) {
                         Icon(Icons.Outlined.Image, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.selectImage)
+                        Text(AppStringsProvider.current().selectImage)
                     }
                     PremiumOutlinedButton(
                         onClick = onSelectVideo,
@@ -227,7 +227,7 @@ fun SplashScreenCard(
                     ) {
                         Icon(Icons.Outlined.VideoFile, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.selectVideo)
+                        Text(AppStringsProvider.current().selectVideo)
                     }
                 }
 
@@ -237,7 +237,7 @@ fun SplashScreenCard(
                     if (editState.splashConfig.type == SplashType.IMAGE) {
                         Column {
                             Text(
-                                text = Strings.displayDurationSeconds.replace("%d", editState.splashConfig.duration.toString()),
+                                text = AppStringsProvider.current().displayDurationSeconds.replace("%d", editState.splashConfig.duration.toString()),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Slider(
@@ -257,9 +257,9 @@ fun SplashScreenCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(Strings.allowSkip, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().allowSkip, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                Strings.allowSkipHint,
+                                AppStringsProvider.current().allowSkipHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -277,9 +277,9 @@ fun SplashScreenCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(Strings.landscapeDisplay, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().landscapeDisplay, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                Strings.landscapeDisplayHint,
+                                AppStringsProvider.current().landscapeDisplayHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -302,9 +302,9 @@ fun SplashScreenCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(Strings.fillScreen, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().fillScreen, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                Strings.fillScreenHint,
+                                AppStringsProvider.current().fillScreenHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -323,9 +323,9 @@ fun SplashScreenCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(Strings.enableAudio, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().enableAudio, style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    Strings.enableAudioHint,
+                                    AppStringsProvider.current().enableAudioHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

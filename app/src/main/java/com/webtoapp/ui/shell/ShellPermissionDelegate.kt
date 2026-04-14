@@ -16,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.util.DownloadHelper
 import java.io.File
@@ -218,7 +218,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                 )
             }
         } else {
-            Toast.makeText(activity, Strings.storagePermissionRequired, Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, AppStringsProvider.current().storagePermissionRequired, Toast.LENGTH_SHORT).show()
             pendingDownload?.let { download ->
                 DownloadHelper.openInBrowser(activity, download.url)
             }
@@ -404,7 +404,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                                 .catch(function(err) {
                                     console.error('[DownloadHelper] Blob fetch failed:', err);
                                     if (window.AndroidDownload && window.AndroidDownload.showToast) {
-                                        window.AndroidDownload.showToast('${Strings.downloadFailedPrefix}' + err.message);
+                                        window.AndroidDownload.showToast('${AppStringsProvider.current().downloadFailedPrefix}' + err.message);
                                     }
                                 });
                         }

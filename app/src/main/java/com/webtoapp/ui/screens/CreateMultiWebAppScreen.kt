@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.MultiWebConfig
 import com.webtoapp.data.model.MultiWebSite
 import com.webtoapp.ui.components.PremiumSwitch
@@ -173,7 +173,7 @@ fun CreateMultiWebAppScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -207,7 +207,7 @@ fun CreateMultiWebAppScreen(
                         enabled = canCreate
                     ) {
                         Text(
-                            if (isEdit) Strings.btnSave else Strings.btnCreate,
+                            if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate,
                             fontWeight = FontWeight.Bold,
                             color = if (canCreate) brandIndigo else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -265,7 +265,7 @@ fun CreateMultiWebAppScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    Strings.multiWebHeroDesc,
+                                    AppStringsProvider.current().multiWebHeroDesc,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color.White.copy(alpha = 0.85f),
                                     lineHeight = 18.sp
@@ -303,16 +303,16 @@ fun CreateMultiWebAppScreen(
                     // ═══════════════════════ 2. MODE SELECTOR ═══════════════════════
                     // pill button- card,
                     val modes = listOf(
-                        Triple("TABS", Strings.multiWebModeTabs, "📑"),
-                        Triple("CARDS", Strings.multiWebModeCards, "🃏"),
-                        Triple("FEED", Strings.multiWebModeFeed, "📰"),
-                        Triple("DRAWER", Strings.multiWebModeDrawer, "☰")
+                        Triple("TABS", AppStringsProvider.current().multiWebModeTabs, "📑"),
+                        Triple("CARDS", AppStringsProvider.current().multiWebModeCards, "🃏"),
+                        Triple("FEED", AppStringsProvider.current().multiWebModeFeed, "📰"),
+                        Triple("DRAWER", AppStringsProvider.current().multiWebModeDrawer, "☰")
                     )
                     val modeDescriptions = mapOf(
-                        "TABS" to Strings.multiWebModeTabsDesc,
-                        "CARDS" to Strings.multiWebModeCardsDesc,
-                        "FEED" to Strings.multiWebModeFeedDesc,
-                        "DRAWER" to Strings.multiWebModeDrawerDesc
+                        "TABS" to AppStringsProvider.current().multiWebModeTabsDesc,
+                        "CARDS" to AppStringsProvider.current().multiWebModeCardsDesc,
+                        "FEED" to AppStringsProvider.current().multiWebModeFeedDesc,
+                        "DRAWER" to AppStringsProvider.current().multiWebModeDrawerDesc
                     )
 
                     Row(
@@ -386,7 +386,7 @@ fun CreateMultiWebAppScreen(
                             color = brandIndigo.copy(alpha = 0.08f)
                         ) {
                             Text(
-                                Strings.multiWebFeedTip,
+                                AppStringsProvider.current().multiWebFeedTip,
                                 modifier = Modifier.padding(14.dp),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = brandIndigo,
@@ -406,12 +406,12 @@ fun CreateMultiWebAppScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                Strings.multiWebSiteList,
+                                AppStringsProvider.current().multiWebSiteList,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                Strings.multiWebSiteCount.replace("%d", sites.size.toString()),
+                                AppStringsProvider.current().multiWebSiteCount.replace("%d", sites.size.toString()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -450,13 +450,13 @@ fun CreateMultiWebAppScreen(
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    Strings.multiWebNoSites,
+                                    AppStringsProvider.current().multiWebNoSites,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    Strings.multiWebQuickAddHint,
+                                    AppStringsProvider.current().multiWebQuickAddHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                 )
@@ -526,7 +526,7 @@ fun CreateMultiWebAppScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            Strings.njsBasicConfig,
+                                            AppStringsProvider.current().njsBasicConfig,
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -535,7 +535,7 @@ fun CreateMultiWebAppScreen(
                                     PremiumTextField(
                                         value = appName,
                                         onValueChange = { appName = it },
-                                        label = { Text(Strings.labelAppName) },
+                                        label = { Text(AppStringsProvider.current().labelAppName) },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
                                     )
@@ -546,7 +546,7 @@ fun CreateMultiWebAppScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            Strings.njsLandscapeMode,
+                                            AppStringsProvider.current().njsLandscapeMode,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                         PremiumSwitch(
@@ -589,7 +589,7 @@ fun CreateMultiWebAppScreen(
                             onValueChange = { quickAddUrl = it },
                             placeholder = {
                                 Text(
-                                    Strings.multiWebQuickAddHint,
+                                    AppStringsProvider.current().multiWebQuickAddHint,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             },
@@ -915,13 +915,13 @@ private fun SiteCard(
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(Strings.multiWebEditSite) },
+                        text = { Text(AppStringsProvider.current().multiWebEditSite) },
                         onClick = { showMenu = false; onEdit() },
                         leadingIcon = { Icon(Icons.Default.Edit, null, modifier = Modifier.size(18.dp)) }
                     )
                     DropdownMenuItem(
                         text = {
-                            Text(if (site.enabled) Strings.multiWebDisableSite else Strings.multiWebEnableSite)
+                            Text(if (site.enabled) AppStringsProvider.current().multiWebDisableSite else AppStringsProvider.current().multiWebEnableSite)
                         },
                         onClick = { showMenu = false; onToggleEnabled(!site.enabled) },
                         leadingIcon = {
@@ -934,13 +934,13 @@ private fun SiteCard(
                     if (onMoveUp != null || onMoveDown != null) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
                         DropdownMenuItem(
-                            text = { Text(Strings.multiWebMoveUp) },
+                            text = { Text(AppStringsProvider.current().multiWebMoveUp) },
                             onClick = { showMenu = false; onMoveUp?.invoke() },
                             leadingIcon = { Icon(Icons.Default.KeyboardArrowUp, null, modifier = Modifier.size(18.dp)) },
                             enabled = onMoveUp != null
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.multiWebMoveDown) },
+                            text = { Text(AppStringsProvider.current().multiWebMoveDown) },
                             onClick = { showMenu = false; onMoveDown?.invoke() },
                             leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, null, modifier = Modifier.size(18.dp)) },
                             enabled = onMoveDown != null
@@ -948,7 +948,7 @@ private fun SiteCard(
                     }
                     HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
                     DropdownMenuItem(
-                        text = { Text(Strings.multiWebDeleteSite, color = MaterialTheme.colorScheme.error) },
+                        text = { Text(AppStringsProvider.current().multiWebDeleteSite, color = MaterialTheme.colorScheme.error) },
                         onClick = { showMenu = false; onDelete() },
                         leadingIcon = {
                             Icon(
@@ -1027,7 +1027,7 @@ private fun AddSiteDialog(
         },
         title = {
             Text(
-                if (editingSite != null) Strings.multiWebEditSite else Strings.multiWebAddSite,
+                if (editingSite != null) AppStringsProvider.current().multiWebEditSite else AppStringsProvider.current().multiWebAddSite,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -1040,7 +1040,7 @@ private fun AddSiteDialog(
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it; hasAutoFilled = false },
-                    label = { Text(Strings.multiWebSiteUrl) },
+                    label = { Text(AppStringsProvider.current().multiWebSiteUrl) },
                     placeholder = { Text("https://example.com") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -1086,7 +1086,7 @@ private fun AddSiteDialog(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            Strings.multiWebFetchingTitle,
+                            AppStringsProvider.current().multiWebFetchingTitle,
                             style = MaterialTheme.typography.labelSmall,
                             color = brandColor.copy(alpha = 0.6f)
                         )
@@ -1097,7 +1097,7 @@ private fun AddSiteDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.multiWebSiteName) },
+                    label = { Text(AppStringsProvider.current().multiWebSiteName) },
                     placeholder = { Text("My Site") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -1119,7 +1119,7 @@ private fun AddSiteDialog(
                     OutlinedTextField(
                         value = category,
                         onValueChange = { category = it },
-                        label = { Text(Strings.multiWebSiteCategory) },
+                        label = { Text(AppStringsProvider.current().multiWebSiteCategory) },
                         placeholder = { Text("News") },
                         modifier = Modifier.weight(0.6f),
                         singleLine = true
@@ -1138,8 +1138,8 @@ private fun AddSiteDialog(
                     OutlinedTextField(
                         value = cssSelector,
                         onValueChange = { cssSelector = it },
-                        label = { Text(Strings.multiWebCssSelector) },
-                        placeholder = { Text(Strings.multiWebCssSelectorHint) },
+                        label = { Text(AppStringsProvider.current().multiWebCssSelector) },
+                        placeholder = { Text(AppStringsProvider.current().multiWebCssSelectorHint) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -1167,10 +1167,10 @@ private fun AddSiteDialog(
                 },
                 enabled = isValid,
                 colors = ButtonDefaults.buttonColors(containerColor = brandColor)
-            ) { Text(Strings.btnSave) }
+            ) { Text(AppStringsProvider.current().btnSave) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(Strings.cancel) }
+            TextButton(onClick = onDismiss) { Text(AppStringsProvider.current().cancel) }
         }
     )
 }
@@ -1245,12 +1245,12 @@ private fun BatchImportDialog(
         icon = {
             Icon(Icons.Outlined.PlaylistAdd, null, tint = brandColor, modifier = Modifier.size(32.dp))
         },
-        title = { Text(Strings.multiWebBatchImport, fontWeight = FontWeight.Bold) },
+        title = { Text(AppStringsProvider.current().multiWebBatchImport, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (!showPreview) {
                     Text(
-                        Strings.multiWebBatchHint,
+                        AppStringsProvider.current().multiWebBatchHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp
@@ -1274,12 +1274,12 @@ private fun BatchImportDialog(
                         }) {
                             Icon(Icons.Outlined.ContentPaste, null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.multiWebPaste)
+                            Text(AppStringsProvider.current().multiWebPaste)
                         }
                     }
                 } else {
                     Text(
-                        String.format(Strings.multiWebImportCount, previewSites.size),
+                        String.format(AppStringsProvider.current().multiWebImportCount, previewSites.size),
                         style = MaterialTheme.typography.titleSmall,
                         color = brandColor,
                         fontWeight = FontWeight.SemiBold
@@ -1322,7 +1322,7 @@ private fun BatchImportDialog(
                         }
                     }
                     TextButton(onClick = { showPreview = false; previewSites = emptyList() }) {
-                        Text(Strings.multiWebEditList)
+                        Text(AppStringsProvider.current().multiWebEditList)
                     }
                 }
             }
@@ -1336,17 +1336,17 @@ private fun BatchImportDialog(
                     },
                     enabled = text.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = brandColor)
-                ) { Text(Strings.multiWebPreview) }
+                ) { Text(AppStringsProvider.current().multiWebPreview) }
             } else {
                 Button(
                     onClick = { onImport(previewSites) },
                     enabled = previewSites.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = brandColor)
-                ) { Text(String.format(Strings.multiWebImportSites, previewSites.size)) }
+                ) { Text(String.format(AppStringsProvider.current().multiWebImportSites, previewSites.size)) }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(Strings.cancel) }
+            TextButton(onClick = onDismiss) { Text(AppStringsProvider.current().cancel) }
         }
     )
 }

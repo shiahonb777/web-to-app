@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import kotlinx.coroutines.Dispatchers
@@ -63,10 +63,10 @@ fun WordPressSettingsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.wpSettings) },
+                title = { Text(AppStringsProvider.current().wpSettings) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 }
             )
@@ -103,7 +103,7 @@ fun WordPressSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = Strings.wpDownloadDeps,
+                            text = AppStringsProvider.current().wpDownloadDeps,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -135,7 +135,7 @@ fun WordPressSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = Strings.wpMirrorSource,
+                            text = AppStringsProvider.current().wpMirrorSource,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -148,9 +148,9 @@ fun WordPressSettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.wpAutoDetect)
+                            Text(AppStringsProvider.current().wpAutoDetect)
                             Text(
-                                text = Strings.wpDownloadDesc,
+                                text = AppStringsProvider.current().wpDownloadDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -170,7 +170,7 @@ fun WordPressSettingsScreen(
                                 mirrorRegion = WordPressDependencyManager.MirrorRegion.CN
                                 WordPressDependencyManager.setMirrorRegion(WordPressDependencyManager.MirrorRegion.CN)
                             },
-                            label = { Text(Strings.wpMirrorCN) },
+                            label = { Text(AppStringsProvider.current().wpMirrorCN) },
                             leadingIcon = if (mirrorRegion == WordPressDependencyManager.MirrorRegion.CN) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                             } else null
@@ -181,7 +181,7 @@ fun WordPressSettingsScreen(
                                 mirrorRegion = WordPressDependencyManager.MirrorRegion.GLOBAL
                                 WordPressDependencyManager.setMirrorRegion(WordPressDependencyManager.MirrorRegion.GLOBAL)
                             },
-                            label = { Text(Strings.wpMirrorGlobal) },
+                            label = { Text(AppStringsProvider.current().wpMirrorGlobal) },
                             leadingIcon = if (mirrorRegion == WordPressDependencyManager.MirrorRegion.GLOBAL) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                             } else null
@@ -193,7 +193,7 @@ fun WordPressSettingsScreen(
                                 WordPressDependencyManager.setMirrorRegion(null)
                                 mirrorRegion = WordPressDependencyManager.getMirrorRegion()
                             },
-                            label = { Text(Strings.wpAutoDetect) }
+                            label = { Text(AppStringsProvider.current().wpAutoDetect) }
                         )
                     }
                 }
@@ -219,7 +219,7 @@ fun WordPressSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = Strings.wpCacheSize,
+                            text = AppStringsProvider.current().wpCacheSize,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -248,7 +248,7 @@ fun WordPressSettingsScreen(
                     ) {
                         Icon(Icons.Outlined.DeleteSweep, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.wpClearCache)
+                        Text(AppStringsProvider.current().wpClearCache)
                     }
                 }
             }

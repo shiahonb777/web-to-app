@@ -48,7 +48,7 @@ import com.webtoapp.core.extension.ModuleRunMode
 import com.webtoapp.core.extension.ModuleRunTime
 import com.webtoapp.core.extension.ModuleUiConfig
 import com.webtoapp.core.extension.ModuleVersion
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.screens.extensionmodule.editor.dialogs.ConfigItemsDialog
@@ -124,7 +124,7 @@ fun ModuleEditorScreen(
     var showTemplateDialog by remember { mutableStateOf(false) }
     var showUiTypeDialog by remember { mutableStateOf(false) }
 
-    val tabs = listOf(Strings.basicInfo, Strings.code, Strings.advancedSettings)
+    val tabs = listOf(AppStringsProvider.current().basicInfo, AppStringsProvider.current().code, AppStringsProvider.current().advancedSettings)
     val tabIcons = listOf(
         Icons.Outlined.Info to Icons.Filled.Info,
         Icons.Outlined.Code to Icons.Filled.Code,
@@ -135,26 +135,26 @@ fun ModuleEditorScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(if (moduleId == null) Strings.createModule else Strings.editModule) },
+                title = { Text(if (moduleId == null) AppStringsProvider.current().createModule else AppStringsProvider.current().editModule) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.Close, contentDescription = Strings.close)
+                        Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().close)
                     }
                 },
                 actions = {
                     if (moduleId == null) {
                         IconButton(onClick = { showTemplateDialog = true }) {
-                            Icon(Icons.Default.AutoAwesome, contentDescription = Strings.useTemplate)
+                            Icon(Icons.Default.AutoAwesome, contentDescription = AppStringsProvider.current().useTemplate)
                         }
                     }
                     TextButton(
                         onClick = {
                             if (name.isBlank()) {
-                                Toast.makeText(context, Strings.pleaseEnterModuleName, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().pleaseEnterModuleName, Toast.LENGTH_SHORT).show()
                                 return@TextButton
                             }
                             if (code.isBlank() && cssCode.isBlank()) {
-                                Toast.makeText(context, Strings.pleaseEnterCodeContent, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().pleaseEnterCodeContent, Toast.LENGTH_SHORT).show()
                                 return@TextButton
                             }
 
@@ -185,15 +185,15 @@ fun ModuleEditorScreen(
 
                             scope.launch {
                                 extensionManager.addModule(module).onSuccess {
-                                    Toast.makeText(context, Strings.saveSuccess, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().saveSuccess, Toast.LENGTH_SHORT).show()
                                     onNavigateBack()
                                 }.onFailure { e ->
-                                    Toast.makeText(context, "${Strings.saveFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "${AppStringsProvider.current().saveFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
                     ) {
-                        Text(Strings.save)
+                        Text(AppStringsProvider.current().save)
                     }
                 }
             )

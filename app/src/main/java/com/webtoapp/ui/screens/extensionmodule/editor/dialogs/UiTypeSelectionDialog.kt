@@ -42,7 +42,7 @@ import com.webtoapp.core.extension.ModuleUiType
 import com.webtoapp.core.extension.SidebarPosition
 import com.webtoapp.core.extension.ToolbarOrientation
 import com.webtoapp.core.extension.UiPosition
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumFilterChip
 import com.webtoapp.ui.components.PremiumSwitch
@@ -64,14 +64,14 @@ fun UiTypeSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.uiTypeConfig) },
+        title = { Text(AppStringsProvider.current().uiTypeConfig) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    Strings.selectUiType,
+                    AppStringsProvider.current().selectUiType,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -153,7 +153,7 @@ fun UiTypeSelectionDialog(
                 )
 
                 Text(
-                    Strings.commonConfig,
+                    AppStringsProvider.current().commonConfig,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -173,7 +173,7 @@ fun UiTypeSelectionDialog(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    Strings.uiPosition,
+                                    AppStringsProvider.current().uiPosition,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -242,7 +242,7 @@ fun UiTypeSelectionDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(Strings.draggableSwitch)
+                    Text(AppStringsProvider.current().draggableSwitch)
                     PremiumSwitch(checked = draggable, onCheckedChange = { draggable = it })
                 }
 
@@ -255,7 +255,7 @@ fun UiTypeSelectionDialog(
                             .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     )
                     Text(
-                        Strings.toolbarConfig,
+                        AppStringsProvider.current().toolbarConfig,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -286,7 +286,7 @@ fun UiTypeSelectionDialog(
                             .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     )
                     Text(
-                        Strings.sidebarConfig,
+                        AppStringsProvider.current().sidebarConfig,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -324,12 +324,12 @@ fun UiTypeSelectionDialog(
                     onDismiss()
                 }
             ) {
-                Text(Strings.confirm)
+                Text(AppStringsProvider.current().confirm)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )

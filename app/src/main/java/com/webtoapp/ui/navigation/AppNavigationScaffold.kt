@@ -45,7 +45,7 @@ internal fun AppNavigationScaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (shouldShowBottomBar(currentRoute)) {
-                val liquidTabs = remember(com.webtoapp.core.i18n.Strings.currentLanguage.value) {
+                val liquidTabs = remember(com.webtoapp.core.i18n.AppStringsProvider.currentLanguage) {
                     BottomTab.entries.map { tab ->
                         LiquidTabItem(
                             selectedIcon = tab.selectedIcon,

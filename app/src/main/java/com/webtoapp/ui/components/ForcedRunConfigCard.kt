@@ -20,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.core.forcedrun.ForcedRunMode
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Forced run config card
@@ -121,12 +121,12 @@ fun ForcedRunConfigCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.forcedRunSettings,
+                            AppStringsProvider.current().forcedRunSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!enabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -149,11 +149,11 @@ fun ForcedRunConfigCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.enableForcedRun,
+                                AppStringsProvider.current().enableForcedRun,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.forcedRunHint,
+                                AppStringsProvider.current().forcedRunHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -175,7 +175,7 @@ fun ForcedRunConfigCard(
                             
                             // runmodeselect
                             Text(
-                                Strings.forcedRunMode,
+                                AppStringsProvider.current().forcedRunMode,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -190,7 +190,7 @@ fun ForcedRunConfigCard(
                                         mode = ForcedRunMode.FIXED_TIME
                                         updateConfig()
                                     },
-                                    label = { Text(Strings.fixedTimeMode) },
+                                    label = { Text(AppStringsProvider.current().fixedTimeMode) },
                                     leadingIcon = if (mode == ForcedRunMode.FIXED_TIME) {
                                         { Icon(Icons.Outlined.Check, null, Modifier.size(18.dp)) }
                                     } else null
@@ -201,7 +201,7 @@ fun ForcedRunConfigCard(
                                         mode = ForcedRunMode.COUNTDOWN
                                         updateConfig()
                                     },
-                                    label = { Text(Strings.countdownMode) },
+                                    label = { Text(AppStringsProvider.current().countdownMode) },
                                     leadingIcon = if (mode == ForcedRunMode.COUNTDOWN) {
                                         { Icon(Icons.Outlined.Check, null, Modifier.size(18.dp)) }
                                     } else null
@@ -212,7 +212,7 @@ fun ForcedRunConfigCard(
                                         mode = ForcedRunMode.DURATION
                                         updateConfig()
                                     },
-                                    label = { Text(Strings.durationMode) },
+                                    label = { Text(AppStringsProvider.current().durationMode) },
                                     leadingIcon = if (mode == ForcedRunMode.DURATION) {
                                         { Icon(Icons.Outlined.Check, null, Modifier.size(18.dp)) }
                                     } else null
@@ -226,7 +226,7 @@ fun ForcedRunConfigCard(
                                 ForcedRunMode.FIXED_TIME -> {
                                     // config
                                     Text(
-                                        Strings.fixedTimeModeHint,
+                                        AppStringsProvider.current().fixedTimeModeHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -253,7 +253,7 @@ fun ForcedRunConfigCard(
                                                     tint = MaterialTheme.colorScheme.primary
                                                 )
                                                 Spacer(modifier = Modifier.width(12.dp))
-                                                Text(Strings.forcedRunStartTime)
+                                                Text(AppStringsProvider.current().forcedRunStartTime)
                                             }
                                             Text(
                                                 startTime,
@@ -285,7 +285,7 @@ fun ForcedRunConfigCard(
                                                     tint = MaterialTheme.colorScheme.error
                                                 )
                                                 Spacer(modifier = Modifier.width(12.dp))
-                                                Text(Strings.forcedRunEndTime)
+                                                Text(AppStringsProvider.current().forcedRunEndTime)
                                             }
                                             Text(
                                                 endTime,
@@ -299,7 +299,7 @@ fun ForcedRunConfigCard(
                                     
                                     // Note
                                     Text(
-                                        Strings.activeDays,
+                                        AppStringsProvider.current().activeDays,
                                         style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
@@ -316,7 +316,7 @@ fun ForcedRunConfigCard(
                                 ForcedRunMode.COUNTDOWN -> {
                                     // modeconfig
                                     Text(
-                                        Strings.countdownModeHint,
+                                        AppStringsProvider.current().countdownModeHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -331,8 +331,8 @@ fun ForcedRunConfigCard(
                                                 updateConfig()
                                             }
                                         },
-                                        label = { Text(Strings.countdownDuration) },
-                                        suffix = { Text(Strings.minutes) },
+                                        label = { Text(AppStringsProvider.current().countdownDuration) },
+                                        suffix = { Text(AppStringsProvider.current().minutes) },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -350,7 +350,7 @@ fun ForcedRunConfigCard(
                                                     countdownMinutes = minutes
                                                     updateConfig()
                                                 },
-                                                label = { Text("${minutes}${Strings.minutesShort}") }
+                                                label = { Text("${minutes}${AppStringsProvider.current().minutesShort}") }
                                             )
                                         }
                                     }
@@ -359,7 +359,7 @@ fun ForcedRunConfigCard(
                                 ForcedRunMode.DURATION -> {
                                     // modeconfig
                                     Text(
-                                        Strings.durationModeHint,
+                                        AppStringsProvider.current().durationModeHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -386,7 +386,7 @@ fun ForcedRunConfigCard(
                                                     tint = MaterialTheme.colorScheme.primary
                                                 )
                                                 Spacer(modifier = Modifier.width(12.dp))
-                                                Text(Strings.accessStartTime)
+                                                Text(AppStringsProvider.current().accessStartTime)
                                             }
                                             Text(
                                                 accessStartTime,
@@ -418,7 +418,7 @@ fun ForcedRunConfigCard(
                                                     tint = MaterialTheme.colorScheme.error
                                                 )
                                                 Spacer(modifier = Modifier.width(12.dp))
-                                                Text(Strings.accessEndTime)
+                                                Text(AppStringsProvider.current().accessEndTime)
                                             }
                                             Text(
                                                 accessEndTime,
@@ -432,7 +432,7 @@ fun ForcedRunConfigCard(
                                     
                                     // Note
                                     Text(
-                                        Strings.accessDays,
+                                        AppStringsProvider.current().accessDays,
                                         style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
@@ -453,7 +453,7 @@ fun ForcedRunConfigCard(
                             
                             // advanced
                             Text(
-                                Strings.advancedOptions,
+                                AppStringsProvider.current().advancedOptions,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -464,7 +464,7 @@ fun ForcedRunConfigCard(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(Strings.blockSystemUI, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().blockSystemUI, style = MaterialTheme.typography.bodyMedium)
                                 PremiumSwitch(
                                     checked = blockSystemUI,
                                     onCheckedChange = {
@@ -480,7 +480,7 @@ fun ForcedRunConfigCard(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(Strings.blockBackButton, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().blockBackButton, style = MaterialTheme.typography.bodyMedium)
                                 PremiumSwitch(
                                     checked = blockBackButton,
                                     onCheckedChange = {
@@ -496,7 +496,7 @@ fun ForcedRunConfigCard(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(Strings.blockHomeButton, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().blockHomeButton, style = MaterialTheme.typography.bodyMedium)
                                 PremiumSwitch(
                                     checked = blockHomeButton,
                                     onCheckedChange = {
@@ -512,7 +512,7 @@ fun ForcedRunConfigCard(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(Strings.showCountdownTimer, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().showCountdownTimer, style = MaterialTheme.typography.bodyMedium)
                                 PremiumSwitch(
                                     checked = showCountdown,
                                     onCheckedChange = {
@@ -531,9 +531,9 @@ fun ForcedRunConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                                    Text(Strings.allowEmergencyExit, style = MaterialTheme.typography.bodyMedium)
+                                    Text(AppStringsProvider.current().allowEmergencyExit, style = MaterialTheme.typography.bodyMedium)
                                     Text(
-                                        Strings.emergencyExitHint,
+                                        AppStringsProvider.current().emergencyExitHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -554,8 +554,8 @@ fun ForcedRunConfigCard(
                                         emergencyPassword = it
                                         updateConfig()
                                     },
-                                    label = { Text(Strings.emergencyPassword) },
-                                    placeholder = { Text(Strings.emergencyPasswordHint) },
+                                    label = { Text(AppStringsProvider.current().emergencyPassword) },
+                                    placeholder = { Text(AppStringsProvider.current().emergencyPasswordHint) },
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     modifier = Modifier
@@ -635,8 +635,8 @@ fun DaySelector(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         val dayNames = listOf(
-            Strings.dayMon, Strings.dayTue, Strings.dayWed,
-            Strings.dayThu, Strings.dayFri, Strings.daySat, Strings.daySun
+            AppStringsProvider.current().dayMon, AppStringsProvider.current().dayTue, AppStringsProvider.current().dayWed,
+            AppStringsProvider.current().dayThu, AppStringsProvider.current().dayFri, AppStringsProvider.current().daySat, AppStringsProvider.current().daySun
         )
         dayNames.forEachIndexed { index, name ->
             val day = index + 1

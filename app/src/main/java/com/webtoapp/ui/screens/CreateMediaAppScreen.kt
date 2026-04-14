@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppType
 import com.webtoapp.data.model.MediaConfig
 import com.webtoapp.data.model.SplashOrientation
@@ -195,10 +195,10 @@ fun CreateMediaAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createMediaAppTitle) },
+                title = { Text(AppStringsProvider.current().createMediaAppTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -207,7 +207,7 @@ fun CreateMediaAppScreen(
                             val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
                             mediaUri?.let { uri ->
                                 onCreated(
-                                    appName.ifBlank { Strings.createMediaApp },
+                                    appName.ifBlank { AppStringsProvider.current().createMediaApp },
                                     mediaType,
                                     uri,
                                     MediaConfig(
@@ -227,7 +227,7 @@ fun CreateMediaAppScreen(
                         },
                         enabled = canCreate
                     ) {
-                        Text(Strings.btnCreate)
+                        Text(AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -258,7 +258,7 @@ fun CreateMediaAppScreen(
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = Strings.selectMediaType,
+                        text = AppStringsProvider.current().selectMediaType,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -269,7 +269,7 @@ fun CreateMediaAppScreen(
                     ) {
                         MediaTypeOption(
                             icon = Icons.Outlined.Image,
-                            label = Strings.image,
+                            label = AppStringsProvider.current().image,
                             selected = mediaType == AppType.IMAGE,
                             onClick = {
                                 mediaType = AppType.IMAGE
@@ -282,7 +282,7 @@ fun CreateMediaAppScreen(
                         )
                         MediaTypeOption(
                             icon = Icons.Outlined.Videocam,
-                            label = Strings.video,
+                            label = AppStringsProvider.current().video,
                             selected = mediaType == AppType.VIDEO,
                             onClick = {
                                 mediaType = AppType.VIDEO
@@ -311,7 +311,7 @@ fun CreateMediaAppScreen(
                         ) }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = if (mediaType == AppType.IMAGE) Strings.selectImage else Strings.selectVideo,
+                            text = if (mediaType == AppType.IMAGE) AppStringsProvider.current().selectImage else AppStringsProvider.current().selectVideo,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -364,7 +364,7 @@ fun CreateMediaAppScreen(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = Strings.videoSelected,
+                                        text = AppStringsProvider.current().videoSelected,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = brandColor
                                     )
@@ -398,7 +398,7 @@ fun CreateMediaAppScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = if (mediaType == AppType.IMAGE) Strings.clickToSelectImage else Strings.clickToSelectVideo,
+                                    text = if (mediaType == AppType.IMAGE) AppStringsProvider.current().clickToSelectImage else AppStringsProvider.current().clickToSelectVideo,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -422,7 +422,7 @@ fun CreateMediaAppScreen(
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = Strings.labelAppInfo,
+                        text = AppStringsProvider.current().labelAppInfo,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -430,7 +430,7 @@ fun CreateMediaAppScreen(
                     AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it },
-                        placeholder = Strings.createMediaApp
+                        placeholder = AppStringsProvider.current().createMediaApp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
@@ -456,18 +456,18 @@ fun CreateMediaAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Tune, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.labelDisplaySettings, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().labelDisplaySettings, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    SettingsRow(title = Strings.fillScreen, subtitle = Strings.fillScreenHint) {
+                    SettingsRow(title = AppStringsProvider.current().fillScreen, subtitle = AppStringsProvider.current().fillScreenHint) {
                         PremiumSwitch(
                             checked = fillScreen,
                             onCheckedChange = { fillScreen = it },
                         )
                     }
                     
-                    SettingsRow(title = Strings.landscapeMode, subtitle = Strings.landscapeModeHint) {
+                    SettingsRow(title = AppStringsProvider.current().landscapeMode, subtitle = AppStringsProvider.current().landscapeModeHint) {
                         PremiumSwitch(
                             checked = orientation == SplashOrientation.LANDSCAPE,
                             onCheckedChange = {
@@ -478,7 +478,7 @@ fun CreateMediaAppScreen(
                     
                     // Enhanced: keep screen on
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    SettingsRow(title = Strings.mediaScreenLock, subtitle = Strings.mediaScreenLockHint) {
+                    SettingsRow(title = AppStringsProvider.current().mediaScreenLock, subtitle = AppStringsProvider.current().mediaScreenLockHint) {
                         PremiumSwitch(
                             checked = keepScreenOn,
                             onCheckedChange = { keepScreenOn = it },
@@ -488,19 +488,19 @@ fun CreateMediaAppScreen(
                     if (mediaType == AppType.VIDEO) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                         
-                        SettingsRow(title = Strings.enableAudio, subtitle = Strings.enableAudioHint) {
+                        SettingsRow(title = AppStringsProvider.current().enableAudio, subtitle = AppStringsProvider.current().enableAudioHint) {
                             PremiumSwitch(
                                 checked = enableAudio,
                                 onCheckedChange = { enableAudio = it },
                             )
                         }
-                        SettingsRow(title = Strings.loopPlay, subtitle = Strings.loopPlayHint) {
+                        SettingsRow(title = AppStringsProvider.current().loopPlay, subtitle = AppStringsProvider.current().loopPlayHint) {
                             PremiumSwitch(
                                 checked = loop,
                                 onCheckedChange = { loop = it },
                             )
                         }
-                        SettingsRow(title = Strings.autoPlay, subtitle = Strings.autoPlayHint) {
+                        SettingsRow(title = AppStringsProvider.current().autoPlay, subtitle = AppStringsProvider.current().autoPlayHint) {
                             PremiumSwitch(
                                 checked = autoPlay,
                                 onCheckedChange = { autoPlay = it },
@@ -566,9 +566,9 @@ fun CreateMediaAppScreen(
                     Icon(Icons.Outlined.Info, null, modifier = Modifier.size(20.dp), tint = brandColor)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.mediaAppHint.replace(
+                        text = AppStringsProvider.current().mediaAppHint.replace(
                             "%s",
-                            if (mediaType == AppType.IMAGE) Strings.fullscreenDisplayImage else Strings.fullscreenPlayVideo
+                            if (mediaType == AppType.IMAGE) AppStringsProvider.current().fullscreenDisplayImage else AppStringsProvider.current().fullscreenPlayVideo
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
@@ -627,15 +627,15 @@ private fun MediaHeroSection(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        text = if (mediaType == AppType.IMAGE) Strings.mediaImageInfo else Strings.mediaVideoInfo,
+                        text = if (mediaType == AppType.IMAGE) AppStringsProvider.current().mediaImageInfo else AppStringsProvider.current().mediaVideoInfo,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = brandColor
                     )
                     Text(
                         text = if (mediaType == AppType.IMAGE)
-                            Strings.clickToSelectImage
-                        else Strings.clickToSelectVideo,
+                            AppStringsProvider.current().clickToSelectImage
+                        else AppStringsProvider.current().clickToSelectVideo,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -706,7 +706,7 @@ private fun MediaFileInfoRow(
                     Icon(Icons.Outlined.Storage, null, modifier = Modifier.size(14.dp), tint = brandColor)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "${Strings.mediaFileSize}: ${formatFileSize(size)}",
+                        "${AppStringsProvider.current().mediaFileSize}: ${formatFileSize(size)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -717,7 +717,7 @@ private fun MediaFileInfoRow(
                     Icon(Icons.Outlined.Description, null, modifier = Modifier.size(14.dp), tint = brandColor)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "${Strings.mediaFormat}: ${mime.substringAfter("/")}",
+                        "${AppStringsProvider.current().mediaFormat}: ${mime.substringAfter("/")}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -748,7 +748,7 @@ private fun MediaPlaybackSpeedCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Speed, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.mediaPlaybackSpeed, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().mediaPlaybackSpeed, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -799,15 +799,15 @@ private fun MediaImageAdjustCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Tune, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.mediaImageAdjust, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().mediaImageAdjust, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 TextButton(onClick = onReset) {
-                    Text(Strings.mediaReset, style = MaterialTheme.typography.labelSmall, color = brandColor)
+                    Text(AppStringsProvider.current().mediaReset, style = MaterialTheme.typography.labelSmall, color = brandColor)
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                Strings.mediaImageAdjustHint,
+                AppStringsProvider.current().mediaImageAdjustHint,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -815,7 +815,7 @@ private fun MediaImageAdjustCard(
             
             // Note
             MediaSliderRow(
-                label = Strings.mediaBrightness,
+                label = AppStringsProvider.current().mediaBrightness,
                 value = brightness,
                 onValueChange = onBrightnessChange,
                 valueRange = 0.5f..2.0f,
@@ -823,7 +823,7 @@ private fun MediaImageAdjustCard(
             )
             // Note
             MediaSliderRow(
-                label = Strings.mediaContrast,
+                label = AppStringsProvider.current().mediaContrast,
                 value = contrast,
                 onValueChange = onContrastChange,
                 valueRange = 0.5f..2.0f,
@@ -831,7 +831,7 @@ private fun MediaImageAdjustCard(
             )
             // Note
             MediaSliderRow(
-                label = Strings.mediaSaturation,
+                label = AppStringsProvider.current().mediaSaturation,
                 value = saturation,
                 onValueChange = onSaturationChange,
                 valueRange = 0.0f..2.0f,
@@ -909,7 +909,7 @@ private fun MediaBackgroundColorCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Palette, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.mediaBackgroundColor, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().mediaBackgroundColor, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -967,11 +967,11 @@ private fun MediaGestureCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.TouchApp, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.mediaGestureConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().mediaGestureConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
-            SettingsRow(title = Strings.mediaSwipeDismiss, subtitle = Strings.mediaSwipeDismissHint) {
+            SettingsRow(title = AppStringsProvider.current().mediaSwipeDismiss, subtitle = AppStringsProvider.current().mediaSwipeDismissHint) {
                 PremiumSwitch(
                     checked = swipeDismiss,
                     onCheckedChange = onSwipeDismissChange,
@@ -979,7 +979,7 @@ private fun MediaGestureCard(
             }
             
             if (isImage) {
-                SettingsRow(title = Strings.mediaDoubleTapZoom, subtitle = Strings.mediaDoubleTapZoomHint) {
+                SettingsRow(title = AppStringsProvider.current().mediaDoubleTapZoom, subtitle = AppStringsProvider.current().mediaDoubleTapZoomHint) {
                     PremiumSwitch(
                         checked = doubleTapZoom,
                         onCheckedChange = onDoubleTapZoomChange,

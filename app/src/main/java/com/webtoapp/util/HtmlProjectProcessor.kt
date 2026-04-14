@@ -2,7 +2,7 @@ package com.webtoapp.util
 
 import com.webtoapp.core.logging.AppLogger
 import android.util.LruCache
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.nio.charset.Charset
 
@@ -150,7 +150,7 @@ object HtmlProjectProcessor {
                     issues.add(ProjectIssue(
                         severity = IssueSeverity.INFO,
                         type = IssueType.STRUCTURE_ISSUE,
-                        message = Strings.htmlFileTooLarge.replace("%s", (file.length() / 1024 / 1024).toString()),
+                        message = AppStringsProvider.current().htmlFileTooLarge.replace("%s", (file.length() / 1024 / 1024).toString()),
                         file = file.name
                     ))
                     emptyList()
@@ -170,11 +170,11 @@ object HtmlProjectProcessor {
                         issues.add(ProjectIssue(
                             severity = IssueSeverity.WARNING,
                             type = if (ref.originalPath.startsWith("/")) IssueType.ABSOLUTE_PATH else IssueType.MISSING_FILE,
-                            message = ref.issue ?: "${Strings.resourceReferenceIssue}: ${ref.originalPath}",
+                            message = ref.issue ?: "${AppStringsProvider.current().resourceReferenceIssue}: ${ref.originalPath}",
                             file = file.name,
                             suggestion = when {
-                                ref.originalPath.startsWith("/") -> Strings.suggestUseRelativePath
-                                else -> Strings.suggestEnsureFileImported.replace("%s", ref.originalPath)
+                                ref.originalPath.startsWith("/") -> AppStringsProvider.current().suggestUseRelativePath
+                                else -> AppStringsProvider.current().suggestEnsureFileImported.replace("%s", ref.originalPath)
                             }
                         ))
                     }
@@ -183,7 +183,7 @@ object HtmlProjectProcessor {
                 issues.add(ProjectIssue(
                     severity = IssueSeverity.ERROR,
                     type = IssueType.MISSING_FILE,
-                    message = "${Strings.htmlFileNotFound}: $path"
+                    message = "${AppStringsProvider.current().htmlFileNotFound}: $path"
                 ))
             }
         }
@@ -205,9 +205,9 @@ object HtmlProjectProcessor {
                     issues.add(ProjectIssue(
                         severity = IssueSeverity.WARNING,
                         type = IssueType.ENCODING_ISSUE,
-                        message = Strings.cssEncodingWarning.replace("%s", encoding ?: "unknown"),
+                        message = AppStringsProvider.current().cssEncodingWarning.replace("%s", encoding ?: "unknown"),
                         file = file.name,
-                        suggestion = Strings.suggestSaveAsUtf8
+                        suggestion = AppStringsProvider.current().suggestSaveAsUtf8
                     ))
                 }
             }
@@ -240,12 +240,12 @@ object HtmlProjectProcessor {
             val htmlFileObj = htmlFilePath?.let { File(it) }?.takeIf { it.exists() && it.length() <= MAX_ANALYZE_FILE_SIZE }
             val htmlContent = htmlFileObj?.let { readFileWithEncoding(it, null) } ?: ""
             if (htmlContent.contains("<link", ignoreCase = true) || htmlContent.contains("<script", ignoreCase = true)) {
-                suggestions.add(Strings.suggestExternalFilesDetected)
+                suggestions.add(AppStringsProvider.current().suggestExternalFilesDetected)
             }
         }
         
         if (issues.any { it.type == IssueType.ABSOLUTE_PATH }) {
-            suggestions.add(Strings.suggestUseRelativePathsForAll)
+            suggestions.add(AppStringsProvider.current().suggestUseRelativePathsForAll)
         }
         
         return ProjectAnalysis(
@@ -519,8 +519,8 @@ $trimmed
         val exists = resolvedPath?.let { File(it).exists() } ?: false
         
         val issue = when {
-            isAbsolute -> Strings.absolutePathWarning
-            !exists && resolvedPath != null -> Strings.referencedFileNotExist
+            isAbsolute -> AppStringsProvider.current().absolutePathWarning
+            !exists && resolvedPath != null -> AppStringsProvider.current().referencedFileNotExist
             else -> null
         }
         
@@ -610,9 +610,9 @@ $trimmed
             issues.add(ProjectIssue(
                 severity = IssueSeverity.WARNING,
                 type = IssueType.SYNTAX_ERROR,
-                message = Strings.documentWriteWarning,
+                message = AppStringsProvider.current().documentWriteWarning,
                 file = fileName,
-                suggestion = Strings.suggestUseDomMethods
+                suggestion = AppStringsProvider.current().suggestUseDomMethods
             ))
         }
         
@@ -622,9 +622,9 @@ $trimmed
             issues.add(ProjectIssue(
                 severity = IssueSeverity.WARNING,
                 type = IssueType.SYNTAX_ERROR,
-                message = Strings.possiblyUnclosedBraces,
+                message = AppStringsProvider.current().possiblyUnclosedBraces,
                 file = fileName,
-                suggestion = Strings.suggestCheckBracesPaired
+                suggestion = AppStringsProvider.current().suggestCheckBracesPaired
             ))
         }
     }

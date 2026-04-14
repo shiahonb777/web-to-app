@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 
 // ========== related ==========
@@ -114,7 +114,7 @@ fun ConsolePanel(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            Strings.console,
+                            AppStringsProvider.current().console,
                             style = MaterialTheme.typography.titleSmall,
                             color = onSurface
                         )
@@ -141,27 +141,27 @@ fun ConsolePanel(
                                     "[${timeFormat.format(java.util.Date(entry.timestamp))}] [${entry.level}] ${entry.message}"
                                 }
                                 clipboardManager.setText(AnnotatedString(allLogs))
-                                Toast.makeText(context, Strings.copiedAllLogs, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedAllLogs, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(36.dp)
                         ) {
-                            Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.copy, tint = onSurfaceVariant)
+                            Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().copy, tint = onSurfaceVariant)
                         }
                         // Note
                         IconButton(onClick = onClear, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Outlined.Delete, contentDescription = Strings.clean, tint = onSurfaceVariant)
+                            Icon(Icons.Outlined.Delete, contentDescription = AppStringsProvider.current().clean, tint = onSurfaceVariant)
                         }
                         // Expand/
                         IconButton(onClick = onExpandToggle, modifier = Modifier.size(36.dp)) {
                             Icon(
                                 if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-                                if (isExpanded) Strings.close else Strings.more,
+                                if (isExpanded) AppStringsProvider.current().close else AppStringsProvider.current().more,
                                 tint = onSurfaceVariant
                             )
                         }
                         // close
                         IconButton(onClick = onClose, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Close, Strings.close, tint = onSurfaceVariant)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close, tint = onSurfaceVariant)
                         }
                     }
                 }
@@ -187,7 +187,7 @@ fun ConsolePanel(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                                Strings.noConsoleMessages,
+                                AppStringsProvider.current().noConsoleMessages,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = onSurfaceVariant.copy(alpha = 0.5f)
                             )
@@ -206,7 +206,7 @@ fun ConsolePanel(
                                 timeFormat = timeFormat,
                                 onCopy = {
                                     clipboardManager.setText(AnnotatedString(entry.message))
-                                    Toast.makeText(context, Strings.msgCopied, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().msgCopied, Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -237,7 +237,7 @@ fun ConsolePanel(
                         onValueChange = { scriptInput = it },
                         placeholder = { 
                             Text(
-                                Strings.inputJavaScript,
+                                AppStringsProvider.current().inputJavaScript,
                                 style = MaterialTheme.typography.bodySmall
                             ) 
                         },
@@ -258,7 +258,7 @@ fun ConsolePanel(
                         },
                         enabled = scriptInput.isNotBlank()
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = Strings.run)
+                        Icon(Icons.Default.PlayArrow, contentDescription = AppStringsProvider.current().run)
                     }
                 }
             }

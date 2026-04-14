@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -156,7 +156,7 @@ internal fun StatsOverviewRow(
     totalDownloads: Int,
     avgRating: Float,
     totalLikes: Int,
-    downloadLabel: String = Strings.storeTotalDownloads
+    downloadLabel: String = AppStringsProvider.current().storeTotalDownloads
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -176,7 +176,7 @@ internal fun StatsOverviewRow(
             icon = Icons.Filled.Star,
             iconColor = Color(0xFFFFC107),
             value = if (avgRating > 0f) String.format("%.1f", avgRating) else "-",
-            label = Strings.storeAverageRating
+            label = AppStringsProvider.current().storeAverageRating
         )
         // Likes
         StatCard(
@@ -184,7 +184,7 @@ internal fun StatsOverviewRow(
             icon = Icons.Outlined.ThumbUp,
             iconColor = Color(0xFFE91E63),
             value = formatDownloads(totalLikes),
-            label = Strings.storeTotalLikes
+            label = AppStringsProvider.current().storeTotalLikes
         )
     }
 }
@@ -230,7 +230,7 @@ internal fun StatCard(
 internal fun ItemDeleteConfirmDialog(
     itemName: String,
     storeName: String,       // "store" or "market"
-    actionVerb: String,      // "download" or Strings. installApp
+    actionVerb: String,      // "download" or AppStringsProvider.current(). installApp
     isDeleting: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
@@ -265,7 +265,7 @@ internal fun ItemDeleteConfirmDialog(
                 }
             }
         },
-        title = { Text(Strings.storeConfirmDelistTitle, fontWeight = FontWeight.Bold) },
+        title = { Text(AppStringsProvider.current().storeConfirmDelistTitle, fontWeight = FontWeight.Bold) },
         text = {
             Text("确定要下架「${itemName}」吗？\n\n下架后将从${storeName}中移除，其他用户将无法看到或${actionVerb}。此操作不可撤销。")
         },
@@ -285,12 +285,12 @@ internal fun ItemDeleteConfirmDialog(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                 }
-                Text(if (isDeleting) Strings.storeConfirmDelisting else Strings.storeConfirmDelistTitle)
+                Text(if (isDeleting) AppStringsProvider.current().storeConfirmDelisting else AppStringsProvider.current().storeConfirmDelistTitle)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isDeleting) {
-                Text(Strings.storeReviewCancel)
+                Text(AppStringsProvider.current().storeReviewCancel)
             }
         }
     )

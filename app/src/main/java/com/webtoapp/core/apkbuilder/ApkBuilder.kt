@@ -2257,7 +2257,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         // App disguise config (independent module)
         disguiseConfig = disguiseConfig,
         // UI language config - use current app language
-        language = com.webtoapp.core.i18n.Strings.currentLanguage.value.name,
+        language = com.webtoapp.core.i18n.AppStringsProvider.currentLanguage.name,
         // Browser engine config
         engineType = apkExportConfig?.engineType ?: "SYSTEM_WEBVIEW",
         // Deep link config

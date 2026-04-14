@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.extension.UrlMatchRule
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.PremiumTextField
 
 @Composable
@@ -52,7 +52,7 @@ fun UrlMatchDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.urlMatchRules) },
+        title = { Text(AppStringsProvider.current().urlMatchRules) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 if (urlMatches.isNotEmpty()) {
@@ -108,7 +108,7 @@ fun UrlMatchDialog(
                                                     .padding(horizontal = 5.dp, vertical = 1.dp)
                                             ) {
                                                 Text(
-                                                    Strings.regex,
+                                                    AppStringsProvider.current().regex,
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.tertiary,
                                                     fontSize = 9.sp
@@ -122,7 +122,7 @@ fun UrlMatchDialog(
                                                 .padding(horizontal = 5.dp, vertical = 1.dp)
                                         ) {
                                             Text(
-                                                if (rule.exclude) Strings.exclude else Strings.include,
+                                                if (rule.exclude) AppStringsProvider.current().exclude else AppStringsProvider.current().include,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = ruleTint,
                                                 fontSize = 9.sp
@@ -138,7 +138,7 @@ fun UrlMatchDialog(
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        contentDescription = Strings.delete,
+                                        contentDescription = AppStringsProvider.current().delete,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
                                     )
@@ -159,7 +159,7 @@ fun UrlMatchDialog(
                     value = newPattern,
                     onValueChange = { newPattern = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(Strings.urlPattern) },
+                    label = { Text(AppStringsProvider.current().urlPattern) },
                     placeholder = { Text("*.example.com/*") },
                     singleLine = true
                 )
@@ -170,11 +170,11 @@ fun UrlMatchDialog(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = isRegex, onCheckedChange = { isRegex = it })
-                        Text(Strings.regexExpression)
+                        Text(AppStringsProvider.current().regexExpression)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = isExclude, onCheckedChange = { isExclude = it })
-                        Text(Strings.excludeRule)
+                        Text(AppStringsProvider.current().excludeRule)
                     }
                 }
             }
@@ -192,10 +192,10 @@ fun UrlMatchDialog(
                     },
                     enabled = newPattern.isNotBlank()
                 ) {
-                    Text(Strings.add)
+                    Text(AppStringsProvider.current().add)
                 }
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.done)
+                    Text(AppStringsProvider.current().done)
                 }
             }
         }

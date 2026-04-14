@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.ui.theme.LocalAppTheme
@@ -91,7 +91,7 @@ fun AboutScreen(
                 val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
                 if (id == downloadId) {
                     isDownloading = false
-                Toast.makeText(context, Strings.downloadComplete, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().downloadComplete, Toast.LENGTH_SHORT).show()
                     AppUpdateChecker.installApk(context, downloadId)
                 }
             }
@@ -130,10 +130,10 @@ fun AboutScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.about, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().about, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -198,7 +198,7 @@ fun AboutScreen(
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.avatar_shiaho),
-                                contentDescription = Strings.authorAvatar,
+                                contentDescription = AppStringsProvider.current().authorAvatar,
                                 modifier = Modifier
                                     .size(100.dp)
                                     .clip(CircleShape)
@@ -224,7 +224,7 @@ fun AboutScreen(
                         
                         // Note
                         Text(
-                            text = Strings.authorTagline,
+                            text = AppStringsProvider.current().authorTagline,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -262,7 +262,7 @@ fun AboutScreen(
                                             showUpdateDialog = true
                                         }.onFailure { e ->
                                             checkError = e.message
-                                            Toast.makeText(context, "${Strings.checkUpdateFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "${AppStringsProvider.current().checkUpdateFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -304,7 +304,7 @@ fun AboutScreen(
                                     showUpdateDialog = true
                                 }.onFailure { e ->
                                     checkError = e.message
-                                    Toast.makeText(context, "${Strings.checkUpdateFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "${AppStringsProvider.current().checkUpdateFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
@@ -335,14 +335,14 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    Strings.checkUpdate,
+                                    AppStringsProvider.current().checkUpdate,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    if (isDownloading) Strings.downloading 
-                                    else if (isCheckingUpdate) Strings.checking
-                                    else "${Strings.currentVersion} v$currentVersionName",
+                                    if (isDownloading) AppStringsProvider.current().downloading 
+                                    else if (isCheckingUpdate) AppStringsProvider.current().checking
+                                    else "${AppStringsProvider.current().currentVersion} v$currentVersionName",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -404,12 +404,12 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    Strings.autoCheckUpdate,
+                                    AppStringsProvider.current().autoCheckUpdate,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    Strings.autoCheckUpdateDesc,
+                                    AppStringsProvider.current().autoCheckUpdateDesc,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -463,14 +463,14 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.aboutThisApp,
+                                    AppStringsProvider.current().aboutThisApp,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                Strings.aboutAppDescription,
+                                AppStringsProvider.current().aboutAppDescription,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 lineHeight = 24.sp
@@ -501,7 +501,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.socialMedia,
+                                    AppStringsProvider.current().socialMedia,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -529,7 +529,7 @@ fun AboutScreen(
                                 SocialMediaButton(
                                     modifier = Modifier.weight(weight = 1f, fill = true),
                                     label = "Telegram",
-                                    subtitle = Strings.communityGroup,
+                                    subtitle = AppStringsProvider.current().communityGroup,
                                     backgroundColor = Color(0xFF0088CC),
                                     iconRes = R.drawable.ic_social_telegram,
                                     link = "https://t.me/webtoapp777",
@@ -548,7 +548,7 @@ fun AboutScreen(
                                 SocialMediaButton(
                                     modifier = Modifier.weight(weight = 1f, fill = true),
                                     label = "GitHub",
-                                    subtitle = Strings.openSourceRepository,
+                                    subtitle = AppStringsProvider.current().openSourceRepository,
                                     backgroundColor = Color(0xFF24292E),
                                     iconRes = R.drawable.ic_social_github,
                                     link = "https://github.com/shiahonb777/web-to-app",
@@ -559,7 +559,7 @@ fun AboutScreen(
                                 SocialMediaButton(
                                     modifier = Modifier.weight(weight = 1f, fill = true),
                                     label = "Bilibili",
-                                    subtitle = Strings.videoTutorialLabel,
+                                    subtitle = AppStringsProvider.current().videoTutorialLabel,
                                     backgroundColor = Color(0xFFFB7299),
                                     iconRes = R.drawable.ic_social_bilibili,
                                     link = "https://b23.tv/8mGDo2N",
@@ -592,7 +592,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.joinCommunityGroup,
+                                    AppStringsProvider.current().joinCommunityGroup,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -601,7 +601,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                Strings.communityGroupDescription,
+                                AppStringsProvider.current().communityGroupDescription,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -614,9 +614,9 @@ fun AboutScreen(
                                 iconText = "Q",
                                 iconColor = Color.White,
                                 iconBgColor = Color(0xFF12B7F5),
-                                label = Strings.qqGroupLabel,
+                                label = AppStringsProvider.current().qqGroupLabel,
                                 value = "1041130206",
-                                description = Strings.exchangeLearningUpdates,
+                                description = AppStringsProvider.current().exchangeLearningUpdates,
                                 link = "https://qun.qq.com/universal-share/share?ac=1&authKey=85Y3%2FckhO7c13%2F1%2F4kee5U7dg5dBPQ%2BDvKyGRVxiLVIgO8WxHdq%2BviYCtfWP4IsJ&busi_data=eyJncm91cENvZGUiOiIxMDQxMTMwMjA2IiwidG9rZW4iOiI1ZUhyRWF0bWhYVjN1T2p2VDJVODRPS3lKNzRCMjlyRmgrK3Robzg1cDhrbkF0bHlYR1d4eU43eW9QUTRGOUs4IiwidWluIjoiMjcxMTY3NDE4NCJ9&data=KG-7jSMVH0EM00Ekocv3-F15tvRkal3f4yQPwRmKS7dK0h13g8VPDADK2doELNhlgyPjrFJDFANTkzbibLL1ug&svctype=4&tempid=h5_group_info",
                                 copyValue = "1041130206"
                             )
@@ -629,9 +629,9 @@ fun AboutScreen(
                                 iconText = "TG",
                                 iconColor = Color.White,
                                 iconBgColor = Color(0xFF0088CC),
-                                label = Strings.telegramGroupLabel,
+                                label = AppStringsProvider.current().telegramGroupLabel,
                                 value = "webtoapp777",
-                                description = Strings.internationalUserGroup,
+                                description = AppStringsProvider.current().internationalUserGroup,
                                 link = "https://t.me/webtoapp777",
                                 copyValue = "https://t.me/webtoapp777"
                             )
@@ -661,7 +661,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.contactAuthor,
+                                    AppStringsProvider.current().contactAuthor,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -670,7 +670,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                Strings.contactAuthorDescription,
+                                AppStringsProvider.current().contactAuthorDescription,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -685,7 +685,7 @@ fun AboutScreen(
                                 iconBgColor = Color(0xFF12B7F5),
                                 label = "QQ",
                                 value = "2711674184",
-                                description = Strings.feedbackConsultation,
+                                description = AppStringsProvider.current().feedbackConsultation,
                                 link = "https://i.qq.com/2711674184",
                                 copyValue = "2711674184"
                             )
@@ -700,7 +700,7 @@ fun AboutScreen(
                                 iconBgColor = Color(0xFFFF6B6B),
                                 label = "QQ Email",
                                 value = "2711674184@qq.com",
-                                description = Strings.emailContact,
+                                description = AppStringsProvider.current().emailContact,
                                 link = "mailto:2711674184@qq.com",
                                 copyValue = "2711674184@qq.com"
                             )
@@ -715,7 +715,7 @@ fun AboutScreen(
                                 iconBgColor = Color(0xFFEA4335),
                                 label = "Gmail",
                                 value = "weuwo479@gmail.com",
-                                description = Strings.internationalEmail,
+                                description = AppStringsProvider.current().internationalEmail,
                                 link = "mailto:weuwo479@gmail.com",
                                 copyValue = "weuwo479@gmail.com"
                             )
@@ -745,7 +745,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.openSourceRepo,
+                                    AppStringsProvider.current().openSourceRepo,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -754,7 +754,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                Strings.welcomeStarSupport,
+                                AppStringsProvider.current().welcomeStarSupport,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -769,7 +769,7 @@ fun AboutScreen(
                                 iconBgColor = Color(0xFF24292E),
                                 label = "GitHub",
                                 value = "shiahonb777/web-to-app",
-                                description = Strings.internationalAccess,
+                                description = AppStringsProvider.current().internationalAccess,
                                 link = "https://github.com/shiahonb777/web-to-app",
                                 copyValue = "https://github.com/shiahonb777/web-to-app"
                             )
@@ -799,7 +799,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.changelog,
+                                    AppStringsProvider.current().changelog,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -812,21 +812,21 @@ fun AboutScreen(
                                 version = "v1.9.5",
                                 isLatest = true
                             ) {
-                                ChangeItem(emoji = "feature", text = Strings.cookiesPersistenceFeature)
-                                ChangeItem(emoji = "feature", text = Strings.multiApiKeyManagement)
-                                ChangeItem(emoji = "feature", text = Strings.modelNameSearchFeature)
-                                ChangeItem(emoji = "feature", text = Strings.hideUrlPreviewFeature)
-                                ChangeItem(emoji = "feature", text = Strings.popupBlockerFeature)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeCustomApiEndpoint)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeModelNameDisplay)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeMultiLanguageAdaptation)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixGalleryBuildPath)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixMicrophonePermission)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixZoomPropertyNotWorking)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixActivationCodeLanguage)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixFrontendGalleryFilename)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixCoreConfigEditAppType)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixKeyboardInitIssue)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().cookiesPersistenceFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().multiApiKeyManagement)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().modelNameSearchFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().hideUrlPreviewFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().popupBlockerFeature)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeCustomApiEndpoint)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeModelNameDisplay)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeMultiLanguageAdaptation)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixGalleryBuildPath)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixMicrophonePermission)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixZoomPropertyNotWorking)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixActivationCodeLanguage)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixFrontendGalleryFilename)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixCoreConfigEditAppType)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixKeyboardInitIssue)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -835,23 +835,23 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.9.0"
                             ) {
-                                ChangeItem(emoji = "feature", text = Strings.browserEngineFeature)
-                                ChangeItem(emoji = "feature", text = Strings.browserSpoofingFeature)
-                                ChangeItem(emoji = "feature", text = Strings.hostsBlockFeature)
-                                ChangeItem(emoji = "feature", text = Strings.longPressMenuFeature)
-                                ChangeItem(emoji = "feature", text = Strings.apkArchitectureFeature)
-                                ChangeItem(emoji = "feature", text = Strings.mediaGalleryFeature)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeExtensionModule)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeEnglishArabicTranslation)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeThemeInteraction)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeApiConfigTest)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixAppNameSpaces)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixAnnouncementJump)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixExternalBrowserCrash)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixDownloadError)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixModuleEditCrash)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixAiImageInvalid)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixDownloaderPlayerCooperation)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().browserEngineFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().browserSpoofingFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().hostsBlockFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().longPressMenuFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().apkArchitectureFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().mediaGalleryFeature)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeExtensionModule)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeEnglishArabicTranslation)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeThemeInteraction)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeApiConfigTest)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixAppNameSpaces)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixAnnouncementJump)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixExternalBrowserCrash)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixDownloadError)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixModuleEditCrash)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixAiImageInvalid)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixDownloaderPlayerCooperation)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -860,15 +860,15 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.8.5"
                             ) {
-                                ChangeItem(emoji = "feature", text = Strings.appCategoryFeature)
-                                ChangeItem(emoji = "feature", text = Strings.faviconFetchFeature)
-                                ChangeItem(emoji = "feature", text = Strings.randomAppNameFeature)
-                                ChangeItem(emoji = "feature", text = Strings.multiAppIconFeature)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeDataBackup)
-                                ChangeItem(emoji = "improve", text = Strings.optimizeBlackTech)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixElementBlocker)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixBackgroundRunCrash)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixI18nStringAdaptation)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().appCategoryFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().faviconFetchFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().randomAppNameFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().multiAppIconFeature)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeDataBackup)
+                                ChangeItem(emoji = "improve", text = AppStringsProvider.current().optimizeBlackTech)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixElementBlocker)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixBackgroundRunCrash)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixI18nStringAdaptation)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -877,16 +877,16 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.8.0"
                             ) {
-                                ChangeItem(emoji = "i18n", text = Strings.multiLanguageSupport)
-                                ChangeItem(emoji = "upload", text = Strings.shareApkFeature)
-                                ChangeItem(emoji = "module", text = Strings.elementBlockerModule)
-                                ChangeItem(emoji = "lock", text = Strings.forcedRunFeature)
-                                ChangeItem(emoji = "linux", text = Strings.linuxOneClickBuild)
-                                ChangeItem(emoji = "framework", text = Strings.frontendFrameworkToApk)
-                                ChangeItem(emoji = "design", text = Strings.optimizeThemeFeature)
-                                ChangeItem(emoji = "feature", text = Strings.optimizeAboutPageUi)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixFullscreenStatusBarIssue)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixDeviceCrashIssue)
+                                ChangeItem(emoji = "i18n", text = AppStringsProvider.current().multiLanguageSupport)
+                                ChangeItem(emoji = "upload", text = AppStringsProvider.current().shareApkFeature)
+                                ChangeItem(emoji = "module", text = AppStringsProvider.current().elementBlockerModule)
+                                ChangeItem(emoji = "lock", text = AppStringsProvider.current().forcedRunFeature)
+                                ChangeItem(emoji = "linux", text = AppStringsProvider.current().linuxOneClickBuild)
+                                ChangeItem(emoji = "framework", text = AppStringsProvider.current().frontendFrameworkToApk)
+                                ChangeItem(emoji = "design", text = AppStringsProvider.current().optimizeThemeFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().optimizeAboutPageUi)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixFullscreenStatusBarIssue)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixDeviceCrashIssue)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -895,8 +895,8 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.8.0"
                             ) {
-                                ChangeItem(emoji = "web", text = Strings.isolatedBrowserEnvironment)
-                                ChangeItem(emoji = "play", text = Strings.backgroundRunFeature)
+                                ChangeItem(emoji = "web", text = AppStringsProvider.current().isolatedBrowserEnvironment)
+                                ChangeItem(emoji = "play", text = AppStringsProvider.current().backgroundRunFeature)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -905,8 +905,8 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.7.7"
                             ) {
-                                ChangeItem(emoji = "design", text = Strings.statusBarStyleConfig)
-                                ChangeItem(emoji = "security", text = Strings.apkEncryptionProtection)
+                                ChangeItem(emoji = "design", text = AppStringsProvider.current().statusBarStyleConfig)
+                                ChangeItem(emoji = "security", text = AppStringsProvider.current().apkEncryptionProtection)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -915,9 +915,9 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.7.6"
                             ) {
-                                ChangeItem(emoji = "feature", text = Strings.bootAutoStartAndScheduled)
-                                ChangeItem(emoji = "save", text = Strings.dataBackupExportImport)
-                                ChangeItem(emoji = "feature", text = Strings.fullscreenStatusBarOverlay)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().bootAutoStartAndScheduled)
+                                ChangeItem(emoji = "save", text = AppStringsProvider.current().dataBackupExportImport)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().fullscreenStatusBarOverlay)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -926,9 +926,9 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.7.5"
                             ) {
-                                ChangeItem(emoji = "feature", text = Strings.fullscreenShowStatusBar)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixHtmlLongPressCopy)
-                                ChangeItem(emoji = "mobile", text = Strings.supportAndroid6)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().fullscreenShowStatusBar)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixHtmlLongPressCopy)
+                                ChangeItem(emoji = "mobile", text = AppStringsProvider.current().supportAndroid6)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -937,11 +937,11 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.7.4"
                             ) {
-                                ChangeItem(emoji = "bugfix", text = Strings.fixHtmlStatusBar)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixEmptyAppName)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixAiModuleCodeOverlay)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixAiHtmlToolCallFailed)
-                                ChangeItem(emoji = "feature", text = Strings.optimizeAiHtmlPrompt)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixHtmlStatusBar)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixEmptyAppName)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixAiModuleCodeOverlay)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixAiHtmlToolCallFailed)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().optimizeAiHtmlPrompt)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
@@ -950,102 +950,102 @@ fun AboutScreen(
                             VersionSection(
                                 version = "v1.7.3"
                             ) {
-                                ChangeItem(emoji = "feature", text = Strings.statusBarFollowTheme)
-                                ChangeItem(emoji = "feature", text = Strings.customStatusBarBgColor)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixStatusBarTextVisibility)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().statusBarFollowTheme)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().customStatusBarBgColor)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixStatusBarTextVisibility)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.7.2
                             VersionSection(version = "v1.7.2") {
-                                ChangeItem(emoji = "bugfix", text = Strings.fixJsFileSelectorCompat)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixVideoFullscreenRotation)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixJsFileSelectorCompat)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixVideoFullscreenRotation)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.7.1
                             VersionSection(version = "v1.7.1") {
-                                ChangeItem(emoji = "bugfix", text = Strings.fixXhsImageSave)
-                                ChangeItem(emoji = "feature", text = Strings.newXhsImageDownloader)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixBlobExportFailed)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixHtmlCssJsNotWorking)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixTaskListDuplicateName)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixXhsImageSave)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().newXhsImageDownloader)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixBlobExportFailed)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixHtmlCssJsNotWorking)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixTaskListDuplicateName)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.7.0
                             VersionSection(version = "v1.7.0") {
-                                ChangeItem(emoji = "bugfix", text = Strings.fixKnownIssues)
-                                ChangeItem(emoji = "ai", text = Strings.optimizeAiAgentArch)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixKnownIssues)
+                                ChangeItem(emoji = "ai", text = AppStringsProvider.current().optimizeAiAgentArch)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.6.0
                             VersionSection(version = "v1.6.0") {
-                                ChangeItem(emoji = "extension", text = Strings.extensionModuleSystem)
-                                ChangeItem(emoji = "ai", text = Strings.aiModuleDeveloperAgent)
-                                ChangeItem(emoji = "design", text = Strings.aiIconGeneration)
-                                ChangeItem(emoji = "library", text = Strings.iconLibrary)
-                                ChangeItem(emoji = "music", text = Strings.onlineMusicSearch)
-                                ChangeItem(emoji = "announce", text = Strings.announcementTemplates)
-                                ChangeItem(emoji = "web", text = Strings.webAutoTranslate)
+                                ChangeItem(emoji = "extension", text = AppStringsProvider.current().extensionModuleSystem)
+                                ChangeItem(emoji = "ai", text = AppStringsProvider.current().aiModuleDeveloperAgent)
+                                ChangeItem(emoji = "design", text = AppStringsProvider.current().aiIconGeneration)
+                                ChangeItem(emoji = "library", text = AppStringsProvider.current().iconLibrary)
+                                ChangeItem(emoji = "music", text = AppStringsProvider.current().onlineMusicSearch)
+                                ChangeItem(emoji = "announce", text = AppStringsProvider.current().announcementTemplates)
+                                ChangeItem(emoji = "web", text = AppStringsProvider.current().webAutoTranslate)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.5.0
                             VersionSection(version = "v1.5.0") {
-                                ChangeItem(emoji = "feature", text = Strings.aiHtmlCodingFeature)
-                                ChangeItem(emoji = "feature", text = Strings.htmlAppFeature)
-                                ChangeItem(emoji = "feature", text = Strings.themeSystemFeature)
-                                ChangeItem(emoji = "feature", text = Strings.bgmLrcFeature)
-                                ChangeItem(emoji = "feature", text = Strings.aiSettingsFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().aiHtmlCodingFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().htmlAppFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().themeSystemFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().bgmLrcFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().aiSettingsFeature)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.3.0
                             VersionSection(version = "v1.3.0") {
-                                ChangeItem(emoji = "feature", text = Strings.mediaAppFeature)
-                                ChangeItem(emoji = "feature", text = Strings.userScriptInjection)
-                                ChangeItem(emoji = "feature", text = Strings.splashScreenFeature)
-                                ChangeItem(emoji = "feature", text = Strings.videoTrimFeature)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixShortcutIconError)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().mediaAppFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().userScriptInjection)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().splashScreenFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().videoTrimFeature)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixShortcutIconError)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.2.x
                             VersionSection(version = "v1.2.x") {
-                                ChangeItem(emoji = "feature", text = Strings.fullscreenModeFeature)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixApkIconCrop)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixReleaseIconNotWorking)
-                                ChangeItem(emoji = "bugfix", text = Strings.fixApkPackageConflict)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().fullscreenModeFeature)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixApkIconCrop)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixReleaseIconNotWorking)
+                                ChangeItem(emoji = "bugfix", text = AppStringsProvider.current().fixApkPackageConflict)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.1.0
                             VersionSection(version = "v1.1.0") {
-                                ChangeItem(emoji = "feature", text = Strings.oneClickBuildApk)
-                                ChangeItem(emoji = "feature", text = Strings.appModifierFeature)
-                                ChangeItem(emoji = "feature", text = Strings.cloneInstallFeature)
-                                ChangeItem(emoji = "feature", text = Strings.desktopModeFeature)
-                                ChangeItem(emoji = "design", text = Strings.materialDesign3UI)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().oneClickBuildApk)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().appModifierFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().cloneInstallFeature)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().desktopModeFeature)
+                                ChangeItem(emoji = "design", text = AppStringsProvider.current().materialDesign3UI)
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             // v1.0.0
                             VersionSection(version = "v1.0.0") {
-                                ChangeItem(emoji = "celebrate", text = Strings.initialVersionRelease)
-                                ChangeItem(emoji = "feature", text = Strings.urlToShortcutBasic)
-                                ChangeItem(emoji = "feature", text = Strings.activationCodeAnnouncementAdBlock)
-                                ChangeItem(emoji = "feature", text = Strings.projectTemplateExport)
+                                ChangeItem(emoji = "celebrate", text = AppStringsProvider.current().initialVersionRelease)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().urlToShortcutBasic)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().activationCodeAnnouncementAdBlock)
+                                ChangeItem(emoji = "feature", text = AppStringsProvider.current().projectTemplateExport)
                             }
                         }
                     }
@@ -1075,7 +1075,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    Strings.legalDisclaimer,
+                                    AppStringsProvider.current().legalDisclaimer,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -1100,7 +1100,7 @@ fun AboutScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.disclaimerWarningText,
+                                        AppStringsProvider.current().disclaimerWarningText,
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.error
@@ -1112,14 +1112,14 @@ fun AboutScreen(
                             
                             // 1.
                             LegalSection(
-                                title = Strings.legalDisclaimerTitle1,
+                                title = AppStringsProvider.current().legalDisclaimerTitle1,
                                 content = "本软件为开源技术研究与教育演示工具，所有功能均基于Android系统公开API实现，" +
                                         "旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。"
                             )
                             
                             // 2. user
                             LegalSection(
-                                title = Strings.legalDisclaimerTitle2,
+                                title = AppStringsProvider.current().legalDisclaimerTitle2,
                                 content = "用户应确保在合法、正当的场景下使用本软件，包括但不限于：\n" +
                                         "• 自我管理：用于个人专注力训练、学习时间管理\n" +
                                         "• 企业展示：用于展会、商场等场景的展示终端\n" +
@@ -1130,7 +1130,7 @@ fun AboutScreen(
                             
                             // 3.
                             LegalSection(
-                                title = Strings.legalDisclaimerTitle3,
+                                title = AppStringsProvider.current().legalDisclaimerTitle3,
                                 content = "本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于技术演示性质：\n\n" +
                                         "1. 【知情同意原则】高级功能仅应在设备所有者或使用者完全知情并明确同意的情况下启用\n\n" +
                                         "2. 【自主控制原则】所有功能均提供紧急退出机制，用户可通过密码随时终止\n\n" +
@@ -1140,7 +1140,7 @@ fun AboutScreen(
                             
                             // 4.
                             LegalSection(
-                                title = Strings.legalDisclaimerTitle4,
+                                title = AppStringsProvider.current().legalDisclaimerTitle4,
                                 content = "1. 本软件按「现状」提供，开发者不对软件的适用性、可靠性、安全性作任何明示或暗示的保证\n\n" +
                                         "2. 用户因违反法律法规或本声明使用本软件所产生的一切法律责任，由用户自行承担，与开发者无关\n\n" +
                                         "3. 开发者不对因使用本软件导致的任何直接、间接、偶然、特殊或惩罚性损害承担责任\n\n" +
@@ -1149,7 +1149,7 @@ fun AboutScreen(
                             
                             // 5.
                             LegalSection(
-                                title = Strings.legalDisclaimerTitle5,
+                                title = AppStringsProvider.current().legalDisclaimerTitle5,
                                 content = "To ensure lawful and compliant use, it is recommended that users:\n" +
                                         "• Obtain written or electronic consent from the actual device user before use\n" +
                                         "• Establish appropriate usage policies and management procedures in enterprise scenarios\n" +
@@ -1159,7 +1159,7 @@ fun AboutScreen(
                             
                             // 6. with
                             LegalSection(
-                                title = Strings.legalDisclaimerTitle6,
+                                title = AppStringsProvider.current().legalDisclaimerTitle6,
                                 content = "This software is released under The Unlicense and dedicated to the public domain. Anyone may use, modify, distribute, or sell it for any purpose." +
                                     "The software is provided \"as is\", without warranty of any kind."
                             )
@@ -1173,7 +1173,7 @@ fun AboutScreen(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        Strings.finalUserAgreementConfirmation,
+                                        AppStringsProvider.current().finalUserAgreementConfirmation,
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -1209,7 +1209,7 @@ fun AboutScreen(
                     
                     // bottom
                     Text(
-                        text = Strings.madeWithLove,
+                        text = AppStringsProvider.current().madeWithLove,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
@@ -1239,13 +1239,13 @@ fun AboutScreen(
                     )
                     if (downloadId == -1L) {
                         isDownloading = false
-                        Toast.makeText(context, Strings.downloadStartFailed, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().downloadStartFailed, Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, Strings.startDownloadCheckNotification, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().startDownloadCheckNotification, Toast.LENGTH_SHORT).show()
                         showUpdateDialog = false
                     }
                 } else {
-                    Toast.makeText(context, Strings.downloadLinkNotFound, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().downloadLinkNotFound, Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -1276,7 +1276,7 @@ private fun UpdateDialog(
         },
         title = {
             Text(
-                if (updateInfo.hasUpdate) Strings.newVersionFound else Strings.latestVersion,
+                if (updateInfo.hasUpdate) AppStringsProvider.current().newVersionFound else AppStringsProvider.current().latestVersion,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1344,14 +1344,14 @@ private fun UpdateDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        Strings.updateRecommendation,
+                        AppStringsProvider.current().updateRecommendation,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                 } else {
                     Text(
-                        Strings.currentVersionIs.replace("%s", currentVersion),
+                        AppStringsProvider.current().currentVersionIs.replace("%s", currentVersion),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -1373,18 +1373,18 @@ private fun UpdateDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text(if (isDownloading) Strings.downloading else Strings.updateNow)
+                    Text(if (isDownloading) AppStringsProvider.current().downloading else AppStringsProvider.current().updateNow)
                 }
             } else {
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.btnOk)
+                    Text(AppStringsProvider.current().btnOk)
                 }
             }
         },
         dismissButton = {
             if (updateInfo.hasUpdate) {
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.updateLater)
+                    Text(AppStringsProvider.current().updateLater)
                 }
             }
         }
@@ -1459,7 +1459,7 @@ private fun ContactItem(
             FilledTonalIconButton(onClick = onCopy) {
                 Icon(
                     Icons.Default.ContentCopy,
-                    Strings.copy,
+                    AppStringsProvider.current().copy,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -1488,7 +1488,7 @@ private fun ContactItemWithLink(
                 try {
                     context.openUrl(link)
                 } catch (e: Exception) {
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                 }
             },
         shape = RoundedCornerShape(12.dp),
@@ -1547,7 +1547,7 @@ private fun ContactItemWithLink(
                 FilledTonalIconButton(onClick = onCopy) {
                     Icon(
                         Icons.Default.ContentCopy,
-                        Strings.copy,
+                        AppStringsProvider.current().copy,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1558,13 +1558,13 @@ private fun ContactItemWithLink(
                         try {
                             context.openUrl(link)
                         } catch (e: Exception) {
-                            Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                         }
                     }
                 ) {
                     Icon(
                         Icons.Outlined.OpenInNew,
-                        Strings.openAction,
+                        AppStringsProvider.current().openAction,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1600,7 +1600,7 @@ private fun VersionSection(
                     color = AppColors.Success
                 ) {
                     Text(
-                        Strings.latestTag,
+                        AppStringsProvider.current().latestTag,
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -1667,7 +1667,7 @@ private fun copyToClipboard(context: Context, label: String, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = ClipData.newPlainText(label, text)
     clipboard.setPrimaryClip(clip)
-    Toast.makeText(context, "${label} ${Strings.copied}", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "${label} ${AppStringsProvider.current().copied}", Toast.LENGTH_SHORT).show()
 }
 
 /**
@@ -1690,7 +1690,7 @@ private fun SocialMediaButton(
                 try {
                     context.openUrl(link)
                 } catch (e: Exception) {
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                 }
             },
         shape = RoundedCornerShape(16.dp),
@@ -1759,7 +1759,7 @@ private fun SocialMediaButton(
                 try {
                     context.openUrl(link)
                 } catch (e: Exception) {
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                 }
             },
         shape = RoundedCornerShape(16.dp),
@@ -1830,7 +1830,7 @@ private fun ContactCardCompact(
                 try {
                     context.openUrl(link)
                 } catch (e: Exception) {
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                 }
             },
         shape = RoundedCornerShape(14.dp),
@@ -1897,7 +1897,7 @@ private fun ContactCardCompact(
                 ) {
                     Icon(
                         Icons.Default.ContentCopy,
-                        Strings.copy,
+                        AppStringsProvider.current().copy,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -1907,14 +1907,14 @@ private fun ContactCardCompact(
                         try {
                             context.openUrl(link)
                         } catch (e: Exception) {
-                            Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
                         Icons.Outlined.OpenInNew,
-                        Strings.openAction,
+                        AppStringsProvider.current().openAction,
                         modifier = Modifier.size(16.dp)
                     )
                 }

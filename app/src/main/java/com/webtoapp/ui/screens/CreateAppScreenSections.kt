@@ -48,7 +48,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.pwa.PwaAnalysisResult
 import com.webtoapp.core.pwa.PwaAnalysisState
 import com.webtoapp.core.pwa.PwaDataSource
@@ -109,7 +109,7 @@ fun BasicInfoCard(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = Strings.labelBasicInfo,
+                text = AppStringsProvider.current().labelBasicInfo,
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -131,7 +131,7 @@ fun BasicInfoCard(
                     PremiumTextField(
                         value = editState.url,
                         onValueChange = onUrlChange,
-                        label = { Text(Strings.labelUrl) },
+                        label = { Text(AppStringsProvider.current().labelUrl) },
                         placeholder = { Text("https://example.com") },
                         leadingIcon = { Icon(Icons.Outlined.Link, null) },
                         singleLine = true,
@@ -167,12 +167,12 @@ fun BasicInfoCard(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = if (isFrontend) Strings.frontendApp else Strings.htmlApp,
+                                    text = if (isFrontend) AppStringsProvider.current().frontendApp else AppStringsProvider.current().htmlApp,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 Text(
-                                    text = "${Strings.entryFile}: $entryFile · ${Strings.totalFilesCount.replace("%d", fileCount.toString())}",
+                                    text = "${AppStringsProvider.current().entryFile}: $entryFile · ${AppStringsProvider.current().totalFilesCount.replace("%d", fileCount.toString())}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                                 )
@@ -184,7 +184,7 @@ fun BasicInfoCard(
                 AppType.IMAGE, AppType.VIDEO -> {
                     val mediaPath = editState.url
                     val isVideo = editState.appType == AppType.VIDEO
-                    val fileName = mediaPath.substringAfterLast("/", Strings.unknownFile)
+                    val fileName = mediaPath.substringAfterLast("/", AppStringsProvider.current().unknownFile)
 
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -204,7 +204,7 @@ fun BasicInfoCard(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                 Text(
-                                    text = if (isVideo) Strings.videoApp else Strings.imageApp,
+                                    text = if (isVideo) AppStringsProvider.current().videoApp else AppStringsProvider.current().imageApp,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
@@ -238,7 +238,7 @@ fun BasicInfoCard(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = Strings.appTypeWordPress,
+                                    text = AppStringsProvider.current().appTypeWordPress,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
@@ -271,12 +271,12 @@ fun BasicInfoCard(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                 Text(
-                                    text = Strings.galleryApp,
+                                    text = AppStringsProvider.current().galleryApp,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 Text(
-                                    text = Strings.galleryMediaList,
+                                    text = AppStringsProvider.current().galleryMediaList,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                                     maxLines = 1
@@ -305,7 +305,7 @@ fun BasicInfoCard(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = Strings.appTypeNodeJs,
+                                    text = AppStringsProvider.current().appTypeNodeJs,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
@@ -321,9 +321,9 @@ fun BasicInfoCard(
 
                 AppType.PHP_APP, AppType.PYTHON_APP, AppType.GO_APP -> {
                     val (label, desc) = when (editState.appType) {
-                        AppType.PHP_APP -> Strings.appTypePhp to "PHP Runtime"
-                        AppType.PYTHON_APP -> Strings.appTypePython to "Python Runtime"
-                        AppType.GO_APP -> Strings.appTypeGo to "Go Binary"
+                        AppType.PHP_APP -> AppStringsProvider.current().appTypePhp to "PHP Runtime"
+                        AppType.PYTHON_APP -> AppStringsProvider.current().appTypePython to "Python Runtime"
+                        AppType.GO_APP -> AppStringsProvider.current().appTypeGo to "Go Binary"
                         else -> "" to ""
                     }
                     EnhancedElevatedCard(
@@ -362,7 +362,7 @@ fun BasicInfoCard(
                     PremiumTextField(
                         value = editState.url,
                         onValueChange = onUrlChange,
-                        label = { Text(Strings.labelUrl) },
+                        label = { Text(AppStringsProvider.current().labelUrl) },
                         placeholder = { Text("https://example.com") },
                         leadingIcon = { Icon(Icons.Outlined.Link, null) },
                         singleLine = true,
@@ -420,7 +420,7 @@ fun ActivationCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.activationCodeVerify,
+                        text = AppStringsProvider.current().activationCodeVerify,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -437,7 +437,7 @@ fun ActivationCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = Strings.activationCodeHint,
+                        text = AppStringsProvider.current().activationCodeHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -449,7 +449,7 @@ fun ActivationCard(
                         PremiumTextField(
                             value = newCode,
                             onValueChange = { newCode = it },
-                            placeholder = { Text(Strings.inputActivationCode) },
+                            placeholder = { Text(AppStringsProvider.current().inputActivationCode) },
                             singleLine = true,
                             modifier = Modifier.weight(weight = 1f, fill = true)
                         )
@@ -462,7 +462,7 @@ fun ActivationCard(
                                 }
                             }
                         ) {
-                            Icon(Icons.Default.Add, Strings.add)
+                            Icon(Icons.Default.Add, AppStringsProvider.current().add)
                         }
                     }
 
@@ -484,7 +484,7 @@ fun ActivationCard(
                             ) {
                                 Icon(
                                     Icons.Outlined.Delete,
-                                    Strings.btnDelete,
+                                    AppStringsProvider.current().btnDelete,
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -528,11 +528,11 @@ fun PwaAnalysisSection(
                     strokeWidth = 2.dp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.pwaAnalyzing)
+                Text(AppStringsProvider.current().pwaAnalyzing)
             } else {
                 Icon(Icons.Outlined.TravelExplore, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.pwaAnalyzeButton)
+                Text(AppStringsProvider.current().pwaAnalyzeButton)
             }
         }
 
@@ -560,7 +560,7 @@ fun PwaAnalysisSection(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${Strings.pwaAnalysisFailed}: $error",
+                        text = "${AppStringsProvider.current().pwaAnalysisFailed}: $error",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -630,7 +630,7 @@ private fun PwaResultCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (result.isPwa) Strings.pwaDetected else Strings.pwaNoneDetected,
+                        text = if (result.isPwa) AppStringsProvider.current().pwaDetected else AppStringsProvider.current().pwaNoneDetected,
                         style = MaterialTheme.typography.titleSmall,
                         color = if (result.isPwa) {
                             MaterialTheme.colorScheme.primary
@@ -651,8 +651,8 @@ private fun PwaResultCard(
 
             Text(
                 text = when (result.source) {
-                    PwaDataSource.MANIFEST -> Strings.pwaSourceManifest
-                    PwaDataSource.META_TAGS -> Strings.pwaSourceMeta
+                    PwaDataSource.MANIFEST -> AppStringsProvider.current().pwaSourceManifest
+                    PwaDataSource.META_TAGS -> AppStringsProvider.current().pwaSourceMeta
                     PwaDataSource.NONE -> ""
                 },
                 style = MaterialTheme.typography.labelSmall,
@@ -662,11 +662,11 @@ private fun PwaResultCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             result.suggestedName?.let { name ->
-                PwaInfoRow(label = Strings.pwaName, value = name)
+                PwaInfoRow(label = AppStringsProvider.current().pwaName, value = name)
             }
 
             result.suggestedIconUrl?.let { url ->
-                PwaInfoRow(label = Strings.pwaIcon, value = url.takeLast(60))
+                PwaInfoRow(label = AppStringsProvider.current().pwaIcon, value = url.takeLast(60))
             }
 
             result.suggestedThemeColor?.let { color ->
@@ -675,7 +675,7 @@ private fun PwaResultCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${Strings.pwaThemeColor}: ",
+                        text = "${AppStringsProvider.current().pwaThemeColor}: ",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -700,15 +700,15 @@ private fun PwaResultCard(
             }
 
             result.suggestedDisplay?.let { display ->
-                PwaInfoRow(label = Strings.pwaDisplayMode, value = display)
+                PwaInfoRow(label = AppStringsProvider.current().pwaDisplayMode, value = display)
             }
 
             result.suggestedOrientation?.let { orientation ->
-                PwaInfoRow(label = Strings.pwaOrientation, value = orientation)
+                PwaInfoRow(label = AppStringsProvider.current().pwaOrientation, value = orientation)
             }
 
             result.startUrl?.let { url ->
-                PwaInfoRow(label = Strings.pwaStartUrl, value = url.takeLast(80))
+                PwaInfoRow(label = AppStringsProvider.current().pwaStartUrl, value = url.takeLast(80))
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -720,7 +720,7 @@ private fun PwaResultCard(
             ) {
                 Icon(Icons.Filled.AutoFixHigh, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.pwaApplyAll)
+                Text(AppStringsProvider.current().pwaApplyAll)
             }
         }
     }
@@ -752,22 +752,22 @@ fun AppThemeCard(
     onThemeChange: (String) -> Unit
 ) {
     val themeOptions = listOf(
-        "AURORA" to Strings.themeAurora,
-        "CYBERPUNK" to Strings.themeCyberpunk,
-        "SAKURA" to Strings.themeSakura,
-        "OCEAN" to Strings.themeOcean,
-        "FOREST" to Strings.themeForest,
-        "GALAXY" to Strings.themeGalaxy,
-        "VOLCANO" to Strings.themeVolcano,
-        "FROST" to Strings.themeFrost,
-        "SUNSET" to Strings.themeSunset,
-        "MINIMAL" to Strings.themeMinimal,
-        "NEON_TOKYO" to Strings.themeNeonTokyo,
-        "LAVENDER" to Strings.themeLavender
+        "AURORA" to AppStringsProvider.current().themeAurora,
+        "CYBERPUNK" to AppStringsProvider.current().themeCyberpunk,
+        "SAKURA" to AppStringsProvider.current().themeSakura,
+        "OCEAN" to AppStringsProvider.current().themeOcean,
+        "FOREST" to AppStringsProvider.current().themeForest,
+        "GALAXY" to AppStringsProvider.current().themeGalaxy,
+        "VOLCANO" to AppStringsProvider.current().themeVolcano,
+        "FROST" to AppStringsProvider.current().themeFrost,
+        "SUNSET" to AppStringsProvider.current().themeSunset,
+        "MINIMAL" to AppStringsProvider.current().themeMinimal,
+        "NEON_TOKYO" to AppStringsProvider.current().themeNeonTokyo,
+        "LAVENDER" to AppStringsProvider.current().themeLavender
     )
 
     var expanded by remember { mutableStateOf(false) }
-    val selectedDisplayName = themeOptions.find { it.first == selectedTheme }?.second ?: Strings.themeAurora
+    val selectedDisplayName = themeOptions.find { it.first == selectedTheme }?.second ?: AppStringsProvider.current().themeAurora
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -791,13 +791,13 @@ fun AppThemeCard(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = Strings.exportAppTheme,
+                    text = AppStringsProvider.current().exportAppTheme,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
 
             Text(
-                text = Strings.exportAppThemeHint,
+                text = AppStringsProvider.current().exportAppThemeHint,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -810,7 +810,7 @@ fun AppThemeCard(
                     value = selectedDisplayName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text(Strings.selectTheme) },
+                    label = { Text(AppStringsProvider.current().selectTheme) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -892,7 +892,7 @@ fun TranslateCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.autoTranslate,
+                        text = AppStringsProvider.current().autoTranslate,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -909,7 +909,7 @@ fun TranslateCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = Strings.autoTranslateHint,
+                        text = AppStringsProvider.current().autoTranslateHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -922,7 +922,7 @@ fun TranslateCard(
                             value = "${config.targetLanguage.displayName} (${config.targetLanguage.code})",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text(Strings.translateTargetLanguage) },
+                            label = { Text(AppStringsProvider.current().translateTargetLanguage) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = langExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -974,7 +974,7 @@ fun TranslateCard(
                             value = config.preferredEngine.displayName,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text(Strings.translateEngine) },
+                            label = { Text(AppStringsProvider.current().translateEngine) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = engineExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1012,9 +1012,9 @@ fun TranslateCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.showTranslateButton, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().showTranslateButton, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                text = Strings.showTranslateButtonHint,
+                                text = AppStringsProvider.current().showTranslateButtonHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1031,9 +1031,9 @@ fun TranslateCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.autoTranslateOnLoad, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().autoTranslateOnLoad, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                text = Strings.autoTranslateOnLoadHint,
+                                text = AppStringsProvider.current().autoTranslateOnLoadHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

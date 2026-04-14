@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.QrCodeShareDialog
 import com.webtoapp.ui.screens.extensionmodule.ExtensionModulesTabContent
 import com.webtoapp.ui.screens.extensionmodule.UserScriptsTabContent
@@ -172,10 +172,10 @@ fun ExtensionModuleScreen(
                                     Toast.makeText(context, context.getString(R.string.msg_import_failed, e.message ?: "Unknown error"), Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                Toast.makeText(context, Strings.qrCodeNotFound, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().qrCodeNotFound, Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, Strings.imageLoadFailed, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().imageLoadFailed, Toast.LENGTH_SHORT).show()
                         }
                     }
                 } catch (e: Exception) {
@@ -210,18 +210,18 @@ fun ExtensionModuleScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.extensionModule) },
+                title = { Text(AppStringsProvider.current().extensionModule) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     IconButton(onClick = { showImportDialog = true }) {
-                        Icon(Icons.Default.Download, contentDescription = Strings.btnImport)
+                        Icon(Icons.Default.Download, contentDescription = AppStringsProvider.current().btnImport)
                     }
                     IconButton(onClick = { onNavigateToEditor(null) }) {
-                        Icon(Icons.Default.Add, contentDescription = Strings.add)
+                        Icon(Icons.Default.Add, contentDescription = AppStringsProvider.current().add)
                     }
                 }
             )
@@ -273,7 +273,7 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Text(
-                                Strings.aiDevelop,
+                                AppStringsProvider.current().aiDevelop,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -324,7 +324,7 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Text(
-                                Strings.manualCreate,
+                                AppStringsProvider.current().manualCreate,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -354,7 +354,7 @@ fun ExtensionModuleScreen(
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = Strings.createModule,
+                        contentDescription = AppStringsProvider.current().createModule,
                         modifier = Modifier.graphicsLayer {
                             rotationZ = fabRotation
                         }
@@ -378,14 +378,14 @@ fun ExtensionModuleScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text(Strings.searchModules) },
+                placeholder = { Text(AppStringsProvider.current().searchModules) },
                 leadingIcon = {
                     Icon(Icons.Outlined.Search, contentDescription = null)
                 },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Outlined.Close, contentDescription = Strings.clear)
+                            Icon(Icons.Outlined.Close, contentDescription = AppStringsProvider.current().clear)
                         }
                     }
                 },
@@ -396,8 +396,8 @@ fun ExtensionModuleScreen(
             // Tab: module /
             val pagerState = rememberPagerState(pageCount = { 2 })
             val tabTitles = listOf(
-                Strings.extensionModulesTab,
-                Strings.userScriptsTab
+                AppStringsProvider.current().extensionModulesTab,
+                AppStringsProvider.current().userScriptsTab
             )
             
             // Apple-style Segmented Control
@@ -498,7 +498,7 @@ fun ExtensionModuleScreen(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text(Strings.importModule) },
+            title = { Text(AppStringsProvider.current().importModule) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Userscript import
@@ -538,9 +538,9 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importUserScript, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importUserScript, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.importUserScriptHint,
+                                    AppStringsProvider.current().importUserScriptHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -586,9 +586,9 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importChromeExtension, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importChromeExtension, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.importChromeExtensionHint,
+                                    AppStringsProvider.current().importChromeExtensionHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -638,9 +638,9 @@ fun ExtensionModuleScreen(
                                 Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importFromFile, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importFromFile, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.selectWtamodFile,
+                                    AppStringsProvider.current().selectWtamodFile,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -681,9 +681,9 @@ fun ExtensionModuleScreen(
                                 Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.tertiary)
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importFromQrImage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importFromQrImage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.selectQrImageHint,
+                                    AppStringsProvider.current().selectQrImageHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -696,7 +696,7 @@ fun ExtensionModuleScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showImportDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -706,7 +706,7 @@ fun ExtensionModuleScreen(
     showUserScriptPreview?.let { parseResult ->
         AlertDialog(
             onDismissRequest = { showUserScriptPreview = null },
-            title = { Text(Strings.installUserScript) },
+            title = { Text(AppStringsProvider.current().installUserScript) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Script info
@@ -758,7 +758,7 @@ fun ExtensionModuleScreen(
                     
                     parseResult.module.author?.let { author ->
                         Text(
-                        "${Strings.scriptAuthor}: ${author.name}",
+                        "${AppStringsProvider.current().scriptAuthor}: ${author.name}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -767,7 +767,7 @@ fun ExtensionModuleScreen(
                     // URL match rules
                     if (parseResult.module.urlMatches.isNotEmpty()) {
                         Text(
-                        "${Strings.matchingSites}: ${parseResult.module.urlMatches.size} ${Strings.matchRules}",
+                        "${AppStringsProvider.current().matchingSites}: ${parseResult.module.urlMatches.size} ${AppStringsProvider.current().matchRules}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -776,7 +776,7 @@ fun ExtensionModuleScreen(
                     // GM API permissions
                     if (parseResult.module.gmGrants.isNotEmpty()) {
                         Text(
-                            "${Strings.requiredApis}: ${parseResult.module.gmGrants.joinToString(", ")}",
+                            "${AppStringsProvider.current().requiredApis}: ${parseResult.module.gmGrants.joinToString(", ")}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -796,7 +796,7 @@ fun ExtensionModuleScreen(
                 PremiumButton(onClick = {
                     scope.launch {
                         extensionManager.addModule(parseResult.module).onSuccess { module ->
-                            Toast.makeText(context, "${Strings.msgImportSuccess}: ${module.name}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${AppStringsProvider.current().msgImportSuccess}: ${module.name}", Toast.LENGTH_SHORT).show()
                             // Pre-load @require and @resource in background
                             val fileManager = com.webtoapp.core.extension.ExtensionFileManager(context)
                             if (module.requireUrls.isNotEmpty()) {
@@ -815,12 +815,12 @@ fun ExtensionModuleScreen(
                         showUserScriptPreview = null
                     }
                 }) {
-                    Text(Strings.install)
+                    Text(AppStringsProvider.current().install)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showUserScriptPreview = null }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -833,7 +833,7 @@ fun ExtensionModuleScreen(
                 showChromeExtPreview = null
                 pendingChromeExtDir = null
             },
-            title = { Text(Strings.installChromeExtension) },
+            title = { Text(AppStringsProvider.current().installChromeExtension) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -883,7 +883,7 @@ fun ExtensionModuleScreen(
                     }
                     
                     Text(
-                        "${Strings.contentScripts}: ${parseResult.modules.size}",
+                        "${AppStringsProvider.current().contentScripts}: ${parseResult.modules.size}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -891,7 +891,7 @@ fun ExtensionModuleScreen(
                     // Supported permissions
                     if (parseResult.supportedPermissions.isNotEmpty()) {
                         Text(
-                            "${Strings.requiredApis}: ${parseResult.supportedPermissions.joinToString(", ")}",
+                            "${AppStringsProvider.current().requiredApis}: ${parseResult.supportedPermissions.joinToString(", ")}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -900,7 +900,7 @@ fun ExtensionModuleScreen(
                     // Unsupported permissions
                     if (parseResult.unsupportedPermissions.isNotEmpty()) {
                         Text(
-                            "⚠️ ${Strings.unsupportedApis}: ${parseResult.unsupportedPermissions.joinToString(", ")}",
+                            "⚠️ ${AppStringsProvider.current().unsupportedApis}: ${parseResult.unsupportedPermissions.joinToString(", ")}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -926,7 +926,7 @@ fun ExtensionModuleScreen(
                         if (successCount > 0) {
                             Toast.makeText(
                                 context,
-                                "${context.getString(R.string.msg_import_success, parseResult.extensionName)} ($successCount ${Strings.contentScripts})",
+                                "${context.getString(R.string.msg_import_success, parseResult.extensionName)} ($successCount ${AppStringsProvider.current().contentScripts})",
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -936,7 +936,7 @@ fun ExtensionModuleScreen(
                         pendingChromeExtDir = null
                     }
                 }) {
-                    Text(Strings.install)
+                    Text(AppStringsProvider.current().install)
                 }
             },
             dismissButton = {
@@ -944,7 +944,7 @@ fun ExtensionModuleScreen(
                     showChromeExtPreview = null
                     pendingChromeExtDir = null
                 }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )

@@ -4,7 +4,7 @@ import android.content.Context
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.extension.agent.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -49,7 +49,7 @@ class AiModuleDeveloper(private val context: Context) {
             val savedModels = aiConfigManager.savedModelsFlow.first()
             
             if (apiKeys.isEmpty()) {
-                return@withContext AiGenerationResult.Error(Strings.aiErrorNoApiKey)
+                return@withContext AiGenerationResult.Error(AppStringsProvider.current().aiErrorNoApiKey)
             }
             
             val defaultModelId = aiConfigManager.defaultModelIdFlow.first()
@@ -57,12 +57,12 @@ class AiModuleDeveloper(private val context: Context) {
                 ?: savedModels.firstOrNull()
 
             if (savedModel == null) {
-                return@withContext AiGenerationResult.Error(Strings.aiErrorNoModel)
+                return@withContext AiGenerationResult.Error(AppStringsProvider.current().aiErrorNoModel)
             }
             
             val apiKey = apiKeys.find { it.id == savedModel.apiKeyId }
             if (apiKey == null) {
-                return@withContext AiGenerationResult.Error(Strings.aiErrorNoApiKeyForModel)
+                return@withContext AiGenerationResult.Error(AppStringsProvider.current().aiErrorNoApiKeyForModel)
             }
             
             val systemPrompt = buildSystemPrompt(category)
@@ -83,7 +83,7 @@ class AiModuleDeveloper(private val context: Context) {
                 AiGenerationResult.Error(response.exceptionOrNull()?.message ?: "Generation failed")
             }
         } catch (e: Exception) {
-            AiGenerationResult.Error(e.message ?: Strings.aiErrorUnknown)
+            AiGenerationResult.Error(e.message ?: AppStringsProvider.current().aiErrorUnknown)
         }
     }
 
@@ -178,8 +178,8 @@ $existingCode
             val cssCode = CSS_BLOCK_REGEX.find(content)?.groupValues?.get(1) ?: ""
             
             return AiGeneratedModule(
-                name = Strings.aiGeneratedModule,
-                description = Strings.aiGeneratedModuleDesc,
+                name = AppStringsProvider.current().aiGeneratedModule,
+                description = AppStringsProvider.current().aiGeneratedModuleDesc,
                 icon = "smart_toy",
                 jsCode = jsCode,
                 cssCode = cssCode,
@@ -223,7 +223,7 @@ data class AiGeneratedModule(
      */
     fun toExtensionModule(): ExtensionModule {
         return ExtensionModule(
-            name = name.ifBlank { Strings.aiGeneratedModule },
+            name = name.ifBlank { AppStringsProvider.current().aiGeneratedModule },
             description = description,
             icon = icon.ifBlank { "🤖" },
             category = ModuleCategory.OTHER,

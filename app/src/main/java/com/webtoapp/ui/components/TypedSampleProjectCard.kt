@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.sample.TypedSampleProject
 import com.webtoapp.ui.theme.LocalAppTheme
 import androidx.compose.ui.graphics.Color
@@ -97,7 +97,7 @@ fun TypedSampleProjectsCard(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        Strings.quickExperience,
+                        AppStringsProvider.current().quickExperience,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -231,7 +231,7 @@ private fun TypedSampleProjectItem(
         ) {
             Icon(
                 Icons.Default.PlayArrow,
-                contentDescription = Strings.run,
+                contentDescription = AppStringsProvider.current().run,
                 tint = sampleColor,
                 modifier = Modifier.size(20.dp)
             )

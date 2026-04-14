@@ -46,7 +46,7 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.stats.HealthStatus
 import com.webtoapp.data.model.AppType
@@ -114,13 +114,13 @@ fun AppCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     AppTypeChip(appType = app.appType)
                     if (app.activationEnabled) {
-                        FeatureChip(icon = Icons.Outlined.Key, label = Strings.activationCodeVerify)
+                        FeatureChip(icon = Icons.Outlined.Key, label = AppStringsProvider.current().activationCodeVerify)
                     }
                     if (app.adBlockEnabled) {
-                        FeatureChip(icon = Icons.Outlined.Block, label = Strings.adBlocking)
+                        FeatureChip(icon = Icons.Outlined.Block, label = AppStringsProvider.current().adBlocking)
                     }
                     if (app.announcementEnabled) {
-                        FeatureChip(icon = Icons.Outlined.Info, label = Strings.popupAnnouncement)
+                        FeatureChip(icon = Icons.Outlined.Info, label = AppStringsProvider.current().popupAnnouncement)
                     }
                 }
             }
@@ -138,7 +138,7 @@ fun AppCard(
 
             Box {
                 IconButton(onClick = { expanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
+                    Icon(Icons.Default.MoreVert, contentDescription = AppStringsProvider.current().more)
                 }
 
                 AppCardMenu(
@@ -247,7 +247,7 @@ private fun AppCardPreview(
                         .crossfade(true)
                         .build(),
                     imageLoader = previewImageLoader,
-                    contentDescription = Strings.btnPreview,
+                    contentDescription = AppStringsProvider.current().btnPreview,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(8.dp)),
@@ -267,7 +267,7 @@ private fun AppCardPreview(
                     onCaptureScreenshot != null -> {
                         Icon(
                             imageVector = Icons.Outlined.Refresh,
-                            contentDescription = Strings.btnPreview,
+                            contentDescription = AppStringsProvider.current().btnPreview,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -275,7 +275,7 @@ private fun AppCardPreview(
                     else -> {
                         Icon(
                             painter = painterResource(defaultAppTypeIconRes(app.appType)),
-                            contentDescription = Strings.btnPreview,
+                            contentDescription = AppStringsProvider.current().btnPreview,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -316,12 +316,12 @@ private fun appCardSubtitle(app: WebApp): String {
                 val imageCount = config.items.count { it.type == GalleryItemType.IMAGE }
                 val videoCount = config.items.count { it.type == GalleryItemType.VIDEO }
                 buildString {
-                    if (imageCount > 0) append("$imageCount ${Strings.galleryImages}")
+                    if (imageCount > 0) append("$imageCount ${AppStringsProvider.current().galleryImages}")
                     if (imageCount > 0 && videoCount > 0) append(", ")
-                    if (videoCount > 0) append("$videoCount ${Strings.galleryVideos}")
+                    if (videoCount > 0) append("$videoCount ${AppStringsProvider.current().galleryVideos}")
                 }
             } else {
-                Strings.galleryEmpty
+                AppStringsProvider.current().galleryEmpty
             }
         }
         else -> app.url

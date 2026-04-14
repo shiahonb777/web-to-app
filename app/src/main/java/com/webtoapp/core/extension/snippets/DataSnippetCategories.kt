@@ -1,17 +1,17 @@
 package com.webtoapp.core.extension.snippets
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal fun storageOperations() = CodeSnippetCategory(
         id = "storage",
-        name = Strings.snippetStorage,
+        name = AppStringsProvider.current().snippetStorage,
         icon = "💾",
-        description = Strings.snippetStorageDesc,
+        description = AppStringsProvider.current().snippetStorageDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "storage-local-set",
-                name = Strings.snippetLocalSet,
-                description = Strings.snippetLocalSetDesc,
+                name = AppStringsProvider.current().snippetLocalSet,
+                description = AppStringsProvider.current().snippetLocalSetDesc,
                 code = """function saveData(key, value) {
     try {
         localStorage.setItem(key, JSON.stringify(value));
@@ -22,12 +22,12 @@ internal fun storageOperations() = CodeSnippetCategory(
     }
 }
 saveData('myKey', { name: 'value' });""",
-                tags = listOf(Strings.tagStorage, Strings.tagSave)
+                tags = listOf(AppStringsProvider.current().tagStorage, AppStringsProvider.current().tagSave)
             ),
             CodeSnippet(
                 id = "storage-local-get",
-                name = Strings.snippetLocalGet,
-                description = Strings.snippetLocalGetDesc,
+                name = AppStringsProvider.current().snippetLocalGet,
+                description = AppStringsProvider.current().snippetLocalGetDesc,
                 code = """function loadData(key, defaultValue = null) {
     try {
         const data = localStorage.getItem(key);
@@ -38,36 +38,36 @@ saveData('myKey', { name: 'value' });""",
     }
 }
 const data = loadData('myKey', {});""",
-                tags = listOf(Strings.tagStorage, Strings.tagRead)
+                tags = listOf(AppStringsProvider.current().tagStorage, AppStringsProvider.current().tagRead)
             ),
             CodeSnippet(
                 id = "storage-session",
-                name = Strings.snippetSessionStorage,
-                description = Strings.snippetSessionStorageDesc,
+                name = AppStringsProvider.current().snippetSessionStorage,
+                description = AppStringsProvider.current().snippetSessionStorageDesc,
                 code = """// Save（页面关闭后清除）
 sessionStorage.setItem('key', 'value');
 const value = sessionStorage.getItem('key');
 // Delete
 sessionStorage.removeItem('key');
 sessionStorage.clear();""",
-                tags = listOf(Strings.tagSession, Strings.tagTemporary)
+                tags = listOf(AppStringsProvider.current().tagSession, AppStringsProvider.current().tagTemporary)
             ),
             CodeSnippet(
                 id = "storage-cookie-set",
-                name = Strings.snippetSetCookie,
-                description = Strings.snippetSetCookieDesc,
+                name = AppStringsProvider.current().snippetSetCookie,
+                description = AppStringsProvider.current().snippetSetCookieDesc,
                 code = """function setCookie(name, value, days = 7) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
     document.cookie = name + '=' + encodeURIComponent(value) + 
         '; expires=' + expires + '; path=/';
 }
 setCookie('myCookie', 'value', 30);""",
-                tags = listOf(Strings.tagCookie, Strings.tagSetting)
+                tags = listOf(AppStringsProvider.current().tagCookie, AppStringsProvider.current().tagSetting)
             ),
             CodeSnippet(
                 id = "storage-cookie-get",
-                name = Strings.snippetGetCookie,
-                description = Strings.snippetGetCookieDesc,
+                name = AppStringsProvider.current().snippetGetCookie,
+                description = AppStringsProvider.current().snippetGetCookieDesc,
                 code = """function getCookie(name) {
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
@@ -79,22 +79,22 @@ setCookie('myCookie', 'value', 30);""",
     return null;
 }
 const value = getCookie('myCookie');""",
-                tags = listOf(Strings.tagCookie, Strings.tagRead)
+                tags = listOf(AppStringsProvider.current().tagCookie, AppStringsProvider.current().tagRead)
             ),
             CodeSnippet(
                 id = "storage-cookie-delete",
-                name = Strings.snippetDeleteCookie,
-                description = Strings.snippetDeleteCookieDesc,
+                name = AppStringsProvider.current().snippetDeleteCookie,
+                description = AppStringsProvider.current().snippetDeleteCookieDesc,
                 code = """function deleteCookie(name) {
     document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 }
 deleteCookie('myCookie');""",
-                tags = listOf(Strings.tagCookie, Strings.tagDelete)
+                tags = listOf(AppStringsProvider.current().tagCookie, AppStringsProvider.current().tagDelete)
             ),
             CodeSnippet(
                 id = "storage-indexeddb",
-                name = Strings.snippetIndexedDB,
-                description = Strings.snippetIndexedDBDesc,
+                name = AppStringsProvider.current().snippetIndexedDB,
+                description = AppStringsProvider.current().snippetIndexedDBDesc,
                 code = """const dbName = 'MyDatabase';
 const storeName = 'MyStore';
 
@@ -117,20 +117,20 @@ async function saveToIDB(data) {
     const tx = db.transaction(storeName, 'readwrite');
     tx.objectStore(storeName).put(data);
 }""",
-                tags = listOf(Strings.tagIndexedDB, Strings.tagBigData)
+                tags = listOf(AppStringsProvider.current().tagIndexedDB, AppStringsProvider.current().tagBigData)
             )
         )
 )
 internal fun networkOperations() = CodeSnippetCategory(
         id = "network",
-        name = Strings.snippetNetwork,
+        name = AppStringsProvider.current().snippetNetwork,
         icon = "🌐",
-        description = Strings.snippetNetworkDesc,
+        description = AppStringsProvider.current().snippetNetworkDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "network-fetch-get",
-                name = Strings.snippetGetRequest,
-                description = Strings.snippetGetRequestDesc,
+                name = AppStringsProvider.current().snippetGetRequest,
+                description = AppStringsProvider.current().snippetGetRequestDesc,
                 code = """async function fetchData(url) {
     try {
         const response = await fetch(url);
@@ -142,12 +142,12 @@ internal fun networkOperations() = CodeSnippetCategory(
     }
 }
 fetchData('https://api.example.com/data').then(console.log);""",
-                tags = listOf(Strings.tagGET, Strings.tagRequest)
+                tags = listOf(AppStringsProvider.current().tagGET, AppStringsProvider.current().tagRequest)
             ),
             CodeSnippet(
                 id = "network-fetch-post",
-                name = Strings.snippetPostRequest,
-                description = Strings.snippetPostRequestDesc,
+                name = AppStringsProvider.current().snippetPostRequest,
+                description = AppStringsProvider.current().snippetPostRequestDesc,
                 code = """async function postData(url, data) {
     try {
         const response = await fetch(url, {
@@ -162,12 +162,12 @@ fetchData('https://api.example.com/data').then(console.log);""",
     }
 }
 postData('https://api.example.com/submit', { name: 'value' });""",
-                tags = listOf(Strings.tagPOST, Strings.tagSubmit)
+                tags = listOf(AppStringsProvider.current().tagPOST, AppStringsProvider.current().tagSubmit)
             ),
             CodeSnippet(
                 id = "network-fetch-timeout",
-                name = Strings.snippetTimeoutRequest,
-                description = Strings.snippetTimeoutRequestDesc,
+                name = AppStringsProvider.current().snippetTimeoutRequest,
+                description = AppStringsProvider.current().snippetTimeoutRequestDesc,
                 code = """async function fetchWithTimeout(url, timeout = 5000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -183,12 +183,12 @@ postData('https://api.example.com/submit', { name: 'value' });""",
         return null;
     }
 }""",
-                tags = listOf(Strings.tagTimeout, Strings.tagRequest)
+                tags = listOf(AppStringsProvider.current().tagTimeout, AppStringsProvider.current().tagRequest)
             ),
             CodeSnippet(
                 id = "network-retry",
-                name = Strings.snippetRetryRequest,
-                description = Strings.snippetRetryRequestDesc,
+                name = AppStringsProvider.current().snippetRetryRequest,
+                description = AppStringsProvider.current().snippetRetryRequestDesc,
                 code = """async function fetchWithRetry(url, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -203,12 +203,12 @@ postData('https://api.example.com/submit', { name: 'value' });""",
     }
     return null;
 }""",
-                tags = listOf(Strings.tagRetry, Strings.tagRequest)
+                tags = listOf(AppStringsProvider.current().tagRetry, AppStringsProvider.current().tagRequest)
             ),
             CodeSnippet(
                 id = "network-download",
-                name = Strings.snippetDownloadFile,
-                description = Strings.snippetDownloadFileDesc,
+                name = AppStringsProvider.current().snippetDownloadFile,
+                description = AppStringsProvider.current().snippetDownloadFileDesc,
                 code = """function downloadFile(url, filename) {
     const link = document.createElement('a');
     link.href = url;
@@ -222,12 +222,12 @@ function downloadBlob(blob, filename) {
     downloadFile(url, filename);
     URL.revokeObjectURL(url);
 }""",
-                tags = listOf(Strings.tagDownload, Strings.tagFile)
+                tags = listOf(AppStringsProvider.current().tagDownload, AppStringsProvider.current().tagFile)
             ),
             CodeSnippet(
                 id = "network-jsonp",
-                name = Strings.snippetJsonp,
-                description = Strings.snippetJsonpDesc,
+                name = AppStringsProvider.current().snippetJsonp,
+                description = AppStringsProvider.current().snippetJsonpDesc,
                 code = """function jsonp(url, callbackName = 'callback') {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -244,20 +244,20 @@ function downloadBlob(blob, filename) {
         document.head.appendChild(script);
     });
 }""",
-                tags = listOf(Strings.tagJSONP, Strings.tagCrossDomain)
+                tags = listOf(AppStringsProvider.current().tagJSONP, AppStringsProvider.current().tagCrossDomain)
             )
         )
 )
 internal fun dataProcessing() = CodeSnippetCategory(
         id = "data",
-        name = Strings.snippetData,
+        name = AppStringsProvider.current().snippetData,
         icon = "📊",
-        description = Strings.snippetDataDesc,
+        description = AppStringsProvider.current().snippetDataDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "data-extract-table",
-                name = Strings.snippetExtractTable,
-                description = Strings.snippetExtractTableDesc,
+                name = AppStringsProvider.current().snippetExtractTable,
+                description = AppStringsProvider.current().snippetExtractTableDesc,
                 code = """function extractTableData(tableSelector) {
     const table = document.querySelector(tableSelector);
     if (!table) return [];
@@ -276,12 +276,12 @@ internal fun dataProcessing() = CodeSnippetCategory(
 }
 const data = extractTableData('table');
 console.log(JSON.stringify(data, null, 2));""",
-                tags = listOf(Strings.tagTable, Strings.tagExtract)
+                tags = listOf(AppStringsProvider.current().tagTable, AppStringsProvider.current().tagExtract)
             ),
             CodeSnippet(
                 id = "data-extract-links",
-                name = Strings.snippetExtractLinks,
-                description = Strings.snippetExtractLinksDesc,
+                name = AppStringsProvider.current().snippetExtractLinks,
+                description = AppStringsProvider.current().snippetExtractLinksDesc,
                 code = """function extractLinks(filter = '') {
     return Array.from(document.querySelectorAll('a[href]'))
         .map(a => ({
@@ -292,12 +292,12 @@ console.log(JSON.stringify(data, null, 2));""",
 }
 const links = extractLinks();
 console.log(links);""",
-                tags = listOf(Strings.tagLink, Strings.tagExtract)
+                tags = listOf(AppStringsProvider.current().tagLink, AppStringsProvider.current().tagExtract)
             ),
             CodeSnippet(
                 id = "data-extract-images",
-                name = Strings.snippetExtractImages,
-                description = Strings.snippetExtractImagesDesc,
+                name = AppStringsProvider.current().snippetExtractImages,
+                description = AppStringsProvider.current().snippetExtractImagesDesc,
                 code = """function extractImages(minSize = 100) {
     return Array.from(document.querySelectorAll('img'))
         .filter(img => img.naturalWidth >= minSize && img.naturalHeight >= minSize)
@@ -310,12 +310,12 @@ console.log(links);""",
 }
 const images = extractImages();
 console.log(images);""",
-                tags = listOf(Strings.tagImage, Strings.tagExtract)
+                tags = listOf(AppStringsProvider.current().tagImage, AppStringsProvider.current().tagExtract)
             ),
             CodeSnippet(
                 id = "data-export-json",
-                name = Strings.snippetExportJson,
-                description = Strings.snippetExportJsonDesc,
+                name = AppStringsProvider.current().snippetExportJson,
+                description = AppStringsProvider.current().snippetExportJsonDesc,
                 code = """function exportJSON(data, filename = 'data.json') {
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -327,12 +327,12 @@ console.log(images);""",
     URL.revokeObjectURL(url);
 }
 exportJSON({ name: 'test', value: 123 });""",
-                tags = listOf(Strings.tagExport, Strings.tagJSON)
+                tags = listOf(AppStringsProvider.current().tagExport, AppStringsProvider.current().tagJSON)
             ),
             CodeSnippet(
                 id = "data-export-csv",
-                name = Strings.snippetExportCsv,
-                description = Strings.snippetExportCsvDesc,
+                name = AppStringsProvider.current().snippetExportCsv,
+                description = AppStringsProvider.current().snippetExportCsvDesc,
                 code = """function exportCSV(data, filename = 'data.csv') {
     if (!data.length) return;
     
@@ -350,12 +350,12 @@ exportJSON({ name: 'test', value: 123 });""",
     a.click();
     URL.revokeObjectURL(url);
 }""",
-                tags = listOf(Strings.tagExport, Strings.tagCSV)
+                tags = listOf(AppStringsProvider.current().tagExport, AppStringsProvider.current().tagCSV)
             ),
             CodeSnippet(
                 id = "data-parse-url",
-                name = Strings.snippetParseUrl,
-                description = Strings.snippetParseUrlDesc,
+                name = AppStringsProvider.current().snippetParseUrl,
+                description = AppStringsProvider.current().snippetParseUrlDesc,
                 code = """function parseUrlParams(url = location.href) {
     const params = {};
     const searchParams = new URL(url).searchParams;
@@ -366,12 +366,12 @@ exportJSON({ name: 'test', value: 123 });""",
 }
 const params = parseUrlParams();
 console.log(params);""",
-                tags = listOf(Strings.tagURL, Strings.tagParse)
+                tags = listOf(AppStringsProvider.current().tagURL, AppStringsProvider.current().tagParse)
             ),
             CodeSnippet(
                 id = "data-build-url",
-                name = Strings.snippetBuildUrl,
-                description = Strings.snippetBuildUrlDesc,
+                name = AppStringsProvider.current().snippetBuildUrl,
+                description = AppStringsProvider.current().snippetBuildUrlDesc,
                 code = """function buildUrl(base, params) {
     const url = new URL(base);
     Object.entries(params).forEach(([key, value]) => {
@@ -380,20 +380,20 @@ console.log(params);""",
     return url.toString();
 }
 const url = buildUrl('https://example.com/search', { q: 'test', page: 1 });""",
-                tags = listOf(Strings.tagURL, Strings.tagBuild)
+                tags = listOf(AppStringsProvider.current().tagURL, AppStringsProvider.current().tagBuild)
             )
         )
 )
 internal fun textProcessing() = CodeSnippetCategory(
         id = "text",
-        name = Strings.snippetText,
+        name = AppStringsProvider.current().snippetText,
         icon = "📄",
-        description = Strings.snippetTextDesc,
+        description = AppStringsProvider.current().snippetTextDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "text-extract-article",
-                name = Strings.snippetExtractArticle,
-                description = Strings.snippetExtractArticleDesc,
+                name = AppStringsProvider.current().snippetExtractArticle,
+                description = AppStringsProvider.current().snippetExtractArticleDesc,
                 code = """function extractArticle() {
     const selectors = [
         'article', '[class*="article"]', '[class*="content"]',
@@ -415,12 +415,12 @@ internal fun textProcessing() = CodeSnippetCategory(
 }
 const article = extractArticle();
 console.log(article);""",
-                tags = listOf(Strings.tagExtract, Strings.tagArticle)
+                tags = listOf(AppStringsProvider.current().tagExtract, AppStringsProvider.current().tagArticle)
             ),
             CodeSnippet(
                 id = "text-replace-all",
-                name = Strings.snippetReplaceText,
-                description = Strings.snippetReplaceTextDesc,
+                name = AppStringsProvider.current().snippetReplaceText,
+                description = AppStringsProvider.current().snippetReplaceTextDesc,
                 code = """function replaceText(replacements) {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const textNodes = [];
@@ -438,12 +438,12 @@ replaceText({
     '旧文本': '新文本',
     '广告': '[已屏蔽]'
 });""",
-                tags = listOf(Strings.tagReplace, Strings.tagText)
+                tags = listOf(AppStringsProvider.current().tagReplace, AppStringsProvider.current().tagText)
             ),
             CodeSnippet(
                 id = "text-translate-selection",
-                name = Strings.snippetTranslateSelection,
-                description = Strings.snippetTranslateSelectionDesc,
+                name = AppStringsProvider.current().snippetTranslateSelection,
+                description = AppStringsProvider.current().snippetTranslateSelectionDesc,
                 code = """document.addEventListener('mouseup', (e) => {
     const selection = window.getSelection().toString().trim();
     if (!selection || selection.length > 200) return;
@@ -469,12 +469,12 @@ replaceText({
     document.body.appendChild(btn);
     setTimeout(() => btn.remove(), 5000);
 });""",
-                tags = listOf(Strings.tagTranslate, Strings.tagSelectedText)
+                tags = listOf(AppStringsProvider.current().tagTranslate, AppStringsProvider.current().tagSelectedText)
             ),
             CodeSnippet(
                 id = "text-markdown-convert",
-                name = Strings.snippetHtmlToMarkdown,
-                description = Strings.snippetHtmlToMarkdownDesc,
+                name = AppStringsProvider.current().snippetHtmlToMarkdown,
+                description = AppStringsProvider.current().snippetHtmlToMarkdownDesc,
                 code = """function htmlToMarkdown(html) {
     let md = html;
     
@@ -502,7 +502,7 @@ replaceText({
 }
 const md = htmlToMarkdown(document.body.innerHTML);
 console.log(md);""",
-                tags = listOf(Strings.tagMarkdown, Strings.tagConvert)
+                tags = listOf(AppStringsProvider.current().tagMarkdown, AppStringsProvider.current().tagConvert)
             )
         )
 )
