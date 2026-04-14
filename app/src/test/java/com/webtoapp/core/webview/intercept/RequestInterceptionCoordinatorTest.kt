@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.webtoapp.core.adblock.AdBlocker
+import com.webtoapp.core.webview.intercept.RequestInterceptionCoordinator
+import com.webtoapp.core.webview.intercept.ResourceFallbackLoader
 import com.webtoapp.data.model.WebViewConfig
 import java.io.File
 import org.junit.Test

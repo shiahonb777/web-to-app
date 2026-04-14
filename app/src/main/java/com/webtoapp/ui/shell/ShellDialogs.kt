@@ -11,8 +11,8 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.core.forcedrun.ForcedRunManager
-import com.webtoapp.core.forcedrun.ForcedRunPermissionDialog
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.ui.components.forcedrun.ForcedRunPermissionDialog
 import com.webtoapp.ui.splash.ActivationDialog
 import kotlinx.coroutines.launch
 

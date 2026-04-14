@@ -41,25 +41,21 @@ object OnlineMusicDownloader {
                 val bgmDir = BgmStorage.getBgmDir(context)
                 val safeName = generateSafeFileName(track.name, track.id)
                 
- Note
                 val playUrl = track.playUrl
                 if (playUrl.isNullOrBlank()) {
                     AppLogger.e(TAG, "无播放链接")
                     return@withContext null
                 }
                 
- Note
                 val ext = detectExtension(playUrl)
                 val musicFile = File(bgmDir, "$safeName.$ext")
                 
- Note
                 if (musicFile.exists() && musicFile.length() > 0) {
                     AppLogger.i(TAG, "音乐文件已存在: ${musicFile.absolutePath}")
                     return@withContext createBgmItem(track, musicFile, bgmDir, safeName)
                 }
 
                 
- Note
                 AppLogger.i(TAG, "开始下载音乐: $playUrl")
                 val downloadSuccess = downloadFile(playUrl, musicFile) { progress ->
                     onProgress?.invoke(progress * 0.8f)
@@ -70,7 +66,6 @@ object OnlineMusicDownloader {
                     return@withContext null
                 }
                 
- Note
                 var coverFile: File? = null
                 if (!track.coverUrl.isNullOrBlank()) {
                     onProgress?.invoke(0.85f)
@@ -84,7 +79,6 @@ object OnlineMusicDownloader {
                     }
                 }
                 
- Note
                 if (!track.lrcText.isNullOrBlank()) {
                     try {
                         val lrcFile = File(bgmDir, "$safeName.lrc")

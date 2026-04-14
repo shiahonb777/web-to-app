@@ -8,7 +8,7 @@ import androidx.navigation.navArgument
 
 internal fun NavGraphBuilder.addPreviewRoutes(
     navController: NavHostController,
-    dependencies: AppNavigationGraphDependencies,
+    dependencies: PreviewRoutesDeps,
 ) {
     composable(
         route = Routes.PREVIEW,

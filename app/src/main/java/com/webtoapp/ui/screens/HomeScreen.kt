@@ -46,7 +46,6 @@ import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import com.webtoapp.core.apkbuilder.ApkBuilder
 import com.webtoapp.core.apkbuilder.BuildResult
-import com.webtoapp.core.i18n.InitializeLanguage
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
@@ -57,6 +56,7 @@ import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.ui.components.LanguageSelectorButton
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.MoveToCategoryDialog
+import com.webtoapp.ui.i18n.InitializeLanguage
 import com.webtoapp.ui.screens.home.components.AppCard
 import com.webtoapp.ui.theme.LocalAnimationSettings
 import com.webtoapp.ui.theme.AppColors

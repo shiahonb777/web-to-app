@@ -1,5 +1,7 @@
 package com.webtoapp.data.model.webapp.config
 
+import com.webtoapp.data.model.WebApp
+
 data class AdConfig(
     val bannerEnabled: Boolean = false,
     val bannerId: String = "",

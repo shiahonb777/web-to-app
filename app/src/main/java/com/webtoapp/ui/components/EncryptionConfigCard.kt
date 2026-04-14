@@ -339,13 +339,13 @@ fun EncryptionConfigCard(
  */
 @Composable
 private fun EncryptionLevelSelector(
-    selectedLevel: ApkEncryptionConfig.EncryptionLevel,
-    onLevelChange: (ApkEncryptionConfig.EncryptionLevel) -> Unit
+    selectedLevel: com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel,
+    onLevelChange: (com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        ApkEncryptionConfig.EncryptionLevel.entries.forEach { level ->
+        com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel.entries.forEach { level ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

@@ -75,12 +75,12 @@ import com.webtoapp.core.php.PhpAppRuntime
 import com.webtoapp.core.stats.AppUsageTracker
 import com.webtoapp.data.repository.WebAppRepository
 import androidx.compose.ui.text.style.TextOverflow
-import org.koin.compose.koinInject
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewScreen(
+    dependencies: WebViewScreenDependencies,
     appId: Long,
     directUrl: String?,
     previewApp: com.webtoapp.data.model.WebApp? = null,
@@ -95,10 +95,10 @@ fun WebViewScreen(
 ) {
     val context = LocalContext.current
     val activity = context as android.app.Activity
-    val repository: WebAppRepository = koinInject()
-    val activation: ActivationManager = koinInject()
-    val announcement: AnnouncementManager = koinInject()
-    val adBlocker: AdBlocker = koinInject()
+    val repository: WebAppRepository = dependencies.repository
+    val activation: ActivationManager = dependencies.activation
+    val announcement: AnnouncementManager = dependencies.announcement
+    val adBlocker: AdBlocker = dependencies.adBlocker
     
     // Yes mode
     val isTestMode = !testUrl.isNullOrBlank()
@@ -829,7 +829,7 @@ fun WebViewScreen(
     val webViewManager = rememberWebViewManager(context, adBlocker)
     
     // Local HTTP
-    val localHttpServer: LocalHttpServer = koinInject()
+    val localHttpServer: LocalHttpServer = dependencies.localHttpServer
     
     // apptype URL
     val targetUrl = remember(directUrl, webApp, testUrl) {

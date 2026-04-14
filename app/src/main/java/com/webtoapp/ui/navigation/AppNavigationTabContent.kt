@@ -5,16 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.webtoapp.core.cloud.AppDownloadManager
-import com.webtoapp.core.cloud.CloudApiClient
-import com.webtoapp.core.cloud.InstalledItemsTracker
-import com.webtoapp.core.extension.ExtensionManager
-import com.webtoapp.core.stats.AppHealthMonitor
-import com.webtoapp.core.stats.BatchImportService
-import com.webtoapp.core.stats.WebsiteScreenshotService
 import com.webtoapp.data.model.AppType
 import com.webtoapp.data.model.WebApp
-import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.ui.screens.AppStoreScreen
 import com.webtoapp.ui.screens.AuthScreen
 import com.webtoapp.ui.screens.HomeScreen
@@ -22,21 +14,14 @@ import com.webtoapp.ui.screens.MoreScreen
 import com.webtoapp.ui.screens.ProfileScreen
 import com.webtoapp.ui.screens.community.CommunityScreen
 import com.webtoapp.ui.viewmodel.AuthState
-import com.webtoapp.ui.viewmodel.AuthViewModel
-import com.webtoapp.ui.viewmodel.CloudViewModel
-import com.webtoapp.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 internal fun HomeTabContent(
     navController: NavHostController,
-    viewModel: MainViewModel,
+    dependencies: HomeTabDeps,
 ) {
-    val healthMonitor: AppHealthMonitor = koinInject()
-    val screenshotService: WebsiteScreenshotService = koinInject()
-    val batchImportService: BatchImportService = koinInject()
+    val viewModel = dependencies.viewModel
 
     fun navigateToCreate(appType: AppType, prepare: (() -> Unit)? = null) {
         prepare?.invoke()
@@ -51,9 +36,9 @@ internal fun HomeTabContent(
 
     HomeScreen(
         viewModel = viewModel,
-        healthMonitor = healthMonitor,
-        screenshotService = screenshotService,
-        batchImportService = batchImportService,
+        healthMonitor = dependencies.healthMonitor,
+        screenshotService = dependencies.screenshotService,
+        batchImportService = dependencies.batchImportService,
         onCreateApp = { navigateToCreate(AppType.WEB, viewModel::createNewApp) },
         onCreateMediaApp = { navigateToCreate(AppType.IMAGE) },
         onCreateGalleryApp = { navigateToCreate(AppType.GALLERY) },
@@ -85,26 +70,21 @@ internal fun HomeTabContent(
 
 @Composable
 internal fun AppStoreTabContent(
+    dependencies: StoreTabDeps,
 ) {
-    val webAppRepository: WebAppRepository = koinInject()
-    val apiClient: CloudApiClient = koinInject()
-    val installedItemsTracker: InstalledItemsTracker = koinInject()
-    val downloadManager: AppDownloadManager = koinInject()
-    val extensionManager: ExtensionManager = koinInject()
-    val cloudViewModel: CloudViewModel = koinViewModel()
     val coroutineScope = rememberCoroutineScope()
 
     AppStoreScreen(
-        cloudViewModel = cloudViewModel,
-        apiClient = apiClient,
-        webAppRepository = webAppRepository,
-        installedTracker = installedItemsTracker,
+        cloudViewModel = dependencies.cloudViewModel,
+        apiClient = dependencies.apiClient,
+        webAppRepository = dependencies.webAppRepository,
+        installedTracker = dependencies.installedItemsTracker,
         onInstallModule = { shareCode ->
             coroutineScope.launch {
-                extensionManager.importFromShareCode(shareCode)
+                dependencies.extensionManager.importFromShareCode(shareCode)
             }
         },
-        downloadManager = downloadManager
+        downloadManager = dependencies.downloadManager
     )
 }
 
@@ -126,9 +106,10 @@ internal fun CommunityTabContent(
 @Composable
 internal fun AccountTabContent(
     navController: NavHostController,
-    authViewModel: AuthViewModel,
+    dependencies: AccountRoutesDeps,
     onBackToHome: () -> Unit,
 ) {
+    val authViewModel = dependencies.authViewModel
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
     when (authState) {

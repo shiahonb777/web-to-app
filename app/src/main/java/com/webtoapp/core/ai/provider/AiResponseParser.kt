@@ -3,8 +3,8 @@ package com.webtoapp.core.ai.provider
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.webtoapp.core.ai.extractContentFrom
-import com.webtoapp.data.model.ToolCallData
-import com.webtoapp.data.model.ToolCallResponse
+import com.webtoapp.core.ai.ToolCallData
+import com.webtoapp.core.ai.ToolCallResponse
 
 internal class AiResponseParser(
     private val gson: Gson

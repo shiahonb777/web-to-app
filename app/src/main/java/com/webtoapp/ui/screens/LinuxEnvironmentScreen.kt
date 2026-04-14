@@ -29,18 +29,19 @@ import com.webtoapp.core.linux.*
 import com.webtoapp.ui.theme.LocalAppTheme
 import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LinuxEnvironmentScreen(onBack: () -> Unit) {
+fun LinuxEnvironmentScreen(
+    envManager: LinuxEnvironmentManager,
+    onBack: () -> Unit
+) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
     // Get
     val themeAccentColor = MaterialTheme.colorScheme.primary
     
-    val envManager: LinuxEnvironmentManager = koinInject()
     val envState by envManager.state.collectAsStateWithLifecycle()
     val installProgress by envManager.installProgress.collectAsStateWithLifecycle()
     

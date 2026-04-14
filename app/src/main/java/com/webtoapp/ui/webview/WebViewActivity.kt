@@ -42,15 +42,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
-import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.activation.ActivationManager
+import com.webtoapp.core.adblock.AdBlocker
+import com.webtoapp.core.announcement.AnnouncementManager
 import com.webtoapp.core.bgm.BgmPlayer
 import com.webtoapp.core.webview.LocalHttpServer
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
-import com.webtoapp.core.webview.WebViewManager
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.data.model.SplashOrientation
@@ -72,7 +74,8 @@ import com.webtoapp.core.wordpress.WordPressManager
 import com.webtoapp.data.model.WordPressConfig
 import com.webtoapp.core.php.PhpAppRuntime
 import com.webtoapp.core.stats.AppUsageTracker
-import androidx.compose.ui.text.style.TextOverflow
+import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
+import org.koin.android.ext.android.inject
 
 /**
  * WebView container activity for previewing and running WebApps.
@@ -392,6 +395,11 @@ class WebViewActivity : AppCompatActivity() {
     // Note
     private var usageTracker: AppUsageTracker? = null
     private var trackedAppId: Long = -1
+    private val webAppRepository: WebAppRepository by inject()
+    private val activationManager: ActivationManager by inject()
+    private val announcementManager: AnnouncementManager by inject()
+    private val adBlocker: AdBlocker by inject()
+    private val localHttpServer: LocalHttpServer by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Enable display( content system area)
@@ -458,6 +466,13 @@ class WebViewActivity : AppCompatActivity() {
                 }
                 
                 WebViewScreen(
+                    dependencies = WebViewScreenDependencies(
+                        repository = webAppRepository,
+                        activation = activationManager,
+                        announcement = announcementManager,
+                        adBlocker = adBlocker,
+                        localHttpServer = localHttpServer,
+                    ),
                     appId = appId,
                     directUrl = directUrl,
                     previewApp = previewApp,

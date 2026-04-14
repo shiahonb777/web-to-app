@@ -66,8 +66,29 @@ object UserAgentVersions {
     const val SAFARI = com.webtoapp.data.model.webapp.config.UserAgentVersions.SAFARI
 }
 
-fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.ActivationCode> =
-    com.webtoapp.data.model.webapp.config.getAllActivationCodes(this)
+fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.ActivationCode> {
+    val codes = mutableListOf<com.webtoapp.core.activation.ActivationCode>()
+    codes.addAll(activationCodeList)
+    activationCodes.forEach { codeStr ->
+        val code = com.webtoapp.core.activation.ActivationCode.fromJson(codeStr)
+        if (code != null) {
+            codes.add(code)
+        } else {
+            codes.add(com.webtoapp.core.activation.ActivationCode.fromLegacyString(codeStr))
+        }
+    }
+    return codes
+}
 
-fun WebApp.getActivationCodeStrings(): List<String> =
-    com.webtoapp.data.model.webapp.config.getActivationCodeStrings(this)
+fun WebApp.getActivationCodeStrings(): List<String> {
+    val strings = mutableListOf<String>()
+    activationCodeList.forEach { code ->
+        strings.add(code.toJson())
+    }
+    activationCodes.forEach { codeStr ->
+        if (!codeStr.trimStart().startsWith("{")) {
+            strings.add(codeStr)
+        }
+    }
+    return strings
+}

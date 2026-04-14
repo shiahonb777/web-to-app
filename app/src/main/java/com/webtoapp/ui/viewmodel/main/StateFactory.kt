@@ -17,7 +17,7 @@ class StateFactory {
             appType = webApp.appType,
             mediaConfig = webApp.mediaConfig,
             htmlConfig = webApp.htmlConfig,
-            allowHttp = webApp.allowHttp,
+            allowHttp = webApp.url.trim().startsWith("http://", ignoreCase = true),
             activationEnabled = webApp.activationEnabled,
             activationCodes = webApp.activationCodes,
             activationCodeList = webApp.activationCodeList,

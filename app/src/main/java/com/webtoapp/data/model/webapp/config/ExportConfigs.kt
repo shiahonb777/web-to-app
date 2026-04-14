@@ -364,11 +364,6 @@ data class AppHardeningConfig(
             responseDelay = 5,
             enableHoneypot = true,
             enableSelfDestruct = true
-
-            val bootStartEnabled: Boolean = false,
-            val scheduledStartEnabled: Boolean = false,
-            val scheduledTime: String = "08:00",
-            val scheduledDays: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7),
-            val scheduledRepeat: Boolean = true,
-            val bootDelay: Long = 5000L
-            responseStrategy = ThreatResponse.SILENT_EXIT,
+        )
+    }
+}

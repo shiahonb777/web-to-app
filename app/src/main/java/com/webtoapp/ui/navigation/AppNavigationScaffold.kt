@@ -28,13 +28,10 @@ import androidx.navigation.compose.rememberNavController
 import com.webtoapp.ui.components.LiquidTabBar
 import com.webtoapp.ui.components.LiquidTabItem
 import com.webtoapp.ui.components.themedBackground
-import com.webtoapp.ui.viewmodel.AuthViewModel
-import com.webtoapp.ui.viewmodel.MainViewModel
 
 @Composable
 internal fun AppNavigationScaffold(
-    viewModel: MainViewModel,
-    authViewModel: AuthViewModel,
+    dependencies: AppNavigationRootDeps,
 ) {
     val navController = rememberNavController()
 
@@ -91,7 +88,7 @@ internal fun AppNavigationScaffold(
             ) {
                 HomeTabContent(
                     navController = navController,
-                    viewModel = viewModel,
+                    dependencies = dependencies.homeTab,
                 )
             }
 
@@ -100,7 +97,7 @@ internal fun AppNavigationScaffold(
                 selectedTab = selectedTab,
                 isOnDetailScreen = isOnDetailScreen,
             ) {
-                AppStoreTabContent()
+                AppStoreTabContent(dependencies = dependencies.storeTab)
             }
 
             NavigationTabContainer(
@@ -121,7 +118,7 @@ internal fun AppNavigationScaffold(
             ) {
                 AccountTabContent(
                     navController = navController,
-                    authViewModel = authViewModel,
+                    dependencies = dependencies.accountRoutes,
                     onBackToHome = { selectedTab = 0 },
                 )
             }
@@ -136,8 +133,7 @@ internal fun AppNavigationScaffold(
 
             AppNavigationGraph(
                 navController = navController,
-                viewModel = viewModel,
-                authViewModel = authViewModel,
+                dependencies = dependencies,
             )
         }
     }

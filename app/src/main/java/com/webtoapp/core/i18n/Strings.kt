@@ -2,10 +2,9 @@ package com.webtoapp.core.i18n
 
 import android.content.Context
 import androidx.annotation.StringRes
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.webtoapp.R
-import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.i18n.strings.AiCodingStrings
 import com.webtoapp.core.i18n.strings.AiConfigStrings
 import com.webtoapp.core.i18n.strings.AiStrings
@@ -26,7 +25,6 @@ import com.webtoapp.core.i18n.strings.SnippetStrings
 import com.webtoapp.core.i18n.strings.StoreStrings
 import com.webtoapp.core.i18n.strings.UiStrings
 import com.webtoapp.core.i18n.strings.WebViewStrings
-import org.koin.compose.koinInject
 
 /**
  * Note.
@@ -11722,27 +11720,3 @@ object Strings {
     val deviceCustomApply: String get() = ShellStrings.deviceCustomApply
 
 }
-
-
-/**
- * Composable.
- */
-@Composable
-fun InitializeLanguage() {
-    val context = LocalContext.current
-    val languageManager: LanguageManager = koinInject()
-    val extensionManager: ExtensionManager = koinInject()
-    val language by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
-    
-    LaunchedEffect(language) {
-        Strings.attachContext(context, language)
-        Strings.setLanguage(language)
-        // Built-in Modules.
-        try {
-            extensionManager.reloadBuiltInModules()
-        } catch (e: Exception) {
-            // Ignore if ExtensionManager not initialized yet
-        }
-    }
-}
-

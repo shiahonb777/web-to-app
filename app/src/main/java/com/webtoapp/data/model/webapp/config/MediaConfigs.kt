@@ -1,6 +1,7 @@
 package com.webtoapp.data.model.webapp.config
 
 import androidx.compose.runtime.Stable
+import com.webtoapp.util.toFileSizeString
 
 data class MediaConfig(
     val mediaPath: String,                         // Media file path
@@ -251,4 +252,3 @@ data class BgmConfig(
     val showLyrics: Boolean = true,
     val lrcTheme: LrcTheme? = null
 )
-

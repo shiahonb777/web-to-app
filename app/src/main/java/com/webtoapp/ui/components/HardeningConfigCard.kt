@@ -116,22 +116,22 @@ fun HardeningConfigCard(
                     ) {
                         HardeningLevelChip(
                             label = Strings.hardeningLevelBasic,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.BASIC,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.BASIC,
                             onClick = { onConfigChange(AppHardeningConfig.BASIC) }
                         )
                         HardeningLevelChip(
                             label = Strings.hardeningLevelStandard,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.STANDARD,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.STANDARD,
                             onClick = { onConfigChange(AppHardeningConfig.STANDARD) }
                         )
                         HardeningLevelChip(
                             label = Strings.hardeningLevelAdvanced,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.ADVANCED,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.ADVANCED,
                             onClick = { onConfigChange(AppHardeningConfig.ADVANCED) }
                         )
                         HardeningLevelChip(
                             label = Strings.hardeningLevelFortress,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.FORTRESS,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.FORTRESS,
                             onClick = { onConfigChange(AppHardeningConfig.FORTRESS) }
                         )
                     }
@@ -711,13 +711,13 @@ private fun HardeningOption(
  */
 @Composable
 private fun ThreatResponseSelector(
-    selectedResponse: AppHardeningConfig.ThreatResponse,
-    onResponseChange: (AppHardeningConfig.ThreatResponse) -> Unit
+    selectedResponse: com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse,
+    onResponseChange: (com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        AppHardeningConfig.ThreatResponse.entries.forEach { response ->
+        com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse.entries.forEach { response ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -730,8 +730,8 @@ private fun ThreatResponseSelector(
                     text = response.displayName,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 4.dp),
-                    color = if (response == AppHardeningConfig.ThreatResponse.DATA_WIPE ||
-                        response == AppHardeningConfig.ThreatResponse.CRASH_RANDOM)
+                    color = if (response == com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse.DATA_WIPE ||
+                        response == com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse.CRASH_RANDOM)
                         MaterialTheme.colorScheme.error
                     else
                         MaterialTheme.colorScheme.onSurface

@@ -3,6 +3,7 @@ package com.webtoapp.core.webview
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.webtoapp.core.webview.intercept.ResourceFallbackLoader
 import java.io.File
 import java.net.ServerSocket
 import java.net.SocketException

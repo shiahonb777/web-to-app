@@ -20,7 +20,7 @@ import com.webtoapp.ui.screens.LinuxEnvironmentScreen
 
 internal fun NavGraphBuilder.addAppCreationRoutes(
     navController: NavHostController,
-    dependencies: AppNavigationGraphDependencies,
+    dependencies: CreationRoutesDeps,
 ) {
     val viewModel = dependencies.viewModel
     val webAppRepository = dependencies.webAppRepository
@@ -223,6 +223,7 @@ internal fun NavGraphBuilder.addAppCreationRoutes(
 
     composable(Routes.LINUX_ENVIRONMENT) {
         LinuxEnvironmentScreen(
+            envManager = dependencies.linuxEnvironmentManager,
             onBack = { navController.popBackStack() }
         )
     }

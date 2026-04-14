@@ -19,5 +19,5 @@ data class CodeSnippet(
     val name: String,
     val description: String,
     val code: String,
-    val tags: List<String> = emptyList(
+    val tags: List<String> = emptyList()
 )
