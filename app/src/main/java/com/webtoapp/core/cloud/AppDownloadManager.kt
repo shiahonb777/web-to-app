@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
  * This is a proper singleton — created once with Application context and lives for the entire
  * app lifecycle. Downloads survive tab switches and navigation changes.
  */
-class AppDownloadManager private constructor(private val context: Context) {
+class AppDownloadManager(private val context: Context) {
 
     companion object {
         private const val TAG = "AppDownloadManager"
@@ -96,6 +96,11 @@ class AppDownloadManager private constructor(private val context: Context) {
     }
 
     init {
+        synchronized(Companion) {
+            if (instance == null) {
+                instance = this
+            }
+        }
         createNotificationChannel()
         scanDownloadedApps()
     }

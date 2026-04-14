@@ -73,14 +73,25 @@ class AdBlockerTest {
     }
 
     @Test
-    fun `stats reflect compiled wildcard cache after matching`() {
+    fun `stats expose current rule buckets for custom wildcard rules`() {
         adBlocker.initialize(useDefaultRules = false)
         adBlocker.setEnabled(true)
         adBlocker.addRule("*adunit*")
 
-        assertThat(adBlocker.getStats()["compiledPatterns"]).isEqualTo(0)
         assertThat(adBlocker.shouldBlock("https://example.com/adunit.js")).isTrue()
-        assertThat(adBlocker.getStats()["compiledPatterns"]).isEqualTo(1)
+
+        val stats = adBlocker.getStats()
+        assertThat(stats.keys).containsExactly(
+            "exactHosts",
+            "hostsFile",
+            "networkBlock",
+            "networkException",
+            "cosmeticBlock",
+            "cosmeticException",
+            "scriptlets"
+        )
+        assertThat(stats["networkBlock"]).isEqualTo(1)
+        assertThat(stats["scriptlets"]).isEqualTo(0)
     }
 }
 

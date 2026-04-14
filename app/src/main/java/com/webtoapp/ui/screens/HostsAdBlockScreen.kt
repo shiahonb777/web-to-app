@@ -243,7 +243,7 @@ fun HostsAdBlockScreen(
                 )
             }
             
-            items(AdBlocker.POPULAR_HOSTS_SOURCES) { source ->
+            items(AdBlocker.getPopularHostsSources()) { source ->
                 HostsSourceCard(
                     source = source,
                     isEnabled = enabledSources.contains(source.url),

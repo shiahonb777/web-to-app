@@ -39,6 +39,14 @@ class LocalHttpServer(
             }
         }
     }
+
+    init {
+        synchronized(Companion) {
+            if (instance == null) {
+                instance = this
+            }
+        }
+    }
     
     private var serverSocket: ServerSocket? = null
     // Bounded thread pool to prevent DoS via unlimited thread creation

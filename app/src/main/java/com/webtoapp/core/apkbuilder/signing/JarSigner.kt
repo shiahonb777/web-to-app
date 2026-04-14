@@ -4,6 +4,8 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.webtoapp.core.logging.AppLogger
 import com.android.apksig.ApkSigner
 import com.android.apksig.ApkVerifier
@@ -41,6 +43,12 @@ class JarSigner(private val context: Context) {
         // Note: brief English comment.
         private const val DEFAULT_PKCS12_FILE = "webtoapp_keystore.p12"
         private const val CUSTOM_PKCS12_FILE = "custom_keystore.p12"
+        private const val LEGACY_AUTO_PASSWORD_FILE = ".ks_credential"
+        private const val LEGACY_CUSTOM_PASSWORD_FILE = "custom_keystore_password.txt"
+        private const val SIGNING_PREFS_NAME = "webtoapp_signing_secure"
+        private const val KEY_AUTO_PASSWORD = "auto_pkcs12_password"
+        private const val KEY_CUSTOM_PASSWORD = "custom_pkcs12_password"
+        private const val LEGACY_PKCS12_PASSWORD = "webtoapp_sign"
         
         // Note: brief English comment.
         private val GENERALIZED_TIME_FORMAT = threadLocalCompat {
@@ -68,6 +76,21 @@ class JarSigner(private val context: Context) {
     private var certificate: X509Certificate? = null
     private var initError: String? = null
     private var currentSignerType: SignerType = SignerType.ANDROID_KEYSTORE
+    private val securePrefs = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            SIGNING_PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        AppLogger.e(TAG, "安全签名存储不可用，敏感密码将不再落明文磁盘", e)
+        null
+    }
 
     init {
         initializeKey()
@@ -228,14 +251,14 @@ class JarSigner(private val context: Context) {
      */
     private fun tryLoadCustomPkcs12(): Boolean {
         val customFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
-        val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
         
-        if (!customFile.exists() || !passwordFile.exists()) {
+        if (!customFile.exists()) {
             return false
         }
-        
+
+        val password = loadStoredPassword(KEY_CUSTOM_PASSWORD, LEGACY_CUSTOM_PASSWORD_FILE) ?: return false
+
         return try {
-            val password = passwordFile.readText().trim().toCharArray()
             loadPkcs12(customFile, password, CUSTOM_KEY_ALIAS)
         } catch (e: Exception) {
             AppLogger.w(TAG, "加载自定义 PKCS12 失败", e)
@@ -290,29 +313,17 @@ class JarSigner(private val context: Context) {
      * Note: brief English comment.
      */
     private fun getOrCreateKeystorePassword(): CharArray {
-        val passwordFile = File(context.filesDir, ".ks_credential")
-        
-        // Note: brief English comment.
-        if (passwordFile.exists()) {
-            try {
-                val saved = passwordFile.readText().trim()
-                if (saved.isNotEmpty()) return saved.toCharArray()
-            } catch (e: Exception) {
-                AppLogger.w(TAG, "读取密码文件失败", e)
-            }
-        }
+        loadStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)?.let { return it }
         
         // Note: brief English comment.
         val keyStoreFile = File(context.filesDir, DEFAULT_PKCS12_FILE)
-        val legacyPassword = "webtoapp_sign"
         if (keyStoreFile.exists()) {
             try {
                 val ks = KeyStore.getInstance("PKCS12")
-                FileInputStream(keyStoreFile).use { fis -> ks.load(fis, legacyPassword.toCharArray()) }
-                // Note: brief English comment.
-                passwordFile.writeText(legacyPassword)
-                AppLogger.d(TAG, "迁移旧密码到文件存储")
-                return legacyPassword.toCharArray()
+                FileInputStream(keyStoreFile).use { fis -> ks.load(fis, LEGACY_PKCS12_PASSWORD.toCharArray()) }
+                persistPassword(KEY_AUTO_PASSWORD, LEGACY_PKCS12_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
+                AppLogger.d(TAG, "迁移旧默认 PKCS12 密码到安全存储")
+                return LEGACY_PKCS12_PASSWORD.toCharArray()
             } catch (_: Exception) {
                 // Note: brief English comment.
             }
@@ -322,14 +333,49 @@ class JarSigner(private val context: Context) {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%^&*"
         val random = SecureRandom()
         val password = CharArray(32) { chars[random.nextInt(chars.length)] }
-        
-        try {
-            passwordFile.writeText(String(password))
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "保存密码文件失败", e)
-        }
+        persistPassword(KEY_AUTO_PASSWORD, String(password), LEGACY_AUTO_PASSWORD_FILE)
         
         return password
+    }
+
+    private fun loadStoredPassword(key: String, legacyFileName: String): CharArray? {
+        securePrefs?.getString(key, null)?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            return it.toCharArray()
+        }
+
+        val legacyFile = File(context.filesDir, legacyFileName)
+        if (!legacyFile.exists()) {
+            return null
+        }
+
+        return try {
+            val legacyPassword = legacyFile.readText().trim()
+            legacyFile.delete()
+            if (legacyPassword.isEmpty()) {
+                null
+            } else {
+                persistPassword(key, legacyPassword, legacyFileName)
+                legacyPassword.toCharArray()
+            }
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "读取旧版密码文件失败: $legacyFileName", e)
+            null
+        }
+    }
+
+    private fun persistPassword(key: String, password: String, legacyFileName: String) {
+        File(context.filesDir, legacyFileName).delete()
+        val prefs = securePrefs
+        if (prefs == null) {
+            AppLogger.w(TAG, "安全签名存储不可用，密码仅保留在当前进程内")
+            return
+        }
+        prefs.edit().putString(key, password).apply()
+    }
+
+    private fun clearStoredPassword(key: String, legacyFileName: String) {
+        securePrefs?.edit()?.remove(key)?.apply()
+        File(context.filesDir, legacyFileName).delete()
     }
     
     /**
@@ -511,9 +557,7 @@ class JarSigner(private val context: Context) {
             val targetFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
             sourceFile.copyTo(targetFile, overwrite = true)
             
-            // Note: brief English comment.
-            val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
-            passwordFile.writeText(password)
+            persistPassword(KEY_CUSTOM_PASSWORD, password, LEGACY_CUSTOM_PASSWORD_FILE)
             
             // Note: brief English comment.
             if (loadPkcs12(targetFile, passwordChars, null)) {
@@ -582,9 +626,7 @@ class JarSigner(private val context: Context) {
                     AppLogger.d(TAG, "已将 $type 转换为 PKCS12 并保存")
                 }
                 
-                // Note: brief English comment.
-                val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
-                passwordFile.writeText(password)
+                persistPassword(KEY_CUSTOM_PASSWORD, password, LEGACY_CUSTOM_PASSWORD_FILE)
                 
                 // Note: brief English comment.
                 val targetFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
@@ -646,10 +688,9 @@ class JarSigner(private val context: Context) {
     fun removeCustomPkcs12(): Boolean {
         return try {
             val customFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
-            val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
             
             customFile.delete()
-            passwordFile.delete()
+            clearStoredPassword(KEY_CUSTOM_PASSWORD, LEGACY_CUSTOM_PASSWORD_FILE)
             
             // Note: brief English comment.
             initializeKey()
@@ -831,7 +872,7 @@ class JarSigner(private val context: Context) {
             AppLogger.e(TAG, "密钥或证书为空，尝试重新初始化...")
             // Note: brief English comment.
             File(context.filesDir, DEFAULT_PKCS12_FILE).delete()
-            File(context.filesDir, ".ks_credential").delete()
+            clearStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
             initializeKey()
             if (privateKey == null || certificate == null) {
                 val errorDetail = initError ?: "key=${privateKey != null}, cert=${certificate != null}"
@@ -934,7 +975,7 @@ class JarSigner(private val context: Context) {
                     causeChain.contains("certificate", ignoreCase = true)) {
                     AppLogger.d(TAG, "检测到可能的密钥问题，重新生成...")
                     File(context.filesDir, DEFAULT_PKCS12_FILE).delete()
-                    File(context.filesDir, ".ks_credential").delete()
+                    clearStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
                     initializeKey()
                 }
             }
@@ -1392,7 +1433,8 @@ class JarSigner(private val context: Context) {
             // Note: brief English comment.
             File(context.filesDir, DEFAULT_PKCS12_FILE).delete()
             File(context.filesDir, CUSTOM_PKCS12_FILE).delete()
-            File(context.filesDir, "custom_keystore_password.txt").delete()
+            clearStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
+            clearStoredPassword(KEY_CUSTOM_PASSWORD, LEGACY_CUSTOM_PASSWORD_FILE)
             
             // Note: brief English comment.
             try {

@@ -30,7 +30,10 @@ private val Context.aiConfigDataStore: DataStore<Preferences> by preferencesData
  * AI configuration manager
  * Handles API keys, saved models, and related settings
  */
-class AiConfigManager(private val context: Context) {
+class AiConfigManager(
+    private val context: Context,
+    private val dataStore: DataStore<Preferences> = context.applicationContext.aiConfigDataStore
+) {
     
     companion object {
         private const val TAG = "AiConfigManager"
@@ -56,10 +59,12 @@ class AiConfigManager(private val context: Context) {
         private const val AES_MODE = "AES/GCM/NoPadding"
         private const val GCM_TAG_BITS = 128
         private const val GCM_IV_BYTES = 12
+        @Volatile
+        private var cachedSecretKey: SecretKey? = null
     }
     
     // API Keys Flow
-    val apiKeysFlow: Flow<List<ApiKeyConfig>> = context.aiConfigDataStore.data.map { prefs ->
+    val apiKeysFlow: Flow<List<ApiKeyConfig>> = dataStore.data.map { prefs ->
         val stored = prefs[KEY_API_KEYS] ?: "[]"
         val json = decodeSensitiveJson(stored) ?: "[]"
         try {
@@ -72,7 +77,7 @@ class AiConfigManager(private val context: Context) {
     }
     
     // Flow of saved models
-    val savedModelsFlow: Flow<List<SavedModel>> = context.aiConfigDataStore.data.map { prefs ->
+    val savedModelsFlow: Flow<List<SavedModel>> = dataStore.data.map { prefs ->
         val json = prefs[KEY_SAVED_MODELS] ?: "[]"
         try {
             val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
@@ -84,7 +89,7 @@ class AiConfigManager(private val context: Context) {
     }
     
     // Flow for the default model ID
-    val defaultModelIdFlow: Flow<String?> = context.aiConfigDataStore.data.map { prefs ->
+    val defaultModelIdFlow: Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_DEFAULT_MODEL]
     }
     
@@ -93,7 +98,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun addApiKey(config: ApiKeyConfig): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
                 val updated = current + config
                 val jsonStr = gson.toJson(updated)
@@ -112,7 +117,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun updateApiKey(config: ApiKeyConfig): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
                 val updated = current.map { if (it.id == config.id) config else it }
                 prefs[KEY_API_KEYS] = encodeSensitiveJson(gson.toJson(updated))
@@ -130,7 +135,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun deleteApiKey(id: String): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
                 val updated = current.filter { it.id != id }
                 prefs[KEY_API_KEYS] = encodeSensitiveJson(gson.toJson(updated))
@@ -148,7 +153,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun saveModel(model: SavedModel): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getSavedModels(prefs)
                 val updated = current + model
                 prefs[KEY_SAVED_MODELS] = gson.toJson(updated)
@@ -166,7 +171,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun updateSavedModel(model: SavedModel): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getSavedModels(prefs)
                 val updated = current.map { if (it.id == model.id) model else it }
                 prefs[KEY_SAVED_MODELS] = gson.toJson(updated)
@@ -184,7 +189,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun deleteSavedModel(id: String): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getSavedModels(prefs)
                 val updated = current.filter { it.id != id }
                 prefs[KEY_SAVED_MODELS] = gson.toJson(updated)
@@ -201,12 +206,25 @@ class AiConfigManager(private val context: Context) {
      * Set the default model
      */
     suspend fun setDefaultModel(modelId: String?) {
-        context.aiConfigDataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             if (modelId != null) {
                 prefs[KEY_DEFAULT_MODEL] = modelId
             } else {
                 prefs.remove(KEY_DEFAULT_MODEL)
             }
+        }
+    }
+
+    /**
+     * Clear all stored AI configuration.
+     */
+    suspend fun clearAll(): Boolean {
+        return try {
+            dataStore.edit { prefs -> prefs.clear() }
+            true
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to clear AI config", e)
+            false
         }
     }
     
@@ -244,7 +262,7 @@ class AiConfigManager(private val context: Context) {
      */
     suspend fun getApiKeyById(id: String): ApiKeyConfig? {
         // Use data.first() for reads instead of edit{} which acquires a write lock unnecessarily
-        val prefs = context.aiConfigDataStore.data.first()
+        val prefs = dataStore.data.first()
         return getApiKeys(prefs).find { it.id == id }
     }
     
@@ -252,7 +270,7 @@ class AiConfigManager(private val context: Context) {
      * Retrieve a saved model by ID
      */
     suspend fun getSavedModelById(id: String): SavedModel? {
-        val prefs = context.aiConfigDataStore.data.first()
+        val prefs = dataStore.data.first()
         return getSavedModels(prefs).find { it.id == id }
     }
     
@@ -313,22 +331,31 @@ class AiConfigManager(private val context: Context) {
     }
 
     private fun getOrCreateSecretKey(): SecretKey {
-        val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
-        val existing = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
-        if (existing != null) return existing
+        cachedSecretKey?.let { return it }
 
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
-        val spec = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .setUserAuthenticationRequired(false)
-            .build()
-        keyGenerator.init(spec)
-        return keyGenerator.generateKey()
+        return synchronized(AiConfigManager::class.java) {
+            cachedSecretKey?.let { return@synchronized it }
+
+            val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+            val existing = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+            if (existing != null) {
+                cachedSecretKey = existing
+                return@synchronized existing
+            }
+
+            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
+            val spec = KeyGenParameterSpec.Builder(
+                KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .setUserAuthenticationRequired(false)
+                .build()
+            keyGenerator.init(spec)
+            keyGenerator.generateKey().also { cachedSecretKey = it }
+        }
     }
 
     private fun encrypt(plainText: String): String {
@@ -356,4 +383,3 @@ class AiConfigManager(private val context: Context) {
         return String(plainBytes, Charsets.UTF_8)
     }
 }
-

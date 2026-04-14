@@ -738,6 +738,10 @@ class AdBlocker {
     // Anti-anti-adblock scriptlets
     private val scriptletRules = mutableListOf<Pair<Set<String>, String>>() // domains → scriptlet call
 
+    // Runtime-added custom rules need to keep their raw form so removeRule can rebuild safely.
+    private val customRules = mutableListOf<String>()
+    private var includeDefaultRules = true
+
     private var enabled = false
 
     // ==================== Public API ====================
@@ -757,6 +761,13 @@ class AdBlocker {
      * Initialize blocker with custom rules and optional defaults.
      */
     fun initialize(customRules: List<String> = emptyList(), useDefaultRules: Boolean = true) {
+        includeDefaultRules = useDefaultRules
+        this.customRules.clear()
+        this.customRules.addAll(customRules)
+        rebuildConfiguredRules()
+    }
+
+    private fun clearConfiguredRules() {
         exactHosts.clear()
         networkBlockFilters.clear()
         networkExceptionFilters.clear()
@@ -766,8 +777,12 @@ class AdBlocker {
         cosmeticExceptionFilters.clear()
         scriptletRules.clear()
         blockResultCache.clear()
+    }
 
-        if (useDefaultRules) {
+    private fun rebuildConfiguredRules() {
+        clearConfiguredRules()
+
+        if (includeDefaultRules) {
             exactHosts.addAll(DEFAULT_AD_HOSTS)
             // ★ Built-in ABP network filter rules — instant protection without external lists
             DEFAULT_NETWORK_RULES.forEach { parseAndAddRule(it) }
@@ -1058,25 +1073,26 @@ class AdBlocker {
 
     // ==================== Rule management ====================
     fun addRule(rule: String) {
-        parseAndAddRule(rule)
-        synchronized(blockResultCache) { blockResultCache.clear() }
+        if (rule !in customRules) {
+            customRules.add(rule)
+            rebuildConfiguredRules()
+        } else {
+            synchronized(blockResultCache) { blockResultCache.clear() }
+        }
     }
 
     fun removeRule(rule: String) {
-        exactHosts.remove(rule)
-        synchronized(blockResultCache) { blockResultCache.clear() }
+        if (customRules.removeAll { it == rule }) {
+            rebuildConfiguredRules()
+        } else {
+            synchronized(blockResultCache) { blockResultCache.clear() }
+        }
     }
 
     fun clearRules() {
-        exactHosts.clear()
-        networkBlockFilters.clear()
-        networkExceptionFilters.clear()
-        anchorDomainIndex.clear()
-        exceptionAnchorDomainIndex.clear()
-        cosmeticBlockFilters.clear()
-        cosmeticExceptionFilters.clear()
-        scriptletRules.clear()
-        blockResultCache.clear()
+        includeDefaultRules = false
+        customRules.clear()
+        clearConfiguredRules()
     }
 
     fun clearHostsFileRules() {

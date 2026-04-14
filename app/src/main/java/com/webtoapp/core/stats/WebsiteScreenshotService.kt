@@ -38,6 +38,14 @@ class WebsiteScreenshotService(private val context: Context) {
             }
         }
     }
+
+    init {
+        synchronized(Companion) {
+            if (INSTANCE == null) {
+                INSTANCE = this
+            }
+        }
+    }
     
     private val screenshotDir: File by lazy {
         File(context.filesDir, SCREENSHOT_DIR).also { it.mkdirs() }

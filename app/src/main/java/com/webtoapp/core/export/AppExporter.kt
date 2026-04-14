@@ -21,7 +21,10 @@ import com.webtoapp.util.threadLocalCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
-import java.util.*/**
+import java.util.Date
+import java.util.Locale
+
+/**
  * Note: brief English comment.
  */
 class AppExporter(private val context: Context) {
@@ -338,8 +341,11 @@ class AppExporter(private val context: Context) {
     private fun createTemplateProject(projectDir: File, webApp: WebApp) {
         // Note: brief English comment.
         val appDir = File(projectDir, "app/src/main")
+        val packageName = "com.webtoapp.${sanitizePackageName(webApp.name)}"
+        val packagePath = packageName.replace('.', '/')
         appDir.mkdirs()
         File(appDir, "java/com/webtoapp/generated").mkdirs()
+        File(appDir, "java/$packagePath").mkdirs()
         File(appDir, "res/values").mkdirs()
         File(appDir, "res/xml").mkdirs()
         File(appDir, "res/mipmap-xxxhdpi").mkdirs()
@@ -350,15 +356,18 @@ class AppExporter(private val context: Context) {
         File(projectDir, "app/build.gradle.kts").writeText(generateAppBuildGradle(webApp))
 
         // GenerateAndroidManifest.xml
-        File(appDir, "AndroidManifest.xml").writeText(generateManifest())
+        File(appDir, "AndroidManifest.xml").writeText(generateManifest(webApp))
 
         // Note: brief English comment.
         File(appDir, "java/com/webtoapp/generated/AppConfig.kt")
             .writeText(generateAppConfig(webApp))
+        File(appDir, "java/$packagePath/MainActivity.kt")
+            .writeText(generateMainActivity(packageName))
 
         // Generatestrings.xml
         File(appDir, "res/values/strings.xml").writeText(generateStrings(webApp))
-        File(appDir, "res/xml/network_security_config.xml").writeText(generateNetworkSecurityConfig())
+        File(appDir, "res/values/themes.xml").writeText(generateThemes())
+        File(appDir, "res/xml/network_security_config.xml").writeText(generateNetworkSecurityConfig(webApp))
 
         // Note: brief English comment.
         webApp.iconPath?.let { path ->
@@ -400,12 +409,12 @@ plugins {
 
 android {
     namespace = "$packageName"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "$packageName"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = 23
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
     }
@@ -435,7 +444,9 @@ dependencies {
         """.trimIndent()
     }
 
-    private fun generateManifest(): String = """
+    private fun generateManifest(webApp: WebApp): String {
+        val allowCleartextTraffic = webApp.url.trim().startsWith("http://", ignoreCase = true)
+        return """
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
@@ -446,8 +457,8 @@ dependencies {
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:usesCleartextTraffic="false"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:usesCleartextTraffic="$allowCleartextTraffic"
+        android:theme="@style/Theme.WebToApp.Template">
 
         <activity
             android:name=".MainActivity"
@@ -460,18 +471,85 @@ dependencies {
         </activity>
     </application>
 </manifest>
-    """.trimIndent()
+        """.trimIndent()
+    }
 
-    private fun generateNetworkSecurityConfig(): String = """
+    private fun generateNetworkSecurityConfig(webApp: WebApp): String {
+        val allowCleartextTraffic = webApp.url.trim().startsWith("http://", ignoreCase = true)
+        return """
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
+    <base-config cleartextTrafficPermitted="$allowCleartextTraffic" />
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">localhost</domain>
         <domain includeSubdomains="false">127.0.0.1</domain>
         <domain includeSubdomains="false">10.0.2.2</domain>
     </domain-config>
 </network-security-config>
+        """.trimIndent()
+    }
+
+    private fun generateThemes(): String = """
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.WebToApp.Template" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>
+    """.trimIndent()
+
+    private fun generateMainActivity(packageName: String): String = """
+package $packageName
+
+import android.annotation.SuppressLint
+import android.os.Bundle
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import com.webtoapp.generated.AppConfig
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var webView: WebView
+
+    @SuppressLint("SetJavaScriptEnabled")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        webView = WebView(this).apply {
+            settings.javaScriptEnabled = AppConfig.JAVASCRIPT_ENABLED
+            settings.domStorageEnabled = AppConfig.DOM_STORAGE_ENABLED
+            settings.setSupportZoom(AppConfig.ZOOM_ENABLED)
+            settings.builtInZoomControls = AppConfig.ZOOM_ENABLED
+            settings.displayZoomControls = false
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = AppConfig.DESKTOP_MODE
+            webChromeClient = WebChromeClient()
+            webViewClient = object : WebViewClient() {}
+            loadUrl(AppConfig.TARGET_URL)
+        }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
+        setContentView(webView)
+    }
+
+    override fun onDestroy() {
+        webView.destroy()
+        super.onDestroy()
+    }
+}
     """.trimIndent()
 
     private fun generateAppConfig(webApp: WebApp): String {
@@ -482,22 +560,22 @@ package com.webtoapp.generated
  * Note: brief English comment.
  */
 object AppConfig {
-    const val APP_NAME = "${webApp.name}"
-    const val TARGET_URL = "${webApp.url}"
+    const val APP_NAME = ${toKotlinStringLiteral(webApp.name)}
+    const val TARGET_URL = ${toKotlinStringLiteral(webApp.url)}
     
     // Note: brief English comment.
     const val ACTIVATION_ENABLED = ${webApp.activationEnabled}
-    val ACTIVATION_CODES = listOf(${webApp.activationCodes.joinToString { "\"$it\"" }})
+    val ACTIVATION_CODES = listOf(${webApp.activationCodes.joinToString { toKotlinStringLiteral(it) }})
     
     // Note: brief English comment.
     const val AD_BLOCK_ENABLED = ${webApp.adBlockEnabled}
-    val AD_BLOCK_RULES = listOf(${webApp.adBlockRules.joinToString { "\"$it\"" }})
+    val AD_BLOCK_RULES = listOf(${webApp.adBlockRules.joinToString { toKotlinStringLiteral(it) }})
     
     // Note: brief English comment.
     const val ANNOUNCEMENT_ENABLED = ${webApp.announcementEnabled}
-    const val ANNOUNCEMENT_TITLE = "${webApp.announcement?.title ?: ""}"
-    const val ANNOUNCEMENT_CONTENT = "${webApp.announcement?.content ?: ""}"
-    const val ANNOUNCEMENT_LINK = "${webApp.announcement?.linkUrl ?: ""}"
+    const val ANNOUNCEMENT_TITLE = ${toKotlinStringLiteral(webApp.announcement?.title.orEmpty())}
+    const val ANNOUNCEMENT_CONTENT = ${toKotlinStringLiteral(webApp.announcement?.content.orEmpty())}
+    const val ANNOUNCEMENT_LINK = ${toKotlinStringLiteral(webApp.announcement?.linkUrl.orEmpty())}
     const val ANNOUNCEMENT_SHOW_ONCE = ${webApp.announcement?.showOnce ?: true}
     
     // Note: brief English comment.
@@ -512,7 +590,7 @@ object AppConfig {
     private fun generateStrings(webApp: WebApp): String = """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">${webApp.name}</string>
+    <string name="app_name">${escapeXml(webApp.name)}</string>
 </resources>
     """.trimIndent()
 
@@ -547,10 +625,44 @@ object AppConfig {
     }
 
     private fun sanitizePackageName(name: String): String {
-        return name.lowercase()
+        val sanitized = name.lowercase()
             .replace(SANITIZE_PACKAGE_REGEX, "")
             .take(20)
-            .ifEmpty { "app" }
+        val safeSegment = when {
+            sanitized.isEmpty() -> "app"
+            sanitized.first().isDigit() -> "app$sanitized"
+            else -> sanitized
+        }
+        return safeSegment.take(20)
+    }
+
+    private fun toKotlinStringLiteral(value: String): String = buildString {
+        append('"')
+        value.forEach { char ->
+            when (char) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                '$' -> append("\\$")
+                else -> append(char)
+            }
+        }
+        append('"')
+    }
+
+    private fun escapeXml(value: String): String = buildString {
+        value.forEach { char ->
+            when (char) {
+                '&' -> append("&amp;")
+                '<' -> append("&lt;")
+                '>' -> append("&gt;")
+                '"' -> append("&quot;")
+                '\'' -> append("&apos;")
+                else -> append(char)
+            }
+        }
     }
 
     private fun WebApp.toExportFormat() = mapOf(

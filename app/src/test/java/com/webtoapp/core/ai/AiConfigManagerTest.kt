@@ -3,12 +3,17 @@ package com.webtoapp.core.ai
 import android.app.Application
 import android.content.Context
 import android.util.Base64
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.webtoapp.data.model.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +33,24 @@ class TestApplication : Application()
 class AiConfigManagerTest {
 
     private val gson = Gson()
+
+    private class InMemoryPreferencesDataStore(
+        initial: Preferences = emptyPreferences()
+    ) : DataStore<Preferences> {
+        private val state = MutableStateFlow(initial)
+
+        override val data: Flow<Preferences> = state
+
+        override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
+            val updated = transform(state.value)
+            state.value = updated
+            return updated
+        }
+    }
+
+    private fun createTestDataStore(): DataStore<Preferences> {
+        return InMemoryPreferencesDataStore()
+    }
 
     // Gson round-trip tests without DataStore
 
@@ -134,9 +157,11 @@ class AiConfigManagerTest {
     // Keep this in one test to avoid singleton state leakage.
 
     @Test
-    fun `test DataStore full save and retrieve end-to-end`() = runTest {
+    fun `test DataStore full save and retrieve end-to-end`() = runBlocking {
         val context: Context = ApplicationProvider.getApplicationContext()
-        val manager = AiConfigManager(context)
+        val dataStore = createTestDataStore()
+        val manager = AiConfigManager(context, dataStore)
+        assertTrue("should clear previous AI config state", manager.clearAll())
 
         println("=== DataStore E2E Test ===")
 
@@ -152,21 +177,26 @@ class AiConfigManagerTest {
             customModelsEndpoint = "/api/models", customChatEndpoint = "/api/chat"
         )
 
-        manager.addApiKey(key1)
-        manager.addApiKey(key2)
-        manager.addApiKey(key3)
+        val addKey1 = manager.addApiKey(key1)
+        val addKey2 = manager.addApiKey(key2)
+        val addKey3 = manager.addApiKey(key3)
+        println("[Step 0] addApiKey results: k1=$addKey1, k2=$addKey2, k3=$addKey3")
+        assertTrue("k1 should save successfully", addKey1)
+        assertTrue("k2 should save successfully", addKey2)
+        assertTrue("k3 should save successfully", addKey3)
 
         val keys = manager.apiKeysFlow.first()
+        val keysById = keys.associateBy { it.id }
         println("[Step 1] API Keys saved: ${keys.size}")
         keys.forEach { println("  ${it.id}: provider=${it.provider}, baseUrl=${it.baseUrl}, format=${it.apiFormat}") }
 
         assertEquals("Should have 3 keys", 3, keys.size)
-        assertEquals(AiProvider.GOOGLE, keys[0].provider)
-        assertEquals("google-key", keys[0].apiKey)
-        assertEquals("DeepSeek 测试", keys[1].alias)
-        assertEquals("https://my-api.com", keys[2].baseUrl)
-        assertEquals(ApiFormat.ANTHROPIC, keys[2].apiFormat)
-        assertEquals("/api/models", keys[2].customModelsEndpoint)
+        assertEquals(AiProvider.GOOGLE, keysById.getValue("k1").provider)
+        assertEquals("google-key", keysById.getValue("k1").apiKey)
+        assertEquals("DeepSeek 测试", keysById.getValue("k2").alias)
+        assertEquals("https://my-api.com", keysById.getValue("k3").baseUrl)
+        assertEquals(ApiFormat.ANTHROPIC, keysById.getValue("k3").apiFormat)
+        assertEquals("/api/models", keysById.getValue("k3").customModelsEndpoint)
         println("✅ Step 1: API Keys save/read OK")
 
         // Step 2: save models with feature mappings
@@ -193,16 +223,17 @@ class AiConfigManagerTest {
         manager.saveModel(model2)
 
         val models = manager.savedModelsFlow.first()
+        val modelsById = models.associateBy { it.id }
         println("[Step 2] Models saved: ${models.size}")
         models.forEach { println("  ${it.id}: ${it.model.name}, default=${it.isDefault}, fm=${it.featureMappings}") }
 
         assertEquals("Should have 2 models", 2, models.size)
-        assertTrue("Model 1 should be default", models[0].isDefault)
-        assertEquals(2, models[0].featureMappings.size)
-        assertNotNull(models[0].featureMappings[ModelCapability.TEXT])
-        assertNotNull(models[0].featureMappings[ModelCapability.CODE])
-        assertTrue(models[0].featureMappings[ModelCapability.TEXT]!!.contains(AiFeature.TRANSLATION))
-        assertEquals(1, models[1].featureMappings.size)
+        assertTrue("Model 1 should be default", modelsById.getValue("m1").isDefault)
+        assertEquals(2, modelsById.getValue("m1").featureMappings.size)
+        assertNotNull(modelsById.getValue("m1").featureMappings[ModelCapability.TEXT])
+        assertNotNull(modelsById.getValue("m1").featureMappings[ModelCapability.CODE])
+        assertTrue(modelsById.getValue("m1").featureMappings[ModelCapability.TEXT]!!.contains(AiFeature.TRANSLATION))
+        assertEquals(1, modelsById.getValue("m2").featureMappings.size)
         println("✅ Step 2: Models with featureMappings save/read OK")
 
         // Step 3: load by ID
@@ -216,28 +247,30 @@ class AiConfigManagerTest {
 
         // Step 4: update a model
         val updatedModel = model1.copy(alias = "My Gemini", isDefault = false)
-        manager.updateSavedModel(updatedModel)
-        val modelsAfterUpdate = manager.savedModelsFlow.first()
-        assertEquals("My Gemini", modelsAfterUpdate[0].alias)
-        assertFalse(modelsAfterUpdate[0].isDefault)
+        assertTrue("updating saved model should succeed", manager.updateSavedModel(updatedModel))
+        val updatedSavedModel = manager.getSavedModelById("m1")!!
+        assertEquals("My Gemini", updatedSavedModel.alias)
+        assertFalse(updatedSavedModel.isDefault)
         println("✅ Step 4: Update model OK")
 
         // Step 5: delete a model
-        manager.deleteSavedModel("m2")
+        assertTrue("deleting saved model should succeed", manager.deleteSavedModel("m2"))
         val modelsAfterDelete = manager.savedModelsFlow.first()
-        assertEquals(1, modelsAfterDelete.size)
-        assertEquals("m1", modelsAfterDelete[0].id)
+        assertNull(manager.getSavedModelById("m2"))
+        assertNotNull(manager.getSavedModelById("m1"))
+        assertEquals(1, modelsAfterDelete.count { it.id == "m1" })
         println("✅ Step 5: Delete model OK")
 
         // Step 6: delete an API key
-        manager.deleteApiKey("k3")
+        assertTrue("deleting API key should succeed", manager.deleteApiKey("k3"))
         val keysAfterDelete = manager.apiKeysFlow.first()
-        assertEquals(2, keysAfterDelete.size)
-        assertTrue(keysAfterDelete.none { it.id == "k3" })
+        assertNull(manager.getApiKeyById("k3"))
+        assertEquals(1, keysAfterDelete.count { it.id == "k1" })
+        assertEquals(1, keysAfterDelete.count { it.id == "k2" })
         println("✅ Step 6: Delete API key OK")
 
         // Step 7: verify persistence with a new manager instance
-        val manager2 = AiConfigManager(context)
+        val manager2 = AiConfigManager(context, dataStore)
         val keys2 = manager2.apiKeysFlow.first()
         val models2 = manager2.savedModelsFlow.first()
         assertEquals("Keys should persist", 2, keys2.size)

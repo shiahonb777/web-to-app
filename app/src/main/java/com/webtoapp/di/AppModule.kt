@@ -64,23 +64,23 @@ val managerModule = module {
     single { AnnouncementManager(androidContext()) }
     single { AdBlocker() }
     single { ShellModeManager(androidContext()) }
-    single { KeyManager.getInstance(androidContext()) }
-    single { ExtensionManager.getInstance(androidContext()) }
+    single(createdAtStart = true) { KeyManager(androidContext()) }
+    single(createdAtStart = true) { ExtensionManager(androidContext()) }
     single { AppUsageTracker(get()) }
-    single { AppHealthMonitor.getInstance(androidContext(), get()) }
-    single { WebsiteScreenshotService.getInstance(androidContext()) }
+    single(createdAtStart = true) { AppHealthMonitor(androidContext(), get()) }
+    single(createdAtStart = true) { WebsiteScreenshotService(androidContext()) }
     single { BatchImportService(androidContext(), get()) }
     single { LanguageManager(androidContext()) }
     single { ThemeManager(androidContext()) }
-    single { AppDownloadManager.getInstance(androidContext()) }
-    single { EngineManager.getInstance(androidContext()) }
-    single { BrowserShields.getInstance(androidContext()) }
-    single { LinuxEnvironmentManager.getInstance(androidContext()) }
-    single { ForcedRunManager.getInstance(androidContext()) }
-    single { ModulePresetManager.getInstance(androidContext()) }
-    single { LocalHttpServer.getInstance(androidContext()) }
+    single(createdAtStart = true) { AppDownloadManager(androidContext()) }
+    single(createdAtStart = true) { EngineManager(androidContext()) }
+    single(createdAtStart = true) { BrowserShields(androidContext()) }
+    single(createdAtStart = true) { LinuxEnvironmentManager(androidContext()) }
+    single(createdAtStart = true) { ForcedRunManager(androidContext()) }
+    single(createdAtStart = true) { ModulePresetManager(androidContext()) }
+    single(createdAtStart = true) { LocalHttpServer(androidContext()) }
     // Auth
-    single { TokenManager.getInstance(androidContext()) }
+    single(createdAtStart = true) { TokenManager(androidContext()) }
     single { AuthApiClient(get()) }
     single { AuthRepository(get(), get()) }
     // Cloud

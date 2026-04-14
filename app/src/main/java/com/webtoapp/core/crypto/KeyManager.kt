@@ -30,6 +30,14 @@ class KeyManager(private val context: Context) {
             }
         }
     }
+
+    init {
+        synchronized(Companion) {
+            if (INSTANCE == null) {
+                INSTANCE = this
+            }
+        }
+    }
     
     // Cache的密钥（避免重复派生）
     @Volatile

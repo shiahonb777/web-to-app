@@ -28,7 +28,7 @@ import java.io.InputStream
  * Handles CRUD, import/export, and storage for modules.
  */
 @SuppressLint("StaticFieldLeak")
-class ExtensionManager private constructor(private val context: Context) {
+class ExtensionManager(private val context: Context) {
     
     companion object {
         private const val TAG = "ExtensionManager"
@@ -107,6 +107,11 @@ class ExtensionManager private constructor(private val context: Context) {
     private var _allModulesCache: List<ExtensionModule> = emptyList()
     
     init {
+        synchronized(Companion) {
+            if (INSTANCE == null) {
+                INSTANCE = this
+            }
+        }
         // Load modules during initialization
         loadModules()
         loadBuiltInModules()

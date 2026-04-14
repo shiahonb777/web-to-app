@@ -75,6 +75,7 @@ import com.webtoapp.core.php.PhpAppRuntime
 import com.webtoapp.core.stats.AppUsageTracker
 import com.webtoapp.data.repository.WebAppRepository
 import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.Job
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,6 +153,8 @@ fun WebViewScreen(
     var longPressTouchX by remember { mutableFloatStateOf(0f) }
     var longPressTouchY by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
+    var keepScreenOnTimeoutJob by remember { mutableStateOf<Job?>(null) }
+    var keepScreenOnManagedByScreen by remember { mutableStateOf(false) }
     val longPressHandler = remember { LongPressHandler(context, scope) }
     
     // state
@@ -244,6 +247,13 @@ fun WebViewScreen(
 
     // Loadappconfig
     LaunchedEffect(appId, directUrl, testUrl, previewApp) {
+        keepScreenOnTimeoutJob?.cancel()
+        keepScreenOnTimeoutJob = null
+        if (keepScreenOnManagedByScreen) {
+            activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            keepScreenOnManagedByScreen = false
+        }
+
         // mode: , loadappconfig
         if (isTestMode) {
             isActivated = true
@@ -285,6 +295,7 @@ fun WebViewScreen(
             // Note
             if (previewApp.webViewConfig.screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS) {
                 activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                keepScreenOnManagedByScreen = true
             }
             
             return@LaunchedEffect
@@ -397,20 +408,24 @@ fun WebViewScreen(
                 when (awakeMode) {
                     com.webtoapp.data.model.ScreenAwakeMode.ALWAYS -> {
                         activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        keepScreenOnManagedByScreen = true
                     }
                     com.webtoapp.data.model.ScreenAwakeMode.TIMED -> {
                         activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        keepScreenOnManagedByScreen = true
                         // Note
                         val timeoutMs = app.webViewConfig.screenAwakeTimeoutMinutes * 60 * 1000L
-                        kotlinx.coroutines.MainScope().launch {
-                            kotlinx.coroutines.delay(timeoutMs)
+                        keepScreenOnTimeoutJob = scope.launch {
+                            delay(timeoutMs)
                             activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            keepScreenOnManagedByScreen = false
                         }
                     }
                     com.webtoapp.data.model.ScreenAwakeMode.OFF -> {
                         // if keepScreenOn=true mode=OFF,
                         if (app.webViewConfig.keepScreenOn) {
                             activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            keepScreenOnManagedByScreen = true
                         }
                     }
                 }
@@ -442,6 +457,12 @@ fun WebViewScreen(
         }
         
         onDispose {
+            keepScreenOnTimeoutJob?.cancel()
+            keepScreenOnTimeoutJob = null
+            if (keepScreenOnManagedByScreen) {
+                activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                keepScreenOnManagedByScreen = false
+            }
             bgmPlayer.release()
             announcement.stopNetworkMonitoring()
         }

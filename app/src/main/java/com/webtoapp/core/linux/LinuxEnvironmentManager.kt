@@ -33,7 +33,7 @@ import java.io.File
  * - 渐进式降级，总能工作
  */
 @SuppressLint("StaticFieldLeak")
-class LinuxEnvironmentManager private constructor(private val context: Context) {
+class LinuxEnvironmentManager(private val context: Context) {
     
     companion object {
         private const val TAG = "LinuxEnvManager"
@@ -46,6 +46,14 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
                 instance ?: LinuxEnvironmentManager(context.applicationContext).also { 
                     instance = it 
                 }
+            }
+        }
+    }
+
+    init {
+        synchronized(Companion) {
+            if (instance == null) {
+                instance = this
             }
         }
     }

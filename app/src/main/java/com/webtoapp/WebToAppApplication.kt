@@ -11,6 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 
@@ -27,17 +28,23 @@ class WebToAppApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        startKoin {
-            androidLogger(Level.ERROR)
-            androidContext(this@WebToAppApplication)
-            modules(appModules)
+        if (GlobalContext.getOrNull() == null) {
+            startKoin {
+                androidLogger(Level.ERROR)
+                androidContext(this@WebToAppApplication)
+                modules(appModules)
+            }
+            startupManager.initialize(appScope)
+        } else {
+            AppLogger.w("WebToAppApplication", "Koin already started, skip duplicate application initialization")
         }
-
-        startupManager.initialize(appScope)
     }
 
     override fun onTerminate() {
-        startupManager.shutdown(appScope)
+        if (GlobalContext.getOrNull() != null) {
+            startupManager.shutdown(appScope)
+            GlobalContext.stopKoin()
+        }
         super.onTerminate()
     }
 

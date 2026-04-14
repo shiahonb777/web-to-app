@@ -25,7 +25,7 @@ data class ModulePreset(
  * Approachmanager.
  */
 @SuppressLint("StaticFieldLeak")
-class ModulePresetManager private constructor(private val context: Context) {
+class ModulePresetManager(private val context: Context) {
     
     companion object {
         private const val PRESETS_FILE = "module_presets.json"
@@ -36,6 +36,14 @@ class ModulePresetManager private constructor(private val context: Context) {
         fun getInstance(context: Context): ModulePresetManager {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: ModulePresetManager(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+    }
+
+    init {
+        synchronized(Companion) {
+            if (INSTANCE == null) {
+                INSTANCE = this
             }
         }
     }

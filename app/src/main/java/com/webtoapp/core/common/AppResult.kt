@@ -136,10 +136,10 @@ enum class ErrorCode {
             is java.net.SocketTimeoutException -> NETWORK_TIMEOUT
             is java.net.UnknownHostException,
             is java.net.ConnectException -> NETWORK_ERROR
+            is java.io.FileNotFoundException -> NOT_FOUND
             is java.io.IOException -> IO_ERROR
             is com.google.gson.JsonSyntaxException,
             is com.google.gson.JsonParseException -> PARSE_ERROR
-            is java.io.FileNotFoundException -> NOT_FOUND
             is SecurityException -> PERMISSION_DENIED
             is IllegalArgumentException -> INVALID_INPUT
             is kotlinx.coroutines.CancellationException -> CANCELLED

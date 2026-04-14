@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * 负责引擎选择、实例创建、下载状态管理
  */
 @SuppressLint("StaticFieldLeak")
-class EngineManager private constructor(private val context: Context) {
+class EngineManager(private val context: Context) {
 
     companion object {
         @Volatile
@@ -22,6 +22,14 @@ class EngineManager private constructor(private val context: Context) {
         fun getInstance(context: Context): EngineManager {
             return instance ?: synchronized(this) {
                 instance ?: EngineManager(context.applicationContext).also { instance = it }
+            }
+        }
+    }
+
+    init {
+        synchronized(Companion) {
+            if (instance == null) {
+                instance = this
             }
         }
     }
