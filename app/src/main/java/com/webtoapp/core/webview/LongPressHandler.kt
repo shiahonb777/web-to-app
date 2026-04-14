@@ -14,7 +14,7 @@ import android.util.Base64
 import android.webkit.MimeTypeMap
 import android.webkit.WebView
 import android.widget.Toast
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.util.DownloadHelper
 import com.webtoapp.util.MediaSaver
@@ -410,7 +410,7 @@ class LongPressHandler(
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboard.setPrimaryClip(clip)
-        Toast.makeText(context, Strings.copiedToClipboard, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().copiedToClipboard, Toast.LENGTH_SHORT).show()
     }
     
     /**
@@ -546,7 +546,7 @@ class LongPressHandler(
         }
         
         scope.launch(Dispatchers.Main) {
-            Toast.makeText(context, Strings.downloadingVideo, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadingVideo, Toast.LENGTH_SHORT).show()
             
             val fileName = DownloadHelper.parseFileName(videoUrl, null, "video/mp4")
                 .ifBlank { "VIDEO_${System.currentTimeMillis()}.mp4" }

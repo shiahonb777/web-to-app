@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * App theme system (minimal palette).
@@ -20,20 +20,20 @@ import com.webtoapp.core.i18n.Strings
 enum class AppThemeType(val icon: String) {
     KIMI_NO_NAWA("Minimize");
     
-    fun getDisplayName(): String = Strings.themeKimiNoNawa
-    fun getDescription(): String = Strings.themeKimiNoNawaDesc
+    fun getDisplayName(): String = AppStringsProvider.current().themeKimiNoNawa
+    fun getDescription(): String = AppStringsProvider.current().themeKimiNoNawaDesc
 }
 
 enum class AnimationStyle {
     SMOOTH, BOUNCY, SNAPPY, ELEGANT, PLAYFUL, DRAMATIC;
     
     fun getDisplayName(): String = when (this) {
-        SMOOTH -> Strings.animSmooth
-        BOUNCY -> Strings.animBouncy
-        SNAPPY -> Strings.animSnappy
-        ELEGANT -> Strings.animElegant
-        PLAYFUL -> Strings.animPlayful
-        DRAMATIC -> Strings.animDramatic
+        SMOOTH -> AppStringsProvider.current().animSmooth
+        BOUNCY -> AppStringsProvider.current().animBouncy
+        SNAPPY -> AppStringsProvider.current().animSnappy
+        ELEGANT -> AppStringsProvider.current().animElegant
+        PLAYFUL -> AppStringsProvider.current().animPlayful
+        DRAMATIC -> AppStringsProvider.current().animDramatic
     }
 }
 
@@ -41,12 +41,12 @@ enum class InteractionStyle {
     RIPPLE, GLOW, SCALE, SHAKE, MORPH, PARTICLE;
     
     fun getDisplayName(): String = when (this) {
-        RIPPLE -> Strings.interRipple
-        GLOW -> Strings.interGlow
-        SCALE -> Strings.interScale
-        SHAKE -> Strings.interShake
-        MORPH -> Strings.interMorph
-        PARTICLE -> Strings.interParticle
+        RIPPLE -> AppStringsProvider.current().interRipple
+        GLOW -> AppStringsProvider.current().interGlow
+        SCALE -> AppStringsProvider.current().interScale
+        SHAKE -> AppStringsProvider.current().interShake
+        MORPH -> AppStringsProvider.current().interMorph
+        PARTICLE -> AppStringsProvider.current().interParticle
     }
 }
 
@@ -248,31 +248,31 @@ object AppThemes {
 }
 
 fun AppThemeType.getLocalizedDisplayName(): String {
-    return com.webtoapp.core.i18n.Strings.themeKimiNoNawa
+    return com.webtoapp.core.i18n.AppStringsProvider.current().themeKimiNoNawa
 }
 
 fun AppThemeType.getLocalizedDescription(): String {
-    return com.webtoapp.core.i18n.Strings.themeKimiNoNawaDesc
+    return com.webtoapp.core.i18n.AppStringsProvider.current().themeKimiNoNawaDesc
 }
 
 fun AnimationStyle.getLocalizedDisplayName(): String {
     return when (this) {
-        AnimationStyle.SMOOTH -> com.webtoapp.core.i18n.Strings.animSmooth
-        AnimationStyle.BOUNCY -> com.webtoapp.core.i18n.Strings.animBouncy
-        AnimationStyle.SNAPPY -> com.webtoapp.core.i18n.Strings.animSnappy
-        AnimationStyle.ELEGANT -> com.webtoapp.core.i18n.Strings.animElegant
-        AnimationStyle.PLAYFUL -> com.webtoapp.core.i18n.Strings.animPlayful
-        AnimationStyle.DRAMATIC -> com.webtoapp.core.i18n.Strings.animDramatic
+        AnimationStyle.SMOOTH -> com.webtoapp.core.i18n.AppStringsProvider.current().animSmooth
+        AnimationStyle.BOUNCY -> com.webtoapp.core.i18n.AppStringsProvider.current().animBouncy
+        AnimationStyle.SNAPPY -> com.webtoapp.core.i18n.AppStringsProvider.current().animSnappy
+        AnimationStyle.ELEGANT -> com.webtoapp.core.i18n.AppStringsProvider.current().animElegant
+        AnimationStyle.PLAYFUL -> com.webtoapp.core.i18n.AppStringsProvider.current().animPlayful
+        AnimationStyle.DRAMATIC -> com.webtoapp.core.i18n.AppStringsProvider.current().animDramatic
     }
 }
 
 fun InteractionStyle.getLocalizedDisplayName(): String {
     return when (this) {
-        InteractionStyle.RIPPLE -> com.webtoapp.core.i18n.Strings.interRipple
-        InteractionStyle.GLOW -> com.webtoapp.core.i18n.Strings.interGlow
-        InteractionStyle.SCALE -> com.webtoapp.core.i18n.Strings.interScale
-        InteractionStyle.SHAKE -> com.webtoapp.core.i18n.Strings.interShake
-        InteractionStyle.MORPH -> com.webtoapp.core.i18n.Strings.interMorph
-        InteractionStyle.PARTICLE -> com.webtoapp.core.i18n.Strings.interParticle
+        InteractionStyle.RIPPLE -> com.webtoapp.core.i18n.AppStringsProvider.current().interRipple
+        InteractionStyle.GLOW -> com.webtoapp.core.i18n.AppStringsProvider.current().interGlow
+        InteractionStyle.SCALE -> com.webtoapp.core.i18n.AppStringsProvider.current().interScale
+        InteractionStyle.SHAKE -> com.webtoapp.core.i18n.AppStringsProvider.current().interShake
+        InteractionStyle.MORPH -> com.webtoapp.core.i18n.AppStringsProvider.current().interMorph
+        InteractionStyle.PARTICLE -> com.webtoapp.core.i18n.AppStringsProvider.current().interParticle
     }
 }

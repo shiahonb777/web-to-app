@@ -32,7 +32,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -315,20 +315,20 @@ fun CodeBlocksTabContainer(
                             val currentBlock = codeBlocks.getOrNull(pagerState.currentPage)
                             if (currentBlock?.language in listOf("html", "htm", "css", "js")) {
                                 IconButton(onClick = { currentBlock?.let { onPreview(it) } }, modifier = Modifier.size(32.dp)) {
-                                    Icon(Icons.Outlined.PlayArrow, contentDescription = Strings.cdPreview, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Outlined.PlayArrow, contentDescription = AppStringsProvider.current().cdPreview, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                 }
                             }
                             IconButton(onClick = { currentBlock?.let { clipboardManager.setText(AnnotatedString(it.content)); onCopy(it.content) } }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.cdCopy, tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().cdCopy, tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             if (onDownload != null || onExportToProject != null) {
                                 Box {
                                     IconButton(onClick = { showMoreMenu = true }, modifier = Modifier.size(32.dp)) {
-                                        Icon(Icons.Outlined.MoreVert, contentDescription = Strings.cdMore, tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Outlined.MoreVert, contentDescription = AppStringsProvider.current().cdMore, tint = colors.text.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                                     }
                                     DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
-                                        onDownload?.let { download -> DropdownMenuItem(text = { Text(Strings.download) }, onClick = { showMoreMenu = false; currentBlock?.let { download(it) } }, leadingIcon = { Icon(Icons.Outlined.Download, null) }) }
-                                        onExportToProject?.let { DropdownMenuItem(text = { Text(Strings.exportAll) }, onClick = { showMoreMenu = false; it() }, leadingIcon = { Icon(Icons.Outlined.FolderOpen, null) }) }
+                                        onDownload?.let { download -> DropdownMenuItem(text = { Text(AppStringsProvider.current().download) }, onClick = { showMoreMenu = false; currentBlock?.let { download(it) } }, leadingIcon = { Icon(Icons.Outlined.Download, null) }) }
+                                        onExportToProject?.let { DropdownMenuItem(text = { Text(AppStringsProvider.current().exportAll) }, onClick = { showMoreMenu = false; it() }, leadingIcon = { Icon(Icons.Outlined.FolderOpen, null) }) }
                                     }
                                 }
                             }
@@ -341,8 +341,8 @@ fun CodeBlocksTabContainer(
             }
             Surface(color = colors.headerBackground.copy(alpha = 0.5f), shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(Strings.fileCountFormat.format(pagerState.currentPage + 1, codeBlocks.size), style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f))
-                    codeBlocks.getOrNull(pagerState.currentPage)?.let { Text(Strings.linesCount.format(it.content.lines().size), style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f)) }
+                    Text(AppStringsProvider.current().fileCountFormat.format(pagerState.currentPage + 1, codeBlocks.size), style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f))
+                    codeBlocks.getOrNull(pagerState.currentPage)?.let { Text(AppStringsProvider.current().linesCount.format(it.content.lines().size), style = MaterialTheme.typography.labelSmall, color = colors.text.copy(alpha = 0.5f)) }
                 }
             }
         }
@@ -537,7 +537,7 @@ fun ThinkingBlock(thinking: String, modifier: Modifier = Modifier, defaultExpand
                     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), modifier = Modifier.size(28.dp)) {
                         Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary) }
                     }
-                    Text(Strings.thinking, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+                    Text(AppStringsProvider.current().thinking, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
                 }
                 Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f), modifier = Modifier.size(28.dp)) {
                     Box(contentAlignment = Alignment.Center) { Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, Modifier.size(20.dp), MaterialTheme.colorScheme.tertiary) }
@@ -610,7 +610,7 @@ private fun StreamingThinkingBlock(thinking: String, modifier: Modifier = Modifi
                 Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), modifier = Modifier.size(28.dp)) {
                     Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary.copy(alpha = alpha)) }
                 }
-                Text(Strings.thinkingDots, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+                Text(AppStringsProvider.current().thinkingDots, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
             }
             Spacer(Modifier.height(10.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), thickness = 1.dp)
@@ -636,7 +636,7 @@ fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<S
                                 AsyncImage(model = File(imagePath), contentDescription = null, modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
                             }
                             Surface(modifier = Modifier.size(24.dp).align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp).clickable { onRemoveImage(index) }, shape = CircleShape, color = MaterialTheme.colorScheme.error, shadowElevation = 2.dp) {
-                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Close, contentDescription = Strings.remove, tint = MaterialTheme.colorScheme.onError, modifier = Modifier.size(14.dp)) }
+                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().remove, tint = MaterialTheme.colorScheme.onError, modifier = Modifier.size(14.dp)) }
                             }
                         }
                     }
@@ -644,13 +644,13 @@ fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<S
             }
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Surface(shape = CircleShape, color = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(44.dp).clickable(enabled = images.size < maxImages && !isLoading) { onAddImage() }) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Image, contentDescription = Strings.addImage, tint = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp)) }
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Image, contentDescription = AppStringsProvider.current().addImage, tint = if (images.size < maxImages && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp)) }
                 }
-                OutlinedTextField(value = value, onValueChange = onValueChange, modifier = Modifier.weight(weight = 1f, fill = true), placeholder = { Text(Strings.describeHtmlPage, color = MaterialTheme.colorScheme.outline) }, maxLines = 5, enabled = !isLoading, shape = RoundedCornerShape(24.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
+                OutlinedTextField(value = value, onValueChange = onValueChange, modifier = Modifier.weight(weight = 1f, fill = true), placeholder = { Text(AppStringsProvider.current().describeHtmlPage, color = MaterialTheme.colorScheme.outline) }, maxLines = 5, enabled = !isLoading, shape = RoundedCornerShape(24.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
                 Surface(shape = CircleShape, color = if (value.isNotBlank() && !isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(44.dp).clickable(enabled = value.isNotBlank() && !isLoading) { onSend() }, shadowElevation = if (value.isNotBlank() && !isLoading) 4.dp else 0.dp) {
                     Box(contentAlignment = Alignment.Center) {
                         if (isLoading) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
-                        else Icon(Icons.Default.Send, contentDescription = Strings.btnSend, tint = if (value.isNotBlank()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
+                        else Icon(Icons.Default.Send, contentDescription = AppStringsProvider.current().btnSend, tint = if (value.isNotBlank()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
                     }
                 }
             }
@@ -670,9 +670,9 @@ fun SessionListItem(session: AiCodingSession, isSelected: Boolean, onClick: () -
             Column(Modifier.weight(weight = 1f, fill = true)) {
                 Text(session.title, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(2.dp))
-                Text(Strings.messagesCount.format(session.messages.size) + " - " + formatDate(session.updatedAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text(AppStringsProvider.current().messagesCount.format(session.messages.size) + " - " + formatDate(session.updatedAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, Strings.btnDelete, Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, AppStringsProvider.current().btnDelete, Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
         }
     }
 }
@@ -689,10 +689,10 @@ fun CheckpointListItem(checkpoint: ProjectCheckpoint, isCurrent: Boolean, onRest
             Column(Modifier.weight(weight = 1f, fill = true)) {
                 Text(checkpoint.name, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
                 Spacer(Modifier.height(2.dp))
-                Text(Strings.filesCountShort.format(checkpoint.files.size) + " - " + formatTime(checkpoint.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text(AppStringsProvider.current().filesCountShort.format(checkpoint.files.size) + " - " + formatTime(checkpoint.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
-            if (!isCurrent) { FilledTonalButton(onClick = onRestore, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 12.dp)) { Text(Strings.btnRestore, style = MaterialTheme.typography.labelMedium) }; Spacer(Modifier.width(8.dp)) }
-            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, Strings.btnDelete, Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
+            if (!isCurrent) { FilledTonalButton(onClick = onRestore, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 12.dp)) { Text(AppStringsProvider.current().btnRestore, style = MaterialTheme.typography.labelMedium) }; Spacer(Modifier.width(8.dp)) }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) { Icon(Icons.Outlined.Delete, AppStringsProvider.current().btnDelete, Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
         }
     }
 }
@@ -777,12 +777,12 @@ fun ConfigPanel(
         Color.Black.copy(alpha = 0.06f)
 
     Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(Strings.sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(AppStringsProvider.current().sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         
         // Text model- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
-                Text(Strings.textModel, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().textModel, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 ModelSelector(
                     selectedModel = textModels.find { it.id == config.textModelId },
@@ -796,7 +796,7 @@ fun ConfigPanel(
         // Image model- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
-                Text(Strings.imageModelOptional, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().imageModelOptional, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 ImageModelSelector(
                     selectedModel = imageModels.find { it.id == config.imageModelId },
@@ -811,12 +811,12 @@ fun ConfigPanel(
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(Strings.temperature, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(AppStringsProvider.current().temperature, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) { Text(String.format(java.util.Locale.getDefault(), "%.1f", config.temperature), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
                 }
                 Spacer(Modifier.height(8.dp))
                 Slider(value = config.temperature, onValueChange = { onConfigChange(config.copy(temperature = it)) }, valueRange = 0f..2f, steps = 19)
-                Text(Strings.temperatureHint, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text(AppStringsProvider.current().temperatureHint, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
         }
         
@@ -830,16 +830,16 @@ fun ConfigPanel(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(Strings.toolbox, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(AppStringsProvider.current().toolbox, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(
-                        Strings.nEnabled.format(config.enabledTools.size),
+                        AppStringsProvider.current().nEnabled.format(config.enabledTools.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    Strings.toolboxHint,
+                    AppStringsProvider.current().toolboxHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -880,7 +880,7 @@ fun ConfigPanel(
                                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                         ) {
                                             Text(
-                                                Strings.required,
+                                                AppStringsProvider.current().required,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -895,7 +895,7 @@ fun ConfigPanel(
                                             color = MaterialTheme.colorScheme.errorContainer
                                         ) {
                                             Text(
-                                                Strings.requiresImageModel,
+                                                AppStringsProvider.current().requiresImageModel,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -936,14 +936,14 @@ fun ConfigPanel(
         // Rules- card
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
-                Text(Strings.rules, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().rules, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(12.dp))
                 var showRulesTemplates by remember { mutableStateOf(false) }
-                PremiumOutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text(Strings.selectFromTemplate) }
+                PremiumOutlinedButton(onClick = { showRulesTemplates = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Outlined.LibraryBooks, null); Spacer(Modifier.width(8.dp)); Text(AppStringsProvider.current().selectFromTemplate) }
                 if (showRulesTemplates) {
-                    AlertDialog(onDismissRequest = { showRulesTemplates = false }, title = { Text(Strings.selectRuleTemplate) }, text = {
+                    AlertDialog(onDismissRequest = { showRulesTemplates = false }, title = { Text(AppStringsProvider.current().selectRuleTemplate) }, text = {
                         LazyColumn { items(rulesTemplates) { template -> ListItem(headlineContent = { Text(template.name) }, supportingContent = { Text(template.description) }, modifier = Modifier.clickable { onConfigChange(config.copy(rules = template.rules)); showRulesTemplates = false }) } }
-                    }, confirmButton = { TextButton(onClick = { showRulesTemplates = false }) { Text(Strings.btnCancel) } })
+                    }, confirmButton = { TextButton(onClick = { showRulesTemplates = false }) { Text(AppStringsProvider.current().btnCancel) } })
                 }
                 Spacer(Modifier.height(12.dp))
                 val effectiveRules = config.getEffectiveRules()
@@ -966,13 +966,13 @@ fun ConfigPanel(
                                     config.rules.toMutableList().apply { removeAt(index) }
                                 }
                                 onConfigChange(config.copy(rules = newRules))
-                            }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = Strings.btnDelete, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error) }
+                            }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().btnDelete, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error) }
                         }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
                 var newRule by remember { mutableStateOf("") }
-                OutlinedTextField(value = newRule, onValueChange = { newRule = it }, placeholder = { Text(Strings.addNewRule) }, modifier = Modifier.fillMaxWidth(), trailingIcon = { IconButton(onClick = { if (newRule.isNotBlank()) { onConfigChange(config.copy(rules = config.rules + newRule)); newRule = "" } }, enabled = newRule.isNotBlank()) { Icon(Icons.Default.Add, contentDescription = Strings.add, tint = if (newRule.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }, singleLine = true, shape = RoundedCornerShape(12.dp))
+                OutlinedTextField(value = newRule, onValueChange = { newRule = it }, placeholder = { Text(AppStringsProvider.current().addNewRule) }, modifier = Modifier.fillMaxWidth(), trailingIcon = { IconButton(onClick = { if (newRule.isNotBlank()) { onConfigChange(config.copy(rules = config.rules + newRule)); newRule = "" } }, enabled = newRule.isNotBlank()) { Icon(Icons.Default.Add, contentDescription = AppStringsProvider.current().add, tint = if (newRule.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }, singleLine = true, shape = RoundedCornerShape(12.dp))
             }
         }
     }
@@ -1027,7 +1027,7 @@ private fun ImageModelSelector(
                         )
                     } else {
                         Text(
-                            Strings.noImageModel,
+                            AppStringsProvider.current().noImageModel,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1037,7 +1037,7 @@ private fun ImageModelSelector(
                 // Note
                 Icon(
                     Icons.Default.ArrowDropDown,
-                    contentDescription = Strings.expand,
+                    contentDescription = AppStringsProvider.current().expand,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1070,7 +1070,7 @@ private fun ImageModelSelector(
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
-                        Text(Strings.noImageModel)
+                        Text(AppStringsProvider.current().noImageModel)
                     }
                 },
                 onClick = {
@@ -1087,7 +1087,7 @@ private fun ImageModelSelector(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 Text(
-                    Strings.selectImageModel,
+                    AppStringsProvider.current().selectImageModel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -1122,7 +1122,7 @@ private fun ImageModelSelector(
                                 if (selectedModel?.id == model.id) {
                                     Icon(
                                         Icons.Default.Check,
-                                        contentDescription = Strings.selected,
+                                        contentDescription = AppStringsProvider.current().selected,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -1157,7 +1157,7 @@ private fun ImageModelSelector(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            Strings.configureMoreModels,
+                            AppStringsProvider.current().configureMoreModels,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -1254,7 +1254,7 @@ fun ProjectFilesPanel(
                             modifier = Modifier.size(22.dp)
                         )
                         Text(
-                            Strings.projectFiles,
+                            AppStringsProvider.current().projectFiles,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -1274,13 +1274,13 @@ fun ProjectFilesPanel(
                         IconButton(onClick = onRefresh, modifier = Modifier.size(32.dp)) {
                             Icon(
                                 Icons.Outlined.Refresh,
-                                contentDescription = Strings.refresh,
+                                contentDescription = AppStringsProvider.current().refresh,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
                         Icon(
                             if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                            contentDescription = if (isExpanded) Strings.collapse else Strings.expand,
+                            contentDescription = if (isExpanded) AppStringsProvider.current().collapse else AppStringsProvider.current().expand,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -1309,12 +1309,12 @@ fun ProjectFilesPanel(
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                Strings.noFilesYet,
+                                AppStringsProvider.current().noFilesYet,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
                             Text(
-                                Strings.aiCodeSavedHere,
+                                AppStringsProvider.current().aiCodeSavedHere,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
                             )
@@ -1426,7 +1426,7 @@ private fun FileGroupItem(
                     ) {
                         Icon(
                             if (showVersions) Icons.Default.ExpandLess else Icons.Default.History,
-                            contentDescription = Strings.versionHistory,
+                            contentDescription = AppStringsProvider.current().versionHistory,
                             modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.outline
                         )
@@ -1441,7 +1441,7 @@ private fun FileGroupItem(
                     ) {
                         Icon(
                             Icons.Outlined.PlayArrow,
-                            contentDescription = Strings.cdPreview,
+                            contentDescription = AppStringsProvider.current().cdPreview,
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -1497,7 +1497,7 @@ private fun FileGroupItem(
                                 ) {
                                     Icon(
                                         Icons.Outlined.PlayArrow,
-                                        contentDescription = Strings.cdPreview,
+                                        contentDescription = AppStringsProvider.current().cdPreview,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -1601,11 +1601,11 @@ fun FilePreviewPanel(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text(Strings.cdPreview)
+                            Text(AppStringsProvider.current().cdPreview)
                         }
                     }
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = Strings.cdClose)
+                        Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().cdClose)
                     }
                 }
             }

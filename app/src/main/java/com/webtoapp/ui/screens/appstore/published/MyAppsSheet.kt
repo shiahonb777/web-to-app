@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -122,11 +122,11 @@ internal fun MyAppsSheet(
     val totalLikes = remember(myApps) { myApps.sumOf { it.likeCount } }
 
     val categoryLabels = mapOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
+        "tools" to AppStringsProvider.current().catTools, "social" to AppStringsProvider.current().catSocial, "education" to "教育",
         "entertainment" to "娱乐", "productivity" to "效率",
         "lifestyle" to "生活", "business" to "商务",
         "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "health" to "健康", "other" to AppStringsProvider.current().catOther
     )
 
     // delete( )
@@ -169,7 +169,7 @@ internal fun MyAppsSheet(
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
             // Header( )
             MyPublishedItemsHeader(
-                title = Strings.storeMyApps,
+                title = AppStringsProvider.current().storeMyApps,
                 isRefreshing = isRefreshing,
                 onRefresh = { loadMyApps(showRefresh = true) }
             ) {
@@ -215,7 +215,7 @@ internal fun MyAppsSheet(
                     totalDownloads = totalDownloads,
                     avgRating = avgRating,
                     totalLikes = totalLikes,
-                    downloadLabel = Strings.storeTotalDownloads
+                    downloadLabel = AppStringsProvider.current().storeTotalDownloads
                 )
             }
 
@@ -229,7 +229,7 @@ internal fun MyAppsSheet(
             } else if (myApps.isEmpty()) {
                 PublishedItemEmptyState(
                     icon = Icons.Outlined.RocketLaunch,
-                    title = Strings.storeNoPublishedApps,
+                    title = AppStringsProvider.current().storeNoPublishedApps,
                     subtitle = "将你制作的 APP 发布到商店\n让更多人发现和使用你的作品",
                     onAction = onDismiss
                 )

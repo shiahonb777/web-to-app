@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.data.model.HtmlConfig
@@ -305,7 +305,7 @@ fun CreateHtmlAppScreen(
                         appName = analysis.suggestedAppName
                     }
                     if (analysis.htmlFiles.isEmpty()) {
-                        zipError = Strings.zipNoHtmlWarning
+                        zipError = AppStringsProvider.current().zipNoHtmlWarning
                     }
                 } catch (e: ZipProjectImporter.ZipImportException) {
                     zipError = e.message
@@ -337,7 +337,7 @@ fun CreateHtmlAppScreen(
                         appName = analysis.suggestedAppName
                     }
                     if (analysis.htmlFiles.isEmpty()) {
-                        folderError = Strings.folderNoHtmlWarning
+                        folderError = AppStringsProvider.current().folderNoHtmlWarning
                     }
                 } catch (e: Exception) {
                     folderError = e.message ?: "Unknown error"
@@ -441,8 +441,8 @@ fun CreateHtmlAppScreen(
         AlertDialog(
             onDismissRequest = { showExitConfirmDialog = false },
             icon = { Icon(Icons.Outlined.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text(Strings.unsavedChangesTitle) },
-            text = { Text(Strings.unsavedChangesMessage) },
+            title = { Text(AppStringsProvider.current().unsavedChangesTitle) },
+            text = { Text(AppStringsProvider.current().unsavedChangesMessage) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -453,12 +453,12 @@ fun CreateHtmlAppScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.discardChanges)
+                    Text(AppStringsProvider.current().discardChanges)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExitConfirmDialog = false }) {
-                    Text(Strings.keepEditing)
+                    Text(AppStringsProvider.current().keepEditing)
                 }
             }
         )
@@ -509,12 +509,12 @@ fun CreateHtmlAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createHtmlAppTitle) },
+                title = { Text(AppStringsProvider.current().createHtmlAppTitle) },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (hasUnsavedChanges) showExitConfirmDialog = true else onBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -544,7 +544,7 @@ fun CreateHtmlAppScreen(
                                                 landscapeMode = landscapeMode
                                             )
                                             onCreated(
-                                                appName.ifBlank { Strings.createHtmlApp },
+                                                appName.ifBlank { AppStringsProvider.current().createHtmlApp },
                                                 config,
                                                 finalIconUri,
                                                 themeType
@@ -559,7 +559,7 @@ fun CreateHtmlAppScreen(
                                             landscapeMode = landscapeMode
                                         )
                                         onCreated(
-                                            appName.ifBlank { Strings.createHtmlApp },
+                                            appName.ifBlank { AppStringsProvider.current().createHtmlApp },
                                             config,
                                             finalIconUri,
                                             themeType
@@ -648,9 +648,9 @@ fun CreateHtmlAppScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.optimizing)
+                            Text(AppStringsProvider.current().optimizing)
                         } else {
-                            Text(Strings.btnCreate)
+                            Text(AppStringsProvider.current().btnCreate)
                         }
                     }
                 }
@@ -689,7 +689,7 @@ fun CreateHtmlAppScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.manualSelectMode)
+                                    Text(AppStringsProvider.current().manualSelectMode)
                                 }
                             }
                         )
@@ -704,7 +704,7 @@ fun CreateHtmlAppScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.zipImportMode)
+                                    Text(AppStringsProvider.current().zipImportMode)
                                 }
                             }
                         )
@@ -719,7 +719,7 @@ fun CreateHtmlAppScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.folderImportMode)
+                                    Text(AppStringsProvider.current().folderImportMode)
                                 }
                             }
                         )
@@ -733,12 +733,12 @@ fun CreateHtmlAppScreen(
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = Strings.selectFiles,
+                            text = AppStringsProvider.current().selectFiles,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = Strings.selectFilesHint,
+                            text = AppStringsProvider.current().selectFilesHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -746,7 +746,7 @@ fun CreateHtmlAppScreen(
                         
                         // HTMLfile( )
                         FileSlotWithEditor(
-                            label = Strings.htmlFile,
+                            label = AppStringsProvider.current().htmlFile,
                             icon = Icons.Outlined.Code,
                             file = htmlFile,
                             required = true,
@@ -765,7 +765,7 @@ fun CreateHtmlAppScreen(
                         
                         // CSSfile( optional)
                         FileSlotWithEditor(
-                            label = Strings.cssFile,
+                            label = AppStringsProvider.current().cssFile,
                             icon = Icons.Outlined.Palette,
                             file = cssFile,
                             required = false,
@@ -784,7 +784,7 @@ fun CreateHtmlAppScreen(
                         
                         // JSfile( optional)
                         FileSlotWithEditor(
-                            label = Strings.jsFile,
+                            label = AppStringsProvider.current().jsFile,
                             icon = Icons.Outlined.Javascript,
                             file = jsFile,
                             required = false,
@@ -815,13 +815,13 @@ fun CreateHtmlAppScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = Strings.writeCode,
+                                text = AppStringsProvider.current().writeCode,
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = Strings.writeCodeHint,
+                            text = AppStringsProvider.current().writeCodeHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -921,7 +921,7 @@ fun CreateHtmlAppScreen(
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = Strings.labelAppInfo,
+                        text = AppStringsProvider.current().labelAppInfo,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -951,7 +951,7 @@ fun CreateHtmlAppScreen(
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = Strings.labelAdvancedConfig,
+                        text = AppStringsProvider.current().labelAdvancedConfig,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -963,9 +963,9 @@ fun CreateHtmlAppScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.enableJavaScript)
+                            Text(AppStringsProvider.current().enableJavaScript)
                             Text(
-                                text = Strings.enableJsHint,
+                                text = AppStringsProvider.current().enableJsHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -987,9 +987,9 @@ fun CreateHtmlAppScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.enableLocalStorage)
+                            Text(AppStringsProvider.current().enableLocalStorage)
                             Text(
-                                text = Strings.enableLocalStorageHint,
+                                text = AppStringsProvider.current().enableLocalStorageHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1011,9 +1011,9 @@ fun CreateHtmlAppScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.landscapeModeLabel)
+                            Text(AppStringsProvider.current().landscapeModeLabel)
                             Text(
-                                text = Strings.landscapeModeHintHtml,
+                                text = AppStringsProvider.current().landscapeModeHintHtml,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1036,7 +1036,7 @@ fun CreateHtmlAppScreen(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(Strings.optimizeCode)
+                                Text(AppStringsProvider.current().optimizeCode)
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = if (esbuildAvailable) "esbuild" else "built-in",
@@ -1057,7 +1057,7 @@ fun CreateHtmlAppScreen(
                                 )
                             }
                             Text(
-                                text = Strings.optimizeCodeHint,
+                                text = AppStringsProvider.current().optimizeCodeHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1083,7 +1083,7 @@ fun CreateHtmlAppScreen(
                             Column(modifier = Modifier.padding(12.dp)) {
                                 if (result.success) {
                                     Text(
-                                        text = Strings.optimizeComplete,
+                                        text = AppStringsProvider.current().optimizeComplete,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Medium
@@ -1091,28 +1091,28 @@ fun CreateHtmlAppScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     if (result.jsFilesOptimized > 0) {
                                         Text(
-                                            text = Strings.optimizeResultJs.replace("%d", result.jsFilesOptimized.toString()),
+                                            text = AppStringsProvider.current().optimizeResultJs.replace("%d", result.jsFilesOptimized.toString()),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     if (result.cssFilesOptimized > 0) {
                                         Text(
-                                            text = Strings.optimizeResultCss.replace("%d", result.cssFilesOptimized.toString()),
+                                            text = AppStringsProvider.current().optimizeResultCss.replace("%d", result.cssFilesOptimized.toString()),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     if (result.tsFilesCompiled > 0) {
                                         Text(
-                                            text = Strings.optimizeResultTs.replace("%d", result.tsFilesCompiled.toString()),
+                                            text = AppStringsProvider.current().optimizeResultTs.replace("%d", result.tsFilesCompiled.toString()),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     if (result.savedBytes > 0) {
                                         Text(
-                                            text = Strings.optimizeResultSaved.replace("%s", formatHtmlProjectFileSize(result.savedBytes)),
+                                            text = AppStringsProvider.current().optimizeResultSaved.replace("%s", formatHtmlProjectFileSize(result.savedBytes)),
                                             style = MaterialTheme.typography.bodySmall,
                                             fontWeight = FontWeight.Medium,
                                             color = MaterialTheme.colorScheme.primary
@@ -1120,7 +1120,7 @@ fun CreateHtmlAppScreen(
                                     }
                                 } else {
                                     Text(
-                                        text = Strings.optimizeFailed.replace("%s", result.error ?: ""),
+                                        text = AppStringsProvider.current().optimizeFailed.replace("%s", result.error ?: ""),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -1151,7 +1151,7 @@ fun CreateHtmlAppScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                 Text(
-                                    text = Strings.projectIssuesDetected,
+                                    text = AppStringsProvider.current().projectIssuesDetected,
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
@@ -1163,9 +1163,9 @@ fun CreateHtmlAppScreen(
                                 }
                                 Text(
                                     text = buildString {
-                                        if (errorCount > 0) append(Strings.errorsCount.replace("%d", errorCount.toString()))
+                                        if (errorCount > 0) append(AppStringsProvider.current().errorsCount.replace("%d", errorCount.toString()))
                                         if (errorCount > 0 && warningCount > 0) append(", ")
-                                        if (warningCount > 0) append(Strings.warningsCount.replace("%d", warningCount.toString()))
+                                        if (warningCount > 0) append(AppStringsProvider.current().warningsCount.replace("%d", warningCount.toString()))
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
@@ -1174,7 +1174,7 @@ fun CreateHtmlAppScreen(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = Strings.autoFixHint,
+                            text = AppStringsProvider.current().autoFixHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
                         )
@@ -1191,7 +1191,7 @@ fun CreateHtmlAppScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.viewAnalysisResult)
+                            Text(AppStringsProvider.current().viewAnalysisResult)
                         }
                     }
                 }
@@ -1216,10 +1216,10 @@ fun CreateHtmlAppScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = when (selectedTabIndex) {
-                            0 -> Strings.htmlAppTip
-                            1 -> Strings.zipTip
-                            2 -> Strings.folderTip
-                            else -> Strings.htmlAppTip
+                            0 -> AppStringsProvider.current().htmlAppTip
+                            1 -> AppStringsProvider.current().zipTip
+                            2 -> AppStringsProvider.current().folderTip
+                            else -> AppStringsProvider.current().htmlAppTip
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -1245,7 +1245,7 @@ fun CreateHtmlAppScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.featureTip,
+                        text = AppStringsProvider.current().featureTip,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
@@ -1272,13 +1272,13 @@ fun CreateHtmlAppScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = Strings.aboutFileReference,
+                                text = AppStringsProvider.current().aboutFileReference,
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = Strings.fileReferenceHint,
+                                text = AppStringsProvider.current().fileReferenceHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )

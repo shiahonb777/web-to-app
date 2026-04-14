@@ -3,7 +3,7 @@ package com.webtoapp.core.extension
 import android.annotation.SuppressLint
 import android.content.Context
 import com.google.gson.reflect.TypeToken
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 
 /**
@@ -68,8 +68,8 @@ class ModulePresetManager(private val context: Context) {
     fun getBuiltInPresets(): List<ModulePreset> = listOf(
         ModulePreset(
             id = "preset-reading",
-            name = Strings.presetReading,
-            description = Strings.presetReadingDesc,
+            name = AppStringsProvider.current().presetReading,
+            description = AppStringsProvider.current().presetReadingDesc,
             icon = "📖",
             moduleIds = listOf(
                 "builtin-dark-mode",
@@ -81,8 +81,8 @@ class ModulePresetManager(private val context: Context) {
         ),
         ModulePreset(
             id = "preset-adblock",
-            name = Strings.presetAdblock,
-            description = Strings.presetAdblockDesc,
+            name = AppStringsProvider.current().presetAdblock,
+            description = AppStringsProvider.current().presetAdblockDesc,
             icon = "🛡️",
             moduleIds = listOf(
                 "builtin-adblocker-enhanced",
@@ -92,8 +92,8 @@ class ModulePresetManager(private val context: Context) {
         ),
         ModulePreset(
             id = "preset-media",
-            name = Strings.presetMedia,
-            description = Strings.presetMediaDesc,
+            name = AppStringsProvider.current().presetMedia,
+            description = AppStringsProvider.current().presetMediaDesc,
             icon = "🎬",
             moduleIds = listOf(
                 "builtin-video-speed",
@@ -103,8 +103,8 @@ class ModulePresetManager(private val context: Context) {
         ),
         ModulePreset(
             id = "preset-utility",
-            name = Strings.presetUtility,
-            description = Strings.presetUtilityDesc,
+            name = AppStringsProvider.current().presetUtility,
+            description = AppStringsProvider.current().presetUtilityDesc,
             icon = "🔧",
             moduleIds = listOf(
                 "builtin-copy-protection-remover",
@@ -115,8 +115,8 @@ class ModulePresetManager(private val context: Context) {
         ),
         ModulePreset(
             id = "preset-night",
-            name = Strings.presetNight,
-            description = Strings.presetNightDesc,
+            name = AppStringsProvider.current().presetNight,
+            description = AppStringsProvider.current().presetNightDesc,
             icon = "🌙",
             moduleIds = listOf(
                 "builtin-dark-mode",

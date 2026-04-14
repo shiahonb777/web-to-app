@@ -1,6 +1,6 @@
 package com.webtoapp.core.extension
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  *
@@ -27,8 +27,8 @@ object DebugTestPages {
      */
     private fun basicHtmlPage() = TestPage(
         id = "basic-html",
-        name = Strings.testPageBasicHtml,
-        description = Strings.testPageBasicHtmlDesc,
+        name = AppStringsProvider.current().testPageBasicHtml,
+        description = AppStringsProvider.current().testPageBasicHtmlDesc,
         icon = "📄",
         html = """
 <!DOCTYPE html>
@@ -97,8 +97,8 @@ object DebugTestPages {
      */
     private fun formTestPage() = TestPage(
         id = "form-test",
-        name = Strings.testPageForm,
-        description = Strings.testPageFormDesc,
+        name = AppStringsProvider.current().testPageForm,
+        description = AppStringsProvider.current().testPageFormDesc,
         icon = "📝",
         html = """
 <!DOCTYPE html>
@@ -168,8 +168,8 @@ object DebugTestPages {
      */
     private fun mediaTestPage() = TestPage(
         id = "media-test",
-        name = Strings.testPageMedia,
-        description = Strings.testPageMediaDesc,
+        name = AppStringsProvider.current().testPageMedia,
+        description = AppStringsProvider.current().testPageMediaDesc,
         icon = "🎬",
         html = """
 <!DOCTYPE html>
@@ -225,8 +225,8 @@ object DebugTestPages {
      */
     private fun adSimulatorPage() = TestPage(
         id = "ad-simulator",
-        name = Strings.testPageAdSimulator,
-        description = Strings.testPageAdSimulatorDesc,
+        name = AppStringsProvider.current().testPageAdSimulator,
+        description = AppStringsProvider.current().testPageAdSimulatorDesc,
         icon = "🛡️",
         html = """
 <!DOCTYPE html>
@@ -301,8 +301,8 @@ object DebugTestPages {
      */
     private fun popupTestPage() = TestPage(
         id = "popup-test",
-        name = Strings.testPagePopup,
-        description = Strings.testPagePopupDesc,
+        name = AppStringsProvider.current().testPagePopup,
+        description = AppStringsProvider.current().testPagePopupDesc,
         icon = "💬",
         html = """
 <!DOCTYPE html>
@@ -364,8 +364,8 @@ object DebugTestPages {
      */
     private fun scrollTestPage() = TestPage(
         id = "scroll-test",
-        name = Strings.testPageScroll,
-        description = Strings.testPageScrollDesc,
+        name = AppStringsProvider.current().testPageScroll,
+        description = AppStringsProvider.current().testPageScrollDesc,
         icon = "📜",
         html = """
 <!DOCTYPE html>
@@ -413,8 +413,8 @@ object DebugTestPages {
      */
     private fun apiTestPage() = TestPage(
         id = "api-test",
-        name = Strings.testPageApi,
-        description = Strings.testPageApiDesc,
+        name = AppStringsProvider.current().testPageApi,
+        description = AppStringsProvider.current().testPageApiDesc,
         icon = "🌐",
         html = """
 <!DOCTYPE html>
@@ -504,8 +504,8 @@ object DebugTestPages {
      */
     private fun styleTestPage() = TestPage(
         id = "style-test",
-        name = Strings.testPageStyle,
-        description = Strings.testPageStyleDesc,
+        name = AppStringsProvider.current().testPageStyle,
+        description = AppStringsProvider.current().testPageStyleDesc,
         icon = "🎨",
         html = """
 <!DOCTYPE html>

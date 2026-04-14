@@ -16,7 +16,7 @@ import androidx.core.app.NotificationCompat
 import com.webtoapp.R
 import com.webtoapp.core.ai.coding.HtmlAgentEvent
 import com.webtoapp.core.ai.coding.AiCodingAgent
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.SavedModel
 import com.webtoapp.core.ai.coding.SessionConfig
 import com.webtoapp.ui.MainActivity
@@ -86,7 +86,7 @@ class AiGenerationService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.w(TAG, "Service started")
-        startForeground(NOTIFICATION_ID, createNotification(Strings.aiGenerationServiceRunning))
+        startForeground(NOTIFICATION_ID, createNotification(AppStringsProvider.current().aiGenerationServiceRunning))
         return START_STICKY
     }
     
@@ -128,7 +128,7 @@ class AiGenerationService : Service() {
         _eventFlow.resetReplayCache()
         
         _isGenerating.value = true
-        updateNotification(Strings.generatingHtmlCode)
+        updateNotification(AppStringsProvider.current().generatingHtmlCode)
         
         AppLogger.w(TAG, "Starting generation for requirement: ${requirement.take(50)}..., sessionId: $sessionId")
         
@@ -150,26 +150,26 @@ class AiGenerationService : Service() {
                     // Update the notification and cache state
                     when (event) {
                         is HtmlAgentEvent.CodeDelta -> {
-                            updateNotification(Strings.generatingCodeChars.format(event.accumulated.length))
+                            updateNotification(AppStringsProvider.current().generatingCodeChars.format(event.accumulated.length))
                         }
                         is HtmlAgentEvent.FileCreated -> {
-                            val versionInfo = if (event.isNewVersion) "v${event.fileInfo.version}" else Strings.newFile
-                            updateNotification(Strings.fileCreatedVersion.format(event.fileInfo.name, versionInfo))
+                            val versionInfo = if (event.isNewVersion) "v${event.fileInfo.version}" else AppStringsProvider.current().newFile
+                            updateNotification(AppStringsProvider.current().fileCreatedVersion.format(event.fileInfo.name, versionInfo))
                             AppLogger.w(TAG, "File created: ${event.fileInfo.name}, version=${event.fileInfo.version}")
                         }
                         is HtmlAgentEvent.HtmlComplete -> {
                             lastHtmlContent = event.html
-                            updateNotification(Strings.codeGenerationComplete)
+                            updateNotification(AppStringsProvider.current().codeGenerationComplete)
                         }
                         is HtmlAgentEvent.Error -> {
-                            updateNotification(Strings.generationFailed.format(event.message))
+                            updateNotification(AppStringsProvider.current().generationFailed.format(event.message))
                             _isGenerating.value = false
                             releaseWakeLock()
                         }
                         is HtmlAgentEvent.Completed -> {
                             lastCompletedEvent = event
                             _isGenerating.value = false
-                            updateNotification(Strings.generationComplete)
+                            updateNotification(AppStringsProvider.current().generationComplete)
                             releaseWakeLock()
                             // Delay stopping the foreground service
                             delay(3000)
@@ -180,11 +180,11 @@ class AiGenerationService : Service() {
                 }
             } catch (e: CancellationException) {
                 AppLogger.w(TAG, "Generation cancelled")
-                _eventFlow.emit(HtmlAgentEvent.Error(Strings.generationCancelled))
+                _eventFlow.emit(HtmlAgentEvent.Error(AppStringsProvider.current().generationCancelled))
                 releaseWakeLock()
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Generation error", e)
-                _eventFlow.emit(HtmlAgentEvent.Error(Strings.generationFailed.format(e.message)))
+                _eventFlow.emit(HtmlAgentEvent.Error(AppStringsProvider.current().generationFailed.format(e.message)))
                 releaseWakeLock()
             } finally {
                 _isGenerating.value = false
@@ -199,7 +199,7 @@ class AiGenerationService : Service() {
         currentJob?.cancel()
         _isGenerating.value = false
         releaseWakeLock()
-        updateNotification(Strings.generationCancelled)
+        updateNotification(AppStringsProvider.current().generationCancelled)
         serviceScope.launch {
             delay(1000)
             stopForegroundCompat()
@@ -254,10 +254,10 @@ class AiGenerationService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                Strings.aiGenerationService,
+                AppStringsProvider.current().aiGenerationService,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = Strings.aiCodeGenerationNotification
+                description = AppStringsProvider.current().aiCodeGenerationNotification
                 setShowBadge(false)
             }
             
@@ -279,7 +279,7 @@ class AiGenerationService : Service() {
         )
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(Strings.htmlCodingAssistant)
+            .setContentTitle(AppStringsProvider.current().htmlCodingAssistant)
             .setContentText(content)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)

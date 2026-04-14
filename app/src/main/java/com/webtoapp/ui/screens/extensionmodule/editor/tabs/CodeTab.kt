@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.CodeSnippetSelectorDialog
 import com.webtoapp.ui.components.PremiumFilterChip
 import com.webtoapp.ui.components.PremiumTextField
@@ -98,7 +98,7 @@ fun CodeTab(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.codeSnippets)
+                    Text(AppStringsProvider.current().codeSnippets)
                 }
             }
         }
@@ -137,14 +137,14 @@ fun CodeTab(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        if (showJsTab) Strings.availableFunctions else Strings.cssTips,
+                        if (showJsTab) AppStringsProvider.current().availableFunctions else AppStringsProvider.current().cssTips,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        if (showJsTab) Strings.jsFunctionsHint else Strings.cssHint,
+                        if (showJsTab) AppStringsProvider.current().jsFunctionsHint else AppStringsProvider.current().cssHint,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         lineHeight = 15.sp
@@ -161,9 +161,9 @@ fun CodeTab(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(weight = 1f, fill = true),
-            label = { Text(if (showJsTab) Strings.javascriptCode else Strings.cssCode) },
+            label = { Text(if (showJsTab) AppStringsProvider.current().javascriptCode else AppStringsProvider.current().cssCode) },
             placeholder = {
-                Text(if (showJsTab) Strings.jsCodePlaceholder else Strings.cssCodePlaceholder)
+                Text(if (showJsTab) AppStringsProvider.current().jsCodePlaceholder else AppStringsProvider.current().cssCodePlaceholder)
             },
             textStyle = LocalTextStyle.current.copy(
                 fontFamily = FontFamily.Monospace,

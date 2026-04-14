@@ -24,7 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumSwitch
 import com.webtoapp.ui.components.PremiumTextField
@@ -56,7 +56,7 @@ fun AdBlockCard(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.adBlocking,
+                        text = AppStringsProvider.current().adBlocking,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -69,7 +69,7 @@ fun AdBlockCard(
             SystemCardExpandContent(visible = editState.adBlockEnabled) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = Strings.adBlockDescription,
+                        text = AppStringsProvider.current().adBlockDescription,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -81,11 +81,11 @@ fun AdBlockCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                text = Strings.adBlockToggleEnabled,
+                                text = AppStringsProvider.current().adBlockToggleEnabled,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = Strings.adBlockToggleDescription,
+                                text = AppStringsProvider.current().adBlockToggleDescription,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -97,7 +97,7 @@ fun AdBlockCard(
                     }
 
                     Text(
-                        text = Strings.customBlockRules,
+                        text = AppStringsProvider.current().customBlockRules,
                         style = MaterialTheme.typography.labelLarge
                     )
 
@@ -108,7 +108,7 @@ fun AdBlockCard(
                         PremiumTextField(
                             value = newRule,
                             onValueChange = { newRule = it },
-                            placeholder = { Text(Strings.adBlockRuleHint) },
+                            placeholder = { Text(AppStringsProvider.current().adBlockRuleHint) },
                             singleLine = true,
                             modifier = Modifier.weight(weight = 1f, fill = true)
                         )
@@ -121,7 +121,7 @@ fun AdBlockCard(
                                 }
                             }
                         ) {
-                            Icon(Icons.Filled.Add, Strings.add)
+                            Icon(Icons.Filled.Add, AppStringsProvider.current().add)
                         }
                     }
 
@@ -143,7 +143,7 @@ fun AdBlockCard(
                             ) {
                                 Icon(
                                     Icons.Outlined.Delete,
-                                    Strings.delete,
+                                    AppStringsProvider.current().delete,
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }

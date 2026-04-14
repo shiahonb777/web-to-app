@@ -17,7 +17,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.delay
 
 /**
@@ -70,7 +70,7 @@ fun ShellSplashOverlay(
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = Strings.cdSplashScreen,
+                    contentDescription = AppStringsProvider.current().cdSplashScreen,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScaleMode
                 )
@@ -338,7 +338,7 @@ fun MediaContentDisplay(
             
             Image(
                 painter = painter,
-                contentDescription = Strings.cdMediaContent,
+                contentDescription = AppStringsProvider.current().cdMediaContent,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = if (mediaConfig.fillScreen) 
                     ContentScale.Crop 

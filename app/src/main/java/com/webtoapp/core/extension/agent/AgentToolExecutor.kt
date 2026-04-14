@@ -2,7 +2,7 @@ package com.webtoapp.core.extension.agent
 
 import android.content.Context
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -42,16 +42,16 @@ class AgentToolExecutor(private val context: Context) {
         
         // executeSecurityScan - 10.
         private val SECURITY_PATTERNS get() = listOf(
-            SecurityPattern(Regex("eval\\s*\\(", RegexOption.IGNORE_CASE), Strings.secEvalDesc, Strings.secEvalRec, RiskLevel.HIGH),
-            SecurityPattern(Regex("innerHTML\\s*=", RegexOption.IGNORE_CASE), Strings.secInnerHtmlDesc, Strings.secInnerHtmlRec, RiskLevel.HIGH),
-            SecurityPattern(Regex("document\\.write\\s*\\(", RegexOption.IGNORE_CASE), Strings.secDocWriteDesc, Strings.secDocWriteRec, RiskLevel.MEDIUM),
-            SecurityPattern(Regex("new\\s+Function\\s*\\(", RegexOption.IGNORE_CASE), Strings.secNewFuncDesc, Strings.secNewFuncRec, RiskLevel.MEDIUM),
-            SecurityPattern(Regex("location\\s*=|location\\.href\\s*=", RegexOption.IGNORE_CASE), Strings.secLocationDesc, Strings.secLocationRec, RiskLevel.LOW),
-            SecurityPattern(Regex("localStorage|sessionStorage", RegexOption.IGNORE_CASE), Strings.secStorageDesc, Strings.secStorageRec, RiskLevel.LOW),
-            SecurityPattern(Regex("XMLHttpRequest|fetch\\s*\\(", RegexOption.IGNORE_CASE), Strings.secFetchDesc, Strings.secFetchRec, RiskLevel.LOW),
-            SecurityPattern(Regex("postMessage\\s*\\(", RegexOption.IGNORE_CASE), Strings.secPostMsgDesc, Strings.secPostMsgRec, RiskLevel.LOW),
-            SecurityPattern(Regex("\\$\\{.*\\}", RegexOption.IGNORE_CASE), Strings.secTemplateDesc, Strings.secTemplateRec, RiskLevel.LOW),
-            SecurityPattern(Regex("atob\\s*\\(|btoa\\s*\\(", RegexOption.IGNORE_CASE), Strings.secBase64Desc, Strings.secBase64Rec, RiskLevel.LOW)
+            SecurityPattern(Regex("eval\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secEvalDesc, AppStringsProvider.current().secEvalRec, RiskLevel.HIGH),
+            SecurityPattern(Regex("innerHTML\\s*=", RegexOption.IGNORE_CASE), AppStringsProvider.current().secInnerHtmlDesc, AppStringsProvider.current().secInnerHtmlRec, RiskLevel.HIGH),
+            SecurityPattern(Regex("document\\.write\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secDocWriteDesc, AppStringsProvider.current().secDocWriteRec, RiskLevel.MEDIUM),
+            SecurityPattern(Regex("new\\s+Function\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secNewFuncDesc, AppStringsProvider.current().secNewFuncRec, RiskLevel.MEDIUM),
+            SecurityPattern(Regex("location\\s*=|location\\.href\\s*=", RegexOption.IGNORE_CASE), AppStringsProvider.current().secLocationDesc, AppStringsProvider.current().secLocationRec, RiskLevel.LOW),
+            SecurityPattern(Regex("localStorage|sessionStorage", RegexOption.IGNORE_CASE), AppStringsProvider.current().secStorageDesc, AppStringsProvider.current().secStorageRec, RiskLevel.LOW),
+            SecurityPattern(Regex("XMLHttpRequest|fetch\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secFetchDesc, AppStringsProvider.current().secFetchRec, RiskLevel.LOW),
+            SecurityPattern(Regex("postMessage\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secPostMsgDesc, AppStringsProvider.current().secPostMsgRec, RiskLevel.LOW),
+            SecurityPattern(Regex("\\$\\{.*\\}", RegexOption.IGNORE_CASE), AppStringsProvider.current().secTemplateDesc, AppStringsProvider.current().secTemplateRec, RiskLevel.LOW),
+            SecurityPattern(Regex("atob\\s*\\(|btoa\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secBase64Desc, AppStringsProvider.current().secBase64Rec, RiskLevel.LOW)
         )
     }
     
@@ -74,7 +74,7 @@ class AgentToolExecutor(private val context: Context) {
                 "get_snippets" -> executeGetSnippets(request.arguments)
                 "validate_config" -> executeValidateConfig(request.arguments)
                 "create_module" -> executeCreateModule(request.arguments)
-                else -> throw IllegalArgumentException("${Strings.toolErrUnknown}: ${request.toolName}")
+                else -> throw IllegalArgumentException("${AppStringsProvider.current().toolErrUnknown}: ${request.toolName}")
             }
 
             ToolCallResult(
@@ -90,7 +90,7 @@ class AgentToolExecutor(private val context: Context) {
                 toolName = request.toolName,
                 success = false,
                 result = null,
-                error = e.message ?: Strings.toolErrExecFailed,
+                error = e.message ?: AppStringsProvider.current().toolErrExecFailed,
                 executionTimeMs = System.currentTimeMillis() - startTime
             )
         }
@@ -136,7 +136,7 @@ class AgentToolExecutor(private val context: Context) {
             if (!result.success && stopOnFailure) {
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = index,
-                    error = result.error ?: Strings.toolErrChainFailed,
+                    error = result.error ?: AppStringsProvider.current().toolErrChainFailed,
                     completedResults = results
                 ))
                 return@flow
@@ -190,7 +190,7 @@ class AgentToolExecutor(private val context: Context) {
             if (!checkResult.success) {
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = attemptCount * 2,
-                    error = checkResult.error ?: Strings.toolErrSyntaxCheckFailed,
+                    error = checkResult.error ?: AppStringsProvider.current().toolErrSyntaxCheckFailed,
                     completedResults = allResults
                 ))
                 return@flow
@@ -211,7 +211,7 @@ class AgentToolExecutor(private val context: Context) {
                 // to max attempts after Check.
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = attemptCount * 2 - 1,
-                    error = Strings.toolErrMaxFixAttempts.replace("%s", maxFixAttempts.toString()),
+                    error = AppStringsProvider.current().toolErrMaxFixAttempts.replace("%s", maxFixAttempts.toString()),
                     completedResults = allResults
                 ))
                 return@flow
@@ -240,7 +240,7 @@ class AgentToolExecutor(private val context: Context) {
             if (!fixResult.success) {
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = attemptCount * 2 - 1,
-                    error = fixResult.error ?: Strings.toolErrAutoFixFailed,
+                    error = fixResult.error ?: AppStringsProvider.current().toolErrAutoFixFailed,
                     completedResults = allResults
                 ))
                 return@flow
@@ -336,13 +336,13 @@ class AgentToolExecutor(private val context: Context) {
      * syntax check.
      */
     private suspend fun executeSyntaxCheck(args: Map<String, Any?>): SyntaxCheckResult {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val language = args["language"] as? String ?: "javascript"
         
         return when (language.lowercase()) {
             "javascript", "js" -> checkJavaScriptSyntax(code)
             "css" -> checkCssSyntax(code)
-            else -> throw IllegalArgumentException("${Strings.toolErrUnsupportedLang}: $language")
+            else -> throw IllegalArgumentException("${AppStringsProvider.current().toolErrUnsupportedLang}: $language")
         }
     }
     
@@ -425,27 +425,27 @@ class AgentToolExecutor(private val context: Context) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = "${Strings.syntaxBraceMismatch}, ${if (braceCount > 0) Strings.syntaxBraceMissing.replace("%s", braceCount.toString()) else Strings.syntaxBraceExtra.replace("%s", (-braceCount).toString())}",
+                message = "${AppStringsProvider.current().syntaxBraceMismatch}, ${if (braceCount > 0) AppStringsProvider.current().syntaxBraceMissing.replace("%s", braceCount.toString()) else AppStringsProvider.current().syntaxBraceExtra.replace("%s", (-braceCount).toString())}",
                 severity = ErrorSeverity.ERROR,
-                suggestion = Strings.syntaxBraceCheckPair
+                suggestion = AppStringsProvider.current().syntaxBraceCheckPair
             ))
         }
         if (parenCount != 0) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = "${Strings.syntaxParenMismatch}, ${if (parenCount > 0) Strings.syntaxParenMissing.replace("%s", parenCount.toString()) else Strings.syntaxParenExtra.replace("%s", (-parenCount).toString())}",
+                message = "${AppStringsProvider.current().syntaxParenMismatch}, ${if (parenCount > 0) AppStringsProvider.current().syntaxParenMissing.replace("%s", parenCount.toString()) else AppStringsProvider.current().syntaxParenExtra.replace("%s", (-parenCount).toString())}",
                 severity = ErrorSeverity.ERROR,
-                suggestion = Strings.syntaxParenCheckPair
+                suggestion = AppStringsProvider.current().syntaxParenCheckPair
             ))
         }
         if (bracketCount != 0) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = "${Strings.syntaxBracketMismatch}, ${if (bracketCount > 0) Strings.syntaxBracketMissing.replace("%s", bracketCount.toString()) else Strings.syntaxBracketExtra.replace("%s", (-bracketCount).toString())}",
+                message = "${AppStringsProvider.current().syntaxBracketMismatch}, ${if (bracketCount > 0) AppStringsProvider.current().syntaxBracketMissing.replace("%s", bracketCount.toString()) else AppStringsProvider.current().syntaxBracketExtra.replace("%s", (-bracketCount).toString())}",
                 severity = ErrorSeverity.ERROR,
-                suggestion = Strings.syntaxBracketCheckPair
+                suggestion = AppStringsProvider.current().syntaxBracketCheckPair
             ))
         }
         
@@ -467,7 +467,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("var"),
-                message = Strings.lintNoVar,
+                message = AppStringsProvider.current().lintNoVar,
                 rule = "no-var"
             ))
         }
@@ -478,7 +478,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = eqMatch.range.first + 1,
-                message = Strings.lintEqeqeq,
+                message = AppStringsProvider.current().lintEqeqeq,
                 rule = "eqeqeq"
             ))
         }
@@ -488,7 +488,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("eval("),
-                message = Strings.lintNoEval,
+                message = AppStringsProvider.current().lintNoEval,
                 rule = "no-eval"
             ))
         }
@@ -498,7 +498,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("document.write("),
-                message = Strings.lintNoDocWrite,
+                message = AppStringsProvider.current().lintNoDocWrite,
                 rule = "no-document-write"
             ))
         }
@@ -508,7 +508,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("console.log("),
-                message = Strings.lintNoConsole,
+                message = AppStringsProvider.current().lintNoConsole,
                 rule = "no-console"
             ))
         }
@@ -562,7 +562,7 @@ class AgentToolExecutor(private val context: Context) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = Strings.syntaxBraceMismatch,
+                message = AppStringsProvider.current().syntaxBraceMismatch,
                 severity = ErrorSeverity.ERROR
             ))
         }
@@ -589,7 +589,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.length,
-                message = Strings.lintCssMissingSemicolon,
+                message = AppStringsProvider.current().lintCssMissingSemicolon,
                 rule = "declaration-block-trailing-semicolon"
             ))
         }
@@ -599,7 +599,7 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("!important"),
-                message = Strings.lintCssNoImportant,
+                message = AppStringsProvider.current().lintCssNoImportant,
                 rule = "declaration-no-important"
             ))
         }
@@ -609,7 +609,7 @@ class AgentToolExecutor(private val context: Context) {
      * Check.
      */
     private suspend fun executeLintCode(args: Map<String, Any?>): Map<String, Any> {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val language = args["language"] as? String ?: "javascript"
         
         val syntaxResult = executeSyntaxCheck(args)
@@ -617,13 +617,13 @@ class AgentToolExecutor(private val context: Context) {
         
         if (language == "javascript") {
             if (!code.contains("'use strict'") && !code.contains("\"use strict\"")) {
-                suggestions.add(Strings.lintUseStrict)
+                suggestions.add(AppStringsProvider.current().lintUseStrict)
             }
             if (code.contains("function ") && !code.contains("=>")) {
-                suggestions.add(Strings.lintUseArrowFn)
+                suggestions.add(AppStringsProvider.current().lintUseArrowFn)
             }
             if (code.lines().any { it.length > 120 }) {
-                suggestions.add(Strings.lintLineTooLong)
+                suggestions.add(AppStringsProvider.current().lintLineTooLong)
             }
         }
         
@@ -645,7 +645,7 @@ class AgentToolExecutor(private val context: Context) {
     /**
      */
     private suspend fun executeSecurityScan(args: Map<String, Any?>): SecurityScanResult {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val issues = mutableListOf<SecurityIssue>()
         val lines = code.lines()
         
@@ -683,7 +683,7 @@ class AgentToolExecutor(private val context: Context) {
      * fix.
      */
     private suspend fun executeFixError(args: Map<String, Any?>): Map<String, Any> {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val language = args["language"] as? String ?: "javascript"
         
         var fixedCode = code
@@ -693,7 +693,7 @@ class AgentToolExecutor(private val context: Context) {
             // Autofix var -> let.
             if (fixedCode.contains("var ")) {
                 fixedCode = fixedCode.replace(VAR_KEYWORD_REGEX, "let ")
-                fixes.add(Strings.fixVarToLet)
+                fixes.add(AppStringsProvider.current().fixVarToLet)
             }
             
             // Autofix == -> ===.
@@ -704,7 +704,7 @@ class AgentToolExecutor(private val context: Context) {
                 "${match.groupValues[1]}===${match.groupValues[2]}"
             }
             if (code != fixedCode && fixes.none { it.contains("===") }) {
-                fixes.add(Strings.fixLooseEq)
+                fixes.add(AppStringsProvider.current().fixLooseEq)
             }
         }
         
@@ -793,7 +793,7 @@ class AgentToolExecutor(private val context: Context) {
                 if (key.isNullOrBlank()) {
                     issues.add(ValidationIssue(
                         field = "config_item",
-                        message = Strings.validateConfigMissingKey,
+                        message = AppStringsProvider.current().validateConfigMissingKey,
                         severity = ErrorSeverity.ERROR
                     ))
                 }
@@ -801,7 +801,7 @@ class AgentToolExecutor(private val context: Context) {
                 if (name.isNullOrBlank()) {
                     issues.add(ValidationIssue(
                         field = "config_item.$key",
-                        message = Strings.validateConfigMissingName,
+                        message = AppStringsProvider.current().validateConfigMissingName,
                         severity = ErrorSeverity.WARNING
                     ))
                 }
@@ -809,7 +809,7 @@ class AgentToolExecutor(private val context: Context) {
                 if (required && key != null && !configValues.containsKey(key)) {
                     issues.add(ValidationIssue(
                         field = key,
-                        message = Strings.validateConfigRequiredNotSet.replace("%s", name ?: ""),
+                        message = AppStringsProvider.current().validateConfigRequiredNotSet.replace("%s", name ?: ""),
                         severity = ErrorSeverity.ERROR
                     ))
                 }
@@ -826,7 +826,7 @@ class AgentToolExecutor(private val context: Context) {
      * create module.
      */
     private suspend fun executeCreateModule(args: Map<String, Any?>): Map<String, Any> = withContext(Dispatchers.IO) {
-        val name = args["name"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingModuleName)
+        val name = args["name"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingModuleName)
         val description = args["description"] as? String ?: ""
         val icon = args["icon"] as? String ?: "📦"
         val categoryStr = args["category"] as? String ?: "OTHER"
@@ -865,12 +865,12 @@ class AgentToolExecutor(private val context: Context) {
             mapOf(
                 "success" to true,
                 "module_id" to module.id,
-                "message" to Strings.toolModuleCreated
+                "message" to AppStringsProvider.current().toolModuleCreated
             )
         } else {
             mapOf(
                 "success" to false,
-                "error" to (result.exceptionOrNull()?.message ?: Strings.toolModuleCreateFailed)
+                "error" to (result.exceptionOrNull()?.message ?: AppStringsProvider.current().toolModuleCreateFailed)
             )
         }
     }

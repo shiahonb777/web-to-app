@@ -1,7 +1,7 @@
 package com.webtoapp.core.ai.coding
 
 import com.webtoapp.core.i18n.AppLanguage
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Note.
@@ -17,7 +17,7 @@ object SimplePrompts {
      * Note.
      */
     fun buildSystemPrompt(): String {
-        return when (Strings.currentLanguage.value) {
+        return when (AppStringsProvider.currentLanguage) {
             AppLanguage.ENGLISH -> """
 You are a mobile frontend expert, creating HTML pages in mobile APP WebView.
 
@@ -77,8 +77,8 @@ You are a mobile frontend expert, creating HTML pages in mobile APP WebView.
         
         if (template == null) return base
         
-        val isEnglish = Strings.currentLanguage.value == AppLanguage.ENGLISH
-        val isArabic = Strings.currentLanguage.value == AppLanguage.ARABIC
+        val isEnglish = AppStringsProvider.currentLanguage == AppLanguage.ENGLISH
+        val isArabic = AppStringsProvider.currentLanguage == AppLanguage.ARABIC
         
         return buildString {
             append(base)

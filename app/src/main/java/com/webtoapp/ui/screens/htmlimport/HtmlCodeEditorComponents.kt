@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.data.model.HtmlConfig
@@ -130,7 +130,7 @@ internal fun FileSlot(
                 )
             } else {
                 Text(
-                    text = Strings.clickToSelectFile,
+                    text = AppStringsProvider.current().clickToSelectFile,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -143,7 +143,7 @@ internal fun FileSlot(
             ) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = Strings.clearFile,
+                    contentDescription = AppStringsProvider.current().clearFile,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
@@ -227,14 +227,14 @@ internal fun FileSlotWithEditor(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "• ${Strings.orWriteDirectly}",
+                        text = "• ${AppStringsProvider.current().orWriteDirectly}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
                 Text(
-                    text = "${Strings.clickToSelectFile} ${Strings.orWriteDirectly}",
+                    text = "${AppStringsProvider.current().clickToSelectFile} ${AppStringsProvider.current().orWriteDirectly}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -247,7 +247,7 @@ internal fun FileSlotWithEditor(
         ) {
             Icon(
                 Icons.Outlined.Edit,
-                contentDescription = Strings.editCode,
+                contentDescription = AppStringsProvider.current().editCode,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(18.dp)
             )
@@ -259,7 +259,7 @@ internal fun FileSlotWithEditor(
             ) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = Strings.clearFile,
+                    contentDescription = AppStringsProvider.current().clearFile,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
@@ -285,13 +285,13 @@ internal fun CodeEditorDialog(
         HtmlFileType.HTML -> "HTML"
         HtmlFileType.CSS -> "CSS"
         HtmlFileType.JS -> "JavaScript"
-        else -> Strings.codeEditorTitle
+        else -> AppStringsProvider.current().codeEditorTitle
     }
     
     val placeholder = when (fileType) {
-        HtmlFileType.HTML -> Strings.htmlCodePlaceholder
-        HtmlFileType.CSS -> Strings.cssCodePlaceholder
-        HtmlFileType.JS -> Strings.jsCodePlaceholder
+        HtmlFileType.HTML -> AppStringsProvider.current().htmlCodePlaceholder
+        HtmlFileType.CSS -> AppStringsProvider.current().cssCodePlaceholder
+        HtmlFileType.JS -> AppStringsProvider.current().jsCodePlaceholder
         else -> ""
     }
     
@@ -342,7 +342,7 @@ internal fun CodeEditorDialog(
                         }) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = Strings.close,
+                                contentDescription = AppStringsProvider.current().close,
                                 tint = Color(0xFFCCCCCC)
                             )
                         }
@@ -363,7 +363,7 @@ internal fun CodeEditorDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         
                         Text(
-                            text = Strings.codeEditorTitle,
+                            text = AppStringsProvider.current().codeEditorTitle,
                             style = MaterialTheme.typography.titleSmall,
                             color = Color(0xFFCCCCCC),
                             modifier = Modifier.weight(1f)
@@ -397,7 +397,7 @@ internal fun CodeEditorDialog(
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                text = Strings.saveFile,
+                                text = AppStringsProvider.current().saveFile,
                                 color = if (codeText.isNotBlank()) Color(0xFF4EC9B0) else Color(0xFF666666)
                             )
                         }

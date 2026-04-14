@@ -22,7 +22,7 @@ import com.webtoapp.core.errorpage.ErrorPageConfig
 import com.webtoapp.core.errorpage.ErrorPageMode
 import com.webtoapp.core.errorpage.ErrorPageStyle
 import com.webtoapp.core.errorpage.MiniGameType
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.PremiumFilterChip
 import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.ui.components.SettingsSwitch
@@ -37,8 +37,8 @@ fun ErrorPageConfigCard(
 
     Column {
         SettingsSwitch(
-            title = Strings.errorPageTitle,
-            subtitle = Strings.errorPageSubtitle,
+            title = AppStringsProvider.current().errorPageTitle,
+            subtitle = AppStringsProvider.current().errorPageSubtitle,
             checked = isCustomized,
             onCheckedChange = { checked ->
                 onConfigChange(
@@ -52,7 +52,7 @@ fun ErrorPageConfigCard(
         SystemCardExpandContent(visible = isCustomized) {
             Column(modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp)) {
                 Text(
-                    text = Strings.errorPageSubtitle,
+                    text = AppStringsProvider.current().errorPageSubtitle,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -65,9 +65,9 @@ fun ErrorPageConfigCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     listOf(
-                        ErrorPageMode.BUILTIN_STYLE to Strings.errorPageModeBuiltIn,
-                        ErrorPageMode.CUSTOM_HTML to Strings.errorPageModeCustomHtml,
-                        ErrorPageMode.CUSTOM_MEDIA to Strings.errorPageModeCustomMedia
+                        ErrorPageMode.BUILTIN_STYLE to AppStringsProvider.current().errorPageModeBuiltIn,
+                        ErrorPageMode.CUSTOM_HTML to AppStringsProvider.current().errorPageModeCustomHtml,
+                        ErrorPageMode.CUSTOM_MEDIA to AppStringsProvider.current().errorPageModeCustomMedia
                     ).forEach { (mode, label) ->
                         PremiumFilterChip(
                             selected = config.mode == mode,
@@ -81,7 +81,7 @@ fun ErrorPageConfigCard(
                     Column {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = Strings.errorPageStyleLabel,
+                            text = AppStringsProvider.current().errorPageStyleLabel,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -92,12 +92,12 @@ fun ErrorPageConfigCard(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             listOf(
-                                ErrorPageStyle.MATERIAL to Strings.errorPageStyleMaterial,
-                                ErrorPageStyle.SATELLITE to Strings.errorPageStyleSatellite,
-                                ErrorPageStyle.OCEAN to Strings.errorPageStyleOcean,
-                                ErrorPageStyle.FOREST to Strings.errorPageStyleForest,
-                                ErrorPageStyle.MINIMAL to Strings.errorPageStyleMinimal,
-                                ErrorPageStyle.NEON to Strings.errorPageStyleNeon
+                                ErrorPageStyle.MATERIAL to AppStringsProvider.current().errorPageStyleMaterial,
+                                ErrorPageStyle.SATELLITE to AppStringsProvider.current().errorPageStyleSatellite,
+                                ErrorPageStyle.OCEAN to AppStringsProvider.current().errorPageStyleOcean,
+                                ErrorPageStyle.FOREST to AppStringsProvider.current().errorPageStyleForest,
+                                ErrorPageStyle.MINIMAL to AppStringsProvider.current().errorPageStyleMinimal,
+                                ErrorPageStyle.NEON to AppStringsProvider.current().errorPageStyleNeon
                             ).forEach { (style, label) ->
                                 PremiumFilterChip(
                                     selected = config.builtInStyle == style,
@@ -109,8 +109,8 @@ fun ErrorPageConfigCard(
 
                         Spacer(modifier = Modifier.height(12.dp))
                         SettingsSwitch(
-                            title = Strings.errorPageMiniGameLabel,
-                            subtitle = Strings.errorPageMiniGameDesc,
+                            title = AppStringsProvider.current().errorPageMiniGameLabel,
+                            subtitle = AppStringsProvider.current().errorPageMiniGameDesc,
                             checked = config.showMiniGame,
                             onCheckedChange = { onConfigChange(config.copy(showMiniGame = it)) }
                         )
@@ -124,11 +124,11 @@ fun ErrorPageConfigCard(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     listOf(
-                                        MiniGameType.RANDOM to Strings.errorPageGameRandom,
-                                        MiniGameType.BREAKOUT to Strings.errorPageGameBreakout,
-                                        MiniGameType.MAZE to Strings.errorPageGameMaze,
-                                        MiniGameType.STAR_CATCH to Strings.errorPageGameStarCatch,
-                                        MiniGameType.INK_ZEN to Strings.errorPageGameInkZen
+                                        MiniGameType.RANDOM to AppStringsProvider.current().errorPageGameRandom,
+                                        MiniGameType.BREAKOUT to AppStringsProvider.current().errorPageGameBreakout,
+                                        MiniGameType.MAZE to AppStringsProvider.current().errorPageGameMaze,
+                                        MiniGameType.STAR_CATCH to AppStringsProvider.current().errorPageGameStarCatch,
+                                        MiniGameType.INK_ZEN to AppStringsProvider.current().errorPageGameInkZen
                                     ).forEach { (type, label) ->
                                         PremiumFilterChip(
                                             selected = config.miniGameType == type,
@@ -148,8 +148,8 @@ fun ErrorPageConfigCard(
                         PremiumTextField(
                             value = config.customHtml ?: "",
                             onValueChange = { onConfigChange(config.copy(customHtml = it)) },
-                            label = { Text(Strings.errorPageModeCustomHtml) },
-                            placeholder = { Text(Strings.errorPageCustomHtmlHint) },
+                            label = { Text(AppStringsProvider.current().errorPageModeCustomHtml) },
+                            placeholder = { Text(AppStringsProvider.current().errorPageCustomHtmlHint) },
                             leadingIcon = { androidx.compose.material3.Icon(Icons.Outlined.Code, null) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 4,
@@ -165,8 +165,8 @@ fun ErrorPageConfigCard(
                         PremiumTextField(
                             value = config.customMediaPath ?: "",
                             onValueChange = { onConfigChange(config.copy(customMediaPath = it)) },
-                            label = { Text(Strings.errorPageModeCustomMedia) },
-                            placeholder = { Text(Strings.errorPageCustomMediaHint) },
+                            label = { Text(AppStringsProvider.current().errorPageModeCustomMedia) },
+                            placeholder = { Text(AppStringsProvider.current().errorPageCustomMediaHint) },
                             leadingIcon = { androidx.compose.material3.Icon(Icons.Outlined.Image, null) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
@@ -176,11 +176,11 @@ fun ErrorPageConfigCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
                 SettingsSwitch(
-                    title = Strings.errorPageAutoRetryLabel,
+                    title = AppStringsProvider.current().errorPageAutoRetryLabel,
                     subtitle = if (config.autoRetrySeconds > 0) {
-                        Strings.errorPageAutoRetryDesc.replace("%d", config.autoRetrySeconds.toString())
+                        AppStringsProvider.current().errorPageAutoRetryDesc.replace("%d", config.autoRetrySeconds.toString())
                     } else {
-                        Strings.errorPageAutoRetryOff
+                        AppStringsProvider.current().errorPageAutoRetryOff
                     },
                     checked = config.autoRetrySeconds > 0,
                     onCheckedChange = { checked ->
@@ -192,7 +192,7 @@ fun ErrorPageConfigCard(
                     Column {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "${config.autoRetrySeconds}${Strings.seconds}",
+                            text = "${config.autoRetrySeconds}${AppStringsProvider.current().seconds}",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary
                         )

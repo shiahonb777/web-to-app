@@ -43,7 +43,7 @@ import com.webtoapp.core.extension.ModuleRunMode
 import com.webtoapp.core.extension.ModuleRunTime
 import com.webtoapp.core.extension.ModuleUiConfig
 import com.webtoapp.core.extension.UrlMatchRule
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +132,7 @@ fun AdvancedTab(
         val secondaryColor = MaterialTheme.colorScheme.secondary
 
         AdvancedOptionCard(
-            title = Strings.uiTypeConfig,
+            title = AppStringsProvider.current().uiTypeConfig,
             subtitle = uiConfig.type.getDisplayName(),
             icon = {
                 Icon(
@@ -147,7 +147,7 @@ fun AdvancedTab(
         )
 
         AdvancedOptionCard(
-            title = Strings.runModeLabel,
+            title = AppStringsProvider.current().runModeLabel,
             subtitle = "${runMode.getDisplayName()} · ${runMode.getDescription()}",
             icon = {
                 Icon(
@@ -162,7 +162,7 @@ fun AdvancedTab(
         )
 
         AdvancedOptionCard(
-            title = Strings.runTime,
+            title = AppStringsProvider.current().runTime,
             subtitle = runAt.getDisplayName(),
             icon = {
                 Icon(
@@ -177,9 +177,9 @@ fun AdvancedTab(
         )
 
         AdvancedOptionCard(
-            title = Strings.requiredPermissions,
+            title = AppStringsProvider.current().requiredPermissions,
             subtitle = if (permissions.isEmpty()) {
-                Strings.noSpecialPermissions
+                AppStringsProvider.current().noSpecialPermissions
             } else {
                 permissions.joinToString { it.displayName }
             },
@@ -196,11 +196,11 @@ fun AdvancedTab(
         )
 
         AdvancedOptionCard(
-            title = Strings.urlMatchRules,
+            title = AppStringsProvider.current().urlMatchRules,
             subtitle = if (urlMatches.isEmpty()) {
-                Strings.matchAllWebsites
+                AppStringsProvider.current().matchAllWebsites
             } else {
-                Strings.rulesCount.replace("%d", urlMatches.size.toString())
+                AppStringsProvider.current().rulesCount.replace("%d", urlMatches.size.toString())
             },
             icon = {
                 Icon(
@@ -215,11 +215,11 @@ fun AdvancedTab(
         )
 
         AdvancedOptionCard(
-            title = Strings.userConfigItems,
+            title = AppStringsProvider.current().userConfigItems,
             subtitle = if (configItems.isEmpty()) {
-                Strings.noConfigItems
+                AppStringsProvider.current().noConfigItems
             } else {
-                Strings.configItemsCount.replace("%d", configItems.size.toString())
+                AppStringsProvider.current().configItemsCount.replace("%d", configItems.size.toString())
             },
             icon = {
                 Icon(
@@ -272,13 +272,13 @@ fun AdvancedTab(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        Strings.developerGuide,
+                        AppStringsProvider.current().developerGuide,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        Strings.developerGuideContent,
+                        AppStringsProvider.current().developerGuideContent,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         lineHeight = 16.sp

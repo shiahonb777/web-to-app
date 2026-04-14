@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -117,7 +117,7 @@ fun AppStoreScreen(
     val downloadedAppsList by (downloadManager?.downloadedApps?.collectAsState() ?: emptyDownloaded)
     val downloadedCount = downloadedAppsList.size
     // current Tab
-    val tabTitles = listOf(Strings.marketTabApps, Strings.marketTabModules)
+    val tabTitles = listOf(AppStringsProvider.current().marketTabApps, AppStringsProvider.current().marketTabModules)
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -135,8 +135,8 @@ fun AppStoreScreen(
                             onExpandedChange = { },
                             placeholder = {
                                 Text(
-                                    if (pagerState.currentPage == 0) Strings.storeSearchPlaceholder
-                                    else Strings.moduleStoreSearchPlaceholder
+                                    if (pagerState.currentPage == 0) AppStringsProvider.current().storeSearchPlaceholder
+                                    else AppStringsProvider.current().moduleStoreSearchPlaceholder
                                 )
                             },
                             leadingIcon = {
@@ -228,7 +228,7 @@ fun AppStoreScreen(
                                 if (pagerState.currentPage == 0) {
                                     // ── Apps Tab Menu ──
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeDownloadManager) },
+                                        text = { Text(AppStringsProvider.current().storeDownloadManager) },
                                         onClick = { showMenu = false; showDownloadManager = true },
                                         leadingIcon = { Icon(Icons.Outlined.Download, null) },
                                         trailingIcon = if (activeCount > 0 || downloadedCount > 0) {{
@@ -239,19 +239,19 @@ fun AppStoreScreen(
                                     )
                                     HorizontalDivider()
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeMyApps) },
+                                        text = { Text(AppStringsProvider.current().storeMyApps) },
                                         onClick = { showMenu = false; showMyApps = true },
                                         leadingIcon = { Icon(Icons.Outlined.Apps, null) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storePublishApp) },
+                                        text = { Text(AppStringsProvider.current().storePublishApp) },
                                         onClick = { showMenu = false; showPublishApp = true },
                                         leadingIcon = { Icon(Icons.Outlined.Publish, null) }
                                     )
                                 } else {
                                     // ── Modules Tab Menu ──
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeDownloadManager) },
+                                        text = { Text(AppStringsProvider.current().storeDownloadManager) },
                                         onClick = { showMenu = false; showDownloadManager = true },
                                         leadingIcon = { Icon(Icons.Outlined.Download, null) },
                                         trailingIcon = if (activeCount > 0 || downloadedCount > 0) {{
@@ -262,12 +262,12 @@ fun AppStoreScreen(
                                     )
                                     HorizontalDivider()
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeMyModules) },
+                                        text = { Text(AppStringsProvider.current().storeMyModules) },
                                         onClick = { showMenu = false; showMyModules = true },
                                         leadingIcon = { Icon(Icons.Outlined.Extension, null) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storePublishModule) },
+                                        text = { Text(AppStringsProvider.current().storePublishModule) },
                                         onClick = { showMenu = false; showPublishModule = true },
                                         leadingIcon = { Icon(Icons.Outlined.Publish, null) }
                                     )
@@ -377,17 +377,17 @@ private fun AppsTabContent(
     var selectedApp by remember { mutableStateOf<AppStoreItem?>(null) }
 
     val categoryLabels = mapOf(
-        "tools" to Strings.storeCatTools,
-        "social" to Strings.storeCatSocial,
-        "education" to Strings.storeCatEducation,
-        "entertainment" to Strings.storeCatEntertainment,
-        "productivity" to Strings.storeCatProductivity,
-        "lifestyle" to Strings.storeCatLifestyle,
-        "business" to Strings.storeCatBusiness,
-        "news" to Strings.storeCatNews,
-        "finance" to Strings.storeCatFinance,
-        "health" to Strings.storeCatHealth,
-        "other" to Strings.storeCatOther,
+        "tools" to AppStringsProvider.current().storeCatTools,
+        "social" to AppStringsProvider.current().storeCatSocial,
+        "education" to AppStringsProvider.current().storeCatEducation,
+        "entertainment" to AppStringsProvider.current().storeCatEntertainment,
+        "productivity" to AppStringsProvider.current().storeCatProductivity,
+        "lifestyle" to AppStringsProvider.current().storeCatLifestyle,
+        "business" to AppStringsProvider.current().storeCatBusiness,
+        "news" to AppStringsProvider.current().storeCatNews,
+        "finance" to AppStringsProvider.current().storeCatFinance,
+        "health" to AppStringsProvider.current().storeCatHealth,
+        "other" to AppStringsProvider.current().storeCatOther,
     )
 
     val categoryIcons = mapOf(
@@ -405,10 +405,10 @@ private fun AppsTabContent(
     )
 
     val sortOptions = listOf(
-        "downloads" to Strings.storeSortDownloads,
-        "rating" to Strings.storeSortRating,
-        "created_at" to Strings.storeSortNewest,
-        "like_count" to Strings.storeSortLikes,
+        "downloads" to AppStringsProvider.current().storeSortDownloads,
+        "rating" to AppStringsProvider.current().storeSortRating,
+        "created_at" to AppStringsProvider.current().storeSortNewest,
+        "like_count" to AppStringsProvider.current().storeSortLikes,
     )
 
     fun loadApps(page: Int = 1) {
@@ -460,7 +460,7 @@ private fun AppsTabContent(
                     PremiumFilterChip(
                         selected = selectedCategory == null,
                         onClick = { selectedCategory = null },
-                        label = { Text(Strings.storeAllCategories, fontSize = 12.sp) },
+                        label = { Text(AppStringsProvider.current().storeAllCategories, fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(
                                 Icons.Outlined.Apps,
@@ -498,7 +498,7 @@ private fun AppsTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "${Strings.storeAppsCount}: $totalApps",
+                    "${AppStringsProvider.current().storeAppsCount}: $totalApps",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -525,7 +525,7 @@ private fun AppsTabContent(
                                         Icon(
                                             if (sortOrder == "desc") Icons.Filled.KeyboardArrowDown
                                             else Icons.Filled.KeyboardArrowUp,
-                                            contentDescription = if (sortOrder == "desc") Strings.sortDesc else Strings.sortAsc,
+                                            contentDescription = if (sortOrder == "desc") AppStringsProvider.current().sortDesc else AppStringsProvider.current().sortAsc,
                                             modifier = Modifier.size(14.dp)
                                         )
                                     }
@@ -553,7 +553,7 @@ private fun AppsTabContent(
                             strokeWidth = 3.dp
                         )
                         Text(
-                            Strings.storeLoadingApps,
+                            AppStringsProvider.current().storeLoadingApps,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
@@ -600,14 +600,14 @@ private fun AppsTabContent(
                         }
                     }
                     Text(
-                        Strings.storeEmpty,
+                        AppStringsProvider.current().storeEmpty,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Text(
-                        Strings.storeNoContentTryAgain,
+                        AppStringsProvider.current().storeNoContentTryAgain,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
@@ -650,7 +650,7 @@ private fun AppsTabContent(
                         )
                     ) {
                         Text(
-                            Strings.storeLoadMore,
+                            AppStringsProvider.current().storeLoadMore,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 0.3.sp
                         )
@@ -715,21 +715,21 @@ private fun ModulesTabContent(
     var sortOrder by rememberSaveable { mutableStateOf("desc") }
 
     val moduleCategories = listOf(
-        "UI_ENHANCE" to Strings.catUiEnhance,
-        "MEDIA" to Strings.catMedia,
-        "PRIVACY" to Strings.catPrivacySecurity,
-        "TOOLS" to Strings.catTools,
-        "AD_BLOCK" to Strings.catAdBlock,
-        "SOCIAL" to Strings.catSocial,
-        "DEVELOPER" to Strings.catDeveloper,
-        "OTHER" to Strings.catOther
+        "UI_ENHANCE" to AppStringsProvider.current().catUiEnhance,
+        "MEDIA" to AppStringsProvider.current().catMedia,
+        "PRIVACY" to AppStringsProvider.current().catPrivacySecurity,
+        "TOOLS" to AppStringsProvider.current().catTools,
+        "AD_BLOCK" to AppStringsProvider.current().catAdBlock,
+        "SOCIAL" to AppStringsProvider.current().catSocial,
+        "DEVELOPER" to AppStringsProvider.current().catDeveloper,
+        "OTHER" to AppStringsProvider.current().catOther
     )
 
     val moduleSorts = listOf(
-        "downloads" to Strings.moduleStoreSortDownloads,
-        "rating" to Strings.moduleStoreSortRating,
-        "created_at" to Strings.moduleStoreSortNewest,
-        "like_count" to Strings.moduleStoreSortLikes,
+        "downloads" to AppStringsProvider.current().moduleStoreSortDownloads,
+        "rating" to AppStringsProvider.current().moduleStoreSortRating,
+        "created_at" to AppStringsProvider.current().moduleStoreSortNewest,
+        "like_count" to AppStringsProvider.current().moduleStoreSortLikes,
     )
 
     fun loadModules() {
@@ -770,7 +770,7 @@ private fun ModulesTabContent(
                     strokeWidth = 3.dp
                 )
                 Text(
-                    Strings.storeLoadingModules,
+                    AppStringsProvider.current().storeLoadingModules,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -798,7 +798,7 @@ private fun ModulesTabContent(
                     PremiumFilterChip(
                         selected = selectedCategory == null,
                         onClick = { selectedCategory = null },
-                        label = { Text(Strings.moduleStoreCatAll, fontSize = 12.sp) }
+                        label = { Text(AppStringsProvider.current().moduleStoreCatAll, fontSize = 12.sp) }
                     )
                 }
                 items(moduleCategories) { (key, name) ->
@@ -843,7 +843,7 @@ private fun ModulesTabContent(
                                 Icon(
                                     if (sortOrder == "desc") Icons.Filled.KeyboardArrowDown
                                     else Icons.Filled.KeyboardArrowUp,
-                                    contentDescription = if (sortOrder == "desc") Strings.sortDesc else Strings.sortAsc,
+                                    contentDescription = if (sortOrder == "desc") AppStringsProvider.current().sortDesc else AppStringsProvider.current().sortAsc,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }} else null,
@@ -914,14 +914,14 @@ private fun ModulesTabContent(
                         }
                     }
                     Text(
-                        if (searchQuery.isNotBlank()) Strings.moduleStoreEmptySearch else Strings.moduleStoreEmpty,
+                        if (searchQuery.isNotBlank()) AppStringsProvider.current().moduleStoreEmptySearch else AppStringsProvider.current().moduleStoreEmpty,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
-                        Strings.storeNoContentForModules,
+                        AppStringsProvider.current().storeNoContentForModules,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
                     )
@@ -943,9 +943,9 @@ private fun ModulesTabContent(
                     onResult = { shareCode ->
                         try {
                             onInstallModule(shareCode)
-                            onComplete(true, Strings.storeInstallSuccess)
+                            onComplete(true, AppStringsProvider.current().storeInstallSuccess)
                         } catch (e: Exception) {
-                            onComplete(false, e.message ?: Strings.storeInstallFailed)
+                            onComplete(false, e.message ?: AppStringsProvider.current().storeInstallFailed)
                         }
                     },
                     onError = { errorMsg ->

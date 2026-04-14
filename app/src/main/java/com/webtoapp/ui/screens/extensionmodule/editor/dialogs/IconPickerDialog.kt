@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.SvgIconMapper
 
 @Composable
@@ -42,7 +42,7 @@ fun IconPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectIcon) },
+        title = { Text(AppStringsProvider.current().selectIcon) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 icons.chunked(6).forEach { row ->
@@ -95,7 +95,7 @@ fun IconPickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )

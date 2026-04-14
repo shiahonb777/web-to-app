@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.python.PythonSampleManager
 import com.webtoapp.data.model.PythonAppConfig
 import com.webtoapp.ui.components.TypedSampleProjectsCard
@@ -175,21 +175,21 @@ fun CreatePythonAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.frameworkDetected
+                creationPhase = AppStringsProvider.current().frameworkDetected
                 errorMessage = null
                 
                 try {
                     val projectDir = resolveDocumentTreeDirectory(treeUri)
                     if (!projectDir.exists()) {
-                        errorMessage = Strings.dirNotExists
+                        errorMessage = AppStringsProvider.current().dirNotExists
                         return@launch
                     }
-                    creationPhase = Strings.copyingProjectFiles
+                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                     val imported = projectImporter.importProject(projectDir)
                     applyImportAnalysis(imported)
-                    creationPhase = Strings.pyProjectReady
+                    creationPhase = AppStringsProvider.current().pyProjectReady
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.projectImportFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().projectImportFailed
                 } finally {
                     isCreating = false
                 }
@@ -214,10 +214,10 @@ fun CreatePythonAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createPythonApp) },
+                title = { Text(AppStringsProvider.current().createPythonApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -243,7 +243,7 @@ fun CreatePythonAppScreen(
                             }
                         },
                         enabled = canCreate && !isCreating
-                    ) { Text(if (isEdit) Strings.btnSave else Strings.btnCreate) }
+                    ) { Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate) }
                 }
             )
         }
@@ -269,20 +269,20 @@ fun CreatePythonAppScreen(
             // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.samplePythonSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().samplePythonSubtitle,
                     samples = remember { PythonSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = PythonSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
                                 isCreating = true
-                                creationPhase = Strings.frameworkDetected
+                                creationPhase = AppStringsProvider.current().frameworkDetected
                                 try {
-                                    creationPhase = Strings.copyingProjectFiles
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                                     val imported = projectImporter.importProject(File(path))
                                     applyImportAnalysis(imported, appNameOverride = sample.name)
-                                    creationPhase = Strings.pyProjectReady
+                                    creationPhase = AppStringsProvider.current().pyProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -304,13 +304,13 @@ fun CreatePythonAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -320,7 +320,7 @@ fun CreatePythonAppScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
@@ -342,11 +342,11 @@ fun CreatePythonAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.pySelectProject, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().pySelectProject, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.pySupportedFrameworks,
+                        text = AppStringsProvider.current().pySupportedFrameworks,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -362,7 +362,7 @@ fun CreatePythonAppScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.pyProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(AppStringsProvider.current().pyProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -372,13 +372,13 @@ fun CreatePythonAppScreen(
                                 )
                                 if (detectedFramework != null && detectedFramework != "raw") {
                                     Text(
-                                        "${Strings.frameworkDetected}: $detectedFramework",
+                                        "${AppStringsProvider.current().frameworkDetected}: $detectedFramework",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Text(
-                                    "${Strings.entryFile}: $entryFile",
+                                    "${AppStringsProvider.current().entryFile}: $entryFile",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -401,7 +401,7 @@ fun CreatePythonAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.pySelectProject)
+                        Text(AppStringsProvider.current().pySelectProject)
                     }
                 }
             }
@@ -538,14 +538,14 @@ private fun PythonHeroSection(
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = if (detectedFramework != null && detectedFramework != "raw")
-                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${Strings.pyHeroTitle}"
-                        else Strings.pyHeroTitle,
+                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${AppStringsProvider.current().pyHeroTitle}"
+                        else AppStringsProvider.current().pyHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.pyHeroDesc,
+                        text = AppStringsProvider.current().pyHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -598,14 +598,14 @@ private fun PythonVenvIndicator(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
-                    text = Strings.pyVenvDetected,
+                    text = AppStringsProvider.current().pyVenvDetected,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = if (venvDetected) frameworkColor else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = if (venvDetected) "${Strings.pyVenvFound} ($venvPath/)"
-                    else Strings.pyVenvNotFound,
+                    text = if (venvDetected) "${AppStringsProvider.current().pyVenvFound} ($venvPath/)"
+                    else AppStringsProvider.current().pyVenvNotFound,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -648,7 +648,7 @@ private fun PythonRequirementsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyRequirements, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyRequirements, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -666,7 +666,7 @@ private fun PythonRequirementsCard(
             
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "${Strings.pyRequirementsFile}: $source",
+                "${AppStringsProvider.current().pyRequirementsFile}: $source",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -699,7 +699,7 @@ private fun PythonRequirementsCard(
             }
             if (requirements.size > 8) {
                 TextButton(onClick = onToggleShowAll, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (showAll) Strings.close else "${Strings.more} (${requirements.size - 8})")
+                    Text(if (showAll) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${requirements.size - 8})")
                 }
             }
         }
@@ -732,14 +732,14 @@ private fun PythonServerTypeCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Dns, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyServerType, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyServerType, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             // Builtin
             PythonServerOption(
-                title = Strings.pyServerBuiltin,
-                description = Strings.pyServerBuiltinDesc,
+                title = AppStringsProvider.current().pyServerBuiltin,
+                description = AppStringsProvider.current().pyServerBuiltinDesc,
                 selected = serverType == "builtin",
                 isRecommended = recommendedServer == null,
                 onClick = { onServerTypeChange("builtin") },
@@ -749,8 +749,8 @@ private fun PythonServerTypeCard(
             
             // Gunicorn (WSGI)
             PythonServerOption(
-                title = Strings.pyServerGunicorn,
-                description = Strings.pyServerGunicornDesc,
+                title = AppStringsProvider.current().pyServerGunicorn,
+                description = AppStringsProvider.current().pyServerGunicornDesc,
                 selected = serverType == "gunicorn",
                 isRecommended = recommendedServer == "gunicorn",
                 onClick = { onServerTypeChange("gunicorn") },
@@ -760,8 +760,8 @@ private fun PythonServerTypeCard(
             
             // Uvicorn (ASGI)
             PythonServerOption(
-                title = Strings.pyServerUvicorn,
-                description = Strings.pyServerUvicornDesc,
+                title = AppStringsProvider.current().pyServerUvicorn,
+                description = AppStringsProvider.current().pyServerUvicornDesc,
                 selected = serverType == "uvicorn",
                 isRecommended = recommendedServer == "uvicorn",
                 onClick = { onServerTypeChange("uvicorn") },
@@ -815,7 +815,7 @@ private fun PythonServerOption(
                             color = accentColor.copy(alpha = 0.12f)
                         ) {
                             Text(
-                                Strings.pyRecommended,
+                                AppStringsProvider.current().pyRecommended,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = accentColor
@@ -853,14 +853,14 @@ private fun PythonModuleConfigCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Code, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpAdvancedConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpAdvancedConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
                 value = entryFile,
                 onValueChange = onEntryFileChange,
-                label = { Text(Strings.entryFile) },
+                label = { Text(AppStringsProvider.current().entryFile) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -871,8 +871,8 @@ private fun PythonModuleConfigCard(
                     PremiumTextField(
                         value = entryModule,
                         onValueChange = onEntryModuleChange,
-                        label = { Text(Strings.pyWsgiModule) },
-                        placeholder = { Text(Strings.pyWsgiModuleHint) },
+                        label = { Text(AppStringsProvider.current().pyWsgiModule) },
+                        placeholder = { Text(AppStringsProvider.current().pyWsgiModuleHint) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         supportingText = {
@@ -909,14 +909,14 @@ private fun PythonDjangoCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Settings, null, tint = Color(0xFF0C4B33), modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyDjangoSettings, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyDjangoSettings, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
                 value = settingsModule,
                 onValueChange = onSettingsModuleChange,
-                label = { Text(Strings.pyDjangoSettingsModule) },
+                label = { Text(AppStringsProvider.current().pyDjangoSettingsModule) },
                 placeholder = { Text("myproject.settings") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -925,7 +925,7 @@ private fun PythonDjangoCard(
             PremiumTextField(
                 value = staticDir,
                 onValueChange = onStaticDirChange,
-                label = { Text(Strings.pyDjangoStaticDir) },
+                label = { Text(AppStringsProvider.current().pyDjangoStaticDir) },
                 placeholder = { Text("static") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -941,7 +941,7 @@ private fun PythonDjangoCard(
                     Icon(Icons.Outlined.Info, null, tint = Color(0xFF0C4B33), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        Strings.pyDjangoAllowedHosts,
+                        AppStringsProvider.current().pyDjangoAllowedHosts,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF0C4B33)
                     )
@@ -968,7 +968,7 @@ private fun PythonFastapiCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Api, null, tint = Color(0xFF009688), modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyFastapiConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyFastapiConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -979,14 +979,14 @@ private fun PythonFastapiCard(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        Strings.pyFastapiDocsEndpoint,
+                        AppStringsProvider.current().pyFastapiDocsEndpoint,
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
                         color = Color(0xFF009688)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        Strings.pyFastapiAsgiHint,
+                        AppStringsProvider.current().pyFastapiAsgiHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1028,7 +1028,7 @@ private fun PythonFrameworkTipCard(framework: String?) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        Strings.phpFrameworkTip,
+                        AppStringsProvider.current().phpFrameworkTip,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = tipData.color

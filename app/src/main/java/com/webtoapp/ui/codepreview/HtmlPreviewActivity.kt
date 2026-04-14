@@ -40,7 +40,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.WebToAppTheme
 import java.io.File
 import java.text.SimpleDateFormat
@@ -171,10 +171,10 @@ private fun HtmlPreviewScreen(
                                 }
                                 context.startActivity(Intent.createChooser(intent, "选择浏览器"))
                             } catch (e: Exception) {
-                                Toast.makeText(context, "${Strings.cannotOpenInBrowser}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "${AppStringsProvider.current().cannotOpenInBrowser}: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
                         } ?: run {
-                            Toast.makeText(context, Strings.noFilePathAvailable, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().noFilePathAvailable, Toast.LENGTH_SHORT).show()
                         }
                     }) {
                         Icon(Icons.Outlined.OpenInBrowser, "在浏览器中打开")
@@ -528,7 +528,7 @@ private fun DevToolsPanel(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            Strings.console,
+                            AppStringsProvider.current().console,
                             style = MaterialTheme.typography.labelMedium,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
@@ -574,13 +574,13 @@ private fun DevToolsPanel(
                                     "[${timeFormat.format(Date(entry.timestamp))}] [${entry.level}] ${entry.message} (${entry.source}:${entry.lineNumber})"
                                 }
                                 clipboardManager.setText(AnnotatedString(allLogs))
-                                Toast.makeText(context, Strings.copiedAllLogs, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedAllLogs, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
                                 Icons.Outlined.ContentCopy,
-                                contentDescription = Strings.copyAll,
+                                contentDescription = AppStringsProvider.current().copyAll,
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(18.dp)
                             )
@@ -592,7 +592,7 @@ private fun DevToolsPanel(
                         ) {
                             Icon(
                                 Icons.Outlined.Delete,
-                                contentDescription = Strings.clear,
+                                contentDescription = AppStringsProvider.current().clear,
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(18.dp)
                             )
@@ -604,7 +604,7 @@ private fun DevToolsPanel(
                         ) {
                             Icon(
                                 if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-                                contentDescription = if (isExpanded) Strings.collapse else Strings.expand,
+                                contentDescription = if (isExpanded) AppStringsProvider.current().collapse else AppStringsProvider.current().expand,
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(18.dp)
                             )
@@ -625,7 +625,7 @@ private fun DevToolsPanel(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            Strings.noConsoleMessages,
+                            AppStringsProvider.current().noConsoleMessages,
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.5f)
                         )
@@ -643,7 +643,7 @@ private fun DevToolsPanel(
                                 onClick = { selectedMessage = if (selectedMessage == entry) null else entry },
                                 onCopy = {
                                     clipboardManager.setText(AnnotatedString(entry.message))
-                                    Toast.makeText(context, Strings.copied, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().copied, Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -674,7 +674,7 @@ private fun DevToolsPanel(
                         onValueChange = { scriptInput = it },
                         placeholder = { 
                             Text(
-                                Strings.inputJavaScriptExpression,
+                                AppStringsProvider.current().inputJavaScriptExpression,
                                 color = Color.White.copy(alpha = 0.3f),
                                 style = MaterialTheme.typography.bodySmall
                             ) 
@@ -705,7 +705,7 @@ private fun DevToolsPanel(
                             contentColor = Color.Black
                         )
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = Strings.run)
+                        Icon(Icons.Default.PlayArrow, contentDescription = AppStringsProvider.current().run)
                     }
                 }
             }
@@ -800,7 +800,7 @@ private fun ConsoleLogItem(
             ) {
                 Icon(
                     Icons.Outlined.ContentCopy,
-                    contentDescription = Strings.copy,
+                    contentDescription = AppStringsProvider.current().copy,
                     tint = Color.White.copy(alpha = 0.5f),
                     modifier = Modifier.size(14.dp)
                 )
@@ -843,7 +843,7 @@ private fun MessageDetailDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.logDetails,
+                            AppStringsProvider.current().logDetails,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White
                         )
@@ -858,12 +858,12 @@ Message:
 ${entry.message}
                                 """.trimIndent()
                                 clipboardManager.setText(AnnotatedString(fullLog))
-                                Toast.makeText(context, Strings.copiedFullLog, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedFullLog, Toast.LENGTH_SHORT).show()
                             }) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.copy, tint = Color.White)
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().copy, tint = Color.White)
                             }
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = Strings.close, tint = Color.White)
+                                Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().close, tint = Color.White)
                             }
                         }
                     }
@@ -877,14 +877,14 @@ ${entry.message}
                         .padding(16.dp)
                 ) {
                     // Comment
-                    InfoRow(Strings.level, entry.level.name)
-                    InfoRow(Strings.time, timeFormat.format(Date(entry.timestamp)))
-                    InfoRow(Strings.source, "${entry.source}:${entry.lineNumber}")
+                    InfoRow(AppStringsProvider.current().level, entry.level.name)
+                    InfoRow(AppStringsProvider.current().time, timeFormat.format(Date(entry.timestamp)))
+                    InfoRow(AppStringsProvider.current().source, "${entry.source}:${entry.lineNumber}")
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        Strings.messageContent,
+                        AppStringsProvider.current().messageContent,
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -969,19 +969,19 @@ private fun SourceCodeDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.sourceCode,
+                            AppStringsProvider.current().sourceCode,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White
                         )
                         Row {
                             IconButton(onClick = {
                                 clipboardManager.setText(AnnotatedString(sourceCode))
-                                Toast.makeText(context, Strings.copiedSourceCode, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedSourceCode, Toast.LENGTH_SHORT).show()
                             }) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.copy, tint = Color.White)
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().copy, tint = Color.White)
                             }
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = Strings.close, tint = Color.White)
+                                Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().close, tint = Color.White)
                             }
                         }
                     }

@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.FaviconFetcher
 import kotlinx.coroutines.launch
 import java.io.File
@@ -77,7 +77,7 @@ fun IconPickerWithLibrary(
                             .data(iconUri)
                             .crossfade(true)
                             .build(),
-                        contentDescription = Strings.labelIcon,
+                        contentDescription = AppStringsProvider.current().labelIcon,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -88,7 +88,7 @@ fun IconPickerWithLibrary(
                             .data(File(iconPath))
                             .crossfade(true)
                             .build(),
-                        contentDescription = Strings.labelIcon,
+                        contentDescription = AppStringsProvider.current().labelIcon,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -100,7 +100,7 @@ fun IconPickerWithLibrary(
                     ) {
                         Icon(
                             Icons.Outlined.AddPhotoAlternate,
-                            contentDescription = Strings.selectIcon,
+                            contentDescription = AppStringsProvider.current().selectIcon,
                             modifier = Modifier.size(32.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -113,11 +113,11 @@ fun IconPickerWithLibrary(
 
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
-                text = Strings.labelIcon,
+                text = AppStringsProvider.current().labelIcon,
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = Strings.clickToSelectOrUseButton,
+                text = AppStringsProvider.current().clickToSelectOrUseButton,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -139,9 +139,9 @@ fun IconPickerWithLibrary(
                                     isFetchingFavicon = false
                                     if (iconPath != null) {
                                         onSelectFromLibrary(iconPath)
-                                        Toast.makeText(context, Strings.faviconFetchSuccess, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, AppStringsProvider.current().faviconFetchSuccess, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        Toast.makeText(context, Strings.faviconFetchFailed, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, AppStringsProvider.current().faviconFetchFailed, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -163,7 +163,7 @@ fun IconPickerWithLibrary(
                             )
                         }
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.fetchWebsiteIcon, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().fetchWebsiteIcon, style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 
@@ -179,7 +179,7 @@ fun IconPickerWithLibrary(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.iconLibrary, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().iconLibrary, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

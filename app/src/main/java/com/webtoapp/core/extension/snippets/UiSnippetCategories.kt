@@ -1,17 +1,17 @@
 package com.webtoapp.core.extension.snippets
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal fun uiComponents() = CodeSnippetCategory(
         id = "ui",
-        name = Strings.snippetUi,
+        name = AppStringsProvider.current().snippetUi,
         icon = "🎯",
-        description = Strings.snippetUiDesc,
+        description = AppStringsProvider.current().snippetUiDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "ui-floating-button",
-                name = Strings.snippetFloatingButton,
-                description = Strings.snippetFloatingButtonDesc,
+                name = AppStringsProvider.current().snippetFloatingButton,
+                description = AppStringsProvider.current().snippetFloatingButtonDesc,
                 code = """function createFloatingButton(text, onClick, position = 'bottom-right') {
     const btn = document.createElement('div');
     btn.textContent = text;
@@ -34,12 +34,12 @@ internal fun uiComponents() = CodeSnippetCategory(
     return btn;
 }
 createFloatingButton('⬆️', () => window.scrollTo({top: 0, behavior: 'smooth'}));""",
-                tags = listOf(Strings.tagButton, Strings.tagFloating)
+                tags = listOf(AppStringsProvider.current().tagButton, AppStringsProvider.current().tagFloating)
             ),
             CodeSnippet(
                 id = "ui-toast",
-                name = Strings.snippetToastUi,
-                description = Strings.snippetToastUiDesc,
+                name = AppStringsProvider.current().snippetToastUi,
+                description = AppStringsProvider.current().snippetToastUiDesc,
                 code = """function showToast(message, duration = 3000) {
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -57,12 +57,12 @@ createFloatingButton('⬆️', () => window.scrollTo({top: 0, behavior: 'smooth'
     }, duration);
 }
 showToast('操作成功！');""",
-                tags = listOf(Strings.tagToast, Strings.tagMessage)
+                tags = listOf(AppStringsProvider.current().tagToast, AppStringsProvider.current().tagMessage)
             ),
             CodeSnippet(
                 id = "ui-modal",
-                name = Strings.snippetModal,
-                description = Strings.snippetModalDesc,
+                name = AppStringsProvider.current().snippetModal,
+                description = AppStringsProvider.current().snippetModalDesc,
                 code = """function showModal(title, content, onConfirm) {
     const overlay = document.createElement('div');
     overlay.style.cssText = `
@@ -89,12 +89,12 @@ showToast('操作成功！');""",
     overlay.onclick = (e) => e.target === overlay && overlay.remove();
 }
 showModal('提示', '确定要执行此操作吗？', () => console.log('确认'));""",
-                tags = listOf(Strings.tagPopup, Strings.tagDialog)
+                tags = listOf(AppStringsProvider.current().tagPopup, AppStringsProvider.current().tagDialog)
             ),
             CodeSnippet(
                 id = "ui-progress-bar",
-                name = Strings.snippetProgressBar,
-                description = Strings.snippetProgressBarDesc,
+                name = AppStringsProvider.current().snippetProgressBar,
+                description = AppStringsProvider.current().snippetProgressBarDesc,
                 code = """const progressBar = document.createElement('div');
 progressBar.style.cssText = `
     position: fixed; top: 0; left: 0; height: 3px;
@@ -109,12 +109,12 @@ window.addEventListener('scroll', () => {
     const progress = (scrollTop / docHeight) * 100;
     progressBar.style.width = progress + '%';
 });""",
-                tags = listOf(Strings.tagProgress, Strings.tagReading)
+                tags = listOf(AppStringsProvider.current().tagProgress, AppStringsProvider.current().tagReading)
             ),
             CodeSnippet(
                 id = "ui-loading",
-                name = Strings.snippetLoading,
-                description = Strings.snippetLoadingDesc,
+                name = AppStringsProvider.current().snippetLoading,
+                description = AppStringsProvider.current().snippetLoadingDesc,
                 code = """function showLoading(message = '加载中...') {
     const loading = document.createElement('div');
     loading.id = 'custom-loading';
@@ -134,12 +134,12 @@ window.addEventListener('scroll', () => {
 function hideLoading() {
     document.getElementById('custom-loading')?.remove();
 }""",
-                tags = listOf(Strings.tagLoading, Strings.tagAnimation)
+                tags = listOf(AppStringsProvider.current().tagLoading, AppStringsProvider.current().tagAnimation)
             ),
             CodeSnippet(
                 id = "ui-snackbar",
-                name = Strings.snippetSnackbar,
-                description = Strings.snippetSnackbarDesc,
+                name = AppStringsProvider.current().snippetSnackbar,
+                description = AppStringsProvider.current().snippetSnackbarDesc,
                 code = """function showSnackbar(message, action, onAction) {
     const snackbar = document.createElement('div');
     snackbar.style.cssText = `
@@ -166,20 +166,20 @@ function hideLoading() {
     }, 4000);
 }
 showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
-                tags = listOf(Strings.tagNotification, Strings.tagSnackbar)
+                tags = listOf(AppStringsProvider.current().tagNotification, AppStringsProvider.current().tagSnackbar)
             )
         )
 )
 internal fun floatingWidgets() = CodeSnippetCategory(
         id = "widgets",
-        name = Strings.snippetWidget,
+        name = AppStringsProvider.current().snippetWidget,
         icon = "🔲",
-        description = Strings.snippetWidgetDesc,
+        description = AppStringsProvider.current().snippetWidgetDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "widget-toolbar",
-                name = Strings.snippetToolbar,
-                description = Strings.snippetToolbarDesc,
+                name = AppStringsProvider.current().snippetToolbar,
+                description = AppStringsProvider.current().snippetToolbarDesc,
                 code = """function createToolbar(buttons) {
     const toolbar = document.createElement('div');
     toolbar.style.cssText = `
@@ -213,12 +213,12 @@ createToolbar([
     { icon: '🌙', title: '深色模式', onClick: () => document.body.classList.toggle('dark') },
     { icon: '📖', title: '阅读模式', onClick: () => console.log('阅读模式') }
 ]);""",
-                tags = listOf(Strings.tagToolbar, Strings.tagFloating)
+                tags = listOf(AppStringsProvider.current().tagToolbar, AppStringsProvider.current().tagFloating)
             ),
             CodeSnippet(
                 id = "widget-sidebar",
-                name = Strings.snippetSidebar,
-                description = Strings.snippetSidebarDesc,
+                name = AppStringsProvider.current().snippetSidebar,
+                description = AppStringsProvider.current().snippetSidebarDesc,
                 code = """function createSidebar(content) {
     const sidebar = document.createElement('div');
     sidebar.style.cssText = `
@@ -256,12 +256,12 @@ createToolbar([
     document.body.appendChild(toggle);
 }
 createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
-                tags = listOf(Strings.tagSidebar, Strings.tagPanel)
+                tags = listOf(AppStringsProvider.current().tagSidebar, AppStringsProvider.current().tagPanel)
             ),
             CodeSnippet(
                 id = "widget-draggable",
-                name = Strings.snippetDraggable,
-                description = Strings.snippetDraggableDesc,
+                name = AppStringsProvider.current().snippetDraggable,
+                description = AppStringsProvider.current().snippetDraggableDesc,
                 code = """function makeDraggable(element) {
     let isDragging = false;
     let offsetX, offsetY;
@@ -288,12 +288,12 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
     });
 }
 // makeDraggable(document.querySelector('.my-widget'));""",
-                tags = listOf(Strings.tagDrag, Strings.tagInteraction)
+                tags = listOf(AppStringsProvider.current().tagDrag, AppStringsProvider.current().tagInteraction)
             ),
             CodeSnippet(
                 id = "widget-mini-player",
-                name = Strings.snippetMiniPlayer,
-                description = Strings.snippetMiniPlayerDesc,
+                name = AppStringsProvider.current().snippetMiniPlayer,
+                description = AppStringsProvider.current().snippetMiniPlayerDesc,
                 code = """function createMiniPlayer() {
     const player = document.createElement('div');
     player.style.cssText = `
@@ -318,20 +318,20 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
     document.body.appendChild(player);
     return player;
 }""",
-                tags = listOf(Strings.tagPlayer, Strings.tagMusic)
+                tags = listOf(AppStringsProvider.current().tagPlayer, AppStringsProvider.current().tagMusic)
             )
         )
 )
 internal fun mediaOperations() = CodeSnippetCategory(
         id = "media",
-        name = Strings.snippetMedia,
+        name = AppStringsProvider.current().snippetMedia,
         icon = "🎬",
-        description = Strings.snippetMediaDesc,
+        description = AppStringsProvider.current().snippetMediaDesc,
         snippets = listOf(
             CodeSnippet(
                 id = "media-video-speed",
-                name = Strings.snippetVideoSpeed,
-                description = Strings.snippetVideoSpeedDesc,
+                name = AppStringsProvider.current().snippetVideoSpeed,
+                description = AppStringsProvider.current().snippetVideoSpeedDesc,
                 code = """function setVideoSpeed(speed) {
     document.querySelectorAll('video').forEach(video => {
         video.playbackRate = speed;
@@ -350,12 +350,12 @@ document.addEventListener('keydown', (e) => {
         video.playbackRate = Math.max(0.25, video.playbackRate - 0.25);
     }
 });""",
-                tags = listOf(Strings.tagVideo, Strings.tagSpeed)
+                tags = listOf(AppStringsProvider.current().tagVideo, AppStringsProvider.current().tagSpeed)
             ),
             CodeSnippet(
                 id = "media-video-pip",
-                name = Strings.snippetPiP,
-                description = Strings.snippetPiPDesc,
+                name = AppStringsProvider.current().snippetPiP,
+                description = AppStringsProvider.current().snippetPiPDesc,
                 code = """async function enablePiP() {
     const video = document.querySelector('video');
     if (video && document.pictureInPictureEnabled) {
@@ -371,12 +371,12 @@ document.addEventListener('keydown', (e) => {
     }
 }
 enablePiP();""",
-                tags = listOf(Strings.tagVideo, Strings.tagPiP)
+                tags = listOf(AppStringsProvider.current().tagVideo, AppStringsProvider.current().tagPiP)
             ),
             CodeSnippet(
                 id = "media-video-screenshot",
-                name = Strings.snippetVideoScreenshot,
-                description = Strings.snippetVideoScreenshotDesc,
+                name = AppStringsProvider.current().snippetVideoScreenshot,
+                description = AppStringsProvider.current().snippetVideoScreenshotDesc,
                 code = """function captureVideoFrame(videoSelector) {
     const video = document.querySelector(videoSelector || 'video');
     if (!video) return null;
@@ -395,12 +395,12 @@ enablePiP();""",
     return canvas.toDataURL('image/png');
 }
 captureVideoFrame();""",
-                tags = listOf(Strings.tagVideo, Strings.tagScreenshot)
+                tags = listOf(AppStringsProvider.current().tagVideo, AppStringsProvider.current().tagScreenshot)
             ),
             CodeSnippet(
                 id = "media-image-zoom",
-                name = Strings.snippetImageZoom,
-                description = Strings.snippetImageZoomDesc,
+                name = AppStringsProvider.current().snippetImageZoom,
+                description = AppStringsProvider.current().snippetImageZoomDesc,
                 code = """document.addEventListener('click', (e) => {
     if (e.target.tagName === 'IMG') {
         const overlay = document.createElement('div');
@@ -420,12 +420,12 @@ captureVideoFrame();""",
         document.body.appendChild(overlay);
     }
 });""",
-                tags = listOf(Strings.tagImage, Strings.tagZoom)
+                tags = listOf(AppStringsProvider.current().tagImage, AppStringsProvider.current().tagZoom)
             ),
             CodeSnippet(
                 id = "media-download-images",
-                name = Strings.snippetDownloadImages,
-                description = Strings.snippetDownloadImagesDesc,
+                name = AppStringsProvider.current().snippetDownloadImages,
+                description = AppStringsProvider.current().snippetDownloadImagesDesc,
                 code = """function downloadAllImages(minSize = 100) {
     const images = Array.from(document.querySelectorAll('img'))
         .filter(img => img.naturalWidth >= minSize && img.naturalHeight >= minSize);
@@ -442,12 +442,12 @@ captureVideoFrame();""",
     console.log('开始下载 ' + images.length + ' 张图片');
 }
 downloadAllImages();""",
-                tags = listOf(Strings.tagImage, Strings.tagDownload)
+                tags = listOf(AppStringsProvider.current().tagImage, AppStringsProvider.current().tagDownload)
             ),
             CodeSnippet(
                 id = "media-audio-control",
-                name = Strings.snippetAudioControl,
-                description = Strings.snippetAudioControlDesc,
+                name = AppStringsProvider.current().snippetAudioControl,
+                description = AppStringsProvider.current().snippetAudioControlDesc,
                 code = """// 静音所有音视频
 function muteAll() {
     document.querySelectorAll('video, audio').forEach(media => {
@@ -470,12 +470,12 @@ function setVolume(volume) {
 }
 
 muteAll(); // 静音所有""",
-                tags = listOf(Strings.tagAudio, Strings.tagControl)
+                tags = listOf(AppStringsProvider.current().tagAudio, AppStringsProvider.current().tagControl)
             ),
             CodeSnippet(
                 id = "media-lazy-load",
-                name = Strings.snippetLazyLoad,
-                description = Strings.snippetLazyLoadDesc,
+                name = AppStringsProvider.current().snippetLazyLoad,
+                description = AppStringsProvider.current().snippetLazyLoadDesc,
                 code = """function setupLazyLoad() {
     const images = document.querySelectorAll('img[data-src]');
     
@@ -493,12 +493,12 @@ muteAll(); // 静音所有""",
     images.forEach(img => observer.observe(img));
 }
 setupLazyLoad();""",
-                tags = listOf(Strings.tagImage, Strings.tagLazyLoad)
+                tags = listOf(AppStringsProvider.current().tagImage, AppStringsProvider.current().tagLazyLoad)
             ),
             CodeSnippet(
                 id = "media-fullscreen",
-                name = Strings.snippetFullscreen,
-                description = Strings.snippetFullscreenDesc,
+                name = AppStringsProvider.current().snippetFullscreen,
+                description = AppStringsProvider.current().snippetFullscreenDesc,
                 code = """function toggleFullscreen(element = document.documentElement) {
     if (!document.fullscreenElement) {
         element.requestFullscreen?.() ||
@@ -516,7 +516,7 @@ function videoFullscreen() {
     const video = document.querySelector('video');
     if (video) toggleFullscreen(video);
 }""",
-                tags = listOf(Strings.tagFullscreen, Strings.tagVideo)
+                tags = listOf(AppStringsProvider.current().tagFullscreen, AppStringsProvider.current().tagVideo)
             )
         )
 )

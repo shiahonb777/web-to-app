@@ -8,7 +8,7 @@ import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.DownloadNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,12 +56,12 @@ class DownloadBridge(
          */
         fun getInjectionScript(): String {
             // Get翻译字符串
-            val msgPreparingDownload = Strings.preparingDownload
-            val msgCannotGetFileData = Strings.cannotGetFileData
-            val msgDownloadUnavailable = Strings.downloadUnavailable
-            val msgProcessFileFailed = Strings.processFileFailed
-            val msgReadFileFailed = Strings.readFileFailed
-            val msgDownloadFailed = Strings.downloadFailedPrefix
+            val msgPreparingDownload = AppStringsProvider.current().preparingDownload
+            val msgCannotGetFileData = AppStringsProvider.current().cannotGetFileData
+            val msgDownloadUnavailable = AppStringsProvider.current().downloadUnavailable
+            val msgProcessFileFailed = AppStringsProvider.current().processFileFailed
+            val msgReadFileFailed = AppStringsProvider.current().readFileFailed
+            val msgDownloadFailed = AppStringsProvider.current().downloadFailedPrefix
             
             return """
             (function() {
@@ -457,7 +457,7 @@ class DownloadBridge(
             AppLogger.d("DownloadBridge", "Starting chunked download: id=$downloadId, file=$safeFilename, size=$totalSize")
             
             scope.launch(Dispatchers.Main) {
-                Toast.makeText(context, Strings.startDownload.replace("%s", safeFilename), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().startDownload.replace("%s", safeFilename), Toast.LENGTH_SHORT).show()
             }
             
             return downloadId
@@ -539,8 +539,8 @@ class DownloadBridge(
                         when (result) {
                             is com.webtoapp.util.MediaSaver.SaveResult.Success -> {
                                 val isImage = download.mimeType.startsWith("image/")
-                                val typeText = if (isImage) Strings.image else Strings.video
-                                Toast.makeText(context, Strings.savedToGallery.replace("%s", typeText), Toast.LENGTH_SHORT).show()
+                                val typeText = if (isImage) AppStringsProvider.current().image else AppStringsProvider.current().video
+                                Toast.makeText(context, AppStringsProvider.current().savedToGallery.replace("%s", typeText), Toast.LENGTH_SHORT).show()
                                 notificationManager.showMediaSaveComplete(
                                     fileName = download.filename,
                                     uri = result.uri,
@@ -550,7 +550,7 @@ class DownloadBridge(
                                 )
                             }
                             is com.webtoapp.util.MediaSaver.SaveResult.Error -> {
-                                Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                                 notificationManager.showSaveFailed(download.filename, result.message, download.notificationId)
                             }
                         }
@@ -561,7 +561,7 @@ class DownloadBridge(
                     
                     withContext(Dispatchers.Main) {
                         if (savedFile != null) {
-                            Toast.makeText(context, Strings.savedTo.replace("%s", savedFile.name), Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, AppStringsProvider.current().savedTo.replace("%s", savedFile.name), Toast.LENGTH_LONG).show()
                             notificationManager.showSaveComplete(
                                 fileName = savedFile.name,
                                 filePath = savedFile.absolutePath,
@@ -569,7 +569,7 @@ class DownloadBridge(
                                 progressNotificationId = download.notificationId
                             )
                         } else {
-                            Toast.makeText(context, Strings.saveFailed, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().saveFailed, Toast.LENGTH_SHORT).show()
                             notificationManager.showSaveFailed(download.filename, "Cannot write file", download.notificationId)
                         }
                     }
@@ -583,7 +583,7 @@ class DownloadBridge(
                 cleanupChunkedDownload(downloadId, false)
                 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", e.message ?: ""), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", e.message ?: ""), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -638,8 +638,8 @@ class DownloadBridge(
                         when (result) {
                             is com.webtoapp.util.MediaSaver.SaveResult.Success -> {
                                 val isImage = mimeType.startsWith("image/")
-                                val typeText = if (isImage) Strings.image else Strings.video
-                                Toast.makeText(context, Strings.savedToGallery.replace("%s", typeText), Toast.LENGTH_SHORT).show()
+                                val typeText = if (isImage) AppStringsProvider.current().image else AppStringsProvider.current().video
+                                Toast.makeText(context, AppStringsProvider.current().savedToGallery.replace("%s", typeText), Toast.LENGTH_SHORT).show()
                                 
                                 // Show完成通知
                                 notificationManager.showMediaSaveComplete(
@@ -651,7 +651,7 @@ class DownloadBridge(
                                 )
                             }
                             is com.webtoapp.util.MediaSaver.SaveResult.Error -> {
-                                Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                                 notificationManager.showSaveFailed(safeFilename, result.message, progressNotificationId)
                             }
                         }
@@ -662,7 +662,7 @@ class DownloadBridge(
                     
                     withContext(Dispatchers.Main) {
                         if (savedFile != null) {
-                            Toast.makeText(context, Strings.savedTo.replace("%s", savedFile.name), Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, AppStringsProvider.current().savedTo.replace("%s", savedFile.name), Toast.LENGTH_LONG).show()
                             
                             // Show完成通知
                             notificationManager.showSaveComplete(
@@ -672,7 +672,7 @@ class DownloadBridge(
                                 progressNotificationId = progressNotificationId
                             )
                         } else {
-                            Toast.makeText(context, Strings.saveFailed, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().saveFailed, Toast.LENGTH_SHORT).show()
                             notificationManager.showSaveFailed(safeFilename, "Cannot write file", progressNotificationId)
                         }
                     }
@@ -681,7 +681,7 @@ class DownloadBridge(
             } catch (e: Exception) {
                 AppLogger.e("DownloadBridge", "Failed to save file", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", e.message ?: ""), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", e.message ?: ""), Toast.LENGTH_SHORT).show()
                     notificationManager.showSaveFailed(filename, e.message ?: "Unknown error", progressNotificationId)
                 }
             }

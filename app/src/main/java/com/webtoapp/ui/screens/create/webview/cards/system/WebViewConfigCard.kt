@@ -50,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.ApkExportConfig
 import com.webtoapp.data.model.ViewportMode
 import com.webtoapp.data.model.WebViewConfig
@@ -87,11 +87,11 @@ fun WebViewConfigCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.advancedSettings,
+                            text = AppStringsProvider.current().advancedSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = Strings.webViewAdvancedConfig,
+                            text = AppStringsProvider.current().webViewAdvancedConfig,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -109,48 +109,48 @@ fun WebViewConfigCard(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     AdvancedSettingsSection(
-                        title = Strings.sectionWebEngine,
+                        title = AppStringsProvider.current().sectionWebEngine,
                         icon = Icons.Outlined.Memory
                     ) {
                         SettingsSwitch(
                             title = "JavaScript",
-                            subtitle = Strings.enableJavaScript,
+                            subtitle = AppStringsProvider.current().enableJavaScript,
                             checked = config.javaScriptEnabled,
                             onCheckedChange = { onConfigChange(config.copy(javaScriptEnabled = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.domStorageSetting,
-                            subtitle = Strings.domStorageSettingHint,
+                            title = AppStringsProvider.current().domStorageSetting,
+                            subtitle = AppStringsProvider.current().domStorageSettingHint,
                             checked = config.domStorageEnabled,
                             onCheckedChange = { onConfigChange(config.copy(domStorageEnabled = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.crossOriginIsolationSetting,
-                            subtitle = Strings.crossOriginIsolationSettingHint,
+                            title = AppStringsProvider.current().crossOriginIsolationSetting,
+                            subtitle = AppStringsProvider.current().crossOriginIsolationSettingHint,
                             checked = config.enableCrossOriginIsolation,
                             onCheckedChange = { onConfigChange(config.copy(enableCrossOriginIsolation = it)) }
                         )
                     }
 
                     AdvancedSettingsSection(
-                        title = Strings.sectionContentDisplay,
+                        title = AppStringsProvider.current().sectionContentDisplay,
                         icon = Icons.Outlined.Visibility
                     ) {
                         SettingsSwitch(
-                            title = Strings.zoomSetting,
-                            subtitle = Strings.zoomSettingHint,
+                            title = AppStringsProvider.current().zoomSetting,
+                            subtitle = AppStringsProvider.current().zoomSettingHint,
                             checked = config.zoomEnabled,
                             onCheckedChange = { onConfigChange(config.copy(zoomEnabled = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.fullscreenVideoSetting,
-                            subtitle = Strings.fullscreenVideoSettingHint,
+                            title = AppStringsProvider.current().fullscreenVideoSetting,
+                            subtitle = AppStringsProvider.current().fullscreenVideoSettingHint,
                             checked = config.fullscreenEnabled,
                             onCheckedChange = { onConfigChange(config.copy(fullscreenEnabled = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.hideBrowserToolbarLabel,
-                            subtitle = Strings.hideBrowserToolbarHint,
+                            title = AppStringsProvider.current().hideBrowserToolbarLabel,
+                            subtitle = AppStringsProvider.current().hideBrowserToolbarHint,
                             checked = config.hideBrowserToolbar,
                             onCheckedChange = { onConfigChange(config.copy(hideBrowserToolbar = it)) }
                         )
@@ -158,24 +158,24 @@ fun WebViewConfigCard(
                     }
 
                     AdvancedSettingsSection(
-                        title = Strings.sectionNavigation,
+                        title = AppStringsProvider.current().sectionNavigation,
                         icon = Icons.Outlined.Navigation
                     ) {
                         SettingsSwitch(
-                            title = Strings.swipeRefreshSetting,
-                            subtitle = Strings.swipeRefreshSettingHint,
+                            title = AppStringsProvider.current().swipeRefreshSetting,
+                            subtitle = AppStringsProvider.current().swipeRefreshSettingHint,
                             checked = config.swipeRefreshEnabled,
                             onCheckedChange = { onConfigChange(config.copy(swipeRefreshEnabled = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.externalLinksSetting,
-                            subtitle = Strings.externalLinksSettingHint,
+                            title = AppStringsProvider.current().externalLinksSetting,
+                            subtitle = AppStringsProvider.current().externalLinksSettingHint,
                             checked = config.openExternalLinks,
                             onCheckedChange = { onConfigChange(config.copy(openExternalLinks = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.deepLinkSetting,
-                            subtitle = Strings.deepLinkSettingHint,
+                            title = AppStringsProvider.current().deepLinkSetting,
+                            subtitle = AppStringsProvider.current().deepLinkSettingHint,
                             checked = apkExportConfig.deepLinkEnabled,
                             onCheckedChange = { onApkExportConfigChange(apkExportConfig.copy(deepLinkEnabled = it)) }
                         )
@@ -185,13 +185,13 @@ fun WebViewConfigCard(
                             }
                             Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
                                 Text(
-                                    text = Strings.deepLinkCustomHostsLabel,
+                                    text = AppStringsProvider.current().deepLinkCustomHostsLabel,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                                 Text(
-                                    text = Strings.deepLinkCustomHostsHint,
+                                    text = AppStringsProvider.current().deepLinkCustomHostsHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(bottom = 4.dp)
@@ -214,41 +214,41 @@ fun WebViewConfigCard(
                             }
                         }
                         SettingsSwitch(
-                            title = Strings.showFloatingBackButtonLabel,
-                            subtitle = Strings.showFloatingBackButtonHint,
+                            title = AppStringsProvider.current().showFloatingBackButtonLabel,
+                            subtitle = AppStringsProvider.current().showFloatingBackButtonHint,
                             checked = config.showFloatingBackButton,
                             onCheckedChange = { onConfigChange(config.copy(showFloatingBackButton = it)) }
                         )
                         SettingsSwitch(
-                            title = Strings.blockSystemNavigationGestureLabel,
-                            subtitle = Strings.blockSystemNavigationGestureHint,
+                            title = AppStringsProvider.current().blockSystemNavigationGestureLabel,
+                            subtitle = AppStringsProvider.current().blockSystemNavigationGestureHint,
                             checked = config.blockSystemNavigationGesture,
                             onCheckedChange = { onConfigChange(config.copy(blockSystemNavigationGesture = it)) }
                         )
                     }
 
                     AdvancedSettingsSection(
-                        title = Strings.sectionOfflinePerformance,
+                        title = AppStringsProvider.current().sectionOfflinePerformance,
                         icon = Icons.Outlined.CloudOff
                     ) {
                         SettingsSwitch(
-                            title = Strings.pwaOfflineTitle,
-                            subtitle = Strings.pwaOfflineSubtitle,
+                            title = AppStringsProvider.current().pwaOfflineTitle,
+                            subtitle = AppStringsProvider.current().pwaOfflineSubtitle,
                             checked = config.pwaOfflineEnabled,
                             onCheckedChange = { onConfigChange(config.copy(pwaOfflineEnabled = it)) }
                         )
                         SystemCardExpandContent(visible = config.pwaOfflineEnabled) {
                             Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
                                 Text(
-                                    text = Strings.pwaOfflineStrategyLabel,
+                                    text = AppStringsProvider.current().pwaOfflineStrategyLabel,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                                 listOf(
-                                    "NETWORK_FIRST" to Strings.pwaStrategyNetworkFirst,
-                                    "CACHE_FIRST" to Strings.pwaStrategyCacheFirst,
-                                    "STALE_WHILE_REVALIDATE" to Strings.pwaStrategyStaleWhileRevalidate
+                                    "NETWORK_FIRST" to AppStringsProvider.current().pwaStrategyNetworkFirst,
+                                    "CACHE_FIRST" to AppStringsProvider.current().pwaStrategyCacheFirst,
+                                    "STALE_WHILE_REVALIDATE" to AppStringsProvider.current().pwaStrategyStaleWhileRevalidate
                                 ).forEach { (value, label) ->
                                     Row(
                                         modifier = Modifier
@@ -274,7 +274,7 @@ fun WebViewConfigCard(
                     }
 
                     AdvancedSettingsSection(
-                        title = Strings.sectionDeveloper,
+                        title = AppStringsProvider.current().sectionDeveloper,
                         icon = Icons.Outlined.Code
                     ) {
                         KeyboardAdjustModeCard(
@@ -353,18 +353,18 @@ private fun ViewportModeSelector(
 ) {
     var viewportExpanded by remember { mutableStateOf(false) }
     val currentModeLabel = when (config.viewportMode) {
-        ViewportMode.DEFAULT -> Strings.viewportModeDefault
-        ViewportMode.FIT_SCREEN -> Strings.viewportModeFitScreen
-        ViewportMode.DESKTOP -> Strings.viewportModeDesktop
+        ViewportMode.DEFAULT -> AppStringsProvider.current().viewportModeDefault
+        ViewportMode.FIT_SCREEN -> AppStringsProvider.current().viewportModeFitScreen
+        ViewportMode.DESKTOP -> AppStringsProvider.current().viewportModeDesktop
         ViewportMode.CUSTOM -> if (config.customViewportWidth in 320..3840) {
-            "${Strings.viewportCustomWidth}: ${config.customViewportWidth}px"
+            "${AppStringsProvider.current().viewportCustomWidth}: ${config.customViewportWidth}px"
         } else {
-            Strings.viewportModeCustom
+            AppStringsProvider.current().viewportModeCustom
         }
     }
 
     SettingsSwitch(
-        title = Strings.viewportModeTitle,
+        title = AppStringsProvider.current().viewportModeTitle,
         subtitle = currentModeLabel,
         checked = viewportExpanded,
         onCheckedChange = { viewportExpanded = it }
@@ -373,16 +373,16 @@ private fun ViewportModeSelector(
     SystemCardExpandContent(visible = viewportExpanded) {
         Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
             Text(
-                text = Strings.viewportModeDescription,
+                text = AppStringsProvider.current().viewportModeDescription,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             val viewportOptions = listOf(
-                ViewportMode.DEFAULT to Pair(Strings.viewportModeDefault, Icons.Outlined.Web),
-                ViewportMode.FIT_SCREEN to Pair(Strings.viewportModeFitScreen, Icons.Outlined.Fullscreen),
-                ViewportMode.DESKTOP to Pair(Strings.viewportModeDesktop, Icons.Outlined.DesktopWindows),
-                ViewportMode.CUSTOM to Pair(Strings.viewportModeCustom, Icons.Outlined.Tune)
+                ViewportMode.DEFAULT to Pair(AppStringsProvider.current().viewportModeDefault, Icons.Outlined.Web),
+                ViewportMode.FIT_SCREEN to Pair(AppStringsProvider.current().viewportModeFitScreen, Icons.Outlined.Fullscreen),
+                ViewportMode.DESKTOP to Pair(AppStringsProvider.current().viewportModeDesktop, Icons.Outlined.DesktopWindows),
+                ViewportMode.CUSTOM to Pair(AppStringsProvider.current().viewportModeCustom, Icons.Outlined.Tune)
             )
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -424,7 +424,7 @@ private fun ViewportModeSelector(
             if (config.viewportMode == ViewportMode.CUSTOM) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = Strings.viewportCustomWidthPresets,
+                    text = AppStringsProvider.current().viewportCustomWidthPresets,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 6.dp)
@@ -472,7 +472,7 @@ private fun ViewportModeSelector(
                             val width = input.filter { it.isDigit() }.take(4).toIntOrNull() ?: 0
                             onConfigChange(config.copy(customViewportWidth = width.coerceIn(0, 3840)))
                         },
-                        label = { Text(Strings.viewportCustomWidth) },
+                        label = { Text(AppStringsProvider.current().viewportCustomWidth) },
                         placeholder = { Text("320-3840") },
                         suffix = { Text("px") },
                         singleLine = true,
@@ -482,8 +482,8 @@ private fun ViewportModeSelector(
                         ),
                         supportingText = {
                             Text(
-                                if (displayWidth in 1..3840) "✓ ${Strings.viewportCustomWidth}: ${displayWidth}px"
-                                else Strings.viewportCustomWidthHint
+                                if (displayWidth in 1..3840) "✓ ${AppStringsProvider.current().viewportCustomWidth}: ${displayWidth}px"
+                                else AppStringsProvider.current().viewportCustomWidthHint
                             )
                         },
                         isError = displayWidth > 0 && (displayWidth < 320 || displayWidth > 3840),

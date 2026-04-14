@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.core.port.PortManager
 import com.webtoapp.core.port.ProcessPortScanner
@@ -99,10 +99,10 @@ fun PortManagerScreen(
             val success = ProcessPortScanner.killProcess(service.port)
             if (success) {
                 snackbarHostState.showSnackbar(
-                    Strings.portManagerServiceKilled.format(service.port)
+                    AppStringsProvider.current().portManagerServiceKilled.format(service.port)
                 )
             } else {
-                snackbarHostState.showSnackbar(Strings.portManagerKillFailed)
+                snackbarHostState.showSnackbar(AppStringsProvider.current().portManagerKillFailed)
             }
             delay(300)
             doScan()
@@ -113,7 +113,7 @@ fun PortManagerScreen(
     fun killAllServices() {
         scope.launch {
             val count = ProcessPortScanner.killAllProcesses(context)
-            snackbarHostState.showSnackbar(Strings.portManagerAllKilled.format(count))
+            snackbarHostState.showSnackbar(AppStringsProvider.current().portManagerAllKilled.format(count))
             delay(300)
             doScan()
         }
@@ -124,7 +124,7 @@ fun PortManagerScreen(
         try {
             context.openUrl(url)
         } catch (_: Exception) {
-            scope.launch { snackbarHostState.showSnackbar(Strings.portManagerKillFailed) }
+            scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().portManagerKillFailed) }
         }
     }
     
@@ -132,10 +132,10 @@ fun PortManagerScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.portManagerTitle) },
+                title = { Text(AppStringsProvider.current().portManagerTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -143,7 +143,7 @@ fun PortManagerScreen(
                     IconButton(onClick = { autoRefresh = !autoRefresh }) {
                         Icon(
                             if (autoRefresh) Icons.Default.SyncDisabled else Icons.Default.Sync,
-                            Strings.portManagerAutoRefresh,
+                            AppStringsProvider.current().portManagerAutoRefresh,
                             tint = if (autoRefresh) MaterialTheme.colorScheme.primary
                                    else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -159,7 +159,7 @@ fun PortManagerScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Icon(Icons.Default.Refresh, Strings.portManagerAutoRefresh)
+                            Icon(Icons.Default.Refresh, AppStringsProvider.current().portManagerAutoRefresh)
                         }
                     }
                     // button
@@ -167,7 +167,7 @@ fun PortManagerScreen(
                         IconButton(onClick = { showKillAllDialog = true }) {
                             Icon(
                                 Icons.Default.DeleteSweep,
-                                Strings.portManagerKillAll,
+                                AppStringsProvider.current().portManagerKillAll,
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -218,8 +218,8 @@ fun PortManagerScreen(
         AlertDialog(
             onDismissRequest = { showKillAllDialog = false },
             icon = { Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text(Strings.portManagerKillAll) },
-            text = { Text(Strings.portManagerKillAllConfirm) },
+            title = { Text(AppStringsProvider.current().portManagerKillAll) },
+            text = { Text(AppStringsProvider.current().portManagerKillAllConfirm) },
             confirmButton = {
                 PremiumButton(
                     onClick = {
@@ -230,12 +230,12 @@ fun PortManagerScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.portManagerKillAll)
+                    Text(AppStringsProvider.current().portManagerKillAll)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showKillAllDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -246,27 +246,27 @@ fun PortManagerScreen(
         AlertDialog(
             onDismissRequest = { showKillDialog = null },
             icon = { Icon(Icons.Default.Stop, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text(Strings.portManagerKillService) },
+            title = { Text(AppStringsProvider.current().portManagerKillService) },
             text = { 
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text(Strings.portManagerKillConfirmSingle)
+                    Text(AppStringsProvider.current().portManagerKillConfirmSingle)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "${Strings.portManagerPort}: ${service.port}",
+                        "${AppStringsProvider.current().portManagerPort}: ${service.port}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontFamily = FontFamily.Monospace
                     )
                     Text(
-                        "${Strings.portManagerType}: ${service.type.label}",
+                        "${AppStringsProvider.current().portManagerType}: ${service.type.label}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "${Strings.portManagerProject}: ${service.owner}",
+                        "${AppStringsProvider.current().portManagerProject}: ${service.owner}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     if (service.allocatedAt > 0) {
                         Text(
-                            "${Strings.portManagerUptime}: ${PortManager.formatDuration(System.currentTimeMillis() - service.allocatedAt)}",
+                            "${AppStringsProvider.current().portManagerUptime}: ${PortManager.formatDuration(System.currentTimeMillis() - service.allocatedAt)}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -283,12 +283,12 @@ fun PortManagerScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.portManagerKill)
+                    Text(AppStringsProvider.current().portManagerKill)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showKillDialog = null }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -322,7 +322,7 @@ private fun PortStatsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    Strings.portManagerRunningServices,
+                    AppStringsProvider.current().portManagerRunningServices,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -346,7 +346,7 @@ private fun PortStatsCard(
                     ) {
                         Icon(
                             Icons.Default.BarChart,
-                            Strings.portManagerPortRanges,
+                            AppStringsProvider.current().portManagerPortRanges,
                             modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -375,7 +375,7 @@ private fun PortStatsCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.portManagerPortRanges,
+                        AppStringsProvider.current().portManagerPortRanges,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -519,7 +519,7 @@ private fun ServiceCard(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                "${Strings.portManagerPort} ${service.port}",
+                                "${AppStringsProvider.current().portManagerPort} ${service.port}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
@@ -615,14 +615,14 @@ private fun ServiceCard(
                     
                     // Note
                     DetailRow("URL", service.url)
-                    DetailRow("PID", if (service.pid > 0) service.pid.toString() else Strings.portManagerUnknown)
-                    DetailRow(Strings.portManagerProcess, service.processName.ifEmpty { Strings.portManagerUnknown })
-                    DetailRow(Strings.portManagerStatus, if (service.isResponding) Strings.portManagerResponding else Strings.portManagerNotResponding)
+                    DetailRow("PID", if (service.pid > 0) service.pid.toString() else AppStringsProvider.current().portManagerUnknown)
+                    DetailRow(AppStringsProvider.current().portManagerProcess, service.processName.ifEmpty { AppStringsProvider.current().portManagerUnknown })
+                    DetailRow(AppStringsProvider.current().portManagerStatus, if (service.isResponding) AppStringsProvider.current().portManagerResponding else AppStringsProvider.current().portManagerNotResponding)
                     if (service.responseTimeMs >= 0) {
-                        DetailRow(Strings.portManagerLatency, "${service.responseTimeMs}ms")
+                        DetailRow(AppStringsProvider.current().portManagerLatency, "${service.responseTimeMs}ms")
                     }
                     if (uptimeText.isNotEmpty()) {
-                        DetailRow(Strings.portManagerUptime, uptimeText)
+                        DetailRow(AppStringsProvider.current().portManagerUptime, uptimeText)
                     }
                     
                     Spacer(modifier = Modifier.height(12.dp))
@@ -644,7 +644,7 @@ private fun ServiceCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.portManagerOpen)
+                            Text(AppStringsProvider.current().portManagerOpen)
                         }
                         
                         // button
@@ -661,7 +661,7 @@ private fun ServiceCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.portManagerKill)
+                            Text(AppStringsProvider.current().portManagerKill)
                         }
                     }
                 }
@@ -716,12 +716,12 @@ private fun EmptyState() {
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )
             Text(
-                Strings.portManagerNoServices,
+                AppStringsProvider.current().portManagerNoServices,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                Strings.portManagerAllReleased,
+                AppStringsProvider.current().portManagerAllReleased,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )

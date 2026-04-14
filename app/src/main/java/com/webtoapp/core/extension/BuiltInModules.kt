@@ -1,6 +1,6 @@
 package com.webtoapp.core.extension
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * extension.
@@ -28,12 +28,12 @@ object BuiltInModules {
     
     private fun videoDownloader() = ExtensionModule(
         id = "builtin-video-downloader",
-        name = Strings.builtinVideoDownloader,
-        description = Strings.builtinVideoDownloaderDesc,
+        name = AppStringsProvider.current().builtinVideoDownloader,
+        description = AppStringsProvider.current().builtinVideoDownloaderDesc,
         icon = "download",
         category = ModuleCategory.MEDIA,
-        tags = listOf(Strings.tagVideo, Strings.tagDownload, "MP4"),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagVideo, AppStringsProvider.current().tagDownload, "MP4"),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -51,12 +51,12 @@ object BuiltInModules {
     
     private fun bilibiliVideoExtractor() = ExtensionModule(
         id = "builtin-bilibili-extractor",
-        name = Strings.builtinBilibiliExtractor,
-        description = Strings.builtinBilibiliExtractorDesc,
+        name = AppStringsProvider.current().builtinBilibiliExtractor,
+        description = AppStringsProvider.current().builtinBilibiliExtractorDesc,
         icon = "tv",
         category = ModuleCategory.MEDIA,
-        tags = listOf(Strings.tagBilibili, "bilibili", Strings.tagVideo),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagBilibili, "bilibili", AppStringsProvider.current().tagVideo),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -75,12 +75,12 @@ object BuiltInModules {
     
     private fun douyinVideoExtractor() = ExtensionModule(
         id = "builtin-douyin-extractor",
-        name = Strings.builtinDouyinExtractor,
-        description = Strings.builtinDouyinExtractorDesc,
+        name = AppStringsProvider.current().builtinDouyinExtractor,
+        description = AppStringsProvider.current().builtinDouyinExtractorDesc,
         icon = "music_note",
         category = ModuleCategory.MEDIA,
-        tags = listOf(Strings.tagDouyin, "douyin", Strings.tagNoWatermark),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagDouyin, "douyin", AppStringsProvider.current().tagNoWatermark),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -99,12 +99,12 @@ object BuiltInModules {
     
     private fun xiaohongshuExtractor() = ExtensionModule(
         id = "builtin-xiaohongshu-extractor",
-        name = Strings.builtinXiaohongshuExtractor,
-        description = Strings.builtinXiaohongshuExtractorDesc,
+        name = AppStringsProvider.current().builtinXiaohongshuExtractor,
+        description = AppStringsProvider.current().builtinXiaohongshuExtractorDesc,
         icon = "menu_book",
         category = ModuleCategory.MEDIA,
-        tags = listOf(Strings.tagXiaohongshu, Strings.tagImage, Strings.tagVideo),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagXiaohongshu, AppStringsProvider.current().tagImage, AppStringsProvider.current().tagVideo),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -123,12 +123,12 @@ object BuiltInModules {
     
     private fun videoEnhancer() = ExtensionModule(
         id = "builtin-video-enhancer",
-        name = Strings.builtinVideoEnhancer,
-        description = Strings.builtinVideoEnhancerDesc,
+        name = AppStringsProvider.current().builtinVideoEnhancer,
+        description = AppStringsProvider.current().builtinVideoEnhancerDesc,
         icon = "movie",
         category = ModuleCategory.VIDEO,
-        tags = listOf(Strings.tagSpeed, Strings.tagPiP, Strings.tagVideo),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagSpeed, AppStringsProvider.current().tagPiP, AppStringsProvider.current().tagVideo),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -143,10 +143,10 @@ object BuiltInModules {
             draggable = true,
             toolbarCollapsible = true,
             toolbarItems = listOf(
-                ToolbarItem(icon = "fast_forward", label = Strings.toolbarSpeed, tooltip = Strings.toolbarSpeedTooltip, action = "changeSpeed()"),
-                ToolbarItem(icon = "picture_in_picture", label = Strings.toolbarPiP, tooltip = Strings.toolbarPiPTooltip, action = "togglePip()"),
-                ToolbarItem(icon = "repeat", label = Strings.toolbarLoop, tooltip = Strings.toolbarLoopTooltip, action = "toggleLoop()"),
-                ToolbarItem(icon = "photo_camera", label = Strings.toolbarScreenshot, tooltip = Strings.toolbarScreenshotTooltip, action = "screenshot()")
+                ToolbarItem(icon = "fast_forward", label = AppStringsProvider.current().toolbarSpeed, tooltip = AppStringsProvider.current().toolbarSpeedTooltip, action = "changeSpeed()"),
+                ToolbarItem(icon = "picture_in_picture", label = AppStringsProvider.current().toolbarPiP, tooltip = AppStringsProvider.current().toolbarPiPTooltip, action = "togglePip()"),
+                ToolbarItem(icon = "repeat", label = AppStringsProvider.current().toolbarLoop, tooltip = AppStringsProvider.current().toolbarLoopTooltip, action = "toggleLoop()"),
+                ToolbarItem(icon = "photo_camera", label = AppStringsProvider.current().toolbarScreenshot, tooltip = AppStringsProvider.current().toolbarScreenshotTooltip, action = "screenshot()")
             )
         )
     )
@@ -154,12 +154,12 @@ object BuiltInModules {
     
     private fun webAnalyzer() = ExtensionModule(
         id = "builtin-web-analyzer",
-        name = Strings.builtinWebAnalyzer,
-        description = Strings.builtinWebAnalyzerDesc,
+        name = AppStringsProvider.current().builtinWebAnalyzer,
+        description = AppStringsProvider.current().builtinWebAnalyzerDesc,
         icon = "search",
         category = ModuleCategory.DEVELOPER,
-        tags = listOf(Strings.tagDebug, Strings.tagAnalyze, Strings.tagDevelop),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagDebug, AppStringsProvider.current().tagAnalyze, AppStringsProvider.current().tagDevelop),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -177,12 +177,12 @@ object BuiltInModules {
     
     private fun advancedDarkMode() = ExtensionModule(
         id = "builtin-dark-mode",
-        name = Strings.builtinDarkMode,
-        description = Strings.builtinDarkModeDesc,
+        name = AppStringsProvider.current().builtinDarkMode,
+        description = AppStringsProvider.current().builtinDarkModeDesc,
         icon = "dark_mode",
         category = ModuleCategory.THEME,
-        tags = listOf(Strings.tagDark, Strings.tagEyeCare, Strings.tagTheme),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagDark, AppStringsProvider.current().tagEyeCare, AppStringsProvider.current().tagTheme),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -200,12 +200,12 @@ object BuiltInModules {
     
     private fun privacyProtection() = ExtensionModule(
         id = "builtin-privacy-protection",
-        name = Strings.builtinPrivacyProtection,
-        description = Strings.builtinPrivacyProtectionDesc,
+        name = AppStringsProvider.current().builtinPrivacyProtection,
+        description = AppStringsProvider.current().builtinPrivacyProtectionDesc,
         icon = "shield",
         category = ModuleCategory.SECURITY,
-        tags = listOf(Strings.tagPrivacy, Strings.tagSecurity, Strings.tagAntiTrack),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagPrivacy, AppStringsProvider.current().tagSecurity, AppStringsProvider.current().tagAntiTrack),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -221,12 +221,12 @@ object BuiltInModules {
     
     private fun elementBlocker() = ExtensionModule(
         id = "builtin-element-blocker",
-        name = Strings.builtinElementBlocker,
-        description = Strings.builtinElementBlockerDesc,
+        name = AppStringsProvider.current().builtinElementBlocker,
+        description = AppStringsProvider.current().builtinElementBlockerDesc,
         icon = "block",
         category = ModuleCategory.CONTENT_FILTER,
-        tags = listOf(Strings.tagBlock, Strings.tagAd, Strings.tagElement),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagBlock, AppStringsProvider.current().tagAd, AppStringsProvider.current().tagElement),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -248,12 +248,12 @@ object BuiltInModules {
     
     private fun contentEnhancer() = ExtensionModule(
         id = "builtin-content-enhancer",
-        name = Strings.builtinContentEnhancer,
-        description = Strings.builtinContentEnhancerDesc,
+        name = AppStringsProvider.current().builtinContentEnhancer,
+        description = AppStringsProvider.current().builtinContentEnhancerDesc,
         icon = "auto_awesome",
         category = ModuleCategory.CONTENT_ENHANCE,
-        tags = listOf(Strings.tagCopy, Strings.tagTranslate, Strings.tagScreenshot),
-        version = ModuleVersion(4, "4.0.0", Strings.versionV4Ui),
+        tags = listOf(AppStringsProvider.current().tagCopy, AppStringsProvider.current().tagTranslate, AppStringsProvider.current().tagScreenshot),
+        version = ModuleVersion(4, "4.0.0", AppStringsProvider.current().versionV4Ui),
         author = ModuleAuthor("WebToApp"),
         builtIn = true,
         enabled = false,
@@ -268,9 +268,9 @@ object BuiltInModules {
             draggable = true,
             toolbarCollapsible = true,
             toolbarItems = listOf(
-                ToolbarItem(icon = "content_copy", label = Strings.toolbarCopy, tooltip = Strings.toolbarCopyTooltip, action = "copyContent()"),
-                ToolbarItem(icon = "translate", label = Strings.toolbarTranslate, tooltip = Strings.toolbarTranslateTooltip, action = "translatePage()"),
-                ToolbarItem(icon = "photo_camera", label = Strings.toolbarScreenshot, tooltip = Strings.toolbarWebScreenshotTooltip, action = "screenshot()")
+                ToolbarItem(icon = "content_copy", label = AppStringsProvider.current().toolbarCopy, tooltip = AppStringsProvider.current().toolbarCopyTooltip, action = "copyContent()"),
+                ToolbarItem(icon = "translate", label = AppStringsProvider.current().toolbarTranslate, tooltip = AppStringsProvider.current().toolbarTranslateTooltip, action = "translatePage()"),
+                ToolbarItem(icon = "photo_camera", label = AppStringsProvider.current().toolbarScreenshot, tooltip = AppStringsProvider.current().toolbarWebScreenshotTooltip, action = "screenshot()")
             )
         )
     )

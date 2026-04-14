@@ -17,7 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AiFeature
 import com.webtoapp.data.model.AiProvider
 import com.webtoapp.data.model.SavedModel
@@ -83,7 +83,7 @@ fun ModelSelector(
             } else {
                 // list
                 Text(
-                    Strings.selectModel,
+                    AppStringsProvider.current().selectModel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -116,7 +116,7 @@ fun ModelSelector(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                Strings.configureMoreModels,
+                                AppStringsProvider.current().configureMoreModels,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -175,18 +175,18 @@ private fun ModelSelectorButton(
                     )
                 } else if (!hasModels) {
                     Text(
-                        Strings.noModelConfigured,
+                        AppStringsProvider.current().noModelConfigured,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
                     Text(
-                        Strings.clickToConfigureAiModel,
+                        AppStringsProvider.current().clickToConfigureAiModel,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Text(
-                        Strings.selectModel,
+                        AppStringsProvider.current().selectModel,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -196,7 +196,7 @@ private fun ModelSelectorButton(
             // Note
             Icon(
                 Icons.Default.ArrowDropDown,
-                contentDescription = Strings.expand,
+                contentDescription = AppStringsProvider.current().expand,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -249,7 +249,7 @@ private fun ModelDropdownItem(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    Strings.defaultLabel,
+                                    AppStringsProvider.current().defaultLabel,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -263,7 +263,7 @@ private fun ModelDropdownItem(
                 if (isSelected) {
                     Icon(
                         Icons.Default.Check,
-                        contentDescription = Strings.selectedLabel,
+                        contentDescription = AppStringsProvider.current().selectedLabel,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -300,13 +300,13 @@ private fun EmptyModelState(
         )
         
         Text(
-            Strings.noAvailableModels,
+            AppStringsProvider.current().noAvailableModels,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
         
         Text(
-            Strings.configureModelHint,
+            AppStringsProvider.current().configureModelHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -322,7 +322,7 @@ private fun EmptyModelState(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(Strings.goToConfig)
+            Text(AppStringsProvider.current().goToConfig)
         }
     }
 }

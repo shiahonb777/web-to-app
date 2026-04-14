@@ -51,7 +51,7 @@ import com.webtoapp.core.bgm.BgmPlayer
 import com.webtoapp.core.webview.LocalHttpServer
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.data.model.SplashOrientation
@@ -240,7 +240,7 @@ fun WebViewScreen(
                     "WebViewActivity",
                     "Ad config detected for appId=${app.id}, but AdManager is placeholder-only and no ad SDK is integrated"
                 )
-                Toast.makeText(context, Strings.adSdkNotIntegrated, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, AppStringsProvider.current().adSdkNotIntegrated, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -977,7 +977,7 @@ fun WebViewScreen(
                             )
                             if (isTestMode && !testModuleIds.isNullOrEmpty()) {
                                 Text(
-                                    text = Strings.testingModules.format(testModuleIds.size),
+                                    text = AppStringsProvider.current().testingModules.format(testModuleIds.size),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1
@@ -1031,7 +1031,7 @@ fun WebViewScreen(
                                 ) {
                                     Icon(
                                         if (showConsole) Icons.Filled.Terminal else Icons.Outlined.Terminal,
-                                        Strings.console
+                                        AppStringsProvider.current().console
                                     )
                                 }
                             }
@@ -1047,7 +1047,7 @@ fun WebViewScreen(
                                 onDismissRequest = { showToolbarMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(Strings.goBack) },
+                                    text = { Text(AppStringsProvider.current().goBack) },
                                     onClick = {
                                         showToolbarMenu = false
                                         webViewRef?.let { wv ->
@@ -1066,7 +1066,7 @@ fun WebViewScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(Strings.goForward) },
+                                    text = { Text(AppStringsProvider.current().goForward) },
                                     onClick = {
                                         showToolbarMenu = false
                                         webViewRef?.goForward()
@@ -1077,7 +1077,7 @@ fun WebViewScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(Strings.refresh) },
+                                    text = { Text(AppStringsProvider.current().refresh) },
                                     onClick = {
                                         showToolbarMenu = false
                                         webViewRef?.reload()
@@ -1169,10 +1169,10 @@ fun WebViewScreen(
                             tint = MaterialTheme.colorScheme.outline
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(Strings.pleaseActivateApp)
+                        Text(AppStringsProvider.current().pleaseActivateApp)
                         Spacer(modifier = Modifier.height(16.dp))
                         PremiumButton(onClick = { showActivationDialog = true }) {
-                            Text(Strings.enterActivationCode)
+                            Text(AppStringsProvider.current().enterActivationCode)
                         }
                     }
                 }
@@ -1372,7 +1372,7 @@ fun WebViewScreen(
             if (isGoAppLoading) {
                 SimpleAppLoadingOverlay(
                     isStarting = goAppPreviewState is GoAppPreviewState.Starting || goAppPreviewState is GoAppPreviewState.StartingServer,
-                    startingText = Strings.goStartingPreview,
+                    startingText = AppStringsProvider.current().goStartingPreview,
                     errorMessage = (goAppPreviewState as? GoAppPreviewState.Error)?.message,
                     onRetry = { goAppRetryTrigger++ }
                 )
@@ -1423,7 +1423,7 @@ fun WebViewScreen(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.cdBack)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().cdBack)
                 }
             }
 
@@ -1449,7 +1449,7 @@ fun WebViewScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(error, modifier = Modifier.weight(weight = 1f, fill = true))
                         TextButton(onClick = { errorMessage = null }) {
-                            Text(Strings.close)
+                            Text(AppStringsProvider.current().close)
                         }
                     }
                 }
@@ -1565,13 +1565,13 @@ com.webtoapp.ui.components.announcement.AnnouncementDialog(
                 try {
                     val safeUrl = normalizeExternalUrlForIntent(url)
                     if (safeUrl.isBlank()) {
-                        Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     } else {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(safeUrl))
                         context.startActivity(intent)
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                 }
             },
             onNeverShowChecked = { checked ->

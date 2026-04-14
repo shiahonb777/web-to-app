@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.webtoapp.core.autostart.AutoStartManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AutoStartConfig
 
 /**
@@ -69,12 +69,12 @@ fun AutoStartCard(
                         val daysDiff = ((it.timeInMillis - now.timeInMillis) / (24 * 60 * 60 * 1000)).toInt()
                         val timeStr = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(it.time)
                         when (daysDiff) {
-                            0 -> "${Strings.today} $timeStr"
-                            1 -> "${Strings.tomorrow} $timeStr"
+                            0 -> "${AppStringsProvider.current().today} $timeStr"
+                            1 -> "${AppStringsProvider.current().tomorrow} $timeStr"
                             else -> {
                                 val dayNames = listOf(
-                                    Strings.dayMon, Strings.dayTue, Strings.dayWed,
-                                    Strings.dayThu, Strings.dayFri, Strings.daySat, Strings.daySun
+                                    AppStringsProvider.current().dayMon, AppStringsProvider.current().dayTue, AppStringsProvider.current().dayWed,
+                                    AppStringsProvider.current().dayThu, AppStringsProvider.current().dayFri, AppStringsProvider.current().daySat, AppStringsProvider.current().daySun
                                 )
                                 val calendarDow = it.get(java.util.Calendar.DAY_OF_WEEK)
                                 val ourDow = if (calendarDow == java.util.Calendar.SUNDAY) 7 else calendarDow - 1
@@ -159,19 +159,19 @@ fun AutoStartCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.autoStartSettings,
+                            AppStringsProvider.current().autoStartSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!bootStartEnabled && !scheduledStartEnabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
                             // display state
                             val statusParts = mutableListOf<String>()
-                            if (bootStartEnabled) statusParts.add(Strings.bootAutoStart)
+                            if (bootStartEnabled) statusParts.add(AppStringsProvider.current().bootAutoStart)
                             if (scheduledStartEnabled) statusParts.add(scheduledTime)
                             Text(
                                 statusParts.joinToString(" · "),
@@ -199,11 +199,11 @@ fun AutoStartCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.bootAutoStart,
+                                AppStringsProvider.current().bootAutoStart,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.bootAutoStartHint,
+                                AppStringsProvider.current().bootAutoStartHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -226,7 +226,7 @@ fun AutoStartCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    Strings.bootDelay,
+                                    AppStringsProvider.current().bootDelay,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -261,11 +261,11 @@ fun AutoStartCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.scheduledAutoStart,
+                                AppStringsProvider.current().scheduledAutoStart,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.scheduledAutoStartHint,
+                                AppStringsProvider.current().scheduledAutoStartHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -302,7 +302,7 @@ fun AutoStartCard(
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
-                                        Text(Strings.launchTime)
+                                        Text(AppStringsProvider.current().launchTime)
                                     }
                                     Text(
                                         scheduledTime,
@@ -316,7 +316,7 @@ fun AutoStartCard(
 
                             // select
                             Text(
-                                Strings.launchDate,
+                                AppStringsProvider.current().launchDate,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -326,8 +326,8 @@ fun AutoStartCard(
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
                                 val dayNames = listOf(
-                                    Strings.dayMon, Strings.dayTue, Strings.dayWed,
-                                    Strings.dayThu, Strings.dayFri, Strings.daySat, Strings.daySun
+                                    AppStringsProvider.current().dayMon, AppStringsProvider.current().dayTue, AppStringsProvider.current().dayWed,
+                                    AppStringsProvider.current().dayThu, AppStringsProvider.current().dayFri, AppStringsProvider.current().daySat, AppStringsProvider.current().daySun
                                 )
                                 dayNames.forEachIndexed { index, name ->
                                     val day = index + 1
@@ -367,7 +367,7 @@ fun AutoStartCard(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "${Strings.nextLaunchTime}: $display",
+                                            "${AppStringsProvider.current().nextLaunchTime}: $display",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -417,7 +417,7 @@ fun AutoStartCard(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            Strings.oemAutoStartHint.replace("%s", oemBrandName),
+                                            AppStringsProvider.current().oemAutoStartHint.replace("%s", oemBrandName),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
@@ -461,7 +461,7 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.exactAlarmPermissionHint,
+                                        AppStringsProvider.current().exactAlarmPermissionHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
@@ -510,7 +510,7 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.batteryOptimizationHint,
+                                        AppStringsProvider.current().batteryOptimizationHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
@@ -544,7 +544,7 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.autoStartPermissionReady,
+                                        AppStringsProvider.current().autoStartPermissionReady,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
@@ -572,7 +572,7 @@ fun AutoStartCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                Strings.autoStartNote,
+                                AppStringsProvider.current().autoStartNote,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -619,7 +619,7 @@ fun TimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectLaunchTime) },
+        title = { Text(AppStringsProvider.current().selectLaunchTime) },
         text = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -636,12 +636,12 @@ fun TimePickerDialog(
                     onConfirm("$hour:$minute")
                 }
             ) {
-                Text(Strings.btnOk)
+                Text(AppStringsProvider.current().btnOk)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

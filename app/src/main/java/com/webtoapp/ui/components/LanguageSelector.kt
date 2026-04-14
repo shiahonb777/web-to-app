@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.webtoapp.R
 import com.webtoapp.core.i18n.AppLanguage
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.i18n.LanguageManager
 import com.webtoapp.util.isRunningOnTv
 import kotlinx.coroutines.launch
@@ -184,6 +185,17 @@ fun FirstLaunchLanguageScreen(
     val scope = rememberCoroutineScope()
     
     var selectedLanguage by remember { mutableStateOf<AppLanguage?>(null) }
+    val confirmLabel = remember(selectedLanguage) {
+        selectedLanguage?.let { language ->
+            AppStringsProvider.forLanguage(language).confirm
+        } ?: listOf(
+            AppLanguage.ENGLISH,
+            AppLanguage.CHINESE,
+            AppLanguage.ARABIC
+        ).joinToString(" / ") { language ->
+            AppStringsProvider.forLanguage(language).confirm
+        }
+    }
     val scrollState = rememberScrollState()
     val isTv = isRunningOnTv()
     val confirmFocusRequester = remember { FocusRequester() }
@@ -284,12 +296,7 @@ fun FirstLaunchLanguageScreen(
                     .focusable()
             ) {
                 Text(
-                    text = when (selectedLanguage) {
-                        AppLanguage.CHINESE -> "确认"
-                        AppLanguage.ENGLISH -> "Confirm"
-                        AppLanguage.ARABIC -> "تأكيد"
-                        null -> "Confirm / 确认 / تأكيد"
-                    },
+                    text = confirmLabel,
                     style = MaterialTheme.typography.titleMedium
                 )
             }

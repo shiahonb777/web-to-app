@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.SplashConfig
 import com.webtoapp.data.model.SplashType
@@ -75,7 +75,7 @@ fun SplashOverlay(
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = Strings.cdSplashScreen,
+                    contentDescription = AppStringsProvider.current().cdSplashScreen,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScaleMode
                 )
@@ -219,12 +219,12 @@ fun ActivationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.activateApp) },
+        title = { Text(AppStringsProvider.current().activateApp) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                Text(Strings.enterCodeToContinue)
+                Text(AppStringsProvider.current().enterCodeToContinue)
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = code,
@@ -232,7 +232,7 @@ fun ActivationDialog(
                         code = it
                         error = null
                     },
-                    label = { Text(Strings.activationCode) },
+                    label = { Text(AppStringsProvider.current().activationCode) },
                     singleLine = true,
                     isError = error != null,
                     supportingText = error?.let { { Text(it) } }
@@ -243,18 +243,18 @@ fun ActivationDialog(
             PremiumButton(
                 onClick = {
                     if (code.isBlank()) {
-                        error = Strings.enterActivationCode
+                        error = AppStringsProvider.current().enterActivationCode
                     } else {
                         onActivate(code)
                     }
                 }
             ) {
-                Text(Strings.activate)
+                Text(AppStringsProvider.current().activate)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

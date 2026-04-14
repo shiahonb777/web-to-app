@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.core.nodejs.NodeDependencyManager
@@ -218,7 +218,7 @@ fun CreateNodeJsAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.njsProjectDetected
+                creationPhase = AppStringsProvider.current().njsProjectDetected
                 errorMessage = null
                 
                 try {
@@ -228,12 +228,12 @@ fun CreateNodeJsAppScreen(
                         return@launch
                     }
 
-                    creationPhase = Strings.copyingProjectFiles
+                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                     val imported = projectImporter.importProject(projectDir) { downloading ->
                         showDownloadDialog = downloading
                     }
                     applyImportAnalysis(imported)
-                    creationPhase = Strings.njsProjectReady
+                    creationPhase = AppStringsProvider.current().njsProjectReady
                 } catch (e: Exception) {
                     errorMessage = e.message ?: "项目导入失败"
                 } finally {
@@ -250,10 +250,10 @@ fun CreateNodeJsAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.njsCreateTitle) },
+                title = { Text(AppStringsProvider.current().njsCreateTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -265,7 +265,7 @@ fun CreateNodeJsAppScreen(
                                 if (enableTsPreCompile && hasTypeScript && esbuildAvailable) {
                                     // TypeScript create
                                     isCreating = true
-                                    creationPhase = Strings.tsPreCompile
+                                    creationPhase = AppStringsProvider.current().tsPreCompile
                                     scope.launch {
                                         val projectDir = File(context.filesDir, "nodejs_projects/$pid")
                                         if (projectDir.exists()) {
@@ -316,7 +316,7 @@ fun CreateNodeJsAppScreen(
                         },
                         enabled = canCreate && !isCreating
                     ) {
-                        Text(if (isEdit) Strings.btnSave else Strings.btnCreate)
+                        Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -352,7 +352,7 @@ fun CreateNodeJsAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -360,7 +360,7 @@ fun CreateNodeJsAppScreen(
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -372,7 +372,7 @@ fun CreateNodeJsAppScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
@@ -394,11 +394,11 @@ fun CreateNodeJsAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsSelectProjectFolder, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsSelectProjectFolder, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.njsSelectProjectDesc,
+                        text = AppStringsProvider.current().njsSelectProjectDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -418,7 +418,7 @@ fun CreateNodeJsAppScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = Strings.njsProjectDetected,
+                                        text = AppStringsProvider.current().njsProjectDetected,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = frameworkColor
                                     )
@@ -431,14 +431,14 @@ fun CreateNodeJsAppScreen(
                                 )
                                 if (detectedFramework != null) {
                                     Text(
-                                        text = "${Strings.njsFramework}: $detectedFramework",
+                                        text = "${AppStringsProvider.current().njsFramework}: $detectedFramework",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 if (detectedEntryFile != null) {
                                     Text(
-                                        text = "${Strings.njsEntryFile}: $detectedEntryFile",
+                                        text = "${AppStringsProvider.current().njsEntryFile}: $detectedEntryFile",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -455,7 +455,7 @@ fun CreateNodeJsAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.njsSelectProjectFolder)
+                        Text(AppStringsProvider.current().njsSelectProjectFolder)
                     }
                 }
             }
@@ -463,22 +463,22 @@ fun CreateNodeJsAppScreen(
             // ========== Sample Projects ==========
             if (selectedProjectDir == null && !isCreating) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.sampleNodeSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().sampleNodeSubtitle,
                     samples = remember { NodeSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = NodeSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
                                 isCreating = true
-                                creationPhase = Strings.njsProjectDetected
+                                creationPhase = AppStringsProvider.current().njsProjectDetected
                                 try {
-                                    creationPhase = Strings.copyingProjectFiles
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                                     val imported = projectImporter.importProject(File(path)) { downloading ->
                                         showDownloadDialog = downloading
                                     }
                                     applyImportAnalysis(imported, appNameOverride = sample.name)
-                                    creationPhase = Strings.njsProjectReady
+                                    creationPhase = AppStringsProvider.current().njsProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -529,14 +529,14 @@ fun CreateNodeJsAppScreen(
                                 contentAlignment = Alignment.Center
                             ) { Icon(Icons.Outlined.Build, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(Strings.njsBuildMode, style = MaterialTheme.typography.titleMedium)
+                            Text(AppStringsProvider.current().njsBuildMode, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         listOf(
-                            Triple(NodeJsBuildMode.STATIC, Strings.njsModeStatic, Strings.njsModeStaticDesc),
-                            Triple(NodeJsBuildMode.API_BACKEND, Strings.njsModeBackend, Strings.njsModeBackendDesc),
-                            Triple(NodeJsBuildMode.FULLSTACK, Strings.njsModeFullstack, Strings.njsModeFullstackDesc)
+                            Triple(NodeJsBuildMode.STATIC, AppStringsProvider.current().njsModeStatic, AppStringsProvider.current().njsModeStaticDesc),
+                            Triple(NodeJsBuildMode.API_BACKEND, AppStringsProvider.current().njsModeBackend, AppStringsProvider.current().njsModeBackendDesc),
+                            Triple(NodeJsBuildMode.FULLSTACK, AppStringsProvider.current().njsModeFullstack, AppStringsProvider.current().njsModeFullstackDesc)
                         ).forEach { (mode, label, desc) ->
                             Surface(
                                 modifier = Modifier
@@ -578,8 +578,8 @@ fun CreateNodeJsAppScreen(
                             PremiumTextField(
                                 value = entryFile,
                                 onValueChange = { entryFile = it },
-                                label = { Text(Strings.njsEntryFile) },
-                                placeholder = { Text(Strings.njsEntryFileHint) },
+                                label = { Text(AppStringsProvider.current().njsEntryFile) },
+                                placeholder = { Text(AppStringsProvider.current().njsEntryFileHint) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 trailingIcon = {
@@ -614,7 +614,7 @@ fun CreateNodeJsAppScreen(
                                     contentAlignment = Alignment.Center
                                 ) { Icon(Icons.Outlined.Speed, null, tint = Color(0xFF3178C6), modifier = Modifier.size(22.dp)) }
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text(Strings.tsPreCompile, style = MaterialTheme.typography.titleMedium)
+                                Text(AppStringsProvider.current().tsPreCompile, style = MaterialTheme.typography.titleMedium)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
@@ -638,7 +638,7 @@ fun CreateNodeJsAppScreen(
                             ) {
                                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                     Text(
-                                        text = Strings.tsPreCompileHint,
+                                        text = AppStringsProvider.current().tsPreCompileHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -686,7 +686,7 @@ fun CreateNodeJsAppScreen(
                                     contentAlignment = Alignment.Center
                                 ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text(Strings.njsEnvVars, style = MaterialTheme.typography.titleMedium)
+                                Text(AppStringsProvider.current().njsEnvVars, style = MaterialTheme.typography.titleMedium)
                                 if (envVars.isNotEmpty()) {
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
@@ -782,7 +782,7 @@ fun CreateNodeJsAppScreen(
                                         }
                                     }
                                 ) {
-                                    Icon(Icons.Default.Add, Strings.njsAddEnvVar)
+                                    Icon(Icons.Default.Add, AppStringsProvider.current().njsAddEnvVar)
                                 }
                             }
                         }
@@ -816,12 +816,12 @@ fun CreateNodeJsAppScreen(
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text(Strings.njsDownloadDeps) },
+            title = { Text(AppStringsProvider.current().njsDownloadDeps) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     when (val state = downloadState) {
                         is NodeDependencyManager.DownloadState.Downloading -> {
-                            Text(Strings.njsDownloading)
+                            Text(AppStringsProvider.current().njsDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(
                                 progress = { state.progress },
@@ -844,13 +844,13 @@ fun CreateNodeJsAppScreen(
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                         is NodeDependencyManager.DownloadState.Complete -> {
-                            Text(Strings.njsDownloadComplete)
+                            Text(AppStringsProvider.current().njsDownloadComplete)
                         }
                         is NodeDependencyManager.DownloadState.Error -> {
                             Text(text = state.message, color = MaterialTheme.colorScheme.error)
                         }
                         else -> {
-                            Text(Strings.njsDownloading)
+                            Text(AppStringsProvider.current().njsDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -906,14 +906,14 @@ private fun NodeJsHeroSection(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        text = if (detectedFramework != null) "$detectedFramework ${Strings.njsHeroTitle}"
-                        else Strings.njsHeroTitle,
+                        text = if (detectedFramework != null) "$detectedFramework ${AppStringsProvider.current().njsHeroTitle}"
+                        else AppStringsProvider.current().njsHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.njsHeroDesc,
+                        text = AppStringsProvider.current().njsHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1000,7 +1000,7 @@ private fun NodeJsProjectInfoCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Info, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsProjectInfo, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsProjectInfo, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1062,14 +1062,14 @@ private fun NodeJsProjectInfoCard(
                         // Note
                         NjsInfoChip(
                             icon = Icons.Outlined.Inventory2,
-                            label = "${Strings.njsDependencies}: $depCount",
+                            label = "${AppStringsProvider.current().njsDependencies}: $depCount",
                             color = frameworkColor
                         )
                         // Note
                         if (devDepCount > 0) {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Build,
-                                label = "${Strings.njsDevDependencies}: $devDepCount",
+                                label = "${AppStringsProvider.current().njsDevDependencies}: $devDepCount",
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                         }
@@ -1084,14 +1084,14 @@ private fun NodeJsProjectInfoCard(
                         // manager
                         NjsInfoChip(
                             icon = Icons.Outlined.Archive,
-                            label = "${Strings.njsPackageManager}: $packageManager",
+                            label = "${AppStringsProvider.current().njsPackageManager}: $packageManager",
                             color = MaterialTheme.colorScheme.secondary
                         )
                         // Note
                         detectedPort?.let {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Lan,
-                                label = "${Strings.njsDetectedPort}: $it",
+                                label = "${AppStringsProvider.current().njsDetectedPort}: $it",
                                 color = Color(0xFFFF6B35)
                             )
                         }
@@ -1151,7 +1151,7 @@ private fun NodeJsScriptsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Terminal, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsScripts, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsScripts, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                     shape = RoundedCornerShape(10.dp),
@@ -1168,7 +1168,7 @@ private fun NodeJsScriptsCard(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = Strings.njsStartupScript,
+                text = AppStringsProvider.current().njsStartupScript,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1255,7 +1255,7 @@ private fun NodeJsPortCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Lan, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsDetectedPort, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsDetectedPort, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1276,7 +1276,7 @@ private fun NodeJsPortCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${Strings.njsDetectedPort}: ",
+                            text = "${AppStringsProvider.current().njsDetectedPort}: ",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1300,14 +1300,14 @@ private fun NodeJsPortCard(
                         onCustomPortChange(newValue)
                     }
                 },
-                label = { Text(Strings.njsPortOverride) },
+                label = { Text(AppStringsProvider.current().njsPortOverride) },
                 placeholder = { Text(detectedPort?.toString() ?: "3000") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 supportingText = {
                     if (customPort.isBlank() && detectedPort != null) {
                         Text(
-                            "${Strings.njsDetectedPort}: $detectedPort",
+                            "${AppStringsProvider.current().njsDetectedPort}: $detectedPort",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -1339,7 +1339,7 @@ private fun NodeJsDependenciesCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Inventory2, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsDependencies, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsDependencies, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1400,7 +1400,7 @@ private fun NodeJsDependenciesCard(
                 if (dependencies.size > 5) {
                     TextButton(onClick = onToggleDeps, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            if (showAllDeps) Strings.collapse else "${Strings.expandAll} (${dependencies.size})",
+                            if (showAllDeps) AppStringsProvider.current().collapse else "${AppStringsProvider.current().expandAll} (${dependencies.size})",
                             style = MaterialTheme.typography.labelSmall,
                             color = frameworkColor
                         )
@@ -1470,7 +1470,7 @@ private fun NodeJsDependenciesCard(
                 if (devDependencies.size > 3) {
                     TextButton(onClick = onToggleDevDeps, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            if (showAllDevDeps) Strings.collapse else "${Strings.expandAll} (${devDependencies.size})",
+                            if (showAllDevDeps) AppStringsProvider.current().collapse else "${AppStringsProvider.current().expandAll} (${devDependencies.size})",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )

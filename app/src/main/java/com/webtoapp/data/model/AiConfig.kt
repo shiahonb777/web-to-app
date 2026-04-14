@@ -1,6 +1,6 @@
 package com.webtoapp.data.model
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * AI provider categories.
@@ -14,12 +14,12 @@ enum class ProviderCategory {
     CUSTOM;        // Custom
     
     val displayName: String get() = when (this) {
-        RECOMMENDED -> Strings.providerCategoryRecommended
-        INTERNATIONAL -> Strings.providerCategoryInternational
-        CHINESE -> Strings.providerCategoryChinese
-        AGGREGATOR -> Strings.providerCategoryAggregator
-        SELF_HOSTED -> Strings.providerCategorySelfHosted
-        CUSTOM -> Strings.providerCategoryCustom
+        RECOMMENDED -> AppStringsProvider.current().providerCategoryRecommended
+        INTERNATIONAL -> AppStringsProvider.current().providerCategoryInternational
+        CHINESE -> AppStringsProvider.current().providerCategoryChinese
+        AGGREGATOR -> AppStringsProvider.current().providerCategoryAggregator
+        SELF_HOSTED -> AppStringsProvider.current().providerCategorySelfHosted
+        CUSTOM -> AppStringsProvider.current().providerCategoryCustom
     }
 }
 
@@ -240,108 +240,108 @@ enum class AiProvider(
     );
     
     val displayName: String get() = when (this) {
-        GOOGLE -> Strings.providerGoogle
-        OPENROUTER -> Strings.providerOpenRouter
-        OPENAI -> Strings.providerOpenAI
-        ANTHROPIC -> Strings.providerAnthropic
-        GROK -> Strings.providerGrok
-        MISTRAL -> Strings.providerMistral
-        COHERE -> Strings.providerCohere
-        AI21 -> Strings.providerAI21
-        GROQ -> Strings.providerGroq
-        CEREBRAS -> Strings.providerCerebras
-        SAMBANOVA -> Strings.providerSambanova
-        TOGETHER -> Strings.providerTogether
-        PERPLEXITY -> Strings.providerPerplexity
-        FIREWORKS -> Strings.providerFireworks
-        DEEPINFRA -> Strings.providerDeepInfra
-        NOVITA -> Strings.providerNovita
-        DEEPSEEK -> Strings.providerDeepSeek
-        QWEN -> Strings.providerQwen
-        GLM -> Strings.providerGLM
-        VOLCANO -> Strings.providerVolcano
-        MOONSHOT -> Strings.providerMoonshot
-        MINIMAX -> Strings.providerMiniMax
-        SILICONFLOW -> Strings.providerSiliconFlow
-        BAICHUAN -> Strings.providerBaichuan
-        YI -> Strings.providerYi
-        STEPFUN -> Strings.providerStepfun
-        HUNYUAN -> Strings.providerHunyuan
-        SPARK -> Strings.providerSpark
-        OLLAMA -> Strings.providerOllama
-        LM_STUDIO -> Strings.providerLmStudio
-        VLLM -> Strings.providerVllm
-        CUSTOM -> Strings.providerCustom
+        GOOGLE -> AppStringsProvider.current().providerGoogle
+        OPENROUTER -> AppStringsProvider.current().providerOpenRouter
+        OPENAI -> AppStringsProvider.current().providerOpenAI
+        ANTHROPIC -> AppStringsProvider.current().providerAnthropic
+        GROK -> AppStringsProvider.current().providerGrok
+        MISTRAL -> AppStringsProvider.current().providerMistral
+        COHERE -> AppStringsProvider.current().providerCohere
+        AI21 -> AppStringsProvider.current().providerAI21
+        GROQ -> AppStringsProvider.current().providerGroq
+        CEREBRAS -> AppStringsProvider.current().providerCerebras
+        SAMBANOVA -> AppStringsProvider.current().providerSambanova
+        TOGETHER -> AppStringsProvider.current().providerTogether
+        PERPLEXITY -> AppStringsProvider.current().providerPerplexity
+        FIREWORKS -> AppStringsProvider.current().providerFireworks
+        DEEPINFRA -> AppStringsProvider.current().providerDeepInfra
+        NOVITA -> AppStringsProvider.current().providerNovita
+        DEEPSEEK -> AppStringsProvider.current().providerDeepSeek
+        QWEN -> AppStringsProvider.current().providerQwen
+        GLM -> AppStringsProvider.current().providerGLM
+        VOLCANO -> AppStringsProvider.current().providerVolcano
+        MOONSHOT -> AppStringsProvider.current().providerMoonshot
+        MINIMAX -> AppStringsProvider.current().providerMiniMax
+        SILICONFLOW -> AppStringsProvider.current().providerSiliconFlow
+        BAICHUAN -> AppStringsProvider.current().providerBaichuan
+        YI -> AppStringsProvider.current().providerYi
+        STEPFUN -> AppStringsProvider.current().providerStepfun
+        HUNYUAN -> AppStringsProvider.current().providerHunyuan
+        SPARK -> AppStringsProvider.current().providerSpark
+        OLLAMA -> AppStringsProvider.current().providerOllama
+        LM_STUDIO -> AppStringsProvider.current().providerLmStudio
+        VLLM -> AppStringsProvider.current().providerVllm
+        CUSTOM -> AppStringsProvider.current().providerCustom
     }
     
     val description: String get() = when (this) {
-        GOOGLE -> Strings.providerGoogleDesc
-        OPENROUTER -> Strings.providerOpenRouterDesc
-        OPENAI -> Strings.providerOpenAIDesc
-        ANTHROPIC -> Strings.providerAnthropicDesc
-        GROK -> Strings.providerGrokDesc
-        MISTRAL -> Strings.providerMistralDesc
-        COHERE -> Strings.providerCohereDesc
-        AI21 -> Strings.providerAI21Desc
-        GROQ -> Strings.providerGroqDesc
-        CEREBRAS -> Strings.providerCerebrasDesc
-        SAMBANOVA -> Strings.providerSambanovaDesc
-        TOGETHER -> Strings.providerTogetherDesc
-        PERPLEXITY -> Strings.providerPerplexityDesc
-        FIREWORKS -> Strings.providerFireworksDesc
-        DEEPINFRA -> Strings.providerDeepInfraDesc
-        NOVITA -> Strings.providerNovitaDesc
-        DEEPSEEK -> Strings.providerDeepSeekDesc
-        QWEN -> Strings.providerQwenDesc
-        GLM -> Strings.providerGLMDesc
-        VOLCANO -> Strings.providerVolcanoDesc
-        MOONSHOT -> Strings.providerMoonshotDesc
-        MINIMAX -> Strings.providerMiniMaxDesc
-        SILICONFLOW -> Strings.providerSiliconFlowDesc
-        BAICHUAN -> Strings.providerBaichuanDesc
-        YI -> Strings.providerYiDesc
-        STEPFUN -> Strings.providerStepfunDesc
-        HUNYUAN -> Strings.providerHunyuanDesc
-        SPARK -> Strings.providerSparkDesc
-        OLLAMA -> Strings.providerOllamaDesc
-        LM_STUDIO -> Strings.providerLmStudioDesc
-        VLLM -> Strings.providerVllmDesc
-        CUSTOM -> Strings.providerCustomDesc
+        GOOGLE -> AppStringsProvider.current().providerGoogleDesc
+        OPENROUTER -> AppStringsProvider.current().providerOpenRouterDesc
+        OPENAI -> AppStringsProvider.current().providerOpenAIDesc
+        ANTHROPIC -> AppStringsProvider.current().providerAnthropicDesc
+        GROK -> AppStringsProvider.current().providerGrokDesc
+        MISTRAL -> AppStringsProvider.current().providerMistralDesc
+        COHERE -> AppStringsProvider.current().providerCohereDesc
+        AI21 -> AppStringsProvider.current().providerAI21Desc
+        GROQ -> AppStringsProvider.current().providerGroqDesc
+        CEREBRAS -> AppStringsProvider.current().providerCerebrasDesc
+        SAMBANOVA -> AppStringsProvider.current().providerSambanovaDesc
+        TOGETHER -> AppStringsProvider.current().providerTogetherDesc
+        PERPLEXITY -> AppStringsProvider.current().providerPerplexityDesc
+        FIREWORKS -> AppStringsProvider.current().providerFireworksDesc
+        DEEPINFRA -> AppStringsProvider.current().providerDeepInfraDesc
+        NOVITA -> AppStringsProvider.current().providerNovitaDesc
+        DEEPSEEK -> AppStringsProvider.current().providerDeepSeekDesc
+        QWEN -> AppStringsProvider.current().providerQwenDesc
+        GLM -> AppStringsProvider.current().providerGLMDesc
+        VOLCANO -> AppStringsProvider.current().providerVolcanoDesc
+        MOONSHOT -> AppStringsProvider.current().providerMoonshotDesc
+        MINIMAX -> AppStringsProvider.current().providerMiniMaxDesc
+        SILICONFLOW -> AppStringsProvider.current().providerSiliconFlowDesc
+        BAICHUAN -> AppStringsProvider.current().providerBaichuanDesc
+        YI -> AppStringsProvider.current().providerYiDesc
+        STEPFUN -> AppStringsProvider.current().providerStepfunDesc
+        HUNYUAN -> AppStringsProvider.current().providerHunyuanDesc
+        SPARK -> AppStringsProvider.current().providerSparkDesc
+        OLLAMA -> AppStringsProvider.current().providerOllamaDesc
+        LM_STUDIO -> AppStringsProvider.current().providerLmStudioDesc
+        VLLM -> AppStringsProvider.current().providerVllmDesc
+        CUSTOM -> AppStringsProvider.current().providerCustomDesc
     }
     
     val pricing: String get() = when (this) {
-        GOOGLE -> Strings.providerGooglePricing
-        OPENROUTER -> Strings.providerOpenRouterPricing
-        OPENAI -> Strings.providerOpenAIPricing
-        ANTHROPIC -> Strings.providerAnthropicPricing
-        GROK -> Strings.providerGrokPricing
-        MISTRAL -> Strings.providerMistralPricing
-        COHERE -> Strings.providerCoherePricing
-        AI21 -> Strings.providerAI21Pricing
-        GROQ -> Strings.providerGroqPricing
-        CEREBRAS -> Strings.providerCerebrasPricing
-        SAMBANOVA -> Strings.providerSambanovaPricing
-        TOGETHER -> Strings.providerTogetherPricing
-        PERPLEXITY -> Strings.providerPerplexityPricing
-        FIREWORKS -> Strings.providerFireworksPricing
-        DEEPINFRA -> Strings.providerDeepInfraPricing
-        NOVITA -> Strings.providerNovitaPricing
-        DEEPSEEK -> Strings.providerDeepSeekPricing
-        QWEN -> Strings.providerQwenPricing
-        GLM -> Strings.providerGLMPricing
-        VOLCANO -> Strings.providerVolcanoPricing
-        MOONSHOT -> Strings.providerMoonshotPricing
-        MINIMAX -> Strings.providerMiniMaxPricing
-        SILICONFLOW -> Strings.providerSiliconFlowPricing
-        BAICHUAN -> Strings.providerBaichuanPricing
-        YI -> Strings.providerYiPricing
-        STEPFUN -> Strings.providerStepfunPricing
-        HUNYUAN -> Strings.providerHunyuanPricing
-        SPARK -> Strings.providerSparkPricing
-        OLLAMA -> Strings.providerOllamaPricing
-        LM_STUDIO -> Strings.providerLmStudioPricing
-        VLLM -> Strings.providerVllmPricing
-        CUSTOM -> Strings.providerCustomPricing
+        GOOGLE -> AppStringsProvider.current().providerGooglePricing
+        OPENROUTER -> AppStringsProvider.current().providerOpenRouterPricing
+        OPENAI -> AppStringsProvider.current().providerOpenAIPricing
+        ANTHROPIC -> AppStringsProvider.current().providerAnthropicPricing
+        GROK -> AppStringsProvider.current().providerGrokPricing
+        MISTRAL -> AppStringsProvider.current().providerMistralPricing
+        COHERE -> AppStringsProvider.current().providerCoherePricing
+        AI21 -> AppStringsProvider.current().providerAI21Pricing
+        GROQ -> AppStringsProvider.current().providerGroqPricing
+        CEREBRAS -> AppStringsProvider.current().providerCerebrasPricing
+        SAMBANOVA -> AppStringsProvider.current().providerSambanovaPricing
+        TOGETHER -> AppStringsProvider.current().providerTogetherPricing
+        PERPLEXITY -> AppStringsProvider.current().providerPerplexityPricing
+        FIREWORKS -> AppStringsProvider.current().providerFireworksPricing
+        DEEPINFRA -> AppStringsProvider.current().providerDeepInfraPricing
+        NOVITA -> AppStringsProvider.current().providerNovitaPricing
+        DEEPSEEK -> AppStringsProvider.current().providerDeepSeekPricing
+        QWEN -> AppStringsProvider.current().providerQwenPricing
+        GLM -> AppStringsProvider.current().providerGLMPricing
+        VOLCANO -> AppStringsProvider.current().providerVolcanoPricing
+        MOONSHOT -> AppStringsProvider.current().providerMoonshotPricing
+        MINIMAX -> AppStringsProvider.current().providerMiniMaxPricing
+        SILICONFLOW -> AppStringsProvider.current().providerSiliconFlowPricing
+        BAICHUAN -> AppStringsProvider.current().providerBaichuanPricing
+        YI -> AppStringsProvider.current().providerYiPricing
+        STEPFUN -> AppStringsProvider.current().providerStepfunPricing
+        HUNYUAN -> AppStringsProvider.current().providerHunyuanPricing
+        SPARK -> AppStringsProvider.current().providerSparkPricing
+        OLLAMA -> AppStringsProvider.current().providerOllamaPricing
+        LM_STUDIO -> AppStringsProvider.current().providerLmStudioPricing
+        VLLM -> AppStringsProvider.current().providerVllmPricing
+        CUSTOM -> AppStringsProvider.current().providerCustomPricing
     }
     
     /**
@@ -378,23 +378,23 @@ enum class AiFeature(
     GENERAL("Chat", listOf(ModelCapability.TEXT));
     
     val displayName: String get() = when (this) {
-        AI_CODING -> Strings.featureAiCoding
-        AI_CODING_IMAGE -> Strings.featureAiCodingImage
-        ICON_GENERATION -> Strings.featureIconGen
-        MODULE_DEVELOPMENT -> Strings.featureModuleDev
-        LRC_GENERATION -> Strings.featureLrcGen
-        TRANSLATION -> Strings.featureTranslate
-        GENERAL -> Strings.featureGeneral
+        AI_CODING -> AppStringsProvider.current().featureAiCoding
+        AI_CODING_IMAGE -> AppStringsProvider.current().featureAiCodingImage
+        ICON_GENERATION -> AppStringsProvider.current().featureIconGen
+        MODULE_DEVELOPMENT -> AppStringsProvider.current().featureModuleDev
+        LRC_GENERATION -> AppStringsProvider.current().featureLrcGen
+        TRANSLATION -> AppStringsProvider.current().featureTranslate
+        GENERAL -> AppStringsProvider.current().featureGeneral
     }
     
     val description: String get() = when (this) {
-        AI_CODING -> Strings.featureAiCodingDesc
-        AI_CODING_IMAGE -> Strings.featureAiCodingImageDesc
-        ICON_GENERATION -> Strings.featureIconGenDesc
-        MODULE_DEVELOPMENT -> Strings.featureModuleDevDesc
-        LRC_GENERATION -> Strings.featureLrcGenDesc
-        TRANSLATION -> Strings.featureTranslateDesc
-        GENERAL -> Strings.featureGeneralDesc
+        AI_CODING -> AppStringsProvider.current().featureAiCodingDesc
+        AI_CODING_IMAGE -> AppStringsProvider.current().featureAiCodingImageDesc
+        ICON_GENERATION -> AppStringsProvider.current().featureIconGenDesc
+        MODULE_DEVELOPMENT -> AppStringsProvider.current().featureModuleDevDesc
+        LRC_GENERATION -> AppStringsProvider.current().featureLrcGenDesc
+        TRANSLATION -> AppStringsProvider.current().featureTranslateDesc
+        GENERAL -> AppStringsProvider.current().featureGeneralDesc
     }
 }
 
@@ -405,25 +405,25 @@ enum class ModelCapability {
     TEXT, AUDIO, IMAGE, IMAGE_GENERATION, VIDEO, CODE, FUNCTION_CALL, LONG_CONTEXT;
     
     val displayName: String get() = when (this) {
-        TEXT -> Strings.capabilityText
-        AUDIO -> Strings.capabilityAudio
-        IMAGE -> Strings.capabilityImage
-        IMAGE_GENERATION -> Strings.capabilityImageGen
-        VIDEO -> Strings.capabilityVideo
-        CODE -> Strings.capabilityCode
-        FUNCTION_CALL -> Strings.capabilityFunctionCall
-        LONG_CONTEXT -> Strings.capabilityLongContext
+        TEXT -> AppStringsProvider.current().capabilityText
+        AUDIO -> AppStringsProvider.current().capabilityAudio
+        IMAGE -> AppStringsProvider.current().capabilityImage
+        IMAGE_GENERATION -> AppStringsProvider.current().capabilityImageGen
+        VIDEO -> AppStringsProvider.current().capabilityVideo
+        CODE -> AppStringsProvider.current().capabilityCode
+        FUNCTION_CALL -> AppStringsProvider.current().capabilityFunctionCall
+        LONG_CONTEXT -> AppStringsProvider.current().capabilityLongContext
     }
     
     val description: String get() = when (this) {
-        TEXT -> Strings.capabilityTextDesc
-        AUDIO -> Strings.capabilityAudioDesc
-        IMAGE -> Strings.capabilityImageDesc
-        IMAGE_GENERATION -> Strings.capabilityImageGenDesc
-        VIDEO -> Strings.capabilityVideoDesc
-        CODE -> Strings.capabilityCodeDesc
-        FUNCTION_CALL -> Strings.capabilityFunctionCallDesc
-        LONG_CONTEXT -> Strings.capabilityLongContextDesc
+        TEXT -> AppStringsProvider.current().capabilityTextDesc
+        AUDIO -> AppStringsProvider.current().capabilityAudioDesc
+        IMAGE -> AppStringsProvider.current().capabilityImageDesc
+        IMAGE_GENERATION -> AppStringsProvider.current().capabilityImageGenDesc
+        VIDEO -> AppStringsProvider.current().capabilityVideoDesc
+        CODE -> AppStringsProvider.current().capabilityCodeDesc
+        FUNCTION_CALL -> AppStringsProvider.current().capabilityFunctionCallDesc
+        LONG_CONTEXT -> AppStringsProvider.current().capabilityLongContextDesc
     }
 }
 
@@ -432,14 +432,14 @@ enum class ModelCapability {
  */
 fun ModelCapability.getLocalizedDisplayName(): String {
     return when (this) {
-        ModelCapability.TEXT -> com.webtoapp.core.i18n.Strings.textGeneration
-        ModelCapability.AUDIO -> com.webtoapp.core.i18n.Strings.audioUnderstanding
-        ModelCapability.IMAGE -> com.webtoapp.core.i18n.Strings.imageUnderstanding
-        ModelCapability.IMAGE_GENERATION -> com.webtoapp.core.i18n.Strings.imageGeneration
-        ModelCapability.VIDEO -> com.webtoapp.core.i18n.Strings.imageUnderstanding // Reuse
-        ModelCapability.CODE -> com.webtoapp.core.i18n.Strings.codeGeneration
-        ModelCapability.FUNCTION_CALL -> com.webtoapp.core.i18n.Strings.functionCall
-        ModelCapability.LONG_CONTEXT -> com.webtoapp.core.i18n.Strings.longContext
+        ModelCapability.TEXT -> com.webtoapp.core.i18n.AppStringsProvider.current().textGeneration
+        ModelCapability.AUDIO -> com.webtoapp.core.i18n.AppStringsProvider.current().audioUnderstanding
+        ModelCapability.IMAGE -> com.webtoapp.core.i18n.AppStringsProvider.current().imageUnderstanding
+        ModelCapability.IMAGE_GENERATION -> com.webtoapp.core.i18n.AppStringsProvider.current().imageGeneration
+        ModelCapability.VIDEO -> com.webtoapp.core.i18n.AppStringsProvider.current().imageUnderstanding // Reuse
+        ModelCapability.CODE -> com.webtoapp.core.i18n.AppStringsProvider.current().codeGeneration
+        ModelCapability.FUNCTION_CALL -> com.webtoapp.core.i18n.AppStringsProvider.current().functionCall
+        ModelCapability.LONG_CONTEXT -> com.webtoapp.core.i18n.AppStringsProvider.current().longContext
     }
 }
 
@@ -448,14 +448,14 @@ fun ModelCapability.getLocalizedDisplayName(): String {
  */
 fun ModelCapability.getLocalizedDescription(): String {
     return when (this) {
-        ModelCapability.TEXT -> com.webtoapp.core.i18n.Strings.basicTextDialogue
-        ModelCapability.AUDIO -> com.webtoapp.core.i18n.Strings.understandAndTranscribeAudio
-        ModelCapability.IMAGE -> com.webtoapp.core.i18n.Strings.understandAndAnalyzeImages
-        ModelCapability.IMAGE_GENERATION -> com.webtoapp.core.i18n.Strings.generateImages
-        ModelCapability.VIDEO -> com.webtoapp.core.i18n.Strings.understandAndAnalyzeImages // Reuse
-        ModelCapability.CODE -> com.webtoapp.core.i18n.Strings.generateAndUnderstandCode
-        ModelCapability.FUNCTION_CALL -> com.webtoapp.core.i18n.Strings.supportToolCall
-        ModelCapability.LONG_CONTEXT -> com.webtoapp.core.i18n.Strings.supportLongTextInput
+        ModelCapability.TEXT -> com.webtoapp.core.i18n.AppStringsProvider.current().basicTextDialogue
+        ModelCapability.AUDIO -> com.webtoapp.core.i18n.AppStringsProvider.current().understandAndTranscribeAudio
+        ModelCapability.IMAGE -> com.webtoapp.core.i18n.AppStringsProvider.current().understandAndAnalyzeImages
+        ModelCapability.IMAGE_GENERATION -> com.webtoapp.core.i18n.AppStringsProvider.current().generateImages
+        ModelCapability.VIDEO -> com.webtoapp.core.i18n.AppStringsProvider.current().understandAndAnalyzeImages // Reuse
+        ModelCapability.CODE -> com.webtoapp.core.i18n.AppStringsProvider.current().generateAndUnderstandCode
+        ModelCapability.FUNCTION_CALL -> com.webtoapp.core.i18n.AppStringsProvider.current().supportToolCall
+        ModelCapability.LONG_CONTEXT -> com.webtoapp.core.i18n.AppStringsProvider.current().supportLongTextInput
     }
 }
 
@@ -641,7 +641,7 @@ object PresetLrcThemes {
     val themes = listOf(
         LrcTheme(
             id = "default",
-            name = Strings.lrcThemeDefault,
+            name = AppStringsProvider.current().lrcThemeDefault,
             textColor = "#FFFFFF",
             highlightColor = "#FFD700",
             backgroundColor = "#80000000",
@@ -649,7 +649,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "karaoke",
-            name = Strings.lrcThemeKaraoke,
+            name = AppStringsProvider.current().lrcThemeKaraoke,
             textColor = "#FFFFFF",
             highlightColor = "#FF4081",
             backgroundColor = "#00000000",
@@ -659,7 +659,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "neon",
-            name = Strings.lrcThemeNeon,
+            name = AppStringsProvider.current().lrcThemeNeon,
             textColor = "#00FFFF",
             highlightColor = "#FF00FF",
             backgroundColor = "#40000000",
@@ -668,7 +668,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "minimal",
-            name = Strings.lrcThemeMinimal,
+            name = AppStringsProvider.current().lrcThemeMinimal,
             fontSize = 16f,
             textColor = "#CCCCCC",
             highlightColor = "#FFFFFF",
@@ -677,7 +677,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "classic",
-            name = Strings.lrcThemeClassic,
+            name = AppStringsProvider.current().lrcThemeClassic,
             fontSize = 20f,
             textColor = "#FFE4B5",
             highlightColor = "#FFD700",
@@ -686,7 +686,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "dark",
-            name = Strings.lrcThemeDark,
+            name = AppStringsProvider.current().lrcThemeDark,
             textColor = "#AAAAAA",
             highlightColor = "#4FC3F7",
             backgroundColor = "#E0000000",
@@ -694,7 +694,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "romantic",
-            name = Strings.lrcThemeRomantic,
+            name = AppStringsProvider.current().lrcThemeRomantic,
             textColor = "#FFB6C1",
             highlightColor = "#FF69B4",
             backgroundColor = "#40000000",
@@ -702,7 +702,7 @@ object PresetLrcThemes {
         ),
         LrcTheme(
             id = "energetic",
-            name = Strings.lrcThemeEnergetic,
+            name = AppStringsProvider.current().lrcThemeEnergetic,
             fontSize = 22f,
             textColor = "#FFEB3B",
             highlightColor = "#FF5722",
@@ -726,13 +726,13 @@ fun AiProvider.getLocalizedDisplayName(): String = displayName
  */
 fun AiFeature.getLocalizedDisplayName(): String {
     return when (this) {
-        AiFeature.AI_CODING -> "HTML ${com.webtoapp.core.i18n.Strings.coding}"
-        AiFeature.AI_CODING_IMAGE -> "HTML ${com.webtoapp.core.i18n.Strings.coding} (${com.webtoapp.core.i18n.Strings.image})"
-        AiFeature.ICON_GENERATION -> com.webtoapp.core.i18n.Strings.featureIconGeneration
-        AiFeature.MODULE_DEVELOPMENT -> com.webtoapp.core.i18n.Strings.featureModuleDevelopment
-        AiFeature.LRC_GENERATION -> com.webtoapp.core.i18n.Strings.featureLrcGeneration
-        AiFeature.TRANSLATION -> com.webtoapp.core.i18n.Strings.featureTranslation
-        AiFeature.GENERAL -> com.webtoapp.core.i18n.Strings.featureGeneralChat
+        AiFeature.AI_CODING -> "HTML ${com.webtoapp.core.i18n.AppStringsProvider.current().coding}"
+        AiFeature.AI_CODING_IMAGE -> "HTML ${com.webtoapp.core.i18n.AppStringsProvider.current().coding} (${com.webtoapp.core.i18n.AppStringsProvider.current().image})"
+        AiFeature.ICON_GENERATION -> com.webtoapp.core.i18n.AppStringsProvider.current().featureIconGeneration
+        AiFeature.MODULE_DEVELOPMENT -> com.webtoapp.core.i18n.AppStringsProvider.current().featureModuleDevelopment
+        AiFeature.LRC_GENERATION -> com.webtoapp.core.i18n.AppStringsProvider.current().featureLrcGeneration
+        AiFeature.TRANSLATION -> com.webtoapp.core.i18n.AppStringsProvider.current().featureTranslation
+        AiFeature.GENERAL -> com.webtoapp.core.i18n.AppStringsProvider.current().featureGeneralChat
     }
 }
 
@@ -741,13 +741,13 @@ fun AiFeature.getLocalizedDisplayName(): String {
  */
 fun AiFeature.getLocalizedDescription(): String {
     return when (this) {
-        AiFeature.AI_CODING -> Strings.aiCodingDesc
-        AiFeature.AI_CODING_IMAGE -> Strings.aiCodingImageDesc
-        AiFeature.ICON_GENERATION -> Strings.iconGenerationDesc
-        AiFeature.MODULE_DEVELOPMENT -> Strings.moduleDevelopmentDesc
-        AiFeature.LRC_GENERATION -> Strings.lrcGenerationDesc
-        AiFeature.TRANSLATION -> Strings.translationDesc
-        AiFeature.GENERAL -> Strings.generalChatDesc
+        AiFeature.AI_CODING -> AppStringsProvider.current().aiCodingDesc
+        AiFeature.AI_CODING_IMAGE -> AppStringsProvider.current().aiCodingImageDesc
+        AiFeature.ICON_GENERATION -> AppStringsProvider.current().iconGenerationDesc
+        AiFeature.MODULE_DEVELOPMENT -> AppStringsProvider.current().moduleDevelopmentDesc
+        AiFeature.LRC_GENERATION -> AppStringsProvider.current().lrcGenerationDesc
+        AiFeature.TRANSLATION -> AppStringsProvider.current().translationDesc
+        AiFeature.GENERAL -> AppStringsProvider.current().generalChatDesc
     }
 }
 

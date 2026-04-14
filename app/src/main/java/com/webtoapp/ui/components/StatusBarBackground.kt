@@ -1,7 +1,7 @@
 package com.webtoapp.ui.components
 
 import android.graphics.BitmapFactory
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -79,7 +79,7 @@ fun StatusBarBackground(
                 // Image
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = Strings.statusBarBackground,
+                    contentDescription = AppStringsProvider.current().statusBarBackground,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 1f - alpha)),
@@ -177,7 +177,7 @@ fun StatusBarOverlay(
                 // Image
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = Strings.statusBarBackground,
+                    contentDescription = AppStringsProvider.current().statusBarBackground,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     alpha = alpha

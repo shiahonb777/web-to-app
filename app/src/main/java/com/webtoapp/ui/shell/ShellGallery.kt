@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -192,7 +192,7 @@ fun ShellGalleryPlayer(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = Strings.cdBack,
+                            contentDescription = AppStringsProvider.current().cdBack,
                             tint = Color.White
                         )
                     }
@@ -249,7 +249,7 @@ fun ShellGalleryPlayer(
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) Strings.cdPause else Strings.cdPlay,
+                        contentDescription = if (isPlaying) AppStringsProvider.current().cdPause else AppStringsProvider.current().cdPlay,
                         modifier = Modifier.size(36.dp),
                         tint = Color.White
                     )
@@ -279,7 +279,7 @@ fun ShellGalleryPlayer(
             ) {
                 Icon(
                     Icons.Default.ChevronLeft,
-                    contentDescription = Strings.cdPrevious,
+                    contentDescription = AppStringsProvider.current().cdPrevious,
                     tint = Color.White
                 )
             }
@@ -306,7 +306,7 @@ fun ShellGalleryPlayer(
             ) {
                 Icon(
                     Icons.Default.ChevronRight,
-                    contentDescription = Strings.cdNext,
+                    contentDescription = AppStringsProvider.current().cdNext,
                     tint = Color.White
                 )
             }
@@ -678,7 +678,7 @@ fun ShellGalleryVideoPlayer(
                         }) {
                             Icon(
                                 Icons.Default.Replay10,
-                                contentDescription = Strings.cdSeekBack,
+                                contentDescription = AppStringsProvider.current().cdSeekBack,
                                 tint = Color.White
                             )
                         }
@@ -690,7 +690,7 @@ fun ShellGalleryVideoPlayer(
                         ) {
                             Icon(
                                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) Strings.cdPause else Strings.cdPlay,
+                                contentDescription = if (isPlaying) AppStringsProvider.current().cdPause else AppStringsProvider.current().cdPlay,
                                 modifier = Modifier.size(36.dp),
                                 tint = Color.White
                             )
@@ -704,7 +704,7 @@ fun ShellGalleryVideoPlayer(
                         }) {
                             Icon(
                                 Icons.Default.Forward10,
-                                contentDescription = Strings.cdSeekForward,
+                                contentDescription = AppStringsProvider.current().cdSeekForward,
                                 tint = Color.White
                             )
                         }

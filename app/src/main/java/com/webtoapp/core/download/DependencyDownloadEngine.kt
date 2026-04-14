@@ -1,7 +1,7 @@
 package com.webtoapp.core.download
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -218,13 +218,13 @@ object DependencyDownloadEngine {
             
             if (!response.isSuccessful && response.code != 206) {
                 AppLogger.e(TAG, "下载失败: HTTP ${response.code} - $url")
-                _state.value = State.Error(Strings.downloadFailedHttp.replace("%d", response.code.toString()))
+                _state.value = State.Error(AppStringsProvider.current().downloadFailedHttp.replace("%d", response.code.toString()))
                 response.close()
                 return@withContext false
             }
             
             val body = response.body ?: run {
-                _state.value = State.Error(Strings.downloadReturnedEmpty)
+                _state.value = State.Error(AppStringsProvider.current().downloadReturnedEmpty)
                 response.close()
                 return@withContext false
             }
@@ -298,7 +298,7 @@ object DependencyDownloadEngine {
             
         } catch (e: Exception) {
             AppLogger.e(TAG, "下载 $displayName 失败", e)
-            _state.value = State.Error(Strings.downloadNameFailed.replaceFirst("%s", displayName).replaceFirst("%s", e.message ?: ""))
+            _state.value = State.Error(AppStringsProvider.current().downloadNameFailed.replaceFirst("%s", displayName).replaceFirst("%s", e.message ?: ""))
             false
         }
     }
@@ -315,7 +315,7 @@ object DependencyDownloadEngine {
     
     fun formatSize(bytes: Long): String {
         return when {
-            bytes < 0 -> Strings.sizeUnknown
+            bytes < 0 -> AppStringsProvider.current().sizeUnknown
             bytes < 1024 -> "$bytes B"
             bytes < 1024 * 1024 -> "${bytes / 1024} KB"
             bytes < 1024L * 1024 * 1024 -> String.format(java.util.Locale.getDefault(), "%.1f MB", bytes / (1024.0 * 1024.0))

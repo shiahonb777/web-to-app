@@ -13,7 +13,7 @@ import android.os.PowerManager
 import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Note.
@@ -110,8 +110,8 @@ class BackgroundRunService : Service() {
         
         // Start
         val notification = createNotification(
-            title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${Strings.appRunningInBackground}",
-            content = notificationContent ?: Strings.tapToReturnToApp
+            title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${AppStringsProvider.current().appRunningInBackground}",
+            content = notificationContent ?: AppStringsProvider.current().tapToReturnToApp
         )
         startForeground(NOTIFICATION_ID, notification)
         isRunning = true

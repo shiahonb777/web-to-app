@@ -153,26 +153,26 @@ enum class BgmTag {
     OTHER;
     
     val displayName: String get() = when (this) {
-        PURE_MUSIC -> com.webtoapp.core.i18n.Strings.bgmTagPureMusic
-        POP -> com.webtoapp.core.i18n.Strings.bgmTagPop
-        ROCK -> com.webtoapp.core.i18n.Strings.bgmTagRock
-        CLASSICAL -> com.webtoapp.core.i18n.Strings.bgmTagClassical
-        JAZZ -> com.webtoapp.core.i18n.Strings.bgmTagJazz
-        ELECTRONIC -> com.webtoapp.core.i18n.Strings.bgmTagElectronic
-        FOLK -> com.webtoapp.core.i18n.Strings.bgmTagFolk
-        CHINESE_STYLE -> com.webtoapp.core.i18n.Strings.bgmTagChineseStyle
-        ANIME -> com.webtoapp.core.i18n.Strings.bgmTagAnime
-        GAME -> com.webtoapp.core.i18n.Strings.bgmTagGame
-        MOVIE -> com.webtoapp.core.i18n.Strings.bgmTagMovie
-        HEALING -> com.webtoapp.core.i18n.Strings.bgmTagHealing
-        EXCITING -> com.webtoapp.core.i18n.Strings.bgmTagExciting
-        SAD -> com.webtoapp.core.i18n.Strings.bgmTagSad
-        ROMANTIC -> com.webtoapp.core.i18n.Strings.bgmTagRomantic
-        RELAXING -> com.webtoapp.core.i18n.Strings.bgmTagRelaxing
-        WORKOUT -> com.webtoapp.core.i18n.Strings.bgmTagWorkout
-        SLEEP -> com.webtoapp.core.i18n.Strings.bgmTagSleep
-        STUDY -> com.webtoapp.core.i18n.Strings.bgmTagStudy
-        OTHER -> com.webtoapp.core.i18n.Strings.bgmTagOther
+        PURE_MUSIC -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagPureMusic
+        POP -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagPop
+        ROCK -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagRock
+        CLASSICAL -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagClassical
+        JAZZ -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagJazz
+        ELECTRONIC -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagElectronic
+        FOLK -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagFolk
+        CHINESE_STYLE -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagChineseStyle
+        ANIME -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagAnime
+        GAME -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagGame
+        MOVIE -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagMovie
+        HEALING -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagHealing
+        EXCITING -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagExciting
+        SAD -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagSad
+        ROMANTIC -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagRomantic
+        RELAXING -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagRelaxing
+        WORKOUT -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagWorkout
+        SLEEP -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagSleep
+        STUDY -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagStudy
+        OTHER -> com.webtoapp.core.i18n.AppStringsProvider.current().bgmTagOther
     }
 }
 
@@ -211,13 +211,13 @@ enum class LrcAnimationType {
     NONE, FADE, SLIDE_UP, SLIDE_LEFT, SCALE, TYPEWRITER, KARAOKE;
     
     val displayName: String get() = when (this) {
-        NONE -> com.webtoapp.core.i18n.Strings.lrcAnimNone
-        FADE -> com.webtoapp.core.i18n.Strings.lrcAnimFade
-        SLIDE_UP -> com.webtoapp.core.i18n.Strings.lrcAnimSlideUp
-        SLIDE_LEFT -> com.webtoapp.core.i18n.Strings.lrcAnimSlideLeft
-        SCALE -> com.webtoapp.core.i18n.Strings.lrcAnimScale
-        TYPEWRITER -> com.webtoapp.core.i18n.Strings.lrcAnimTypewriter
-        KARAOKE -> com.webtoapp.core.i18n.Strings.lrcAnimKaraoke
+        NONE -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimNone
+        FADE -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimFade
+        SLIDE_UP -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimSlideUp
+        SLIDE_LEFT -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimSlideLeft
+        SCALE -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimScale
+        TYPEWRITER -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimTypewriter
+        KARAOKE -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcAnimKaraoke
     }
 }
 
@@ -225,9 +225,9 @@ enum class LrcPosition {
     TOP, CENTER, BOTTOM;
     
     val displayName: String get() = when (this) {
-        TOP -> com.webtoapp.core.i18n.Strings.lrcPosTop
-        CENTER -> com.webtoapp.core.i18n.Strings.lrcPosCenter
-        BOTTOM -> com.webtoapp.core.i18n.Strings.lrcPosBottom
+        TOP -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcPosTop
+        CENTER -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcPosCenter
+        BOTTOM -> com.webtoapp.core.i18n.AppStringsProvider.current().lrcPosBottom
     }
 }
 

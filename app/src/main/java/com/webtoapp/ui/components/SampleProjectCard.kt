@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.frontend.FrontendFramework
 import com.webtoapp.core.frontend.SampleProject
 import com.webtoapp.core.frontend.SampleProjectManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.LocalAppTheme
 import kotlin.math.cos
 import kotlin.math.sin
@@ -258,13 +258,13 @@ fun SampleProjectsCard(
                 
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        Strings.sampleProjects,
+                        AppStringsProvider.current().sampleProjects,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        Strings.quickExperienceFrontend,
+                        AppStringsProvider.current().quickExperienceFrontend,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -278,7 +278,7 @@ fun SampleProjectsCard(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        Strings.quickExperience,
+                        AppStringsProvider.current().quickExperience,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -422,7 +422,7 @@ private fun SampleProjectItem(
         ) {
             Icon(
                 Icons.Default.PlayArrow,
-                contentDescription = Strings.run,
+                contentDescription = AppStringsProvider.current().run,
                 tint = frameworkColor,
                 modifier = Modifier.size(20.dp)
             )

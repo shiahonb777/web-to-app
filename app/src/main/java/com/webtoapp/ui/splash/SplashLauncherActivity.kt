@@ -274,13 +274,13 @@ fun SplashLauncherScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = com.webtoapp.core.i18n.Strings.appNeedsActivation,
+                    text = com.webtoapp.core.i18n.AppStringsProvider.current().appNeedsActivation,
                     color = Color.White,
                     style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 PremiumButton(onClick = { showActivationDialog = true }) {
-                    Text(com.webtoapp.core.i18n.Strings.enterActivationCode)
+                    Text(com.webtoapp.core.i18n.AppStringsProvider.current().enterActivationCode)
                 }
             }
         }
@@ -373,12 +373,12 @@ fun ActivationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(customTitle.ifBlank { com.webtoapp.core.i18n.Strings.activateApp }) },
+        title = { Text(customTitle.ifBlank { com.webtoapp.core.i18n.AppStringsProvider.current().activateApp }) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                Text(customSubtitle.ifBlank { com.webtoapp.core.i18n.Strings.enterCodeToContinue })
+                Text(customSubtitle.ifBlank { com.webtoapp.core.i18n.AppStringsProvider.current().enterCodeToContinue })
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = code,
@@ -386,7 +386,7 @@ fun ActivationDialog(
                         code = it
                         error = null
                     },
-                    label = { Text(customInputLabel.ifBlank { com.webtoapp.core.i18n.Strings.activationCode }) },
+                    label = { Text(customInputLabel.ifBlank { com.webtoapp.core.i18n.AppStringsProvider.current().activationCode }) },
                     singleLine = true,
                     isError = error != null,
                     supportingText = error?.let { { Text(it) } }
@@ -397,18 +397,18 @@ fun ActivationDialog(
             PremiumButton(
                 onClick = {
                     if (code.isBlank()) {
-                        error = com.webtoapp.core.i18n.Strings.pleaseEnterActivationCode
+                        error = com.webtoapp.core.i18n.AppStringsProvider.current().pleaseEnterActivationCode
                     } else {
                         onActivate(code)
                     }
                 }
             ) {
-                Text(customButtonText.ifBlank { com.webtoapp.core.i18n.Strings.activate })
+                Text(customButtonText.ifBlank { com.webtoapp.core.i18n.AppStringsProvider.current().activate })
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(com.webtoapp.core.i18n.Strings.btnCancel)
+                Text(com.webtoapp.core.i18n.AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -503,7 +503,7 @@ fun SplashContent(
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = com.webtoapp.core.i18n.Strings.splashScreen,
+                    contentDescription = com.webtoapp.core.i18n.AppStringsProvider.current().splashScreen,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScaleMode
                 )
@@ -611,7 +611,7 @@ fun SplashContent(
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     Text(
-                        text = com.webtoapp.core.i18n.Strings.skip,
+                        text = com.webtoapp.core.i18n.AppStringsProvider.current().skip,
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )

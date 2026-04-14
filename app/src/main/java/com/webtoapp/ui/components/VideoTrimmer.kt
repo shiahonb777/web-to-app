@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
@@ -69,7 +69,7 @@ fun VideoTrimmer(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = Strings.videoFileNotExist,
+                text = AppStringsProvider.current().videoFileNotExist,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -182,7 +182,7 @@ fun VideoTrimmer(
             } else if (thumbnail != null) {
                 Image(
                     bitmap = thumbnail!!.asImageBitmap(),
-                    contentDescription = Strings.videoPreview,
+                    contentDescription = AppStringsProvider.current().videoPreview,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -217,12 +217,12 @@ fun VideoTrimmer(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = Strings.selectedDuration.format(selectedSeconds),
+                text = AppStringsProvider.current().selectedDuration.format(selectedSeconds),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = Strings.totalDuration.format(totalDuration / 1000f),
+                text = AppStringsProvider.current().totalDuration.format(totalDuration / 1000f),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -232,7 +232,7 @@ fun VideoTrimmer(
         if (totalDuration > 0) {
             Column {
                 Text(
-                    text = Strings.trimRangeHint,
+                    text = AppStringsProvider.current().trimRangeHint,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

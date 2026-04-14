@@ -39,7 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.AppUpdateChecker
 
 @Composable
@@ -108,7 +108,7 @@ internal fun AppNavigationEffects() {
             },
             title = {
                 Text(
-                    text = Strings.newVersionFound,
+                    text = AppStringsProvider.current().newVersionFound,
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -183,12 +183,12 @@ internal fun AppNavigationEffects() {
                         )
                         Spacer(modifier = Modifier.size(8.dp))
                     }
-                    Text(Strings.updateNow)
+                    Text(AppStringsProvider.current().updateNow)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAutoUpdateDialog = false }) {
-                    Text(Strings.updateLater)
+                    Text(AppStringsProvider.current().updateLater)
                 }
             }
         )

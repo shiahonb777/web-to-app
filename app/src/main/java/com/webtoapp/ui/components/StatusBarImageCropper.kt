@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -152,14 +152,14 @@ fun StatusBarImageCropper(
                         if (bitmap != null) {
                             originalBitmap = bitmap
                         } else {
-                            errorMessage = Strings.cannotParseImage
+                            errorMessage = AppStringsProvider.current().cannotParseImage
                         }
                     }
                 } ?: run {
-                    errorMessage = Strings.cannotOpenImage
+                    errorMessage = AppStringsProvider.current().cannotOpenImage
                 }
             } catch (e: Exception) {
-                errorMessage = Strings.loadImageFailed.format(e.message)
+                errorMessage = AppStringsProvider.current().loadImageFailed.format(e.message)
             }
         }
         isLoading = false
@@ -197,7 +197,7 @@ fun StatusBarImageCropper(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                Text(Strings.cropStatusBarBg)
+                Text(AppStringsProvider.current().cropStatusBarBg)
             }
         },
         text = {
@@ -222,7 +222,7 @@ fun StatusBarImageCropper(
                             tint = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
-                            text = Strings.dragToSelectArea,
+                            text = AppStringsProvider.current().dragToSelectArea,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -247,7 +247,7 @@ fun StatusBarImageCropper(
                             ) {
                                 CircularProgressIndicator()
                                 Text(
-                                    text = Strings.loadingImage,
+                                    text = AppStringsProvider.current().loadingImage,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -284,7 +284,7 @@ fun StatusBarImageCropper(
                                 // Note
                                 Image(
                                     bitmap = originalBitmap!!.asImageBitmap(),
-                                    contentDescription = Strings.originalImage,
+                                    contentDescription = AppStringsProvider.current().originalImage,
                                     modifier = Modifier.fillMaxWidth(),
                                     contentScale = ContentScale.FillWidth
                                 )
@@ -344,7 +344,7 @@ fun StatusBarImageCropper(
                         ) {
                             Column {
                                 Text(
-                                    text = Strings.cropSize,
+                                    text = AppStringsProvider.current().cropSize,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -355,7 +355,7 @@ fun StatusBarImageCropper(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = Strings.originalSize,
+                                    text = AppStringsProvider.current().originalSize,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -397,7 +397,7 @@ fun StatusBarImageCropper(
                 },
                 enabled = originalBitmap != null && !isCropping
             ) {
-                Text(Strings.confirmCrop)
+                Text(AppStringsProvider.current().confirmCrop)
             }
         },
         dismissButton = {
@@ -405,7 +405,7 @@ fun StatusBarImageCropper(
                 onClick = onDismiss,
                 enabled = !isCropping
             ) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

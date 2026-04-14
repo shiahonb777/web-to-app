@@ -6,7 +6,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.webtoapp.core.forcedrun.ForcedRunManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.shell.ShellRuntimeServices
@@ -181,7 +181,7 @@ object ShellActivityInit {
         return object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (forcedRunManager.handleKeyEvent(KeyEvent.KEYCODE_BACK)) {
-                    Toast.makeText(activity, Strings.cannotExitDuringForcedRun, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, AppStringsProvider.current().cannotExitDuringForcedRun, Toast.LENGTH_SHORT).show()
                     return
                 }
                 when {

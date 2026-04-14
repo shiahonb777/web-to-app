@@ -42,7 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.ScreenAwakeMode
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumSwitch
@@ -67,9 +67,9 @@ fun KeepScreenOnCard(
     )
 
     val modeOptions = listOf(
-        AwakeModeOption(ScreenAwakeMode.OFF, Icons.Outlined.BedtimeOff, Strings.screenAwakeOff, Strings.screenAwakeOffDesc),
-        AwakeModeOption(ScreenAwakeMode.ALWAYS, Icons.Outlined.LightMode, Strings.screenAwakeAlways, Strings.screenAwakeAlwaysDesc),
-        AwakeModeOption(ScreenAwakeMode.TIMED, Icons.Outlined.Timer, Strings.screenAwakeTimed, Strings.screenAwakeTimedDesc)
+        AwakeModeOption(ScreenAwakeMode.OFF, Icons.Outlined.BedtimeOff, AppStringsProvider.current().screenAwakeOff, AppStringsProvider.current().screenAwakeOffDesc),
+        AwakeModeOption(ScreenAwakeMode.ALWAYS, Icons.Outlined.LightMode, AppStringsProvider.current().screenAwakeAlways, AppStringsProvider.current().screenAwakeAlwaysDesc),
+        AwakeModeOption(ScreenAwakeMode.TIMED, Icons.Outlined.Timer, AppStringsProvider.current().screenAwakeTimed, AppStringsProvider.current().screenAwakeTimedDesc)
     )
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -91,7 +91,7 @@ fun KeepScreenOnCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.keepScreenOnLabel,
+                            text = AppStringsProvider.current().keepScreenOnLabel,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -108,7 +108,7 @@ fun KeepScreenOnCard(
             SystemCardExpandContent(visible = isEnabled) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     Text(
-                        text = Strings.screenAwakeModeLabel,
+                        text = AppStringsProvider.current().screenAwakeModeLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = primary,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -186,7 +186,7 @@ fun KeepScreenOnCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = Strings.screenAwakeTimeoutLabel,
+                                    text = AppStringsProvider.current().screenAwakeTimeoutLabel,
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                                 )
                                 Surface(
@@ -194,7 +194,7 @@ fun KeepScreenOnCard(
                                     color = primary.copy(alpha = 0.1f)
                                 ) {
                                     Text(
-                                        text = Strings.screenAwakeTimeoutValue(screenAwakeTimeoutMinutes),
+                                        text = AppStringsProvider.current().screenAwakeTimeoutValue(screenAwakeTimeoutMinutes),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = primary,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -218,7 +218,7 @@ fun KeepScreenOnCard(
                                     FilterChip(
                                         selected = isPresetSelected,
                                         onClick = { onScreenAwakeTimeoutChange(minutes) },
-                                        label = { Text(Strings.screenAwakeTimeoutValue(minutes), style = MaterialTheme.typography.labelSmall) },
+                                        label = { Text(AppStringsProvider.current().screenAwakeTimeoutValue(minutes), style = MaterialTheme.typography.labelSmall) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -241,12 +241,12 @@ fun KeepScreenOnCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = Strings.screenBrightnessLabel,
+                                text = AppStringsProvider.current().screenBrightnessLabel,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                             )
                         }
                         Text(
-                            text = if (screenBrightness < 0) Strings.screenBrightnessAuto else "${screenBrightness}%",
+                            text = if (screenBrightness < 0) AppStringsProvider.current().screenBrightnessAuto else "${screenBrightness}%",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -260,7 +260,7 @@ fun KeepScreenOnCard(
                         FilterChip(
                             selected = isAuto,
                             onClick = { onScreenBrightnessChange(-1) },
-                            label = { Text(Strings.screenBrightnessAuto) },
+                            label = { Text(AppStringsProvider.current().screenBrightnessAuto) },
                             leadingIcon = if (isAuto) {
                                 { Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
                             } else null,
@@ -269,7 +269,7 @@ fun KeepScreenOnCard(
                         FilterChip(
                             selected = !isAuto,
                             onClick = { if (isAuto) onScreenBrightnessChange(80) },
-                            label = { Text(Strings.screenBrightnessManual) },
+                            label = { Text(AppStringsProvider.current().screenBrightnessManual) },
                             leadingIcon = if (!isAuto) {
                                 { Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
                             } else null,
@@ -330,8 +330,8 @@ fun KeepScreenOnCard(
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = when (screenAwakeMode) {
-                                    ScreenAwakeMode.ALWAYS -> Strings.screenAwakeBatteryWarning
-                                    ScreenAwakeMode.TIMED -> Strings.screenAwakeTimedHint
+                                    ScreenAwakeMode.ALWAYS -> AppStringsProvider.current().screenAwakeBatteryWarning
+                                    ScreenAwakeMode.TIMED -> AppStringsProvider.current().screenAwakeTimedHint
                                     else -> ""
                                 },
                                 style = MaterialTheme.typography.bodySmall,

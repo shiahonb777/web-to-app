@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.StatusBarConfigCard
@@ -67,7 +67,7 @@ fun StatusBarStyleCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = Strings.statusBarStyleConfigLabel,
+                        text = AppStringsProvider.current().statusBarStyleConfigLabel,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -95,13 +95,13 @@ fun StatusBarStyleCard(
                         Tab(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            text = { Text(Strings.statusBarLightModeLabel) },
+                            text = { Text(AppStringsProvider.current().statusBarLightModeLabel) },
                             icon = { Icon(Icons.Outlined.LightMode, contentDescription = null, modifier = Modifier.size(18.dp)) }
                         )
                         Tab(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            text = { Text(Strings.statusBarDarkModeLabel) },
+                            text = { Text(AppStringsProvider.current().statusBarDarkModeLabel) },
                             icon = { Icon(Icons.Outlined.DarkMode, contentDescription = null, modifier = Modifier.size(18.dp)) }
                         )
                     }

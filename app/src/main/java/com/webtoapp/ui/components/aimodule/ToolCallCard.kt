@@ -1,6 +1,6 @@
 package com.webtoapp.ui.components.aimodule
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -185,7 +185,7 @@ private fun ToolCallHeader(
         // Expand/collapsebutton
         Icon(
             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-            contentDescription = if (isExpanded) Strings.cdCollapse else Strings.cdExpand,
+            contentDescription = if (isExpanded) AppStringsProvider.current().cdCollapse else AppStringsProvider.current().cdExpand,
             modifier = Modifier.size(20.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )

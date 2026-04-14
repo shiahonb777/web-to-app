@@ -17,7 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppType
 
 @Composable
@@ -40,7 +40,7 @@ fun AppCardMenu(
     ) {
         if (appType == AppType.WEB) {
             DropdownMenuItem(
-                text = { Text(Strings.btnEdit) },
+                text = { Text(AppStringsProvider.current().btnEdit) },
                 onClick = {
                     onDismiss()
                     onEdit()
@@ -49,7 +49,7 @@ fun AppCardMenu(
             )
         } else {
             DropdownMenuItem(
-                text = { Text(Strings.editCoreConfig) },
+                text = { Text(AppStringsProvider.current().editCoreConfig) },
                 onClick = {
                     onDismiss()
                     onEditCore()
@@ -57,7 +57,7 @@ fun AppCardMenu(
                 leadingIcon = { Icon(Icons.Outlined.Tune, null) }
             )
             DropdownMenuItem(
-                text = { Text(Strings.editCommonConfig) },
+                text = { Text(AppStringsProvider.current().editCommonConfig) },
                 onClick = {
                     onDismiss()
                     onEdit()
@@ -67,7 +67,7 @@ fun AppCardMenu(
         }
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text(Strings.btnShortcut) },
+            text = { Text(AppStringsProvider.current().btnShortcut) },
             onClick = {
                 onDismiss()
                 onCreateShortcut()
@@ -75,7 +75,7 @@ fun AppCardMenu(
             leadingIcon = { Icon(Icons.Outlined.AppShortcut, null) }
         )
         DropdownMenuItem(
-            text = { Text(Strings.buildDialogTitle) },
+            text = { Text(AppStringsProvider.current().buildDialogTitle) },
             onClick = {
                 onDismiss()
                 onBuildApk()
@@ -83,7 +83,7 @@ fun AppCardMenu(
             leadingIcon = { Icon(Icons.Outlined.InstallMobile, null) }
         )
         DropdownMenuItem(
-            text = { Text(Strings.shareApk) },
+            text = { Text(AppStringsProvider.current().shareApk) },
             onClick = {
                 onDismiss()
                 onShareApk()
@@ -91,7 +91,7 @@ fun AppCardMenu(
             leadingIcon = { Icon(Icons.Outlined.Share, null) }
         )
         DropdownMenuItem(
-            text = { Text(Strings.btnExport) },
+            text = { Text(AppStringsProvider.current().btnExport) },
             onClick = {
                 onDismiss()
                 onExport()
@@ -99,7 +99,7 @@ fun AppCardMenu(
             leadingIcon = { Icon(Icons.Outlined.FileDownload, null) }
         )
         DropdownMenuItem(
-            text = { Text(Strings.moveToCategory) },
+            text = { Text(AppStringsProvider.current().moveToCategory) },
             onClick = {
                 onDismiss()
                 onMoveToCategory()
@@ -108,7 +108,7 @@ fun AppCardMenu(
         )
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text(Strings.btnDelete) },
+            text = { Text(AppStringsProvider.current().btnDelete) },
             onClick = {
                 onDismiss()
                 onDelete()

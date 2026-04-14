@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.ByteArrayOutputStream
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.verticalScroll
@@ -150,12 +150,12 @@ fun ExtensionModuleCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.extensionModule,
+                            text = AppStringsProvider.current().extensionModule,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (enabled && selectedModuleIds.isNotEmpty()) {
                             Text(
-                                text = Strings.selectedCountFormat.format(selectedModuleIds.size),
+                                text = AppStringsProvider.current().selectedCountFormat.format(selectedModuleIds.size),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -176,7 +176,7 @@ fun ExtensionModuleCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = Strings.addCustomFeatures,
+                        text = AppStringsProvider.current().addCustomFeatures,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -187,7 +187,7 @@ fun ExtensionModuleCard(
                         selectedModuleIds = selectedModuleIds,
                         onApplyPreset = { preset ->
                             onModuleIdsChange(preset.moduleIds.toSet())
-                            Toast.makeText(context, "${Strings.appliedPreset}: ${preset.name}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${AppStringsProvider.current().appliedPreset}: ${preset.name}", Toast.LENGTH_SHORT).show()
                         },
                         onShowAllPresets = { showPresetSelector = true }
                     )
@@ -197,7 +197,7 @@ fun ExtensionModuleCard(
                     // select module
                     if (availableModules.isNotEmpty()) {
                         Text(
-                            text = Strings.quickSelect,
+                            text = AppStringsProvider.current().quickSelect,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -226,7 +226,7 @@ fun ExtensionModuleCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = Strings.selectedModulesCount.format(selectedModules.size),
+                                text = AppStringsProvider.current().selectedModulesCount.format(selectedModules.size),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -238,14 +238,14 @@ fun ExtensionModuleCard(
                                 ) {
                                     Icon(Icons.Outlined.Save, null, Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.saveAsScheme, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().saveAsScheme, style = MaterialTheme.typography.labelSmall)
                                 }
                                 // button
                                 TextButton(
                                     onClick = { onModuleIdsChange(emptySet()) },
                                     contentPadding = PaddingValues(horizontal = 8.dp)
                                 ) {
-                                    Text(Strings.clearAll, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().clearAll, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -283,7 +283,7 @@ fun ExtensionModuleCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.selectModules)
+                            Text(AppStringsProvider.current().selectModules)
                         }
                         
                         // managementbutton
@@ -336,7 +336,7 @@ fun ExtensionModuleCard(
             presetManager = presetManager,
             onSaved = { 
                 showSavePresetDialog = false
-                Toast.makeText(context, Strings.presetSaved, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().presetSaved, Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showSavePresetDialog = false }
         )
@@ -449,7 +449,7 @@ private fun SelectedModuleItem(
                     // label
                     if (module.builtIn) {
                         CompactBadge(
-                            text = Strings.builtIn,
+                            text = AppStringsProvider.current().builtIn,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -490,7 +490,7 @@ private fun SelectedModuleItem(
             ) {
                 Icon(
                     Icons.Outlined.Close,
-                    contentDescription = Strings.removeModule,
+                    contentDescription = AppStringsProvider.current().removeModule,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.error
                 )
@@ -609,13 +609,13 @@ private fun FabIconSelector(
             },
             title = {
                 Text(
-                    Strings.fabIconPreviewTitle,
+                    AppStringsProvider.current().fabIconPreviewTitle,
                     style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
                 Text(
-                    Strings.fabIconPreviewDesc,
+                    AppStringsProvider.current().fabIconPreviewDesc,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -626,7 +626,7 @@ private fun FabIconSelector(
                     pendingBitmap = null
                     pendingBase64 = null
                 }) {
-                    Text(Strings.confirm)
+                    Text(AppStringsProvider.current().confirm)
                 }
             },
             dismissButton = {
@@ -637,14 +637,14 @@ private fun FabIconSelector(
                     pendingBase64 = null
                     galleryLauncher.launch("image/*")
                 }) {
-                    Text(Strings.reselect)
+                    Text(AppStringsProvider.current().reselect)
                 }
             }
         )
     }
     
     Text(
-        text = Strings.extensionFabIconLabel,
+        text = AppStringsProvider.current().extensionFabIconLabel,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -682,7 +682,7 @@ private fun FabIconSelector(
                         if (customBitmap != null) {
                             Image(
                                 bitmap = customBitmap.asImageBitmap(),
-                                contentDescription = Strings.fabIconFromGallery,
+                                contentDescription = AppStringsProvider.current().fabIconFromGallery,
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
@@ -690,14 +690,14 @@ private fun FabIconSelector(
                         } else {
                             Icon(
                                 Icons.Outlined.AddPhotoAlternate,
-                                contentDescription = Strings.fabIconFromGallery,
+                                contentDescription = AppStringsProvider.current().fabIconFromGallery,
                                 modifier = Modifier.size(22.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     Text(
-                        text = if (isCustomSelected) Strings.fabIconChangeImage else Strings.fabIconCustom,
+                        text = if (isCustomSelected) AppStringsProvider.current().fabIconChangeImage else AppStringsProvider.current().fabIconCustom,
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isCustomSelected) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -766,7 +766,7 @@ private fun FabIconSelector(
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = if (isCustomSelected) Strings.fabIconSelected
+                text = if (isCustomSelected) AppStringsProvider.current().fabIconSelected
                        else PRESET_FAB_ICONS.find { it.id == selectedIcon }?.id ?: selectedIcon,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
@@ -829,15 +829,15 @@ fun ExtensionModuleSelectorDialog(
             Column {
                 // Note
                 TopAppBar(
-                    title = { Text(Strings.selectExtensionModules) },
+                    title = { Text(AppStringsProvider.current().selectExtensionModules) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.btnCancel)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().btnCancel)
                         }
                     },
                     actions = {
                         TextButton(onClick = onDismiss) {
-                            Text(Strings.doneWithCount.format(selectedIds.size))
+                            Text(AppStringsProvider.current().doneWithCount.format(selectedIds.size))
                         }
                     }
                 )
@@ -852,12 +852,12 @@ fun ExtensionModuleSelectorDialog(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(Strings.searchModulesHint) },
+                        placeholder = { Text(AppStringsProvider.current().searchModulesHint) },
                         leadingIcon = { Icon(Icons.Default.Search, null) },
                         trailingIcon = {
                             if (searchQuery.isNotBlank()) {
                                 IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Default.Clear, Strings.clear)
+                                    Icon(Icons.Default.Clear, AppStringsProvider.current().clear)
                                 }
                             }
                         },
@@ -875,7 +875,7 @@ fun ExtensionModuleSelectorDialog(
                             PremiumFilterChip(
                                 selected = selectedCategory == null,
                                 onClick = { selectedCategory = null },
-                                label = { Text(Strings.all) },
+                                label = { Text(AppStringsProvider.current().all) },
                                 leadingIcon = if (selectedCategory == null) {
                                     { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                                 } else null
@@ -965,7 +965,7 @@ fun ExtensionModuleSelectorDialog(
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            Strings.noMatchingModules,
+                                            AppStringsProvider.current().noMatchingModules,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -1054,7 +1054,7 @@ private fun ModuleSelectItem(
                 ) {
                     if (module.builtIn) {
                         CompactBadge(
-                            text = Strings.builtIn,
+                            text = AppStringsProvider.current().builtIn,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -1141,10 +1141,10 @@ fun ModuleTestDialog(
             Column {
                 // Note
                 TopAppBar(
-                    title = { Text(Strings.testModule) },
+                    title = { Text(AppStringsProvider.current().testModule) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     }
                 )
@@ -1174,7 +1174,7 @@ fun ModuleTestDialog(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                 Text(
-                                    Strings.willTestModulesFormat.format(selectedModules.size),
+                                    AppStringsProvider.current().willTestModulesFormat.format(selectedModules.size),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1191,7 +1191,7 @@ fun ModuleTestDialog(
                     
                     // select
                     Text(
-                        Strings.selectTestPageTitle,
+                        AppStringsProvider.current().selectTestPageTitle,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -1240,12 +1240,12 @@ fun ModuleTestDialog(
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.startTestBtn)
+                        Text(AppStringsProvider.current().startTestBtn)
                     }
                     
                     // hint
                     Text(
-                        Strings.testPageHintText,
+                        AppStringsProvider.current().testPageHintText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1288,7 +1288,7 @@ fun ModuleDetailDialog(
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     }
                 )
@@ -1314,7 +1314,7 @@ fun ModuleDetailDialog(
                         InfoChip(module.category.getDisplayName())
                         InfoChip("v${module.version.name}")
                         if (module.builtIn) {
-                            InfoChip(Strings.builtInModule)
+                            InfoChip(AppStringsProvider.current().builtInModule)
                         }
                     }
                     
@@ -1341,7 +1341,7 @@ fun ModuleDetailDialog(
                     // Configure
                     if (module.configItems.isNotEmpty()) {
                         Text(
-                            Strings.configurableItems.format(module.configItems.size),
+                            AppStringsProvider.current().configurableItems.format(module.configItems.size),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -1363,7 +1363,7 @@ fun ModuleDetailDialog(
                     // Permission
                     if (module.permissions.isNotEmpty()) {
                         Text(
-                            Strings.requiredPermissions,
+                            AppStringsProvider.current().requiredPermissions,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -1402,7 +1402,7 @@ fun ModuleDetailDialog(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.addThisModule)
+                        Text(AppStringsProvider.current().addThisModule)
                     }
                 }
             }
@@ -1445,7 +1445,7 @@ private fun PresetQuickSelect(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = Strings.quickSchemes,
+                text = AppStringsProvider.current().quickSchemes,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1453,7 +1453,7 @@ private fun PresetQuickSelect(
                 onClick = onShowAllPresets,
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
-                Text(Strings.allSchemesBtn, style = MaterialTheme.typography.labelSmall)
+                Text(AppStringsProvider.current().allSchemesBtn, style = MaterialTheme.typography.labelSmall)
                 Icon(Icons.Default.ChevronRight, null, Modifier.size(16.dp))
             }
         }
@@ -1506,10 +1506,10 @@ fun PresetSelectorDialog(
         ) {
             Column {
                 TopAppBar(
-                    title = { Text(Strings.moduleSchemes) },
+                    title = { Text(AppStringsProvider.current().moduleSchemes) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     }
                 )
@@ -1523,7 +1523,7 @@ fun PresetSelectorDialog(
                     // Built- in
                     item {
                         Text(
-                            Strings.builtInSchemes,
+                            AppStringsProvider.current().builtInSchemes,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -1545,7 +1545,7 @@ fun PresetSelectorDialog(
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                Strings.mySchemes,
+                                AppStringsProvider.current().mySchemes,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -1560,7 +1560,7 @@ fun PresetSelectorDialog(
                                 onApply = { onApplyPreset(preset) },
                                 onDelete = {
                                     presetManager.deletePreset(preset.id)
-                                    Toast.makeText(context, Strings.deleted, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().deleted, Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -1569,7 +1569,7 @@ fun PresetSelectorDialog(
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            Strings.schemeTip,
+                            AppStringsProvider.current().schemeTip,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1644,7 +1644,7 @@ private fun PresetItem(
                             color = MaterialTheme.colorScheme.secondaryContainer
                         ) {
                             Text(
-                                Strings.builtIn,
+                                AppStringsProvider.current().builtIn,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -1665,7 +1665,7 @@ private fun PresetItem(
                 
                 // module
                 Text(
-                    "${Strings.containsModules.format(modules.size)}: ${modules.joinToString { it.name }}",
+                    "${AppStringsProvider.current().containsModules.format(modules.size)}: ${modules.joinToString { it.name }}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1675,14 +1675,14 @@ private fun PresetItem(
             if (isApplied) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = Strings.applied,
+                    contentDescription = AppStringsProvider.current().applied,
                     tint = MaterialTheme.colorScheme.primary
                 )
             } else if (onDelete != null) {
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = Strings.btnDelete,
+                        contentDescription = AppStringsProvider.current().btnDelete,
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -1709,7 +1709,7 @@ fun SavePresetDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.saveAsSchemeTitle) },
+        title = { Text(AppStringsProvider.current().saveAsSchemeTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Iconselect
@@ -1729,8 +1729,8 @@ fun SavePresetDialog(
                     PremiumTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text(Strings.schemeNameLabel) },
-                        placeholder = { Text(Strings.enterSchemeNameHint) },
+                        label = { Text(AppStringsProvider.current().schemeNameLabel) },
+                        placeholder = { Text(AppStringsProvider.current().enterSchemeNameHint) },
                         singleLine = true,
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
@@ -1739,14 +1739,14 @@ fun SavePresetDialog(
                 PremiumTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(Strings.descriptionOptionalLabel) },
-                    placeholder = { Text(Strings.briefDescribeSchemeHint) },
+                    label = { Text(AppStringsProvider.current().descriptionOptionalLabel) },
+                    placeholder = { Text(AppStringsProvider.current().briefDescribeSchemeHint) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Text(
-                    Strings.willSaveModules.format(moduleIds.size),
+                    AppStringsProvider.current().willSaveModules.format(moduleIds.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1754,7 +1754,7 @@ fun SavePresetDialog(
                 // Iconselect
                 if (showIconPicker) {
                     HorizontalDivider()
-                    Text(Strings.selectIconTitle, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().selectIconTitle, style = MaterialTheme.typography.labelMedium)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(PRESET_ICONS) { icon ->
                             Surface(
@@ -1799,12 +1799,12 @@ fun SavePresetDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import com.webtoapp.core.blacktech.BlackTechConfig
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * configcard
@@ -177,12 +177,12 @@ fun BlackTechConfigCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.blackTechFeatures,
+                            AppStringsProvider.current().blackTechFeatures,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!enabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -205,11 +205,11 @@ fun BlackTechConfigCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.enableBlackTech,
+                                AppStringsProvider.current().enableBlackTech,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.blackTechWarning,
+                                AppStringsProvider.current().blackTechWarning,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -231,15 +231,15 @@ fun BlackTechConfigCard(
                             
                             // Volume
                             Text(
-                                Strings.volumeControl,
+                                AppStringsProvider.current().volumeControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceMaxVolume,
-                                description = Strings.forceMaxVolumeDesc,
+                                title = AppStringsProvider.current().forceMaxVolume,
+                                description = AppStringsProvider.current().forceMaxVolumeDesc,
                                 checked = forceMaxVolume,
                                 onCheckedChange = {
                                     forceMaxVolume = it
@@ -249,8 +249,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceMuteMode,
-                                description = Strings.forceMuteModeDesc,
+                                title = AppStringsProvider.current().forceMuteMode,
+                                description = AppStringsProvider.current().forceMuteModeDesc,
                                 checked = forceMuteMode,
                                 onCheckedChange = {
                                     forceMuteMode = it
@@ -260,8 +260,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlockVolumeKeys,
-                                description = Strings.forceBlockVolumeKeysDesc,
+                                title = AppStringsProvider.current().forceBlockVolumeKeys,
+                                description = AppStringsProvider.current().forceBlockVolumeKeysDesc,
                                 checked = forceBlockVolumeKeys,
                                 onCheckedChange = {
                                     forceBlockVolumeKeys = it
@@ -275,15 +275,15 @@ fun BlackTechConfigCard(
                             
                             // with
                             Text(
-                                Strings.vibrationAndFlash,
+                                AppStringsProvider.current().vibrationAndFlash,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceMaxVibration,
-                                description = Strings.forceMaxVibrationDesc,
+                                title = AppStringsProvider.current().forceMaxVibration,
+                                description = AppStringsProvider.current().forceMaxVibrationDesc,
                                 checked = forceMaxVibration,
                                 onCheckedChange = {
                                     forceMaxVibration = it
@@ -293,8 +293,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceFlashlight,
-                                description = Strings.forceFlashlightDesc,
+                                title = AppStringsProvider.current().forceFlashlight,
+                                description = AppStringsProvider.current().forceFlashlightDesc,
                                 checked = forceFlashlight,
                                 onCheckedChange = {
                                     forceFlashlight = it
@@ -427,15 +427,15 @@ fun BlackTechConfigCard(
                             
                             // System
                             Text(
-                                Strings.systemControl,
+                                AppStringsProvider.current().systemControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
                             // Maxperformancemode
                             BlackTechSwitchRow(
-                                title = Strings.forceMaxPerformance,
-                                description = Strings.forceMaxPerformanceDesc,
+                                title = AppStringsProvider.current().forceMaxPerformance,
+                                description = AppStringsProvider.current().forceMaxPerformanceDesc,
                                 checked = forceMaxPerformance,
                                 onCheckedChange = {
                                     forceMaxPerformance = it
@@ -445,8 +445,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlockPowerKey,
-                                description = Strings.forceBlockPowerKeyDesc,
+                                title = AppStringsProvider.current().forceBlockPowerKey,
+                                description = AppStringsProvider.current().forceBlockPowerKeyDesc,
                                 checked = forceBlockPowerKey,
                                 onCheckedChange = {
                                     forceBlockPowerKey = it
@@ -461,15 +461,15 @@ fun BlackTechConfigCard(
                             
                             // Note
                             Text(
-                                Strings.screenControl,
+                                AppStringsProvider.current().screenControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlackScreen,
-                                description = Strings.forceBlackScreenDesc,
+                                title = AppStringsProvider.current().forceBlackScreen,
+                                description = AppStringsProvider.current().forceBlackScreenDesc,
                                 checked = forceBlackScreen,
                                 onCheckedChange = {
                                     forceBlackScreen = it
@@ -480,8 +480,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceScreenRotation,
-                                description = Strings.forceScreenRotationDesc,
+                                title = AppStringsProvider.current().forceScreenRotation,
+                                description = AppStringsProvider.current().forceScreenRotationDesc,
                                 checked = forceScreenRotation,
                                 onCheckedChange = {
                                     forceScreenRotation = it
@@ -491,8 +491,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlockTouch,
-                                description = Strings.forceBlockTouchDesc,
+                                title = AppStringsProvider.current().forceBlockTouch,
+                                description = AppStringsProvider.current().forceBlockTouchDesc,
                                 checked = forceBlockTouch,
                                 onCheckedChange = {
                                     forceBlockTouch = it
@@ -503,8 +503,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceScreenAwake,
-                                description = Strings.forceScreenAwakeDesc,
+                                title = AppStringsProvider.current().forceScreenAwake,
+                                description = AppStringsProvider.current().forceScreenAwakeDesc,
                                 checked = forceScreenAwake,
                                 onCheckedChange = {
                                     forceScreenAwake = it
@@ -518,15 +518,15 @@ fun BlackTechConfigCard(
                             
                             // ===== network( v2. 0) =====
                             Text(
-                                Strings.networkControl,
+                                AppStringsProvider.current().networkControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
                             // WiFi
                             BlackTechSwitchRow(
-                                title = Strings.forceWifiHotspot,
-                                description = Strings.forceWifiHotspotDesc,
+                                title = AppStringsProvider.current().forceWifiHotspot,
+                                description = AppStringsProvider.current().forceWifiHotspotDesc,
                                 checked = forceWifiHotspot,
                                 onCheckedChange = {
                                     forceWifiHotspot = it
@@ -543,7 +543,7 @@ fun BlackTechConfigCard(
                                             hotspotSsid = it
                                             updateConfig()
                                         },
-                                        label = { Text(Strings.hotspotSsid) },
+                                        label = { Text(AppStringsProvider.current().hotspotSsid) },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp)
@@ -555,8 +555,8 @@ fun BlackTechConfigCard(
                                             hotspotPassword = it
                                             updateConfig()
                                         },
-                                        label = { Text(Strings.hotspotPassword) },
-                                        supportingText = { Text(Strings.hotspotPasswordHint) },
+                                        label = { Text(AppStringsProvider.current().hotspotPassword) },
+                                        supportingText = { Text(AppStringsProvider.current().hotspotPasswordHint) },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp)
@@ -566,8 +566,8 @@ fun BlackTechConfigCard(
                             
                             // close WiFi
                             BlackTechSwitchRow(
-                                title = Strings.forceDisableWifi,
-                                description = Strings.forceDisableWifiDesc,
+                                title = AppStringsProvider.current().forceDisableWifi,
+                                description = AppStringsProvider.current().forceDisableWifiDesc,
                                 checked = forceDisableWifi,
                                 onCheckedChange = {
                                     forceDisableWifi = it
@@ -577,8 +577,8 @@ fun BlackTechConfigCard(
                             
                             // close
                             BlackTechSwitchRow(
-                                title = Strings.forceDisableBluetooth,
-                                description = Strings.forceDisableBluetoothDesc,
+                                title = AppStringsProvider.current().forceDisableBluetooth,
+                                description = AppStringsProvider.current().forceDisableBluetoothDesc,
                                 checked = forceDisableBluetooth,
                                 onCheckedChange = {
                                     forceDisableBluetooth = it
@@ -588,8 +588,8 @@ fun BlackTechConfigCard(
                             
                             // close
                             BlackTechSwitchRow(
-                                title = Strings.forceDisableMobileData,
-                                description = Strings.forceDisableMobileDataDesc,
+                                title = AppStringsProvider.current().forceDisableMobileData,
+                                description = AppStringsProvider.current().forceDisableMobileDataDesc,
                                 checked = forceDisableMobileData,
                                 onCheckedChange = {
                                     forceDisableMobileData = it
@@ -604,15 +604,15 @@ fun BlackTechConfigCard(
                             
                             // ===== mode( v2. 0) =====
                             Text(
-                                Strings.specialModes,
+                                AppStringsProvider.current().specialModes,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
                             // 💣 mode
                             BlackTechSwitchRow(
-                                title = Strings.nuclearMode,
-                                description = Strings.nuclearModeDesc,
+                                title = AppStringsProvider.current().nuclearMode,
+                                description = AppStringsProvider.current().nuclearModeDesc,
                                 checked = nuclearMode,
                                 onCheckedChange = {
                                     nuclearMode = it
@@ -635,8 +635,8 @@ fun BlackTechConfigCard(
                             
                             // 🥷 mode
                             BlackTechSwitchRow(
-                                title = Strings.stealthMode,
-                                description = Strings.stealthModeDesc,
+                                title = AppStringsProvider.current().stealthMode,
+                                description = AppStringsProvider.current().stealthModeDesc,
                                 checked = stealthMode,
                                 onCheckedChange = {
                                     stealthMode = it
@@ -658,8 +658,8 @@ fun BlackTechConfigCard(
                             
                             // Note
                             BlackTechSwitchRow(
-                                title = Strings.customAlarm,
-                                description = Strings.customAlarmDesc,
+                                title = AppStringsProvider.current().customAlarm,
+                                description = AppStringsProvider.current().customAlarmDesc,
                                 checked = customAlarmEnabled,
                                 onCheckedChange = {
                                     customAlarmEnabled = it
@@ -677,8 +677,8 @@ fun BlackTechConfigCard(
                                             customAlarmPattern = it
                                             updateConfig()
                                         },
-                                        label = { Text(Strings.customAlarmPattern) },
-                                        supportingText = { Text(Strings.customAlarmPatternHint) },
+                                        label = { Text(AppStringsProvider.current().customAlarmPattern) },
+                                        supportingText = { Text(AppStringsProvider.current().customAlarmPatternHint) },
                                         singleLine = false,
                                         maxLines = 3,
                                         modifier = Modifier.fillMaxWidth(),
@@ -688,8 +688,8 @@ fun BlackTechConfigCard(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
                                     BlackTechSwitchRow(
-                                        title = Strings.customAlarmVibSync,
-                                        description = Strings.customAlarmVibSyncDesc,
+                                        title = AppStringsProvider.current().customAlarmVibSync,
+                                        description = AppStringsProvider.current().customAlarmVibSyncDesc,
                                         checked = customAlarmVibSync,
                                         onCheckedChange = {
                                             customAlarmVibSync = it
@@ -717,7 +717,7 @@ fun BlackTechConfigCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.blackTechFinalWarning,
+                                        AppStringsProvider.current().blackTechFinalWarning,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )

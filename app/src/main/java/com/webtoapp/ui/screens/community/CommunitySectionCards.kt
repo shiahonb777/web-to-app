@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.cloud.CommunityPostItem
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 @Composable
 internal fun SectionHeader(
@@ -102,7 +102,7 @@ internal fun ShowcaseCard(
                         Spacer(Modifier.width(6.dp))
                     }
                     Text(
-                        post.appName ?: Strings.communityTypeShowcase,
+                        post.appName ?: AppStringsProvider.current().communityTypeShowcase,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = Color.White,
@@ -214,9 +214,9 @@ internal fun TutorialCard(
                     )
                     post.difficulty?.let { diff ->
                         val (diffLabel, diffColor) = when (diff) {
-                            "beginner" -> Strings.communityDifficultyBeginner to Color(0xFF4CAF50)
-                            "intermediate" -> Strings.communityDifficultyIntermediate to Color(0xFFFF9800)
-                            "advanced" -> Strings.communityDifficultyAdvanced to Color(0xFFE91E63)
+                            "beginner" -> AppStringsProvider.current().communityDifficultyBeginner to Color(0xFF4CAF50)
+                            "intermediate" -> AppStringsProvider.current().communityDifficultyIntermediate to Color(0xFFFF9800)
+                            "advanced" -> AppStringsProvider.current().communityDifficultyAdvanced to Color(0xFFE91E63)
                             else -> diff to Color(0xFF9E9E9E)
                         }
                         Surface(shape = RoundedCornerShape(4.dp), color = diffColor.copy(alpha = 0.1f)) {
@@ -285,7 +285,7 @@ internal fun QuestionCard(
                     }
                     if (post.isResolved == true) {
                         Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF4CAF50).copy(alpha = 0.1f)) {
-                            Text(Strings.communityResolvedLabel, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                            Text(AppStringsProvider.current().communityResolvedLabel, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
                         }
                     }
                 }

@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -91,11 +91,11 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
     var updateError by remember { mutableStateOf<String?>(null) }
 
     val categories = listOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
+        "tools" to AppStringsProvider.current().catTools, "social" to AppStringsProvider.current().catSocial, "education" to "教育",
         "entertainment" to "娱乐", "productivity" to "效率",
         "lifestyle" to "生活", "business" to "商务",
         "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "health" to "健康", "other" to AppStringsProvider.current().catOther
     )
 
     // editdialog
@@ -170,7 +170,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
                     Text(if (isUpdating) "Saving…" else "Save")
                 }
             },
-            dismissButton = { TextButton(onClick = { showEditDialog = false }, enabled = !isUpdating) { Text(Strings.storeReviewCancel) } }
+            dismissButton = { TextButton(onClick = { showEditDialog = false }, enabled = !isUpdating) { Text(AppStringsProvider.current().storeReviewCancel) } }
         )
     }
 
@@ -216,7 +216,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
                     Text(if (isDeleting) "删除中…" else "确认删除", color = Color.White)
                 }
             },
-            dismissButton = { TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleting) { Text(Strings.storeReviewCancel) } }
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleting) { Text(AppStringsProvider.current().storeReviewCancel) } }
         )
     }
 
@@ -225,7 +225,7 @@ internal fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient?
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GradientMiniStat(mgmtGradientBlue, Icons.Outlined.Download, "${app.downloads}", "下载", Modifier.weight(1f))
-                GradientMiniStat(mgmtGradientOrange, Icons.Filled.Star, String.format("%.1f", app.rating), Strings.storeReviewRatingLabel, Modifier.weight(1f))
+                GradientMiniStat(mgmtGradientOrange, Icons.Filled.Star, String.format("%.1f", app.rating), AppStringsProvider.current().storeReviewRatingLabel, Modifier.weight(1f))
                 GradientMiniStat(mgmtGradientGreen, Icons.Outlined.ThumbUp, "${app.likeCount}", "点赞", Modifier.weight(1f))
             }
         }
@@ -358,7 +358,7 @@ internal fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClien
                     Text(if (isAdding) "添加中…" else "添加")
                 }
             },
-            dismissButton = { TextButton(onClick = { showAddDialog = false }, enabled = !isAdding) { Text(Strings.storeReviewCancel) } }
+            dismissButton = { TextButton(onClick = { showAddDialog = false }, enabled = !isAdding) { Text(AppStringsProvider.current().storeReviewCancel) } }
         )
     }
 
@@ -472,7 +472,7 @@ internal fun ManagementAnnouncementTab(app: AppStoreItem, apiClient: CloudApiCli
                 }
             },
             confirmButton = { Button(onClick = { isCreating = true; scope.launch { apiClient.createAnnouncement(app.id, annoTitle, annoContent, annoType, annoPinned); load(); showCreateDialog = false; isCreating = false; annoTitle = ""; annoContent = ""; selectedTemplateId = null } }, enabled = !isCreating && annoTitle.isNotBlank() && annoContent.isNotBlank(), shape = RoundedCornerShape(10.dp)) { if (isCreating) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }; Text(if (isCreating) "发布中…" else "发布") } },
-            dismissButton = { TextButton(onClick = { showCreateDialog = false }, enabled = !isCreating) { Text(Strings.storeReviewCancel) } }
+            dismissButton = { TextButton(onClick = { showCreateDialog = false }, enabled = !isCreating) { Text(AppStringsProvider.current().storeReviewCancel) } }
         )
     }
 
@@ -654,7 +654,7 @@ internal fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, s
                 }
             },
             confirmButton = { Button(onClick = { isPushing = true; scope.launch { apiClient.pushUpdate(app.id, pushVersionName, pushVersionCode.toIntOrNull() ?: 1, pushTitle, pushContent, selectedSourceApp?.id, pushForce, 0, pushTemplateId); load(); showPushDialog = false; isPushing = false } }, enabled = !isPushing && pushVersionName.isNotBlank() && pushTitle.isNotBlank(), shape = RoundedCornerShape(10.dp)) { if (isPushing) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }; Text(if (isPushing) "推送中…" else "推送更新") } },
-            dismissButton = { TextButton(onClick = { showPushDialog = false }, enabled = !isPushing) { Text(Strings.storeReviewCancel) } }
+            dismissButton = { TextButton(onClick = { showPushDialog = false }, enabled = !isPushing) { Text(AppStringsProvider.current().storeReviewCancel) } }
         )
     }
 

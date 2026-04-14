@@ -1,7 +1,7 @@
 package com.webtoapp.core.extension
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 
 /**
@@ -71,12 +71,12 @@ object BuiltInChromeExtensions {
         if (contentJs != null) {
             modules.add(ExtensionModule(
                 id = "builtin-chrome-bewlycat-content",
-                name = Strings.builtinBewlyCat,
-                description = Strings.builtinBewlyCatDesc,
+                name = AppStringsProvider.current().builtinBewlyCat,
+                description = AppStringsProvider.current().builtinBewlyCatDesc,
                 icon = "drawable:ic_ext_bewlycat",
                 category = ModuleCategory.CONTENT_ENHANCE,
                 tags = listOf("Bilibili", "B站", "UI"),
-                version = ModuleVersion(1, BEWLYCAT_VERSION, Strings.builtInVersion),
+                version = ModuleVersion(1, BEWLYCAT_VERSION, AppStringsProvider.current().builtInVersion),
                 author = ModuleAuthor("BewlyCat"),
                 builtIn = true,
                 enabled = false,  // Note.
@@ -105,11 +105,11 @@ object BuiltInChromeExtensions {
         if (injectJs != null) {
             modules.add(ExtensionModule(
                 id = "builtin-chrome-bewlycat-inject",
-                name = "${Strings.builtinBewlyCat} (MAIN)",
+                name = "${AppStringsProvider.current().builtinBewlyCat} (MAIN)",
                 description = "BewlyCat MAIN world script",
                 icon = "drawable:ic_ext_bewlycat",
                 category = ModuleCategory.CONTENT_ENHANCE,
-                version = ModuleVersion(1, BEWLYCAT_VERSION, Strings.builtInVersion),
+                version = ModuleVersion(1, BEWLYCAT_VERSION, AppStringsProvider.current().builtInVersion),
                 author = ModuleAuthor("BewlyCat"),
                 builtIn = true,
                 enabled = false,  // Note.

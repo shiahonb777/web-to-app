@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.Announcement
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumOutlinedButton
@@ -74,7 +74,7 @@ data class AnnouncementConfig(
 
 private fun Announcement.linkUrlOrNull(): String? = linkUrl?.takeIf { it.isNotBlank() }
 
-private fun Announcement.linkTextOrDefault(defaultText: String = Strings.viewDetails): String =
+private fun Announcement.linkTextOrDefault(defaultText: String = AppStringsProvider.current().viewDetails): String =
     linkText?.ifEmpty { defaultText } ?: defaultText
 
 /**
@@ -142,7 +142,7 @@ private fun DialogActions(
     config: AnnouncementConfig,
     onDismiss: () -> Unit,
     onLinkClick: ((String) -> Unit)?,
-    confirmText: String = Strings.btnConfirm,
+    confirmText: String = AppStringsProvider.current().btnConfirm,
     confirmGradient: List<Color>? = null,
     confirmTextColor: Color = Color.White,
     linkTextColor: Color = MaterialTheme.colorScheme.primary
@@ -248,7 +248,7 @@ private fun MinimalTemplate(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        Strings.btnConfirm,
+                        AppStringsProvider.current().btnConfirm,
                         color = Color(0xFF999999),
                         fontWeight = FontWeight.W300,
                         letterSpacing = 1.sp
@@ -261,7 +261,7 @@ private fun MinimalTemplate(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            config.announcement.linkTextOrDefault(Strings.viewDetails),
+                            config.announcement.linkTextOrDefault(AppStringsProvider.current().viewDetails),
                             color = Color(0xFF1A1A1A),
                             fontWeight = FontWeight.W400,
                             letterSpacing = 1.sp
@@ -310,7 +310,7 @@ private fun XiaohongshuTemplate(
                     Spacer(modifier = Modifier.height(14.dp))
                 }
                 Text(
-                    text = config.announcement.title.ifEmpty { Strings.popupAnnouncement },
+                    text = config.announcement.title.ifEmpty { AppStringsProvider.current().popupAnnouncement },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -338,7 +338,7 @@ private fun XiaohongshuTemplate(
 
         DialogActions(
             config, onDismiss, onLinkClick,
-            confirmText = Strings.iUnderstand,
+            confirmText = AppStringsProvider.current().iUnderstand,
             confirmGradient = listOf(Color(0xFFFF2442), Color(0xFFFF6B81)),
             linkTextColor = Color(0xFFFF2442)
         )
@@ -447,7 +447,7 @@ private fun GradientTemplate(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
-                            Strings.btnConfirm,
+                            AppStringsProvider.current().btnConfirm,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF667EEA)
                         )
@@ -573,7 +573,7 @@ private fun GlassmorphismTemplate(
                 shape = RoundedCornerShape(0.dp)
             ) {
                 Text(
-                    Strings.btnConfirm,
+                    AppStringsProvider.current().btnConfirm,
                     color = Color(0xFF6366F1),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp
@@ -729,7 +729,7 @@ private fun CuteTemplate(
 
             DialogActions(
                 config, onDismiss, onLinkClick,
-                confirmText = "${Strings.btnConfirm} 💕",
+                confirmText = "${AppStringsProvider.current().btnConfirm} 💕",
                 confirmGradient = listOf(Color(0xFFFF69B4), Color(0xFFFFB6D9)),
                 linkTextColor = Color(0xFFD63384)
             )

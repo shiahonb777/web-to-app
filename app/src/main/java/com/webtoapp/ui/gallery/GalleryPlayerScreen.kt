@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -210,7 +210,7 @@ fun GalleryPlayerScreen(
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) Strings.galleryPlayerPause else Strings.galleryPlayerPlay,
+                        contentDescription = if (isPlaying) AppStringsProvider.current().galleryPlayerPause else AppStringsProvider.current().galleryPlayerPlay,
                         modifier = Modifier.size(36.dp),
                         tint = Color.White
                     )
@@ -242,7 +242,7 @@ fun GalleryPlayerScreen(
             ) {
                 Icon(
                     Icons.Default.ChevronLeft,
-                    contentDescription = Strings.galleryPlayerPrevious,
+                    contentDescription = AppStringsProvider.current().galleryPlayerPrevious,
                     tint = Color.White
                 )
             }
@@ -271,7 +271,7 @@ fun GalleryPlayerScreen(
             ) {
                 Icon(
                     Icons.Default.ChevronRight,
-                    contentDescription = Strings.galleryPlayerNext,
+                    contentDescription = AppStringsProvider.current().galleryPlayerNext,
                     tint = Color.White
                 )
             }
@@ -303,7 +303,7 @@ private fun TopInfoBar(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = Strings.back,
+                    contentDescription = AppStringsProvider.current().back,
                     tint = Color.White
                 )
             }
@@ -768,7 +768,7 @@ private fun VideoControlBar(
                 IconButton(onClick = { onSeek((currentPosition - 10000).coerceAtLeast(0)) }) {
                     Icon(
                         Icons.Default.Replay10,
-                        contentDescription = Strings.galleryPlayerSeekBack,
+                        contentDescription = AppStringsProvider.current().galleryPlayerSeekBack,
                         tint = Color.White
                     )
                 }
@@ -780,7 +780,7 @@ private fun VideoControlBar(
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) Strings.galleryPlayerPause else Strings.galleryPlayerPlay,
+                        contentDescription = if (isPlaying) AppStringsProvider.current().galleryPlayerPause else AppStringsProvider.current().galleryPlayerPlay,
                         modifier = Modifier.size(36.dp),
                         tint = Color.White
                     )
@@ -790,7 +790,7 @@ private fun VideoControlBar(
                 IconButton(onClick = { onSeek((currentPosition + 10000).coerceAtMost(duration)) }) {
                     Icon(
                         Icons.Default.Forward10,
-                        contentDescription = Strings.galleryPlayerSeekForward,
+                        contentDescription = AppStringsProvider.current().galleryPlayerSeekForward,
                         tint = Color.White
                     )
                 }

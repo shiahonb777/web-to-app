@@ -14,7 +14,7 @@ import com.webtoapp.util.SplashStorage
 import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.util.IconStorage
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.pwa.PwaAnalyzer
 import com.webtoapp.core.pwa.PwaAnalysisResult
 import com.webtoapp.core.pwa.PwaAnalysisState
@@ -114,7 +114,7 @@ class MainViewModel(
             } catch (e: Exception) {
                 AppLogger.e("MainViewModel", "PWA analysis error", e)
                 _pwaAnalysisState.value = PwaAnalysisState.Error(
-                    e.message ?: Strings.pwaAnalysisFailed
+                    e.message ?: AppStringsProvider.current().pwaAnalysisFailed
                 )
             }
         }
@@ -151,7 +151,7 @@ class MainViewModel(
                     savedIconPath = savedPath
                 )
             } else {
-                _uiState.value = UiState.Error(Strings.failedSaveIcon)
+                _uiState.value = UiState.Error(AppStringsProvider.current().failedSaveIcon)
             }
         }
     }
@@ -168,7 +168,7 @@ class MainViewModel(
                     splashConfig = _editState.value.splashConfig.copy(type = type)
                 )
             } else {
-                _uiState.value = UiState.Error(Strings.failedSaveSplash)
+                _uiState.value = UiState.Error(AppStringsProvider.current().failedSaveSplash)
             }
         }
     }
@@ -208,10 +208,10 @@ class MainViewModel(
                     repository.createWebApp(webApp)
                 }
 
-                _uiState.value = UiState.Success(Strings.appSavedSuccessfully)
+                _uiState.value = UiState.Success(AppStringsProvider.current().appSavedSuccessfully)
                 resetEditState()
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: Strings.saveFailed)
+                _uiState.value = UiState.Error(e.message ?: AppStringsProvider.current().saveFailed)
             }
         }
     }
@@ -219,9 +219,9 @@ class MainViewModel(
         viewModelScope.launch {
             try {
                 repository.deleteWebApp(webApp)
-                _uiState.value = UiState.Success(Strings.appDeleted)
+                _uiState.value = UiState.Success(AppStringsProvider.current().appDeleted)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: Strings.deleteFailed)
+                _uiState.value = UiState.Error(e.message ?: AppStringsProvider.current().deleteFailed)
             }
         }
     }
@@ -268,27 +268,27 @@ class MainViewModel(
     private fun validateInput(state: EditState): Boolean {
         return when {
             state.name.isBlank() -> {
-                _uiState.value = UiState.Error(Strings.pleaseEnterAppName)
+                _uiState.value = UiState.Error(AppStringsProvider.current().pleaseEnterAppName)
                 false
             }
             state.appType == AppType.WEB && state.url.isBlank() -> {
-                _uiState.value = UiState.Error(Strings.pleaseEnterWebsiteUrl)
+                _uiState.value = UiState.Error(AppStringsProvider.current().pleaseEnterWebsiteUrl)
                 false
             }
             state.appType == AppType.WEB && !isValidUrl(state.url) -> {
-                _uiState.value = UiState.Error(Strings.pleaseEnterValidUrl)
+                _uiState.value = UiState.Error(AppStringsProvider.current().pleaseEnterValidUrl)
                 false
             }
             state.appType == AppType.WEB && isInsecureRemoteHttpUrl(state.url) && !state.allowHttp -> {
-                _uiState.value = UiState.Error(Strings.insecureHttpWarning)
+                _uiState.value = UiState.Error(AppStringsProvider.current().insecureHttpWarning)
                 false
             }
             state.appType == AppType.HTML && (state.htmlConfig?.files?.isEmpty() != false) -> {
-                _uiState.value = UiState.Error(Strings.pleaseSelectHtmlFile)
+                _uiState.value = UiState.Error(AppStringsProvider.current().pleaseSelectHtmlFile)
                 false
             }
             (state.appType == AppType.IMAGE || state.appType == AppType.VIDEO) && state.url.isBlank() -> {
-                _uiState.value = UiState.Error(Strings.mediaFilePathEmpty)
+                _uiState.value = UiState.Error(AppStringsProvider.current().mediaFilePathEmpty)
                 false
             }
             else -> true
@@ -353,10 +353,10 @@ class MainViewModel(
                     ?: return@launch
 
                 withContext(Dispatchers.IO) { repository.createWebApp(webApp) }
-                _uiState.value = UiState.Success(Strings.appCreatedSuccessfully.replaceFirst("%s", typeName))
+                _uiState.value = UiState.Success(AppStringsProvider.current().appCreatedSuccessfully.replaceFirst("%s", typeName))
             } catch (e: Exception) {
                 AppLogger.e("MainViewModel", "Failed to save $typeName app", e)
-                _uiState.value = UiState.Error(Strings.creationFailed.replaceFirst("%s", e.message ?: ""))
+                _uiState.value = UiState.Error(AppStringsProvider.current().creationFailed.replaceFirst("%s", e.message ?: ""))
             }
         }
     }
@@ -377,10 +377,10 @@ class MainViewModel(
                 val updatedApp = applyUpdate(existingApp, savedIconPath)
 
                 withContext(Dispatchers.IO) { repository.updateWebApp(updatedApp) }
-                _uiState.value = UiState.Success(Strings.appUpdatedSuccessfully.replaceFirst("%s", typeName))
+                _uiState.value = UiState.Success(AppStringsProvider.current().appUpdatedSuccessfully.replaceFirst("%s", typeName))
             } catch (e: Exception) {
                 AppLogger.e("MainViewModel", "Failed to update $typeName app", e)
-                _uiState.value = UiState.Error(Strings.updateFailed.replaceFirst("%s", e.message ?: ""))
+                _uiState.value = UiState.Error(AppStringsProvider.current().updateFailed.replaceFirst("%s", e.message ?: ""))
             }
         }
     }
@@ -398,7 +398,7 @@ class MainViewModel(
             withContext(Dispatchers.IO) { MediaStorage.saveMedia(context, uri, isVideo) }
         }
         if (savedMediaPath == null) {
-            _uiState.value = UiState.Error(Strings.failedSaveMediaFile)
+            _uiState.value = UiState.Error(AppStringsProvider.current().failedSaveMediaFile)
             return@createApp null
         }
         WebApp(
@@ -423,7 +423,7 @@ class MainViewModel(
         themeType: String = "AURORA"
     ) {
         if (galleryConfig == null || galleryConfig.items.isEmpty()) {
-            _uiState.value = UiState.Error(Strings.pleaseAddMediaFile)
+            _uiState.value = UiState.Error(AppStringsProvider.current().pleaseAddMediaFile)
             return
         }
         createApp("Gallery", iconUri) { savedIconPath, currentThemeType, categoryId ->
@@ -467,7 +467,7 @@ class MainViewModel(
         if (savedHtmlFiles.none { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }) {
             AppLogger.e("MainViewModel", "No HTML files were saved successfully. savedHtmlFiles=$savedHtmlFiles")
             withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, projectId) }
-            _uiState.value = UiState.Error(Strings.saveFailedCannotProcessHtml)
+            _uiState.value = UiState.Error(AppStringsProvider.current().saveFailedCannotProcessHtml)
             return@createApp null
         }
 
@@ -506,7 +506,7 @@ class MainViewModel(
         if (savedFiles.none { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }) {
             AppLogger.e("MainViewModel", "No HTML files found in ZIP project")
             withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, projectId) }
-            _uiState.value = UiState.Error(Strings.saveFailedNoHtmlInZip)
+            _uiState.value = UiState.Error(AppStringsProvider.current().saveFailedNoHtmlInZip)
             return@createApp null
         }
         withContext(Dispatchers.IO) { com.webtoapp.util.ZipProjectImporter.cleanupTempFiles(context) }
@@ -801,7 +801,7 @@ class MainViewModel(
         themeType: String = "AURORA"
     ) {
         if (galleryConfig == null || galleryConfig.items.isEmpty()) {
-            _uiState.value = UiState.Error(Strings.pleaseAddMediaFile)
+            _uiState.value = UiState.Error(AppStringsProvider.current().pleaseAddMediaFile)
             return
         }
         updateApp(appId, "Gallery", iconUri) { existingApp, savedIconPath ->
@@ -831,7 +831,7 @@ class MainViewModel(
             if (savedHtmlFiles.none { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }) {
                 AppLogger.e("MainViewModel", "No HTML files were saved successfully in update")
                 withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, projectId) }
-                throw Exception(Strings.saveFailedCannotProcessHtml)
+                throw Exception(AppStringsProvider.current().saveFailedCannotProcessHtml)
             }
 
             withContext(Dispatchers.IO) { HtmlStorage.clearTempFiles(context) }
@@ -861,7 +861,7 @@ class MainViewModel(
                 )
                 categoryRepository.createCategory(category)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(Strings.failedCreateCategory.replaceFirst("%s", e.message ?: ""))
+                _uiState.value = UiState.Error(AppStringsProvider.current().failedCreateCategory.replaceFirst("%s", e.message ?: ""))
             }
         }
     }
@@ -870,7 +870,7 @@ class MainViewModel(
             try {
                 categoryRepository.updateCategory(category)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(Strings.failedUpdateCategory.replaceFirst("%s", e.message ?: ""))
+                _uiState.value = UiState.Error(AppStringsProvider.current().failedUpdateCategory.replaceFirst("%s", e.message ?: ""))
             }
         }
     }
@@ -883,7 +883,7 @@ class MainViewModel(
                     _selectedCategoryId.value = null
                 }
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(Strings.failedDeleteCategory.replaceFirst("%s", e.message ?: ""))
+                _uiState.value = UiState.Error(AppStringsProvider.current().failedDeleteCategory.replaceFirst("%s", e.message ?: ""))
             }
         }
     }
@@ -892,7 +892,7 @@ class MainViewModel(
             try {
                 repository.updateWebApp(webApp.copy(categoryId = categoryId))
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(Strings.moveFailed.replaceFirst("%s", e.message ?: ""))
+                _uiState.value = UiState.Error(AppStringsProvider.current().moveFailed.replaceFirst("%s", e.message ?: ""))
             }
         }
     }

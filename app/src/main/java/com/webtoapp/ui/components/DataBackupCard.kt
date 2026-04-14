@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.backup.DataBackupManager
 import kotlinx.coroutines.launch
 
@@ -138,7 +138,7 @@ fun DataBackupCard(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    Strings.dataBackupTitle,
+                    AppStringsProvider.current().dataBackupTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -147,7 +147,7 @@ fun DataBackupCard(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                Strings.dataBackupDesc,
+                AppStringsProvider.current().dataBackupDesc,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -195,7 +195,7 @@ fun DataBackupCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.exportData)
+                    Text(AppStringsProvider.current().exportData)
                 }
                 
                 // Importbutton
@@ -220,7 +220,7 @@ fun DataBackupCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.importData)
+                    Text(AppStringsProvider.current().importData)
                 }
             }
             
@@ -243,7 +243,7 @@ fun DataBackupCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        Strings.dataBackupNote,
+                        AppStringsProvider.current().dataBackupNote,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )

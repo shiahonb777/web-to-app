@@ -243,9 +243,9 @@ fun ManualLrcAlignerDialog(
                 TopAppBar(
                     title = { 
                         Text(when (currentStep) {
-                            1 -> com.webtoapp.core.i18n.Strings.inputLyrics
-                            2 -> com.webtoapp.core.i18n.Strings.timeAlignment
-                            else -> com.webtoapp.core.i18n.Strings.previewConfirm
+                            1 -> com.webtoapp.core.i18n.AppStringsProvider.current().inputLyrics
+                            2 -> com.webtoapp.core.i18n.AppStringsProvider.current().timeAlignment
+                            else -> com.webtoapp.core.i18n.AppStringsProvider.current().previewConfirm
                         })
                     },
                     navigationIcon = {
@@ -256,7 +256,7 @@ fun ManualLrcAlignerDialog(
                                 mediaPlayer = null
                                 onDismiss()
                             }) {
-                                Icon(Icons.Default.Close, com.webtoapp.core.i18n.Strings.close)
+                                Icon(Icons.Default.Close, com.webtoapp.core.i18n.AppStringsProvider.current().close)
                             }
                         } else {
                             // 2/3: back
@@ -266,7 +266,7 @@ fun ManualLrcAlignerDialog(
                                     3 -> { currentStep = 2 }
                                 }
                             }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, com.webtoapp.core.i18n.Strings.previousStep)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, com.webtoapp.core.i18n.AppStringsProvider.current().previousStep)
                             }
                         }
                     },
@@ -307,7 +307,7 @@ fun ManualLrcAlignerDialog(
                                     },
                                     enabled = lineCount > 0
                                 ) {
-                                    Text(com.webtoapp.core.i18n.Strings.nextStepTimeAlign)
+                                    Text(com.webtoapp.core.i18n.AppStringsProvider.current().nextStepTimeAlign)
                                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                                 }
                             }
@@ -320,7 +320,7 @@ fun ManualLrcAlignerDialog(
                                     },
                                     enabled = lyricLines.indices.all { it in alignedIndices }
                                 ) {
-                                    Text(com.webtoapp.core.i18n.Strings.nextStep)
+                                    Text(com.webtoapp.core.i18n.AppStringsProvider.current().nextStep)
                                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                                 }
                             }
@@ -338,7 +338,7 @@ fun ManualLrcAlignerDialog(
                                 ) {
                                     Icon(Icons.Default.Save, null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(com.webtoapp.core.i18n.Strings.saveLrc)
+                                    Text(com.webtoapp.core.i18n.AppStringsProvider.current().saveLrc)
                                 }
                             }
                         }
@@ -370,7 +370,7 @@ fun ManualLrcAlignerDialog(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
-                                "${com.webtoapp.core.i18n.Strings.duration}: ${formatTime(duration)}",
+                                "${com.webtoapp.core.i18n.AppStringsProvider.current().duration}: ${formatTime(duration)}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -498,7 +498,7 @@ private fun LyricsInputStep(
 ) {
     Column(modifier = modifier) {
         Text(
-            com.webtoapp.core.i18n.Strings.inputLyricsHint,
+            com.webtoapp.core.i18n.AppStringsProvider.current().inputLyricsHint,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -514,7 +514,7 @@ private fun LyricsInputStep(
                 .weight(weight = 1f, fill = true),
             placeholder = { 
                 Text(
-                    com.webtoapp.core.i18n.Strings.lyricsPlaceholder,
+                    com.webtoapp.core.i18n.AppStringsProvider.current().lyricsPlaceholder,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 ) 
             },
@@ -526,7 +526,7 @@ private fun LyricsInputStep(
         // Note
         val lineCount = lyricsText.lines().filter { it.trim().isNotEmpty() }.size
         Text(
-            com.webtoapp.core.i18n.Strings.totalLinesCount.format(lineCount),
+            com.webtoapp.core.i18n.AppStringsProvider.current().totalLinesCount.format(lineCount),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -564,7 +564,7 @@ private fun AlignmentStep(
     Column(modifier = modifier) {
         // Note
         Text(
-            com.webtoapp.core.i18n.Strings.alignmentHint,
+            com.webtoapp.core.i18n.AppStringsProvider.current().alignmentHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -671,7 +671,7 @@ private fun AlignmentStep(
                     ) {
                         Icon(
                             Icons.Default.KeyboardArrowLeft,
-                            com.webtoapp.core.i18n.Strings.undo,
+                            com.webtoapp.core.i18n.AppStringsProvider.current().undo,
                             tint = if (canUndo) 
                                 MaterialTheme.colorScheme.primary 
                             else 
@@ -681,7 +681,7 @@ private fun AlignmentStep(
                     
                     // 3
                     IconButton(onClick = onRewind) {
-                        Icon(Icons.Default.Replay, com.webtoapp.core.i18n.Strings.rewind3s)
+                        Icon(Icons.Default.Replay, com.webtoapp.core.i18n.AppStringsProvider.current().rewind3s)
                     }
                     
                     // Play/
@@ -691,7 +691,7 @@ private fun AlignmentStep(
                     ) {
                         Icon(
                             if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (isPlaying) com.webtoapp.core.i18n.Strings.pause else com.webtoapp.core.i18n.Strings.play,
+                            contentDescription = if (isPlaying) com.webtoapp.core.i18n.AppStringsProvider.current().pause else com.webtoapp.core.i18n.AppStringsProvider.current().play,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -724,7 +724,7 @@ private fun AlignmentStep(
                     ) {
                         Icon(Icons.Default.TouchApp, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(com.webtoapp.core.i18n.Strings.tap, fontWeight = FontWeight.Bold)
+                        Text(com.webtoapp.core.i18n.AppStringsProvider.current().tap, fontWeight = FontWeight.Bold)
                     }
                     
                     // button- clearcurrent
@@ -735,7 +735,7 @@ private fun AlignmentStep(
                     ) {
                         Icon(
                             Icons.Default.Refresh,
-                            com.webtoapp.core.i18n.Strings.reTap,
+                            com.webtoapp.core.i18n.AppStringsProvider.current().reTap,
                             tint = if (currentTimestamp > 0) 
                                 MaterialTheme.colorScheme.error 
                             else 
@@ -750,7 +750,7 @@ private fun AlignmentStep(
                     ) {
                         Icon(
                             Icons.Default.KeyboardArrowRight,
-                            com.webtoapp.core.i18n.Strings.redo,
+                            com.webtoapp.core.i18n.AppStringsProvider.current().redo,
                             tint = if (canRedo) 
                                 MaterialTheme.colorScheme.primary 
                             else 
@@ -766,7 +766,7 @@ private fun AlignmentStep(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "${com.webtoapp.core.i18n.Strings.progress}: ${currentAlignIndex + 1}/${lyricLines.size}",
+                    "${com.webtoapp.core.i18n.AppStringsProvider.current().progress}: ${currentAlignIndex + 1}/${lyricLines.size}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp)
@@ -923,7 +923,7 @@ private fun PreviewStep(
     
     Column(modifier = modifier) {
         Text(
-            com.webtoapp.core.i18n.Strings.previewLrcHint,
+            com.webtoapp.core.i18n.AppStringsProvider.current().previewLrcHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1002,7 +1002,7 @@ private fun PreviewStep(
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) com.webtoapp.core.i18n.Strings.pause else com.webtoapp.core.i18n.Strings.play,
+                        contentDescription = if (isPlaying) com.webtoapp.core.i18n.AppStringsProvider.current().pause else com.webtoapp.core.i18n.AppStringsProvider.current().play,
                         modifier = Modifier.size(28.dp)
                     )
                 }

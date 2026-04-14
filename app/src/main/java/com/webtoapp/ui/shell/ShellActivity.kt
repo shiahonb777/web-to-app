@@ -17,7 +17,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.ShellTheme
 import com.webtoapp.ui.theme.LocalIsDarkTheme
 import com.webtoapp.core.webview.TranslateBridge
@@ -242,7 +242,7 @@ class ShellActivity : AppCompatActivity() {
         if (config == null) {
             AppLogger.e("ShellActivity", "配置加载失败，无法启动应用")
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "配置加载失败，无法启动应用")
-            Toast.makeText(this, Strings.appConfigLoadFailed, Toast.LENGTH_LONG).show()
+            Toast.makeText(this, AppStringsProvider.current().appConfigLoadFailed, Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -393,7 +393,7 @@ class ShellActivity : AppCompatActivity() {
             } else {
                 // , user
                 com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "悬浮窗权限未授予，引导用户授权")
-                Toast.makeText(this, Strings.floatingWindowPermissionRequired, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, AppStringsProvider.current().floatingWindowPermissionRequired, Toast.LENGTH_LONG).show()
                 FloatingWindowService.requestOverlayPermission(this)
             }
         }

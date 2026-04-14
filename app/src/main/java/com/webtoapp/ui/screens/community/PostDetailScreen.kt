@@ -48,7 +48,7 @@ import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.CloudApiClient
 import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.PostCommentItem
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -149,7 +149,7 @@ fun PostDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp))
@@ -226,7 +226,7 @@ fun PostDetailScreen(
                                         tint = MaterialTheme.colorScheme.primary)
                                     Spacer(Modifier.width(6.dp))
                                     Text(
-                                        Strings.communityMentionSelectUser,
+                                        AppStringsProvider.current().communityMentionSelectUser,
                                         fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -248,7 +248,7 @@ fun PostDetailScreen(
                                     }
                                 } else if (mentionResults.isEmpty() && mentionFilter.isNotBlank()) {
                                     Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                                        Text(Strings.communityNoUsersFound, fontSize = 12.sp,
+                                        Text(AppStringsProvider.current().communityNoUsersFound, fontSize = 12.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                                     }
                                 } else {
@@ -343,7 +343,7 @@ fun PostDetailScreen(
                             },
                             placeholder = {
                                 Text(
-                                    if (replyingTo != null) "${Strings.communityComment}..." else Strings.communityPostYourReply,
+                                    if (replyingTo != null) "${AppStringsProvider.current().communityComment}..." else AppStringsProvider.current().communityPostYourReply,
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                                 )
@@ -470,7 +470,7 @@ fun PostDetailScreen(
                                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
                                             ) {
                                                 Text(
-                                                    if (isFollowing) Strings.communityFollowing else Strings.communityFollow,
+                                                    if (isFollowing) AppStringsProvider.current().communityFollowing else AppStringsProvider.current().communityFollow,
                                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
                                                     fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                                     color = if (isFollowing) MaterialTheme.colorScheme.onSurface
@@ -820,7 +820,7 @@ fun PostDetailScreen(
                                                     Spacer(Modifier.width(10.dp))
                                                     Column(Modifier.weight(1f)) {
                                                         Text(
-                                                            appLink.appName ?: Strings.communityApplication,
+                                                            appLink.appName ?: AppStringsProvider.current().communityApplication,
                                                             fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
                                                             maxLines = 1, overflow = TextOverflow.Ellipsis
                                                         )
@@ -868,10 +868,10 @@ fun PostDetailScreen(
                                         .padding(horizontal = 16.dp, vertical = 10.dp),
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    StatPill("${p.likeCount}", Strings.communityLike)
-                                    StatPill("${p.commentCount}", Strings.communityComment)
-                                    StatPill("${p.shareCount}", Strings.communityShare)
-                                    StatPill("${p.viewCount}", Strings.communityViews)
+                                    StatPill("${p.likeCount}", AppStringsProvider.current().communityLike)
+                                    StatPill("${p.commentCount}", AppStringsProvider.current().communityComment)
+                                    StatPill("${p.shareCount}", AppStringsProvider.current().communityShare)
+                                    StatPill("${p.viewCount}", AppStringsProvider.current().communityViews)
                                     if (p.postType == "showcase" && p.hasRecipe) {
                                         StatPill(
                                             "${p.recipeImportCount}",
@@ -893,7 +893,7 @@ fun PostDetailScreen(
                                     DetailActionButton(
                                         icon = Icons.Outlined.FavoriteBorder,
                                         activeIcon = Icons.Filled.Favorite,
-                                        label = Strings.communityLike,
+                                        label = AppStringsProvider.current().communityLike,
                                         isActive = p.isLiked,
                                         activeColor = Color(0xFFE91E63),
                                         onClick = {
@@ -913,7 +913,7 @@ fun PostDetailScreen(
                                     DetailActionButton(
                                         icon = Icons.Outlined.ChatBubbleOutline,
                                         activeIcon = Icons.Outlined.ChatBubbleOutline,
-                                        label = Strings.communityComment,
+                                        label = AppStringsProvider.current().communityComment,
                                         isActive = false,
                                         activeColor = MaterialTheme.colorScheme.primary,
                                         onClick = {
@@ -926,7 +926,7 @@ fun PostDetailScreen(
                                     DetailActionButton(
                                         icon = Icons.Outlined.Repeat,
                                         activeIcon = Icons.Filled.Repeat,
-                                        label = Strings.communityShare,
+                                        label = AppStringsProvider.current().communityShare,
                                         isActive = false,
                                         activeColor = Color(0xFF4CAF50),
                                         onClick = {
@@ -960,7 +960,7 @@ fun PostDetailScreen(
                         item {
                             StaggeredItem(index = 3) {
                                 Text(
-                                    "${Strings.communityComment} ($commentTotal)",
+                                    "${AppStringsProvider.current().communityComment} ($commentTotal)",
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                                     fontWeight = FontWeight.Bold, fontSize = 15.sp
                                 )
@@ -980,10 +980,10 @@ fun PostDetailScreen(
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
                                         )
                                         Spacer(Modifier.height(8.dp))
-                                        Text(Strings.communityNoRepliesYet,
+                                        Text(AppStringsProvider.current().communityNoRepliesYet,
                                             fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                         Spacer(Modifier.height(2.dp))
-                                        Text(Strings.communityBeFirstReply, fontSize = 14.sp,
+                                        Text(AppStringsProvider.current().communityBeFirstReply, fontSize = 14.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
                                     }
                                 }
@@ -1021,7 +1021,7 @@ fun PostDetailScreen(
                                     } else {
                                         TextButton(onClick = { loadMoreComments() }) {
                                             Text(
-                                                Strings.communityShowMoreReplies,
+                                                AppStringsProvider.current().communityShowMoreReplies,
                                                 fontSize = 13.sp,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
@@ -1038,7 +1038,7 @@ fun PostDetailScreen(
                         Icon(Icons.Outlined.SearchOff, null, Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                         Spacer(Modifier.height(8.dp))
-                        Text(Strings.communityPostNotFound, fontSize = 15.sp,
+                        Text(AppStringsProvider.current().communityPostNotFound, fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     }
                 }
@@ -1070,7 +1070,7 @@ fun PostDetailScreen(
                                 Icon(Icons.Outlined.Edit, null, Modifier.size(22.dp),
                                     tint = MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.width(14.dp))
-                                Text(Strings.communityEditPost, fontSize = 15.sp,
+                                Text(AppStringsProvider.current().communityEditPost, fontSize = 15.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.primary)
                             }
@@ -1093,7 +1093,7 @@ fun PostDetailScreen(
                                 Icon(Icons.Outlined.Delete, null, Modifier.size(22.dp),
                                     tint = Color(0xFFE57373))
                                 Spacer(Modifier.width(14.dp))
-                                Text(Strings.communityDeletePost, fontSize = 15.sp,
+                                Text(AppStringsProvider.current().communityDeletePost, fontSize = 15.sp,
                                     fontWeight = FontWeight.Medium, color = Color(0xFFE57373))
                             }
                         }
@@ -1117,7 +1117,7 @@ fun PostDetailScreen(
                         Icon(Icons.Outlined.Flag, null, Modifier.size(22.dp),
                             tint = Color(0xFFE57373))
                         Spacer(Modifier.width(14.dp))
-                        Text(Strings.communityReportTitle, fontSize = 15.sp,
+                        Text(AppStringsProvider.current().communityReportTitle, fontSize = 15.sp,
                             fontWeight = FontWeight.Medium, color = Color(0xFFE57373))
                     }
                 }
@@ -1128,7 +1128,7 @@ fun PostDetailScreen(
                         .clickable {
                             showMoreSheet = false
                             scope.launch {
-                                snackbarHostState.showSnackbar(Strings.communityShare)
+                                snackbarHostState.showSnackbar(AppStringsProvider.current().communityShare)
                             }
                         },
                     shape = RoundedCornerShape(12.dp),
@@ -1141,7 +1141,7 @@ fun PostDetailScreen(
                         Icon(Icons.Outlined.Share, null, Modifier.size(22.dp),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                         Spacer(Modifier.width(14.dp))
-                        Text(Strings.communityShare, fontSize = 15.sp,
+                        Text(AppStringsProvider.current().communityShare, fontSize = 15.sp,
                             fontWeight = FontWeight.Medium)
                     }
                 }
@@ -1160,16 +1160,16 @@ fun PostDetailScreen(
                     showDeleteConfirm = false
                     communityViewModel.deletePost(postId, onSuccess = { onBack() })
                 }) {
-                    Text(Strings.communityConfirmDelete, color = Color(0xFFE57373))
+                    Text(AppStringsProvider.current().communityConfirmDelete, color = Color(0xFFE57373))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(Strings.communityCancel)
+                    Text(AppStringsProvider.current().communityCancel)
                 }
             },
-            title = { Text(Strings.communityDeletePost, fontWeight = FontWeight.Bold) },
-            text = { Text(Strings.communityDeletePostConfirmMsg) }
+            title = { Text(AppStringsProvider.current().communityDeletePost, fontWeight = FontWeight.Bold) },
+            text = { Text(AppStringsProvider.current().communityDeletePostConfirmMsg) }
         )
     }
 
@@ -1177,7 +1177,7 @@ fun PostDetailScreen(
     if (showEditSheet) {
         ModalBottomSheet(onDismissRequest = { showEditSheet = false }) {
             Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-                Text(Strings.communityEditPost, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(AppStringsProvider.current().communityEditPost, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = editContent,
@@ -1192,7 +1192,7 @@ fun PostDetailScreen(
                     horizontalArrangement = Arrangement.End
                 ){
                     TextButton(onClick = { showEditSheet = false }) {
-                        Text(Strings.communityCancel)
+                        Text(AppStringsProvider.current().communityCancel)
                     }
                     Spacer(Modifier.width(8.dp))
                     Button(
@@ -1204,7 +1204,7 @@ fun PostDetailScreen(
                         },
                         enabled = editContent.isNotBlank()
                     ) {
-                        Text(Strings.communitySave)
+                        Text(AppStringsProvider.current().communitySave)
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -1395,7 +1395,7 @@ private fun PostCommentRow(
                         Icon(Icons.Filled.SubdirectoryArrowRight, null, Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                         Spacer(Modifier.width(3.dp))
-                        Text(Strings.communityComment, fontSize = 12.sp,
+                        Text(AppStringsProvider.current().communityComment, fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                     }
                     // Like count
@@ -1456,7 +1456,7 @@ private fun PostCommentRow(
                         if (comment.replies.size > 3) {
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                Strings.communityShowMoreReplies,
+                                AppStringsProvider.current().communityShowMoreReplies,
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium,
@@ -1481,15 +1481,15 @@ private fun ReportReasonSheet(
         Column(
             Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
-            Text(Strings.communityReportWhy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(AppStringsProvider.current().communityReportWhy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(Modifier.height(16.dp))
 
             val reasons = listOf(
-                "spam" to Strings.communityReportSpam,
-                "inappropriate" to Strings.communityReportInappropriate,
-                "malicious" to Strings.communityReportMalicious,
-                "copyright" to Strings.communityReportCopyright,
-                "other" to Strings.communityReportOther,
+                "spam" to AppStringsProvider.current().communityReportSpam,
+                "inappropriate" to AppStringsProvider.current().communityReportInappropriate,
+                "malicious" to AppStringsProvider.current().communityReportMalicious,
+                "copyright" to AppStringsProvider.current().communityReportCopyright,
+                "other" to AppStringsProvider.current().communityReportOther,
             )
             reasons.forEach { (key, label) ->
                 Surface(

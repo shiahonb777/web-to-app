@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.screens.aimodule.ErrorInfo
 import androidx.compose.ui.graphics.Color
 
@@ -352,12 +352,12 @@ private fun RawResponseSection(
         ) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (isExpanded) Strings.cdCollapse else Strings.cdExpand,
+                contentDescription = if (isExpanded) AppStringsProvider.current().cdCollapse else AppStringsProvider.current().cdExpand,
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
             Text(
-                text = if (isExpanded) Strings.hideRawResponse else Strings.viewRawResponse,
+                text = if (isExpanded) AppStringsProvider.current().hideRawResponse else AppStringsProvider.current().viewRawResponse,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -516,7 +516,7 @@ fun CompactErrorCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = Strings.cdRetry,
+                    contentDescription = AppStringsProvider.current().cdRetry,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -573,7 +573,7 @@ fun OfflineIndicator(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.retry)
+                Text(AppStringsProvider.current().retry)
             }
         }
     }

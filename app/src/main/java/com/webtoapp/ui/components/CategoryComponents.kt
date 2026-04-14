@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 
@@ -49,7 +49,7 @@ fun CategoryTabRow(
             PremiumFilterChip(
                 selected = selectedCategoryId == null,
                 onClick = { onCategorySelected(null) },
-                label = { Text(Strings.allApps) },
+                label = { Text(AppStringsProvider.current().allApps) },
                 leadingIcon = {
                     if (selectedCategoryId == null) {
                         Icon(
@@ -67,7 +67,7 @@ fun CategoryTabRow(
             PremiumFilterChip(
                 selected = selectedCategoryId == -1L,
                 onClick = { onCategorySelected(-1L) },
-                label = { Text(Strings.uncategorized) },
+                label = { Text(AppStringsProvider.current().uncategorized) },
                 leadingIcon = {
                     if (selectedCategoryId == -1L) {
                         Icon(
@@ -120,7 +120,7 @@ fun CategoryTabRow(
                     onDismissRequest = { showCategoryMenu = null }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(Strings.editCategory) },
+                        text = { Text(AppStringsProvider.current().editCategory) },
                         onClick = {
                             showCategoryMenu = null
                             onEditCategory(category)
@@ -128,7 +128,7 @@ fun CategoryTabRow(
                         leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                     )
                     DropdownMenuItem(
-                        text = { Text(Strings.deleteCategory) },
+                        text = { Text(AppStringsProvider.current().deleteCategory) },
                         onClick = {
                             showCategoryMenu = null
                             showDeleteConfirm = category
@@ -149,7 +149,7 @@ fun CategoryTabRow(
         item {
             AssistChip(
                 onClick = onAddCategory,
-                label = { Text(Strings.addCategory) },
+                label = { Text(AppStringsProvider.current().addCategory) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Add,
@@ -165,8 +165,8 @@ fun CategoryTabRow(
     showDeleteConfirm?.let { category ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
-            title = { Text(Strings.deleteCategory) },
-            text = { Text(Strings.deleteCategoryConfirm) },
+            title = { Text(AppStringsProvider.current().deleteCategory) },
+            text = { Text(AppStringsProvider.current().deleteCategoryConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -177,12 +177,12 @@ fun CategoryTabRow(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.btnDelete)
+                    Text(AppStringsProvider.current().btnDelete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = null }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -227,7 +227,7 @@ fun CategoryEditorDialog(
         onDismissRequest = onDismiss,
         title = { 
             Text(
-                if (category == null) Strings.addCategory else Strings.editCategory
+                if (category == null) AppStringsProvider.current().addCategory else AppStringsProvider.current().editCategory
             ) 
         },
         text = {
@@ -239,14 +239,14 @@ fun CategoryEditorDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.categoryName) },
-                    placeholder = { Text(Strings.categoryNamePlaceholder) },
+                    label = { Text(AppStringsProvider.current().categoryName) },
+                    placeholder = { Text(AppStringsProvider.current().categoryNamePlaceholder) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 // Iconselect
-                Text(Strings.categoryIcon, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().categoryIcon, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetIcons.chunked(8).forEach { rowIcons ->
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -280,7 +280,7 @@ fun CategoryEditorDialog(
                 }
                 
                 // Colorselect
-                Text(Strings.categoryColor, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().categoryColor, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetColors.chunked(8).forEach { rowColors ->
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -320,12 +320,12 @@ fun CategoryEditorDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -343,7 +343,7 @@ fun MoveToCategoryDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.moveToCategory) },
+        title = { Text(AppStringsProvider.current().moveToCategory) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -379,7 +379,7 @@ fun MoveToCategoryDialog(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.width(12.dp))
-                        Text(Strings.uncategorized)
+                        Text(AppStringsProvider.current().uncategorized)
                         Spacer(Modifier.weight(weight = 1f, fill = true))
                         if (app.categoryId == null) {
                             Icon(
@@ -428,7 +428,7 @@ fun MoveToCategoryDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

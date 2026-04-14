@@ -3,7 +3,7 @@ package com.webtoapp.core.frontend
 import android.content.Context
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.i18n.AppLanguage
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 
 /**
@@ -20,7 +20,7 @@ object SampleProjectManager {
      * 根据当前语言获取项目 ID 后缀
      */
     private fun getLanguageSuffix(): String {
-        return when (Strings.currentLanguage.value) {
+        return when (AppStringsProvider.currentLanguage) {
             AppLanguage.CHINESE -> "" // 中文使用原始项目（无后缀）
             AppLanguage.ENGLISH -> "-en"
             AppLanguage.ARABIC -> "-ar"
@@ -35,24 +35,24 @@ object SampleProjectManager {
         return listOf(
             SampleProject(
                 id = "vue-demo$suffix",
-                name = Strings.sampleVueCounterName,
-                description = Strings.sampleVueCounterDesc,
+                name = AppStringsProvider.current().sampleVueCounterName,
+                description = AppStringsProvider.current().sampleVueCounterDesc,
                 framework = FrontendFramework.VUE,
                 icon = "🟢",
-                tags = listOf("Vue 3", Strings.sampleVueCounterTagReactive)
+                tags = listOf("Vue 3", AppStringsProvider.current().sampleVueCounterTagReactive)
             ),
             SampleProject(
                 id = "react-demo$suffix",
-                name = Strings.sampleReactTodoName,
-                description = Strings.sampleReactTodoDesc,
+                name = AppStringsProvider.current().sampleReactTodoName,
+                description = AppStringsProvider.current().sampleReactTodoDesc,
                 framework = FrontendFramework.REACT,
                 icon = "⚛️",
                 tags = listOf("React 18", "Hooks")
             ),
             SampleProject(
                 id = "vite-vanilla$suffix",
-                name = Strings.sampleWeatherAppName,
-                description = Strings.sampleWeatherAppDesc,
+                name = AppStringsProvider.current().sampleWeatherAppName,
+                description = AppStringsProvider.current().sampleWeatherAppDesc,
                 framework = FrontendFramework.VITE,
                 icon = "🌤️",
                 tags = listOf("Vite", "Vanilla JS")

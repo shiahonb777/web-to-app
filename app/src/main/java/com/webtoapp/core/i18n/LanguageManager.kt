@@ -6,9 +6,16 @@ import android.content.res.Configuration
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
@@ -40,19 +47,31 @@ private val Context.languageDataStore by preferencesDataStore(name = "language_s
  */
 @SuppressLint("StaticFieldLeak")
 class LanguageManager(private val context: Context) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _currentLanguageState = MutableStateFlow(AppLanguage.fromCode(getSystemLanguageCode()))
+    private val storedLanguageFlow: Flow<AppLanguage> = context.languageDataStore.data.map { prefs ->
+        val code = prefs[LANGUAGE_KEY] ?: getSystemLanguageCode()
+        AppLanguage.fromCode(code)
+    }
     
     companion object {
         private val LANGUAGE_KEY = stringPreferencesKey("app_language")
         private val LANGUAGE_SELECTED_KEY = stringPreferencesKey("language_selected")
     }
+
+    init {
+        scope.launch {
+            storedLanguageFlow.collect { language ->
+                _currentLanguageState.value = language
+            }
+        }
+    }
     
     /**
      * Flow.
      */
-    val currentLanguageFlow: Flow<AppLanguage> = context.languageDataStore.data.map { prefs ->
-        val code = prefs[LANGUAGE_KEY] ?: getSystemLanguageCode()
-        AppLanguage.fromCode(code)
-    }
+    val currentLanguageFlow: StateFlow<AppLanguage> = _currentLanguageState
+    val currentLanguage: AppLanguage get() = _currentLanguageState.value
     
     /**
      * Note.
@@ -88,13 +107,14 @@ class LanguageManager(private val context: Context) {
             prefs[LANGUAGE_KEY] = language.code
             prefs[LANGUAGE_SELECTED_KEY] = "true"
         }
+        _currentLanguageState.value = language
     }
     
     /**
      * Note.
      */
     suspend fun getCurrentLanguage(): AppLanguage {
-        return currentLanguageFlow.first()
+        return storedLanguageFlow.first()
     }
     
     /**

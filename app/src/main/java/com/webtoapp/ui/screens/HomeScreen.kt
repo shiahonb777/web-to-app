@@ -46,7 +46,7 @@ import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import com.webtoapp.core.apkbuilder.ApkBuilder
 import com.webtoapp.core.apkbuilder.BuildResult
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.components.CategoryEditorDialog
@@ -167,17 +167,17 @@ fun HomeScreen(
         val onClick: () -> Unit
     )
     val createActionItems = listOf(
-        CreateActionItem(Strings.appTypeWeb, R.drawable.ic_type_web, onCreateApp),
-        CreateActionItem(Strings.appTypeMultiWeb, R.drawable.ic_type_web, onCreateMultiWebApp),
-        CreateActionItem(Strings.appTypeHtml, R.drawable.ic_type_html, onCreateHtmlApp),
-        CreateActionItem(Strings.appTypeFrontend, R.drawable.ic_type_frontend, onCreateFrontendApp),
-        CreateActionItem(Strings.appTypePhp, R.drawable.ic_type_php, onCreatePhpApp),
-        CreateActionItem(Strings.appTypeWordPress, R.drawable.ic_type_wordpress, onCreateWordPressApp),
-        CreateActionItem(Strings.appTypeNodeJs, R.drawable.ic_type_nodejs, onCreateNodeJsApp),
-        CreateActionItem(Strings.appTypePython, R.drawable.ic_type_python, onCreatePythonApp),
-        CreateActionItem(Strings.appTypeGo, R.drawable.ic_type_go, onCreateGoApp),
-        CreateActionItem(Strings.createMediaApp, R.drawable.ic_type_media, onCreateMediaApp),
-        CreateActionItem(Strings.appTypeGallery, R.drawable.ic_type_gallery, onCreateGalleryApp)
+        CreateActionItem(AppStringsProvider.current().appTypeWeb, R.drawable.ic_type_web, onCreateApp),
+        CreateActionItem(AppStringsProvider.current().appTypeMultiWeb, R.drawable.ic_type_web, onCreateMultiWebApp),
+        CreateActionItem(AppStringsProvider.current().appTypeHtml, R.drawable.ic_type_html, onCreateHtmlApp),
+        CreateActionItem(AppStringsProvider.current().appTypeFrontend, R.drawable.ic_type_frontend, onCreateFrontendApp),
+        CreateActionItem(AppStringsProvider.current().appTypePhp, R.drawable.ic_type_php, onCreatePhpApp),
+        CreateActionItem(AppStringsProvider.current().appTypeWordPress, R.drawable.ic_type_wordpress, onCreateWordPressApp),
+        CreateActionItem(AppStringsProvider.current().appTypeNodeJs, R.drawable.ic_type_nodejs, onCreateNodeJsApp),
+        CreateActionItem(AppStringsProvider.current().appTypePython, R.drawable.ic_type_python, onCreatePythonApp),
+        CreateActionItem(AppStringsProvider.current().appTypeGo, R.drawable.ic_type_go, onCreateGoApp),
+        CreateActionItem(AppStringsProvider.current().createMediaApp, R.drawable.ic_type_media, onCreateMediaApp),
+        CreateActionItem(AppStringsProvider.current().appTypeGallery, R.drawable.ic_type_gallery, onCreateGalleryApp)
     )
     
     Scaffold(
@@ -189,7 +189,7 @@ fun HomeScreen(
                         PremiumTextField(
                             value = searchQuery,
                             onValueChange = { viewModel.search(it) },
-                            placeholder = { Text(Strings.search, style = MaterialTheme.typography.bodyMedium) },
+                            placeholder = { Text(AppStringsProvider.current().search, style = MaterialTheme.typography.bodyMedium) },
                             singleLine = true,
                             modifier = Modifier
                                 .widthIn(max = 200.dp)
@@ -202,7 +202,7 @@ fun HomeScreen(
                             listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                         }
                         
-                        val typewriterTexts = listOf(Strings.typewriterText1, Strings.typewriterText2, Strings.typewriterText3)
+                        val typewriterTexts = listOf(AppStringsProvider.current().typewriterText1, AppStringsProvider.current().typewriterText2, AppStringsProvider.current().typewriterText3)
                         var textIndex by remember { mutableIntStateOf(0) }
                         var charIndex by remember { mutableIntStateOf(0) }
                         var userPaused by remember { mutableStateOf(false) }
@@ -337,7 +337,7 @@ fun HomeScreen(
                     LanguageSelectorButton(
                         onLanguageChanged = {
                             scope.launch {
-                                snackbarHostState.showSnackbar(Strings.msgLanguageChanged)
+                                snackbarHostState.showSnackbar(AppStringsProvider.current().msgLanguageChanged)
                             }
                         }
                     )
@@ -351,7 +351,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = Strings.search,
+                            contentDescription = AppStringsProvider.current().search,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -555,7 +555,7 @@ fun HomeScreen(
                                 ) {
                                     Icon(
                                         Icons.Outlined.DeleteOutline,
-                                        contentDescription = Strings.btnDelete,
+                                        contentDescription = AppStringsProvider.current().btnDelete,
                                         tint = MaterialTheme.colorScheme.error.copy(alpha = bgAlpha),
                                         modifier = Modifier
                                             .size(28.dp)
@@ -583,7 +583,7 @@ fun HomeScreen(
                                 scope.launch {
                                     when (val result = exporter.createShortcut(app)) {
                                         is com.webtoapp.core.export.ShortcutResult.Success -> {
-                                            snackbarHostState.showSnackbar(Strings.shortcutCreatedSuccess)
+                                            snackbarHostState.showSnackbar(AppStringsProvider.current().shortcutCreatedSuccess)
                                         }
                                         is com.webtoapp.core.export.ShortcutResult.Pending -> {
                                             snackbarHostState.showSnackbar(result.message)
@@ -604,7 +604,7 @@ fun HomeScreen(
                                 scope.launch {
                                     when (val result = exporter.exportAsTemplate(app)) {
                                         is com.webtoapp.core.export.ExportResult.Success -> {
-                                            snackbarHostState.showSnackbar(Strings.projectExportedTo.replace("%s", result.path))
+                                            snackbarHostState.showSnackbar(AppStringsProvider.current().projectExportedTo.replace("%s", result.path))
                                         }
                                         is com.webtoapp.core.export.ExportResult.Error -> {
                                             snackbarHostState.showSnackbar(result.message)
@@ -618,7 +618,7 @@ fun HomeScreen(
                             },
                             onShareApk = {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar(Strings.shareApkBuilding)
+                                    snackbarHostState.showSnackbar(AppStringsProvider.current().shareApkBuilding)
                                     val apkBuilder = sharedApkBuilder
                                     val result = apkBuilder.buildApk(app) { _, _ -> }
                                     when (result) {
@@ -632,16 +632,16 @@ fun HomeScreen(
                                                 val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                                                     type = "application/vnd.android.package-archive"
                                                     putExtra(android.content.Intent.EXTRA_STREAM, apkUri)
-                                                    putExtra(android.content.Intent.EXTRA_SUBJECT, Strings.shareApkTitle.replace("%s", app.name))
+                                                    putExtra(android.content.Intent.EXTRA_SUBJECT, AppStringsProvider.current().shareApkTitle.replace("%s", app.name))
                                                     addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                                 }
-                                                listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", app.name)))
+                                                listContext.startActivity(android.content.Intent.createChooser(shareIntent, AppStringsProvider.current().shareApkTitle.replace("%s", app.name)))
                                             } catch (e: Exception) {
-                                                snackbarHostState.showSnackbar(Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"))
+                                                snackbarHostState.showSnackbar(AppStringsProvider.current().shareApkFailed.replace("%s", e.message ?: "Unknown error"))
                                             }
                                         }
                                         is BuildResult.Error -> {
-                                            snackbarHostState.showSnackbar(Strings.shareApkFailed.replace("%s", result.message))
+                                            snackbarHostState.showSnackbar(AppStringsProvider.current().shareApkFailed.replace("%s", result.message))
                                         }
                                     }
                                 }
@@ -821,14 +821,14 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 Icons.Default.Add,
-                                Strings.btnCreate,
+                                AppStringsProvider.current().btnCreate,
                                 modifier = Modifier
                                     .size(20.dp)
                                     .graphicsLayer { rotationZ = fabRotation }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                if (showFabMenu) Strings.close else Strings.createApp,
+                                if (showFabMenu) AppStringsProvider.current().close else AppStringsProvider.current().createApp,
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
@@ -857,8 +857,8 @@ fun HomeScreen(
                 showDeleteDialog = false
                 selectedApp = null
             },
-            title = { Text(Strings.deleteConfirmTitle) },
-            text = { Text(Strings.deleteConfirmMessage) },
+            title = { Text(AppStringsProvider.current().deleteConfirmTitle) },
+            text = { Text(AppStringsProvider.current().deleteConfirmMessage) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -870,7 +870,7 @@ fun HomeScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.btnDelete)
+                    Text(AppStringsProvider.current().btnDelete)
                 }
             },
             dismissButton = {
@@ -878,7 +878,7 @@ fun HomeScreen(
                     showDeleteDialog = false
                     selectedApp = null
                 }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -1029,13 +1029,13 @@ fun EmptyState(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = Strings.msgNoApps,
+            text = AppStringsProvider.current().msgNoApps,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = Strings.emptyStateHint,
+            text = AppStringsProvider.current().emptyStateHint,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline
         )
@@ -1043,7 +1043,7 @@ fun EmptyState(
         PremiumButton(onClick = onCreateApp) {
             Icon(Icons.Default.Add, null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(Strings.createApp)
+            Text(AppStringsProvider.current().createApp)
         }
     }
 }
@@ -1060,7 +1060,7 @@ fun BuildApkDialog(
     
     var isBuilding by remember { mutableStateOf(false) }
     var progress by remember { mutableIntStateOf(0) }
-    var progressText by remember { mutableStateOf(Strings.preparing) }
+    var progressText by remember { mutableStateOf(AppStringsProvider.current().preparing) }
     var analysisReport by remember { mutableStateOf<com.webtoapp.core.apkbuilder.ApkAnalyzer.AnalysisReport?>(null) }
     var encryptionConfig by remember { 
         mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig()) 
@@ -1087,7 +1087,7 @@ fun BuildApkDialog(
 
     AnimatedAlertDialog(
         onDismissRequest = { if (!isBuilding) onDismiss() },
-        title = { Text(Strings.buildDialogTitle) },
+        title = { Text(AppStringsProvider.current().buildDialogTitle) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1162,12 +1162,12 @@ fun BuildApkDialog(
                 HorizontalDivider()
                 
                 Text(
-                    Strings.buildApkForApp.replace("%s", webApp.name),
+                    AppStringsProvider.current().buildApkForApp.replace("%s", webApp.name),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 
                 Text(
-                    Strings.buildCompleteInstallHint,
+                    AppStringsProvider.current().buildCompleteInstallHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1352,7 +1352,7 @@ fun BuildApkDialog(
                                     }
                                 }
                                 is BuildResult.Error -> {
-                                    onResult("${Strings.buildFailed}: ${result.message}")
+                                    onResult("${AppStringsProvider.current().buildFailed}: ${result.message}")
                                 }
                             }
                         }
@@ -1360,7 +1360,7 @@ fun BuildApkDialog(
                 ) {
                     Icon(Icons.Outlined.Build, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(Strings.btnStartBuild)
+                    Text(AppStringsProvider.current().btnStartBuild)
                 }
             } else {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -1369,7 +1369,7 @@ fun BuildApkDialog(
         dismissButton = {
             if (!isBuilding) {
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         }
@@ -1384,11 +1384,11 @@ fun EngineSelectionCard(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            Strings.engineSelectTitle,
+            AppStringsProvider.current().engineSelectTitle,
             style = MaterialTheme.typography.titleSmall
         )
         Text(
-            Strings.engineSelectDesc,
+            AppStringsProvider.current().engineSelectDesc,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1406,9 +1406,9 @@ fun EngineSelectionCard(
             )
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(weight = 1f, fill = true)) {
-                Text(Strings.engineSystemWebView, style = MaterialTheme.typography.bodyMedium)
+                Text(AppStringsProvider.current().engineSystemWebView, style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    Strings.engineSystemWebViewDesc,
+                    AppStringsProvider.current().engineSystemWebViewDesc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1433,7 +1433,7 @@ fun EngineSelectionCard(
             Column(Modifier.weight(weight = 1f, fill = true)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        Strings.engineGeckoView,
+                        AppStringsProvider.current().engineGeckoView,
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isGeckoDownloaded) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurfaceVariant
@@ -1445,7 +1445,7 @@ fun EngineSelectionCard(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                Strings.engineReady,
+                                AppStringsProvider.current().engineReady,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -1455,13 +1455,13 @@ fun EngineSelectionCard(
                 }
                 if (!isGeckoDownloaded) {
                     Text(
-                        Strings.engineGeckoNotDownloaded,
+                        AppStringsProvider.current().engineGeckoNotDownloaded,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
                 } else {
                     Text(
-                        Strings.engineApkSizeWarning.replace("%s", com.webtoapp.core.engine.EngineType.GECKOVIEW.estimatedSizeMb.toString()),
+                        AppStringsProvider.current().engineApkSizeWarning.replace("%s", com.webtoapp.core.engine.EngineType.GECKOVIEW.estimatedSizeMb.toString()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

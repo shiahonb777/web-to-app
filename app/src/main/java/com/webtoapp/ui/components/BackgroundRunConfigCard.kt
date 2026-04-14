@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.BackgroundRunExportConfig
 
 /**
@@ -63,12 +63,12 @@ fun BackgroundRunConfigCard(
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.backgroundRunTitle,
+                            AppStringsProvider.current().backgroundRunTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!enabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -94,7 +94,7 @@ fun BackgroundRunConfigCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.backgroundRunShowNotification,
+                            AppStringsProvider.current().backgroundRunShowNotification,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         PremiumSwitch(
@@ -110,7 +110,7 @@ fun BackgroundRunConfigCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.backgroundRunKeepCpuAwake,
+                            AppStringsProvider.current().backgroundRunKeepCpuAwake,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         PremiumSwitch(
@@ -124,7 +124,7 @@ fun BackgroundRunConfigCard(
                         onClick = { expanded = !expanded },
                         modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text(if (expanded) Strings.hideAdvanced else Strings.showAdvanced)
+                        Text(if (expanded) AppStringsProvider.current().hideAdvanced else AppStringsProvider.current().showAdvanced)
                     }
                     
                     // advancedsettings
@@ -134,8 +134,8 @@ fun BackgroundRunConfigCard(
                             PremiumTextField(
                                 value = config.notificationTitle,
                                 onValueChange = { onConfigChange(config.copy(notificationTitle = it)) },
-                                label = { Text(Strings.backgroundRunNotificationTitle) },
-                                placeholder = { Text(Strings.backgroundRunNotificationTitlePlaceholder) },
+                                label = { Text(AppStringsProvider.current().backgroundRunNotificationTitle) },
+                                placeholder = { Text(AppStringsProvider.current().backgroundRunNotificationTitlePlaceholder) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
@@ -144,8 +144,8 @@ fun BackgroundRunConfigCard(
                             PremiumTextField(
                                 value = config.notificationContent,
                                 onValueChange = { onConfigChange(config.copy(notificationContent = it)) },
-                                label = { Text(Strings.backgroundRunNotificationContent) },
-                                placeholder = { Text(Strings.backgroundRunNotificationContentPlaceholder) },
+                                label = { Text(AppStringsProvider.current().backgroundRunNotificationContent) },
+                                placeholder = { Text(AppStringsProvider.current().backgroundRunNotificationContentPlaceholder) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )

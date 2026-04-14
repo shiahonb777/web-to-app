@@ -32,7 +32,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.window.Dialog
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import kotlinx.coroutines.launch
@@ -68,10 +68,10 @@ fun AiSettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.aiSettings) },
+                title = { Text(AppStringsProvider.current().aiSettings) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -154,7 +154,7 @@ fun AiSettingsScreen(
                         showAddApiKeyDialog = false
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -177,7 +177,7 @@ fun AiSettingsScreen(
                         editingApiKey = null
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -208,7 +208,7 @@ fun AiSettingsScreen(
                         showAddModelDialog = false
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -228,7 +228,7 @@ fun AiSettingsScreen(
                         editingModel = null
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -257,15 +257,15 @@ private fun ApiKeysSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(Strings.apiKeys, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().apiKeys, style = MaterialTheme.typography.titleMedium)
                 IconButton(onClick = onAddClick) {
-                    Icon(Icons.Default.Add, Strings.add)
+                    Icon(Icons.Default.Add, AppStringsProvider.current().add)
                 }
             }
             
             if (apiKeys.isEmpty()) {
                 Text(
-                    Strings.noApiKeysHint,
+                    AppStringsProvider.current().noApiKeysHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -335,29 +335,29 @@ private fun ApiKeyItem(
             // button
             TextButton(onClick = {
                 scope.launch {
-                    testResult = Strings.testing
+                    testResult = AppStringsProvider.current().testing
                     val result = apiClient.testConnection(config)
-                    testResult = if (result.isSuccess) Strings.connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
+                    testResult = if (result.isSuccess) AppStringsProvider.current().connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
                 }
             }) {
-                Text(Strings.test)
+                Text(AppStringsProvider.current().test)
             }
             
             Box {
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Default.MoreVert, Strings.more)
+                    Icon(Icons.Default.MoreVert, AppStringsProvider.current().more)
                 }
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(Strings.edit) },
+                        text = { Text(AppStringsProvider.current().edit) },
                         onClick = { showMenu = false; onEdit() },
                         leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                     )
                     DropdownMenuItem(
-                        text = { Text(Strings.btnDelete) },
+                        text = { Text(AppStringsProvider.current().btnDelete) },
                         onClick = { showMenu = false; onDelete() },
                         leadingIcon = { Icon(Icons.Outlined.Delete, null) }
                     )
@@ -386,17 +386,17 @@ private fun SavedModelsSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(Strings.savedModels, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().savedModels, style = MaterialTheme.typography.titleMedium)
                 IconButton(
                     onClick = onAddClick,
                     enabled = apiKeys.isNotEmpty()
                 ) {
-                    Icon(Icons.Default.Add, Strings.add)
+                    Icon(Icons.Default.Add, AppStringsProvider.current().add)
                 }
             }
             
             Text(
-                Strings.configModelCapabilities,
+                AppStringsProvider.current().configModelCapabilities,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -406,13 +406,13 @@ private fun SavedModelsSection(
             if (models.isEmpty()) {
                 if (apiKeys.isEmpty()) {
                     Text(
-                        Strings.pleaseAddApiKeyFirst,
+                        AppStringsProvider.current().pleaseAddApiKeyFirst,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Text(
-                        Strings.noSavedModelsHint,
+                        AppStringsProvider.current().noSavedModelsHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -478,7 +478,7 @@ private fun SavedModelItem(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    Strings.defaultLabel,
+                                    AppStringsProvider.current().defaultLabel,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -499,26 +499,26 @@ private fun SavedModelItem(
                 
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, Strings.more)
+                        Icon(Icons.Default.MoreVert, AppStringsProvider.current().more)
                     }
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(Strings.edit) },
+                            text = { Text(AppStringsProvider.current().edit) },
                             onClick = { showMenu = false; onEdit() },
                             leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                         )
                         if (!model.isDefault) {
                             DropdownMenuItem(
-                                text = { Text(Strings.setAsDefault) },
+                                text = { Text(AppStringsProvider.current().setAsDefault) },
                                 onClick = { showMenu = false; onSetDefault() },
                                 leadingIcon = { Icon(Icons.Outlined.Star, null) }
                             )
                         }
                         DropdownMenuItem(
-                            text = { Text(Strings.btnDelete) },
+                            text = { Text(AppStringsProvider.current().btnDelete) },
                             onClick = { showMenu = false; onDelete() },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null) }
                         )
@@ -551,7 +551,7 @@ private fun SavedModelItem(
             if (supportedFeatures.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "${Strings.availableFor}: ${supportedFeatures.joinToString("、") { it.displayName }}",
+                    "${AppStringsProvider.current().availableFor}: ${supportedFeatures.joinToString("、") { it.displayName }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -591,7 +591,7 @@ private fun AddApiKeyDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialConfig != null) Strings.editApiKey else Strings.addApiKey) },
+        title = { Text(if (initialConfig != null) AppStringsProvider.current().editApiKey else AppStringsProvider.current().addApiKey) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -607,7 +607,7 @@ private fun AddApiKeyDialog(
                         value = selectedProvider.displayName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(Strings.provider) },
+                        label = { Text(AppStringsProvider.current().provider) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -704,7 +704,7 @@ private fun AddApiKeyDialog(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.getApiKey, style = MaterialTheme.typography.labelMedium)
+                                Text(AppStringsProvider.current().getApiKey, style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -714,7 +714,7 @@ private fun AddApiKeyDialog(
                 OutlinedTextField(
                     value = apiKey,
                     onValueChange = { apiKey = it },
-                    label = { Text(if (selectedProvider.requiresApiKey) "API Key" else "API Key (${Strings.optionalLabel})") },
+                    label = { Text(if (selectedProvider.requiresApiKey) "API Key" else "API Key (${AppStringsProvider.current().optionalLabel})") },
                     singleLine = true,
                     visualTransformation = if (showApiKey) VisualTransformation.None 
                                           else PasswordVisualTransformation(),
@@ -734,8 +734,8 @@ private fun AddApiKeyDialog(
                 OutlinedTextField(
                     value = alias,
                     onValueChange = { alias = it },
-                    label = { Text(Strings.aliasOptional) },
-                    placeholder = { Text(Strings.apiKeyAliasPlaceholder) },
+                    label = { Text(AppStringsProvider.current().aliasOptional) },
+                    placeholder = { Text(AppStringsProvider.current().apiKeyAliasPlaceholder) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -748,7 +748,7 @@ private fun AddApiKeyDialog(
                         label = { Text("Base URL") },
                         placeholder = { Text("https://api.example.com") },
                         singleLine = true,
-                        supportingText = { Text(Strings.openAiCompatibleHint) },
+                        supportingText = { Text(AppStringsProvider.current().openAiCompatibleHint) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     
@@ -762,7 +762,7 @@ private fun AddApiKeyDialog(
                             value = selectedApiFormat.displayName,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text(Strings.apiFormat) },
+                            label = { Text(AppStringsProvider.current().apiFormat) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(formatExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -795,7 +795,7 @@ private fun AddApiKeyDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.advancedOptions)
+                        Text(AppStringsProvider.current().advancedOptions)
                     }
                     
                     // advanced
@@ -804,20 +804,20 @@ private fun AddApiKeyDialog(
                             OutlinedTextField(
                                 value = customModelsEndpoint,
                                 onValueChange = { customModelsEndpoint = it },
-                                label = { Text(Strings.modelsEndpoint) },
+                                label = { Text(AppStringsProvider.current().modelsEndpoint) },
                                 placeholder = { Text("/v1/models") },
                                 singleLine = true,
-                                supportingText = { Text(Strings.modelsEndpointHint) },
+                                supportingText = { Text(AppStringsProvider.current().modelsEndpointHint) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
                             OutlinedTextField(
                                 value = customChatEndpoint,
                                 onValueChange = { customChatEndpoint = it },
-                                label = { Text(Strings.chatEndpoint) },
+                                label = { Text(AppStringsProvider.current().chatEndpoint) },
                                 placeholder = { Text("/v1/chat/completions") },
                                 singleLine = true,
-                                supportingText = { Text(Strings.chatEndpointHint) },
+                                supportingText = { Text(AppStringsProvider.current().chatEndpointHint) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -852,9 +852,9 @@ private fun AddApiKeyDialog(
                         )
                         scope.launch {
                             isTesting = true
-                            testResult = Strings.testing
+                            testResult = AppStringsProvider.current().testing
                             val result = apiClient.testConnection(config)
-                            testResult = if (result.isSuccess) Strings.connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
+                            testResult = if (result.isSuccess) AppStringsProvider.current().connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
                             isTesting = false
                         }
                     },
@@ -863,7 +863,7 @@ private fun AddApiKeyDialog(
                     if (isTesting) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
-                        Text(Strings.test)
+                        Text(AppStringsProvider.current().test)
                     }
                 }
                 
@@ -885,13 +885,13 @@ private fun AddApiKeyDialog(
                     },
                     enabled = apiKey.isNotBlank() || !selectedProvider.requiresApiKey
                 ) {
-                    Text(Strings.btnSave)
+                    Text(AppStringsProvider.current().btnSave)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -901,10 +901,10 @@ private fun AddApiKeyDialog(
  * Note
  */
 private enum class ModelSortType(val displayName: String) {
-    NAME(Strings.sortByName),
-    CONTEXT(Strings.sortByContext),
-    PRICE_LOW(Strings.sortByPriceLow),
-    PRICE_HIGH(Strings.sortByPriceHigh)
+    NAME(AppStringsProvider.current().sortByName),
+    CONTEXT(AppStringsProvider.current().sortByContext),
+    PRICE_LOW(AppStringsProvider.current().sortByPriceLow),
+    PRICE_HIGH(AppStringsProvider.current().sortByPriceHigh)
 }
 
 /**
@@ -978,7 +978,7 @@ private fun AddModelDialog(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                Text(Strings.addModel, style = MaterialTheme.typography.headlineSmall)
+                Text(AppStringsProvider.current().addModel, style = MaterialTheme.typography.headlineSmall)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -992,7 +992,7 @@ private fun AddModelDialog(
                         value = selectedApiKey.displayName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(Strings.selectApiKey) },
+                        label = { Text(AppStringsProvider.current().selectApiKey) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(apiKeyExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1061,12 +1061,12 @@ private fun AddModelDialog(
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                placeholder = { Text(Strings.searchModels) },
+                                placeholder = { Text(AppStringsProvider.current().searchModels) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                                 trailingIcon = {
                                     if (searchQuery.isNotEmpty()) {
                                         IconButton(onClick = { searchQuery = "" }) {
-                                            Icon(Icons.Default.Clear, contentDescription = Strings.clear)
+                                            Icon(Icons.Default.Clear, contentDescription = AppStringsProvider.current().clear)
                                         }
                                     }
                                 },
@@ -1085,7 +1085,7 @@ private fun AddModelDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "${Strings.selectModel} (${filteredAndSortedModels.size}/${models.size})", 
+                                    "${AppStringsProvider.current().selectModel} (${filteredAndSortedModels.size}/${models.size})", 
                                     style = MaterialTheme.typography.labelMedium
                                 )
                                 Row(
@@ -1099,7 +1099,7 @@ private fun AddModelDialog(
                                             isBatchMode = !isBatchMode
                                             if (!isBatchMode) selectedModels = emptySet()
                                         },
-                                        label = { Text(Strings.batchSelectModels, style = MaterialTheme.typography.labelSmall) },
+                                        label = { Text(AppStringsProvider.current().batchSelectModels, style = MaterialTheme.typography.labelSmall) },
                                         modifier = Modifier.height(28.dp)
                                     )
                                 }
@@ -1121,7 +1121,7 @@ private fun AddModelDialog(
                             // ( mode)
                             if (isBatchMode && selectedModels.isNotEmpty()) {
                                 Text(
-                                    Strings.selectedModelsCount.format(selectedModels.size),
+                                    AppStringsProvider.current().selectedModelsCount.format(selectedModels.size),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -1130,7 +1130,7 @@ private fun AddModelDialog(
                             // hint
                             if (filteredAndSortedModels.isEmpty() && searchQuery.isNotEmpty()) {
                                 Text(
-                                    Strings.noSearchResults,
+                                    AppStringsProvider.current().noSearchResults,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(vertical = 16.dp)
@@ -1202,7 +1202,7 @@ private fun AddModelDialog(
                                                         )
                                                     } else if (model.inputPrice == 0.0 && model.contextLength > 0) {
                                                         Text(
-                                                            Strings.free,
+                                                            AppStringsProvider.current().free,
                                                             style = MaterialTheme.typography.labelSmall,
                                                             color = MaterialTheme.colorScheme.primary
                                                         )
@@ -1246,15 +1246,15 @@ private fun AddModelDialog(
                         // input ID( only mode)
                         if (!isBatchMode) {
                             HorizontalDivider()
-                            Text(Strings.orManualInputModelId, style = MaterialTheme.typography.labelMedium)
+                            Text(AppStringsProvider.current().orManualInputModelId, style = MaterialTheme.typography.labelMedium)
                             OutlinedTextField(
                                 value = customModelId,
                                 onValueChange = { 
                                     customModelId = it
                                     if (it.isNotBlank()) selectedModels = emptySet()
                                 },
-                                label = { Text(Strings.modelId) },
-                                placeholder = { Text(Strings.modelIdPlaceholder) },
+                                label = { Text(AppStringsProvider.current().modelId) },
+                                placeholder = { Text(AppStringsProvider.current().modelIdPlaceholder) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -1263,15 +1263,15 @@ private fun AddModelDialog(
                             OutlinedTextField(
                                 value = alias,
                                 onValueChange = { alias = it },
-                                label = { Text(Strings.aliasOptional) },
+                                label = { Text(AppStringsProvider.current().aliasOptional) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
                             // labelselect
-                            Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
+                            Text(AppStringsProvider.current().capabilityTags, style = MaterialTheme.typography.labelMedium)
                             Text(
-                                Strings.selectCapabilitiesHint,
+                                AppStringsProvider.current().selectCapabilitiesHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1306,7 +1306,7 @@ private fun AddModelDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     PremiumButton(
@@ -1358,9 +1358,9 @@ private fun AddModelDialog(
                                   (!isBatchMode && (selectedModels.isNotEmpty() || customModelId.isNotBlank()))
                     ) {
                         Text(if (isBatchMode && selectedModels.size > 1) 
-                            Strings.addSelectedModels 
+                            AppStringsProvider.current().addSelectedModels 
                         else 
-                            Strings.btnSave)
+                            AppStringsProvider.current().btnSave)
                     }
                 }
             }
@@ -1396,7 +1396,7 @@ private fun EditModelDialog(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                Text(Strings.editModel, style = MaterialTheme.typography.headlineSmall)
+                Text(AppStringsProvider.current().editModel, style = MaterialTheme.typography.headlineSmall)
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
@@ -1418,13 +1418,13 @@ private fun EditModelDialog(
                     OutlinedTextField(
                         value = alias,
                         onValueChange = { alias = it },
-                        label = { Text(Strings.alias) },
+                        label = { Text(AppStringsProvider.current().alias) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     
                     // labelselect
-                    Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().capabilityTags, style = MaterialTheme.typography.labelMedium)
                     
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
@@ -1451,11 +1451,11 @@ private fun EditModelDialog(
                         HorizontalDivider()
                         
                         Text(
-                            Strings.featureSceneConfig,
+                            AppStringsProvider.current().featureSceneConfig,
                             style = MaterialTheme.typography.labelMedium
                         )
                         Text(
-                            Strings.selectFeaturesForCapability,
+                            AppStringsProvider.current().selectFeaturesForCapability,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1486,7 +1486,7 @@ private fun EditModelDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     PremiumButton(
@@ -1498,7 +1498,7 @@ private fun EditModelDialog(
                             ))
                         }
                     ) {
-                        Text(Strings.btnSave)
+                        Text(AppStringsProvider.current().btnSave)
                     }
                 }
             }
@@ -1537,21 +1537,21 @@ private fun CapabilityFeatureCard(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        Strings.selectedCount.format(selectedFeatures.size),
+                        AppStringsProvider.current().selectedCount.format(selectedFeatures.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Icon(
                     if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) Strings.collapse else Strings.expand
+                    contentDescription = if (isExpanded) AppStringsProvider.current().collapse else AppStringsProvider.current().expand
                 )
             }
             
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     Text(
-                        Strings.selectCapabilitiesForFeatures,
+                        AppStringsProvider.current().selectCapabilitiesForFeatures,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1606,21 +1606,21 @@ private fun CapabilityFeatureCard(
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(Strings.restoreDefault, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().restoreDefault, style = MaterialTheme.typography.labelSmall)
                         }
                         TextButton(
                             onClick = { onFeaturesChanged(AiFeature.entries.toSet()) },
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(Strings.selectAll, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().selectAll, style = MaterialTheme.typography.labelSmall)
                         }
                         TextButton(
                             onClick = { onFeaturesChanged(emptySet()) },
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(Strings.clearAll, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().clearAll, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

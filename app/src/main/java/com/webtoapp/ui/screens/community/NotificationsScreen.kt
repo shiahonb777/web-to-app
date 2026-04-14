@@ -28,7 +28,7 @@ import com.webtoapp.core.cloud.FeedItem
 import com.webtoapp.core.cloud.NotificationItem
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * with- Jobs- style: Tab + indicator + animation
@@ -62,7 +62,7 @@ fun NotificationsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityNotifications, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().communityNotifications, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp)) }
                 },
@@ -84,7 +84,7 @@ fun NotificationsScreen(
         Column(Modifier) {
             // === Tab ===
             SpringTab(
-                tabs = listOf(Strings.communityTabAll, Strings.communityTabActivity),
+                tabs = listOf(AppStringsProvider.current().communityTabAll, AppStringsProvider.current().communityTabActivity),
                 selectedIndex = selectedTab,
                 badge = if (unreadCount > 0) unreadCount else null,
                 onSelect = { selectedTab = it }
@@ -177,7 +177,7 @@ private fun NotificationsContent(
     if (loading) {
         ListShimmer()
     } else if (notifications.isEmpty()) {
-        EmptyState(Strings.communityNothingYet, Strings.communityNothingYetHint)
+        EmptyState(AppStringsProvider.current().communityNothingYet, AppStringsProvider.current().communityNothingYetHint)
     } else {
         LazyColumn {
             itemsIndexed(notifications, key = { _, n -> n.id }) { index, notification ->
@@ -249,7 +249,7 @@ private fun FeedContent(feed: List<FeedItem>, loading: Boolean, onModule: (Int) 
     if (loading) {
         ListShimmer()
     } else if (feed.isEmpty()) {
-        EmptyState(Strings.communityNoFeedYet, Strings.communityNoFeedYetHint)
+        EmptyState(AppStringsProvider.current().communityNoFeedYet, AppStringsProvider.current().communityNoFeedYetHint)
     } else {
         LazyColumn {
             itemsIndexed(feed, key = { _, f -> f.id }) { index, item ->
@@ -265,8 +265,8 @@ private fun FeedContent(feed: List<FeedItem>, loading: Boolean, onModule: (Int) 
 @Composable
 private fun FeedRow(item: FeedItem, onTargetClick: () -> Unit) {
     val action = when (item.type) {
-        "publish" -> Strings.communityActionPublished; "vote" -> Strings.communityActionLiked; "comment" -> Strings.communityActionReplied
-        "favorite" -> Strings.communityActionBookmarked; "follow" -> Strings.communityActionFollowed; else -> Strings.communityActionInteracted
+        "publish" -> AppStringsProvider.current().communityActionPublished; "vote" -> AppStringsProvider.current().communityActionLiked; "comment" -> AppStringsProvider.current().communityActionReplied
+        "favorite" -> AppStringsProvider.current().communityActionBookmarked; "follow" -> AppStringsProvider.current().communityActionFollowed; else -> AppStringsProvider.current().communityActionInteracted
     }
 
     Row(

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.golang.GoSampleManager
 import com.webtoapp.data.model.GoAppConfig
 import com.webtoapp.ui.components.TypedSampleProjectsCard
@@ -168,21 +168,21 @@ fun CreateGoAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.frameworkDetected
+                creationPhase = AppStringsProvider.current().frameworkDetected
                 errorMessage = null
                 
                 try {
                     val projectDir = resolveDocumentTreeDirectory(treeUri)
                     if (!projectDir.exists()) {
-                        errorMessage = Strings.dirNotExists
+                        errorMessage = AppStringsProvider.current().dirNotExists
                         return@launch
                     }
-                    creationPhase = Strings.copyingProjectFiles
+                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                     val imported = projectImporter.importProject(projectDir)
                     applyImportAnalysis(imported)
-                    creationPhase = Strings.goProjectReady
+                    creationPhase = AppStringsProvider.current().goProjectReady
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.projectImportFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().projectImportFailed
                 } finally {
                     isCreating = false
                 }
@@ -208,10 +208,10 @@ fun CreateGoAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createGoApp) },
+                title = { Text(AppStringsProvider.current().createGoApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -235,7 +235,7 @@ fun CreateGoAppScreen(
                             }
                         },
                         enabled = canCreate && !isCreating
-                    ) { Text(if (isEdit) Strings.btnSave else Strings.btnCreate) }
+                    ) { Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate) }
                 }
             )
         }
@@ -261,20 +261,20 @@ fun CreateGoAppScreen(
             // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.sampleGoSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().sampleGoSubtitle,
                     samples = remember { GoSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = GoSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
                                 isCreating = true
-                                creationPhase = Strings.frameworkDetected
+                                creationPhase = AppStringsProvider.current().frameworkDetected
                                 try {
-                                    creationPhase = Strings.copyingProjectFiles
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
                                     val imported = projectImporter.importProject(File(path))
                                     applyImportAnalysis(imported, appNameOverride = sample.name)
-                                    creationPhase = Strings.goProjectReady
+                                    creationPhase = AppStringsProvider.current().goProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -296,13 +296,13 @@ fun CreateGoAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -312,7 +312,7 @@ fun CreateGoAppScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
@@ -334,11 +334,11 @@ fun CreateGoAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.goSelectProject, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().goSelectProject, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.goSupportedFrameworks,
+                        text = AppStringsProvider.current().goSupportedFrameworks,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -354,7 +354,7 @@ fun CreateGoAppScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.goProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(AppStringsProvider.current().goProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -364,14 +364,14 @@ fun CreateGoAppScreen(
                                 )
                                 if (detectedFramework != null && detectedFramework != "raw") {
                                     Text(
-                                        "${Strings.frameworkDetected}: $detectedFramework",
+                                        "${AppStringsProvider.current().frameworkDetected}: $detectedFramework",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 if (binaryName.isNotEmpty()) {
                                     Text(
-                                        "${Strings.goSelectBinary}: $binaryName",
+                                        "${AppStringsProvider.current().goSelectBinary}: $binaryName",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -388,7 +388,7 @@ fun CreateGoAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.goSelectProject)
+                        Text(AppStringsProvider.current().goSelectProject)
                     }
                 }
             }
@@ -520,14 +520,14 @@ private fun GoHeroSection(
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = if (detectedFramework != null && detectedFramework != "raw" && detectedFramework != "net_http")
-                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${Strings.goHeroTitle}"
-                        else Strings.goHeroTitle,
+                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${AppStringsProvider.current().goHeroTitle}"
+                        else AppStringsProvider.current().goHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.goHeroDesc,
+                        text = AppStringsProvider.current().goHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -571,7 +571,7 @@ private fun GoModuleInfoCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Info, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goModuleInfo, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().goModuleInfo, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -585,7 +585,7 @@ private fun GoModuleInfoCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(Strings.goModulePath, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(AppStringsProvider.current().goModulePath, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(modulePath, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold)
                     }
                     if (goVersion != null) {
@@ -594,7 +594,7 @@ private fun GoModuleInfoCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(Strings.goVersion, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(AppStringsProvider.current().goVersion, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(goVersion, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                         }
                     }
@@ -603,7 +603,7 @@ private fun GoModuleInfoCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(Strings.goDependencyCount, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(AppStringsProvider.current().goDependencyCount, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("$depCount", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = frameworkColor)
                     }
                 }
@@ -632,7 +632,7 @@ private fun GoBinaryDetectionCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Memory, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goBinaryDetection, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().goBinaryDetection, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -652,14 +652,14 @@ private fun GoBinaryDetectionCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            if (binaryDetected) Strings.goBinaryFound else Strings.goBinaryNotFound,
+                            if (binaryDetected) AppStringsProvider.current().goBinaryFound else AppStringsProvider.current().goBinaryNotFound,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
                             color = if (binaryDetected) frameworkColor else MaterialTheme.colorScheme.error
                         )
                         if (binaryDetected && binarySize != null) {
                             Text(
-                                "${Strings.goBinarySize}: ${formatFileSize(binarySize)}",
+                                "${AppStringsProvider.current().goBinarySize}: ${formatFileSize(binarySize)}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -672,7 +672,7 @@ private fun GoBinaryDetectionCard(
             PremiumTextField(
                 value = binaryName,
                 onValueChange = onBinaryNameChange,
-                label = { Text(Strings.goSelectBinary) },
+                label = { Text(AppStringsProvider.current().goSelectBinary) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -705,7 +705,7 @@ private fun GoTargetArchCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.DeveloperBoard, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goTargetArch, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().goTargetArch, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -745,11 +745,11 @@ private fun GoStaticFilesCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goStaticFiles, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().goStaticFiles, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                Strings.goStaticFilesHint,
+                AppStringsProvider.current().goStaticFilesHint,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -757,7 +757,7 @@ private fun GoStaticFilesCard(
             PremiumTextField(
                 value = staticDir,
                 onValueChange = onStaticDirChange,
-                label = { Text(Strings.goStaticFiles) },
+                label = { Text(AppStringsProvider.current().goStaticFiles) },
                 placeholder = { Text("static/") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -783,13 +783,13 @@ private fun GoHealthCheckCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.MonitorHeart, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goHealthCheck, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().goHealthCheck, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             PremiumTextField(
                 value = endpoint,
                 onValueChange = onEndpointChange,
-                label = { Text(Strings.goHealthCheckEndpoint) },
+                label = { Text(AppStringsProvider.current().goHealthCheckEndpoint) },
                 placeholder = { Text("/health") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -817,7 +817,7 @@ private fun GoDepsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goDirectDeps, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().goDirectDeps, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -859,7 +859,7 @@ private fun GoDepsCard(
             }
             if (deps.size > 6) {
                 TextButton(onClick = onToggleShowAll, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (showAll) Strings.close else "${Strings.more} (${deps.size - 6})")
+                    Text(if (showAll) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${deps.size - 6})")
                 }
             }
         }
@@ -893,7 +893,7 @@ private fun GoFrameworkTipCard(framework: String?) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        Strings.phpFrameworkTip,
+                        AppStringsProvider.current().phpFrameworkTip,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = tipData.color

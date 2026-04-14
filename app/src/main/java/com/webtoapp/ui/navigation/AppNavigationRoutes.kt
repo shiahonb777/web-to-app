@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal const val TAB_HOST_ROUTE = "tab_host"
 
@@ -29,11 +29,11 @@ enum class BottomTab(
     MORE(Routes.MORE, Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz, "more");
 
     fun label(): String = when (this) {
-        HOME -> Strings.tabHome
-        STORE -> Strings.tabStore
-        COMMUNITY -> Strings.tabCommunity
-        PROFILE -> Strings.tabProfile
-        MORE -> Strings.tabMore
+        HOME -> AppStringsProvider.current().tabHome
+        STORE -> AppStringsProvider.current().tabStore
+        COMMUNITY -> AppStringsProvider.current().tabCommunity
+        PROFILE -> AppStringsProvider.current().tabProfile
+        MORE -> AppStringsProvider.current().tabMore
     }
 }
 

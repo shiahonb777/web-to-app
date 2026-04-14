@@ -1,7 +1,7 @@
 package com.webtoapp.core.extension
 
 import com.google.gson.annotations.SerializedName
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.GsonProvider
 import java.util.UUID
 import java.util.concurrent.Executors
@@ -81,55 +81,55 @@ enum class ModuleCategory(val icon: String) {
     OTHER("package");
     
     fun getDisplayName(): String = when (this) {
-        CONTENT_FILTER -> Strings.catContentFilter
-        CONTENT_ENHANCE -> Strings.catContentEnhance
-        STYLE_MODIFIER -> Strings.catStyleModifier
-        THEME -> Strings.catTheme
-        FUNCTION_ENHANCE -> Strings.catFunctionEnhance
-        AUTOMATION -> Strings.catAutomation
-        NAVIGATION -> Strings.catNavigation
-        DATA_EXTRACT -> Strings.catDataExtract
-        DATA_SAVE -> Strings.catDataSave
-        INTERACTION -> Strings.catInteraction
-        ACCESSIBILITY -> Strings.catAccessibility
-        MEDIA -> Strings.catMedia
-        VIDEO -> Strings.catVideo
-        IMAGE -> Strings.catImage
-        AUDIO -> Strings.catAudio
-        SECURITY -> Strings.catSecurity
-        ANTI_TRACKING -> Strings.catAntiTracking
-        SOCIAL -> Strings.catSocial
-        SHOPPING -> Strings.catShopping
-        READING -> Strings.catReading
-        TRANSLATE -> Strings.catTranslate
-        DEVELOPER -> Strings.catDeveloper
-        OTHER -> Strings.catOther
+        CONTENT_FILTER -> AppStringsProvider.current().catContentFilter
+        CONTENT_ENHANCE -> AppStringsProvider.current().catContentEnhance
+        STYLE_MODIFIER -> AppStringsProvider.current().catStyleModifier
+        THEME -> AppStringsProvider.current().catTheme
+        FUNCTION_ENHANCE -> AppStringsProvider.current().catFunctionEnhance
+        AUTOMATION -> AppStringsProvider.current().catAutomation
+        NAVIGATION -> AppStringsProvider.current().catNavigation
+        DATA_EXTRACT -> AppStringsProvider.current().catDataExtract
+        DATA_SAVE -> AppStringsProvider.current().catDataSave
+        INTERACTION -> AppStringsProvider.current().catInteraction
+        ACCESSIBILITY -> AppStringsProvider.current().catAccessibility
+        MEDIA -> AppStringsProvider.current().catMedia
+        VIDEO -> AppStringsProvider.current().catVideo
+        IMAGE -> AppStringsProvider.current().catImage
+        AUDIO -> AppStringsProvider.current().catAudio
+        SECURITY -> AppStringsProvider.current().catSecurity
+        ANTI_TRACKING -> AppStringsProvider.current().catAntiTracking
+        SOCIAL -> AppStringsProvider.current().catSocial
+        SHOPPING -> AppStringsProvider.current().catShopping
+        READING -> AppStringsProvider.current().catReading
+        TRANSLATE -> AppStringsProvider.current().catTranslate
+        DEVELOPER -> AppStringsProvider.current().catDeveloper
+        OTHER -> AppStringsProvider.current().catOther
     }
     
     fun getDescription(): String = when (this) {
-        CONTENT_FILTER -> Strings.catContentFilterDesc
-        CONTENT_ENHANCE -> Strings.catContentEnhanceDesc
-        STYLE_MODIFIER -> Strings.catStyleModifierDesc
-        THEME -> Strings.catThemeDesc
-        FUNCTION_ENHANCE -> Strings.catFunctionEnhanceDesc
-        AUTOMATION -> Strings.catAutomationDesc
-        NAVIGATION -> Strings.catNavigationDesc
-        DATA_EXTRACT -> Strings.catDataExtractDesc
-        DATA_SAVE -> Strings.catDataSaveDesc
-        INTERACTION -> Strings.catInteractionDesc
-        ACCESSIBILITY -> Strings.catAccessibilityDesc
-        MEDIA -> Strings.catMediaDesc
-        VIDEO -> Strings.catVideoDesc
-        IMAGE -> Strings.catImageDesc
-        AUDIO -> Strings.catAudioDesc
-        SECURITY -> Strings.catSecurityDesc
-        ANTI_TRACKING -> Strings.catAntiTrackingDesc
-        SOCIAL -> Strings.catSocialDesc
-        SHOPPING -> Strings.catShoppingDesc
-        READING -> Strings.catReadingDesc
-        TRANSLATE -> Strings.catTranslateDesc
-        DEVELOPER -> Strings.catDeveloperDesc
-        OTHER -> Strings.catOtherDesc
+        CONTENT_FILTER -> AppStringsProvider.current().catContentFilterDesc
+        CONTENT_ENHANCE -> AppStringsProvider.current().catContentEnhanceDesc
+        STYLE_MODIFIER -> AppStringsProvider.current().catStyleModifierDesc
+        THEME -> AppStringsProvider.current().catThemeDesc
+        FUNCTION_ENHANCE -> AppStringsProvider.current().catFunctionEnhanceDesc
+        AUTOMATION -> AppStringsProvider.current().catAutomationDesc
+        NAVIGATION -> AppStringsProvider.current().catNavigationDesc
+        DATA_EXTRACT -> AppStringsProvider.current().catDataExtractDesc
+        DATA_SAVE -> AppStringsProvider.current().catDataSaveDesc
+        INTERACTION -> AppStringsProvider.current().catInteractionDesc
+        ACCESSIBILITY -> AppStringsProvider.current().catAccessibilityDesc
+        MEDIA -> AppStringsProvider.current().catMediaDesc
+        VIDEO -> AppStringsProvider.current().catVideoDesc
+        IMAGE -> AppStringsProvider.current().catImageDesc
+        AUDIO -> AppStringsProvider.current().catAudioDesc
+        SECURITY -> AppStringsProvider.current().catSecurityDesc
+        ANTI_TRACKING -> AppStringsProvider.current().catAntiTrackingDesc
+        SOCIAL -> AppStringsProvider.current().catSocialDesc
+        SHOPPING -> AppStringsProvider.current().catShoppingDesc
+        READING -> AppStringsProvider.current().catReadingDesc
+        TRANSLATE -> AppStringsProvider.current().catTranslateDesc
+        DEVELOPER -> AppStringsProvider.current().catDeveloperDesc
+        OTHER -> AppStringsProvider.current().catOtherDesc
     }
 }
 
@@ -141,19 +141,19 @@ enum class ModuleRunTime(val jsEvent: String) {
     BEFORE_UNLOAD("beforeunload");
     
     fun getDisplayName(): String = when (this) {
-        DOCUMENT_START -> Strings.runTimeDocStart
-        DOCUMENT_END -> Strings.runTimeDocEnd
-        DOCUMENT_IDLE -> Strings.runTimeDocIdle
-        CONTEXT_MENU -> Strings.runTimeContextMenu
-        BEFORE_UNLOAD -> Strings.runTimeBeforeUnload
+        DOCUMENT_START -> AppStringsProvider.current().runTimeDocStart
+        DOCUMENT_END -> AppStringsProvider.current().runTimeDocEnd
+        DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdle
+        CONTEXT_MENU -> AppStringsProvider.current().runTimeContextMenu
+        BEFORE_UNLOAD -> AppStringsProvider.current().runTimeBeforeUnload
     }
     
     fun getDescription(): String = when (this) {
-        DOCUMENT_START -> Strings.runTimeDocStartDesc
-        DOCUMENT_END -> Strings.runTimeDocEndDesc
-        DOCUMENT_IDLE -> Strings.runTimeDocIdleDesc
-        CONTEXT_MENU -> Strings.runTimeContextMenuDesc
-        BEFORE_UNLOAD -> Strings.runTimeBeforeUnloadDesc
+        DOCUMENT_START -> AppStringsProvider.current().runTimeDocStartDesc
+        DOCUMENT_END -> AppStringsProvider.current().runTimeDocEndDesc
+        DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdleDesc
+        CONTEXT_MENU -> AppStringsProvider.current().runTimeContextMenuDesc
+        BEFORE_UNLOAD -> AppStringsProvider.current().runTimeBeforeUnloadDesc
     }
 }
 
@@ -170,29 +170,29 @@ enum class ModuleTrigger {
     VISIBILITY;
     
     val displayName: String get() = when (this) {
-        AUTO -> Strings.triggerAuto
-        MANUAL -> Strings.triggerManual
-        INTERVAL -> Strings.triggerInterval
-        MUTATION -> Strings.triggerMutation
-        SCROLL -> Strings.triggerScroll
-        CLICK -> Strings.triggerClick
-        HOVER -> Strings.triggerHover
-        FOCUS -> Strings.triggerFocus
-        INPUT -> Strings.triggerInput
-        VISIBILITY -> Strings.triggerVisibility
+        AUTO -> AppStringsProvider.current().triggerAuto
+        MANUAL -> AppStringsProvider.current().triggerManual
+        INTERVAL -> AppStringsProvider.current().triggerInterval
+        MUTATION -> AppStringsProvider.current().triggerMutation
+        SCROLL -> AppStringsProvider.current().triggerScroll
+        CLICK -> AppStringsProvider.current().triggerClick
+        HOVER -> AppStringsProvider.current().triggerHover
+        FOCUS -> AppStringsProvider.current().triggerFocus
+        INPUT -> AppStringsProvider.current().triggerInput
+        VISIBILITY -> AppStringsProvider.current().triggerVisibility
     }
     
     val description: String get() = when (this) {
-        AUTO -> Strings.triggerAutoDesc
-        MANUAL -> Strings.triggerManualDesc
-        INTERVAL -> Strings.triggerIntervalDesc
-        MUTATION -> Strings.triggerMutationDesc
-        SCROLL -> Strings.triggerScrollDesc
-        CLICK -> Strings.triggerClickDesc
-        HOVER -> Strings.triggerHoverDesc
-        FOCUS -> Strings.triggerFocusDesc
-        INPUT -> Strings.triggerInputDesc
-        VISIBILITY -> Strings.triggerVisibilityDesc
+        AUTO -> AppStringsProvider.current().triggerAutoDesc
+        MANUAL -> AppStringsProvider.current().triggerManualDesc
+        INTERVAL -> AppStringsProvider.current().triggerIntervalDesc
+        MUTATION -> AppStringsProvider.current().triggerMutationDesc
+        SCROLL -> AppStringsProvider.current().triggerScrollDesc
+        CLICK -> AppStringsProvider.current().triggerClickDesc
+        HOVER -> AppStringsProvider.current().triggerHoverDesc
+        FOCUS -> AppStringsProvider.current().triggerFocusDesc
+        INPUT -> AppStringsProvider.current().triggerInputDesc
+        VISIBILITY -> AppStringsProvider.current().triggerVisibilityDesc
     }
 }
 
@@ -230,71 +230,71 @@ enum class ModulePermission(val dangerous: Boolean = false) {
     NAVIGATION;
     
     val displayName: String get() = when (this) {
-        DOM_ACCESS -> Strings.permDomAccess
-        DOM_OBSERVE -> Strings.permDomObserve
-        CSS_INJECT -> Strings.permCssInject
-        STORAGE -> Strings.permStorage
-        COOKIE -> Strings.permCookie
-        INDEXED_DB -> Strings.permIndexedDb
-        CACHE -> Strings.permCache
-        NETWORK -> Strings.permNetwork
-        WEBSOCKET -> Strings.permWebsocket
-        FETCH_INTERCEPT -> Strings.permFetchIntercept
-        CLIPBOARD -> Strings.permClipboard
-        NOTIFICATION -> Strings.permNotification
-        ALERT -> Strings.permAlert
-        KEYBOARD -> Strings.permKeyboard
-        MOUSE -> Strings.permMouse
-        TOUCH -> Strings.permTouch
-        LOCATION -> Strings.permLocation
-        CAMERA -> Strings.permCamera
-        MICROPHONE -> Strings.permMicrophone
-        DEVICE_INFO -> Strings.permDeviceInfo
-        MEDIA -> Strings.permMedia
-        FULLSCREEN -> Strings.permFullscreen
-        PICTURE_IN_PICTURE -> Strings.permPip
-        SCREEN_CAPTURE -> Strings.permScreenCapture
-        DOWNLOAD -> Strings.permDownload
-        FILE_ACCESS -> Strings.permFileAccess
-        EVAL -> Strings.permEval
-        IFRAME -> Strings.permIframe
-        WINDOW_OPEN -> Strings.permWindowOpen
-        HISTORY -> Strings.permHistory
-        NAVIGATION -> Strings.permNavigation
+        DOM_ACCESS -> AppStringsProvider.current().permDomAccess
+        DOM_OBSERVE -> AppStringsProvider.current().permDomObserve
+        CSS_INJECT -> AppStringsProvider.current().permCssInject
+        STORAGE -> AppStringsProvider.current().permStorage
+        COOKIE -> AppStringsProvider.current().permCookie
+        INDEXED_DB -> AppStringsProvider.current().permIndexedDb
+        CACHE -> AppStringsProvider.current().permCache
+        NETWORK -> AppStringsProvider.current().permNetwork
+        WEBSOCKET -> AppStringsProvider.current().permWebsocket
+        FETCH_INTERCEPT -> AppStringsProvider.current().permFetchIntercept
+        CLIPBOARD -> AppStringsProvider.current().permClipboard
+        NOTIFICATION -> AppStringsProvider.current().permNotification
+        ALERT -> AppStringsProvider.current().permAlert
+        KEYBOARD -> AppStringsProvider.current().permKeyboard
+        MOUSE -> AppStringsProvider.current().permMouse
+        TOUCH -> AppStringsProvider.current().permTouch
+        LOCATION -> AppStringsProvider.current().permLocation
+        CAMERA -> AppStringsProvider.current().permCamera
+        MICROPHONE -> AppStringsProvider.current().permMicrophone
+        DEVICE_INFO -> AppStringsProvider.current().permDeviceInfo
+        MEDIA -> AppStringsProvider.current().permMedia
+        FULLSCREEN -> AppStringsProvider.current().permFullscreen
+        PICTURE_IN_PICTURE -> AppStringsProvider.current().permPip
+        SCREEN_CAPTURE -> AppStringsProvider.current().permScreenCapture
+        DOWNLOAD -> AppStringsProvider.current().permDownload
+        FILE_ACCESS -> AppStringsProvider.current().permFileAccess
+        EVAL -> AppStringsProvider.current().permEval
+        IFRAME -> AppStringsProvider.current().permIframe
+        WINDOW_OPEN -> AppStringsProvider.current().permWindowOpen
+        HISTORY -> AppStringsProvider.current().permHistory
+        NAVIGATION -> AppStringsProvider.current().permNavigation
     }
     
     val description: String get() = when (this) {
-        DOM_ACCESS -> Strings.permDomAccessDesc
-        DOM_OBSERVE -> Strings.permDomObserveDesc
-        CSS_INJECT -> Strings.permCssInjectDesc
-        STORAGE -> Strings.permStorageDesc
-        COOKIE -> Strings.permCookieDesc
-        INDEXED_DB -> Strings.permIndexedDbDesc
-        CACHE -> Strings.permCacheDesc
-        NETWORK -> Strings.permNetworkDesc
-        WEBSOCKET -> Strings.permWebsocketDesc
-        FETCH_INTERCEPT -> Strings.permFetchInterceptDesc
-        CLIPBOARD -> Strings.permClipboardDesc
-        NOTIFICATION -> Strings.permNotificationDesc
-        ALERT -> Strings.permAlertDesc
-        KEYBOARD -> Strings.permKeyboardDesc
-        MOUSE -> Strings.permMouseDesc
-        TOUCH -> Strings.permTouchDesc
-        LOCATION -> Strings.permLocationDesc
-        CAMERA -> Strings.permCameraDesc
-        MICROPHONE -> Strings.permMicrophoneDesc
-        DEVICE_INFO -> Strings.permDeviceInfoDesc
-        MEDIA -> Strings.permMediaDesc
-        FULLSCREEN -> Strings.permFullscreenDesc
-        PICTURE_IN_PICTURE -> Strings.permPipDesc
-        SCREEN_CAPTURE -> Strings.permScreenCaptureDesc
-        DOWNLOAD -> Strings.permDownloadDesc
-        FILE_ACCESS -> Strings.permFileAccessDesc
-        EVAL -> Strings.permEvalDesc
-        IFRAME -> Strings.permIframeDesc
-        WINDOW_OPEN -> Strings.permWindowOpenDesc
-        HISTORY -> Strings.permHistoryDesc
-        NAVIGATION -> Strings.permNavigationDesc
+        DOM_ACCESS -> AppStringsProvider.current().permDomAccessDesc
+        DOM_OBSERVE -> AppStringsProvider.current().permDomObserveDesc
+        CSS_INJECT -> AppStringsProvider.current().permCssInjectDesc
+        STORAGE -> AppStringsProvider.current().permStorageDesc
+        COOKIE -> AppStringsProvider.current().permCookieDesc
+        INDEXED_DB -> AppStringsProvider.current().permIndexedDbDesc
+        CACHE -> AppStringsProvider.current().permCacheDesc
+        NETWORK -> AppStringsProvider.current().permNetworkDesc
+        WEBSOCKET -> AppStringsProvider.current().permWebsocketDesc
+        FETCH_INTERCEPT -> AppStringsProvider.current().permFetchInterceptDesc
+        CLIPBOARD -> AppStringsProvider.current().permClipboardDesc
+        NOTIFICATION -> AppStringsProvider.current().permNotificationDesc
+        ALERT -> AppStringsProvider.current().permAlertDesc
+        KEYBOARD -> AppStringsProvider.current().permKeyboardDesc
+        MOUSE -> AppStringsProvider.current().permMouseDesc
+        TOUCH -> AppStringsProvider.current().permTouchDesc
+        LOCATION -> AppStringsProvider.current().permLocationDesc
+        CAMERA -> AppStringsProvider.current().permCameraDesc
+        MICROPHONE -> AppStringsProvider.current().permMicrophoneDesc
+        DEVICE_INFO -> AppStringsProvider.current().permDeviceInfoDesc
+        MEDIA -> AppStringsProvider.current().permMediaDesc
+        FULLSCREEN -> AppStringsProvider.current().permFullscreenDesc
+        PICTURE_IN_PICTURE -> AppStringsProvider.current().permPipDesc
+        SCREEN_CAPTURE -> AppStringsProvider.current().permScreenCaptureDesc
+        DOWNLOAD -> AppStringsProvider.current().permDownloadDesc
+        FILE_ACCESS -> AppStringsProvider.current().permFileAccessDesc
+        EVAL -> AppStringsProvider.current().permEvalDesc
+        IFRAME -> AppStringsProvider.current().permIframeDesc
+        WINDOW_OPEN -> AppStringsProvider.current().permWindowOpenDesc
+        HISTORY -> AppStringsProvider.current().permHistoryDesc
+        NAVIGATION -> AppStringsProvider.current().permNavigationDesc
     }
 }
 
@@ -307,53 +307,53 @@ enum class ConfigItemType {
     FILE, IMAGE;
     
     val displayName: String get() = when (this) {
-        TEXT -> Strings.configTypeText
-        TEXTAREA -> Strings.configTypeTextarea
-        NUMBER -> Strings.configTypeNumber
-        BOOLEAN -> Strings.configTypeBoolean
-        SELECT -> Strings.configTypeSelect
-        MULTI_SELECT -> Strings.configTypeMultiSelect
-        RADIO -> Strings.configTypeRadio
-        CHECKBOX -> Strings.configTypeCheckbox
-        COLOR -> Strings.configTypeColor
-        URL -> Strings.configTypeUrl
-        EMAIL -> Strings.configTypeEmail
-        PASSWORD -> Strings.configTypePassword
-        REGEX -> Strings.configTypeRegex
-        CSS_SELECTOR -> Strings.configTypeCssSelector
-        JAVASCRIPT -> Strings.configTypeJavascript
-        JSON -> Strings.configTypeJson
-        RANGE -> Strings.configTypeRange
-        DATE -> Strings.configTypeDate
-        TIME -> Strings.configTypeTime
-        DATETIME -> Strings.configTypeDatetime
-        FILE -> Strings.configTypeFile
-        IMAGE -> Strings.configTypeImage
+        TEXT -> AppStringsProvider.current().configTypeText
+        TEXTAREA -> AppStringsProvider.current().configTypeTextarea
+        NUMBER -> AppStringsProvider.current().configTypeNumber
+        BOOLEAN -> AppStringsProvider.current().configTypeBoolean
+        SELECT -> AppStringsProvider.current().configTypeSelect
+        MULTI_SELECT -> AppStringsProvider.current().configTypeMultiSelect
+        RADIO -> AppStringsProvider.current().configTypeRadio
+        CHECKBOX -> AppStringsProvider.current().configTypeCheckbox
+        COLOR -> AppStringsProvider.current().configTypeColor
+        URL -> AppStringsProvider.current().configTypeUrl
+        EMAIL -> AppStringsProvider.current().configTypeEmail
+        PASSWORD -> AppStringsProvider.current().configTypePassword
+        REGEX -> AppStringsProvider.current().configTypeRegex
+        CSS_SELECTOR -> AppStringsProvider.current().configTypeCssSelector
+        JAVASCRIPT -> AppStringsProvider.current().configTypeJavascript
+        JSON -> AppStringsProvider.current().configTypeJson
+        RANGE -> AppStringsProvider.current().configTypeRange
+        DATE -> AppStringsProvider.current().configTypeDate
+        TIME -> AppStringsProvider.current().configTypeTime
+        DATETIME -> AppStringsProvider.current().configTypeDatetime
+        FILE -> AppStringsProvider.current().configTypeFile
+        IMAGE -> AppStringsProvider.current().configTypeImage
     }
     
     val description: String get() = when (this) {
-        TEXT -> Strings.configTypeTextDesc
-        TEXTAREA -> Strings.configTypeTextareaDesc
-        NUMBER -> Strings.configTypeNumberDesc
-        BOOLEAN -> Strings.configTypeBooleanDesc
-        SELECT -> Strings.configTypeSelectDesc
-        MULTI_SELECT -> Strings.configTypeMultiSelectDesc
-        RADIO -> Strings.configTypeRadioDesc
-        CHECKBOX -> Strings.configTypeCheckboxDesc
-        COLOR -> Strings.configTypeColorDesc
-        URL -> Strings.configTypeUrlDesc
-        EMAIL -> Strings.configTypeEmailDesc
-        PASSWORD -> Strings.configTypePasswordDesc
-        REGEX -> Strings.configTypeRegexDesc
-        CSS_SELECTOR -> Strings.configTypeCssSelectorDesc
-        JAVASCRIPT -> Strings.configTypeJavascriptDesc
-        JSON -> Strings.configTypeJsonDesc
-        RANGE -> Strings.configTypeRangeDesc
-        DATE -> Strings.configTypeDateDesc
-        TIME -> Strings.configTypeTimeDesc
-        DATETIME -> Strings.configTypeDatetimeDesc
-        FILE -> Strings.configTypeFileDesc
-        IMAGE -> Strings.configTypeImageDesc
+        TEXT -> AppStringsProvider.current().configTypeTextDesc
+        TEXTAREA -> AppStringsProvider.current().configTypeTextareaDesc
+        NUMBER -> AppStringsProvider.current().configTypeNumberDesc
+        BOOLEAN -> AppStringsProvider.current().configTypeBooleanDesc
+        SELECT -> AppStringsProvider.current().configTypeSelectDesc
+        MULTI_SELECT -> AppStringsProvider.current().configTypeMultiSelectDesc
+        RADIO -> AppStringsProvider.current().configTypeRadioDesc
+        CHECKBOX -> AppStringsProvider.current().configTypeCheckboxDesc
+        COLOR -> AppStringsProvider.current().configTypeColorDesc
+        URL -> AppStringsProvider.current().configTypeUrlDesc
+        EMAIL -> AppStringsProvider.current().configTypeEmailDesc
+        PASSWORD -> AppStringsProvider.current().configTypePasswordDesc
+        REGEX -> AppStringsProvider.current().configTypeRegexDesc
+        CSS_SELECTOR -> AppStringsProvider.current().configTypeCssSelectorDesc
+        JAVASCRIPT -> AppStringsProvider.current().configTypeJavascriptDesc
+        JSON -> AppStringsProvider.current().configTypeJsonDesc
+        RANGE -> AppStringsProvider.current().configTypeRangeDesc
+        DATE -> AppStringsProvider.current().configTypeDateDesc
+        TIME -> AppStringsProvider.current().configTypeTimeDesc
+        DATETIME -> AppStringsProvider.current().configTypeDatetimeDesc
+        FILE -> AppStringsProvider.current().configTypeFileDesc
+        IMAGE -> AppStringsProvider.current().configTypeImageDesc
     }
 }
 
@@ -388,23 +388,23 @@ enum class ModuleUiType {
     CUSTOM;
     
     fun getDisplayName(): String = when (this) {
-        FLOATING_BUTTON -> Strings.uiTypeFloatingButton
-        FLOATING_TOOLBAR -> Strings.uiTypeFloatingToolbar
-        SIDEBAR -> Strings.uiTypeSidebar
-        BOTTOM_BAR -> Strings.uiTypeBottomBar
-        FLOATING_PANEL -> Strings.uiTypeFloatingPanel
-        MINI_BUTTON -> Strings.uiTypeMiniButton
-        CUSTOM -> Strings.uiTypeCustom
+        FLOATING_BUTTON -> AppStringsProvider.current().uiTypeFloatingButton
+        FLOATING_TOOLBAR -> AppStringsProvider.current().uiTypeFloatingToolbar
+        SIDEBAR -> AppStringsProvider.current().uiTypeSidebar
+        BOTTOM_BAR -> AppStringsProvider.current().uiTypeBottomBar
+        FLOATING_PANEL -> AppStringsProvider.current().uiTypeFloatingPanel
+        MINI_BUTTON -> AppStringsProvider.current().uiTypeMiniButton
+        CUSTOM -> AppStringsProvider.current().uiTypeCustom
     }
     
     fun getDescription(): String = when (this) {
-        FLOATING_BUTTON -> Strings.uiTypeFloatingButtonDesc
-        FLOATING_TOOLBAR -> Strings.uiTypeFloatingToolbarDesc
-        SIDEBAR -> Strings.uiTypeSidebarDesc
-        BOTTOM_BAR -> Strings.uiTypeBottomBarDesc
-        FLOATING_PANEL -> Strings.uiTypeFloatingPanelDesc
-        MINI_BUTTON -> Strings.uiTypeMiniButtonDesc
-        CUSTOM -> Strings.uiTypeCustomDesc
+        FLOATING_BUTTON -> AppStringsProvider.current().uiTypeFloatingButtonDesc
+        FLOATING_TOOLBAR -> AppStringsProvider.current().uiTypeFloatingToolbarDesc
+        SIDEBAR -> AppStringsProvider.current().uiTypeSidebarDesc
+        BOTTOM_BAR -> AppStringsProvider.current().uiTypeBottomBarDesc
+        FLOATING_PANEL -> AppStringsProvider.current().uiTypeFloatingPanelDesc
+        MINI_BUTTON -> AppStringsProvider.current().uiTypeMiniButtonDesc
+        CUSTOM -> AppStringsProvider.current().uiTypeCustomDesc
     }
     
     fun getIcon(): String = when (this) {
@@ -436,15 +436,15 @@ enum class UiPosition {
     }
     
     fun getDisplayName(): String = when (this) {
-        TOP_LEFT -> Strings.posTopLeft
-        TOP_CENTER -> Strings.posTopCenter
-        TOP_RIGHT -> Strings.posTopRight
-        MIDDLE_LEFT -> Strings.posMiddleLeft
-        MIDDLE_CENTER -> Strings.posMiddleCenter
-        MIDDLE_RIGHT -> Strings.posMiddleRight
-        BOTTOM_LEFT -> Strings.posBottomLeft
-        BOTTOM_CENTER -> Strings.posBottomCenter
-        BOTTOM_RIGHT -> Strings.posBottomRight
+        TOP_LEFT -> AppStringsProvider.current().posTopLeft
+        TOP_CENTER -> AppStringsProvider.current().posTopCenter
+        TOP_RIGHT -> AppStringsProvider.current().posTopRight
+        MIDDLE_LEFT -> AppStringsProvider.current().posMiddleLeft
+        MIDDLE_CENTER -> AppStringsProvider.current().posMiddleCenter
+        MIDDLE_RIGHT -> AppStringsProvider.current().posMiddleRight
+        BOTTOM_LEFT -> AppStringsProvider.current().posBottomLeft
+        BOTTOM_CENTER -> AppStringsProvider.current().posBottomCenter
+        BOTTOM_RIGHT -> AppStringsProvider.current().posBottomRight
     }
 }
 
@@ -453,8 +453,8 @@ enum class ToolbarOrientation {
     VERTICAL;
     
     fun getDisplayName(): String = when (this) {
-        HORIZONTAL -> Strings.orientationHorizontal
-        VERTICAL -> Strings.orientationVertical
+        HORIZONTAL -> AppStringsProvider.current().orientationHorizontal
+        VERTICAL -> AppStringsProvider.current().orientationVertical
     }
 }
 
@@ -463,8 +463,8 @@ enum class SidebarPosition {
     RIGHT;
     
     fun getDisplayName(): String = when (this) {
-        LEFT -> Strings.sidebarLeft
-        RIGHT -> Strings.sidebarRight
+        LEFT -> AppStringsProvider.current().sidebarLeft
+        RIGHT -> AppStringsProvider.current().sidebarRight
     }
 }
 
@@ -604,13 +604,13 @@ enum class ModuleRunMode {
     AUTO;
     
     fun getDisplayName(): String = when (this) {
-        INTERACTIVE -> Strings.runModeInteractive
-        AUTO -> Strings.runModeAuto
+        INTERACTIVE -> AppStringsProvider.current().runModeInteractive
+        AUTO -> AppStringsProvider.current().runModeAuto
     }
     
     fun getDescription(): String = when (this) {
-        INTERACTIVE -> Strings.runModeInteractiveDesc
-        AUTO -> Strings.runModeAutoDesc
+        INTERACTIVE -> AppStringsProvider.current().runModeInteractiveDesc
+        AUTO -> AppStringsProvider.current().runModeAutoDesc
     }
     
     fun getIcon(): String = when (this) {
@@ -933,11 +933,11 @@ data class ExtensionModule(
     fun validate(): List<String> {
         val errors = mutableListOf<String>()
         
-        if (name.isBlank()) errors.add(Strings.validateNameEmpty)
-        if (code.isBlank() && cssCode.isBlank()) errors.add(Strings.validateCodeEmpty)
+        if (name.isBlank()) errors.add(AppStringsProvider.current().validateNameEmpty)
+        if (code.isBlank() && cssCode.isBlank()) errors.add(AppStringsProvider.current().validateCodeEmpty)
         configItems.forEach { item ->
             if (item.required && configValues[item.key].isNullOrBlank()) {
-                errors.add(Strings.validateConfigRequired.replace("%s", item.name))
+                errors.add(AppStringsProvider.current().validateConfigRequired.replace("%s", item.name))
             }
         }
         
@@ -977,7 +977,7 @@ data class ModulePackage(
 object ModuleCategoryGroups {
     val groups = listOf(
         CategoryGroup(
-            name = Strings.categoryGroupContent,
+            name = AppStringsProvider.current().categoryGroupContent,
             icon = "edit_note",
             categories = listOf(
                 ModuleCategory.CONTENT_FILTER,
@@ -986,7 +986,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupAppearance,
+            name = AppStringsProvider.current().categoryGroupAppearance,
             icon = "palette",
             categories = listOf(
                 ModuleCategory.STYLE_MODIFIER,
@@ -994,7 +994,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupFunction,
+            name = AppStringsProvider.current().categoryGroupFunction,
             icon = "bolt",
             categories = listOf(
                 ModuleCategory.FUNCTION_ENHANCE,
@@ -1004,7 +1004,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupData,
+            name = AppStringsProvider.current().categoryGroupData,
             icon = "analytics",
             categories = listOf(
                 ModuleCategory.DATA_EXTRACT,
@@ -1013,7 +1013,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupMedia,
+            name = AppStringsProvider.current().categoryGroupMedia,
             icon = "movie",
             categories = listOf(
                 ModuleCategory.MEDIA,
@@ -1023,7 +1023,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupSecurity,
+            name = AppStringsProvider.current().categoryGroupSecurity,
             icon = "lock",
             categories = listOf(
                 ModuleCategory.SECURITY,
@@ -1031,7 +1031,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupLife,
+            name = AppStringsProvider.current().categoryGroupLife,
             icon = "build",
             categories = listOf(
                 ModuleCategory.SOCIAL,
@@ -1040,14 +1040,14 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupDeveloper,
+            name = AppStringsProvider.current().categoryGroupDeveloper,
             icon = "computer",
             categories = listOf(
                 ModuleCategory.DEVELOPER
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupOther,
+            name = AppStringsProvider.current().categoryGroupOther,
             icon = "package",
             categories = listOf(
                 ModuleCategory.OTHER
@@ -1069,7 +1069,7 @@ object ModulePermissionGroups {
     
     val groups = listOf(
         PermissionGroup(
-            name = Strings.permGroupBasic,
+            name = AppStringsProvider.current().permGroupBasic,
             permissions = listOf(
                 ModulePermission.DOM_ACCESS,
                 ModulePermission.DOM_OBSERVE,
@@ -1077,7 +1077,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupStorage,
+            name = AppStringsProvider.current().permGroupStorage,
             permissions = listOf(
                 ModulePermission.STORAGE,
                 ModulePermission.COOKIE,
@@ -1086,7 +1086,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupNetwork,
+            name = AppStringsProvider.current().permGroupNetwork,
             permissions = listOf(
                 ModulePermission.NETWORK,
                 ModulePermission.WEBSOCKET,
@@ -1094,7 +1094,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupInteraction,
+            name = AppStringsProvider.current().permGroupInteraction,
             permissions = listOf(
                 ModulePermission.CLIPBOARD,
                 ModulePermission.NOTIFICATION,
@@ -1105,7 +1105,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupDevice,
+            name = AppStringsProvider.current().permGroupDevice,
             permissions = listOf(
                 ModulePermission.LOCATION,
                 ModulePermission.CAMERA,
@@ -1114,7 +1114,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupMediaPerm,
+            name = AppStringsProvider.current().permGroupMediaPerm,
             permissions = listOf(
                 ModulePermission.MEDIA,
                 ModulePermission.FULLSCREEN,
@@ -1123,14 +1123,14 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupFile,
+            name = AppStringsProvider.current().permGroupFile,
             permissions = listOf(
                 ModulePermission.DOWNLOAD,
                 ModulePermission.FILE_ACCESS
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupAdvanced,
+            name = AppStringsProvider.current().permGroupAdvanced,
             permissions = listOf(
                 ModulePermission.EVAL,
                 ModulePermission.IFRAME,
@@ -1151,14 +1151,14 @@ object ModulePresets {
     fun createElementBlocker(
         name: String,
         selectors: List<String>,
-        description: String = Strings.presetBlockElements
+        description: String = AppStringsProvider.current().presetBlockElements
     ): ExtensionModule {
         return ExtensionModule(
             name = name,
             description = description,
             icon = "block",
             category = ModuleCategory.CONTENT_FILTER,
-            tags = listOf(Strings.tagBlock, Strings.tagHideElement),
+            tags = listOf(AppStringsProvider.current().tagBlock, AppStringsProvider.current().tagHideElement),
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.DOM_OBSERVE),
             code = """
@@ -1177,14 +1177,14 @@ object ModulePresets {
     fun createStyleInjector(
         name: String,
         cssCode: String,
-        description: String = Strings.presetInjectStyle
+        description: String = AppStringsProvider.current().presetInjectStyle
     ): ExtensionModule {
         return ExtensionModule(
             name = name,
             description = description,
             icon = "palette",
             category = ModuleCategory.STYLE_MODIFIER,
-            tags = listOf(Strings.tagStyleCss, "CSS"),
+            tags = listOf(AppStringsProvider.current().tagStyleCss, "CSS"),
             runAt = ModuleRunTime.DOCUMENT_START,
             permissions = listOf(ModulePermission.CSS_INJECT),
             cssCode = cssCode
@@ -1195,14 +1195,14 @@ object ModulePresets {
         name: String,
         selector: String,
         delay: Int = 1000,
-        description: String = Strings.presetAutoClick
+        description: String = AppStringsProvider.current().presetAutoClick
     ): ExtensionModule {
         return ExtensionModule(
             name = name,
             description = description,
             icon = "mouse",
             category = ModuleCategory.AUTOMATION,
-            tags = listOf(Strings.tagAuto, Strings.tagClickAction),
+            tags = listOf(AppStringsProvider.current().tagAuto, AppStringsProvider.current().tagClickAction),
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS),
             code = """
@@ -1219,7 +1219,7 @@ object ModulePresets {
         buttonText: String,
         onClick: String,
         position: String = "bottom-right",
-        description: String = Strings.presetFloatingButton
+        description: String = AppStringsProvider.current().presetFloatingButton
     ): ExtensionModule {
         val positionStyle = when (position) {
             "bottom-left" -> "bottom: 80px; left: 20px;"
@@ -1233,7 +1233,7 @@ object ModulePresets {
             description = description,
             icon = "radio_button",
             category = ModuleCategory.FUNCTION_ENHANCE,
-            tags = listOf(Strings.tagButton, Strings.tagFloatingWidget),
+            tags = listOf(AppStringsProvider.current().tagButton, AppStringsProvider.current().tagFloatingWidget),
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS),
             code = """

@@ -3,7 +3,7 @@ package com.webtoapp.core.sample
 import android.content.Context
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.i18n.AppLanguage
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 
 /**
@@ -34,7 +34,7 @@ object SampleProjectExtractor {
      * Note: brief English comment.
      */
     fun getLanguageSuffix(): String {
-        return when (Strings.currentLanguage.value) {
+        return when (AppStringsProvider.currentLanguage) {
             AppLanguage.CHINESE -> ""
             AppLanguage.ENGLISH -> "-en"
             AppLanguage.ARABIC -> "-ar"

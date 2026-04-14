@@ -40,7 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.extension.ModuleCategory
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ModuleIcon
 import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.util.SvgIconMapper
@@ -118,7 +118,7 @@ fun BasicInfoTab(
 
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        Strings.moduleNameRequired,
+                        AppStringsProvider.current().moduleNameRequired,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -128,7 +128,7 @@ fun BasicInfoTab(
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
                             Text(
-                                Strings.inputModuleName,
+                                AppStringsProvider.current().inputModuleName,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
                         },
@@ -171,7 +171,7 @@ fun BasicInfoTab(
                         )
                     }
                     Text(
-                        Strings.description,
+                        AppStringsProvider.current().description,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -181,7 +181,7 @@ fun BasicInfoTab(
                     value = description,
                     onValueChange = onDescriptionChange,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(Strings.briefModuleDescription) },
+                    placeholder = { Text(AppStringsProvider.current().briefModuleDescription) },
                     minLines = 3,
                     maxLines = 5,
                     shape = RoundedCornerShape(12.dp)
@@ -223,7 +223,7 @@ fun BasicInfoTab(
                 }
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        Strings.category,
+                        AppStringsProvider.current().category,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -274,7 +274,7 @@ fun BasicInfoTab(
                         )
                     }
                     Text(
-                        Strings.tags,
+                        AppStringsProvider.current().tags,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -284,7 +284,7 @@ fun BasicInfoTab(
                     value = tags,
                     onValueChange = onTagsChange,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(Strings.tagsHint) },
+                    placeholder = { Text(AppStringsProvider.current().tagsHint) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -344,7 +344,7 @@ fun BasicInfoTab(
                         )
                     }
                     Text(
-                        Strings.moduleInfo,
+                        AppStringsProvider.current().moduleInfo,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -355,7 +355,7 @@ fun BasicInfoTab(
                         value = versionName,
                         onValueChange = onVersionNameChange,
                         modifier = Modifier.weight(weight = 1f, fill = true),
-                        label = { Text(Strings.versionLabel) },
+                        label = { Text(AppStringsProvider.current().versionLabel) },
                         placeholder = { Text("1.0.0") },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -372,8 +372,8 @@ fun BasicInfoTab(
                         value = authorName,
                         onValueChange = onAuthorNameChange,
                         modifier = Modifier.weight(weight = 1f, fill = true),
-                        label = { Text(Strings.author) },
-                        placeholder = { Text(Strings.yourName) },
+                        label = { Text(AppStringsProvider.current().author) },
+                        placeholder = { Text(AppStringsProvider.current().yourName) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         leadingIcon = {

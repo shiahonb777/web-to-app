@@ -1,6 +1,6 @@
 package com.webtoapp.core.engine.shields
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Cookie.
@@ -13,9 +13,9 @@ enum class ThirdPartyCookiePolicy {
     BLOCK_ALL_THIRD_PARTY;
 
     val displayName: String get() = when (this) {
-        ALLOW_ALL -> Strings.shieldsCookieAllowAll
-        BLOCK_CROSS_SITE -> Strings.shieldsCookieBlockCrossSite
-        BLOCK_ALL_THIRD_PARTY -> Strings.shieldsCookieBlockAllThirdParty
+        ALLOW_ALL -> AppStringsProvider.current().shieldsCookieAllowAll
+        BLOCK_CROSS_SITE -> AppStringsProvider.current().shieldsCookieBlockCrossSite
+        BLOCK_ALL_THIRD_PARTY -> AppStringsProvider.current().shieldsCookieBlockAllThirdParty
     }
 }
 
@@ -32,11 +32,11 @@ enum class ShieldsReferrerPolicy(val value: String) {
     UNSAFE_URL("unsafe-url");
 
     val displayName: String get() = when (this) {
-        NO_REFERRER -> Strings.shieldsRefNoReferrer
-        ORIGIN -> Strings.shieldsRefOrigin
-        STRICT_ORIGIN_CROSS -> Strings.shieldsRefStrictOriginCross
-        SAME_ORIGIN -> Strings.shieldsRefSameOrigin
-        UNSAFE_URL -> Strings.shieldsRefUnsafeUrl
+        NO_REFERRER -> AppStringsProvider.current().shieldsRefNoReferrer
+        ORIGIN -> AppStringsProvider.current().shieldsRefOrigin
+        STRICT_ORIGIN_CROSS -> AppStringsProvider.current().shieldsRefStrictOriginCross
+        SAME_ORIGIN -> AppStringsProvider.current().shieldsRefSameOrigin
+        UNSAFE_URL -> AppStringsProvider.current().shieldsRefUnsafeUrl
     }
 }
 
@@ -53,11 +53,11 @@ enum class TrackerCategory {
     AD_NETWORK;
 
     val displayName: String get() = when (this) {
-        ANALYTICS -> Strings.shieldsTrackerAnalytics
-        SOCIAL -> Strings.shieldsTrackerSocial
-        FINGERPRINTING -> Strings.shieldsTrackerFingerprinting
-        CRYPTOMINING -> Strings.shieldsTrackerCryptomining
-        AD_NETWORK -> Strings.shieldsTrackerAdNetwork
+        ANALYTICS -> AppStringsProvider.current().shieldsTrackerAnalytics
+        SOCIAL -> AppStringsProvider.current().shieldsTrackerSocial
+        FINGERPRINTING -> AppStringsProvider.current().shieldsTrackerFingerprinting
+        CRYPTOMINING -> AppStringsProvider.current().shieldsTrackerCryptomining
+        AD_NETWORK -> AppStringsProvider.current().shieldsTrackerAdNetwork
     }
 }
 
@@ -75,15 +75,15 @@ enum class SslErrorPolicy {
     BLOCK;
 
     val displayName: String get() = when (this) {
-        AUTO_HTTP_FALLBACK -> Strings.sslErrorPolicyAutoFallback
-        ASK_USER -> Strings.sslErrorPolicyAskUser
-        BLOCK -> Strings.sslErrorPolicyBlock
+        AUTO_HTTP_FALLBACK -> AppStringsProvider.current().sslErrorPolicyAutoFallback
+        ASK_USER -> AppStringsProvider.current().sslErrorPolicyAskUser
+        BLOCK -> AppStringsProvider.current().sslErrorPolicyBlock
     }
 
     val description: String get() = when (this) {
-        AUTO_HTTP_FALLBACK -> Strings.sslErrorPolicyAutoFallbackDesc
-        ASK_USER -> Strings.sslErrorPolicyAskUserDesc
-        BLOCK -> Strings.sslErrorPolicyBlockDesc
+        AUTO_HTTP_FALLBACK -> AppStringsProvider.current().sslErrorPolicyAutoFallbackDesc
+        ASK_USER -> AppStringsProvider.current().sslErrorPolicyAskUserDesc
+        BLOCK -> AppStringsProvider.current().sslErrorPolicyBlockDesc
     }
 }
 

@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.data.model.HtmlConfig
@@ -86,7 +86,7 @@ internal fun FolderImportSection(
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = Strings.folderImporting,
+                    text = AppStringsProvider.current().folderImporting,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -118,7 +118,7 @@ internal fun FolderImportSection(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = Strings.zipProjectAnalysis,
+                            text = AppStringsProvider.current().zipProjectAnalysis,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -129,7 +129,7 @@ internal fun FolderImportSection(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.zipReimport, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().zipReimport, style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 
@@ -154,7 +154,7 @@ internal fun FolderImportSection(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = Strings.zipEntryFile,
+                            text = AppStringsProvider.current().zipEntryFile,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -170,7 +170,7 @@ internal fun FolderImportSection(
                     if (folderAnalysis.htmlFiles.size > 1) {
                         Icon(
                             Icons.Outlined.SwapHoriz,
-                            contentDescription = Strings.zipChangeEntry,
+                            contentDescription = AppStringsProvider.current().zipChangeEntry,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -181,7 +181,7 @@ internal fun FolderImportSection(
                 
                 // Note
                 Text(
-                    text = Strings.zipResourceStats,
+                    text = AppStringsProvider.current().zipResourceStats,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -216,12 +216,12 @@ internal fun FolderImportSection(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = Strings.zipTotalFiles.replace("%d", folderAnalysis.totalFileCount.toString()),
+                        text = AppStringsProvider.current().zipTotalFiles.replace("%d", folderAnalysis.totalFileCount.toString()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = Strings.zipTotalSize.replace("%s", folderAnalysis.formattedTotalSize),
+                        text = AppStringsProvider.current().zipTotalSize.replace("%s", folderAnalysis.formattedTotalSize),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -239,7 +239,7 @@ internal fun FolderImportSection(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.zipFileTreeTitle, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().zipFileTreeTitle, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -283,12 +283,12 @@ internal fun FolderImportSection(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = Strings.folderSelectFolder,
+                    text = AppStringsProvider.current().folderSelectFolder,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = Strings.folderSelectHint,
+                    text = AppStringsProvider.current().folderSelectHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -305,7 +305,7 @@ internal fun FolderImportSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.folderSelectFolder)
+                    Text(AppStringsProvider.current().folderSelectFolder)
                 }
                 
                 // error
@@ -391,7 +391,7 @@ internal fun importFolderFromSaf(
     } catch (e: Exception) {
         tempDir.deleteRecursively()
         AppLogger.e("FolderImport", "文件夹导入失败", e)
-        throw RuntimeException(Strings.folderImportFailed.replace("%s", e.message ?: "Unknown"), e)
+        throw RuntimeException(AppStringsProvider.current().folderImportFailed.replace("%s", e.message ?: "Unknown"), e)
     }
 }
 
@@ -510,7 +510,7 @@ internal fun analyzeFolder(
         ?: htmlFiles.firstOrNull()?.relativePath
     
     if (entryFile == null && htmlFiles.isEmpty()) {
-        warnings.add(Strings.folderNoHtmlWarning)
+        warnings.add(AppStringsProvider.current().folderNoHtmlWarning)
     }
     
     if (allFiles.any { it.size > 50 * 1024 * 1024 }) {

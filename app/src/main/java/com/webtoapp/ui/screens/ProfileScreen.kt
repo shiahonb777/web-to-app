@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.auth.ProStatus
 import com.webtoapp.core.auth.UserProfile
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.AuthState
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import com.webtoapp.ui.viewmodel.FormState
@@ -117,7 +117,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        Strings.authProfile,
+                        AppStringsProvider.current().authProfile,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -245,7 +245,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.cloudActivationCode,
+                        text = AppStringsProvider.current().cloudActivationCode,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(weight = 1f, fill = true)
@@ -277,15 +277,15 @@ fun ProfileScreen(
                 ) {
                     StatItem(
                         value = user.appsCreated.toString(),
-                        label = Strings.authStatsAppsCreated
+                        label = AppStringsProvider.current().authStatsAppsCreated
                     )
                     StatItem(
                         value = user.apksBuilt.toString(),
-                        label = Strings.authStatsApksBuilt
+                        label = AppStringsProvider.current().authStatsApksBuilt
                     )
                     StatItem(
                         value = user.maxDevices.toString(),
-                        label = Strings.authStatsMaxDevices
+                        label = AppStringsProvider.current().authStatsMaxDevices
                     )
                 }
             }
@@ -322,12 +322,12 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = Strings.authProInactive,
+                                text = AppStringsProvider.current().authProInactive,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = Strings.authUpgradeDesc,
+                                text = AppStringsProvider.current().authUpgradeDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -354,15 +354,15 @@ fun ProfileScreen(
                 Column {
                     MenuItemRow(
                         icon = Icons.Outlined.Devices,
-                        title = Strings.authMenuDevices,
-                        subtitle = "${Strings.authMenuDevicesMax}: ${user.maxDevices}",
+                        title = AppStringsProvider.current().authMenuDevices,
+                        subtitle = "${AppStringsProvider.current().authMenuDevicesMax}: ${user.maxDevices}",
                         onClick = onNavigateDevices
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     MenuItemRow(
                         icon = Icons.Outlined.Groups,
-                        title = Strings.teamTitle,
-                        subtitle = if (user.isPro) "${Strings.teamMembers} · RBAC" else Strings.authMenuCloudUpgrade,
+                        title = AppStringsProvider.current().teamTitle,
+                        subtitle = if (user.isPro) "${AppStringsProvider.current().teamMembers} · RBAC" else AppStringsProvider.current().authMenuCloudUpgrade,
                         onClick = onNavigateTeams
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -375,8 +375,8 @@ fun ProfileScreen(
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     MenuItemRow(
                         icon = Icons.Outlined.Security,
-                        title = Strings.authMenuSecurity,
-                        subtitle = Strings.authMenuSecurityDesc
+                        title = AppStringsProvider.current().authMenuSecurity,
+                        subtitle = AppStringsProvider.current().authMenuSecurityDesc
                     )
                 }
             }
@@ -400,7 +400,7 @@ fun ProfileScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.authLogout)
+                Text(AppStringsProvider.current().authLogout)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -445,8 +445,8 @@ fun ProfileScreen(
         if (showLogoutDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
-                title = { Text(Strings.authLogout) },
-                text = { Text(Strings.authLogoutConfirm) },
+                title = { Text(AppStringsProvider.current().authLogout) },
+                text = { Text(AppStringsProvider.current().authLogoutConfirm) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -458,12 +458,12 @@ fun ProfileScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text(Strings.authLogout)
+                        Text(AppStringsProvider.current().authLogout)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showLogoutDialog = false }) {
-                        Text(Strings.cancel)
+                        Text(AppStringsProvider.current().cancel)
                     }
                 }
             )
@@ -493,7 +493,7 @@ fun ProfileScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showLogoutAllDialog = false }) {
-                        Text(Strings.cancel)
+                        Text(AppStringsProvider.current().cancel)
                     }
                 }
             )
@@ -594,7 +594,7 @@ private fun ChangePasswordDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -695,7 +695,7 @@ private fun DeleteAccountDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -741,11 +741,11 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
         else -> MaterialTheme.colorScheme.outline
     }
     val statusText = when {
-        isUltraLifetime -> Strings.authUltraLifetimeActive
-        isUltra -> Strings.authUltraActive
-        isProLifetime -> Strings.authLifetimeActive
-        user.isPro -> Strings.authProActive
-        else -> Strings.authProInactive
+        isUltraLifetime -> AppStringsProvider.current().authUltraLifetimeActive
+        isUltra -> AppStringsProvider.current().authUltraActive
+        isProLifetime -> AppStringsProvider.current().authLifetimeActive
+        user.isPro -> AppStringsProvider.current().authProActive
+        else -> AppStringsProvider.current().authProInactive
     }
 
     EnhancedElevatedCard(
@@ -779,21 +779,21 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                     )
                     if (proStatus?.daysRemaining != null && !isLifetime) {
                         Text(
-                            text = "${Strings.authProRemaining}: ${proStatus.daysRemaining} ${Strings.authProDays}",
+                            text = "${AppStringsProvider.current().authProRemaining}: ${proStatus.daysRemaining} ${AppStringsProvider.current().authProDays}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (isLifetime && !isUltraLifetime) {
                         Text(
-                            text = "∞ ${Strings.authProDays}",
+                            text = "∞ ${AppStringsProvider.current().authProDays}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (isUltraLifetime) {
                         Text(
-                            text = "∞ ${Strings.authProDays}",
+                            text = "∞ ${AppStringsProvider.current().authProDays}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFFFD700).copy(alpha = 0.7f)
                         )
@@ -820,13 +820,13 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = Strings.authUpgradeToUltra,
+                            text = AppStringsProvider.current().authUpgradeToUltra,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFFFFD700)
                         )
                         Text(
-                            text = "${Strings.authUpgradeDesc} \$${"%,.0f".format(upgradeCost)}",
+                            text = "${AppStringsProvider.current().authUpgradeDesc} \$${"%,.0f".format(upgradeCost)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.components.announcement.AnnouncementDialog
@@ -59,7 +59,7 @@ fun AnnouncementCard(
             // header: icon + +
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Campaign,
-                title = Strings.popupAnnouncement,
+                title = AppStringsProvider.current().popupAnnouncement,
                 checked = editState.announcementEnabled,
                 onCheckedChange = onEnabledChange
             )
@@ -95,7 +95,7 @@ fun AnnouncementCard(
                         onValueChange = {
                             onAnnouncementChange(editState.announcement.copy(title = it))
                         },
-                        label = { Text(Strings.announcementTitle) },
+                        label = { Text(AppStringsProvider.current().announcementTitle) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -106,7 +106,7 @@ fun AnnouncementCard(
                         onValueChange = {
                             onAnnouncementChange(editState.announcement.copy(content = it))
                         },
-                        label = { Text(Strings.announcementContent) },
+                        label = { Text(AppStringsProvider.current().announcementContent) },
                         supportingText = {
                             Text(
                                 "${editState.announcement.content.length}/500",
@@ -127,7 +127,7 @@ fun AnnouncementCard(
                         onValueChange = {
                             onAnnouncementChange(editState.announcement.copy(linkUrl = it.ifBlank { null }))
                         },
-                        label = { Text(Strings.linkUrl) },
+                        label = { Text(AppStringsProvider.current().linkUrl) },
                         placeholder = { Text("https://...") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -142,8 +142,8 @@ fun AnnouncementCard(
                             onValueChange = {
                                 onAnnouncementChange(editState.announcement.copy(linkText = it.ifBlank { null }))
                             },
-                            label = { Text(Strings.linkButtonText) },
-                            placeholder = { Text(Strings.viewDetails) },
+                            label = { Text(AppStringsProvider.current().linkButtonText) },
+                            placeholder = { Text(AppStringsProvider.current().viewDetails) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -155,7 +155,7 @@ fun AnnouncementCard(
 
                     // display
                     Text(
-                        Strings.displayFrequency,
+                        AppStringsProvider.current().displayFrequency,
                         style = MaterialTheme.typography.labelLarge
                     )
 
@@ -166,7 +166,7 @@ fun AnnouncementCard(
                         PremiumFilterChip(
                             selected = editState.announcement.showOnce,
                             onClick = { onAnnouncementChange(editState.announcement.copy(showOnce = true)) },
-                            label = { Text(Strings.showOnce) },
+                            label = { Text(AppStringsProvider.current().showOnce) },
                             leadingIcon = if (editState.announcement.showOnce) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -174,7 +174,7 @@ fun AnnouncementCard(
                         PremiumFilterChip(
                             selected = !editState.announcement.showOnce,
                             onClick = { onAnnouncementChange(editState.announcement.copy(showOnce = false)) },
-                            label = { Text(Strings.everyLaunch) },
+                            label = { Text(AppStringsProvider.current().everyLaunch) },
                             leadingIcon = if (!editState.announcement.showOnce) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -187,13 +187,13 @@ fun AnnouncementCard(
 
                     // settings
                     Text(
-                        Strings.announcementTriggerSettings,
+                        AppStringsProvider.current().announcementTriggerSettings,
                         style = MaterialTheme.typography.labelLarge
                     )
 
                     SettingsSwitch(
-                        title = Strings.announcementTriggerOnLaunch,
-                        subtitle = Strings.announcementTriggerOnLaunchHint,
+                        title = AppStringsProvider.current().announcementTriggerOnLaunch,
+                        subtitle = AppStringsProvider.current().announcementTriggerOnLaunchHint,
                         checked = editState.announcement.triggerOnLaunch,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(triggerOnLaunch = it))
@@ -201,8 +201,8 @@ fun AnnouncementCard(
                     )
 
                     SettingsSwitch(
-                        title = Strings.announcementTriggerOnNoNetwork,
-                        subtitle = Strings.announcementTriggerOnNoNetworkHint,
+                        title = AppStringsProvider.current().announcementTriggerOnNoNetwork,
+                        subtitle = AppStringsProvider.current().announcementTriggerOnNoNetworkHint,
                         checked = editState.announcement.triggerOnNoNetwork,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(triggerOnNoNetwork = it))
@@ -220,14 +220,14 @@ fun AnnouncementCard(
                     ) {
                         Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                             Text(
-                                Strings.announcementTriggerInterval,
+                                AppStringsProvider.current().announcementTriggerInterval,
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
                                 )
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                Strings.announcementTriggerIntervalHint,
+                                AppStringsProvider.current().announcementTriggerIntervalHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -250,9 +250,9 @@ fun AnnouncementCard(
                                 ) {
                                     Text(
                                         if (editState.announcement.triggerIntervalMinutes == 0)
-                                            Strings.announcementIntervalDisabled
+                                            AppStringsProvider.current().announcementIntervalDisabled
                                         else
-                                            "${editState.announcement.triggerIntervalMinutes} ${Strings.minutesShort}",
+                                            "${editState.announcement.triggerIntervalMinutes} ${AppStringsProvider.current().minutesShort}",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -278,8 +278,8 @@ fun AnnouncementCard(
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                 }
                                                 Text(
-                                                    if (interval == 0) Strings.announcementIntervalDisabled
-                                                    else "$interval ${Strings.minutesShort}"
+                                                    if (interval == 0) AppStringsProvider.current().announcementIntervalDisabled
+                                                    else "$interval ${AppStringsProvider.current().minutesShort}"
                                                 )
                                             }
                                         },
@@ -298,8 +298,8 @@ fun AnnouncementCard(
                         visible = editState.announcement.triggerIntervalMinutes > 0
                     ) {
                         SettingsSwitch(
-                            title = Strings.announcementTriggerIntervalIncludeLaunch,
-                            subtitle = Strings.announcementTriggerOnLaunchHint,
+                            title = AppStringsProvider.current().announcementTriggerIntervalIncludeLaunch,
+                            subtitle = AppStringsProvider.current().announcementTriggerOnLaunchHint,
                             checked = editState.announcement.triggerIntervalIncludeLaunch,
                             onCheckedChange = {
                                 onAnnouncementChange(editState.announcement.copy(triggerIntervalIncludeLaunch = it))
@@ -313,13 +313,13 @@ fun AnnouncementCard(
 
                     // advanced
                     Text(
-                        Strings.announcementAdvancedOptions,
+                        AppStringsProvider.current().announcementAdvancedOptions,
                         style = MaterialTheme.typography.labelLarge
                     )
 
                     SettingsSwitch(
-                        title = Strings.showEmoji,
-                        subtitle = Strings.announcementEmojiHint,
+                        title = AppStringsProvider.current().showEmoji,
+                        subtitle = AppStringsProvider.current().announcementEmojiHint,
                         checked = editState.announcement.showEmoji,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(showEmoji = it))
@@ -327,8 +327,8 @@ fun AnnouncementCard(
                     )
 
                     SettingsSwitch(
-                        title = Strings.enableAnimation,
-                        subtitle = Strings.announcementAnimationHint,
+                        title = AppStringsProvider.current().enableAnimation,
+                        subtitle = AppStringsProvider.current().announcementAnimationHint,
                         checked = editState.announcement.animationEnabled,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(animationEnabled = it))
@@ -336,8 +336,8 @@ fun AnnouncementCard(
                     )
 
                     SettingsSwitch(
-                        title = Strings.announcementRequireConfirmLabel,
-                        subtitle = Strings.announcementRequireConfirmHint,
+                        title = AppStringsProvider.current().announcementRequireConfirmLabel,
+                        subtitle = AppStringsProvider.current().announcementRequireConfirmHint,
                         checked = editState.announcement.requireConfirmation,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(requireConfirmation = it))
@@ -345,8 +345,8 @@ fun AnnouncementCard(
                     )
 
                     SettingsSwitch(
-                        title = Strings.announcementAllowNeverShowLabel,
-                        subtitle = Strings.announcementAllowNeverShowHint,
+                        title = AppStringsProvider.current().announcementAllowNeverShowLabel,
+                        subtitle = AppStringsProvider.current().announcementAllowNeverShowHint,
                         checked = editState.announcement.allowNeverShow,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(allowNeverShow = it))
@@ -361,7 +361,7 @@ fun AnnouncementCard(
                     ) {
                         Icon(Icons.Outlined.Preview, null, Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.previewAnnouncementEffect)
+                        Text(AppStringsProvider.current().previewAnnouncementEffect)
                     }
                 }
             }

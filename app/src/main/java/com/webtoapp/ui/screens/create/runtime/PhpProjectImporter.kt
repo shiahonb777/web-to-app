@@ -1,7 +1,7 @@
 package com.webtoapp.ui.screens.create.runtime
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.php.PhpAppRuntime
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 import com.webtoapp.ui.screens.create.common.ImportedProject
@@ -30,7 +30,7 @@ class PhpProjectImporter(
                 onDependencyDownloadStateChange(false)
             }
             if (!success) {
-                throw ProjectImportException(Strings.wpDownloadFailed)
+                throw ProjectImportException(AppStringsProvider.current().wpDownloadFailed)
             }
         }
 

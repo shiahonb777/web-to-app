@@ -28,7 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.animation.CardExpandTransition
@@ -62,13 +62,13 @@ fun ApkExportSection(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = Strings.apkExportConfig,
+                text = AppStringsProvider.current().apkExportConfig,
                 style = MaterialTheme.typography.titleSmall
             )
         }
         
         Text(
-            text = Strings.apkConfigNote,
+            text = AppStringsProvider.current().apkConfigNote,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
@@ -83,7 +83,7 @@ fun ApkExportSection(
             onValueChange = { 
                 onConfigChange(config.copy(customPackageName = it.ifBlank { null }))
             },
-            label = { Text(Strings.customPackageName) },
+            label = { Text(AppStringsProvider.current().customPackageName) },
             placeholder = { Text("com.example.myapp") },
             singleLine = true,
             modifier = Modifier
@@ -100,11 +100,11 @@ fun ApkExportSection(
             supportingText = { 
                 if (isPackageNameInvalid) {
                     Text(
-                        Strings.packageNameInvalidFormat,
+                        AppStringsProvider.current().packageNameInvalidFormat,
                         color = MaterialTheme.colorScheme.error
                     )
                 } else {
-                    Text(Strings.packageNameHint)
+                    Text(AppStringsProvider.current().packageNameHint)
                 }
             }
         )
@@ -120,7 +120,7 @@ fun ApkExportSection(
                 onValueChange = { 
                     onConfigChange(config.copy(customVersionName = it.ifBlank { null }))
                 },
-                label = { Text(Strings.versionName) },
+                label = { Text(AppStringsProvider.current().versionName) },
                 placeholder = { Text("1.0.0") },
                 singleLine = true,
                 modifier = Modifier
@@ -141,7 +141,7 @@ fun ApkExportSection(
                     val code = input.filter { it.isDigit() }.toIntOrNull()
                     onConfigChange(config.copy(customVersionCode = code))
                 },
-                label = { Text(Strings.versionCode) },
+                label = { Text(AppStringsProvider.current().versionCode) },
                 placeholder = { Text("1") },
                 singleLine = true,
                 modifier = Modifier
@@ -161,7 +161,7 @@ fun ApkExportSection(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = Strings.apkArchitecture,
+            text = AppStringsProvider.current().apkArchitecture,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -206,21 +206,21 @@ fun ApkExportSection(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = Strings.performanceOptimization,
+                text = AppStringsProvider.current().performanceOptimization,
                 style = MaterialTheme.typography.titleSmall
             )
         }
         
         Text(
-            text = Strings.performanceOptimizationDesc,
+            text = AppStringsProvider.current().performanceOptimizationDesc,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
         )
         
         SettingsSwitch(
-            title = Strings.performanceOptimization,
-            subtitle = if (config.performanceOptimization) Strings.perfEnabled else Strings.perfDisabled,
+            title = AppStringsProvider.current().performanceOptimization,
+            subtitle = if (config.performanceOptimization) AppStringsProvider.current().perfEnabled else AppStringsProvider.current().perfDisabled,
             checked = config.performanceOptimization,
             onCheckedChange = { onConfigChange(config.copy(performanceOptimization = it)) }
         )
@@ -232,38 +232,38 @@ fun ApkExportSection(
         ) {
             Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
                 Text(
-                    text = Strings.perfResourceOptimize,
+                    text = AppStringsProvider.current().perfResourceOptimize,
                     style = MaterialTheme.typography.labelMedium,
                     color = AppColors.Success,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 SettingsSwitch(
-                    title = Strings.perfCompressImages,
-                    subtitle = Strings.perfCompressImagesHint,
+                    title = AppStringsProvider.current().perfCompressImages,
+                    subtitle = AppStringsProvider.current().perfCompressImagesHint,
                     checked = config.performanceConfig.compressImages,
                     onCheckedChange = { 
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(compressImages = it)))
                     }
                 )
                 SettingsSwitch(
-                    title = Strings.perfConvertWebP,
-                    subtitle = Strings.perfConvertWebPHint,
+                    title = AppStringsProvider.current().perfConvertWebP,
+                    subtitle = AppStringsProvider.current().perfConvertWebPHint,
                     checked = config.performanceConfig.convertToWebP,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(convertToWebP = it)))
                     }
                 )
                 SettingsSwitch(
-                    title = Strings.perfMinifyCode,
-                    subtitle = Strings.perfMinifyCodeHint,
+                    title = AppStringsProvider.current().perfMinifyCode,
+                    subtitle = AppStringsProvider.current().perfMinifyCodeHint,
                     checked = config.performanceConfig.minifyCode,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(minifyCode = it)))
                     }
                 )
                 SettingsSwitch(
-                    title = Strings.perfRemoveUnused,
-                    subtitle = Strings.perfRemoveUnusedHint,
+                    title = AppStringsProvider.current().perfRemoveUnused,
+                    subtitle = AppStringsProvider.current().perfRemoveUnusedHint,
                     checked = config.performanceConfig.removeUnusedResources,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(removeUnusedResources = it)))
@@ -273,22 +273,22 @@ fun ApkExportSection(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = Strings.perfBuildOptimize,
+                    text = AppStringsProvider.current().perfBuildOptimize,
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF2196F3),
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 SettingsSwitch(
-                    title = Strings.perfParallelProcessing,
-                    subtitle = Strings.perfParallelProcessingHint,
+                    title = AppStringsProvider.current().perfParallelProcessing,
+                    subtitle = AppStringsProvider.current().perfParallelProcessingHint,
                     checked = config.performanceConfig.parallelProcessing,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(parallelProcessing = it)))
                     }
                 )
                 SettingsSwitch(
-                    title = Strings.perfEnableCache,
-                    subtitle = Strings.perfEnableCacheHint,
+                    title = AppStringsProvider.current().perfEnableCache,
+                    subtitle = AppStringsProvider.current().perfEnableCacheHint,
                     checked = config.performanceConfig.enableCache,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(enableCache = it)))
@@ -298,30 +298,30 @@ fun ApkExportSection(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = Strings.perfLoadOptimize,
+                    text = AppStringsProvider.current().perfLoadOptimize,
                     style = MaterialTheme.typography.labelMedium,
                     color = AppColors.Warning,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 SettingsSwitch(
-                    title = Strings.perfPreloadHints,
-                    subtitle = Strings.perfPreloadHintsHint,
+                    title = AppStringsProvider.current().perfPreloadHints,
+                    subtitle = AppStringsProvider.current().perfPreloadHintsHint,
                     checked = config.performanceConfig.injectPreloadHints,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectPreloadHints = it)))
                     }
                 )
                 SettingsSwitch(
-                    title = Strings.perfLazyLoading,
-                    subtitle = Strings.perfLazyLoadingHint,
+                    title = AppStringsProvider.current().perfLazyLoading,
+                    subtitle = AppStringsProvider.current().perfLazyLoadingHint,
                     checked = config.performanceConfig.injectLazyLoading,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectLazyLoading = it)))
                     }
                 )
                 SettingsSwitch(
-                    title = Strings.perfOptimizeScripts,
-                    subtitle = Strings.perfOptimizeScriptsHint,
+                    title = AppStringsProvider.current().perfOptimizeScripts,
+                    subtitle = AppStringsProvider.current().perfOptimizeScriptsHint,
                     checked = config.performanceConfig.optimizeScripts,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(optimizeScripts = it)))
@@ -331,14 +331,14 @@ fun ApkExportSection(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = Strings.perfRuntimeOptimize,
+                    text = AppStringsProvider.current().perfRuntimeOptimize,
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF9C27B0),
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 SettingsSwitch(
-                    title = Strings.perfRuntimeScript,
-                    subtitle = Strings.perfRuntimeScriptHint,
+                    title = AppStringsProvider.current().perfRuntimeScript,
+                    subtitle = AppStringsProvider.current().perfRuntimeScriptHint,
                     checked = config.performanceConfig.injectPerformanceScript,
                     onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectPerformanceScript = it)))
@@ -409,13 +409,13 @@ fun CustomSigningSection() {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = Strings.customSigning,
+                text = AppStringsProvider.current().customSigning,
                 style = MaterialTheme.typography.titleSmall
             )
         }
         
         Text(
-            text = Strings.customSigningDesc,
+            text = AppStringsProvider.current().customSigningDesc,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
@@ -437,7 +437,7 @@ fun CustomSigningSection() {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = Strings.currentSigningStatus,
+                        text = AppStringsProvider.current().currentSigningStatus,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -445,9 +445,9 @@ fun CustomSigningSection() {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = when (signerType) {
-                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM -> Strings.signingTypeCustom
-                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_AUTO -> Strings.signingTypeAutoGenerated
-                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.ANDROID_KEYSTORE -> Strings.signingTypeAndroidKeyStore
+                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM -> AppStringsProvider.current().signingTypeCustom
+                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_AUTO -> AppStringsProvider.current().signingTypeAutoGenerated
+                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.ANDROID_KEYSTORE -> AppStringsProvider.current().signingTypeAndroidKeyStore
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
@@ -486,12 +486,12 @@ fun CustomSigningSection() {
                 Spacer(modifier = Modifier.width(6.dp))
                 Column {
                     Text(
-                        text = Strings.customSigningNote,
+                        text = AppStringsProvider.current().customSigningNote,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        text = Strings.supportedKeystoreFormats,
+                        text = AppStringsProvider.current().supportedKeystoreFormats,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                         modifier = Modifier.padding(top = 2.dp)
@@ -519,7 +519,7 @@ fun CustomSigningSection() {
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.importKeystore, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().importKeystore, style = MaterialTheme.typography.labelMedium)
             }
             
             PremiumOutlinedButton(
@@ -535,7 +535,7 @@ fun CustomSigningSection() {
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.exportKeystore, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().exportKeystore, style = MaterialTheme.typography.labelMedium)
             }
         }
         
@@ -554,7 +554,7 @@ fun CustomSigningSection() {
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.removeCustomKeystore)
+                Text(AppStringsProvider.current().removeCustomKeystore)
             }
         }
         
@@ -587,11 +587,11 @@ fun CustomSigningSection() {
                 importError = null
             },
             icon = { Icon(Icons.Outlined.Key, null) },
-            title = { Text(Strings.importKeystore) },
+            title = { Text(AppStringsProvider.current().importKeystore) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(
-                        text = Strings.keystorePasswordHint,
+                        text = AppStringsProvider.current().keystorePasswordHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 12.dp)
@@ -602,7 +602,7 @@ fun CustomSigningSection() {
                             passwordInput = it
                             importError = null
                         },
-                        label = { Text(Strings.keystorePassword) },
+                        label = { Text(AppStringsProvider.current().keystorePassword) },
                         singleLine = true,
                         visualTransformation = if (passwordVisible) 
                             androidx.compose.ui.text.input.VisualTransformation.None 
@@ -648,21 +648,21 @@ fun CustomSigningSection() {
                                         pendingKeystoreUri = null
                                         passwordInput = ""
                                         importError = null
-                                        snackbarMessage = Strings.keystoreImportSuccess
+                                        snackbarMessage = AppStringsProvider.current().keystoreImportSuccess
                                     } else {
-                                        importError = Strings.keystoreImportFailed
+                                        importError = AppStringsProvider.current().keystoreImportFailed
                                     }
                                 }
                             } catch (e: Exception) {
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                    importError = Strings.keystoreImportFailed
+                                    importError = AppStringsProvider.current().keystoreImportFailed
                                 }
                             }
                         }
                     },
                     enabled = passwordInput.isNotEmpty()
                 ) {
-                    Text(Strings.confirm)
+                    Text(AppStringsProvider.current().confirm)
                 }
             },
             dismissButton = {
@@ -672,7 +672,7 @@ fun CustomSigningSection() {
                     passwordInput = ""
                     importError = null
                 }) {
-                    Text(Strings.cancel)
+                    Text(AppStringsProvider.current().cancel)
                 }
             }
         )
@@ -686,11 +686,11 @@ fun CustomSigningSection() {
                 passwordInput = ""
             },
             icon = { Icon(Icons.Outlined.FileDownload, null) },
-            title = { Text(Strings.exportKeystore) },
+            title = { Text(AppStringsProvider.current().exportKeystore) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(
-                        text = Strings.exportPasswordHint,
+                        text = AppStringsProvider.current().exportPasswordHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 12.dp)
@@ -698,7 +698,7 @@ fun CustomSigningSection() {
                     OutlinedTextField(
                         value = passwordInput,
                         onValueChange = { passwordInput = it },
-                        label = { Text(Strings.exportPassword) },
+                        label = { Text(AppStringsProvider.current().exportPassword) },
                         singleLine = true,
                         visualTransformation = if (passwordVisible) 
                             androidx.compose.ui.text.input.VisualTransformation.None 
@@ -738,19 +738,19 @@ fun CustomSigningSection() {
                                     showExportPasswordDialog = false
                                     pendingKeystoreUri = null
                                     passwordInput = ""
-                                    snackbarMessage = if (success) Strings.keystoreExportSuccess else Strings.keystoreExportFailed
+                                    snackbarMessage = if (success) AppStringsProvider.current().keystoreExportSuccess else AppStringsProvider.current().keystoreExportFailed
                                 }
                             } catch (e: Exception) {
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                     showExportPasswordDialog = false
-                                    snackbarMessage = Strings.keystoreExportFailed
+                                    snackbarMessage = AppStringsProvider.current().keystoreExportFailed
                                 }
                             }
                         }
                     },
                     enabled = passwordInput.isNotEmpty()
                 ) {
-                    Text(Strings.confirm)
+                    Text(AppStringsProvider.current().confirm)
                 }
             },
             dismissButton = {
@@ -759,7 +759,7 @@ fun CustomSigningSection() {
                     pendingKeystoreUri = null
                     passwordInput = ""
                 }) {
-                    Text(Strings.cancel)
+                    Text(AppStringsProvider.current().cancel)
                 }
             }
         )
@@ -769,8 +769,8 @@ fun CustomSigningSection() {
         AlertDialog(
             onDismissRequest = { showRemoveConfirmDialog = false },
             icon = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text(Strings.removeCustomKeystore) },
-            text = { Text(Strings.keystoreRemoveConfirm) },
+            title = { Text(AppStringsProvider.current().removeCustomKeystore) },
+            text = { Text(AppStringsProvider.current().keystoreRemoveConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -778,7 +778,7 @@ fun CustomSigningSection() {
                         if (success) {
                             signerType = signer.getSignerType()
                             certInfo = signer.getCertificateInfo()
-                            snackbarMessage = Strings.keystoreRemoveSuccess
+                            snackbarMessage = AppStringsProvider.current().keystoreRemoveSuccess
                         }
                         showRemoveConfirmDialog = false
                     },
@@ -786,12 +786,12 @@ fun CustomSigningSection() {
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.confirm)
+                    Text(AppStringsProvider.current().confirm)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRemoveConfirmDialog = false }) {
-                    Text(Strings.cancel)
+                    Text(AppStringsProvider.current().cancel)
                 }
             }
         )
