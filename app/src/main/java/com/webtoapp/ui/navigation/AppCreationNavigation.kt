@@ -25,11 +25,13 @@ internal fun NavGraphBuilder.addAppCreationRoutes(
     val viewModel = dependencies.viewModel
     val webAppRepository = dependencies.webAppRepository
     val activationManager = dependencies.activationManager
+    val cloudViewModel = dependencies.cloudViewModel
 
     composable(Routes.CREATE_APP) {
         CreateAppScreen(
             viewModel = viewModel,
             activationManager = activationManager,
+            cloudViewModel = cloudViewModel,
             isEdit = false,
             onBack = { navController.popBackStack() },
             onSaved = { navController.popBackStack() }
@@ -235,6 +237,7 @@ internal fun NavGraphBuilder.addAppCreationRoutes(
         CreateAppScreen(
             viewModel = viewModel,
             activationManager = activationManager,
+            cloudViewModel = cloudViewModel,
             isEdit = true,
             onBack = { navController.popBackStack() },
             onSaved = { navController.popBackStack() }

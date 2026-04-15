@@ -40,14 +40,16 @@ class StateFactory {
             themeType = webApp.themeType,
             translateEnabled = webApp.translateEnabled,
             translateConfig = webApp.translateConfig ?: com.webtoapp.data.model.TranslateConfig(),
-            extensionModuleEnabled = webApp.extensionModuleIds.isNotEmpty(),
+            extensionModuleEnabled = webApp.extensionEnabled,
             extensionModuleIds = webApp.extensionModuleIds.toSet(),
             extensionFabIcon = webApp.extensionFabIcon ?: "",
             autoStartConfig = webApp.autoStartConfig,
             forcedRunConfig = webApp.forcedRunConfig,
             blackTechConfig = webApp.blackTechConfig,
             disguiseConfig = webApp.disguiseConfig,
-            deviceDisguiseConfig = webApp.deviceDisguiseConfig ?: DeviceDisguiseConfig()
+            browserDisguiseConfig = webApp.browserDisguiseConfig,
+            deviceDisguiseConfig = webApp.deviceDisguiseConfig ?: DeviceDisguiseConfig(),
+            cloudConfig = webApp.cloudConfig
         )
     }
 }

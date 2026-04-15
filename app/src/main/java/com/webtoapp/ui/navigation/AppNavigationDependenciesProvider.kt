@@ -56,6 +56,7 @@ internal data class CreationRoutesDeps(
     val webAppRepository: WebAppRepository,
     val activationManager: ActivationManager,
     val linuxEnvironmentManager: LinuxEnvironmentManager,
+    val cloudViewModel: CloudViewModel,
 )
 
 internal data class PreviewRoutesDeps(
@@ -150,6 +151,7 @@ internal fun rememberAppNavigationRootDeps(
                 webAppRepository = webAppRepository,
                 activationManager = activationManager,
                 linuxEnvironmentManager = linuxEnvironmentManager,
+                cloudViewModel = cloudViewModel,
             ),
             previewRoutes = PreviewRoutesDeps(
                 webAppRepository = webAppRepository,

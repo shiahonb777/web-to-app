@@ -1228,6 +1228,7 @@ fun WebViewScreen(
                                         emptyList(), // embeddedExtensionModules
                                         webApp?.extensionFabIcon.orEmpty(),
                                         allowGlobalModuleFallback = false,
+                                        browserDisguiseConfig = webApp?.browserDisguiseConfig,
                                         deviceDisguiseConfig = webApp?.deviceDisguiseConfig
                                     )
                                     // HTML app config supportlocalfile

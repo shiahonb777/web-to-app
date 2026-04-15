@@ -58,6 +58,7 @@ private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
 fun CreateAppScreen(
     viewModel: MainViewModel,
     activationManager: com.webtoapp.core.activation.ActivationManager,
+    cloudViewModel: com.webtoapp.ui.viewmodel.CloudViewModel,
     isEdit: Boolean,
     onBack: () -> Unit,
     onSaved: () -> Unit
@@ -407,11 +408,30 @@ fun CreateAppScreen(
                 onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
             )
 
+            com.webtoapp.ui.components.BrowserDisguiseConfigCard(
+                config = editState.browserDisguiseConfig,
+                onConfigChange = { newConfig ->
+                    viewModel.updateEditState {
+                        copy(browserDisguiseConfig = newConfig)
+                    }
+                }
+            )
+
             DeviceDisguiseCard(
                 config = editState.deviceDisguiseConfig,
                 onConfigChange = { newConfig ->
                     viewModel.updateEditState {
                         copy(deviceDisguiseConfig = newConfig)
+                    }
+                }
+            )
+
+            CloudAppConfigCard(
+                config = editState.cloudConfig,
+                cloudViewModel = cloudViewModel,
+                onConfigChange = { newConfig ->
+                    viewModel.updateEditState {
+                        copy(cloudConfig = newConfig)
                     }
                 }
             )

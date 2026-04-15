@@ -69,6 +69,7 @@ data class WebApp(
     val themeType: String = "AURORA",
     val translateEnabled: Boolean = false,
     val translateConfig: TranslateConfig? = null,
+    val extensionEnabled: Boolean = false,
     val extensionModuleIds: List<String> = emptyList(),
     val extensionFabIcon: String? = null,
     val autoStartConfig: AutoStartConfig? = null,

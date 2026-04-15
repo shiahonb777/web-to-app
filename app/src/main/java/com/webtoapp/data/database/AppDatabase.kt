@@ -24,12 +24,12 @@ private val UNSUPPORTED_LEGACY_VERSIONS = IntArray(27) { index -> index + 1 }
  * Room database.
  *
  * Compatibility policy now focuses on API level 28+:
- * - `28 -> 33` keeps incremental migrations
+ * - `28 -> 34` keeps incremental migrations
  * - `<28` falls back to destructive rebuild
  */
 @Database(
     entities = [WebApp::class, AppCategory::class, AppUsageStats::class, AppHealthRecord::class],
-    version = 33,
+    version = 34,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -52,6 +52,7 @@ fun createAppDatabase(context: Context): AppDatabase {
             AppDatabaseMigrations.MIGRATION_30_31,
             AppDatabaseMigrations.MIGRATION_31_32,
             AppDatabaseMigrations.MIGRATION_32_33,
+            AppDatabaseMigrations.MIGRATION_33_34,
         )
         .fallbackToDestructiveMigrationFrom(*UNSUPPORTED_LEGACY_VERSIONS)
         .fallbackToDestructiveMigrationOnDowngrade()
@@ -126,4 +127,14 @@ private object AppDatabaseMigrations {
     val MIGRATION_30_31 = createAddColumnMigration(30, 31, "multiWebConfig")
     val MIGRATION_31_32 = createAddColumnMigration(31, 32, "browserDisguiseConfig")
     val MIGRATION_32_33 = createAddColumnMigration(32, 33, "deviceDisguiseConfig")
+    val MIGRATION_33_34 = object : Migration(33, 34) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            try {
+                db.execSQL("ALTER TABLE web_apps ADD COLUMN extensionEnabled INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE web_apps SET extensionEnabled = 1 WHERE extensionModuleIds != '[]' AND extensionModuleIds != ''")
+            } catch (e: Exception) {
+                AppLogger.w("AppDatabase", "迁移 33->34 跳过列 extensionEnabled: ${e.message}")
+            }
+        }
+    }
 }
