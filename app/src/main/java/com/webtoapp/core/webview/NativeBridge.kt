@@ -1,6 +1,9 @@
 package com.webtoapp.core.webview
 
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import com.webtoapp.core.logging.AppLogger
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -14,6 +17,10 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.util.MediaSaver
 import com.webtoapp.util.getUrlScheme
@@ -457,6 +464,96 @@ if (NativeBridge.isFullscreen()) {
             }
         } catch (e: Exception) {
             AppLogger.e("NativeBridge", "打开应用失败", e)
+            false
+        }
+    }
+
+    // ==================== 通知 ====================
+
+    @JavascriptInterface
+    fun getNotificationPermissionState(): String {
+        return try {
+            if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                return "denied"
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val granted = ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (granted) "granted" else "default"
+            } else {
+                "granted"
+            }
+        } catch (e: Exception) {
+            AppLogger.w("NativeBridge", "读取通知权限状态失败", e)
+            "default"
+        }
+    }
+
+    @JavascriptInterface
+    fun requestNotificationPermission(): String {
+        val current = getNotificationPermissionState()
+        if (current == "granted" || current == "denied") return current
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val activity = context as? Activity
+            if (activity != null) {
+                scope.launch(Dispatchers.Main) {
+                    try {
+                        ActivityCompat.requestPermissions(
+                            activity,
+                            arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                            9001
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.w("NativeBridge", "请求通知权限失败", e)
+                    }
+                }
+            }
+        }
+        return getNotificationPermissionState()
+    }
+
+    @JavascriptInterface
+    fun showWebNotification(title: String, body: String = "", tag: String = ""): Boolean {
+        return try {
+            if (getNotificationPermissionState() != "granted") return false
+
+            val channelId = "webapp_notifications"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val channel = NotificationChannel(
+                    channelId,
+                    "WebApp Notifications",
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+                manager.createNotificationChannel(channel)
+            }
+
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP) }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                (tag.ifBlank { title }).hashCode(),
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(context.applicationInfo.icon)
+                .setContentTitle(title.ifBlank { context.applicationInfo.loadLabel(context.packageManager).toString() })
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
+
+            NotificationManagerCompat.from(context).notify((tag.ifBlank { "$title|$body" }).hashCode(), notification)
+            true
+        } catch (e: Exception) {
+            AppLogger.e("NativeBridge", "显示网页通知失败", e)
             false
         }
     }

@@ -389,6 +389,21 @@ object AppLogger {
             "读取日志失败: ${e.message}"
         }
     }
+
+    /** 获取当前日志尾部内容 */
+    fun getRecentLogTail(maxChars: Int = 12000): String {
+        flushBuffer()
+        return try {
+            val content = logFile?.takeIf { it.exists() }?.readText().orEmpty()
+            when {
+                content.isBlank() -> "日志为空"
+                content.length <= maxChars -> content
+                else -> content.takeLast(maxChars)
+            }
+        } catch (e: Exception) {
+            "读取日志失败: ${e.message}"
+        }
+    }
     
     /** 获取运行时间统计 */
     fun getSessionDuration(): Long {

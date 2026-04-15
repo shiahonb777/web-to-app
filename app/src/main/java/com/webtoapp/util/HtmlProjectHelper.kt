@@ -134,13 +134,42 @@ object HtmlProjectHelper {
             }
         }
 
+        // Save CSS files independently (even though they were inlined into HTML)
+        // This ensures the edit screen can restore them when re-opened
+        val savedCssFiles = cssFiles.mapNotNull { file ->
+            try {
+                val savedPath = HtmlStorage.saveFromTempFile(context, file.path, file.name, projectId)
+                if (savedPath != null) {
+                    AppLogger.d(TAG, "CSS file saved independently: ${file.name}")
+                    file.copy(path = savedPath)
+                } else null
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Failed to save CSS file: ${file.path}", e)
+                null
+            }
+        }
+
+        // Save JS files independently (even though they were inlined into HTML)
+        val savedJsFiles = jsFiles.mapNotNull { file ->
+            try {
+                val savedPath = HtmlStorage.saveFromTempFile(context, file.path, file.name, projectId)
+                if (savedPath != null) {
+                    AppLogger.d(TAG, "JS file saved independently: ${file.name}")
+                    file.copy(path = savedPath)
+                } else null
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Failed to save JS file: ${file.path}", e)
+                null
+            }
+        }
+
         // Save other files (images, fonts, etc.)
         val savedOtherFiles = otherFiles.mapNotNull { file ->
             val savedPath = HtmlStorage.saveFromTempFile(context, file.path, file.name, projectId)
             if (savedPath != null) file.copy(path = savedPath) else null
         }
 
-        processedHtmlFiles + savedOtherFiles
+        processedHtmlFiles + savedCssFiles + savedJsFiles + savedOtherFiles
     }
 
     /**

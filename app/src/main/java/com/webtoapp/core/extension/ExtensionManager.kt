@@ -9,8 +9,11 @@ import androidx.core.content.FileProvider
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
-import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +23,8 @@ import kotlinx.coroutines.withContext
 import android.os.Environment
 import com.webtoapp.core.i18n.Strings
 import java.io.File
+import java.io.InputStreamReader
+import com.google.gson.stream.JsonReader
 import java.io.InputStream
 
 /**
@@ -106,11 +111,25 @@ class ExtensionManager private constructor(private val context: Context) {
     @Volatile
     private var _allModulesCache: List<ExtensionModule> = emptyList()
     
+    // Loading state for UI to observe
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    
+    // Background scope for async initialization
+    private val initScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
     init {
-        // Initialize时加载模块
-        loadModules()
+        // Built-in modules are lightweight — load synchronously
         loadBuiltInModules()
         rebuildAllModulesCache()
+        
+        // User modules may be very large (10+MB code) — load async to prevent ANR
+        initScope.launch {
+            loadModulesAsync()
+            rebuildAllModulesCache()
+            _isLoading.value = false
+            AppLogger.d(TAG, "Async module loading completed")
+        }
     }
     
     /**
@@ -125,9 +144,11 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 加载所有用户模块
+     * 异步加载所有用户模块
+     * 初始加载时不加载代码内容（代码懒加载），仅加载元数据
+     * 自动迁移旧版内联代码到独立文件
      */
-    private fun loadModules() {
+    private suspend fun loadModulesAsync() = withContext(Dispatchers.IO) {
         try {
             val file = File(modulesDir, MODULES_FILE)
             if (file.exists()) {
@@ -135,21 +156,50 @@ class ExtensionManager private constructor(private val context: Context) {
                 if (json.isBlank()) {
                     AppLogger.d(TAG, "Modules file is empty")
                     _modules.value = emptyList()
-                    return
+                    return@withContext
                 }
-                val type = object : TypeToken<List<ExtensionModule>>() {}.type
-                val loadedModules: List<ExtensionModule>? = try {
-                    gson.fromJson(json, type)
-                } catch (e: Exception) {
-                    AppLogger.e(TAG, "JSON parsing failed, attempting recovery", e)
-                    // 尝试恢复：备份损坏文件并重置
-                    val backupFile = File(modulesDir, "modules_backup_${System.currentTimeMillis()}.json")
-                    file.copyTo(backupFile, overwrite = true)
-                    AppLogger.i(TAG, "Corrupted modules backed up to: ${backupFile.name}")
-                    null
+                val loadedModules: List<ExtensionModule>? = parseModulesJson(json)
+                    ?: run {
+                        AppLogger.e(TAG, "JSON parsing failed, attempting recovery")
+                        val backupFile = File(modulesDir, "modules_backup_${System.currentTimeMillis()}.json")
+                        file.copyTo(backupFile, overwrite = true)
+                        AppLogger.i(TAG, "Corrupted modules backed up to: ${backupFile.name}")
+                        null
+                    }
+                
+                val modules = loadedModules?.filterNotNull() ?: emptyList()
+                
+                // Migration: if any module has inline code or codeFiles, extract to separate files
+                var needsMigration = false
+                val migratedModules = modules.map { module ->
+                    var m = module
+                    if (m.code.isNotBlank()) {
+                        saveModuleCode(m.id, m.code)
+                        needsMigration = true
+                        m = m.copy(code = "")  // Strip from in-memory (will be lazy-loaded)
+                    }
+                    if (m.cssCode.isNotBlank()) {
+                        saveModuleCss(m.id, m.cssCode)
+                        needsMigration = true
+                        m = m.copy(cssCode = "")
+                    }
+                    if (m.codeFiles.isNotEmpty()) {
+                        saveModuleCodeFiles(m.id, m.codeFiles)
+                        needsMigration = true
+                        m = m.copy(codeFiles = emptyMap())
+                    }
+                    m
                 }
-                _modules.value = loadedModules?.filterNotNull() ?: emptyList()
-                AppLogger.d(TAG, "Loaded ${_modules.value.size} modules")
+                
+                // Rewrite modules.json without code if migration happened
+                if (needsMigration) {
+                    AppLogger.i(TAG, "Migrating ${modules.size} modules: stripping inline code to separate files")
+                    file.writeText(gson.toJson(migratedModules))
+                }
+                
+                // Store modules WITHOUT code in memory (lazy-load code on demand)
+                _modules.value = migratedModules
+                AppLogger.d(TAG, "Loaded ${_modules.value.size} modules (code lazy-loaded)")
             }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to load modules", e)
@@ -202,8 +252,7 @@ class ExtensionManager private constructor(private val context: Context) {
             val file = File(modulesDir, BUILTIN_STATES_FILE)
             if (file.exists()) {
                 val json = file.readText()
-                val type = object : TypeToken<Map<String, Boolean>>() {}.type
-                gson.fromJson(json, type) ?: emptyMap()
+                parseBuiltInStatesJson(json) ?: emptyMap()
             } else {
                 emptyMap()
             }
@@ -216,6 +265,51 @@ class ExtensionManager private constructor(private val context: Context) {
     /**
      * 保存内置模块的启用状态
      */
+    internal fun parseModulesJson(json: String): List<ExtensionModule>? {
+        return try {
+            val parsed = JsonParser.parseString(json)
+            if (parsed.isJsonNull) return emptyList()
+            if (!parsed.isJsonArray) return null
+
+            val jsonArray = parsed.asJsonArray
+            val result = jsonArray.mapNotNull { element ->
+                try {
+                    gson.fromJson(element, ExtensionModule::class.java)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            if (jsonArray.size() > 0 && result.isEmpty()) null else result
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    internal fun parseBuiltInStatesJson(json: String): Map<String, Boolean>? {
+        return try {
+            val parsed = JsonParser.parseString(json)
+            if (parsed.isJsonNull) return emptyMap()
+            if (!parsed.isJsonObject) return null
+
+            val jsonObject = parsed.asJsonObject
+            val result = buildMap {
+                jsonObject.entrySet().forEach { (key, value) ->
+                    try {
+                        if (!value.isJsonNull) {
+                            put(key, value.asBoolean)
+                        }
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+
+            if (jsonObject.size() > 0 && result.isEmpty()) null else result
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     private suspend fun saveBuiltInStates() = withContext(Dispatchers.IO) {
         saveMutex.withLock {
             try {
@@ -231,17 +325,153 @@ class ExtensionManager private constructor(private val context: Context) {
     
     /**
      * 保存模块列表
+     * 代码内容单独存储为文件，modules.json 只保存轻量元数据
+     * 这避免了每次保存都序列化所有模块的完整代码（可能几十 MB）
      */
     private suspend fun saveModules() = withContext(Dispatchers.IO) {
         saveMutex.withLock {
             try {
+                // Save code/cssCode/codeFiles to separate files, strip from JSON
+                val strippedModules = _modules.value.map { module ->
+                    // Save code to individual file
+                    if (module.code.isNotBlank()) {
+                        saveModuleCode(module.id, module.code)
+                    }
+                    if (module.cssCode.isNotBlank()) {
+                        saveModuleCss(module.id, module.cssCode)
+                    }
+                    // Save codeFiles to subdirectory
+                    if (module.codeFiles.isNotEmpty()) {
+                        saveModuleCodeFiles(module.id, module.codeFiles)
+                    }
+                    // Strip code from JSON to keep modules.json small
+                    module.copy(code = "", cssCode = "", codeFiles = emptyMap())
+                }
                 val file = File(modulesDir, MODULES_FILE)
-                val json = gson.toJson(_modules.value)
+                val json = gson.toJson(strippedModules)
                 file.writeText(json)
-                AppLogger.d(TAG, "Saved ${_modules.value.size} modules")
+                AppLogger.d(TAG, "Saved ${_modules.value.size} modules (code in separate files)")
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to save modules", e)
             }
+        }
+    }
+    
+    // ==================== Separate Code File Storage ====================
+    
+    private fun saveModuleCode(moduleId: String, code: String) {
+        try {
+            File(modulesDir, "code_$moduleId.js").writeText(code)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to save code for module $moduleId", e)
+        }
+    }
+    
+    private fun saveModuleCss(moduleId: String, css: String) {
+        try {
+            File(modulesDir, "css_$moduleId.css").writeText(css)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to save CSS for module $moduleId", e)
+        }
+    }
+    
+    private fun loadModuleCode(moduleId: String): String {
+        return try {
+            val file = File(modulesDir, "code_$moduleId.js")
+            if (file.exists()) file.readText() else ""
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to load code for module $moduleId", e)
+            ""
+        }
+    }
+    
+    private fun loadModuleCss(moduleId: String): String {
+        return try {
+            val file = File(modulesDir, "css_$moduleId.css")
+            if (file.exists()) file.readText() else ""
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to load CSS for module $moduleId", e)
+            ""
+        }
+    }
+    
+    private fun deleteModuleCodeFiles(moduleId: String) {
+        try {
+            File(modulesDir, "code_$moduleId.js").delete()
+            File(modulesDir, "css_$moduleId.css").delete()
+            // Delete multi-file directory
+            val codeFilesDir = File(modulesDir, "codefiles_$moduleId")
+            if (codeFilesDir.exists()) {
+                codeFilesDir.deleteRecursively()
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to delete code files for module $moduleId", e)
+        }
+    }
+    
+    // ==================== Multi-file Code Storage ====================
+    
+    /**
+     * 保存模块的多文件代码到独立子目录
+     * 目录结构: extension_modules/codefiles_<moduleId>/<relativePath>
+     */
+    private fun saveModuleCodeFiles(moduleId: String, codeFiles: Map<String, String>) {
+        try {
+            val dir = File(modulesDir, "codefiles_$moduleId")
+            // Clean existing files first to handle renames/deletions
+            if (dir.exists()) dir.deleteRecursively()
+            dir.mkdirs()
+            
+            codeFiles.forEach { (relativePath, content) ->
+                val file = File(dir, relativePath)
+                file.parentFile?.mkdirs()
+                file.writeText(content)
+            }
+            AppLogger.d(TAG, "Saved ${codeFiles.size} code files for module $moduleId")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to save code files for module $moduleId", e)
+        }
+    }
+    
+    /**
+     * 从磁盘加载模块的多文件代码
+     */
+    private fun loadModuleCodeFiles(moduleId: String): Map<String, String> {
+        return try {
+            val dir = File(modulesDir, "codefiles_$moduleId")
+            if (!dir.exists() || !dir.isDirectory) return emptyMap()
+            
+            val result = linkedMapOf<String, String>()
+            dir.walkTopDown()
+                .filter { it.isFile }
+                .forEach { file ->
+                    val relativePath = file.relativeTo(dir).path
+                    result[relativePath] = file.readText()
+                }
+            result
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to load code files for module $moduleId", e)
+            emptyMap()
+        }
+    }
+    
+    /**
+     * 按需加载模块代码（懒加载）
+     * 内存中的模块默认不含代码，需要时从文件加载
+     * 用于注入、导出、编辑等需要代码的场景
+     */
+    fun ensureCodeLoaded(module: ExtensionModule): ExtensionModule {
+        // If code is already loaded, return as-is
+        if (module.code.isNotBlank() || module.cssCode.isNotBlank() || module.codeFiles.isNotEmpty()) return module
+        
+        val code = loadModuleCode(module.id)
+        val css = loadModuleCss(module.id)
+        val codeFiles = loadModuleCodeFiles(module.id)
+        
+        return if (code.isNotBlank() || css.isNotBlank() || codeFiles.isNotEmpty()) {
+            module.copy(code = code, cssCode = css, codeFiles = codeFiles)
+        } else {
+            module
         }
     }
     
@@ -332,6 +562,7 @@ class ExtensionManager private constructor(private val context: Context) {
             _modules.value = _modules.value.filter { it.id != moduleId }
             rebuildAllModulesCache()
             saveModules()
+            deleteModuleCodeFiles(moduleId)
             Result.success(Unit)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to delete module", e)
@@ -407,9 +638,11 @@ class ExtensionManager private constructor(private val context: Context) {
             val module = getAllModules().find { it.id == moduleId }
                 ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
             
-            val fileName = "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
+            // Ensure code is loaded before export
+            val fullModule = ensureCodeLoaded(module)
+            val fileName = "${fullModule.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
             val file = File(context.cacheDir, fileName)
-            file.writeText(module.toJson())
+            file.writeText(fullModule.toJson())
             
             Result.success(file)
         } catch (e: Exception) {
@@ -428,7 +661,10 @@ class ExtensionManager private constructor(private val context: Context) {
         author: ModuleAuthor? = null
     ): Result<File> = withContext(Dispatchers.IO) {
         try {
-            val modulesToExport = getAllModules().filter { it.id in moduleIds }
+            // Ensure code is loaded for all modules before export
+            val modulesToExport = getAllModules()
+                .filter { it.id in moduleIds }
+                .map { ensureCodeLoaded(it) }
             if (modulesToExport.isEmpty()) {
                 return@withContext Result.failure(IllegalArgumentException(Strings.errNoModulesToExport))
             }
@@ -453,12 +689,18 @@ class ExtensionManager private constructor(private val context: Context) {
     
     /**
      * 从文件导入模块
+     * 使用流式 JsonReader 避免将整个文件读入内存（大型模块可能 10+MB）
      */
     suspend fun importModule(inputStream: InputStream): Result<ExtensionModule> = withContext(Dispatchers.IO) {
         try {
-            val json = inputStream.bufferedReader().readText()
-            val module = ExtensionModule.fromJson(json)
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errInvalidModuleFile))
+            val module = try {
+                val reader = JsonReader(InputStreamReader(inputStream.buffered()))
+                reader.isLenient = true
+                gson.fromJson<ExtensionModule>(reader, ExtensionModule::class.java)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Stream-based parsing failed", e)
+                null
+            } ?: return@withContext Result.failure(IllegalArgumentException(Strings.errInvalidModuleFile))
             
             // Generate新 ID 避免冲突
             val importedModule = module.copy(
@@ -530,7 +772,8 @@ class ExtensionManager private constructor(private val context: Context) {
      * 分享模块（生成分享 Intent）
      */
     fun shareModule(moduleId: String): Intent? {
-        val module = getAllModules().find { it.id == moduleId } ?: return null
+        val rawModule = getAllModules().find { it.id == moduleId } ?: return null
+        val module = ensureCodeLoaded(rawModule)
         
         val shareText = """
             ${Strings.shareModuleTitle}
@@ -581,7 +824,9 @@ class ExtensionManager private constructor(private val context: Context) {
             val module = getAllModules().find { it.id == moduleId }
                 ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
             
-            val fileName = "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
+            // Ensure code is loaded before export
+            val fullModule = ensureCodeLoaded(module)
+            val fileName = "${fullModule.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             
             if (!downloadsDir.exists()) {
@@ -589,7 +834,7 @@ class ExtensionManager private constructor(private val context: Context) {
             }
             
             val file = File(downloadsDir, fileName)
-            file.writeText(module.toJson())
+            file.writeText(fullModule.toJson())
             
             Result.success(file.absolutePath)
         } catch (e: Exception) {
@@ -608,8 +853,10 @@ class ExtensionManager private constructor(private val context: Context) {
             val module = getAllModules().find { it.id == moduleId }
                 ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
             
+            // Ensure code is loaded before export
+            val fullModule = ensureCodeLoaded(module)
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                outputStream.write(module.toJson().toByteArray())
+                outputStream.write(fullModule.toJson().toByteArray())
             } ?: return@withContext Result.failure(IllegalStateException(Strings.errCannotOpenOutputStream))
             
             Result.success(Unit)
@@ -644,13 +891,14 @@ class ExtensionManager private constructor(private val context: Context) {
         if (matchingModules.isEmpty()) return ""
         
         return matchingModules.joinToString("\n\n") { module ->
+            val loadedModule = ensureCodeLoaded(module)
             """
-            // ========== ${module.name} (${module.version.name}) ==========
+            // ========== ${loadedModule.name} (${loadedModule.version.name}) ==========
             (function() {
                 try {
-                    ${module.generateExecutableCode()}
+                    ${loadedModule.generateExecutableCode()}
                 } catch(__moduleError__) {
-                    console.error('[WebToApp Module Error] ${module.name}:', __moduleError__);
+                    console.error('[WebToApp Module Error] ${loadedModule.name}:', __moduleError__);
                 }
             })();
             """.trimIndent()
@@ -683,13 +931,14 @@ class ExtensionManager private constructor(private val context: Context) {
         if (targetModules.isEmpty()) return ""
         
         return targetModules.joinToString("\n\n") { module ->
+            val loadedModule = ensureCodeLoaded(module)
             """
-            // ========== ${module.name} (${module.version.name}) ==========
+            // ========== ${loadedModule.name} (${loadedModule.version.name}) ==========
             (function() {
                 try {
-                    ${module.generateExecutableCode()}
+                    ${loadedModule.generateExecutableCode()}
                 } catch(__moduleError__) {
-                    console.error('[WebToApp Module Error] ${module.name}:', __moduleError__);
+                    console.error('[WebToApp Module Error] ${loadedModule.name}:', __moduleError__);
                 }
             })();
             """.trimIndent()
@@ -708,7 +957,9 @@ class ExtensionManager private constructor(private val context: Context) {
      */
     fun getModulesByIds(moduleIds: List<String>): List<ExtensionModule> {
         val allModules = getAllModules()
-        return moduleIds.mapNotNull { id -> allModules.find { it.id == id } }
+        return moduleIds.mapNotNull { id -> 
+            allModules.find { it.id == id }?.let { ensureCodeLoaded(it) }
+        }
     }
     
     /**

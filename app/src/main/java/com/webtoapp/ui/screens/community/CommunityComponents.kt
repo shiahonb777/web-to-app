@@ -64,7 +64,7 @@ object CommunityPhysics {
 // ═══════════════════════════════════════════════════════════
 
 /**
- * 毛玻璃 Surface — API 31+ 使用真实 blur，低版本降级为半透明
+ * 毛玻璃 Surface — API 31+ 使用真实 blur，低版本使用更实的半透明表面
  * 参数:
  *   blurRadius — 高斯模糊半径（px）
  *   tintAlpha  — 表面着色透明度
@@ -92,7 +92,7 @@ fun FrostedGlassSurface(
                     .background(surfaceColor.copy(alpha = tintAlpha))
             )
         } else {
-            // 降级方案 — 更高的不透明度
+            // 低版本表面方案 — 提高不透明度保持层次感
             Box(
                 Modifier
                     .matchParentSize()

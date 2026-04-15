@@ -280,6 +280,7 @@ fun CreateGalleryAppScreen(
                     isLoading = isLoadingMedia,
                     selectedItems = selectedItems,
                     isSelectionMode = isSelectionMode,
+                    isEditMode = isEditMode,
                     onAddMedia = {
                         mediaPickerLauncher.launch(arrayOf("image/*", "video/*"))
                     },
@@ -437,7 +438,8 @@ private fun MediaManagementTab(
     appIcon: Uri?,
     appIconPath: String?,
     onSelectIcon: () -> Unit,
-    onSelectIconFromLibrary: (String) -> Unit
+    onSelectIconFromLibrary: (String) -> Unit,
+    isEditMode: Boolean = false
 ) {
     val context = LocalContext.current
     
@@ -448,7 +450,8 @@ private fun MediaManagementTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App信息卡片
+        // App信息卡片（仅新建时显示，编辑时在通用配置中设置）
+        if (!isEditMode) {
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -472,6 +475,7 @@ private fun MediaManagementTab(
                     onSelectFromLibrary = onSelectIconFromLibrary
                 )
             }
+        }
         }
         
         // 分类管理
@@ -1711,7 +1715,8 @@ fun CreateGalleryAppScreenV2(
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // 可折叠应用信息
+            // 可折叠应用信息（仅新建时显示，编辑时在通用配置中设置）
+            if (existingAppId == null) {
             AnimatedVisibility(visible = showAppInfoSection, enter = expandVertically(), exit = shrinkVertically()) {
                 Surface(color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)) {
                     Row(
@@ -1748,6 +1753,7 @@ fun CreateGalleryAppScreenV2(
             }
             Surface(modifier = Modifier.fillMaxWidth().clickable { showAppInfoSection = !showAppInfoSection }, color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)) {
                 Icon(if (showAppInfoSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, modifier = Modifier.fillMaxWidth().padding(4.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             }
 
             // 统计条

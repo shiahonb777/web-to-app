@@ -37,14 +37,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.cloud.AppDownloadManager
 import com.webtoapp.core.cloud.AppStoreItem
 import com.webtoapp.core.cloud.AppStoreListResponse
@@ -976,6 +979,7 @@ private fun ModuleStoreDetailSheet(
 
     // Report state
     var showReportDialog by remember { mutableStateOf(false) }
+    var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     // Download / Install state
     var isDownloading by remember { mutableStateOf(false) }
@@ -1055,7 +1059,16 @@ private fun ModuleStoreDetailSheet(
                                     installedTracker.markInstalled(module.id)
                                     scope.launch { snackbarHostState.showSnackbar("✅ " + Strings.storeModuleInstallSuccess) }
                                 } else {
-                                    scope.launch { snackbarHostState.showSnackbar("❌ " + msg) }
+                                    actionFailureReport = buildSheetFailureReport(
+                                        title = "模块安装失败",
+                                        stage = "安装模块",
+                                        summary = msg,
+                                        contextLines = listOf(
+                                            "moduleId=${module.id}",
+                                            "moduleName=${module.name}",
+                                            "versionName=${module.versionName ?: ""}"
+                                        )
+                                    )
                                 }
                             }
                         },
@@ -1092,7 +1105,24 @@ private fun ModuleStoreDetailSheet(
                     AppPhysicsActionButton(icon = Icons.Outlined.ThumbUp, activeIcon = Icons.Filled.ThumbUp, count = currentLikeCount, isActive = isLiked, activeColor = Color(0xFF4CAF50), onClick = {
                         if (isLiking) return@AppPhysicsActionButton; isLiking = true
                         scope.launch {
-                            when (val r = apiClient.likeStoreModule(module.id)) { is com.webtoapp.core.auth.AuthResult.Success -> { isLiked = r.data.liked; currentLikeCount = r.data.likeCount }; is com.webtoapp.core.auth.AuthResult.Error -> snackbarHostState.showSnackbar(r.message) }
+                            when (val r = apiClient.likeStoreModule(module.id)) {
+                                is com.webtoapp.core.auth.AuthResult.Success -> {
+                                    isLiked = r.data.liked
+                                    currentLikeCount = r.data.likeCount
+                                }
+                                is com.webtoapp.core.auth.AuthResult.Error -> {
+                                    actionFailureReport = buildSheetFailureReport(
+                                        title = "模块操作失败",
+                                        stage = "点赞模块",
+                                        summary = r.message,
+                                        contextLines = listOf(
+                                            "moduleId=${module.id}",
+                                            "moduleName=${module.name}",
+                                            "action=likeStoreModule"
+                                        )
+                                    )
+                                }
+                            }
                             isLiking = false
                         }
                     })
@@ -1133,7 +1163,21 @@ private fun ModuleStoreDetailSheet(
     if (showReportDialog) {
         ReportDialog(appName = Strings.storeReportAppTitle + " \"" + module.name + "\"", onDismiss = { showReportDialog = false }, onSubmit = { reason, _ ->
             scope.launch {
-                when (val r = apiClient.reportStoreModule(module.id, reason)) { is com.webtoapp.core.auth.AuthResult.Success -> snackbarHostState.showSnackbar(Strings.storeReportSuccess); is com.webtoapp.core.auth.AuthResult.Error -> snackbarHostState.showSnackbar(Strings.storeReportFailed + ": ${r.message}") }
+                when (val r = apiClient.reportStoreModule(module.id, reason)) {
+                    is com.webtoapp.core.auth.AuthResult.Success -> snackbarHostState.showSnackbar(Strings.storeReportSuccess)
+                    is com.webtoapp.core.auth.AuthResult.Error -> {
+                        actionFailureReport = buildSheetFailureReport(
+                            title = "模块举报失败",
+                            stage = "举报模块",
+                            summary = Strings.storeReportFailed + ": ${r.message}",
+                            contextLines = listOf(
+                                "moduleId=${module.id}",
+                                "moduleName=${module.name}",
+                                "reason=$reason"
+                            )
+                        )
+                    }
+                }
                 showReportDialog = false
             }
         })
@@ -1166,7 +1210,20 @@ private fun ModuleStoreDetailSheet(
                     scope.launch {
                         when (val result = apiClient.reviewStoreModule(module.id, reviewRating, reviewComment.ifBlank { null })) {
                             is com.webtoapp.core.auth.AuthResult.Success -> { isSubmittingReview = false; showReviewDialog = false; apiClient.getModuleReviews(module.id, page = 1, size = 5).onSuccess { reviews = it.reviews; reviewsTotal = it.total }; snackbarHostState.showSnackbar(Strings.storeReviewSuccess) }
-                            is com.webtoapp.core.auth.AuthResult.Error -> { isSubmittingReview = false; snackbarHostState.showSnackbar(Strings.storeReviewFailed + ": \${result.message}") }
+                            is com.webtoapp.core.auth.AuthResult.Error -> {
+                                isSubmittingReview = false
+                                actionFailureReport = buildSheetFailureReport(
+                                    title = "模块评价提交失败",
+                                    stage = "提交评价",
+                                    summary = Strings.storeReviewFailed + ": ${result.message}",
+                                    contextLines = listOf(
+                                        "moduleId=${module.id}",
+                                        "moduleName=${module.name}",
+                                        "rating=$reviewRating",
+                                        "comment=$reviewComment"
+                                    )
+                                )
+                            }
                         }
                     }
                 }, enabled = !isSubmittingReview, shape = RoundedCornerShape(10.dp)) {
@@ -1175,6 +1232,13 @@ private fun ModuleStoreDetailSheet(
                 }
             },
             dismissButton = { TextButton(onClick = { showReviewDialog = false }, enabled = !isSubmittingReview) { Text(Strings.storeReviewCancel) } }
+        )
+    }
+
+    actionFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { actionFailureReport = null }
         )
     }
 }
@@ -1667,6 +1731,7 @@ private fun AppDetailSheet(
     var isLoadingDetail by remember { mutableStateOf(true) }
     var isDownloading by remember { mutableStateOf(false) }
     var showReportDialog by remember { mutableStateOf(false) }
+    var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     // Like state
     var isLiked by remember { mutableStateOf(false) }
@@ -2047,8 +2112,52 @@ private fun AppDetailSheet(
                                                     val url = urls["apk_url_github"] ?: urls["apk_url_gitee"]
                                                     if (url != null && downloadManager != null) {
                                                         downloadManager.startDownload(detail.id, detail.name, url)
+                                                    } else if (url != null) {
+                                                        uriHandler.openUri(url)
+                                                    } else {
+                                                        actionFailureReport = buildSheetFailureReport(
+                                                            title = "应用下载失败",
+                                                            stage = "获取下载链接",
+                                                            summary = Strings.storeNoDownloadLink,
+                                                            contextLines = listOf(
+                                                                "appId=${detail.id}",
+                                                                "appName=${detail.name}",
+                                                                "retry=true"
+                                                            )
+                                                        )
                                                     }
                                                 }
+                                                result.onFailure { e ->
+                                                    actionFailureReport = buildSheetFailureReport(
+                                                        title = "应用下载失败",
+                                                        stage = "获取下载链接",
+                                                        summary = context.getString(
+                                                            com.webtoapp.R.string.store_get_download_link_failed,
+                                                            (e.message ?: "")
+                                                        ),
+                                                        contextLines = listOf(
+                                                            "appId=${detail.id}",
+                                                            "appName=${detail.name}",
+                                                            "retry=true"
+                                                        ),
+                                                        throwable = e
+                                                    )
+                                                }
+                                            } catch (e: Exception) {
+                                                actionFailureReport = buildSheetFailureReport(
+                                                    title = "应用下载失败",
+                                                    stage = "请求下载接口",
+                                                    summary = context.getString(
+                                                        com.webtoapp.R.string.store_network_error,
+                                                        (e.message ?: "")
+                                                    ),
+                                                    contextLines = listOf(
+                                                        "appId=${detail.id}",
+                                                        "appName=${detail.name}",
+                                                        "retry=true"
+                                                    ),
+                                                    throwable = e
+                                                )
                                             } finally {
                                                 isDownloading = false
                                             }
@@ -2086,30 +2195,49 @@ private fun AppDetailSheet(
                                             } else if (url != null) {
                                                 uriHandler.openUri(url)
                                             } else {
-                                                scope.launch {
-                                                    snackbarHostState.showSnackbar(Strings.storeNoDownloadLink)
-                                                }
-                                            }
-                                        }
-                                        result.onFailure { e ->
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar(
-                                                    context.getString(
-                                                        com.webtoapp.R.string.store_get_download_link_failed,
-                                                        (e.message ?: "")
+                                                actionFailureReport = buildSheetFailureReport(
+                                                    title = "应用下载失败",
+                                                    stage = "获取下载链接",
+                                                    summary = Strings.storeNoDownloadLink,
+                                                    contextLines = listOf(
+                                                        "appId=${detail.id}",
+                                                        "appName=${detail.name}",
+                                                        "retry=false"
                                                     )
                                                 )
                                             }
                                         }
-                                    } catch (e: Exception) {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                context.getString(
-                                                    com.webtoapp.R.string.store_network_error,
+                                        result.onFailure { e ->
+                                            actionFailureReport = buildSheetFailureReport(
+                                                title = "应用下载失败",
+                                                stage = "获取下载链接",
+                                                summary = context.getString(
+                                                    com.webtoapp.R.string.store_get_download_link_failed,
                                                     (e.message ?: "")
-                                                )
+                                                ),
+                                                contextLines = listOf(
+                                                    "appId=${detail.id}",
+                                                    "appName=${detail.name}",
+                                                    "retry=false"
+                                                ),
+                                                throwable = e
                                             )
                                         }
+                                    } catch (e: Exception) {
+                                        actionFailureReport = buildSheetFailureReport(
+                                            title = "应用下载失败",
+                                            stage = "请求下载接口",
+                                            summary = context.getString(
+                                                com.webtoapp.R.string.store_network_error,
+                                                (e.message ?: "")
+                                            ),
+                                            contextLines = listOf(
+                                                "appId=${detail.id}",
+                                                "appName=${detail.name}",
+                                                "retry=false"
+                                            ),
+                                            throwable = e
+                                        )
                                     } finally {
                                         isDownloading = false
                                     }
@@ -2304,7 +2432,16 @@ private fun AppDetailSheet(
                                         }
                                         is com.webtoapp.core.auth.AuthResult.Error -> {
                                             isLiking = false
-                                            snackbarHostState.showSnackbar(result.message)
+                                            actionFailureReport = buildSheetFailureReport(
+                                                title = "应用操作失败",
+                                                stage = "点赞应用",
+                                                summary = result.message,
+                                                contextLines = listOf(
+                                                    "appId=${detail.id}",
+                                                    "appName=${detail.name}",
+                                                    "action=likeStoreApp"
+                                                )
+                                            )
                                             return@launch
                                         }
                                     }
@@ -2418,10 +2555,18 @@ private fun AppDetailSheet(
                             snackbarHostState.showSnackbar(Strings.storeReportSuccess)
                         }
                         is com.webtoapp.core.auth.AuthResult.Error -> {
-                            snackbarHostState.showSnackbar(
-                                context.getString(
+                            actionFailureReport = buildSheetFailureReport(
+                                title = "应用举报失败",
+                                stage = "举报应用",
+                                summary = context.getString(
                                     com.webtoapp.R.string.store_report_failed,
                                     result.message
+                                ),
+                                contextLines = listOf(
+                                    "appId=${detail.id}",
+                                    "appName=${detail.name}",
+                                    "reason=$reason",
+                                    "description=${description ?: ""}"
                                 )
                             )
                         }
@@ -2537,7 +2682,17 @@ private fun AppDetailSheet(
                                 }
                                 is com.webtoapp.core.auth.AuthResult.Error -> {
                                     isSubmittingReview = false
-                                    snackbarHostState.showSnackbar(Strings.storeReviewFailed + ": \${result.message}")
+                                    actionFailureReport = buildSheetFailureReport(
+                                        title = "应用评价提交失败",
+                                        stage = "提交评价",
+                                        summary = Strings.storeReviewFailed + ": ${result.message}",
+                                        contextLines = listOf(
+                                            "appId=${detail.id}",
+                                            "appName=${detail.name}",
+                                            "rating=$reviewRating",
+                                            "comment=$reviewComment"
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -2559,6 +2714,13 @@ private fun AppDetailSheet(
                     enabled = !isSubmittingReview
                 ) { Text(Strings.storeReviewCancel) }
             }
+        )
+    }
+
+    actionFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { actionFailureReport = null }
         )
     }
 }
@@ -4315,6 +4477,7 @@ private fun MyAppsSheet(
     var isDeleting by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     var managedApp by remember { mutableStateOf<AppStoreItem?>(null) }
+    var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     fun loadMyApps(showRefresh: Boolean = false) {
         scope.launch {
@@ -4362,9 +4525,24 @@ private fun MyAppsSheet(
             onConfirm = {
                 isDeleting = true
                 scope.launch {
-                    apiClient.deleteMyApp(app.id)
-                    myApps = myApps.filterNot { it.id == app.id }
-                    appToDelete = null
+                    when (val result = apiClient.deleteMyApp(app.id)) {
+                        is com.webtoapp.core.auth.AuthResult.Success -> {
+                            myApps = myApps.filterNot { it.id == app.id }
+                            appToDelete = null
+                        }
+                        is com.webtoapp.core.auth.AuthResult.Error -> {
+                            actionFailureReport = buildSheetFailureReport(
+                                title = "应用下架失败",
+                                stage = "下架已发布应用",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "appId=${app.id}",
+                                    "appName=${app.name}",
+                                    "versionName=${app.versionName}"
+                                )
+                            )
+                        }
+                    }
                     isDeleting = false
                 }
             },
@@ -4578,6 +4756,13 @@ private fun MyAppsSheet(
             }
         }
     }
+
+    actionFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { actionFailureReport = null }
+        )
+    }
 }
 
 
@@ -4754,6 +4939,7 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
     var isUpdating by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
     var updateError by remember { mutableStateOf<String?>(null) }
+    var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     val categories = listOf(
         "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
@@ -4864,12 +5050,24 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                     onClick = {
                         isDeleting = true
                         scope.launch {
-                            when (apiClient.deleteStoreApp(app.id)) {
+                            when (val result = apiClient.deleteStoreApp(app.id)) {
                                 is com.webtoapp.core.auth.AuthResult.Success -> {
                                     showDeleteDialog = false
                                     onAppDeleted?.invoke()
                                 }
-                                is com.webtoapp.core.auth.AuthResult.Error -> { isDeleting = false }
+                                is com.webtoapp.core.auth.AuthResult.Error -> {
+                                    actionFailureReport = buildSheetFailureReport(
+                                        title = "应用删除失败",
+                                        stage = "删除应用",
+                                        summary = result.message,
+                                        contextLines = listOf(
+                                            "appId=${app.id}",
+                                            "appName=${app.name}",
+                                            "versionName=${app.versionName}"
+                                        )
+                                    )
+                                    isDeleting = false
+                                }
                             }
                         }
                     },
@@ -4962,6 +5160,13 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                 }
             }
         }
+    }
+
+    actionFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { actionFailureReport = null }
+        )
     }
 }
 
@@ -5446,6 +5651,134 @@ private fun countryFlag(countryCode: String): String {
     return String(Character.toChars(first)) + String(Character.toChars(second))
 }
 
+private data class SheetFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+private fun buildSheetFailureReport(
+    title: String,
+    stage: String,
+    summary: String,
+    contextLines: List<String>,
+    throwable: Throwable? = null
+): SheetFailureReport {
+    throwable?.let { AppLogger.e("AppStoreScreen", "$title failed at $stage", it) }
+    val details = buildString {
+        appendLine(title)
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        if (contextLines.isNotEmpty()) {
+            appendLine()
+            appendLine("context:")
+            contextLines.forEach { appendLine(it) }
+        }
+        if (throwable != null) {
+            appendLine()
+            appendLine("exception:")
+            appendLine(android.util.Log.getStackTraceString(throwable))
+        }
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+    return SheetFailureReport(title = title, summary = summary, details = details)
+}
+
+private fun buildApkBuildFailureReport(
+    context: android.content.Context,
+    project: com.webtoapp.data.model.WebApp,
+    error: com.webtoapp.core.apkbuilder.BuildResult.Error
+): SheetFailureReport {
+    val buildLog = com.webtoapp.core.apkbuilder.BuildLogger(context).readLogContent(error.logPath)
+
+    val details = buildString {
+        appendLine("APK 构建失败")
+        appendLine("stage: apk_build")
+        appendLine("summary: ${error.message}")
+        appendLine()
+        appendLine("project:")
+        appendLine("name=${project.name}")
+        appendLine("appType=${project.appType}")
+        appendLine("source=${project.url}")
+        appendLine()
+        appendLine("log_path:")
+        appendLine(error.logPath ?: "<unavailable>")
+        appendLine()
+        appendLine("build_log:")
+        appendLine(buildLog ?: "<build log unavailable>")
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+
+    return SheetFailureReport(
+        title = "APK 构建失败",
+        summary = error.message,
+        details = details
+    )
+}
+
+@Composable
+private fun SheetFailureReportDialog(
+    report: SheetFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
+
 // ════════════════════════════════════════════════
 // 发布应用 Bottom Sheet
 // ════════════════════════════════════════════════
@@ -5487,6 +5820,7 @@ private fun PublishAppSheet(
     var isPublishing by remember { mutableStateOf(false) }
     var uploadProgress by remember { mutableFloatStateOf(0f) }
     var uploadStatus by remember { mutableStateOf("") }
+    var publishFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     // ── 激活码配置 ──
     var enableActivation by remember { mutableStateOf(false) }
@@ -5539,7 +5873,8 @@ private fun PublishAppSheet(
     var isBuilding by remember { mutableStateOf(false) }
     var buildProgress by remember { mutableIntStateOf(0) }
     var buildProgressText by remember { mutableStateOf("") }
-    var buildError by remember { mutableStateOf<String?>(null) }
+    var buildFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
+    var showBuildFailureDialog by remember { mutableStateOf(false) }
 
     // Screenshot picker (multi-select)
     var screenshotUris by remember { mutableStateOf<List<android.net.Uri>>(emptyList()) }
@@ -5755,23 +6090,30 @@ private fun PublishAppSheet(
                                     }
                                     // Rebuild button
                                     TextButton(onClick = {
-                                        buildError = null
+                                        buildFailureReport = null
+                                        showBuildFailureDialog = false
                                         isBuilding = true
                                         buildProgress = 0
                                         buildProgressText = "准备构建..."
                                         scope.launch {
                                             val apkBuilder = com.webtoapp.core.apkbuilder.ApkBuilder(context)
-                                            val result = apkBuilder.buildApk(selectedProject!!) { p, t ->
+                                    val result = apkBuilder.buildApk(selectedProject!!) { p, t ->
                                                 buildProgress = p
                                                 buildProgressText = t
                                             }
                                             when (result) {
                                                 is com.webtoapp.core.apkbuilder.BuildResult.Success -> {
                                                     selectedApkFile = result.apkFile
-                                                    buildError = null
+                                                    buildFailureReport = null
+                                                    showBuildFailureDialog = false
                                                 }
                                                 is com.webtoapp.core.apkbuilder.BuildResult.Error -> {
-                                                    buildError = result.message
+                                                    buildFailureReport = buildApkBuildFailureReport(
+                                                        context = context,
+                                                        project = selectedProject!!,
+                                                        error = result
+                                                    )
+                                                    showBuildFailureDialog = true
                                                 }
                                             }
                                             isBuilding = false
@@ -5853,7 +6195,8 @@ private fun PublishAppSheet(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Button(
                                         onClick = {
-                                            buildError = null
+                                            buildFailureReport = null
+                                            showBuildFailureDialog = false
                                             isBuilding = true
                                             buildProgress = 0
                                             buildProgressText = "准备构建..."
@@ -5866,10 +6209,16 @@ private fun PublishAppSheet(
                                                 when (result) {
                                                     is com.webtoapp.core.apkbuilder.BuildResult.Success -> {
                                                         selectedApkFile = result.apkFile
-                                                        buildError = null
+                                                        buildFailureReport = null
+                                                        showBuildFailureDialog = false
                                                     }
                                                     is com.webtoapp.core.apkbuilder.BuildResult.Error -> {
-                                                        buildError = result.message
+                                                        buildFailureReport = buildApkBuildFailureReport(
+                                                            context = context,
+                                                            project = selectedProject!!,
+                                                            error = result
+                                                        )
+                                                        showBuildFailureDialog = true
                                                     }
                                                 }
                                                 isBuilding = false
@@ -5888,17 +6237,48 @@ private fun PublishAppSheet(
                                 }
                             }
 
-                            // Build error
-                            if (buildError != null) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)) {
-                                    Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.Top) {
-                                        Icon(Icons.Outlined.Error, null, modifier = Modifier.size(14.dp),
-                                            tint = MaterialTheme.colorScheme.error)
+                        }
+
+                        if (buildFailureReport != null && !isBuilding) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.32f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.Top) {
+                                        Icon(
+                                            Icons.Outlined.ErrorOutline,
+                                            null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                "构建失败",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onErrorContainer
+                                            )
+                                            Text(
+                                                buildFailureReport!!.summary,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f)
+                                            )
+                                        }
+                                    }
+                                    OutlinedButton(
+                                        onClick = { showBuildFailureDialog = true },
+                                        modifier = Modifier.align(Alignment.End)
+                                    ) {
+                                        Icon(Icons.Outlined.Article, null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("构建失败: $buildError",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onErrorContainer)
+                                        Text("查看完整报错")
                                     }
                                 }
                             }
@@ -6747,10 +7127,43 @@ private fun PublishAppSheet(
                                         when (val r = apiClient.uploadAsset(iconFile, "image/png")) {
                                             is com.webtoapp.core.auth.AuthResult.Success -> finalIconUrl = r.data
                                             is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                uploadStatus = "图标上传失败: ${r.message}"
+                                                val summary = "图标上传失败: ${r.message}"
+                                                publishFailureReport = buildSheetFailureReport(
+                                                    title = "应用发布失败",
+                                                    stage = "上传图标",
+                                                    summary = summary,
+                                                    contextLines = listOf(
+                                                        "project=${selectedProject?.name ?: "unknown"}",
+                                                        "iconUri=${iconUri}",
+                                                        "name=$name",
+                                                        "versionName=$versionName",
+                                                        "versionCode=$versionCode"
+                                                    )
+                                                )
+                                                iconFile.delete()
+                                                isPublishing = false
+                                                uploadProgress = 0f
+                                                uploadStatus = summary
+                                                return@launch
                                             }
                                         }
                                         iconFile.delete()
+                                    } else {
+                                        val summary = "图标读取失败，无法创建临时文件"
+                                        publishFailureReport = buildSheetFailureReport(
+                                            title = "应用发布失败",
+                                            stage = "读取图标",
+                                            summary = summary,
+                                            contextLines = listOf(
+                                                "project=${selectedProject?.name ?: "unknown"}",
+                                                "iconUri=${iconUri}",
+                                                "name=$name"
+                                            )
+                                        )
+                                        isPublishing = false
+                                        uploadProgress = 0f
+                                        uploadStatus = summary
+                                        return@launch
                                     }
                                 }
 
@@ -6766,10 +7179,42 @@ private fun PublishAppSheet(
                                             when (val r = apiClient.uploadAsset(scrFile, "image/png")) {
                                                 is com.webtoapp.core.auth.AuthResult.Success -> allScreenshotUrls.add(r.data)
                                                 is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                    uploadStatus = "截图 ${idx + 1} 上传失败"
+                                                    val summary = "截图 ${idx + 1} 上传失败: ${r.message}"
+                                                    publishFailureReport = buildSheetFailureReport(
+                                                        title = "应用发布失败",
+                                                        stage = "上传截图",
+                                                        summary = summary,
+                                                        contextLines = listOf(
+                                                            "project=${selectedProject?.name ?: "unknown"}",
+                                                            "screenshotIndex=${idx + 1}",
+                                                            "screenshotUri=$uri",
+                                                            "name=$name"
+                                                        )
+                                                    )
+                                                    scrFile.delete()
+                                                    isPublishing = false
+                                                    uploadProgress = 0f
+                                                    uploadStatus = summary
+                                                    return@launch
                                                 }
                                             }
                                             scrFile.delete()
+                                        } else {
+                                            val summary = "截图 ${idx + 1} 读取失败，无法创建临时文件"
+                                            publishFailureReport = buildSheetFailureReport(
+                                                title = "应用发布失败",
+                                                stage = "读取截图",
+                                                summary = summary,
+                                                contextLines = listOf(
+                                                    "project=${selectedProject?.name ?: "unknown"}",
+                                                    "screenshotIndex=${idx + 1}",
+                                                    "screenshotUri=$uri"
+                                                )
+                                            )
+                                            isPublishing = false
+                                            uploadProgress = 0f
+                                            uploadStatus = summary
+                                            return@launch
                                         }
                                     }
                                 }
@@ -6784,10 +7229,45 @@ private fun PublishAppSheet(
                                             "application/vnd.android.package-archive"
                                         ) { progress -> uploadProgress = 0.5f + progress * 0.4f }) {
                                             is com.webtoapp.core.auth.AuthResult.Success -> apkUrlGithub = r.data
-                                            is com.webtoapp.core.auth.AuthResult.Error -> uploadStatus = "APK 上传失败: ${r.message}"
+                                            is com.webtoapp.core.auth.AuthResult.Error -> {
+                                                val summary = "APK 上传失败: ${r.message}"
+                                                publishFailureReport = buildSheetFailureReport(
+                                                    title = "应用发布失败",
+                                                    stage = "上传 APK",
+                                                    summary = summary,
+                                                    contextLines = listOf(
+                                                        "project=${selectedProject?.name ?: "unknown"}",
+                                                        "apk=${selectedApkFile!!.absolutePath}",
+                                                        "apkSize=${selectedApkFile!!.length()}",
+                                                        "name=$name",
+                                                        "versionName=$versionName",
+                                                        "versionCode=$versionCode"
+                                                    )
+                                                )
+                                                isPublishing = false
+                                                uploadProgress = 0f
+                                                uploadStatus = summary
+                                                return@launch
+                                            }
                                         }
                                     } catch (e: Exception) {
-                                        uploadStatus = "APK 上传失败: ${e.message}"
+                                        val summary = "APK 上传失败: ${e.message}"
+                                        publishFailureReport = buildSheetFailureReport(
+                                            title = "应用发布失败",
+                                            stage = "上传 APK",
+                                            summary = summary,
+                                            contextLines = listOf(
+                                                "project=${selectedProject?.name ?: "unknown"}",
+                                                "apk=${selectedApkFile!!.absolutePath}",
+                                                "apkSize=${selectedApkFile!!.length()}",
+                                                "name=$name"
+                                            ),
+                                            throwable = e
+                                        )
+                                        isPublishing = false
+                                        uploadProgress = 0f
+                                        uploadStatus = summary
+                                        return@launch
                                     }
                                 } else {
                                     // Warn: no APK selected — app won't be downloadable
@@ -6853,7 +7333,19 @@ private fun PublishAppSheet(
                                         onPublished()
                                     }
                                     is com.webtoapp.core.auth.AuthResult.Error -> {
-                                        snackbarHostState.showSnackbar("${Strings.storePublishFailed}: ${result.message}")
+                                        val summary = "${Strings.storePublishFailed}: ${result.message}"
+                                        publishFailureReport = buildSheetFailureReport(
+                                            title = "应用发布失败",
+                                            stage = "提交应用信息",
+                                            summary = summary,
+                                            contextLines = listOf(
+                                                "project=${selectedProject?.name ?: "unknown"}",
+                                                "name=$name",
+                                                "versionName=$versionName",
+                                                "versionCode=$versionCode",
+                                                "apkUrlGithub=${apkUrlGithub ?: "null"}"
+                                            )
+                                        )
                                     }
                                 }
                             }
@@ -6963,7 +7455,6 @@ private fun PublishAppSheet(
                                 selectedApkFile = builtApks
                                     .filter { it.name.contains(sanitizedName, ignoreCase = true) }
                                     .maxByOrNull { it.lastModified() }
-                                    ?: builtApks.maxByOrNull { it.lastModified() } // fallback: latest APK
 
                                 showProjectPicker = false
                             },
@@ -7041,6 +7532,20 @@ private fun PublishAppSheet(
             }
         )
     }
+
+    publishFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { publishFailureReport = null }
+        )
+    }
+
+    if (showBuildFailureDialog && buildFailureReport != null) {
+        SheetFailureReportDialog(
+            report = buildFailureReport!!,
+            onDismiss = { showBuildFailureDialog = false }
+        )
+    }
 }
 
 
@@ -7064,6 +7569,7 @@ private fun MyModulesSheet(
     var moduleToDelete by remember { mutableStateOf<StoreModuleInfo?>(null) }
     var isDeleting by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     fun loadMyModules(showRefresh: Boolean = false) {
         scope.launch {
@@ -7120,9 +7626,24 @@ private fun MyModulesSheet(
             onConfirm = {
                 isDeleting = true
                 scope.launch {
-                    apiClient.deleteMyModule(module.id)
-                    myModules = myModules.filterNot { it.id == module.id }
-                    moduleToDelete = null
+                    when (val result = apiClient.deleteMyModule(module.id)) {
+                        is com.webtoapp.core.auth.AuthResult.Success -> {
+                            myModules = myModules.filterNot { it.id == module.id }
+                            moduleToDelete = null
+                        }
+                        is com.webtoapp.core.auth.AuthResult.Error -> {
+                            actionFailureReport = buildSheetFailureReport(
+                                title = "模块下架失败",
+                                stage = "下架已发布模块",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "moduleId=${module.id}",
+                                    "moduleName=${module.name}",
+                                    "versionName=${module.versionName ?: ""}"
+                                )
+                            )
+                        }
+                    }
                     isDeleting = false
                 }
             },
@@ -7300,6 +7821,13 @@ private fun MyModulesSheet(
             }
         }
     }
+
+    actionFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { actionFailureReport = null }
+        )
+    }
 }
 
 
@@ -7338,6 +7866,7 @@ private fun PublishModuleSheet(
     var isPublishing by remember { mutableStateOf(false) }
     var uploadProgress by remember { mutableFloatStateOf(0f) }
     var uploadStatus by remember { mutableStateOf("") }
+    var publishFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     // ── Team association state ──
     var myTeams by remember { mutableStateOf<List<com.webtoapp.core.cloud.TeamItem>>(emptyList()) }
@@ -7489,8 +8018,9 @@ private fun PublishModuleSheet(
                                     tags = module.tags.joinToString(",")
                                     versionName = module.version.name
                                     versionCode = module.version.code
-                                    // Generate share code
-                                    shareCode = module.toShareCode()
+                                    // Generate share code (need to load code from file first)
+                                    val loadedModule = extensionManager.ensureCodeLoaded(module)
+                                    shareCode = loadedModule.toShareCode()
                                     showModulePicker = false
                                 },
                                 shape = RoundedCornerShape(12.dp),
@@ -8219,10 +8749,43 @@ private fun PublishModuleSheet(
                                         when (val r = apiClient.uploadAsset(iconFile, "image/png")) {
                                             is com.webtoapp.core.auth.AuthResult.Success -> finalIconUrl = r.data
                                             is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                uploadStatus = "图标上传失败: ${r.message}"
+                                                val summary = "图标上传失败: ${r.message}"
+                                                publishFailureReport = buildSheetFailureReport(
+                                                    title = "模块发布失败",
+                                                    stage = "上传图标",
+                                                    summary = summary,
+                                                    contextLines = listOf(
+                                                        "module=${selectedModule?.name ?: "manual"}",
+                                                        "iconUri=${iconUri}",
+                                                        "name=$name",
+                                                        "versionName=$versionName",
+                                                        "versionCode=$versionCode"
+                                                    )
+                                                )
+                                                iconFile.delete()
+                                                isPublishing = false
+                                                uploadProgress = 0f
+                                                uploadStatus = summary
+                                                return@launch
                                             }
                                         }
                                         iconFile.delete()
+                                    } else {
+                                        val summary = "图标读取失败，无法创建临时文件"
+                                        publishFailureReport = buildSheetFailureReport(
+                                            title = "模块发布失败",
+                                            stage = "读取图标",
+                                            summary = summary,
+                                            contextLines = listOf(
+                                                "module=${selectedModule?.name ?: "manual"}",
+                                                "iconUri=${iconUri}",
+                                                "name=$name"
+                                            )
+                                        )
+                                        isPublishing = false
+                                        uploadProgress = 0f
+                                        uploadStatus = summary
+                                        return@launch
                                     }
                                 }
 
@@ -8271,11 +8834,35 @@ private fun PublishModuleSheet(
                                             onPublished()
                                         }
                                         is com.webtoapp.core.auth.AuthResult.Error -> {
-                                            snackbarHostState.showSnackbar("发布失败: ${result.message}")
+                                            val summary = "发布失败: ${result.message}"
+                                            publishFailureReport = buildSheetFailureReport(
+                                                title = "模块发布失败",
+                                                stage = "提交模块信息",
+                                                summary = summary,
+                                                contextLines = listOf(
+                                                    "module=${selectedModule?.name ?: "manual"}",
+                                                    "name=$name",
+                                                    "versionName=$versionName",
+                                                    "versionCode=$versionCode",
+                                                    "selectedCategory=$selectedCategory"
+                                                )
+                                            )
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    snackbarHostState.showSnackbar("网络错误: ${e.message}")
+                                    val summary = "网络错误: ${e.message}"
+                                    publishFailureReport = buildSheetFailureReport(
+                                        title = "模块发布失败",
+                                        stage = "请求发布接口",
+                                        summary = summary,
+                                        contextLines = listOf(
+                                            "module=${selectedModule?.name ?: "manual"}",
+                                            "name=$name",
+                                            "versionName=$versionName",
+                                            "versionCode=$versionCode"
+                                        ),
+                                        throwable = e
+                                    )
                                 } finally {
                                     isPublishing = false
                                 }
@@ -8309,5 +8896,11 @@ private fun PublishModuleSheet(
             }
         }
     }
-}
 
+    publishFailureReport?.let { report ->
+        SheetFailureReportDialog(
+            report = report,
+            onDismiss = { publishFailureReport = null }
+        )
+    }
+}

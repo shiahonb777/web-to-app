@@ -939,6 +939,200 @@ fun WebViewConfigCard(
                             onConfigChange = onApkExportConfigChange
                         )
                     }
+
+                    // ═══════════════════════════════════════════
+                    // § 6 — Network / Proxy
+                    // ═══════════════════════════════════════════
+                    AdvancedSettingsSection(
+                        title = Strings.proxySectionTitle,
+                        icon = Icons.Outlined.VpnKey
+                    ) {
+                        Text(
+                            text = Strings.proxySectionSubtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        // 代理模式选择
+                        Text(
+                            text = Strings.proxyModeLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        @OptIn(ExperimentalLayoutApi::class)
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            val proxyModes = listOf(
+                                "NONE" to Strings.proxyModeNone,
+                                "STATIC" to Strings.proxyModeStatic,
+                                "PAC" to Strings.proxyModePac
+                            )
+                            proxyModes.forEach { (mode, label) ->
+                                FilterChip(
+                                    selected = config.proxyMode == mode,
+                                    onClick = { onConfigChange(config.copy(proxyMode = mode)) },
+                                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                                    leadingIcon = if (config.proxyMode == mode) {{
+                                        Icon(
+                                            Icons.Filled.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }} else null
+                                )
+                            }
+                        }
+
+                        // STATIC 模式 — 固定代理配置
+                        AnimatedVisibility(
+                            visible = config.proxyMode == "STATIC",
+                            enter = CardExpandTransition,
+                            exit = CardCollapseTransition
+                        ) {
+                            Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
+                                // 协议选择
+                                Text(
+                                    text = Strings.proxyTypeLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                @OptIn(ExperimentalLayoutApi::class)
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                ) {
+                                    listOf("HTTP", "HTTPS", "SOCKS5").forEach { type ->
+                                        FilterChip(
+                                            selected = config.proxyType == type,
+                                            onClick = { onConfigChange(config.copy(proxyType = type)) },
+                                            label = { Text(type, style = MaterialTheme.typography.bodySmall) }
+                                        )
+                                    }
+                                }
+
+                                // 主机和端口
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    PremiumTextField(
+                                        value = config.proxyHost,
+                                        onValueChange = { onConfigChange(config.copy(proxyHost = it.trim())) },
+                                        modifier = Modifier.weight(1f),
+                                        label = { Text(Strings.proxyHostLabel) },
+                                        placeholder = { Text(Strings.proxyHostHint) },
+                                        singleLine = true,
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
+                                    PremiumTextField(
+                                        value = if (config.proxyPort > 0) config.proxyPort.toString() else "",
+                                        onValueChange = { input ->
+                                            val port = input.filter { it.isDigit() }.take(5).toIntOrNull() ?: 0
+                                            onConfigChange(config.copy(proxyPort = port))
+                                        },
+                                        modifier = Modifier.width(100.dp),
+                                        label = { Text(Strings.proxyPortLabel) },
+                                        placeholder = { Text(Strings.proxyPortHint) },
+                                        singleLine = true,
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // 绕过规则
+                                var bypassText by remember(config.proxyBypassRules) {
+                                    mutableStateOf(config.proxyBypassRules.joinToString("\n"))
+                                }
+                                Text(
+                                    text = Strings.proxyBypassLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
+                                )
+                                Text(
+                                    text = Strings.proxyBypassHint,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                PremiumTextField(
+                                    value = bypassText,
+                                    onValueChange = { newText ->
+                                        bypassText = newText
+                                        val rules = newText.split("\n")
+                                            .map { it.trim() }
+                                            .filter { it.isNotBlank() }
+                                        onConfigChange(config.copy(proxyBypassRules = rules))
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { Text("*.local\n192.168.0.0/16") },
+                                    minLines = 2,
+                                    maxLines = 4,
+                                    textStyle = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+
+                        // PAC 模式 — PAC 脚本 URL
+                        AnimatedVisibility(
+                            visible = config.proxyMode == "PAC",
+                            enter = CardExpandTransition,
+                            exit = CardCollapseTransition
+                        ) {
+                            Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
+                                PremiumTextField(
+                                    value = config.pacUrl,
+                                    onValueChange = { onConfigChange(config.copy(pacUrl = it.trim())) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = { Text(Strings.pacUrlLabel) },
+                                    placeholder = { Text(Strings.pacUrlHint) },
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodySmall
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // 绕过规则
+                                var pacBypassText by remember(config.proxyBypassRules) {
+                                    mutableStateOf(config.proxyBypassRules.joinToString("\n"))
+                                }
+                                Text(
+                                    text = Strings.proxyBypassLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
+                                )
+                                Text(
+                                    text = Strings.proxyBypassHint,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                PremiumTextField(
+                                    value = pacBypassText,
+                                    onValueChange = { newText ->
+                                        pacBypassText = newText
+                                        val rules = newText.split("\n")
+                                            .map { it.trim() }
+                                            .filter { it.isNotBlank() }
+                                        onConfigChange(config.copy(proxyBypassRules = rules))
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { Text("*.local\n192.168.0.0/16") },
+                                    minLines = 2,
+                                    maxLines = 4,
+                                    textStyle = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1390,6 +1584,61 @@ fun UserAgentCard(
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 隐藏浏览器工具栏卡片 — 独立于全屏模式
+ * 仅隐藏顶部 TopAppBar，不触发系统沉浸式模式
+ */
+@Composable
+fun HideBrowserToolbarCard(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
+) {
+    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            CollapsibleCardHeader(
+                icon = Icons.Outlined.WebAsset,
+                title = Strings.hideBrowserToolbar,
+                checked = enabled,
+                onCheckedChange = onEnabledChange
+            )
+            
+            AnimatedVisibility(
+                visible = enabled,
+                enter = CardExpandTransition,
+                exit = CardCollapseTransition
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = Strings.hideBrowserToolbarHint,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
                         }
                     }
                 }

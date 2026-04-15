@@ -82,7 +82,9 @@ private fun resolveWordPressPreviewSpec(context: Context, app: WebApp): AppPrevi
 private fun resolveNodePreviewSpec(context: Context, app: WebApp): AppPreviewSpec {
     val runtime = NodeRuntime(context)
     val config = app.nodejsConfig
-    val projectDir = config?.projectId?.takeIf { it.isNotBlank() }?.let(runtime::getProjectDir)?.takeIf { it.exists() }
+    val sourceProjectDir = runtime.resolveSourceProjectDir(config?.sourceProjectPath)
+    val storedProjectDir = config?.projectId?.takeIf { it.isNotBlank() }?.let(runtime::getProjectDir)?.takeIf { it.exists() }
+    val projectDir = sourceProjectDir ?: storedProjectDir
     val staticEntry = projectDir?.let { findStaticHtmlEntry(it, listOf("dist", "build", "public", "static", "www", "")) }
     if (staticEntry != null) {
         return AppPreviewSpec(captureUrl = staticEntry.toFileUrl())

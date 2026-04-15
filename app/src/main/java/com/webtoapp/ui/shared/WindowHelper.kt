@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -23,6 +24,10 @@ import com.webtoapp.data.model.KeyboardAdjustMode
  * - Colour-luminance helper
  */
 object WindowHelper {
+
+    private const val DEFAULT_GESTURE_EXCLUSION_DP = 48
+    private const val MAX_GESTURE_EXCLUSION_DP = 200
+    private val gestureExclusionLayoutListeners = java.util.WeakHashMap<View, View.OnLayoutChangeListener>()
 
     // ==================== Status Bar ====================
 
@@ -107,6 +112,7 @@ object WindowHelper {
         statusBarDarkIcons: Boolean? = null,
         statusBarBgType: String = "COLOR",
         keyboardAdjustMode: KeyboardAdjustMode? = null,
+        blockSystemNavigationGesture: Boolean = false,
         tag: String = "WindowHelper"
     ) {
         try {
@@ -116,17 +122,10 @@ object WindowHelper {
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
 
-            // Determine soft input mode based on keyboardAdjustMode preference
-            // If keyboardAdjustMode is null (not specified), use legacy behavior for backward compatibility
-            val softInputMode = when (keyboardAdjustMode) {
-                KeyboardAdjustMode.RESIZE -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-                KeyboardAdjustMode.NOTHING -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
-                null -> if (enabled) WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
-                        else WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-            }
-
-            @Suppress("DEPRECATION")
-            activity.window.setSoftInputMode(softInputMode)
+            // ★ 键盘模式处理
+            // Android 11+ 废弃了 ADJUST_RESIZE，且 enableEdgeToEdge() 使其失效
+            // 需要通过 WindowInsets 监听 IME 变化，手动调整内容视图的 padding
+            applyKeyboardMode(activity, keyboardAdjustMode, tag)
 
             WindowInsetsControllerCompat(activity.window, activity.window.decorView).let { controller ->
                 if (enabled) {
@@ -194,9 +193,221 @@ object WindowHelper {
                     applyStatusBarColor(activity, statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
                 }
             }
+
+            applySystemNavigationGestureBlocking(
+                activity = activity,
+                enabled = enabled && blockSystemNavigationGesture,
+                tag = tag
+            )
         } catch (e: Exception) {
             AppLogger.w(tag, "applyImmersiveFullscreen failed", e)
         }
+    }
+
+    fun applySystemNavigationGestureBlocking(
+        activity: Activity,
+        enabled: Boolean,
+        tag: String = "WindowHelper"
+    ) {
+        try {
+            val contentView = activity.findViewById<View>(android.R.id.content) ?: return
+
+            gestureExclusionLayoutListeners.remove(contentView)?.let { listener ->
+                contentView.removeOnLayoutChangeListener(listener)
+            }
+
+            if (!enabled) {
+                ViewCompat.setSystemGestureExclusionRects(contentView, emptyList())
+                return
+            }
+
+            val listener = View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+                updateSystemGestureExclusionRects(view)
+            }
+            gestureExclusionLayoutListeners[contentView] = listener
+            contentView.addOnLayoutChangeListener(listener)
+            contentView.post {
+                updateSystemGestureExclusionRects(contentView)
+                AppLogger.d(tag, "已应用系统导航手势屏蔽")
+            }
+        } catch (e: Exception) {
+            AppLogger.w(tag, "applySystemNavigationGestureBlocking failed", e)
+        }
+    }
+
+    private fun updateSystemGestureExclusionRects(view: View) {
+        if (view.width <= 0 || view.height <= 0) return
+
+        val density = view.resources.displayMetrics.density
+        val fallbackWidthPx = ((DEFAULT_GESTURE_EXCLUSION_DP * density) + 0.5f).toInt()
+        val maxAllowedPx = ((MAX_GESTURE_EXCLUSION_DP * density) + 0.5f).toInt()
+        val gestureInsets = ViewCompat.getRootWindowInsets(view)
+            ?.getInsets(WindowInsetsCompat.Type.systemGestures())
+
+        val leftWidth = (gestureInsets?.left ?: 0).coerceAtLeast(fallbackWidthPx).coerceAtMost(maxAllowedPx)
+        val rightWidth = (gestureInsets?.right ?: 0).coerceAtLeast(fallbackWidthPx).coerceAtMost(maxAllowedPx)
+
+        val exclusionRects = buildList {
+            if (leftWidth > 0) add(android.graphics.Rect(0, 0, leftWidth, view.height))
+            if (rightWidth > 0) add(android.graphics.Rect((view.width - rightWidth).coerceAtLeast(0), 0, view.width, view.height))
+        }
+
+        ViewCompat.setSystemGestureExclusionRects(view, exclusionRects)
+    }
+    
+    // ==================== Keyboard Handling ====================
+    
+    /**
+     * 应用键盘调整模式（仅更新键盘行为，不触发全屏模式变更）
+     * 
+     * 这个方法可以在配置加载后独立调用，无需重新走完整的 applyImmersiveFullscreen 流程
+     */
+    fun applyKeyboardModeOnly(
+        activity: Activity,
+        keyboardAdjustMode: KeyboardAdjustMode?,
+        tag: String = "WindowHelper"
+    ) {
+        try {
+            applyKeyboardMode(activity, keyboardAdjustMode, tag)
+        } catch (e: Exception) {
+            AppLogger.w(tag, "applyKeyboardModeOnly failed", e)
+        }
+    }
+    
+    /**
+     * 内部方法：配置键盘弹出时的内容调整行为
+     * 
+     * Android 11+ (API 30) 废弃了 SOFT_INPUT_ADJUST_RESIZE，在使用 enableEdgeToEdge() 的应用中，
+     * 该标志完全不生效。需要使用 WindowInsets API 监听 IME（输入法）变化，手动调整视图 padding。
+     * 
+     * RESIZE 模式：监听 IME insets，键盘弹出时增加 decorView 的 bottomPadding → 内容被推上去
+     * NOTHING 模式：不监听 IME，键盘直接覆盖内容（适合游戏/视频等场景）
+     */
+    private fun applyKeyboardMode(
+        activity: Activity,
+        keyboardAdjustMode: KeyboardAdjustMode?,
+        tag: String
+    ) {
+        val decorView = activity.window.decorView
+        val contentView = activity.findViewById<View>(android.R.id.content) ?: return
+        
+        // 确定目标模式
+        val mode = keyboardAdjustMode ?: KeyboardAdjustMode.RESIZE
+        
+        when (mode) {
+            KeyboardAdjustMode.RESIZE -> {
+                // RESIZE 模式：手动接管键盘弹出时的内容调整
+                // 
+                // 策略：
+                // 1. 设置 ADJUST_NOTHING 让系统不做任何布局调整
+                // 2. 通过 WindowInsets 监听 IME 高度变化
+                // 3. 在键盘弹出时给 contentView 设置 bottom padding = IME 高度
+                // 4. 注入 JS 滚动焦点输入框到可视区域
+                //
+                // 注意：使用 contentView 而非 decorView 设置 padding，
+                // 避免影响状态栏/导航栏的系统 insets 处理
+                @Suppress("DEPRECATION")
+                activity.window.setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
+                )
+                
+                ViewCompat.setOnApplyWindowInsetsListener(contentView) { view, windowInsets ->
+                    val imeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+                    val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+                    
+                    if (imeVisible) {
+                        // 键盘弹出：设置 bottom padding = IME 高度
+                        // IME insets 已包含导航栏高度（IME bottom = 键盘高度 + 导航栏高度）
+                        view.setPadding(
+                            view.paddingLeft,
+                            view.paddingTop,
+                            view.paddingRight,
+                            imeInsets.bottom
+                        )
+                        
+                        AppLogger.d(tag, "键盘弹出: IME bottom=${imeInsets.bottom}px")
+                        
+                        // 触发 WebView 滚动到焦点输入框
+                        // 使用延迟确保布局已更新
+                        view.postDelayed({
+                            scrollWebViewToFocusedInput(activity)
+                        }, 100)
+                    } else {
+                        // 键盘隐藏：重置 padding
+                        view.setPadding(
+                            view.paddingLeft,
+                            view.paddingTop,
+                            view.paddingRight,
+                            0
+                        )
+                    }
+                    
+                    windowInsets
+                }
+                
+                // 触发一次 insets 重新计算
+                ViewCompat.requestApplyInsets(contentView)
+                AppLogger.d(tag, "键盘模式: RESIZE (WindowInsets 监听)")
+            }
+            
+            KeyboardAdjustMode.NOTHING -> {
+                // NOTHING 模式：键盘覆盖内容，不调整布局
+                @Suppress("DEPRECATION")
+                activity.window.setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
+                )
+                
+                // 移除之前的 insets 监听器，重置 padding
+                ViewCompat.setOnApplyWindowInsetsListener(contentView, null)
+                contentView.setPadding(
+                    contentView.paddingLeft,
+                    contentView.paddingTop,
+                    contentView.paddingRight,
+                    0
+                )
+                
+                AppLogger.d(tag, "键盘模式: NOTHING (覆盖)")
+            }
+        }
+    }
+    
+    /**
+     * 在 WebView 中滚动到当前焦点输入框
+     * 
+     * 当键盘弹出且内容区域被 padding 压缩后，WebView 内部的焦点输入框
+     * 可能仍然在可视区域之外。注入 JS 调用 scrollIntoView 确保可见。
+     */
+    private fun scrollWebViewToFocusedInput(activity: Activity) {
+        try {
+            // 在 View 树中寻找 WebView
+            val webView = findWebViewInHierarchy(activity.window.decorView)
+            webView?.evaluateJavascript("""
+                (function() {
+                    var el = document.activeElement;
+                    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                })();
+            """.trimIndent(), null)
+        } catch (e: Exception) {
+            AppLogger.w("WindowHelper", "scrollWebViewToFocusedInput failed", e)
+        }
+    }
+    
+    /**
+     * 在 View 层级中递归查找 WebView 实例
+     */
+    private fun findWebViewInHierarchy(view: View): android.webkit.WebView? {
+        if (view is android.webkit.WebView) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val result = findWebViewInHierarchy(view.getChildAt(i))
+                if (result != null) return result
+            }
+        }
+        return null
     }
 
     // ==================== Video Custom View ====================

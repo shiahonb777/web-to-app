@@ -12,7 +12,14 @@ import android.provider.Settings
 import android.webkit.WebView
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.core.webview.DownloadBridge
+import com.webtoapp.core.webview.TranslateBridge
 import com.webtoapp.data.model.FloatingWindowConfig
+import com.webtoapp.ui.shell.injectTranslateScript
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 /**
  * 悬浮小窗前台服务
@@ -35,6 +42,9 @@ class FloatingWindowService : Service() {
         const val EXTRA_URL = "extra_url"
         const val EXTRA_APP_NAME = "extra_app_name"
         const val EXTRA_ACTION = "extra_action"
+        const val EXTRA_TRANSLATE_ENABLED = "extra_translate_enabled"
+        const val EXTRA_TRANSLATE_TARGET_LANGUAGE = "extra_translate_target_language"
+        const val EXTRA_TRANSLATE_SHOW_BUTTON = "extra_translate_show_button"
         
         // Actions
         const val ACTION_SHOW = "action_show"
@@ -74,6 +84,7 @@ class FloatingWindowService : Service() {
     }
     
     private lateinit var floatingWindowManager: FloatingWindowManager
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     
     override fun onCreate() {
         super.onCreate()
@@ -91,6 +102,9 @@ class FloatingWindowService : Service() {
                 val configJson = intent?.getStringExtra(EXTRA_CONFIG)
                 val url = intent?.getStringExtra(EXTRA_URL) ?: ""
                 val appName = intent?.getStringExtra(EXTRA_APP_NAME) ?: ""
+                val translateEnabled = intent?.getBooleanExtra(EXTRA_TRANSLATE_ENABLED, false) == true
+                val translateTargetLanguage = intent?.getStringExtra(EXTRA_TRANSLATE_TARGET_LANGUAGE) ?: "zh-CN"
+                val translateShowButton = intent?.getBooleanExtra(EXTRA_TRANSLATE_SHOW_BUTTON, true) != false
                 
                 val config = if (configJson != null) {
                     try {
@@ -107,10 +121,33 @@ class FloatingWindowService : Service() {
                 
                 // 启动前台通知
                 startForeground(NOTIFICATION_ID, createNotification(appName))
-                
+
+                val translateBridgeFactory: ((WebView) -> Unit)? = if (translateEnabled) {
+                    { webView ->
+                        val translateBridge = TranslateBridge(webView, serviceScope)
+                        webView.addJavascriptInterface(translateBridge, TranslateBridge.JS_INTERFACE_NAME)
+                    }
+                } else {
+                    null
+                }
+                val downloadBridgeFactory: (WebView) -> Unit = { webView ->
+                    val downloadBridge = DownloadBridge(this, serviceScope)
+                    webView.addJavascriptInterface(downloadBridge, DownloadBridge.JS_INTERFACE_NAME)
+                }
+
                 // 创建悬浮窗
                 floatingWindowManager.onDismiss = {
                     stopSelf()
+                }
+                floatingWindowManager.onWebViewCreated = { webView ->
+                    translateBridgeFactory?.invoke(webView)
+                    downloadBridgeFactory(webView)
+                }
+                floatingWindowManager.onWebViewPageFinished = { webView, _ ->
+                    if (translateEnabled) {
+                        injectTranslateScript(webView, translateTargetLanguage, translateShowButton)
+                    }
+                    webView.evaluateJavascript(DownloadBridge.getInjectionScript(), null)
                 }
                 floatingWindowManager.show(config, appName, url)
                 
@@ -138,6 +175,7 @@ class FloatingWindowService : Service() {
     
     override fun onDestroy() {
         floatingWindowManager.dismiss()
+        serviceScope.cancel()
         instance = null
         AppLogger.i(TAG, "FloatingWindowService 已销毁")
         super.onDestroy()

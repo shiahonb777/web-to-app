@@ -21,6 +21,7 @@ import com.webtoapp.core.shell.BgmShellItem
 import com.webtoapp.core.shell.LrcShellTheme
 import com.webtoapp.data.model.LrcData
 import com.webtoapp.data.model.WebApp
+import com.webtoapp.data.model.getActivationCodeStrings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -127,7 +128,7 @@ class ApkBuilder(private val context: Context) {
         onProgress: (Int, String) -> Unit = { _, _ -> }
     ): BuildResult = withContext(Dispatchers.IO) {
         // Start logging
-        val logFile = logger.startNewLog(webApp.name)
+        logger.startNewLog(webApp.name)
         
         try {
             onProgress(0, "Preparing build...")
@@ -309,8 +310,24 @@ class ApkBuilder(private val context: Context) {
                 }
                 val nodeDirDeferred = async {
                     if (webApp.appType == com.webtoapp.data.model.AppType.NODEJS_APP) {
-                        val projectId = webApp.nodejsConfig?.projectId ?: ""
-                        if (projectId.isNotEmpty()) com.webtoapp.core.nodejs.NodeRuntime(context).getProjectDir(projectId) else null
+                        val config = webApp.nodejsConfig
+                        val projectId = config?.projectId ?: ""
+                        if (projectId.isNotEmpty()) {
+                            val runtime = com.webtoapp.core.nodejs.NodeRuntime(context)
+                            val internalProjectPath = runtime.getProjectDir(projectId).absolutePath
+                            config?.sourceProjectPath
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let(runtime::resolveSourceProjectDir)
+                                ?.takeIf { it.absolutePath != internalProjectPath }
+                                ?.let { sourceDir ->
+                                    try {
+                                        runtime.syncProjectFromSource(projectId, sourceDir)
+                                    } catch (e: Exception) {
+                                        com.webtoapp.core.logging.AppLogger.w("ApkBuilder", "同步 Node 源项目失败: ${sourceDir.absolutePath}", e)
+                                    }
+                                }
+                            runtime.getProjectDir(projectId)
+                        } else null
                     } else null
                 }
                 val phpDirDeferred = async {
@@ -367,7 +384,10 @@ class ApkBuilder(private val context: Context) {
             if (templateApk == null) {
                 logger.error("Failed to get template APK")
                 logger.endLog(false, "Failed to get template APK")
-                return@withContext BuildResult.Error("Failed to get template APK")
+                return@withContext BuildResult.Error(
+                    message = "Failed to get template APK",
+                    logPath = logger.getCurrentLogPath()
+                )
             }
             logger.logKeyValue("templatePath", templateApk.absolutePath)
             logger.logKeyValue("templateSize", "${templateApk.length() / 1024} KB")
@@ -452,7 +472,10 @@ class ApkBuilder(private val context: Context) {
             if (!unsignedApk.exists() || unsignedApk.length() == 0L) {
                 logger.error("Unsigned APK invalid: exists=${unsignedApk.exists()}, size=${unsignedApk.length()}")
                 logger.endLog(false, "Failed to generate unsigned APK")
-                return@withContext BuildResult.Error("Failed to generate unsigned APK")
+                return@withContext BuildResult.Error(
+                    message = "Failed to generate unsigned APK",
+                    logPath = logger.getCurrentLogPath()
+                )
             }
             logger.logKeyValue("unsignedApkSize", "${unsignedApk.length() / 1024} KB")
             
@@ -467,7 +490,10 @@ class ApkBuilder(private val context: Context) {
             } catch (e: Exception) {
                 logger.error("Signing exception", e)
                 logger.endLog(false, "Signing failed: ${e.message}")
-                return@withContext BuildResult.Error("Signing failed: ${e.message ?: "Unknown error"}")
+                return@withContext BuildResult.Error(
+                    message = "Signing failed: ${e.message ?: "Unknown error"}",
+                    logPath = logger.getCurrentLogPath()
+                )
             }
             
             // 检查签名后文件是否有效（唯一的硬性条件）
@@ -475,7 +501,10 @@ class ApkBuilder(private val context: Context) {
                 logger.error("Signed APK file missing or empty after sign()")
                 logger.endLog(false, "Signed APK file invalid")
                 if (signedApk.exists()) signedApk.delete()
-                return@withContext BuildResult.Error("APK signing failed: output file invalid")
+                return@withContext BuildResult.Error(
+                    message = "APK signing failed: output file invalid",
+                    logPath = logger.getCurrentLogPath()
+                )
             }
             
             logger.logKeyValue("signedApkSize", "${signedApk.length() / 1024} KB")
@@ -534,7 +563,10 @@ class ApkBuilder(private val context: Context) {
             // Clean temp files even on build failure
             cleanTempFiles()
             
-            BuildResult.Error("Build failed: ${e.message ?: "Unknown error"}")
+            BuildResult.Error(
+                message = "Build failed: ${e.message ?: "Unknown error"}",
+                logPath = logger.getCurrentLogPath()
+            )
         }
     }
 
@@ -2349,22 +2381,33 @@ builtins.__import__ = _w2a_import
         encryptor: AssetEncryptor? = null,
         encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED
     ) {
-        val configJson = template.createConfigJson(config)
         AppLogger.d("ApkBuilder", "Writing config file: splashEnabled=${config.splashEnabled}, splashType=${config.splashType}")
         AppLogger.d("ApkBuilder", "Config userAgentMode=${config.userAgentMode}, customUserAgent=${config.customUserAgent}")
-        AppLogger.d("ApkBuilder", "Config JSON content: $configJson")
         
         if (encryptionConfig.encryptConfig && encryptor != null) {
-            // Encrypt config file
+            // Encrypt config file — sensitive data is ONLY in the encrypted copy
+            val configJson = template.createConfigJson(config)
             val encryptedData = encryptor.encryptJson(configJson, "app_config.json")
             writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH + ".enc", encryptedData)
-            // 同时写入明文配置作为解密失败时的安全降级
-            // 确保即使解密环节出问题，App 也不会变回原版 WebToApp
-            val data = configJson.toByteArray(Charsets.UTF_8)
-            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
-            AppLogger.d("ApkBuilder", "Config file encrypted (with plaintext fallback)")
+            // 安全降级: 写入最小化存根配置（不含 targetUrl、激活码等敏感字段）
+            // 目的是让解密失败时 App 仍以 Shell 模式运行（显示错误提示），而非回退为 WebToApp 编辑器
+            val stubJson = """
+            {
+                "appName": "${template.escapeJson(config.appName)}",
+                "packageName": "${template.escapeJson(config.packageName)}",
+                "targetUrl": "",
+                "appType": "${config.appType}",
+                "versionCode": ${config.versionCode},
+                "versionName": "${template.escapeJson(config.versionName)}",
+                "webViewConfig": {}
+            }
+            """.trimIndent()
+            val stubData = stubJson.toByteArray(Charsets.UTF_8)
+            writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, stubData)
+            AppLogger.d("ApkBuilder", "Config file encrypted (stub fallback, no sensitive data)")
         } else {
-            // Write plaintext
+            // Write plaintext (encryption not enabled)
+            val configJson = template.createConfigJson(config)
             val data = configJson.toByteArray(Charsets.UTF_8)
             writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, data)
         }
@@ -2657,7 +2700,7 @@ builtins.__import__ = _w2a_import
 /**
  * WebApp extension function: Convert to ApkConfig
  */
-fun WebApp.toApkConfig(packageName: String): ApkConfig {
+fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = null): ApkConfig {
     // HTML and media apps don't use targetUrl, set placeholder to avoid config validation failure
     val effectiveTargetUrl = when (appType) {
         com.webtoapp.data.model.AppType.HTML -> {
@@ -2702,7 +2745,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         versionName = apkExportConfig?.customVersionName?.takeIf { it.isNotBlank() } ?: "1.0.0",
         iconPath = iconPath,
         activationEnabled = activationEnabled,
-        activationCodes = activationCodes,
+        activationCodes = getActivationCodeStrings(),
         activationRequireEveryTime = activationRequireEveryTime,
         activationDialogTitle = activationDialogConfig?.title ?: "",
         activationDialogSubtitle = activationDialogConfig?.subtitle ?: "",
@@ -2731,6 +2774,7 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         // Use user-configured hideToolbar setting, no longer force HTML/media apps to hide toolbar
         // User can choose whether to enable fullscreen mode when creating app
         hideToolbar = webViewConfig.hideToolbar,
+        hideBrowserToolbar = webViewConfig.hideBrowserToolbar,
         showStatusBarInFullscreen = webViewConfig.showStatusBarInFullscreen,
         showNavigationBarInFullscreen = webViewConfig.showNavigationBarInFullscreen,
         showToolbarInFullscreen = webViewConfig.showToolbarInFullscreen,
@@ -2761,8 +2805,15 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
                 enabled = true,
                 runAt = com.webtoapp.data.model.ScriptRunTime.DOCUMENT_END
             ))
-            // 用户自定义脚本
-            addAll(webViewConfig.injectScripts)
+            // 用户自定义脚本（需要解析文件引用）
+            val resolvedScripts = if (context != null && webViewConfig.injectScripts.any { 
+                com.webtoapp.core.script.UserScriptStorage.isFileReference(it.code) 
+            }) {
+                com.webtoapp.core.script.UserScriptStorage.internalizeScripts(context, webViewConfig.injectScripts)
+            } else {
+                webViewConfig.injectScripts
+            }
+            addAll(resolvedScripts)
         },
         // Status bar config
         statusBarColorMode = webViewConfig.statusBarColorMode.name,
@@ -2798,6 +2849,13 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         performanceOptimization = webViewConfig.performanceOptimization,
         pwaOfflineEnabled = webViewConfig.pwaOfflineEnabled,
         pwaOfflineStrategy = webViewConfig.pwaOfflineStrategy,
+        // 代理配置
+        proxyMode = webViewConfig.proxyMode,
+        proxyHost = webViewConfig.proxyHost,
+        proxyPort = webViewConfig.proxyPort,
+        proxyType = webViewConfig.proxyType,
+        pacUrl = webViewConfig.pacUrl,
+        proxyBypassRules = webViewConfig.proxyBypassRules,
         // 网络错误页配置
         errorPageMode = webViewConfig.errorPageConfig.mode.name,
         errorPageBuiltInStyle = webViewConfig.errorPageConfig.builtInStyle.name,
@@ -2928,6 +2986,8 @@ fun WebApp.toApkConfig(packageName: String): ApkConfig {
         blackTechConfig = blackTechConfig,
         // App disguise config (independent module)
         disguiseConfig = disguiseConfig,
+        // Browser disguise config (anti-fingerprint engine)
+        browserDisguiseConfig = browserDisguiseConfig,
         // UI language config - use current app language
         language = com.webtoapp.core.i18n.Strings.currentLanguage.value.name,
         // Browser engine config
@@ -3079,21 +3139,51 @@ private fun extractHostsFromUrl(url: String, customHosts: List<String> = emptyLi
  * @param context Context, for getting extension module manager
  */
 fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.Context): ApkConfig {
-    val baseConfig = toApkConfig(packageName)
+    val baseConfig = toApkConfig(packageName, context)
     
     // Get and embed extension module data
     val embeddedModules = if (extensionModuleIds.isNotEmpty()) {
         try {
             val extensionManager = com.webtoapp.core.extension.ExtensionManager.getInstance(context)
             extensionManager.getModulesByIds(extensionModuleIds).map { module ->
+                // 对于多文件模块（ZIP导入），需要将 codeFiles 合并为单个代码块
+                // 因为 EmbeddedShellModule 仅支持单一 code 字段
+                val resolvedCode: String
+                val resolvedCss: String
+                if (module.codeFiles.isNotEmpty()) {
+                    val entryNames = setOf("main.js", "index.js", "app.js", "init.js", "bundle.js", "dist.js")
+                    val jsFiles = module.codeFiles.entries
+                        .filter { it.key.endsWith(".js", true) }
+                        .sortedWith(compareByDescending<Map.Entry<String, String>> { 
+                            it.key.substringAfterLast("/") in entryNames 
+                        }.thenBy { it.key })
+                    val cssFiles = module.codeFiles.entries
+                        .filter { it.key.endsWith(".css", true) }
+                    resolvedCode = jsFiles.joinToString("\n\n") { (path, content) ->
+                        "// === $path ===\n$content"
+                    }
+                    resolvedCss = if (cssFiles.isNotEmpty()) {
+                        val baseCss = module.cssCode
+                        val mergedCss = cssFiles.joinToString("\n\n") { (path, content) ->
+                            "/* === $path === */\n$content"
+                        }
+                        if (baseCss.isNotBlank()) "$baseCss\n\n$mergedCss" else mergedCss
+                    } else {
+                        module.cssCode
+                    }
+                } else {
+                    resolvedCode = module.code
+                    resolvedCss = module.cssCode
+                }
+                
                 EmbeddedExtensionModule(
                     id = module.id,
                     name = module.name,
                     description = module.description,
                     icon = module.icon,
                     category = module.category.name,
-                    code = module.code,
-                    cssCode = module.cssCode,
+                    code = resolvedCode,
+                    cssCode = resolvedCss,
                     runAt = module.runAt.name,
                     urlMatches = module.urlMatches.map { rule ->
                         EmbeddedUrlMatchRule(
@@ -3137,5 +3227,8 @@ sealed class BuildResult {
         val logPath: String? = null,
         val analysisReport: ApkAnalyzer.AnalysisReport? = null
     ) : BuildResult()
-    data class Error(val message: String) : BuildResult()
+    data class Error(
+        val message: String,
+        val logPath: String? = null
+    ) : BuildResult()
 }

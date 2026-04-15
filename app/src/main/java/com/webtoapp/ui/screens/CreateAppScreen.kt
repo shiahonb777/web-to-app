@@ -2,6 +2,7 @@ package com.webtoapp.ui.screens
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -69,7 +70,9 @@ fun CreateAppScreen(
     val context = LocalContext.current
     val editState by viewModel.editState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    var showDiscardDialog by remember { mutableStateOf(false) }
 
     // Handle保存结果
     LaunchedEffect(uiState) {
@@ -77,6 +80,11 @@ fun CreateAppScreen(
             onSaved()
             viewModel.resetUiState()
         }
+    }
+
+    // Intercept system back when there are unsaved changes
+    BackHandler(enabled = hasUnsavedChanges) {
+        showDiscardDialog = true
     }
 
     // Image选择器 - 选择后复制到私有目录实现持久化
@@ -117,7 +125,9 @@ fun CreateAppScreen(
             TopAppBar(
                 title = { Text(if (isEdit) Strings.editApp else Strings.createApp) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        if (hasUnsavedChanges) showDiscardDialog = true else onBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
                     }
                 },
@@ -254,6 +264,16 @@ fun CreateAppScreen(
                 onFabIconChange = { viewModel.updateEditState { copy(extensionFabIcon = it) } }
             )
 
+            // 隐藏浏览器工具栏（独立于全屏模式）
+            HideBrowserToolbarCard(
+                enabled = editState.webViewConfig.hideBrowserToolbar,
+                onEnabledChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(hideBrowserToolbar = it))
+                    }
+                }
+            )
+
             // Fullscreen模式
             FullscreenModeCard(
                 enabled = editState.webViewConfig.hideToolbar,
@@ -291,9 +311,13 @@ fun CreateAppScreen(
             // 屏幕方向模式
             LandscapeModeCard(
                 enabled = editState.webViewConfig.landscapeMode,
-                onEnabledChange = {
+                onEnabledChange = { enabled ->
                     viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(landscapeMode = it))
+                        copy(webViewConfig = webViewConfig.copy(
+                            landscapeMode = enabled,
+                            orientationMode = if (enabled) com.webtoapp.data.model.OrientationMode.LANDSCAPE 
+                                             else com.webtoapp.data.model.OrientationMode.PORTRAIT
+                        ))
                     }
                 },
                 orientationMode = editState.webViewConfig.orientationMode,
@@ -490,6 +514,34 @@ fun CreateAppScreen(
             Spacer(modifier = Modifier.height(32.dp))
             }
         }
+    }
+
+    // Unsaved changes confirmation dialog
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            icon = { Icon(Icons.Outlined.Warning, contentDescription = null) },
+            title = { Text(Strings.unsavedChangesTitle) },
+            text = { Text(Strings.unsavedChangesMessage) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onBack()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(Strings.discardChanges)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(Strings.btnCancel)
+                }
+            }
+        )
     }
 }
 
@@ -814,126 +866,6 @@ fun BasicInfoCard(
                         )
                     )
                 }
-            }
-        }
-    }
-}
-
-/**
- * 激活码设置卡片
- */
-@Composable
-fun ActivationCard(
-    editState: EditState,
-    onEnabledChange: (Boolean) -> Unit,
-    onCodesChange: (List<String>) -> Unit
-) {
-    var newCode by remember { mutableStateOf("") }
-
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (editState.activationEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.Key,
-                            null,
-                            tint = if (editState.activationEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = Strings.activationCodeVerify,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                PremiumSwitch(
-                    checked = editState.activationEnabled,
-                    onCheckedChange = onEnabledChange
-                )
-            }
-
-            AnimatedVisibility(
-                visible = editState.activationEnabled,
-                enter = CardExpandTransition,
-                exit = CardCollapseTransition
-            ) {
-              Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = Strings.activationCodeHint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // 添加激活码
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    PremiumTextField(
-                        value = newCode,
-                        onValueChange = { newCode = it },
-                        placeholder = { Text(Strings.inputActivationCode) },
-                        singleLine = true,
-                        modifier = Modifier.weight(weight = 1f, fill = true)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    FilledIconButton(
-                        onClick = {
-                            if (newCode.isNotBlank()) {
-                                onCodesChange(editState.activationCodes + newCode)
-                                newCode = ""
-                            }
-                        }
-                    ) {
-                        Icon(Icons.Default.Add, Strings.add)
-                    }
-                }
-
-                // Activation码列表
-                editState.activationCodes.forEachIndexed { index, code ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = code,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(weight = 1f, fill = true)
-                        )
-                        IconButton(
-                            onClick = {
-                                onCodesChange(editState.activationCodes.filterIndexed { i, _ -> i != index })
-                            }
-                        ) {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                Strings.btnDelete,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                }
-              }
             }
         }
     }

@@ -66,11 +66,10 @@ android {
 
     buildTypes {
         release {
-            // 启用 R8 tree-shaking（移除未使用代码）+ 资源压缩
-            // ProGuard 规则中已设置 -dontobfuscate，确保类名不被混淆
-            // （WebToApp 使用自身 APK 作为模板，类名必须保持不变）
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // 关闭 R8 与资源压缩，避免正式包和调试包出现不必要的行为差异。
+            // WebToApp 本身开源，不依赖代码混淆或收缩来保护应用本体。
+            isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig = signingConfigs.getByName("shiaho")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

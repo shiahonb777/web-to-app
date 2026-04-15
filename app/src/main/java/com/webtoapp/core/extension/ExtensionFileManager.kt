@@ -66,6 +66,15 @@ class ExtensionFileManager(private val context: Context) {
             val extractedDir: File
         ) : ImportResult()
         
+        /**
+         * JS ZIP 包导入结果 — 多个 JS/CSS 文件打包的扩展
+         */
+        data class JsPackage(
+            val module: ExtensionModule,
+            val fileCount: Int,
+            val totalSize: Long
+        ) : ImportResult()
+        
         data class Error(val message: String) : ImportResult()
     }
     
@@ -134,6 +143,7 @@ class ExtensionFileManager(private val context: Context) {
     
     /**
      * 从文件导入 Chrome 扩展
+     * 如果 ZIP 中没有 manifest.json 但包含 JS 文件，自动转为 JS 包导入
      */
     suspend fun importChromeExtensionFromFile(file: File): ImportResult = withContext(Dispatchers.IO) {
         try {
@@ -155,8 +165,13 @@ class ExtensionFileManager(private val context: Context) {
             // 检查是否有嵌套目录（部分扩展 ZIP 内有一层目录）
             val actualDir = findManifestDirectory(extractDir)
             if (actualDir == null) {
+                // 没有 manifest.json — 尝试作为 JS 包导入
+                val jsPackageResult = tryImportAsJsPackage(extractDir)
+                if (jsPackageResult != null) {
+                    return@withContext jsPackageResult
+                }
                 extractDir.deleteRecursively()
-                return@withContext ImportResult.Error("No manifest.json found in extension")
+                return@withContext ImportResult.Error("No manifest.json or JS files found in ZIP")
             }
             
             // Pass the top-level UUID directory name as extensionId
@@ -175,6 +190,103 @@ class ExtensionFileManager(private val context: Context) {
             AppLogger.e(TAG, "Failed to import Chrome extension from file", e)
             ImportResult.Error("Import failed: ${e.message}")
         }
+    }
+    
+    /**
+     * 从 URI 导入 JS ZIP 扩展包
+     * 支持包含多个 JS/CSS 文件的 ZIP 包（无需 manifest.json）
+     */
+    suspend fun importJsZipPackage(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
+        try {
+            val tempFile = File(tempDir, "jszip_${System.currentTimeMillis()}")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    val copied = input.copyTo(output)
+                    if (copied > MAX_EXTENSION_SIZE) {
+                        tempFile.delete()
+                        return@withContext ImportResult.Error("ZIP too large (max 50MB)")
+                    }
+                }
+            } ?: return@withContext ImportResult.Error("Cannot read file")
+            
+            val extractDir = File(tempDir, "jszip_extract_${System.currentTimeMillis()}")
+            extractDir.mkdirs()
+            
+            try {
+                extractZipToDirectory(tempFile, extractDir)
+                val result = tryImportAsJsPackage(extractDir)
+                if (result != null) {
+                    return@withContext result
+                }
+                return@withContext ImportResult.Error("No JS files found in ZIP")
+            } finally {
+                tempFile.delete()
+                extractDir.deleteRecursively()
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to import JS ZIP package", e)
+            ImportResult.Error("Import failed: ${e.message}")
+        }
+    }
+    
+    /**
+     * 尝试将解压后的目录作为 JS 扩展包导入
+     * 扫描所有 JS/CSS 文件，按入口优先级排序后拼接为单个模块
+     */
+    private fun tryImportAsJsPackage(dir: File): ImportResult? {
+        val jsFiles = dir.walkTopDown()
+            .filter { it.isFile && (it.extension.equals("js", true) || it.extension.equals("mjs", true)) }
+            .toList()
+        
+        if (jsFiles.isEmpty()) return null
+        
+        val cssFiles = dir.walkTopDown()
+            .filter { it.isFile && it.extension.equals("css", true) }
+            .toList()
+        
+        // 构建多文件映射（相对路径 → 文件内容）
+        // 保留原始文件结构，不再拼接成单个巨型字符串
+        val codeFilesMap = linkedMapOf<String, String>()
+        jsFiles.forEach { file ->
+            val relativePath = file.relativeTo(dir).path
+            codeFilesMap[relativePath] = file.readText()
+        }
+        
+        // CSS 文件同样保留独立结构，拼接为一个 cssCode（CSS 不需要执行顺序）
+        val combinedCss = if (cssFiles.isNotEmpty()) {
+            buildString {
+                cssFiles.forEachIndexed { index, file ->
+                    if (index > 0) append("\n\n")
+                    append("/* ========== ${file.relativeTo(dir).path} ========== */\n")
+                    append(file.readText())
+                }
+            }
+        } else ""
+        
+        // Auto-detect a name from the directory or first file
+        val suggestedName = dir.name.takeIf { it.isNotBlank() && !it.startsWith("jszip_") }
+            ?: jsFiles.firstOrNull()?.nameWithoutExtension
+            ?: "JS Extension"
+        
+        val totalSize = (jsFiles + cssFiles).sumOf { it.length() }
+        
+        val module = ExtensionModule(
+            id = UUID.randomUUID().toString(),
+            name = suggestedName,
+            description = "Imported from ZIP (${jsFiles.size} JS + ${cssFiles.size} CSS files)",
+            code = "",  // 不再使用单一 code 字段
+            cssCode = combinedCss,
+            codeFiles = codeFilesMap,  // 多文件独立存储
+            category = ModuleCategory.OTHER,
+            sourceType = ModuleSourceType.CUSTOM,
+            enabled = true
+        )
+        
+        return ImportResult.JsPackage(
+            module = module,
+            fileCount = jsFiles.size + cssFiles.size,
+            totalSize = totalSize
+        )
     }
     
     // ==================== @require / @resource Pre-loading ====================

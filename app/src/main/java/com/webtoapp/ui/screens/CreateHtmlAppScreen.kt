@@ -59,6 +59,21 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
+ * Snapshot of HTML app editor state for dirty-tracking.
+ * Compared against current state to determine if user has made changes.
+ */
+private data class HtmlEditorStateSnapshot(
+    val appName: String = "",
+    val htmlFile: HtmlFile? = null,
+    val cssFile: HtmlFile? = null,
+    val jsFile: HtmlFile? = null,
+    val appIcon: Uri? = null,
+    val enableJavaScript: Boolean = true,
+    val enableLocalStorage: Boolean = true,
+    val landscapeMode: Boolean = false
+)
+
+/**
  * 创建/编辑HTML应用页面
  * 支持单个HTML文件、HTML+CSS+JS项目
  */
@@ -175,28 +190,28 @@ fun CreateHtmlAppScreen(
                     }
                 }
                 
-                // 如果文件列表为空但 projectId 存在，尝试从目录中加载
-                if (htmlFile == null && config.projectId.isNotBlank()) {
+                // 如果文件列表恢复后仍有缺失槽位，尝试从项目目录中扫描补全
+                if ((htmlFile == null || cssFile == null || jsFile == null) && config.projectId.isNotBlank()) {
                     val projectDir = java.io.File(context.filesDir, "html_projects/${config.projectId}")
                     if (projectDir.exists()) {
                         projectDir.listFiles()?.forEach { file ->
                             when {
-                                file.name.endsWith(".html", ignoreCase = true) ||
-                                file.name.endsWith(".htm", ignoreCase = true) -> {
+                                (file.name.endsWith(".html", ignoreCase = true) ||
+                                file.name.endsWith(".htm", ignoreCase = true)) && htmlFile == null -> {
                                     htmlFile = HtmlFile(
                                         name = file.name,
                                         path = file.absolutePath,
                                         type = HtmlFileType.HTML
                                     )
                                 }
-                                file.name.endsWith(".css", ignoreCase = true) -> {
+                                file.name.endsWith(".css", ignoreCase = true) && cssFile == null -> {
                                     cssFile = HtmlFile(
                                         name = file.name,
                                         path = file.absolutePath,
                                         type = HtmlFileType.CSS
                                     )
                                 }
-                                file.name.endsWith(".js", ignoreCase = true) -> {
+                                file.name.endsWith(".js", ignoreCase = true) && jsFile == null -> {
                                     jsFile = HtmlFile(
                                         name = file.name,
                                         path = file.absolutePath,
@@ -419,11 +434,53 @@ fun CreateHtmlAppScreen(
     ) { uri -> uri?.let { appIcon = it } }
     
     // ==================== Dirty State & Back Confirmation ====================
-    // Track initial values to detect changes
-    val initialAppName = remember { importProjectName ?: "" }
-    val hasUnsavedChanges = remember(appName, htmlFile, cssFile, jsFile, appIcon, enableJavaScript, enableLocalStorage, landscapeMode) {
-        appName != initialAppName || htmlFile != null || cssFile != null || jsFile != null || 
-        appIcon != null || !enableJavaScript || !enableLocalStorage || landscapeMode
+    // Snapshot-based dirty tracking: capture baseline after data loading, compare current state against it
+    var baselineSnapshot by remember { mutableStateOf(HtmlEditorStateSnapshot(appName = importProjectName ?: "")) }
+    
+    // Update baseline after edit mode data loading completes
+    LaunchedEffect(existingApp) {
+        existingApp?.let {
+            // Wait one frame for LaunchedEffect(existingApp) above to update local state
+            kotlinx.coroutines.delay(100)
+            baselineSnapshot = HtmlEditorStateSnapshot(
+                appName = appName,
+                htmlFile = htmlFile,
+                cssFile = cssFile,
+                jsFile = jsFile,
+                appIcon = appIcon,
+                enableJavaScript = enableJavaScript,
+                enableLocalStorage = enableLocalStorage,
+                landscapeMode = landscapeMode
+            )
+        }
+    }
+    
+    // Update baseline after AI import loading completes
+    LaunchedEffect(importDir) {
+        if (importDir != null) {
+            kotlinx.coroutines.delay(100)
+            baselineSnapshot = HtmlEditorStateSnapshot(
+                appName = appName,
+                htmlFile = htmlFile,
+                cssFile = cssFile,
+                jsFile = jsFile,
+                appIcon = appIcon,
+                enableJavaScript = enableJavaScript,
+                enableLocalStorage = enableLocalStorage,
+                landscapeMode = landscapeMode
+            )
+        }
+    }
+    
+    val hasUnsavedChanges = remember(appName, htmlFile, cssFile, jsFile, appIcon, enableJavaScript, enableLocalStorage, landscapeMode, baselineSnapshot) {
+        appName != baselineSnapshot.appName ||
+        htmlFile != baselineSnapshot.htmlFile ||
+        cssFile != baselineSnapshot.cssFile ||
+        jsFile != baselineSnapshot.jsFile ||
+        appIcon != baselineSnapshot.appIcon ||
+        enableJavaScript != baselineSnapshot.enableJavaScript ||
+        enableLocalStorage != baselineSnapshot.enableLocalStorage ||
+        landscapeMode != baselineSnapshot.landscapeMode
     }
     var showExitConfirmDialog by remember { mutableStateOf(false) }
     
@@ -918,7 +975,8 @@ fun CreateHtmlAppScreen(
                 )
             }
             
-            // App信息
+            // App信息（仅新建时显示，编辑时在通用配置中设置）
+            if (!isEditMode) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -946,6 +1004,7 @@ fun CreateHtmlAppScreen(
                         }
                     )
                 }
+            }
             }
             
             // 高级配置
@@ -1005,7 +1064,8 @@ fun CreateHtmlAppScreen(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Landscape模式开关
+                    // Landscape模式开关（仅新建时显示，编辑时在通用配置中设置）
+                    if (!isEditMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1023,6 +1083,7 @@ fun CreateHtmlAppScreen(
                             checked = landscapeMode,
                             onCheckedChange = { landscapeMode = it }
                         )
+                    }
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))

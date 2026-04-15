@@ -30,6 +30,7 @@ class NodeRuntime(private val context: Context) {
         private const val TAG = "NodeRuntime"
         private const val MAX_HEALTH_CHECK_RETRIES = 60
         private const val HEALTH_CHECK_INTERVAL_MS = 500L
+        private val PROJECT_EXCLUDE_DIRS = setOf(".git", ".cache")
     }
     
     // ==================== 状态 ====================
@@ -358,21 +359,23 @@ $filesHtml
     }
 
     /**
-     * 创建 Node.js 项目目录
+     * 创建或覆盖同步 Node.js 项目目录
      */
     suspend fun createProject(
         projectId: String,
-        sourceDir: File
+        sourceDir: File,
+        cleanTarget: Boolean = true
     ): File = withContext(Dispatchers.IO) {
+        require(sourceDir.exists() && sourceDir.isDirectory) { "源项目目录不存在: ${sourceDir.absolutePath}" }
+
         val projectDir = File(NodeDependencyManager.getNodeProjectsDir(context), projectId)
+        if (cleanTarget && projectDir.exists()) {
+            projectDir.deleteRecursively()
+        }
         projectDir.mkdirs()
-        
-        val excludeDirs = setOf(".git", "dist", "build", ".cache", ".next", ".nuxt")
-        
+
         sourceDir.walkTopDown()
-            .filter { file ->
-                !excludeDirs.any { excluded -> file.absolutePath.contains("/$excluded/") }
-            }
+            .onEnter { dir -> dir == sourceDir || dir.name !in PROJECT_EXCLUDE_DIRS }
             .filter { it.isFile }
             .forEach { file ->
                 val relativePath = file.relativeTo(sourceDir).path
@@ -380,9 +383,21 @@ $filesHtml
                 destFile.parentFile?.mkdirs()
                 file.copyTo(destFile, overwrite = true)
             }
-        
-        AppLogger.i(TAG, "项目文件已复制到: ${projectDir.absolutePath}")
+
+        AppLogger.i(TAG, "项目文件已同步到: ${projectDir.absolutePath}")
         projectDir
+    }
+
+    suspend fun syncProjectFromSource(
+        projectId: String,
+        sourceDir: File
+    ): File = createProject(projectId = projectId, sourceDir = sourceDir, cleanTarget = true)
+
+    fun resolveSourceProjectDir(sourceProjectPath: String?): File? {
+        val path = sourceProjectPath?.trim().orEmpty()
+        if (path.isEmpty()) return null
+        val file = File(path)
+        return file.takeIf { it.exists() && it.isDirectory }
     }
     
     /**

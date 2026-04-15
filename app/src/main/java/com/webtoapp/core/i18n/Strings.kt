@@ -4790,9 +4790,9 @@ object Strings {
     }
     
     val builtInEngineReady: String get() = when (lang) {
-        AppLanguage.CHINESE -> "内置构建引擎已就绪。支持导入已构建的项目，或使用 esbuild 进行简单构建。推荐在电脑上完成复杂项目的构建。"
-        AppLanguage.ENGLISH -> "Built-in build engine ready. Supports importing built projects or simple builds with esbuild. Complex projects are recommended to be built on computer."
-        AppLanguage.ARABIC -> "محرك البناء المدمج جاهز. يدعم استيراد المشاريع المبنية أو البناء البسيط باستخدام esbuild. يُنصح ببناء المشاريع المعقدة على الكمبيوتر."
+        AppLanguage.CHINESE -> "构建引擎已就绪。支持导入已构建项目，并可使用 esbuild 进行构建。复杂项目建议先在电脑完成构建。"
+        AppLanguage.ENGLISH -> "Build engine ready. Supports importing built projects and building with esbuild. Complex projects are best built on a computer first."
+        AppLanguage.ARABIC -> "محرك البناء جاهز. يدعم استيراد المشاريع المبنية والبناء باستخدام esbuild. يُفضّل بناء المشاريع المعقدة على الكمبيوتر أولاً."
     }
 
     // ==================== 媒体应用页面 ====================
@@ -5812,6 +5812,18 @@ object Strings {
         AppLanguage.ARABIC -> "وضع ملء الشاشة"
     }
     
+    val hideBrowserToolbar: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏浏览器工具栏"
+        AppLanguage.ENGLISH -> "Hide Browser Toolbar"
+        AppLanguage.ARABIC -> "إخفاء شريط أدوات المتصفح"
+    }
+    
+    val hideBrowserToolbarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "仅隐藏顶部导航栏，保留系统状态栏和导航栏，让应用看起来更像原生应用"
+        AppLanguage.ENGLISH -> "Hide only the top navigation bar while keeping system status bar and navigation bar visible, giving a more native app look"
+        AppLanguage.ARABIC -> "إخفاء شريط التنقل العلوي فقط مع الحفاظ على شريط الحالة وشريط التنقل مرئيين، مما يمنح مظهر تطبيق أصلي"
+    }
+    
     val splashScreen: String get() = when (lang) {
         AppLanguage.CHINESE -> "启动画面"
         AppLanguage.ENGLISH -> "Splash Screen"
@@ -6733,9 +6745,9 @@ object Strings {
     }
     
     val techDescriptionContent: String get() = when (lang) {
-        AppLanguage.CHINESE -> "本应用采用第一性原理设计，不依赖传统的 Node.js 运行时：\n\n• 内置打包器：纯 Kotlin 实现，可处理简单项目\n• esbuild：为 Android 编译的原生二进制，高性能\n• 渐进式降级：总能找到可用的构建方案\n\n推荐工作流：在电脑上完成 npm run build，然后导入构建输出。"
-        AppLanguage.ENGLISH -> "This app uses first principles design, not relying on traditional Node.js runtime:\n\n• Built-in packager: Pure Kotlin implementation for simple projects\n• esbuild: Native binary compiled for Android, high performance\n• Progressive degradation: Always finds a working build solution\n\nRecommended workflow: Complete npm run build on computer, then import build output."
-        AppLanguage.ARABIC -> "يستخدم هذا التطبيق تصميم المبادئ الأولى، دون الاعتماد على وقت تشغيل Node.js التقليدي:\n\n• أداة التعبئة المدمجة: تنفيذ Kotlin خالص للمشاريع البسيطة\n• esbuild: ثنائي أصلي مترجم لـ Android، أداء عالي\n• التدهور التدريجي: يجد دائمًا حل بناء يعمل\n\nسير العمل الموصى به: أكمل npm run build على الكمبيوتر، ثم استورد مخرجات البناء."
+        AppLanguage.CHINESE -> "本应用采用第一性原理设计，不依赖传统的 Node.js 运行时：\n\n• 内置打包器：纯 Kotlin 实现，可处理简单项目\n• esbuild：为 Android 编译的原生二进制，高性能\n• 构建失败时直接返回完整错误，便于定位问题\n\n推荐工作流：在电脑上完成 npm run build，然后导入构建输出。"
+        AppLanguage.ENGLISH -> "This app uses first-principles design without relying on a traditional Node.js runtime:\n\n• Built-in packager: Pure Kotlin implementation for simple projects\n• esbuild: Native binary compiled for Android, high performance\n• Build failures return full error details directly for diagnosis\n\nRecommended workflow: Complete npm run build on a computer, then import the build output."
+        AppLanguage.ARABIC -> "يستخدم هذا التطبيق تصميم المبادئ الأولى دون الاعتماد على وقت تشغيل Node.js التقليدي:\n\n• أداة التعبئة المدمجة: تنفيذ Kotlin خالص للمشاريع البسيطة\n• esbuild: ثنائي أصلي مترجم لـ Android عالي الأداء\n• عند فشل البناء يتم إظهار الخطأ الكامل مباشرة لتسهيل التشخيص\n\nسير العمل الموصى به: أكمل npm run build على الكمبيوتر ثم استورد مخرجات البناء."
     }
 
     // ==================== 应用修改器 ====================
@@ -20843,9 +20855,9 @@ object Strings {
     }
     
     val floatingWindowShowTitleBarDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "显示标题栏以便拖拽移动窗口位置"
-        AppLanguage.ENGLISH -> "Show title bar to drag and move window position"
-        AppLanguage.ARABIC -> "عرض شريط العنوان لسحب وتحريك موضع النافذة"
+        AppLanguage.CHINESE -> "显示标题栏，并提供后退、前进、全屏、最小化和关闭按钮"
+        AppLanguage.ENGLISH -> "Show the title bar with Back, Forward, Fullscreen, Minimize, and Close controls"
+        AppLanguage.ARABIC -> "عرض شريط العنوان مع أزرار الرجوع والتقدم وملء الشاشة والتصغير والإغلاق"
     }
     
     val floatingWindowStartMinimized: String get() = when (lang) {
@@ -20907,11 +20919,66 @@ object Strings {
         AppLanguage.ENGLISH -> "Close"
         AppLanguage.ARABIC -> "إغلاق"
     }
+
+    val floatingWindowMinimize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最小化"
+        AppLanguage.ENGLISH -> "Minimize"
+        AppLanguage.ARABIC -> "تصغير"
+    }
+
+    val floatingWindowRestoreWindow: String get() = when (lang) {
+        AppLanguage.CHINESE -> "恢复窗口"
+        AppLanguage.ENGLISH -> "Restore Window"
+        AppLanguage.ARABIC -> "استعادة النافذة"
+    }
+
+    val floatingWindowEnterFullscreen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "进入全屏"
+        AppLanguage.ENGLISH -> "Enter Fullscreen"
+        AppLanguage.ARABIC -> "دخول ملء الشاشة"
+    }
+
+    val floatingWindowExitFullscreen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "退出全屏"
+        AppLanguage.ENGLISH -> "Exit Fullscreen"
+        AppLanguage.ARABIC -> "الخروج من ملء الشاشة"
+    }
     
     val floatingWindowPermissionRequired: String get() = when (lang) {
         AppLanguage.CHINESE -> "悬浮窗需要\"显示在其他应用上层\"权限"
         AppLanguage.ENGLISH -> "Floating window requires \"Display over other apps\" permission"
         AppLanguage.ARABIC -> "تتطلب النافذة العائمة إذن \"العرض فوق التطبيقات الأخرى\""
+    }
+    
+    // ==================== HTTP Basic Auth ====================
+    val httpAuthTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "需要身份验证"
+        AppLanguage.ENGLISH -> "Authentication Required"
+        AppLanguage.ARABIC -> "المصادقة مطلوبة"
+    }
+    
+    val httpAuthMessage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "服务器 %s 要求输入用户名和密码"
+        AppLanguage.ENGLISH -> "The server %s requires a username and password"
+        AppLanguage.ARABIC -> "يتطلب الخادم %s اسم مستخدم وكلمة مرور"
+    }
+    
+    val httpAuthUsername: String get() = when (lang) {
+        AppLanguage.CHINESE -> "用户名"
+        AppLanguage.ENGLISH -> "Username"
+        AppLanguage.ARABIC -> "اسم المستخدم"
+    }
+    
+    val httpAuthPassword: String get() = when (lang) {
+        AppLanguage.CHINESE -> "密码"
+        AppLanguage.ENGLISH -> "Password"
+        AppLanguage.ARABIC -> "كلمة المرور"
+    }
+    
+    val httpAuthLogin: String get() = when (lang) {
+        AppLanguage.CHINESE -> "登录"
+        AppLanguage.ENGLISH -> "Sign In"
+        AppLanguage.ARABIC -> "تسجيل الدخول"
     }
     
     val floatingWindowGoToSettings: String get() = when (lang) {
@@ -26667,6 +26734,36 @@ object Strings {
         AppLanguage.ENGLISH -> "Install Chrome Extension"
         AppLanguage.ARABIC -> "تثبيت إضافة Chrome"
     }
+    val importJsPackage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "导入 JS 扩展包"
+        AppLanguage.ENGLISH -> "Import JS Package"
+        AppLanguage.ARABIC -> "استيراد حزمة JS"
+    }
+    val importJsPackageHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持包含多个 JS/CSS 文件的 ZIP 包"
+        AppLanguage.ENGLISH -> "Supports ZIP with multiple JS/CSS files"
+        AppLanguage.ARABIC -> "يدعم ملفات ZIP تحتوي على ملفات JS/CSS متعددة"
+    }
+    val installJsPackage: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装 JS 扩展包"
+        AppLanguage.ENGLISH -> "Install JS Package"
+        AppLanguage.ARABIC -> "تثبيت حزمة JS"
+    }
+    val filesDetected: String get() = when (lang) {
+        AppLanguage.CHINESE -> "个文件"
+        AppLanguage.ENGLISH -> "files detected"
+        AppLanguage.ARABIC -> "ملفات مكتشفة"
+    }
+    val totalSize: String get() = when (lang) {
+        AppLanguage.CHINESE -> "总大小"
+        AppLanguage.ENGLISH -> "total"
+        AppLanguage.ARABIC -> "الحجم الإجمالي"
+    }
+    val extensionName: String get() = when (lang) {
+        AppLanguage.CHINESE -> "扩展名称"
+        AppLanguage.ENGLISH -> "Extension Name"
+        AppLanguage.ARABIC -> "اسم الإضافة"
+    }
     val install: String get() = when (lang) {
         AppLanguage.CHINESE -> "安装"
         AppLanguage.ENGLISH -> "Install"
@@ -26691,6 +26788,16 @@ object Strings {
         AppLanguage.CHINESE -> "不支持的 API"
         AppLanguage.ENGLISH -> "Unsupported APIs"
         AppLanguage.ARABIC -> "واجهات غير مدعومة"
+    }
+    val multiFileStorageHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "多文件独立存储，保留原始文件结构"
+        AppLanguage.ENGLISH -> "Multi-file storage, preserving original structure"
+        AppLanguage.ARABIC -> "تخزين متعدد الملفات، الحفاظ على الهيكل الأصلي"
+    }
+    val includedFiles: String get() = when (lang) {
+        AppLanguage.CHINESE -> "包含的文件"
+        AppLanguage.ENGLISH -> "Included files"
+        AppLanguage.ARABIC -> "الملفات المضمنة"
     }
     
     // ==================== HTML 项目优化（Linux 环境） ====================
@@ -30995,6 +31102,104 @@ object Strings {
         AppLanguage.ARABIC -> "تطبيق التكوين المخصص"
     }
 
+    // ==================== 代理配置 (Proxy Configuration) ====================
+    
+    val proxySectionTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代理配置"
+        AppLanguage.ENGLISH -> "Proxy Configuration"
+        AppLanguage.ARABIC -> "إعدادات الوكيل"
+    }
+    val proxySectionSubtitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "支持 PAC 自动配置脚本 / 固定代理服务器"
+        AppLanguage.ENGLISH -> "PAC auto-config script / Static proxy server"
+        AppLanguage.ARABIC -> "دعم سكربت التكوين التلقائي PAC / خادم وكيل ثابت"
+    }
+    val proxyModeNone: String get() = when (lang) {
+        AppLanguage.CHINESE -> "无代理"
+        AppLanguage.ENGLISH -> "No Proxy"
+        AppLanguage.ARABIC -> "بدون وكيل"
+    }
+    val proxyModeNoneDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "直接连接，不使用代理"
+        AppLanguage.ENGLISH -> "Direct connection, no proxy"
+        AppLanguage.ARABIC -> "اتصال مباشر بدون وكيل"
+    }
+    val proxyModeStatic: String get() = when (lang) {
+        AppLanguage.CHINESE -> "固定代理"
+        AppLanguage.ENGLISH -> "Static Proxy"
+        AppLanguage.ARABIC -> "وكيل ثابت"
+    }
+    val proxyModeStaticDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "指定代理服务器地址和端口"
+        AppLanguage.ENGLISH -> "Specify proxy server address and port"
+        AppLanguage.ARABIC -> "تحديد عنوان ومنفذ خادم الوكيل"
+    }
+    val proxyModePac: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PAC 脚本"
+        AppLanguage.ENGLISH -> "PAC Script"
+        AppLanguage.ARABIC -> "سكربت PAC"
+    }
+    val proxyModePacDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用 .pac 脚本自动配置代理规则"
+        AppLanguage.ENGLISH -> "Auto-configure proxy rules via .pac script"
+        AppLanguage.ARABIC -> "تكوين قواعد الوكيل تلقائياً عبر سكربت .pac"
+    }
+    val proxyHostLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代理主机"
+        AppLanguage.ENGLISH -> "Proxy Host"
+        AppLanguage.ARABIC -> "مضيف الوكيل"
+    }
+    val proxyHostHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "如 proxy.example.com 或 192.168.1.1"
+        AppLanguage.ENGLISH -> "e.g. proxy.example.com or 192.168.1.1"
+        AppLanguage.ARABIC -> "مثال: proxy.example.com أو 192.168.1.1"
+    }
+    val proxyPortLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "端口"
+        AppLanguage.ENGLISH -> "Port"
+        AppLanguage.ARABIC -> "المنفذ"
+    }
+    val proxyPortHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "如 8080"
+        AppLanguage.ENGLISH -> "e.g. 8080"
+        AppLanguage.ARABIC -> "مثال: 8080"
+    }
+    val proxyTypeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "协议"
+        AppLanguage.ENGLISH -> "Protocol"
+        AppLanguage.ARABIC -> "البروتوكول"
+    }
+    val pacUrlLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "PAC 脚本地址"
+        AppLanguage.ENGLISH -> "PAC Script URL"
+        AppLanguage.ARABIC -> "عنوان سكربت PAC"
+    }
+    val pacUrlHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "http://proxy.example.com/proxy.pac"
+        AppLanguage.ENGLISH -> "http://proxy.example.com/proxy.pac"
+        AppLanguage.ARABIC -> "http://proxy.example.com/proxy.pac"
+    }
+    val proxyBypassLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "绕过规则"
+        AppLanguage.ENGLISH -> "Bypass Rules"
+        AppLanguage.ARABIC -> "قواعد التجاوز"
+    }
+    val proxyBypassHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "一行一个，如 *.example.com 或 192.168.0.0/16"
+        AppLanguage.ENGLISH -> "One per line, e.g. *.example.com or 192.168.0.0/16"
+        AppLanguage.ARABIC -> "واحد لكل سطر، مثال: *.example.com أو 192.168.0.0/16"
+    }
+    val proxyNotSupported: String get() = when (lang) {
+        AppLanguage.CHINESE -> "当前 WebView 版本不支持代理覆盖"
+        AppLanguage.ENGLISH -> "Proxy override not supported on this WebView version"
+        AppLanguage.ARABIC -> "تجاوز الوكيل غير مدعوم في هذا الإصدار من WebView"
+    }
+    val proxyModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代理模式"
+        AppLanguage.ENGLISH -> "Proxy Mode"
+        AppLanguage.ARABIC -> "وضع الوكيل"
+    }
+
 }
 
 
@@ -31018,4 +31223,3 @@ fun InitializeLanguage() {
         }
     }
 }
-

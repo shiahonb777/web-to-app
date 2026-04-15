@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.webtoapp.core.logging.AppLogger
@@ -150,22 +149,16 @@ fun ShellContentRouter(
             )
         }
         appType == "HTML" || appType == "FRONTEND" -> {
-            // HTML/前端应用模式 - 加载嵌入在 APK assets 中的 HTML 文件
-            val htmlEntryFile = config.htmlConfig.getValidEntryFile()
-            val htmlUrl = "file:///android_asset/html/$htmlEntryFile"
-            ShellLocalFileWebView(
+            HtmlFrontendShellMode(
                 config = config,
                 webViewConfig = webViewConfig,
                 webViewCallbacks = webViewCallbacks,
                 webViewManager = webViewManager,
-                targetUrl = htmlUrl,
-                enableJavaScript = config.htmlConfig.enableJavaScript,
-                enableLocalStorage = config.htmlConfig.enableLocalStorage,
+                onWebViewCreated = onWebViewCreated,
+                onWebViewRefUpdated = onWebViewRefUpdated,
                 swipeRefreshEnabled = swipeRefreshEnabled,
                 isRefreshing = isRefreshing,
-                onRefresh = onRefresh,
-                onWebViewCreated = onWebViewCreated,
-                onWebViewRefUpdated = onWebViewRefUpdated
+                onRefresh = onRefresh
             )
         }
         else -> {
@@ -204,7 +197,8 @@ fun ShellContentRouter(
                                 webViewCallbacks,
                                 config.extensionModuleIds,
                                 config.embeddedExtensionModules,
-                                config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                browserDisguiseConfig = config.browserDisguiseConfig)
 
                             // 添加长按监听器
                             // 持续跟踪触摸位置，确保长按时使用最新坐标
@@ -301,7 +295,8 @@ fun ShellLocalFileWebView(
                         webViewCallbacks,
                         config.extensionModuleIds,
                         config.embeddedExtensionModules,
-                        config.extensionFabIcon, allowGlobalModuleFallback = false)
+                        config.extensionFabIcon, allowGlobalModuleFallback = false,
+                        browserDisguiseConfig = config.browserDisguiseConfig)
                     // 然后覆盖本地文件特定的设置（必须在 configureWebView 之后）
                     // 因为 configureWebView 会将 allowFileAccessFromFileURLs 设为 false
                     settings.apply {
@@ -357,3 +352,4 @@ fun ShellLocalFileWebView(
         modifier = Modifier.fillMaxSize()
     )
 }
+

@@ -8,6 +8,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -37,7 +38,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.webtoapp.R
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.ui.theme.LocalAppTheme
@@ -75,7 +79,7 @@ fun AboutScreen(
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<AppUpdateChecker.UpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
-    var checkError by remember { mutableStateOf<String?>(null) }
+    var updateFailureReport by remember { mutableStateOf<UpdateFailureReport?>(null) }
     
     // Download状态
     var isDownloading by remember { mutableStateOf(false) }
@@ -112,6 +116,64 @@ fun AboutScreen(
     val theme = LocalAppTheme.current
     val primaryGradient = theme.gradients.primary.ifEmpty { listOf(Color(0xFF667eea), Color(0xFF764ba2)) }
     val accentColor = primaryGradient.first()
+
+    fun showUpdateFailureReport(
+        title: String,
+        stage: String,
+        summary: String,
+        throwable: Throwable? = null,
+        extraContext: String? = null
+    ) {
+        updateFailureReport = buildUpdateFailureReport(
+            title = title,
+            stage = stage,
+            summary = summary,
+            currentVersionName = currentVersionName,
+            currentVersionCode = currentVersionCode,
+            throwable = throwable,
+            extraContext = extraContext
+        )
+    }
+
+    fun triggerManualUpdateCheck() {
+        scope.launch {
+            isCheckingUpdate = true
+            updateFailureReport = null
+            try {
+                val result = AppUpdateChecker.checkUpdate(currentVersionName, currentVersionCode)
+                result.onSuccess { info ->
+                    updateInfo = info
+                    showUpdateDialog = true
+                }.onFailure { error ->
+                    showUpdateFailureReport(
+                        title = "检查更新失败",
+                        stage = "手动检查更新",
+                        summary = "更新服务请求失败，已停止继续处理。",
+                        throwable = error,
+                        extraContext = """
+                            trigger: manual
+                            current_version_name: v$currentVersionName
+                            current_version_code: $currentVersionCode
+                        """.trimIndent()
+                    )
+                }
+            } catch (error: Exception) {
+                showUpdateFailureReport(
+                    title = "检查更新失败",
+                    stage = "手动检查更新",
+                    summary = "更新检查过程发生未捕获异常，已停止继续处理。",
+                    throwable = error,
+                    extraContext = """
+                        trigger: manual
+                        current_version_name: v$currentVersionName
+                        current_version_code: $currentVersionCode
+                    """.trimIndent()
+                )
+            } finally {
+                isCheckingUpdate = false
+            }
+        }
+    }
     
     // 动画
     val infiniteTransition = rememberInfiniteTransition(label = "about")
@@ -250,20 +312,7 @@ fun AboutScreen(
                                 shape = RoundedCornerShape(20.dp),
                                 color = MaterialTheme.colorScheme.secondaryContainer,
                                 modifier = Modifier.clickable {
-                                    // 点击版本号检查更新
-                                    scope.launch {
-                                        isCheckingUpdate = true
-                                        checkError = null
-                                        val result = AppUpdateChecker.checkUpdate(currentVersionName, currentVersionCode)
-                                        isCheckingUpdate = false
-                                        result.onSuccess { info ->
-                                            updateInfo = info
-                                            showUpdateDialog = true
-                                        }.onFailure { e ->
-                                            checkError = e.message
-                                            Toast.makeText(context, "${Strings.checkUpdateFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
+                                    triggerManualUpdateCheck()
                                 }
                             ) {
                                 Row(
@@ -293,19 +342,7 @@ fun AboutScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                         .clickable(enabled = !isCheckingUpdate && !isDownloading) {
-                            scope.launch {
-                                isCheckingUpdate = true
-                                checkError = null
-                                val result = AppUpdateChecker.checkUpdate(currentVersionName, currentVersionCode)
-                                isCheckingUpdate = false
-                                result.onSuccess { info ->
-                                    updateInfo = info
-                                    showUpdateDialog = true
-                                }.onFailure { e ->
-                                    checkError = e.message
-                                    Toast.makeText(context, "${Strings.checkUpdateFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            triggerManualUpdateCheck()
                         },
                     shape = RoundedCornerShape(16.dp)
                 ) {
@@ -1226,6 +1263,7 @@ fun AboutScreen(
         UpdateDialog(
             updateInfo = updateInfo!!,
             currentVersion = currentVersionName,
+            currentVersionCode = currentVersionCode,
             isDownloading = isDownloading,
             onDismiss = { showUpdateDialog = false },
             onDownload = {
@@ -1238,15 +1276,42 @@ fun AboutScreen(
                     )
                     if (downloadId == -1L) {
                         isDownloading = false
-                        Toast.makeText(context, Strings.downloadStartFailed, Toast.LENGTH_SHORT).show()
+                        showUpdateFailureReport(
+                            title = "更新下载启动失败",
+                            stage = "启动更新下载",
+                            summary = "系统下载任务创建失败，未继续执行安装流程。",
+                            extraContext = """
+                                current_version_name: v$currentVersionName
+                                current_version_code: $currentVersionCode
+                                target_version_name: ${updateInfo!!.versionName}
+                                download_url: ${updateInfo!!.downloadUrl}
+                            """.trimIndent()
+                        )
                     } else {
                         Toast.makeText(context, Strings.startDownloadCheckNotification, Toast.LENGTH_SHORT).show()
                         showUpdateDialog = false
                     }
                 } else {
-                    Toast.makeText(context, Strings.downloadLinkNotFound, Toast.LENGTH_SHORT).show()
+                    showUpdateFailureReport(
+                        title = "更新下载启动失败",
+                        stage = "准备更新下载",
+                        summary = "更新响应缺少有效下载链接，未继续执行下载流程。",
+                        extraContext = """
+                            current_version_name: v$currentVersionName
+                            current_version_code: $currentVersionCode
+                            target_version_name: ${updateInfo!!.versionName}
+                            download_url: <empty>
+                        """.trimIndent()
+                    )
                 }
             }
+        )
+    }
+
+    updateFailureReport?.let { report ->
+        UpdateFailureReportDialog(
+            report = report,
+            onDismiss = { updateFailureReport = null }
         )
     }
         }
@@ -1259,6 +1324,7 @@ fun AboutScreen(
 private fun UpdateDialog(
     updateInfo: AppUpdateChecker.UpdateInfo,
     currentVersion: String,
+    currentVersionCode: Int,
     isDownloading: Boolean,
     onDismiss: () -> Unit,
     onDownload: () -> Unit
@@ -1350,7 +1416,7 @@ private fun UpdateDialog(
                     )
                 } else {
                     Text(
-                        Strings.currentVersionIs.replace("%s", currentVersion),
+                        "${Strings.currentVersionIs.replace("%s", currentVersion)}\nversionCode: $currentVersionCode",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -1385,6 +1451,114 @@ private fun UpdateDialog(
                 TextButton(onClick = onDismiss) {
                     Text(Strings.updateLater)
                 }
+            }
+        }
+    )
+}
+
+private data class UpdateFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+private fun buildUpdateFailureReport(
+    title: String,
+    stage: String,
+    summary: String,
+    currentVersionName: String,
+    currentVersionCode: Int,
+    throwable: Throwable? = null,
+    extraContext: String? = null
+): UpdateFailureReport {
+    val details = buildString {
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        appendLine("current_version_name: v$currentVersionName")
+        appendLine("current_version_code: $currentVersionCode")
+
+        if (!extraContext.isNullOrBlank()) {
+            appendLine()
+            appendLine("context:")
+            appendLine(extraContext)
+        }
+
+        appendLine()
+        appendLine("error:")
+        appendLine(throwable?.message ?: "未返回异常对象")
+
+        throwable?.let {
+            appendLine()
+            appendLine("stacktrace:")
+            appendLine(Log.getStackTraceString(it))
+        }
+
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+
+    return UpdateFailureReport(
+        title = title,
+        summary = summary,
+        details = details
+    )
+}
+
+@Composable
+private fun UpdateFailureReportDialog(
+    report: UpdateFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
             }
         }
     )

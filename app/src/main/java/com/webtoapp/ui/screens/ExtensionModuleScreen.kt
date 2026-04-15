@@ -77,6 +77,7 @@ fun ExtensionModuleScreen(
     
     val modules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
+    val isModulesLoading by extensionManager.isLoading.collectAsStateWithLifecycle()
     
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     var searchQuery by remember { mutableStateOf("") }
@@ -88,11 +89,15 @@ fun ExtensionModuleScreen(
     var showChromeExtPreview by remember { mutableStateOf<ChromeExtensionParser.ParseResult?>(null) }
     var pendingChromeExtDir by remember { mutableStateOf<java.io.File?>(null) }
     
+    // Import loading state
+    var isImporting by remember { mutableStateOf(false) }
+    
     // File选择器 (.wtamod)
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
+            isImporting = true
             scope.launch {
                 try {
                     context.contentResolver.openInputStream(it)?.use { stream ->
@@ -105,6 +110,8 @@ fun ExtensionModuleScreen(
                     }
                 } catch (e: Exception) {
                     Toast.makeText(context, context.getString(R.string.msg_import_failed, e.message ?: context.getString(R.string.unknown_error)), Toast.LENGTH_SHORT).show()
+                } finally {
+                    isImporting = false
                 }
             }
         }
@@ -131,16 +138,46 @@ fun ExtensionModuleScreen(
     }
     
     // Chrome 扩展文件选择器 (.crx / .zip)
+    // 现在也支持自动 fallback 到 JS 包导入
+    var showJsPackagePreview by remember { mutableStateOf<ExtensionFileManager.ImportResult.JsPackage?>(null) }
+    
     val chromeExtPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
+            isImporting = true
             scope.launch {
                 val result = extensionFileManager.importChromeExtension(it)
+                isImporting = false
                 when (result) {
                     is ExtensionFileManager.ImportResult.ChromeExtension -> {
                         showChromeExtPreview = result.parseResult
                         pendingChromeExtDir = result.extractedDir
+                    }
+                    is ExtensionFileManager.ImportResult.JsPackage -> {
+                        showJsPackagePreview = result
+                    }
+                    is ExtensionFileManager.ImportResult.Error -> {
+                        Toast.makeText(context, context.getString(R.string.msg_import_failed, result.message), Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+    
+    // JS ZIP 扩展包选择器
+    val jsZipPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            isImporting = true
+            scope.launch {
+                val result = extensionFileManager.importJsZipPackage(it)
+                isImporting = false
+                when (result) {
+                    is ExtensionFileManager.ImportResult.JsPackage -> {
+                        showJsPackagePreview = result
                     }
                     is ExtensionFileManager.ImportResult.Error -> {
                         Toast.makeText(context, context.getString(R.string.msg_import_failed, result.message), Toast.LENGTH_SHORT).show()
@@ -491,6 +528,33 @@ fun ExtensionModuleScreen(
         }
     }
     
+    // Import进度对话框 — 防止大文件导入时用户以为卡死
+    if (isImporting) {
+        Dialog(onDismissRequest = { /* 不允许关闭 */ }) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        strokeWidth = 3.dp
+                    )
+                    Text(
+                        Strings.importing,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+    
     // Import对话框
     if (showImportDialog) {
         AlertDialog(
@@ -586,6 +650,54 @@ fun ExtensionModuleScreen(
                                 Text(Strings.importChromeExtension, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
                                     Strings.importChromeExtensionHint,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            }
+                            Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                        }
+                    }
+                    
+                    // JS 扩展包导入 (.zip with JS files)
+                    Surface(
+                        onClick = {
+                            showImportDialog = false
+                            jsZipPickerLauncher.launch("*/*")
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(11.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                Color(0xFF34A853).copy(alpha = 0.15f),
+                                                Color(0xFF34A853).copy(alpha = 0.05f)
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.FolderZip,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = Color(0xFF34A853)
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(Strings.importJsPackage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(
+                                    Strings.importJsPackageHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -817,6 +929,176 @@ fun ExtensionModuleScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showUserScriptPreview = null }) {
+                    Text(Strings.btnCancel)
+                }
+            }
+        )
+    }
+    
+    // JS 扩展包预览安装对话框
+    showJsPackagePreview?.let { jsPackage ->
+        var editableName by remember(jsPackage) { mutableStateOf(jsPackage.module.name) }
+        
+        AlertDialog(
+            onDismissRequest = { showJsPackagePreview = null },
+            title = { Text(Strings.installJsPackage) },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 包信息
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            Color(0xFF34A853).copy(alpha = 0.15f),
+                                            Color(0xFF34A853).copy(alpha = 0.05f)
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.FolderZip,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = Color(0xFF34A853)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                "${jsPackage.fileCount} ${Strings.filesDetected}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "${formatFileSize(jsPackage.totalSize)} ${Strings.totalSize}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    
+                    // 多文件独立存储提示
+                    if (jsPackage.module.codeFiles.isNotEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF34A853).copy(alpha = 0.08f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Inventory2,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color(0xFF34A853)
+                                )
+                                Text(
+                                    Strings.multiFileStorageHint,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF34A853)
+                                )
+                            }
+                        }
+                    }
+                    
+                    // 名称编辑
+                    PremiumTextField(
+                        value = editableName,
+                        onValueChange = { editableName = it },
+                        label = { Text(Strings.extensionName) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    // 文件列表（最多显示 15 个）
+                    if (jsPackage.module.codeFiles.isNotEmpty()) {
+                        Text(
+                            Strings.includedFiles,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                val filePaths = jsPackage.module.codeFiles.keys.toList()
+                                val displayCount = minOf(filePaths.size, 15)
+                                filePaths.take(displayCount).forEach { path ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 3.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            if (path.endsWith(".css", true)) Icons.Outlined.Palette
+                                            else Icons.Outlined.Javascript,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = if (path.endsWith(".css", true)) Color(0xFF2196F3)
+                                                else Color(0xFFF7DF1E)
+                                        )
+                                        Text(
+                                            path,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                if (filePaths.size > displayCount) {
+                                    Text(
+                                        "... +${filePaths.size - displayCount}",
+                                        modifier = Modifier.padding(start = 24.dp, top = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 描述
+                    Text(
+                        jsPackage.module.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                PremiumButton(onClick = {
+                    scope.launch {
+                        val finalModule = jsPackage.module.copy(
+                            name = editableName.ifBlank { jsPackage.module.name }
+                        )
+                        extensionManager.addModule(finalModule).onSuccess { module ->
+                            Toast.makeText(context, context.getString(R.string.msg_import_success, module.name), Toast.LENGTH_SHORT).show()
+                        }.onFailure { e ->
+                            Toast.makeText(context, context.getString(R.string.msg_import_failed, e.message ?: "Unknown error"), Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    showJsPackagePreview = null
+                }) {
+                    Text(Strings.install)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showJsPackagePreview = null }) {
                     Text(Strings.btnCancel)
                 }
             }
@@ -1248,9 +1530,10 @@ fun ModuleCard(
     }
     
     if (showQrCodeDialog) {
+        val fullModule = remember(module) { extensionManager.ensureCodeLoaded(module) }
         QrCodeShareDialog(
-            module = module,
-            shareCode = module.toShareCode(),
+            module = fullModule,
+            shareCode = fullModule.toShareCode(),
             onDismiss = { showQrCodeDialog = false }
         )
     }
@@ -1537,8 +1820,8 @@ private fun ExtensionModulesTabContent(
                     } else null
                 )
             }
+
             
-            // 空状态
             if (filteredModules.isEmpty()) {
                 item {
                     Box(

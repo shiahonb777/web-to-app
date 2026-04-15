@@ -2,7 +2,7 @@ package com.webtoapp.core.extension
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonParser
 import com.webtoapp.core.i18n.Strings
 import java.io.File
 
@@ -125,8 +125,7 @@ class ModulePresetManager private constructor(private val context: Context) {
         return try {
             if (presetsFile.exists()) {
                 val json = presetsFile.readText()
-                val type = object : TypeToken<List<ModulePreset>>() {}.type
-                gson.fromJson(json, type) ?: emptyList()
+                parsePresetList(json) ?: emptyList()
             } else {
                 emptyList()
             }
@@ -135,6 +134,27 @@ class ModulePresetManager private constructor(private val context: Context) {
         }
     }
     
+    internal fun parsePresetList(json: String): List<ModulePreset>? {
+        return try {
+            val parsed = JsonParser.parseString(json)
+            if (parsed.isJsonNull) return emptyList()
+            if (!parsed.isJsonArray) return null
+
+            val jsonArray = parsed.asJsonArray
+            val result = jsonArray.mapNotNull { element ->
+                try {
+                    gson.fromJson(element, ModulePreset::class.java)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            if (jsonArray.size() > 0 && result.isEmpty()) null else result
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     /**
      * 保存用户方案
      */

@@ -55,7 +55,7 @@ class WebAppModelTest {
     }
 
     @Test
-    fun `getAllActivationCodes merges new and legacy codes`() {
+    fun `getAllActivationCodes returns only new activation code list`() {
         val webApp = WebApp(
             name = "Demo",
             url = "https://example.com",
@@ -70,13 +70,12 @@ class WebAppModelTest {
 
         val allCodes = webApp.getAllActivationCodes()
 
-        assertThat(allCodes.map { it.code }).containsExactly("NEW", "OLD", "JSON").inOrder()
-        assertThat(allCodes.first { it.code == "OLD" }.type).isEqualTo(ActivationCodeType.PERMANENT)
-        assertThat(allCodes.first { it.code == "JSON" }.type).isEqualTo(ActivationCodeType.USAGE_LIMITED)
+        assertThat(allCodes.map { it.code }).containsExactly("NEW")
+        assertThat(allCodes.first().type).isEqualTo(ActivationCodeType.PERMANENT)
     }
 
     @Test
-    fun `getActivationCodeStrings exports new json and legacy non-json only`() {
+    fun `getActivationCodeStrings serializes only new activation code list`() {
         val webApp = WebApp(
             name = "Demo",
             url = "https://example.com",
@@ -91,10 +90,9 @@ class WebAppModelTest {
 
         val exported = webApp.getActivationCodeStrings()
 
-        assertThat(exported).hasSize(2)
-        assertThat(exported.any { it.contains("\"code\":\"NEW\"") }).isTrue()
-        assertThat(exported).contains("OLD")
-        assertThat(exported.any { it.contains("SHOULD_SKIP") }).isFalse()
+        assertThat(exported).hasSize(1)
+        assertThat(exported.single()).contains("\"code\":\"NEW\"")
+        assertThat(exported.single()).doesNotContain("SHOULD_SKIP")
     }
 
     @Test

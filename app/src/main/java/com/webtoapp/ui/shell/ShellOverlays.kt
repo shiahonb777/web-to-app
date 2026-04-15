@@ -113,8 +113,10 @@ fun BoxScope.ShellFloatingBackButton(
 ) {
     val context = LocalContext.current
 
-    // 仅在全屏模式下toolbar未显示时才显示悬浮返回按钮（且用户未禁用）
-    if (showFloatingBackButton && hideToolbar && !showToolbar && canGoBack && !forcedRunActive) {
+    // 仅在工具栏未显示时才显示悬浮返回按钮（且用户未禁用）
+    // hideToolbar=全屏模式, showToolbar=false 表示toolbar被隐藏
+    // 也支持 hideBrowserToolbar 模式（仅隐藏工具栏，非全屏）
+    if (showFloatingBackButton && (hideToolbar || !showToolbar) && !showToolbar && canGoBack && !forcedRunActive) {
         var fabAlpha by remember { mutableFloatStateOf(0.9f) }
         var fadeKey by remember { mutableIntStateOf(0) }
 

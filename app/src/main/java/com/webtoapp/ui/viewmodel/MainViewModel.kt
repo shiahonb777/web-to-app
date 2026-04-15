@@ -64,6 +64,10 @@ class MainViewModel(
     private val _editState = MutableStateFlow(EditState())
     val editState: StateFlow<EditState> = _editState.asStateFlow()
 
+    // Unsaved changes tracking
+    private val _hasUnsavedChanges = MutableStateFlow(false)
+    val hasUnsavedChanges: StateFlow<Boolean> = _hasUnsavedChanges.asStateFlow()
+
     // UI state
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -120,6 +124,7 @@ class MainViewModel(
         _editState.value = EditState()
         _currentApp.value = null
         _uiState.value = UiState.Idle  // Reset UI state, avoid showing old error messages
+        _hasUnsavedChanges.value = false
     }
 
     /**
@@ -138,7 +143,7 @@ class MainViewModel(
             mediaConfig = webApp.mediaConfig,  // Keep media config
             htmlConfig = webApp.htmlConfig,  // Keep HTML config
             activationEnabled = webApp.activationEnabled,
-            activationCodes = webApp.activationCodes,
+            activationCodes = emptyList(),
             activationCodeList = webApp.activationCodeList,
             activationRequireEveryTime = webApp.activationRequireEveryTime,
             activationDialogConfig = webApp.activationDialogConfig ?: com.webtoapp.data.model.ActivationDialogConfig(),
@@ -159,7 +164,7 @@ class MainViewModel(
             themeType = webApp.themeType,
             translateEnabled = webApp.translateEnabled,
             translateConfig = webApp.translateConfig ?: TranslateConfig(),
-            extensionModuleEnabled = webApp.extensionModuleIds.isNotEmpty(),
+            extensionModuleEnabled = webApp.extensionEnabled,
             extensionModuleIds = webApp.extensionModuleIds.toSet(),
             extensionFabIcon = webApp.extensionFabIcon ?: "",
             autoStartConfig = webApp.autoStartConfig,
@@ -168,6 +173,25 @@ class MainViewModel(
             disguiseConfig = webApp.disguiseConfig,
             deviceDisguiseConfig = webApp.deviceDisguiseConfig ?: com.webtoapp.core.disguise.DeviceDisguiseConfig()
         )
+        _hasUnsavedChanges.value = false
+        
+        // 异步加载：将 FILE_REF: 标记的脚本代码从文件中恢复，以便编辑器显示完整代码
+        // 放在 IO 线程，避免阻塞主线程
+        if (webApp.webViewConfig.injectScripts.any { 
+            com.webtoapp.core.script.UserScriptStorage.isFileReference(it.code) 
+        }) {
+            viewModelScope.launch {
+                val resolvedScripts = withContext(Dispatchers.IO) {
+                    com.webtoapp.core.script.UserScriptStorage.internalizeScripts(
+                        getApplication(), webApp.webViewConfig.injectScripts
+                    )
+                }
+                val currentState = _editState.value
+                _editState.value = currentState.copy(
+                    webViewConfig = currentState.webViewConfig.copy(injectScripts = resolvedScripts)
+                )
+            }
+        }
     }
 
     /**
@@ -175,6 +199,7 @@ class MainViewModel(
      */
     fun updateEditState(update: EditState.() -> EditState) {
         _editState.value = _editState.value.update()
+        _hasUnsavedChanges.value = true
     }
 
     // ═══════════════════════════════════════════
@@ -413,10 +438,12 @@ class MainViewModel(
      */
     fun saveApp() {
         viewModelScope.launch {
-            val state = _editState.value
+            var state = _editState.value
 
-            // Verify
+            // Verify (may mutate _editState, e.g. auto-allowing HTTP)
             if (!validateInput(state)) return@launch
+            // Re-read state in case validateInput mutated it (e.g., set allowHttp = true)
+            state = _editState.value
 
             _uiState.value = UiState.Loading
 
@@ -457,15 +484,25 @@ class MainViewModel(
                 val currentThemeType = themeManager.themeTypeFlow.first().name
 
                 // Build extension module ID list
-                // 直接保存用户选择的模块 ID，不依赖 extensionModuleEnabled 开关
-                // 加载时 extensionModuleEnabled 会根据列表是否为空自动推断
                 val extensionModuleIds = state.extensionModuleIds.toList()
                 
-                // Convert new format activation codes to string list (for compatibility)
-                // Only include legacy (non-JSON) entries from activationCodes to avoid duplication
-                val legacyCodeStrings = state.activationCodes.filter { !it.trimStart().startsWith("{") }
-                val activationCodeStrings = state.activationCodeList.map { it.toJson() } + legacyCodeStrings
+                // 外置大脚本到文件（确定 appId 后）
+                val appId = _currentApp.value?.id ?: 0L
+                val externalizedConfig = if (state.webViewConfig.injectScripts.any { it.code.length > com.webtoapp.core.script.UserScriptStorage.EXTERNAL_STORAGE_THRESHOLD }) {
+                    withContext(Dispatchers.IO) {
+                        state.webViewConfig.copy(
+                            injectScripts = com.webtoapp.core.script.UserScriptStorage.externalizeScripts(
+                                getApplication(), appId, state.webViewConfig.injectScripts
+                            )
+                        )
+                    }
+                } else {
+                    state.webViewConfig
+                }
                 
+                AppLogger.d("MainViewModel", "saveApp: activationEnabled=${state.activationEnabled}, " +
+                    "activationCodeList.size=${state.activationCodeList.size}")
+
                 val webApp = _currentApp.value?.copy(
                     name = state.name,
                     url = normalizeUrl(state.url, state.appType, state.allowHttp),
@@ -474,7 +511,7 @@ class MainViewModel(
                     mediaConfig = state.mediaConfig,  // Keep media config
                     htmlConfig = state.htmlConfig,  // Keep HTML config
                     activationEnabled = state.activationEnabled,
-                    activationCodes = activationCodeStrings,
+                    activationCodes = emptyList(),
                     activationCodeList = state.activationCodeList,
                     activationRequireEveryTime = state.activationRequireEveryTime,
                     activationDialogConfig = state.activationDialogConfig.let {
@@ -486,7 +523,7 @@ class MainViewModel(
                     announcement = state.announcement,
                     adBlockEnabled = state.adBlockEnabled,
                     adBlockRules = state.adBlockRules,
-                    webViewConfig = state.webViewConfig,
+                    webViewConfig = externalizedConfig,
                     splashEnabled = state.splashEnabled,
                     splashConfig = splashConfig,
                     bgmEnabled = state.bgmEnabled,
@@ -496,6 +533,7 @@ class MainViewModel(
                     translateEnabled = state.translateEnabled,
                     translateConfig = translateConfig,
                     extensionModuleIds = extensionModuleIds,
+                    extensionEnabled = state.extensionModuleEnabled,
                     extensionFabIcon = state.extensionFabIcon.ifBlank { null },
                     autoStartConfig = state.autoStartConfig,
                     forcedRunConfig = state.forcedRunConfig,
@@ -508,11 +546,11 @@ class MainViewModel(
                     
                     WebApp(
                         name = state.name,
-                        url = normalizeUrl(state.url, AppType.WEB, state.allowHttp),
+                        url = normalizeUrl(state.url, state.appType, state.allowHttp),
                         iconPath = iconPath,
-                        appType = AppType.WEB,  // Default type
+                        appType = state.appType,  // Keep user-selected type
                         activationEnabled = state.activationEnabled,
-                        activationCodes = activationCodeStrings,
+                        activationCodes = emptyList(),
                         activationCodeList = state.activationCodeList,
                         activationRequireEveryTime = state.activationRequireEveryTime,
                         activationDialogConfig = state.activationDialogConfig.let {
@@ -524,7 +562,7 @@ class MainViewModel(
                         announcement = state.announcement,
                         adBlockEnabled = state.adBlockEnabled,
                         adBlockRules = state.adBlockRules,
-                        webViewConfig = state.webViewConfig,
+                        webViewConfig = externalizedConfig,
                         splashEnabled = state.splashEnabled,
                         splashConfig = splashConfig,
                         bgmEnabled = state.bgmEnabled,
@@ -534,6 +572,7 @@ class MainViewModel(
                         translateEnabled = state.translateEnabled,
                         translateConfig = translateConfig,
                         extensionModuleIds = extensionModuleIds,
+                        extensionEnabled = state.extensionModuleEnabled,
                         extensionFabIcon = state.extensionFabIcon.ifBlank { null },
                         autoStartConfig = state.autoStartConfig,
                         forcedRunConfig = state.forcedRunConfig,
@@ -547,7 +586,16 @@ class MainViewModel(
                 if (_currentApp.value != null) {
                     repository.updateWebApp(webApp)
                 } else {
-                    repository.createWebApp(webApp)
+                    val newId = repository.createWebApp(webApp)
+                    // 新建应用：用新 ID 重新外置脚本文件（之前用的是临时 ID 0）
+                    if (newId > 0 && state.webViewConfig.injectScripts.any { it.code.length > com.webtoapp.core.script.UserScriptStorage.EXTERNAL_STORAGE_THRESHOLD }) {
+                        val reExternalized = state.webViewConfig.copy(
+                            injectScripts = com.webtoapp.core.script.UserScriptStorage.externalizeScripts(
+                                getApplication(), newId, state.webViewConfig.injectScripts
+                            )
+                        )
+                        repository.updateWebApp(webApp.copy(id = newId, webViewConfig = reExternalized))
+                    }
                 }
 
                 _uiState.value = UiState.Success(Strings.appSavedSuccessfully)
@@ -565,6 +613,12 @@ class MainViewModel(
         viewModelScope.launch {
             try {
                 repository.deleteWebApp(webApp)
+                // 清理该应用关联的外置脚本文件
+                withContext(Dispatchers.IO) {
+                    com.webtoapp.core.script.UserScriptStorage.deleteScriptsForApp(
+                        getApplication(), webApp.id
+                    )
+                }
                 _uiState.value = UiState.Success(Strings.appDeleted)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: Strings.deleteFailed)
@@ -592,6 +646,7 @@ class MainViewModel(
     private fun resetEditState() {
         _editState.value = EditState()
         _currentApp.value = null
+        _hasUnsavedChanges.value = false
     }
 
     /**
@@ -630,8 +685,17 @@ class MainViewModel(
             val currentThemeType = getCurrentThemeType()
             val extensionModuleIds = state.extensionModuleIds.toList()
             
-            val legacyCodeStrings = state.activationCodes.filter { !it.trimStart().startsWith("{") }
-            val activationCodeStrings = state.activationCodeList.map { it.toJson() } + legacyCodeStrings
+            // 外置大脚本到文件
+            val previewAppId = _currentApp.value?.id ?: 0L
+            val previewExternalizedConfig = if (state.webViewConfig.injectScripts.any { it.code.length > com.webtoapp.core.script.UserScriptStorage.EXTERNAL_STORAGE_THRESHOLD }) {
+                state.webViewConfig.copy(
+                    injectScripts = com.webtoapp.core.script.UserScriptStorage.externalizeScripts(
+                        getApplication(), previewAppId, state.webViewConfig.injectScripts
+                    )
+                )
+            } else {
+                state.webViewConfig
+            }
             
             val webApp = _currentApp.value?.copy(
                 name = state.name.ifBlank { "Preview" },
@@ -641,7 +705,7 @@ class MainViewModel(
                 mediaConfig = state.mediaConfig,
                 htmlConfig = state.htmlConfig,
                 activationEnabled = state.activationEnabled,
-                activationCodes = activationCodeStrings,
+                activationCodes = emptyList(),
                 activationCodeList = state.activationCodeList,
                 activationRequireEveryTime = state.activationRequireEveryTime,
                 activationDialogConfig = state.activationDialogConfig.let {
@@ -653,7 +717,7 @@ class MainViewModel(
                 announcement = state.announcement,
                 adBlockEnabled = state.adBlockEnabled,
                 adBlockRules = state.adBlockRules,
-                webViewConfig = state.webViewConfig,
+                webViewConfig = previewExternalizedConfig,
                 splashEnabled = state.splashEnabled,
                 splashConfig = splashConfig,
                 bgmEnabled = state.bgmEnabled,
@@ -663,6 +727,7 @@ class MainViewModel(
                 translateEnabled = state.translateEnabled,
                 translateConfig = translateConfig,
                 extensionModuleIds = extensionModuleIds,
+                extensionEnabled = state.extensionModuleEnabled,
                 extensionFabIcon = state.extensionFabIcon.ifBlank { null },
                 autoStartConfig = state.autoStartConfig,
                 forcedRunConfig = state.forcedRunConfig,
@@ -677,7 +742,7 @@ class MainViewModel(
                     iconPath = iconPath,
                     appType = state.appType,
                     activationEnabled = state.activationEnabled,
-                    activationCodes = activationCodeStrings,
+                    activationCodes = emptyList(),
                     activationCodeList = state.activationCodeList,
                     activationRequireEveryTime = state.activationRequireEveryTime,
                     activationDialogConfig = state.activationDialogConfig.let {
@@ -689,7 +754,7 @@ class MainViewModel(
                     announcement = state.announcement,
                     adBlockEnabled = state.adBlockEnabled,
                     adBlockRules = state.adBlockRules,
-                    webViewConfig = state.webViewConfig,
+                    webViewConfig = previewExternalizedConfig,
                     splashEnabled = state.splashEnabled,
                     splashConfig = splashConfig,
                     bgmEnabled = state.bgmEnabled,
@@ -699,6 +764,7 @@ class MainViewModel(
                     translateEnabled = state.translateEnabled,
                     translateConfig = translateConfig,
                     extensionModuleIds = extensionModuleIds,
+                    extensionEnabled = state.extensionModuleEnabled,
                     extensionFabIcon = state.extensionFabIcon.ifBlank { null },
                     autoStartConfig = state.autoStartConfig,
                     forcedRunConfig = state.forcedRunConfig,
@@ -747,10 +813,14 @@ class MainViewModel(
                 _uiState.value = UiState.Error(Strings.pleaseEnterValidUrl)
                 false
             }
-            // WEB type with insecure HTTP URL needs user confirmation
+            // WEB type with insecure HTTP URL — auto-allow and log
+            // Previously this blocked saving entirely, but there was no UI to toggle allowHttp,
+            // making it impossible for users to save HTTP-only sites (e.g. game servers, LAN sites).
+            // Security is enforced at WebView layer (cleartext proxy, HTTPS auto-upgrade).
             state.appType == AppType.WEB && isInsecureRemoteHttpUrl(state.url) && !state.allowHttp -> {
-                _uiState.value = UiState.Error(Strings.insecureHttpWarning)
-                false
+                AppLogger.w("MainViewModel", "Auto-allowing insecure HTTP URL: ${state.url}")
+                _editState.value = state.copy(allowHttp = true)
+                true // Allow saving — normalizeUrl() will preserve the HTTP scheme
             }
             // HTML type needs HTML files
             state.appType == AppType.HTML && (state.htmlConfig?.files?.isEmpty() != false) -> {
@@ -1475,6 +1545,110 @@ class MainViewModel(
             htmlConfig = finalHtmlConfig,
             updatedAt = System.currentTimeMillis()
         )
+    }
+    
+    // ==================== Website Offline Packaging ====================
+    
+    /**
+     * 网站离线打包：抓取指定 URL 的整个前端资源，保存为 HTML 应用
+     * 
+     * 使用 WebsiteScraper 下载页面及其所有 CSS/JS/图片/字体资源，
+     * 重写路径为本地相对路径，生成 HtmlFile 列表，然后通过现有的 HTML 
+     * 应用打包流水线集成到 APK 构建流程中。
+     * 
+     * @param name 应用名称
+     * @param url 目标网站 URL
+     * @param iconUri 可选的图标 URI
+     * @param maxDepth 最大爬取深度（默认 3）
+     * @param downloadCdnResources 是否下载 CDN 资源（默认 true）
+     * @param onProgress 进度回调
+     */
+    fun saveScrapedWebsiteApp(
+        name: String,
+        url: String,
+        iconUri: Uri?,
+        maxDepth: Int = 3,
+        downloadCdnResources: Boolean = true,
+        onProgress: (com.webtoapp.core.scraper.WebsiteScraper.ScrapeProgress) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                val context = getApplication<Application>()
+                val scraper = com.webtoapp.core.scraper.WebsiteScraper(context)
+                
+                val config = com.webtoapp.core.scraper.WebsiteScraper.ScrapeConfig(
+                    url = url,
+                    maxDepth = maxDepth,
+                    downloadCdnResources = downloadCdnResources
+                )
+                
+                val result = scraper.scrape(config, onProgress)
+                
+                when (result) {
+                    is com.webtoapp.core.scraper.WebsiteScraper.ScrapeResult.Success -> {
+                        // Use the existing HTML app creation pipeline
+                        val currentThemeType = getCurrentThemeType()
+                        val savedIconPath = saveIconIfPresent(iconUri)
+                        val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
+                        
+                        // Copy scraped files to persistent HTML storage using shared helper
+                        val projectId = HtmlStorage.generateProjectId()
+                        val savedFiles = copyBuildOutputToStorage(
+                            context, 
+                            result.projectDir.absolutePath, 
+                            projectId
+                        )
+                        
+                        if (savedFiles.none { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }) {
+                            AppLogger.e("MainViewModel", "No HTML files in scraped result")
+                            withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, projectId) }
+                            _uiState.value = UiState.Error("抓取完成但未找到有效的 HTML 文件")
+                            return@launch
+                        }
+                        
+                        val webApp = WebApp(
+                            name = name.ifBlank { 
+                                try { java.net.URL(url).host } catch (e: Exception) { "Offline Site" }
+                            },
+                            url = url, // Keep original URL as reference
+                            iconPath = savedIconPath,
+                            appType = AppType.HTML,
+                            htmlConfig = HtmlConfig(
+                                projectId = projectId,
+                                entryFile = result.entryFile,
+                                files = savedFiles,
+                                enableJavaScript = true,
+                                enableLocalStorage = true
+                            ),
+                            activationEnabled = false,
+                            activationCodes = emptyList(),
+                            activationCodeList = emptyList(),
+                            bgmEnabled = false,
+                            bgmConfig = BgmConfig(),
+                            themeType = currentThemeType,
+                            categoryId = categoryId
+                        )
+                        
+                        withContext(Dispatchers.IO) { repository.createWebApp(webApp) }
+                        
+                        // Cleanup scraper temp files
+                        scraper.deleteScrapedSite(result.projectDir.name)
+                        
+                        val sizeKb = result.totalSize / 1024
+                        _uiState.value = UiState.Success(
+                            "网站离线打包成功: ${result.totalFiles} 个文件, ${sizeKb} KB"
+                        )
+                    }
+                    is com.webtoapp.core.scraper.WebsiteScraper.ScrapeResult.Error -> {
+                        _uiState.value = UiState.Error(result.message)
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.e("MainViewModel", "Website scrape failed", e)
+                _uiState.value = UiState.Error("网站离线打包失败: ${e.message}")
+            }
+        }
     }
     
     // ==================== Category Management ====================

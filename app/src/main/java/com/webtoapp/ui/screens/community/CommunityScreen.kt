@@ -23,9 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,12 +38,14 @@ import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.*
 import com.webtoapp.core.auth.TokenManager
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.UserTitleBadges
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel
 import com.webtoapp.ui.viewmodel.CommunityViewModel
+import com.webtoapp.ui.viewmodel.OperationFailureReport
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +75,7 @@ fun CommunityScreen(
     val discoverLoading by communityViewModel.discoverLoading.collectAsState()
     val followingPosts by communityViewModel.followingPosts.collectAsState()
     val followingLoading by communityViewModel.followingLoading.collectAsState()
+    val feedFailureReport by communityViewModel.feedFailureReport.collectAsState()
     var showCreatePost by remember { mutableStateOf(false) }
     var showSearchSheet by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -586,6 +591,13 @@ fun CommunityScreen(
             }
         )
     }
+
+    feedFailureReport?.let { report ->
+        FeedFailureReportDialog(
+            report = report,
+            onDismiss = { communityViewModel.clearFeedFailureReport() }
+        )
+    }
 }
 
 
@@ -982,6 +994,159 @@ data class PendingMedia(
     val error: Boolean = false,
 )
 
+private data class CommunityFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+@Composable
+private fun FeedFailureReportDialog(
+    report: OperationFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
+
+private fun buildCommunityFailureReport(
+    title: String,
+    stage: String,
+    summary: String,
+    contextLines: List<String> = emptyList(),
+    throwable: Throwable? = null
+): CommunityFailureReport {
+    throwable?.let { AppLogger.e("CommunityScreen", "$title failed at $stage", it) }
+    val details = buildString {
+        appendLine(title)
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        if (contextLines.isNotEmpty()) {
+            appendLine()
+            appendLine("context:")
+            contextLines.forEach { appendLine(it) }
+        }
+        if (throwable != null) {
+            appendLine()
+            appendLine("exception:")
+            appendLine(android.util.Log.getStackTraceString(throwable))
+        }
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+    return CommunityFailureReport(title = title, summary = summary, details = details)
+}
+
+@Composable
+private fun CommunityFailureReportDialog(
+    report: CommunityFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreatePostSheet(
@@ -996,6 +1161,7 @@ private fun CreatePostSheet(
     var selectedTags by remember { mutableStateOf<Set<String>>(emptySet()) }
     var isPublishing by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var failureReport by remember { mutableStateOf<CommunityFailureReport?>(null) }
 
     // Phase 1 v2: Post type state
     var selectedPostType by remember { mutableStateOf("discussion") }
@@ -1041,15 +1207,33 @@ private fun CreatePostSheet(
                         is AuthResult.Success -> pendingMedia = pendingMedia.map {
                             if (it.uri == media.uri) it.copy(uploading = false, uploadedUrl = result.data, progress = 1f) else it
                         }
-                        is AuthResult.Error -> pendingMedia = pendingMedia.map {
-                            if (it.uri == media.uri) it.copy(uploading = false, error = true) else it
+                        is AuthResult.Error -> {
+                            pendingMedia = pendingMedia.map {
+                                if (it.uri == media.uri) it.copy(uploading = false, error = true) else it
+                            }
+                            failureReport = buildCommunityFailureReport(
+                                title = "帖子素材上传失败",
+                                stage = "上传帖子图片",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "uri=${media.uri}",
+                                    "contentLength=${tempFile.length()}"
+                                )
+                            )
                         }
                     }
                     tempFile.delete()
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     pendingMedia = pendingMedia.map {
                         if (it.uri == media.uri) it.copy(uploading = false, error = true) else it
                     }
+                    failureReport = buildCommunityFailureReport(
+                        title = "帖子素材上传失败",
+                        stage = "上传帖子图片",
+                        summary = e.message ?: "图片上传异常",
+                        contextLines = listOf("uri=${media.uri}"),
+                        throwable = e
+                    )
                 }
             }
         }
@@ -1058,7 +1242,13 @@ private fun CreatePostSheet(
     LaunchedEffect(Unit) {
         when (val result = apiClient.listStoreModules(page = 1, size = 100)) {
             is AuthResult.Success -> storeApps = result.data.first
-            is AuthResult.Error -> { /* silent */ }
+            is AuthResult.Error -> {
+                failureReport = buildCommunityFailureReport(
+                    title = "社区初始化失败",
+                    stage = "加载可关联应用",
+                    summary = result.message
+                )
+            }
         }
     }
 
@@ -1131,7 +1321,19 @@ private fun CreatePostSheet(
                             )
                             when (result) {
                                 is AuthResult.Success -> onPosted()
-                                is AuthResult.Error -> snackbarHostState.showSnackbar(Strings.communityPublishFailed)
+                                is AuthResult.Error -> {
+                                    failureReport = buildCommunityFailureReport(
+                                        title = "帖子发布失败",
+                                        stage = "提交帖子",
+                                        summary = result.message.ifBlank { Strings.communityPublishFailed },
+                                        contextLines = listOf(
+                                            "postType=$selectedPostType",
+                                            "tagCount=${selectedTags.size}",
+                                            "linkedAppCount=${selectedAppLinks.size}",
+                                            "uploadedMediaCount=${mediaInputs.size}"
+                                        )
+                                    )
+                                }
                             }
                             isPublishing = false
                         }
@@ -1445,6 +1647,13 @@ private fun CreatePostSheet(
                 }
             },
             confirmButton = { TextButton(onClick = { showAppPicker = false }) { Text(Strings.communityConfirm) } }
+        )
+    }
+
+    failureReport?.let { report ->
+        CommunityFailureReportDialog(
+            report = report,
+            onDismiss = { failureReport = null }
         )
     }
 }

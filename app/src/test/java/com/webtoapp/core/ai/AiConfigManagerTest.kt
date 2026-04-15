@@ -5,7 +5,6 @@ import android.content.Context
 import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -29,25 +28,30 @@ class AiConfigManagerTest {
 
     private val gson = Gson()
 
+    private fun createManager(): AiConfigManager {
+        val context: Context = ApplicationProvider.getApplicationContext()
+        return AiConfigManager(context)
+    }
+
     // ==================== 1. Gson 序列化测试（纯内存，无 DataStore）====================
 
     @Test
-    fun `test Gson ApiKeyConfig roundtrip`() {
+    fun `test parseApiKeyConfigs roundtrip`() {
         val config = ApiKeyConfig(
             id = "gson-1", provider = AiProvider.OPENROUTER, apiKey = "or-key",
             baseUrl = "https://openrouter.ai/api", apiFormat = ApiFormat.OPENAI_COMPATIBLE
         )
         val json = gson.toJson(listOf(config))
-        val type = object : TypeToken<List<ApiKeyConfig>>() {}.type
-        val result: List<ApiKeyConfig> = gson.fromJson(json, type)
-        assertEquals(1, result.size)
+        val result = createManager().parseApiKeyConfigs(json)
+        assertNotNull(result)
+        assertEquals(1, result!!.size)
         assertEquals(AiProvider.OPENROUTER, result[0].provider)
         assertEquals("or-key", result[0].apiKey)
-        println("✅ ApiKeyConfig Gson roundtrip OK")
+        println("✅ ApiKeyConfig parser roundtrip OK")
     }
 
     @Test
-    fun `test Gson SavedModel with featureMappings roundtrip`() {
+    fun `test parseSavedModels roundtrip with featureMappings`() {
         val model = SavedModel(
             id = "gson-m1",
             model = AiModel(id = "test-model", name = "Test Model", provider = AiProvider.OPENAI),
@@ -61,25 +65,52 @@ class AiConfigManagerTest {
         val json = gson.toJson(listOf(model))
         println("SavedModel JSON: $json")
 
-        val type = object : TypeToken<List<SavedModel>>() {}.type
-        val result: List<SavedModel> = gson.fromJson(json, type)
-        assertEquals(1, result.size)
+        val result = createManager().parseSavedModels(json)
+        assertNotNull(result)
+        assertEquals(1, result!!.size)
         val fm = result[0].featureMappings
         assertEquals(2, fm.size)
         assertNotNull(fm[ModelCapability.TEXT])
         assertTrue(fm[ModelCapability.TEXT]!!.contains(AiFeature.AI_CODING))
-        println("✅ SavedModel featureMappings Gson roundtrip OK")
+        println("✅ SavedModel parser roundtrip OK")
         println("  Key types: ${fm.keys.map { it::class.java.name }}")
     }
 
     @Test
-    fun `test Gson null safety`() {
-        val type = object : TypeToken<List<ApiKeyConfig>>() {}.type
-        val empty: List<ApiKeyConfig> = gson.fromJson("[]", type)
-        assertEquals(0, empty.size)
-        val nullResult: List<ApiKeyConfig>? = gson.fromJson("null", type)
-        assertNull(nullResult)
-        println("✅ Gson null safety OK")
+    fun `test parseApiKeyConfigs skips malformed items`() {
+        val encoded = """
+            [
+              {"id":"good-1","provider":"OPENAI","apiKey":"key-1"},
+              "broken-item",
+              {"id":"good-2","provider":"CUSTOM","apiKey":"key-2","apiFormat":"ANTHROPIC"}
+            ]
+        """.trimIndent()
+
+        val decoded = createManager().parseApiKeyConfigs(encoded)
+        assertNotNull(decoded)
+        assertEquals(listOf("good-1", "good-2"), decoded!!.map { it.id })
+        assertEquals(ApiFormat.ANTHROPIC, decoded[1].apiFormat)
+        println("✅ ApiKeyConfig parser malformed-item tolerance OK")
+    }
+
+    @Test
+    fun `test parseSavedModels skips malformed items`() {
+        val validModelJson = gson.toJson(
+            SavedModel(
+                id = "good-model",
+                model = AiModel(id = "test-model", name = "Test Model", provider = AiProvider.OPENAI),
+                apiKeyId = "key-1",
+                capabilities = listOf(ModelCapability.TEXT),
+                featureMappings = mapOf(ModelCapability.TEXT to setOf(AiFeature.GENERAL))
+            )
+        )
+        val encoded = "[${validModelJson},\"broken-item\"]"
+
+        val decoded = createManager().parseSavedModels(encoded)
+        assertNotNull(decoded)
+        assertEquals(listOf("good-model"), decoded!!.map { it.id })
+        assertTrue(decoded[0].featureMappings[ModelCapability.TEXT]!!.contains(AiFeature.GENERAL))
+        println("✅ SavedModel parser malformed-item tolerance OK")
     }
 
     @Test

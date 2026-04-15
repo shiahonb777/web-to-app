@@ -68,7 +68,7 @@ fun ShellGalleryPlayer(
             modifier = Modifier.fillMaxSize().background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            Text("没有媒体文件", color = Color.White)
+            Text(Strings.galleryEmpty, color = Color.White)
         }
         return
     }

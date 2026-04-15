@@ -8,8 +8,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -23,6 +25,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.ModuleComment
 import com.webtoapp.ui.viewmodel.CommunityViewModel
+import com.webtoapp.ui.viewmodel.OperationFailureReport
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.core.i18n.Strings
 
@@ -54,6 +59,7 @@ fun ModuleDetailScreen(
     val comments by communityViewModel.comments.collectAsStateWithLifecycle()
     val commentsLoading by communityViewModel.commentsLoading.collectAsStateWithLifecycle()
     val message by communityViewModel.message.collectAsStateWithLifecycle()
+    val failureReport by communityViewModel.moduleFailureReport.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     var commentText by remember { mutableStateOf("") }
@@ -114,8 +120,12 @@ fun ModuleDetailScreen(
                     FilledIconButton(
                         onClick = {
                             if (sendEnabled) {
-                                communityViewModel.addComment(moduleId, commentText.trim())
-                                commentText = ""
+                                val content = commentText.trim()
+                                communityViewModel.addComment(
+                                    moduleId = moduleId,
+                                    content = content,
+                                    onSuccess = { commentText = "" }
+                                )
                             }
                         },
                         enabled = sendEnabled,
@@ -288,7 +298,73 @@ fun ModuleDetailScreen(
             }
         )
     }
+
+    failureReport?.let { report ->
+        ModuleFailureReportDialog(
+            report = report,
+            onDismiss = { communityViewModel.clearModuleFailureReport() }
+        )
+    }
         }
+}
+
+@Composable
+private fun ModuleFailureReportDialog(
+    report: OperationFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
 }
 
 // ═══════════════════════════════════════════

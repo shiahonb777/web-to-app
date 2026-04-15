@@ -121,6 +121,7 @@ class BatchImportService(
             adBlockEnabled = app.adBlockEnabled,
             adBlockRules = app.adBlockRules,
             extensionModuleIds = app.extensionModuleIds,
+            extensionEnabled = app.extensionEnabled,
             splashEnabled = app.splashEnabled,
             bgmEnabled = app.bgmEnabled,
             translateEnabled = app.translateEnabled
@@ -149,7 +150,8 @@ class BatchImportService(
             url = template.url,
             adBlockEnabled = template.adBlockEnabled,
             adBlockRules = template.adBlockRules,
-            extensionModuleIds = template.extensionModuleIds
+            extensionModuleIds = template.extensionModuleIds,
+            extensionEnabled = template.extensionEnabled || template.extensionModuleIds.isNotEmpty()
         )
         return repository.createWebApp(app)
     }
@@ -190,6 +192,7 @@ data class AppTemplate(
     val adBlockEnabled: Boolean = false,
     val adBlockRules: List<String> = emptyList(),
     val extensionModuleIds: List<String> = emptyList(),
+    val extensionEnabled: Boolean = false,
     val splashEnabled: Boolean = false,
     val bgmEnabled: Boolean = false,
     val translateEnabled: Boolean = false,

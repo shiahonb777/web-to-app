@@ -351,6 +351,10 @@ data class ShellConfig(
     @SerializedName("disguiseConfig")
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
     
+    // 浏览器伪装配置（反指纹引擎）
+    @SerializedName("browserDisguiseConfig")
+    val browserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig? = null,
+    
     // 界面语言配置
     @SerializedName("language")
     val language: String = "CHINESE",  // CHINESE, ENGLISH, ARABIC
@@ -841,6 +845,9 @@ data class WebViewShellConfig(
     @SerializedName("hideToolbar")
     val hideToolbar: Boolean = false,
     
+    @SerializedName("hideBrowserToolbar")
+    val hideBrowserToolbar: Boolean = false,  // 仅隐藏浏览器工具栏（不触发沉浸式，保留系统状态栏和导航栏）
+    
     @SerializedName("showStatusBarInFullscreen")
     val showStatusBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示状态栏
     
@@ -971,7 +978,26 @@ data class WebViewShellConfig(
 
     // ============ 悬浮小窗配置 ============
     @SerializedName("floatingWindowConfig")
-    val floatingWindowConfig: FloatingWindowShellConfig = FloatingWindowShellConfig()
+    val floatingWindowConfig: FloatingWindowShellConfig = FloatingWindowShellConfig(),
+
+    // ============ 代理配置（PAC / Static / None）============
+    @SerializedName("proxyMode")
+    val proxyMode: String = "NONE",  // NONE, STATIC, PAC
+    
+    @SerializedName("proxyHost")
+    val proxyHost: String = "",      // 固定代理主机（STATIC 模式）
+    
+    @SerializedName("proxyPort")
+    val proxyPort: Int = 0,          // 固定代理端口（STATIC 模式）
+    
+    @SerializedName("proxyType")
+    val proxyType: String = "HTTP",  // HTTP, HTTPS, SOCKS5（STATIC 模式）
+    
+    @SerializedName("pacUrl")
+    val pacUrl: String = "",         // PAC 脚本 URL（PAC 模式）
+    
+    @SerializedName("proxyBypassRules")
+    val proxyBypassRules: List<String> = emptyList() // 代理绕过规则
 )
 
 /**

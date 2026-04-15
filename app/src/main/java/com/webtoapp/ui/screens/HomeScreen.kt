@@ -34,7 +34,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
@@ -48,6 +50,7 @@ import com.webtoapp.core.apkbuilder.ApkBuilder
 import com.webtoapp.core.apkbuilder.BuildResult
 import com.webtoapp.core.i18n.InitializeLanguage
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.components.CategoryEditorDialog
@@ -71,6 +74,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.Spring
@@ -140,8 +144,10 @@ fun HomeScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showBuildDialog by remember { mutableStateOf(false) }
     var buildingApp by remember { mutableStateOf<WebApp?>(null) }
+    var shareApkFailureReport by remember { mutableStateOf<BuildFailureReport?>(null) }
     var showFabMenu by remember { mutableStateOf(false) }
     var showBatchImportDialog by remember { mutableStateOf(false) }
+    var showScraperDialog by remember { mutableStateOf(false) }
 
     // Scope 和 Snackbar
     val scope = rememberCoroutineScope()
@@ -171,6 +177,7 @@ fun HomeScreen(
         CreateActionItem(Strings.appTypeWeb, R.drawable.ic_type_web, onCreateApp),
         CreateActionItem(Strings.appTypeMultiWeb, R.drawable.ic_type_web, onCreateMultiWebApp),
         CreateActionItem(Strings.appTypeHtml, R.drawable.ic_type_html, onCreateHtmlApp),
+        CreateActionItem("网站离线打包", R.drawable.ic_type_html, { showScraperDialog = true }),
         CreateActionItem(Strings.appTypeFrontend, R.drawable.ic_type_frontend, onCreateFrontendApp),
         CreateActionItem(Strings.appTypePhp, R.drawable.ic_type_php, onCreatePhpApp),
         CreateActionItem(Strings.appTypeWordPress, R.drawable.ic_type_wordpress, onCreateWordPressApp),
@@ -670,6 +677,7 @@ fun HomeScreen(
                             },
                             onShareApk = {
                                 scope.launch {
+                                    shareApkFailureReport = null
                                     snackbarHostState.showSnackbar(Strings.shareApkBuilding)
                                     val apkBuilder = sharedApkBuilder
                                     val result = apkBuilder.buildApk(app) { _, _ -> }
@@ -690,11 +698,28 @@ fun HomeScreen(
                                                 }
                                                 listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", app.name)))
                                             } catch (e: Exception) {
-                                                snackbarHostState.showSnackbar(Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"))
+                                                shareApkFailureReport = buildActionFailureReport(
+                                                    title = "APK 分享失败",
+                                                    stage = "share_apk_intent",
+                                                    webApp = app,
+                                                    summary = Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"),
+                                                    logPath = result.logPath,
+                                                    throwable = e,
+                                                    extraLines = listOf(
+                                                        "apkPath=${result.apkFile.absolutePath}",
+                                                        "apkSize=${result.apkFile.length()}"
+                                                    )
+                                                )
                                             }
                                         }
                                         is BuildResult.Error -> {
-                                            snackbarHostState.showSnackbar(Strings.shareApkFailed.replace("%s", result.message))
+                                            shareApkFailureReport = buildActionFailureReport(
+                                                title = "APK 分享失败",
+                                                stage = "build_apk_for_share",
+                                                webApp = app,
+                                                summary = Strings.shareApkFailed.replace("%s", result.message),
+                                                logPath = result.logPath
+                                            )
                                         }
                                     }
                                 }
@@ -912,6 +937,13 @@ fun HomeScreen(
         )
     }
 
+    shareApkFailureReport?.let { report ->
+        BuildFailureReportDialog(
+            report = report,
+            onDismiss = { shareApkFailureReport = null }
+        )
+    }
+
     // Delete确认对话框
     if (showDeleteDialog && selectedApp != null) {
         AnimatedAlertDialog(
@@ -993,6 +1025,25 @@ fun HomeScreen(
             onDismiss = { showBatchImportDialog = false },
             onImport = { entries ->
                 importService.importEntries(entries)
+            }
+        )
+    }
+    
+    // 网站离线打包对话框
+    if (showScraperDialog) {
+        WebsiteScraperDialog(
+            onDismiss = { showScraperDialog = false },
+            onStartScrape = { name, url, maxDepth, downloadCdn, onProgress ->
+                viewModel.saveScrapedWebsiteApp(
+                    name = name,
+                    url = url,
+                    iconUri = null,
+                    maxDepth = maxDepth,
+                    downloadCdnResources = downloadCdn,
+                    onProgress = onProgress
+                )
+                // Dialog will auto-close via UiState.Success snackbar
+                showScraperDialog = false
             }
         )
     }
@@ -1628,6 +1679,149 @@ fun EmptyState(
     }
 }
 
+private data class BuildFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+private fun readBuildLogTail(path: String?, maxChars: Int = 20000): String {
+    return try {
+        path
+            ?.takeIf { it.isNotBlank() }
+            ?.let(::File)
+            ?.takeIf { it.exists() && it.isFile }
+            ?.readText()
+            ?.let { content ->
+                if (content.length <= maxChars) content else content.takeLast(maxChars)
+            }
+    } catch (e: Exception) {
+        AppLogger.e("HomeScreen", "读取 APK 构建日志失败", e)
+        "读取构建日志失败: ${e.message ?: "Unknown error"}"
+    } ?: "<build log unavailable>"
+}
+
+private fun buildActionFailureReport(
+    title: String,
+    stage: String,
+    webApp: WebApp,
+    summary: String,
+    logPath: String? = null,
+    throwable: Throwable? = null,
+    extraLines: List<String> = emptyList()
+): BuildFailureReport {
+    throwable?.let { AppLogger.e("HomeScreen", "$title failed at $stage", it) }
+    val buildLog = readBuildLogTail(logPath)
+
+    val details = buildString {
+        appendLine(title)
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        appendLine()
+        appendLine("project:")
+        appendLine("name=${webApp.name}")
+        appendLine("appType=${webApp.appType}")
+        appendLine("source=${webApp.url}")
+        if (extraLines.isNotEmpty()) {
+            appendLine()
+            appendLine("context:")
+            extraLines.forEach { appendLine(it) }
+        }
+        appendLine()
+        appendLine("log_path:")
+        appendLine(logPath ?: "<unavailable>")
+        appendLine()
+        appendLine("build_log:")
+        appendLine(buildLog)
+        if (throwable != null) {
+            appendLine()
+            appendLine("exception:")
+            appendLine(android.util.Log.getStackTraceString(throwable))
+        }
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+
+    return BuildFailureReport(
+        title = title,
+        summary = summary,
+        details = details
+    )
+}
+
+private fun buildBuildFailureReport(
+    webApp: WebApp,
+    error: BuildResult.Error
+): BuildFailureReport {
+    return buildActionFailureReport(
+        title = "APK 构建失败",
+        stage = "apk_build",
+        webApp = webApp,
+        summary = error.message,
+        logPath = error.logPath
+    )
+}
+
+@Composable
+private fun BuildFailureReportDialog(
+    report: BuildFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
+
 /**
  * 构建 APK 对话框
  */
@@ -1645,6 +1839,7 @@ fun BuildApkDialog(
     var progress by remember { mutableIntStateOf(0) }
     var progressText by remember { mutableStateOf(Strings.preparing) }
     var analysisReport by remember { mutableStateOf<com.webtoapp.core.apkbuilder.ApkAnalyzer.AnalysisReport?>(null) }
+    var buildFailureReport by remember { mutableStateOf<BuildFailureReport?>(null) }
     
     // Encryption配置状态
     var encryptionConfig by remember { 
@@ -1966,6 +2161,7 @@ fun BuildApkDialog(
                             when (result) {
                                 is BuildResult.Success -> {
                                     analysisReport = result.analysisReport
+                                    buildFailureReport = null
                                     isBuilding = false
                                     // 直接安装
                                     apkBuilder.installApk(result.apkFile)
@@ -1974,7 +2170,8 @@ fun BuildApkDialog(
                                     }
                                 }
                                 is BuildResult.Error -> {
-                                    onResult("${Strings.buildFailed}: ${result.message}")
+                                    buildFailureReport = buildBuildFailureReport(webAppWithConfig, result)
+                                    isBuilding = false
                                 }
                             }
                         }
@@ -1996,6 +2193,13 @@ fun BuildApkDialog(
             }
         }
     )
+
+    buildFailureReport?.let { report ->
+        BuildFailureReportDialog(
+            report = report,
+            onDismiss = { buildFailureReport = null }
+        )
+    }
 }
 
 /**

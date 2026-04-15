@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -18,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,10 +30,105 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.*
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+
+private data class TeamFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+private fun buildTeamFailureReport(
+    title: String,
+    stage: String,
+    summary: String,
+    contextLines: List<String> = emptyList(),
+    throwable: Throwable? = null
+): TeamFailureReport {
+    throwable?.let { AppLogger.e("TeamScreen", "$title failed at $stage", it) }
+    val details = buildString {
+        appendLine(title)
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        if (contextLines.isNotEmpty()) {
+            appendLine()
+            appendLine("context:")
+            contextLines.forEach { appendLine(it) }
+        }
+        if (throwable != null) {
+            appendLine()
+            appendLine("exception:")
+            appendLine(android.util.Log.getStackTraceString(throwable))
+        }
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+    return TeamFailureReport(title = title, summary = summary, details = details)
+}
+
+@Composable
+private fun TeamFailureReportDialog(
+    report: TeamFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
 
 /**
  * 团队管理界面
@@ -68,6 +167,7 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
     var showCreateDialog by remember { mutableStateOf(false) }
     var showInviteFor by remember { mutableStateOf<Int?>(null) }
     var showJoinDialog by remember { mutableStateOf<TeamSearchItem?>(null) }
+    var failureReport by remember { mutableStateOf<TeamFailureReport?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -82,7 +182,13 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                     memberLimit = result.data.memberLimit
                     tier = result.data.tier
                 }
-                else -> {}
+                is AuthResult.Error -> {
+                    failureReport = buildTeamFailureReport(
+                        title = "团队加载失败",
+                        stage = "加载我的团队",
+                        summary = result.message
+                    )
+                }
             }
             isLoading = false
         }
@@ -94,7 +200,14 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                 is AuthResult.Success -> {
                     teamMembers = teamMembers + (teamId to result.data)
                 }
-                else -> {}
+                is AuthResult.Error -> {
+                    failureReport = buildTeamFailureReport(
+                        title = "团队成员加载失败",
+                        stage = "加载团队成员",
+                        summary = result.message,
+                        contextLines = listOf("teamId=$teamId")
+                    )
+                }
             }
         }
     }
@@ -105,7 +218,14 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                 is AuthResult.Success -> {
                     teamRankings = teamRankings + (teamId to result.data)
                 }
-                else -> {}
+                is AuthResult.Error -> {
+                    failureReport = buildTeamFailureReport(
+                        title = "团队排行加载失败",
+                        stage = "加载团队排行",
+                        summary = result.message,
+                        contextLines = listOf("teamId=$teamId")
+                    )
+                }
             }
         }
     }
@@ -116,7 +236,14 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                 is AuthResult.Success -> {
                     teamJoinRequests = teamJoinRequests + (teamId to result.data)
                 }
-                else -> {}
+                is AuthResult.Error -> {
+                    failureReport = buildTeamFailureReport(
+                        title = "申请列表加载失败",
+                        stage = "加载入队申请",
+                        summary = result.message,
+                        contextLines = listOf("teamId=$teamId")
+                    )
+                }
             }
         }
     }
@@ -127,7 +254,15 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
             hasSearched = true
             when (val result = apiClient.searchTeams(searchQuery)) {
                 is AuthResult.Success -> searchResults = result.data.teams
-                else -> searchResults = emptyList()
+                is AuthResult.Error -> {
+                    searchResults = emptyList()
+                    failureReport = buildTeamFailureReport(
+                        title = "团队搜索失败",
+                        stage = "搜索团队",
+                        summary = result.message,
+                        contextLines = listOf("query=$searchQuery")
+                    )
+                }
             }
             isSearching = false
         }
@@ -221,23 +356,61 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                         onInvite = { showInviteFor = it },
                         onRemoveMember = { teamId, memberId ->
                             scope.launch {
-                                apiClient.removeTeamMember(teamId, memberId)
-                                loadMembers(teamId)
-                                loadTeams()
+                                when (val result = apiClient.removeTeamMember(teamId, memberId)) {
+                                    is AuthResult.Success -> {
+                                        loadMembers(teamId)
+                                        loadTeams()
+                                    }
+                                    is AuthResult.Error -> {
+                                        failureReport = buildTeamFailureReport(
+                                            title = "移除成员失败",
+                                            stage = "移除团队成员",
+                                            summary = result.message,
+                                            contextLines = listOf(
+                                                "teamId=$teamId",
+                                                "memberId=$memberId"
+                                            )
+                                        )
+                                    }
+                                }
                             }
                         },
                         onDeleteTeam = { teamId ->
                             scope.launch {
-                                apiClient.deleteTeam(teamId)
-                                loadTeams()
+                                when (val result = apiClient.deleteTeam(teamId)) {
+                                    is AuthResult.Success -> loadTeams()
+                                    is AuthResult.Error -> {
+                                        failureReport = buildTeamFailureReport(
+                                            title = "删除团队失败",
+                                            stage = "删除团队",
+                                            summary = result.message,
+                                            contextLines = listOf("teamId=$teamId")
+                                        )
+                                    }
+                                }
                             }
                         },
                         onReviewRequest = { teamId, requestId, action ->
                             scope.launch {
-                                apiClient.reviewJoinRequest(teamId, requestId, action)
-                                loadJoinRequests(teamId)
-                                loadMembers(teamId)
-                                loadTeams()
+                                when (val result = apiClient.reviewJoinRequest(teamId, requestId, action)) {
+                                    is AuthResult.Success -> {
+                                        loadJoinRequests(teamId)
+                                        loadMembers(teamId)
+                                        loadTeams()
+                                    }
+                                    is AuthResult.Error -> {
+                                        failureReport = buildTeamFailureReport(
+                                            title = "审核申请失败",
+                                            stage = "审核入队申请",
+                                            summary = result.message,
+                                            contextLines = listOf(
+                                                "teamId=$teamId",
+                                                "requestId=$requestId",
+                                                "action=$action"
+                                            )
+                                        )
+                                    }
+                                }
                             }
                         },
                         onCreateTeam = { showCreateDialog = true }
@@ -263,9 +436,23 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
             onDismiss = { showCreateDialog = false },
             onCreate = { name, desc ->
                 scope.launch {
-                    apiClient.createTeam(name, desc)
-                    loadTeams()
-                    showCreateDialog = false
+                    when (val result = apiClient.createTeam(name, desc)) {
+                        is AuthResult.Success -> {
+                            loadTeams()
+                            showCreateDialog = false
+                        }
+                        is AuthResult.Error -> {
+                            failureReport = buildTeamFailureReport(
+                                title = "创建团队失败",
+                                stage = "创建团队",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "name=$name",
+                                    "description=${desc ?: ""}"
+                                )
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -277,10 +464,25 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
             onDismiss = { showInviteFor = null },
             onInvite = { username, role ->
                 scope.launch {
-                    apiClient.inviteTeamMember(teamId, username, role)
-                    loadMembers(teamId)
-                    loadTeams()
-                    showInviteFor = null
+                    when (val result = apiClient.inviteTeamMember(teamId, username, role)) {
+                        is AuthResult.Success -> {
+                            loadMembers(teamId)
+                            loadTeams()
+                            showInviteFor = null
+                        }
+                        is AuthResult.Error -> {
+                            failureReport = buildTeamFailureReport(
+                                title = "邀请成员失败",
+                                stage = "邀请团队成员",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "teamId=$teamId",
+                                    "username=$username",
+                                    "role=$role"
+                                )
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -293,18 +495,34 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
             onDismiss = { showJoinDialog = null },
             onJoin = { message ->
                 scope.launch {
-                    when (apiClient.requestJoinTeam(team.id, message)) {
+                    when (val result = apiClient.requestJoinTeam(team.id, message)) {
                         is AuthResult.Success -> {
                             snackbarHostState.showSnackbar(Strings.teamJoinSent)
                             doSearch() // refresh search results
                         }
                         is AuthResult.Error -> {
-                            snackbarHostState.showSnackbar("Failed")
+                            failureReport = buildTeamFailureReport(
+                                title = "申请加入团队失败",
+                                stage = "申请加入团队",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "teamId=${team.id}",
+                                    "teamName=${team.name}",
+                                    "message=${message ?: ""}"
+                                )
+                            )
                         }
                     }
                     showJoinDialog = null
                 }
             }
+        )
+    }
+
+    failureReport?.let { report ->
+        TeamFailureReportDialog(
+            report = report,
+            onDismiss = { failureReport = null }
         )
     }
 }

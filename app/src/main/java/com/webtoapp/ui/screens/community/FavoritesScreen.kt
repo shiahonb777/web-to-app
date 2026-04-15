@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.CommunityModuleDetail
 import com.webtoapp.ui.viewmodel.CommunityViewModel
+import com.webtoapp.ui.viewmodel.OperationFailureReport
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 import com.webtoapp.core.i18n.Strings
@@ -40,6 +41,7 @@ fun FavoritesScreen(
     val favorites by communityViewModel.favorites.collectAsStateWithLifecycle()
     val loading by communityViewModel.favoritesLoading.collectAsStateWithLifecycle()
     val message by communityViewModel.message.collectAsStateWithLifecycle()
+    val failureReport by communityViewModel.profileFailureReport.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { communityViewModel.loadFavorites() }
@@ -98,6 +100,13 @@ fun FavoritesScreen(
                 }
             }
         }
+    }
+
+    failureReport?.let { report ->
+        OperationFailureReportDialog(
+            report = report,
+            onDismiss = { communityViewModel.clearProfileFailureReport() }
+        )
     }
         }
 }

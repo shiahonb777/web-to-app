@@ -476,18 +476,14 @@ fun CreatePhpAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. 基本配置（仅新建时显示，编辑时在通用配置中设置） ==========
+            if (!isEdit) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Settings,
+                        title = Strings.njsBasicConfig
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
@@ -496,15 +492,6 @@ fun CreatePhpAppScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(Strings.njsLandscapeMode)
-                        PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
-                    }
                 }
             }
             
@@ -513,19 +500,15 @@ fun CreatePhpAppScreen(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
+            }
             
             // ========== 4. 项目选择 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.phpSelectProject, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Folder,
+                        title = Strings.phpSelectProject
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = Strings.phpSupportedFrameworks,
@@ -713,66 +696,21 @@ private fun PhpHeroSection(
     frameworkColor: Color,
     frameworkVersion: String?
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(frameworkColor.copy(alpha = 0.15f), frameworkColor.copy(alpha = 0.05f))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = frameworkColor.copy(alpha = 0.15f)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Code, null, modifier = Modifier.size(32.dp), tint = frameworkColor)
-                    }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Text(
-                        text = if (detectedFramework != null && detectedFramework != "raw")
-                            "$detectedFramework ${Strings.phpHeroTitle}"
-                        else Strings.phpHeroTitle,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = frameworkColor
-                    )
-                    Text(
-                        text = Strings.phpHeroDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (frameworkVersion != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = frameworkColor.copy(alpha = 0.12f)
-                        ) {
-                            Text(
-                                text = "PHP $frameworkVersion",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = frameworkColor,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    val title = if (detectedFramework != null && detectedFramework != "raw")
+        "$detectedFramework ${Strings.phpHeroTitle}"
+    else Strings.phpHeroTitle
+    
+    val tags = buildList {
+        frameworkVersion?.let { add("PHP $it" to frameworkColor) }
     }
+    
+    RuntimeHeroSection(
+        icon = Icons.Outlined.Code,
+        title = title,
+        subtitle = Strings.phpHeroDesc,
+        brandColor = frameworkColor,
+        tags = tags
+    )
 }
 
 /**
@@ -790,15 +728,11 @@ private fun PhpComposerDepsCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpComposerDeps, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Extension,
+                title = Strings.phpComposerDeps,
+                brandColor = frameworkColor
+            ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = frameworkColor.copy(alpha = 0.1f)
@@ -881,15 +815,10 @@ private fun PhpDocRootCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.FolderOpen, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpDocRootSelect, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.FolderOpen,
+                title = Strings.phpDocRootSelect
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(Strings.phpDocRootHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
@@ -967,15 +896,11 @@ private fun PhpExtensionsCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Extension, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpExtensions, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Extension,
+                title = Strings.phpExtensions,
+                brandColor = MaterialTheme.colorScheme.tertiary
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(Strings.phpExtensionsHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
@@ -1010,15 +935,11 @@ private fun PhpDatabaseCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Storage, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpDatabaseConfig, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Storage,
+                title = Strings.phpDatabaseConfig,
+                brandColor = MaterialTheme.colorScheme.secondary
+            )
             Spacer(modifier = Modifier.height(8.dp))
             
             Surface(

@@ -138,6 +138,30 @@ class BuildLogger(private val context: Context) {
      * 获取当前日志文件路径
      */
     fun getCurrentLogPath(): String? = currentLogFile?.absolutePath
+
+    /**
+     * 读取构建日志内容，用于在 UI 中直接展示完整报错细节
+     */
+    fun readLogContent(path: String?, maxChars: Int = 20000): String? {
+        if (path.isNullOrBlank()) return null
+
+        return try {
+            val file = File(path)
+            if (!file.exists() || !file.isFile) {
+                null
+            } else {
+                val content = file.readText()
+                if (content.length <= maxChars) {
+                    content
+                } else {
+                    content.takeLast(maxChars)
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "读取构建日志失败", e)
+            null
+        }
+    }
     
     /**
      * 获取所有日志文件

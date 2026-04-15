@@ -24,13 +24,13 @@ import java.io.File
  * 新方案：
  * 1. 优先使用已构建的项目（dist/build 目录）
  * 2. 如果需要构建，使用 esbuild（为 Android 编译的原生二进制）
- * 3. 最后手段：纯 Kotlin 实现的简单打包器
+ * 3. 若 esbuild 不可用，则明确报错并要求用户修复环境
  * 
  * 这个方案：
  * - 不依赖 PRoot
  * - 不依赖 Linux rootfs
  * - 不依赖 Node.js
- * - 渐进式降级，总能工作
+ * - 失败即时暴露，不掩盖真实错误
  */
 @SuppressLint("StaticFieldLeak")
 class LinuxEnvironmentManager private constructor(private val context: Context) {
@@ -99,12 +99,10 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
             }
             
             if (result.isFailure) {
-                // esbuild 安装失败，但我们仍然可以工作
-                // 使用纯 Kotlin 打包器作为后备
-                AppLogger.w(TAG, "esbuild 安装失败，将使用内置打包器")
-                _state.value = EnvironmentState.Ready
-                onProgress("使用内置打包器", 1f)
-                return@withContext Result.success(Unit)
+                val message = result.exceptionOrNull()?.message ?: "esbuild 安装失败"
+                AppLogger.e(TAG, "esbuild 安装失败", result.exceptionOrNull())
+                _state.value = EnvironmentState.Error(message, recoverable = true)
+                return@withContext Result.failure(result.exceptionOrNull() ?: IllegalStateException(message))
             }
             
             _state.value = EnvironmentState.Ready
@@ -115,10 +113,8 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
             
         } catch (e: Exception) {
             AppLogger.e(TAG, "Initialization failed", e)
-            // 即使失败，我们仍然标记为 Ready
-            // 因为纯 Kotlin 打包器不需要任何外部依赖
-            _state.value = EnvironmentState.Ready
-            Result.success(Unit)
+            _state.value = EnvironmentState.Error(e.message ?: "未知错误", recoverable = true)
+            Result.failure(e)
         }
     }
     
@@ -140,7 +136,7 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
         val esbuildAvailable = NativeNodeEngine.isAvailable(context)
         
         EnvironmentInfo(
-            isInstalled = true, // 总是可用（至少有纯 Kotlin 打包器）
+            isInstalled = esbuildAvailable,
             nodeVersion = null,
             npmVersion = null,
             yarnVersion = null,

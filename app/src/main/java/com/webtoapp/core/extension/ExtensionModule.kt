@@ -726,6 +726,12 @@ data class ExtensionModule(
     @SerializedName("cssCode")
     val cssCode: String = "",                       // CSS 代码（可选）
     
+    // 多文件代码（用于 ZIP 包导入的大型扩展）
+    // key = 相对路径 (如 "lib/utils.js"), value = 文件内容
+    // 运行时按 key 排序后依次注入，未设置时使用 code 字段
+    @SerializedName("codeFiles")
+    val codeFiles: Map<String, String> = emptyMap(),
+    
     // Execute配置
     @SerializedName("runAt")
     val runAt: ModuleRunTime = ModuleRunTime.DOCUMENT_END, // Execute时机
@@ -997,6 +1003,21 @@ data class ExtensionModule(
             "customCss" to uiConfig.customCss
         ))
         val runModeStr = runMode.name
+        // 决定使用哪种代码源：多文件 codeFiles 优先，否则使用单一 code 字段
+        val effectiveCode = if (codeFiles.isNotEmpty()) {
+            // 多文件模式：按入口优先级排序后依次注入
+            val entryNames = setOf("main.js", "index.js", "app.js", "script.js", "content.js")
+            val sortedFiles = codeFiles.entries.sortedWith(
+                compareByDescending<Map.Entry<String, String>> { it.key.substringAfterLast('/').lowercase() in entryNames }
+                    .thenBy { it.key }
+            )
+            sortedFiles.joinToString("\n\n") { (path, content) ->
+                "// ========== $path ==========\n$content"
+            }
+        } else {
+            code
+        }
+        
         return """
             (function() {
                 'use strict';
@@ -1030,7 +1051,7 @@ data class ExtensionModule(
                 
                 // User代码
                 try {
-                    $code
+                    $effectiveCode
                 } catch(e) {
                     console.error('[ExtModule: ${name.escapeForJsSingleQuote()}] Error:', e);
                 }
@@ -1077,7 +1098,7 @@ data class ExtensionModule(
         val errors = mutableListOf<String>()
         
         if (name.isBlank()) errors.add(Strings.validateNameEmpty)
-        if (code.isBlank() && cssCode.isBlank()) errors.add(Strings.validateCodeEmpty)
+        if (code.isBlank() && cssCode.isBlank() && codeFiles.isEmpty()) errors.add(Strings.validateCodeEmpty)
         
         // Verify配置项
         configItems.forEach { item ->

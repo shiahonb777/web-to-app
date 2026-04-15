@@ -148,6 +148,14 @@ fun CreatePythonAppScreen(
                 
                 try {
                     withContext(Dispatchers.IO) {
+                        val runtime = PythonRuntime(context)
+                        
+                        // ========== 第一步：复制项目文件到内部目录 ==========
+                        // 先尝试 File API（快速），失败则回退 SAF API（兼容 Scoped Storage）
+                        creationPhase = Strings.copyingProjectFiles
+                        val newProjectId = java.util.UUID.randomUUID().toString()
+                        
+                        // 尝试从 SAF URI 解析出文件系统路径
                         val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
                         val path = docId.substringAfter(":")
                         val storageRoot = if (docId.startsWith("primary:")) {
@@ -156,21 +164,42 @@ fun CreatePythonAppScreen(
                             "/storage/${docId.substringBefore(":")}"
                         }
                         val projectPath = "$storageRoot/$path"
-                        val projectDir = File(projectPath)
+                        val projectFileDir = File(projectPath)
                         
-                        if (!projectDir.exists()) {
-                            errorMessage = Strings.dirNotExists
-                            isCreating = false
-                            return@withContext
+                        // 尝试用 File API 复制
+                        var copiedDir: File
+                        if (projectFileDir.exists() && projectFileDir.canRead()) {
+                            copiedDir = runtime.createProject(newProjectId, projectFileDir)
+                        } else {
+                            copiedDir = runtime.getProjectDir(newProjectId)
+                            copiedDir.mkdirs()
+                        }
+                        
+                        // 检查 File API 是否成功复制了文件
+                        val copiedFileCount = copiedDir.walkTopDown().filter { it.isFile }.count()
+                        if (copiedFileCount == 0) {
+                            // File API 无法访问文件（Android 11+ Scoped Storage 限制）
+                            // 回退到 SAF DocumentFile API
+                            android.util.Log.w("CreatePythonApp", "File API 复制了 0 个文件，回退 SAF API: $treeUri")
+                            copiedDir = runtime.createProjectFromUri(newProjectId, treeUri, context)
+                            val safCopiedCount = copiedDir.walkTopDown().filter { it.isFile }.count()
+                            android.util.Log.i("CreatePythonApp", "SAF API 复制了 $safCopiedCount 个文件")
+                            if (safCopiedCount == 0) {
+                                errorMessage = Strings.dirNotExists
+                                isCreating = false
+                                return@withContext
+                            }
                         }
                         
                         selectedProjectDir = projectPath
+                        projectId = newProjectId
                         
-                        val runtime = PythonRuntime(context)
-                        val framework = runtime.detectFramework(projectDir)
+                        // ========== 第二步：在内部副本上检测框架和入口文件 ==========
+                        // 使用 copiedDir（内部目录），File API 在这里总是可用的
+                        val framework = runtime.detectFramework(copiedDir)
                         detectedFramework = framework
                         
-                        val detected = runtime.detectEntryFile(projectDir, framework)
+                        val detected = runtime.detectEntryFile(copiedDir, framework)
                         entryFile = detected
                         
                         // 推断 server type
@@ -183,7 +212,7 @@ fun CreatePythonAppScreen(
                         // 增强：检测虚拟环境
                         val venvDirs = listOf("venv", ".venv", "env", ".env")
                         for (vDir in venvDirs) {
-                            val venvDir = File(projectDir, vDir)
+                            val venvDir = File(copiedDir, vDir)
                             if (venvDir.isDirectory && File(venvDir, "bin/python").exists()) {
                                 venvDetected = true
                                 venvPath = vDir
@@ -197,10 +226,10 @@ fun CreatePythonAppScreen(
                             }
                         }
                         
-                        // 增强：解析 requirements.txt
-                        val reqFile = File(projectDir, "requirements.txt")
-                        val pipfileFile = File(projectDir, "Pipfile")
-                        val pyprojectFile = File(projectDir, "pyproject.toml")
+                        // 增强：解析 requirements.txt（从内部副本读取）
+                        val reqFile = File(copiedDir, "requirements.txt")
+                        val pipfileFile = File(copiedDir, "Pipfile")
+                        val pyprojectFile = File(copiedDir, "pyproject.toml")
                         
                         if (reqFile.exists()) {
                             requirementsSource = "requirements.txt"
@@ -265,7 +294,7 @@ fun CreatePythonAppScreen(
                         }
                         
                         // 读取项目名称 (setup.py fallback)
-                        val setupPy = File(projectDir, "setup.py")
+                        val setupPy = File(copiedDir, "setup.py")
                         if (setupPy.exists() && appName.isBlank()) {
                             try {
                                 val content = setupPy.readText()
@@ -277,7 +306,7 @@ fun CreatePythonAppScreen(
                         // 增强：Django 专属检测
                         if (framework == "django") {
                             // 检测 settings module
-                            val managePy = File(projectDir, "manage.py")
+                            val managePy = File(copiedDir, "manage.py")
                             if (managePy.exists()) {
                                 try {
                                     val content = managePy.readText()
@@ -289,8 +318,8 @@ fun CreatePythonAppScreen(
                                 } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse manage.py", e) }
                             }
                             // 检测 wsgi.py
-                            projectDir.walk().maxDepth(2).filter { it.name == "wsgi.py" }.firstOrNull()?.let {
-                                val modulePath = it.relativeTo(projectDir).path
+                            copiedDir.walk().maxDepth(2).filter { it.name == "wsgi.py" }.firstOrNull()?.let {
+                                val modulePath = it.relativeTo(copiedDir).path
                                     .removeSuffix(".py").replace(File.separator, ".")
                                 if (entryModule.isBlank()) entryModule = "$modulePath:application"
                             }
@@ -299,7 +328,7 @@ fun CreatePythonAppScreen(
                         // 增强：FastAPI 专属检测
                         if (framework == "fastapi") {
                             // 推断 ASGI module
-                            val mainPy = File(projectDir, entryFile)
+                            val mainPy = File(copiedDir, entryFile)
                             if (mainPy.exists()) {
                                 try {
                                     val content = mainPy.readText()
@@ -314,7 +343,7 @@ fun CreatePythonAppScreen(
                         }
                         
                         // 读取 .env 文件
-                        val envFile = File(projectDir, ".env")
+                        val envFile = File(copiedDir, ".env")
                         if (envFile.exists()) {
                             envFile.readLines().forEach { line ->
                                 val trimmed = line.trim()
@@ -328,11 +357,6 @@ fun CreatePythonAppScreen(
                             }
                         }
                         
-                        // 复制项目文件
-                        creationPhase = Strings.copyingProjectFiles
-                        val newProjectId = java.util.UUID.randomUUID().toString()
-                        runtime.createProject(newProjectId, projectDir)
-                        projectId = newProjectId
                         creationPhase = Strings.pyProjectReady
                     }
                 } catch (e: Exception) {
@@ -456,18 +480,14 @@ fun CreatePythonAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. 基本配置（仅新建时显示，编辑时在通用配置中设置） ==========
+            if (!isEdit) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Settings,
+                        title = Strings.njsBasicConfig
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
@@ -476,15 +496,6 @@ fun CreatePythonAppScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(Strings.njsLandscapeMode)
-                        PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
-                    }
                 }
             }
             
@@ -493,19 +504,15 @@ fun CreatePythonAppScreen(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
+            }
             
             // ========== 4. 项目选择 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.pySelectProject, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Folder,
+                        title = Strings.pySelectProject
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = Strings.pySupportedFrameworks,
@@ -670,66 +677,21 @@ private fun PythonHeroSection(
     frameworkColor: Color,
     pythonVersion: String?
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(frameworkColor.copy(alpha = 0.15f), frameworkColor.copy(alpha = 0.05f))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = frameworkColor.copy(alpha = 0.15f)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Code, null, modifier = Modifier.size(32.dp), tint = frameworkColor)
-                    }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Text(
-                        text = if (detectedFramework != null && detectedFramework != "raw")
-                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${Strings.pyHeroTitle}"
-                        else Strings.pyHeroTitle,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = frameworkColor
-                    )
-                    Text(
-                        text = Strings.pyHeroDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (pythonVersion != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = frameworkColor.copy(alpha = 0.12f)
-                        ) {
-                            Text(
-                                text = "Python $pythonVersion",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = frameworkColor,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    val title = if (detectedFramework != null && detectedFramework != "raw")
+        "${detectedFramework.replaceFirstChar { it.uppercase() }} ${Strings.pyHeroTitle}"
+    else Strings.pyHeroTitle
+    
+    val tags = buildList {
+        pythonVersion?.let { add("Python $it" to frameworkColor) }
     }
+    
+    RuntimeHeroSection(
+        icon = Icons.Outlined.Code,
+        title = title,
+        subtitle = Strings.pyHeroDesc,
+        brandColor = frameworkColor,
+        tags = tags
+    )
 }
 
 /**
@@ -803,15 +765,11 @@ private fun PythonRequirementsCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyRequirements, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Extension,
+                title = Strings.pyRequirements,
+                brandColor = frameworkColor
+            ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = frameworkColor.copy(alpha = 0.1f)
@@ -887,15 +845,10 @@ private fun PythonServerTypeCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Dns, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyServerType, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Dns,
+                title = Strings.pyServerType
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             // Builtin
@@ -1008,15 +961,10 @@ private fun PythonModuleConfigCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Code, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpAdvancedConfig, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Code,
+                title = Strings.phpAdvancedConfig
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
@@ -1064,15 +1012,11 @@ private fun PythonDjangoCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF0C4B33).copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Settings, null, tint = Color(0xFF0C4B33), modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyDjangoSettings, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Settings,
+                title = Strings.pyDjangoSettings,
+                brandColor = Color(0xFF0C4B33)
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
@@ -1123,15 +1067,11 @@ private fun PythonFastapiCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF009688).copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Api, null, tint = Color(0xFF009688), modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyFastapiConfig, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Api,
+                title = Strings.pyFastapiConfig,
+                brandColor = Color(0xFF009688)
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(

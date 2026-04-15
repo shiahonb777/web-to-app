@@ -363,18 +363,14 @@ fun CreateGoAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. 基本配置（仅新建时显示，编辑时在通用配置中设置） ==========
+            if (!isEdit) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Settings,
+                        title = Strings.njsBasicConfig
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
@@ -383,15 +379,6 @@ fun CreateGoAppScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(Strings.njsLandscapeMode)
-                        PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
-                    }
                 }
             }
             
@@ -400,19 +387,15 @@ fun CreateGoAppScreen(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
+            }
             
             // ========== 4. 项目选择 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.goSelectProject, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Folder,
+                        title = Strings.goSelectProject
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = Strings.goSupportedFrameworks,
@@ -567,66 +550,21 @@ private fun GoHeroSection(
     frameworkColor: Color,
     goVersion: String?
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(frameworkColor.copy(alpha = 0.15f), frameworkColor.copy(alpha = 0.05f))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = frameworkColor.copy(alpha = 0.15f)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Code, null, modifier = Modifier.size(32.dp), tint = frameworkColor)
-                    }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Text(
-                        text = if (detectedFramework != null && detectedFramework != "raw" && detectedFramework != "net_http")
-                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${Strings.goHeroTitle}"
-                        else Strings.goHeroTitle,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = frameworkColor
-                    )
-                    Text(
-                        text = Strings.goHeroDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (goVersion != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = frameworkColor.copy(alpha = 0.12f)
-                        ) {
-                            Text(
-                                text = "Go $goVersion",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = frameworkColor,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    val title = if (detectedFramework != null && detectedFramework != "raw" && detectedFramework != "net_http")
+        "${detectedFramework.replaceFirstChar { it.uppercase() }} ${Strings.goHeroTitle}"
+    else Strings.goHeroTitle
+    
+    val tags = buildList {
+        goVersion?.let { add("Go $it" to frameworkColor) }
     }
+    
+    RuntimeHeroSection(
+        icon = Icons.Outlined.Code,
+        title = title,
+        subtitle = Strings.goHeroDesc,
+        brandColor = frameworkColor,
+        tags = tags
+    )
 }
 
 /**
@@ -641,15 +579,11 @@ private fun GoModuleInfoCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Info, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goModuleInfo, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Info,
+                title = Strings.goModuleInfo,
+                brandColor = frameworkColor
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(
@@ -702,15 +636,10 @@ private fun GoBinaryDetectionCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Memory, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goBinaryDetection, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Memory,
+                title = Strings.goBinaryDetection
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(
@@ -775,15 +704,10 @@ private fun GoTargetArchCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.DeveloperBoard, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goTargetArch, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.DeveloperBoard,
+                title = Strings.goTargetArch
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             FlowRow(
@@ -815,15 +739,10 @@ private fun GoStaticFilesCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goStaticFiles, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Folder,
+                title = Strings.goStaticFiles
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 Strings.goStaticFilesHint,
@@ -853,15 +772,10 @@ private fun GoHealthCheckCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.MonitorHeart, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goHealthCheck, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.MonitorHeart,
+                title = Strings.goHealthCheck
+            )
             Spacer(modifier = Modifier.height(12.dp))
             PremiumTextField(
                 value = endpoint,
@@ -887,15 +801,11 @@ private fun GoDepsCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.goDirectDeps, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Extension,
+                title = Strings.goDirectDeps,
+                brandColor = frameworkColor
+            ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = frameworkColor.copy(alpha = 0.1f)

@@ -6,7 +6,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.google.gson.reflect.TypeToken
 import com.webtoapp.data.model.ActivationDialogConfig
 import com.webtoapp.data.model.AdConfig
 import com.webtoapp.data.model.Announcement
@@ -27,7 +26,6 @@ import com.webtoapp.data.model.PythonAppConfig
 import com.webtoapp.data.model.GoAppConfig
 import com.webtoapp.data.model.MultiWebConfig
 import com.webtoapp.core.activation.ActivationCode
-import java.lang.reflect.Type
 
 /**
  * Room数据库类型转换器
@@ -54,15 +52,6 @@ class Converters {
                         }
                     })
                 .create()
-        }
-        
-        // Cache TypeToken，避免重复创建
-        private val stringListType: Type by lazy {
-            object : TypeToken<List<String>>() {}.type
-        }
-        
-        private val activationCodeListType: Type by lazy {
-            object : TypeToken<List<ActivationCode>>() {}.type
         }
         
         /**
@@ -160,7 +149,16 @@ class Converters {
     @TypeConverter
     fun toStringList(value: String): List<String> {
         return try {
-            gson.fromJson(value, stringListType) ?: emptyList()
+            val parsed = JsonParser.parseString(value)
+            if (!parsed.isJsonArray) return emptyList()
+
+            parsed.asJsonArray.mapNotNull { element ->
+                try {
+                    if (element.isJsonNull) null else element.asString
+                } catch (_: Exception) {
+                    null
+                }
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -185,7 +183,16 @@ class Converters {
     fun fromWebViewConfig(value: WebViewConfig): String = toJson(value)
 
     @TypeConverter
-    fun toWebViewConfig(value: String): WebViewConfig = fromJsonOrDefault(value, WebViewConfig())
+    fun toWebViewConfig(value: String): WebViewConfig {
+        val config = fromJsonOrDefault(value, WebViewConfig())
+        // 旧版数据兼容：如果 JSON 中没有 orientationMode 但 landscapeMode=true，
+        // 则迁移 orientationMode 为 LANDSCAPE
+        return if (config.landscapeMode && config.orientationMode == com.webtoapp.data.model.OrientationMode.PORTRAIT) {
+            config.copy(orientationMode = com.webtoapp.data.model.OrientationMode.LANDSCAPE)
+        } else {
+            config
+        }
+    }
 
     // SplashConfig 转换
     @TypeConverter
@@ -250,13 +257,23 @@ class Converters {
     // List<ActivationCode> 转换
     @TypeConverter
     fun fromActivationCodeList(value: List<ActivationCode>?): String {
-        return gson.toJson(value ?: emptyList<ActivationCode>())
+        val safeList = value ?: emptyList()
+        return gson.toJson(safeList.map { gson.toJsonTree(it) })
     }
 
     @TypeConverter
     fun toActivationCodeList(value: String): List<ActivationCode> {
         return try {
-            gson.fromJson(value, activationCodeListType) ?: emptyList()
+            val parsed = JsonParser.parseString(value)
+            if (!parsed.isJsonArray) return emptyList()
+
+            parsed.asJsonArray.mapNotNull { element ->
+                try {
+                    gson.fromJson(element, ActivationCode::class.java)
+                } catch (e: Exception) {
+                    null
+                }
+            }
         } catch (e: Exception) {
             emptyList()
         }

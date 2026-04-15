@@ -367,15 +367,11 @@ fun CreateWordPressAppScreen(
             // ========== 2. 基本配置 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(wpBlue.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Settings, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.wpBasicConfig, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Settings,
+                        title = Strings.wpBasicConfig,
+                        brandColor = wpBlue
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     // 应用名称
@@ -414,15 +410,11 @@ fun CreateWordPressAppScreen(
             // ========== 3. 图标选择 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(wpBlue.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Image, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.labelIcon, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Image,
+                        title = Strings.labelIcon,
+                        brandColor = wpBlue
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -453,15 +445,11 @@ fun CreateWordPressAppScreen(
             // ========== 4. 项目创建/导入 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(wpBlue.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.FolderOpen, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.wpImportProject, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.FolderOpen,
+                        title = Strings.wpImportProject,
+                        brandColor = wpBlue
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = Strings.wpImportProjectDesc,
@@ -569,60 +557,21 @@ fun CreateWordPressAppScreen(
             
             // 状态显示
             if (isCreating) {
-                EnhancedElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = wpBlue.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = wpBlue)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(creationPhase, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
+                RuntimeBrandedLoadingCard(creationPhase = creationPhase, brandColor = wpBlue)
             }
             
             // 错误信息
             errorMessage?.let { error ->
-                EnhancedElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(error, modifier = Modifier.weight(weight = 1f, fill = true), color = MaterialTheme.colorScheme.onErrorContainer)
-                        TextButton(onClick = { errorMessage = null }) { Text(Strings.btnCancel) }
-                    }
-                }
+                RuntimeBrandedErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             
             // 项目就绪状态
             if (projectId != null && !isCreating) {
-                EnhancedElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = wpBlue.copy(alpha = 0.08f))
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.CheckCircle, null, tint = wpBlue)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = Strings.wpProjectReady,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = wpBlue,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "ID: $projectId",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
+                RuntimeSuccessCard(
+                    title = Strings.wpProjectReady,
+                    subtitle = "ID: $projectId",
+                    brandColor = wpBlue
+                )
             }
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -699,109 +648,20 @@ private fun WpHeroSection(
     wpVersion: String?,
     isImportMode: Boolean
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(wpBlue.copy(alpha = 0.15f), Color(0xFF464646).copy(alpha = 0.08f))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = wpBlue.copy(alpha = 0.15f)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Language, null, modifier = Modifier.size(32.dp), tint = wpBlue)
-                    }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Text(
-                        text = Strings.wpHeroTitle,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = wpBlue
-                    )
-                    Text(
-                        text = Strings.wpHeroDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // WP 版本
-                        wpVersion?.let { ver ->
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = wpBlue.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = "WP $ver",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = wpBlue,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                        // PHP 标签
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = Color(0xFF777BB4).copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = "PHP",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF777BB4),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        // SQLite 标签
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = Color(0xFF003B57).copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = "SQLite",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF003B57),
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        // 导入/新建标签
-                        if (isImportMode) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFFFF6B35).copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = "Imported",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFFFF6B35),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    val tags = buildList {
+        wpVersion?.let { add("WP $it" to wpBlue) }
+        add("PHP" to Color(0xFF777BB4))
+        add("SQLite" to Color(0xFF003B57))
+        if (isImportMode) add("Imported" to Color(0xFFFF6B35))
     }
+    
+    RuntimeHeroSection(
+        icon = Icons.Outlined.Language,
+        title = Strings.wpHeroTitle,
+        subtitle = Strings.wpHeroDesc,
+        brandColor = wpBlue,
+        tags = tags
+    )
 }
 
 /**
@@ -817,15 +677,11 @@ private fun WpAdminConfigCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(wpBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.AdminPanelSettings, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpAdminConfig, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.AdminPanelSettings,
+                title = Strings.wpAdminConfig,
+                brandColor = wpBlue
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
@@ -892,16 +748,12 @@ private fun WpThemeCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(wpBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Palette, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpThemePanel, style = MaterialTheme.typography.titleMedium)
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Palette,
+                title = Strings.wpThemePanel,
+                brandColor = wpBlue
+            ) {
                 if (themes.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         color = wpBlue.copy(alpha = 0.12f)
@@ -1026,16 +878,12 @@ private fun WpPluginCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(wpBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Extension, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpPluginPanel, style = MaterialTheme.typography.titleMedium)
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Extension,
+                title = Strings.wpPluginPanel,
+                brandColor = wpBlue
+            ) {
                 if (plugins.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         color = wpBlue.copy(alpha = 0.12f)
@@ -1137,15 +985,11 @@ private fun WpPermalinkCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(wpBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Link, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpPermalink, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Link,
+                title = Strings.wpPermalink,
+                brandColor = wpBlue
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             options.forEach { (value, label, icon) ->
@@ -1208,15 +1052,11 @@ private fun WpLanguageCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(wpBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Translate, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpSiteLanguage, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Translate,
+                title = Strings.wpSiteLanguage,
+                brandColor = wpBlue
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             FlowRow(
@@ -1243,15 +1083,11 @@ private fun WpLanguageCard(
 private fun WpDbInfoCard(wpBlue: Color) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(wpBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Storage, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpDbInfo, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Storage,
+                title = Strings.wpDbInfo,
+                brandColor = wpBlue
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(

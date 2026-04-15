@@ -392,6 +392,7 @@ class PythonRuntime(private val context: Context) {
         val projectDir = File(getProjectsDir(), projectId)
         projectDir.mkdirs()
         val excludeDirs = setOf("venv", ".venv", "__pycache__", ".git", "node_modules", ".idea", ".mypy_cache", ".pytest_cache", "env")
+        var copiedCount = 0
         sourceDir.walkTopDown()
             .filter { file -> !excludeDirs.any { excluded -> file.absolutePath.contains("/$excluded/") || file.absolutePath.endsWith("/$excluded") } }
             .filter { it.isFile }
@@ -400,8 +401,70 @@ class PythonRuntime(private val context: Context) {
                 val destFile = File(projectDir, relativePath)
                 destFile.parentFile?.mkdirs()
                 file.copyTo(destFile, overwrite = true)
+                copiedCount++
             }
-        AppLogger.i(TAG, "Python 项目文件已复制到: ${projectDir.absolutePath}")
+        AppLogger.i(TAG, "Python 项目文件已复制到: ${projectDir.absolutePath} (共 $copiedCount 个文件)")
+        if (copiedCount == 0) {
+            AppLogger.w(TAG, "警告: 没有复制到任何文件! sourceDir=${sourceDir.absolutePath}, exists=${sourceDir.exists()}, canRead=${sourceDir.canRead()}, children=${sourceDir.listFiles()?.size ?: -1}")
+        }
+        return projectDir
+    }
+    
+    /**
+     * 从 SAF URI 创建项目（解决 Android 11+ Scoped Storage 限制）
+     * 
+     * 在 Android 11+ 上，通过 OpenDocumentTree 选择的目录无法使用 java.io.File 直接访问文件，
+     * 必须使用 DocumentFile + ContentResolver API 进行遍历和读取。
+     * 
+     * @param projectId 项目 ID
+     * @param treeUri SAF 返回的目录 URI（content://...）
+     * @param context Android Context，用于获取 ContentResolver
+     * @return 内部项目目录
+     */
+    fun createProjectFromUri(projectId: String, treeUri: android.net.Uri, context: Context): File {
+        val projectDir = File(getProjectsDir(), projectId)
+        projectDir.mkdirs()
+        val excludeDirs = setOf("venv", ".venv", "__pycache__", ".git", "node_modules", ".idea", ".mypy_cache", ".pytest_cache", "env", "__MACOSX")
+        
+        val rootDoc = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, treeUri)
+        if (rootDoc == null || !rootDoc.exists()) {
+            AppLogger.e(TAG, "SAF 目录无效: $treeUri")
+            return projectDir
+        }
+        
+        var copiedCount = 0
+        
+        fun copyDocTree(doc: androidx.documentfile.provider.DocumentFile, relativePath: String) {
+            if (doc.isDirectory) {
+                val dirName = doc.name ?: return
+                if (dirName in excludeDirs || dirName.startsWith("._")) return
+                val subPath = if (relativePath.isEmpty()) dirName else "$relativePath/$dirName"
+                doc.listFiles().forEach { child -> copyDocTree(child, subPath) }
+            } else if (doc.isFile) {
+                val fileName = doc.name ?: return
+                val destRelPath = if (relativePath.isEmpty()) fileName else "$relativePath/$fileName"
+                val destFile = File(projectDir, destRelPath)
+                destFile.parentFile?.mkdirs()
+                try {
+                    context.contentResolver.openInputStream(doc.uri)?.use { input ->
+                        destFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    copiedCount++
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "复制文件失败: $destRelPath - ${e.message}")
+                }
+            }
+        }
+        
+        // 直接遍历根目录下的子项（不再包裹一层根目录名称）
+        rootDoc.listFiles().forEach { child -> copyDocTree(child, "") }
+        
+        AppLogger.i(TAG, "SAF 项目文件已复制到: ${projectDir.absolutePath} (共 $copiedCount 个文件)")
+        if (copiedCount == 0) {
+            AppLogger.w(TAG, "警告: SAF 未复制到任何文件! treeUri=$treeUri, rootDoc.name=${rootDoc.name}")
+        }
         return projectDir
     }
     

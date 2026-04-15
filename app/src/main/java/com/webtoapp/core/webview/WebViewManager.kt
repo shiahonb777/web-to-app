@@ -20,7 +20,6 @@ import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.UserAgentMode
 import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.core.engine.shields.BrowserShields
-import com.webtoapp.core.engine.shields.ThirdPartyCookiePolicy
 import com.webtoapp.core.errorpage.ErrorPageManager
 import com.webtoapp.core.errorpage.ErrorPageMode
 import java.io.ByteArrayInputStream
@@ -28,6 +27,9 @@ import java.net.URL
 import okhttp3.OkHttpClient
 import okhttp3.ConnectionSpec
 import okhttp3.Request
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.Response
 import okhttp3.TlsVersion
 
@@ -80,6 +82,55 @@ class WebViewManager(
 
         // Local cleartext hosts allowed by network security config
         private val LOCAL_CLEARTEXT_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
+
+        // CAPTCHA / bot-verification service hosts — must NEVER be blocked by
+        // tracker or ad filters, otherwise login flows and form submissions break.
+        // These services load in cross-origin iframes and require cookies + JS.
+        private val CAPTCHA_HOST_SUFFIXES = setOf(
+            // Google reCAPTCHA v2/v3/Enterprise
+            "www.google.com",         // /recaptcha/* iframe
+            "www.gstatic.com",        // /recaptcha/* assets
+            "recaptcha.net",          // CN-accessible mirror
+            "www.recaptcha.net",
+            "apis.google.com",        // reCAPTCHA API loader
+            // hCaptcha
+            "hcaptcha.com",
+            "js.hcaptcha.com",
+            "newassets.hcaptcha.com",
+            "imgs.hcaptcha.com",
+            // Cloudflare Turnstile
+            "challenges.cloudflare.com",
+            // Arkose Labs / FunCaptcha (used by Spotify, EA, Roblox)
+            "arkoselabs.com",
+            "client-api.arkoselabs.com",
+            "cdn.arkoselabs.com",
+            "funcaptcha.com"
+        )
+
+        // OAuth / SSO login service hosts — must NEVER be proxied by
+        // CrossOriginIsolation (COEP/COOP headers break their CSP policies).
+        // Also excluded from TrackerBlocker/AdBlocker to prevent login breakage.
+        // Issue #69: Google OAuth inside CrossOriginIsolation proxy causes
+        // CSP frame-ancestors violations and base-uri blocks.
+        private val OAUTH_HOST_SUFFIXES = setOf(
+            // Google OAuth / Sign-In
+            "accounts.google.com",
+            "accounts.youtube.com",
+            "myaccount.google.com",
+            // Facebook OAuth
+            "www.facebook.com",
+            "m.facebook.com",
+            // Apple Sign-In
+            "appleid.apple.com",
+            // Microsoft OAuth
+            "login.microsoftonline.com",
+            "login.live.com",
+            // GitHub OAuth
+            "github.com",
+            // Twitter/X OAuth
+            "api.twitter.com",
+            "api.x.com"
+        )
 
         // Well-known map tile server host suffixes — these must NEVER be blocked by
         // ad/tracker filters, otherwise Leaflet / Mapbox / Google Maps tile layers break.
@@ -293,60 +344,169 @@ class WebViewManager(
         })();"""
 
         /**
-         * Scroll Position Save/Restore Script
+         * Scroll Position Save/Restore Script (Enhanced v3)
          * 
-         * 解决 Android WebView goBack() 后滚动位置丢失的问题。
-         * 原因: goBack() 会重新加载页面, 加上 onPageStarted 中大量 JS 注入
-         * (内核伪装/剪切板/性能优化/用户脚本) 导致 DOM 在浏览器原生滚动恢复
-         * 之前就被修改, 滚动位置被重置到顶部。
-         * 
-         * 方案: 通过 sessionStorage 在页面离开前保存滚动位置,
-         * 返回后在 onPageFinished 延迟恢复。
+         * 解决场景：
+         * 1. 普通网页进入子页后返回，列表页回到顶部
+         * 2. SPA / H5 单页路由返回时，没有触发完整 onPageFinished，导致无法恢复滚动位置
+         * 3. 页面内容异步变高（图片/懒加载）时，恢复过早失败
          */
         private const val SCROLL_SAVE_JS = """(function(){
             'use strict';
-            if(window.__wtaScrollSaveInstalled)return;
-            window.__wtaScrollSaveInstalled=true;
-            var KEY='__wta_scroll_';
-            function getKey(){return KEY+location.href;}
-            function savePos(){
+            if(window.__wtaScrollMemory&&window.__wtaScrollMemory.installed)return;
+
+            var PREFIX='__wta_scroll_';
+            var scrollTimer=null;
+            var restoreTimers=[];
+            var rawPushState=history.pushState?history.pushState.bind(history):null;
+            var rawReplaceState=history.replaceState?history.replaceState.bind(history):null;
+
+            function getKey(url){
+                return PREFIX+(url||location.href);
+            }
+
+            function getScrollY(){
+                return window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+            }
+
+            function getDocumentHeight(){
+                return Math.max(
+                    document.body?document.body.scrollHeight:0,
+                    document.documentElement?document.documentElement.scrollHeight:0,
+                    document.body?document.body.offsetHeight:0,
+                    document.documentElement?document.documentElement.offsetHeight:0
+                );
+            }
+
+            function savePos(urlOverride){
                 try{
-                    var y=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||0;
-                    if(y>0)sessionStorage.setItem(getKey(),String(y));
+                    var targetUrl=urlOverride||location.href;
+                    var y=getScrollY();
+                    sessionStorage.setItem(getKey(targetUrl),String(y));
+                    if(rawReplaceState){
+                        try{
+                            var st=(history.state&&typeof history.state==='object')?history.state:{};
+                            st.__wtaScrollY=y;
+                            st.__wtaScrollUrl=targetUrl;
+                            rawReplaceState(st,document.title,location.href);
+                        }catch(e2){}
+                    }
                 }catch(e){}
             }
-            window.addEventListener('pagehide',savePos);
-            window.addEventListener('beforeunload',savePos);
-            var _t=null;
-            window.addEventListener('scroll',function(){
-                clearTimeout(_t);
-                _t=setTimeout(savePos,500);
-            },{passive:true});
+
+            function readSavedY(){
+                var saved=null;
+                try{
+                    saved=sessionStorage.getItem(getKey());
+                }catch(e){}
+                if((saved===null||saved==='')&&history.state&&history.state.__wtaScrollUrl===location.href){
+                    try{
+                        if(history.state.__wtaScrollY>=0)saved=String(history.state.__wtaScrollY);
+                    }catch(e2){}
+                }
+                var y=parseInt(saved||'',10);
+                return isNaN(y)?-1:y;
+            }
+
+            function clearRestoreTimers(){
+                for(var i=0;i<restoreTimers.length;i++){
+                    clearTimeout(restoreTimers[i]);
+                }
+                restoreTimers=[];
+            }
+
+            function restorePos(maxAttempts){
+                var y=readSavedY();
+                if(y<0)return false;
+                if('scrollRestoration' in history){
+                    try{history.scrollRestoration='manual';}catch(e3){}
+                }
+                var attempts=maxAttempts||60;
+                function apply(remaining){
+                    if(remaining<=0)return;
+                    var docH=getDocumentHeight();
+                    var maxY=Math.max(0,docH-window.innerHeight);
+                    var targetY=Math.min(y,maxY);
+                    window.scrollTo(0,targetY);
+                    var currentY=getScrollY();
+                    if(Math.abs(currentY-targetY)<=2&&(targetY===0||docH>=y+window.innerHeight*0.2)){
+                        setTimeout(function(){window.scrollTo(0,targetY);},60);
+                        setTimeout(function(){window.scrollTo(0,targetY);},180);
+                        setTimeout(function(){window.scrollTo(0,targetY);},360);
+                        return;
+                    }
+                    setTimeout(function(){apply(remaining-1);},120);
+                }
+                apply(attempts);
+                return true;
+            }
+
+            function scheduleRestore(){
+                clearRestoreTimers();
+                var delays=[0,60,180,420,900,1600,2600];
+                for(var i=0;i<delays.length;i++){
+                    (function(delayMs){
+                        restoreTimers.push(setTimeout(function(){restorePos(60);},delayMs));
+                    })(delays[i]);
+                }
+            }
+
+            function saveSoon(){
+                clearTimeout(scrollTimer);
+                scrollTimer=setTimeout(function(){savePos();},180);
+            }
+
+            window.__wtaScrollMemory={
+                installed:true,
+                save:savePos,
+                restore:restorePos,
+                scheduleRestore:scheduleRestore
+            };
+
+            window.addEventListener('pagehide',function(){savePos();});
+            window.addEventListener('beforeunload',function(){savePos();});
+            window.addEventListener('pageshow',function(){scheduleRestore();});
+            window.addEventListener('popstate',function(){scheduleRestore();});
+            window.addEventListener('hashchange',function(){scheduleRestore();});
+            window.addEventListener('load',function(){scheduleRestore();});
+            document.addEventListener('visibilitychange',function(){
+                if(document.visibilityState==='hidden'){
+                    savePos();
+                }else if(document.visibilityState==='visible'){
+                    scheduleRestore();
+                }
+            });
+            document.addEventListener('click',function(){savePos();},true);
+            window.addEventListener('scroll',saveSoon,{passive:true});
+
+            if(rawPushState){
+                history.pushState=function(){
+                    savePos();
+                    return rawPushState.apply(history,arguments);
+                };
+            }
+            if(rawReplaceState){
+                history.replaceState=function(){
+                    savePos();
+                    return rawReplaceState.apply(history,arguments);
+                };
+            }
         })();"""
 
+        /**
+         * Scroll Position Restore Script (Enhanced v3)
+         * 
+         * 说明：
+         * 1. 普通多页面返回时，由 Kotlin 在 onPageCommitVisible / onPageFinished 主动触发
+         * 2. SPA 返回时，由上面的保存脚本内部监听 popstate/pageshow 自动触发
+         */
         private const val SCROLL_RESTORE_JS = """(function(){
             'use strict';
-            var KEY='__wta_scroll_'+location.href;
             try{
-                var saved=sessionStorage.getItem(KEY);
-                if(saved){
-                    var y=parseInt(saved,10);
-                    if(y>0){
-                        sessionStorage.removeItem(KEY);
-                        function tryRestore(attempts){
-                            if(attempts<=0)return;
-                            var docH=Math.max(
-                                document.body?document.body.scrollHeight:0,
-                                document.documentElement?document.documentElement.scrollHeight:0
-                            );
-                            if(docH>=y+window.innerHeight*0.5){
-                                window.scrollTo(0,y);
-                            }else{
-                                setTimeout(function(){tryRestore(attempts-1);},100);
-                            }
-                        }
-                        setTimeout(function(){tryRestore(10);},150);
-                    }
+                if(window.__wtaScrollMemory&&typeof window.__wtaScrollMemory.scheduleRestore==='function'){
+                    window.__wtaScrollMemory.scheduleRestore();
+                }else if(window.__wtaScrollMemory&&typeof window.__wtaScrollMemory.restore==='function'){
+                    window.__wtaScrollMemory.restore(60);
                 }
             }catch(e){}
         })();"""
@@ -603,6 +763,26 @@ class WebViewManager(
     
     // Track configured WebViews for resource cleanup
     private val managedWebViews = java.util.WeakHashMap<WebView, Boolean>()
+
+    // Navigation direction flag — auto-detected in onPageStarted via history index comparison
+    // Can also be manually set via markNavigatingBack() before goBack() for explicit control
+    @Volatile
+    var isNavigatingBack: Boolean = false
+        private set
+
+    // Previous history index — used to auto-detect back navigation direction
+    private var previousHistoryIndex: Int = -1
+
+    /**
+     * Mark that the next navigation is a back navigation.
+     * This flag is auto-cleared in onPageFinished.
+     * 
+     * NOTE: In most cases this is auto-detected via WebBackForwardList in onPageStarted.
+     * Use this method only as an explicit override for edge cases.
+     */
+    fun markNavigatingBack() {
+        isNavigatingBack = true
+    }
     
     // Browser Shields — privacy protection manager
     private lateinit var shields: BrowserShields
@@ -728,6 +908,33 @@ class WebViewManager(
             AppLogger.d("WebViewManager", "  Embedded module: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}")
         }
         
+        // ============ 代理配置（PAC / Static / None）============
+        if (config.proxyMode != "NONE") {
+            AppLogger.d("WebViewManager", "Applying proxy: mode=${config.proxyMode}")
+            val proxyManager = PacProxyManager(context)
+            val proxyMode = config.proxyMode
+            val proxyHost = config.proxyHost
+            val proxyPort = config.proxyPort
+            val proxyType = config.proxyType
+            val pacUrl = config.pacUrl
+            val bypassRules = config.proxyBypassRules
+            @Suppress("OPT_IN_USAGE")
+            GlobalScope.launch(Dispatchers.Main) {
+                try {
+                    proxyManager.applyProxy(
+                        proxyMode = proxyMode,
+                        staticProxyHost = proxyHost,
+                        staticProxyPort = proxyPort,
+                        staticProxyType = proxyType,
+                        pacUrl = pacUrl,
+                        bypassRules = bypassRules
+                    )
+                } catch (e: Exception) {
+                    AppLogger.e("WebViewManager", "Failed to apply proxy config", e)
+                }
+            }
+        }
+        
         // Track this WebView
         managedWebViews[webView] = true
         
@@ -735,17 +942,25 @@ class WebViewManager(
         // Enable cookies and third-party cookies for login persistence
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
-        // Shields: Apply third-party cookie policy
-        // When disableShields is true (per-app setting), allow all third-party cookies
-        val shieldsActive = shields.isEnabled() && !config.disableShields
-        val cookiePolicy = shields.getConfig().thirdPartyCookiePolicy
-        cookieManager.setAcceptThirdPartyCookies(
-            webView,
-            !shieldsActive || cookiePolicy == ThirdPartyCookiePolicy.ALLOW_ALL
-        )
+        // ★ CRITICAL: Always allow third-party cookies.
+        // Android WebView's setAcceptThirdPartyCookies() is per-WebView, NOT per-domain.
+        // There is no API to allow cookies for specific domains while blocking others.
+        //
+        // Blocking third-party cookies breaks ALL cross-origin iframe services:
+        // - reCAPTCHA (google.com iframe on any site) — Issue #64
+        // - hCaptcha, Cloudflare Turnstile, Arkose/FunCaptcha
+        // - OAuth login flows (Facebook, Google, etc.)
+        // - Stripe/PayPal payment iframes
+        // - Embedded YouTube, Vimeo players
+        //
+        // Privacy protection is already handled by TrackerBlocker (domain-level blocking)
+        // and AdBlocker (ABP rules), which provide fine-grained request-level filtering.
+        // Cookie-level blocking at the WebView layer is too blunt and causes more breakage
+        // than privacy benefit.
+        cookieManager.setAcceptThirdPartyCookies(webView, true)
         // Ensure cookies are persisted to disk
         cookieManager.flush()
-        AppLogger.d("WebViewManager", "Cookie persistence enabled (disableShields=${config.disableShields})")
+        AppLogger.d("WebViewManager", "Cookie persistence enabled (thirdParty=true, disableShields=${config.disableShields})")
 
         val isDesktopModeRequested = config.userAgentMode in DESKTOP_UA_MODES || config.desktopMode || (currentDeviceDisguiseConfig?.requiresDesktopViewport() == true)
         // Landscape apps should keep a native-sized viewport instead of overview shrink-fit.
@@ -914,17 +1129,13 @@ class WebViewManager(
                 addJavascriptInterface(ShareBridge(context), "NativeShareBridge")
             }
             
-            // Register OAuth block detection bridge — lets the safety-net JS
-            // notify Kotlin when Google renders the "not secure" error page client-side
+            // Register OAuth block detection bridge — for diagnostics only.
+            // Do NOT jump to external browsers here, otherwise Google login state
+            // is lost and users get stuck in Chrome instead of returning to WebView.
             addJavascriptInterface(object {
                 @android.webkit.JavascriptInterface
                 fun onOAuthBlocked(url: String) {
-                    AppLogger.w("WebViewManager", "OAuth block detected via JS bridge — redirecting to CCT: $url")
-                    webView.post {
-                        webView.stopLoading()
-                        if (webView.canGoBack()) webView.goBack()
-                        openInCustomTab(url)
-                    }
+                    AppLogger.w("WebViewManager", "OAuth block detected via JS bridge — staying in WebView for: $url")
                 }
             }, "NativeOAuthBridge")
             
@@ -1125,13 +1336,20 @@ class WebViewManager(
                         isThirdPartySubResourceRequest(it) else false
                     val isMapTile = if (isThirdParty) isMapTileRequest(url) else false
                     
+                    // ★ CAPTCHA safelist — never block CAPTCHA service requests (Issue #64)
+                    // reCAPTCHA, hCaptcha, Turnstile, Arkose load as cross-origin sub-resources
+                    // and must pass through unmodified for login/form flows to work.
+                    val isCaptchaRequest = if (isHttpOrHttps) isCaptchaServiceRequest(url) else false
+
                     // Shields: Tracker blocking (before AdBlocker for dedicated tracking protection)
                     // Skip when disableShields is true (per-app setting for games etc.)
                     // Also skip for well-known map tile servers to prevent breaking Leaflet/Mapbox/Google Maps
+                    // Also skip for CAPTCHA services to prevent breaking reCAPTCHA/hCaptcha/Turnstile
                     if (!bypassAggressiveNetworkHooks &&
                         !config.disableShields &&
                         isThirdParty &&
                         !isMapTile &&
+                        !isCaptchaRequest &&
                         ::shields.isInitialized && shields.isEnabled() && shields.getConfig().trackerBlocking) {
                         val trackerCategory = shields.trackerBlocker.checkTracker(url)
                         if (trackerCategory != null) {
@@ -1144,8 +1362,10 @@ class WebViewManager(
                     
                     // Ad blocking: check BOTH first-party and third-party requests
                     // ★ Reuse resType already inferred above; fallback to inferResourceType for non-HTTP
+                    // ★ Skip for CAPTCHA services — they must never be ad-blocked (Issue #64)
                     if (!bypassAggressiveNetworkHooks &&
                         !isMapTile &&
+                        !isCaptchaRequest &&
                         adBlocker.isEnabled()) {
                         val adResType = resType ?: inferResourceType(it)
                         val pageHost = extractHostFromUrl(currentMainFrameUrl)
@@ -1157,10 +1377,21 @@ class WebViewManager(
                         }
                     }
                     
+                    // ★ OAuth safelist — never proxy OAuth/SSO requests through CrossOriginIsolation (Issue #69)
+                    // Google, Facebook, Apple, Microsoft SSO pages have strict CSP policies
+                    // (frame-ancestors, base-uri) that break when COEP/COOP headers are injected.
+                    val isOAuthRequest = if (isHttpOrHttps) isOAuthServiceRequest(url) else false
+
                     // Cross-Origin Isolation support (for SharedArrayBuffer / FFmpeg.wasm)
+                    // ★ Skip for CAPTCHA services — COEP: require-corp breaks cross-origin
+                    //   iframes from google.com/gstatic.com that don't serve CORP headers.
+                    // ★ Skip for OAuth/SSO services — COOP: same-origin breaks frame-ancestors
+                    //   CSP checks on login pages (Issue #69)
                     if (!bypassAggressiveNetworkHooks &&
                         config.enableCrossOriginIsolation &&
-                        isHttpOrHttps) {
+                        isHttpOrHttps &&
+                        !isCaptchaRequest &&
+                        !isOAuthRequest) {
                         android.util.Log.w("DIAG", "CROSS_ORIGIN_PROXY: ${url.take(120)}")
                         return fetchWithCrossOriginHeaders(it)
                     }
@@ -1171,10 +1402,18 @@ class WebViewManager(
                     // android:usesCleartextTraffic="false" in the manifest.
                     // This proxy fetches HTTP content via OkHttp with explicit cleartext support
                     // and serves it back to the WebView, so the WebView never makes HTTP requests directly.
+                    //
+                    // IMPORTANT: Skip local loopback addresses (127.0.0.1, localhost, etc.)
+                    // because WebResourceRequest does NOT carry POST/PUT/PATCH body data,
+                    // which breaks API calls to local servers (e.g. Node.js Express on port 3000).
+                    // Local requests don't need cleartext proxying since they are not external HTTP.
                     if (url.startsWith("http://")) {
-                        val cleartextResponse = fetchCleartextResource(it)
-                        if (cleartextResponse != null) {
-                            return cleartextResponse
+                        val httpHost = extractHostFromUrl(url)
+                        if (httpHost != null && httpHost !in LOCAL_CLEARTEXT_HOSTS) {
+                            val cleartextResponse = fetchCleartextResource(it)
+                            if (cleartextResponse != null) {
+                                return cleartextResponse
+                            }
                         }
                     }
                 }
@@ -1200,11 +1439,23 @@ class WebViewManager(
                 // After login completes, the redirect_uri takes the user back to the website,
                 // and the WebView picks up the authenticated session via shared cookies.
                 if (request.isForMainFrame && OAuthCompatEngine.shouldRedirectToCustomTab(url)) {
-                    val provider = OAuthCompatEngine.getProviderType(url)
-                    AppLogger.i("WebViewManager", "Google OAuth detected [$provider] — redirecting to Chrome Custom Tab: $url")
-                    view?.stopLoading()
-                    openInCustomTab(url)
-                    return true
+                    // ★ Issue #69: Check if a CCT-capable browser is available.
+                    // Huawei devices (no GMS) typically don't have Chrome installed.
+                    // CustomTabsIntent falls back to the system browser, but the system
+                    // browser cannot share cookies with our WebView, so the login
+                    // redirect never returns. On these devices, let Google OAuth load
+                    // in-WebView with anti-detection JS instead.
+                    if (isCustomTabAvailable()) {
+                        val provider = OAuthCompatEngine.getProviderType(url)
+                        AppLogger.i("WebViewManager", "Google OAuth detected [$provider] — redirecting to Chrome Custom Tab: $url")
+                        view?.stopLoading()
+                        openInCustomTab(url)
+                        return true
+                    } else {
+                        val provider = OAuthCompatEngine.getProviderType(url)
+                        AppLogger.i("WebViewManager", "Google OAuth detected [$provider] — no CCT browser available, allowing in-WebView with disguise: $url")
+                        // Fall through — anti-detection JS will be injected in onPageStarted
+                    }
                 }
                 
                 // Other OAuth providers: Allow login in-WebView with full anti-detection
@@ -1265,6 +1516,22 @@ class WebViewManager(
                 super.onPageStarted(view, url, favicon)
                 currentMainFrameUrl = url
                 
+                // ★ 自动检测 back navigation — 通过 WebBackForwardList 索引比较
+                // 如果当前索引 < 上次记录的索引，说明是 goBack() 导航
+                // 这样无需在每个 goBack() 调用点手动设置标志
+                view?.let { wv ->
+                    try {
+                        val list = wv.copyBackForwardList()
+                        val currentIndex = list.currentIndex
+                        if (previousHistoryIndex >= 0 && currentIndex < previousHistoryIndex) {
+                            isNavigatingBack = true
+                        }
+                        previousHistoryIndex = currentIndex
+                    } catch (e: Exception) {
+                        // copyBackForwardList() 在某些极端情况下可能抛异常
+                    }
+                }
+                
                 // ★ DIAG: 页面加载计时开始
                 diagPageStartTime = System.currentTimeMillis()
                 diagRequestCount = 0
@@ -1303,6 +1570,11 @@ class WebViewManager(
                 if (::shields.isInitialized) shields.onPageStarted(url)
                 // ★ Invalidate AdBlocker LRU cache on page navigation
                 adBlocker.invalidateCache()
+                // ★ Back Navigation 优化：减少不必要的 JS 注入
+                // goBack() 时页面会被完全重新加载，大量 JS 注入会干扰 WebView 的原生滚动恢复
+                // 该标志在 onPageFinished 中自动清除
+                val isBack = isNavigatingBack
+
                 // ★ Browser Disguise Engine v2.0 — 统一编排引擎
                 // 按优先级注入 3 层反检测: BrowserKernel → BrowserDisguise → OAuthCompat
                 // 冲突解决、诊断探针均由引擎内部处理
@@ -1331,7 +1603,10 @@ class WebViewManager(
                     view?.evaluateJavascript(customJs, null)
                 }
                 // C 级性能优化 — DOCUMENT_START 注入 (被动事件监听, 页面可见性回收)
-                view?.let { com.webtoapp.core.perf.NativePerfEngine.injectPerfOptimizations(it, com.webtoapp.core.perf.NativePerfEngine.Phase.DOCUMENT_START) }
+                // ★ Back navigation 时跳过性能优化注入，减少 DOM 干扰，提高滚动恢复成功率
+                if (!isBack) {
+                    view?.let { com.webtoapp.core.perf.NativePerfEngine.injectPerfOptimizations(it, com.webtoapp.core.perf.NativePerfEngine.Phase.DOCUMENT_START) }
+                }
                 // Inject DOCUMENT_START scripts (use passed url parameter, as webView.url might still be old value)
                 view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_START, url) }
             }
@@ -1342,6 +1617,11 @@ class WebViewManager(
                 val elapsed = System.currentTimeMillis() - diagPageStartTime
                 android.util.Log.w("DIAG", "═══ PAGE_COMMIT_VISIBLE ═══ +${elapsed}ms requests=$diagRequestCount blocked=$diagBlockedCount url=$url")
                 callbacks.onPageCommitVisible(url)
+                // ★ 提前注入滚动恢复脚本 — onPageCommitVisible 比 onPageFinished 更早触发
+                // 此时页面 DOM 已可交互但可能未完全加载，早期恢复可减少用户可感知的闪烁
+                if (isNavigatingBack) {
+                    view?.evaluateJavascript(SCROLL_RESTORE_JS, null)
+                }
             }
 
             override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -1385,7 +1665,11 @@ class WebViewManager(
                 }
                 callbacks.onPageFinished(url)
                 // 滚动位置恢复 — 从 sessionStorage 恢复之前保存的滚动位置
+                // 即使在 onPageCommitVisible 中已提前注入，此处再注入一次作为兜底
+                // （SCROLL_RESTORE_JS 有 __wtaScrollRestoring 防重复执行标志）
                 view?.evaluateJavascript(SCROLL_RESTORE_JS, null)
+                // 清除 back-navigation 标志
+                isNavigatingBack = false
                 // OAuth 安全网检测 — 在 Google OAuth 页面加载完成后注入检测脚本
                 // 检测 Google 客户端渲染的 "This browser or app may not be secure" 错误页
                 // 如果检测到，通过 NativeOAuthBridge 通知 Kotlin 层重定向到 Chrome Custom Tab
@@ -1608,17 +1892,11 @@ class WebViewManager(
                     val description = if (statusCode > 0) "HTTP $statusCode $reason" else reason
                     AppLogger.w("WebViewManager", "Main-frame HTTP error: url=$failedUrl code=$statusCode reason=$reason")
 
-                    // OAuth blocked fallback: if provider still detects WebView despite
-                    // our multi-layer disguise (403/400), fall back to system browser.
+                    // OAuth blocked fallback: keep the user in WebView instead of
+                    // throwing them into Chrome, otherwise the login flow is broken.
                     if (failedUrl != null && OAuthCompatEngine.isOAuthBlockedError(statusCode, failedUrl)) {
                         val provider = OAuthCompatEngine.getProviderType(failedUrl)
-                        AppLogger.w("WebViewManager", "OAuth [$provider] $statusCode detected — kernel disguise insufficient, falling back to system browser: $failedUrl")
-                        view?.stopLoading()
-                        if (view?.canGoBack() == true) {
-                            view.goBack()
-                        }
-                        openInSystemBrowser(failedUrl)
-                        return
+                        AppLogger.w("WebViewManager", "OAuth [$provider] $statusCode detected — staying in WebView for diagnosis: $failedUrl")
                     }
 
                     val manager = errorPageManager
@@ -1642,6 +1920,33 @@ class WebViewManager(
                 handler: SslErrorHandler?,
                 error: android.net.http.SslError?
             ) {
+                val errorUrl = error?.url
+
+                // ★ Issue #65: 区分主框架和子资源的 SSL 错误
+                // Android WebView 的 onReceivedSslError 不提供 isForMainFrame 信息，
+                // 所以通过比较 errorUrl 与当前主框架 URL 来判断。
+                // 子资源的 SSL 错误（如 GTM、analytics 等第三方脚本）应静默取消，
+                // 不应弹出错误栏打扰终端用户。
+                val isMainFrameSslError = if (errorUrl != null && currentMainFrameUrl != null) {
+                    val errorHost = extractHostFromUrl(errorUrl)
+                    val mainHost = extractHostFromUrl(currentMainFrameUrl)
+                    // 如果 SSL 错误 URL 和当前主框架 URL 的 host 相同，视为主框架错误
+                    // 如果 currentMainFrameUrl 仍然是 about:blank（首次加载），也视为主框架错误
+                    errorHost != null && (errorHost == mainHost || currentMainFrameUrl == "about:blank")
+                } else {
+                    // 无法判断时，保守地认为是主框架错误
+                    true
+                }
+
+                if (!isMainFrameSslError) {
+                    // ★ 子资源 SSL 错误 — 静默取消，不显示错误 UI
+                    handler?.cancel()
+                    AppLogger.d("WebViewManager", "Sub-resource SSL error silently cancelled: $errorUrl")
+                    return
+                }
+
+                // ===== 以下是主框架 SSL 错误的处理 =====
+
                 // 检查 Shields 配置中的 SSL 错误处理策略
                 if (!config.disableShields && ::shields.isInitialized && shields.isEnabled()) {
                     val sslPolicy = shields.getConfig().sslErrorPolicy
@@ -1650,7 +1955,7 @@ class WebViewManager(
                         // 策略1: 自动回退到 HTTP — 尝试将 HTTPS 降级为 HTTP
                         com.webtoapp.core.engine.shields.SslErrorPolicy.AUTO_HTTP_FALLBACK -> {
                             // 首先检查是否是 HTTPS 升级导致的错误，回退到原始 HTTP
-                            var fallbackUrl = shields.httpsUpgrader.onSslError(error?.url)
+                            var fallbackUrl = shields.httpsUpgrader.onSslError(errorUrl)
                             if (fallbackUrl != null) {
                                 handler?.cancel()
                                 view?.loadUrl(fallbackUrl)
@@ -1658,7 +1963,7 @@ class WebViewManager(
                                 return
                             }
                             // 通用 SSL 错误，尝试 HTTP 回退
-                            fallbackUrl = shields.httpsUpgrader.tryHttpFallback(error?.url)
+                            fallbackUrl = shields.httpsUpgrader.tryHttpFallback(errorUrl)
                             if (fallbackUrl != null) {
                                 handler?.cancel()
                                 view?.loadUrl(fallbackUrl)
@@ -1691,6 +1996,124 @@ class WebViewManager(
                 // 默认行为（Shields 未启用时）
                 handler?.cancel()
                 callbacks.onSslError(error?.toString() ?: "SSL Error")
+            }
+
+            /**
+             * HTTP Basic/Digest Auth 支持
+             * 当服务器返回 401 时（如 nginx basic auth），显示用户名/密码输入对话框
+             * 凭据按 host+realm 缓存，同一服务器后续请求自动使用已保存的凭据
+             */
+            override fun onReceivedHttpAuthRequest(
+                view: WebView?,
+                handler: HttpAuthHandler?,
+                host: String?,
+                realm: String?
+            ) {
+                if (handler == null || view == null) {
+                    super.onReceivedHttpAuthRequest(view, handler, host, realm)
+                    return
+                }
+
+                // 尝试使用 WebView 内置的凭据缓存（如果用户之前已输入过）
+                if (handler.useHttpAuthUsernamePassword()) {
+                    val credentials = view.getHttpAuthUsernamePassword(host ?: "", realm ?: "")
+                    if (credentials != null && credentials.size == 2) {
+                        handler.proceed(credentials[0], credentials[1])
+                        AppLogger.d("WebViewManager", "HTTP Auth: 使用缓存凭据 host=$host realm=$realm")
+                        return
+                    }
+                }
+
+                // 首次请求：显示登录对话框
+                val activity = try {
+                    var ctx = view.context
+                    while (ctx is android.content.ContextWrapper) {
+                        if (ctx is android.app.Activity) break
+                        ctx = ctx.baseContext
+                    }
+                    ctx as? android.app.Activity
+                } catch (_: Exception) { null }
+
+                if (activity == null || activity.isFinishing || activity.isDestroyed) {
+                    handler.cancel()
+                    return
+                }
+
+                AppLogger.i("WebViewManager", "HTTP Auth 请求: host=$host realm=$realm")
+
+                activity.runOnUiThread {
+                    val dialogView = android.widget.LinearLayout(activity).apply {
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        setPadding(64, 32, 64, 0)
+
+                        // Realm 信息提示
+                        if (!realm.isNullOrBlank()) {
+                            addView(android.widget.TextView(activity).apply {
+                                text = realm
+                                setTextColor(android.graphics.Color.parseColor("#888888"))
+                                textSize = 13f
+                                setPadding(0, 0, 0, 24)
+                            })
+                        }
+
+                        // 用户名输入框
+                        addView(com.google.android.material.textfield.TextInputLayout(activity).apply {
+                            hint = com.webtoapp.core.i18n.Strings.httpAuthUsername
+                            boxBackgroundMode = com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE
+                            setBoxCornerRadii(12f, 12f, 12f, 12f)
+                            addView(com.google.android.material.textfield.TextInputEditText(activity).apply {
+                                tag = "auth_username"
+                                inputType = android.text.InputType.TYPE_CLASS_TEXT
+                                isSingleLine = true
+                            })
+                        })
+
+                        addView(android.view.View(activity).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 24
+                            )
+                        })
+
+                        // 密码输入框
+                        addView(com.google.android.material.textfield.TextInputLayout(activity).apply {
+                            hint = com.webtoapp.core.i18n.Strings.httpAuthPassword
+                            boxBackgroundMode = com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE
+                            setBoxCornerRadii(12f, 12f, 12f, 12f)
+                            endIconMode = com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE
+                            addView(com.google.android.material.textfield.TextInputEditText(activity).apply {
+                                tag = "auth_password"
+                                inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                                    android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+                                isSingleLine = true
+                            })
+                        })
+                    }
+
+                    val hostDisplay = host ?: "server"
+
+                    android.app.AlertDialog.Builder(activity)
+                        .setTitle(com.webtoapp.core.i18n.Strings.httpAuthTitle)
+                        .setMessage(com.webtoapp.core.i18n.Strings.httpAuthMessage.format(hostDisplay))
+                        .setView(dialogView)
+                        .setPositiveButton(com.webtoapp.core.i18n.Strings.httpAuthLogin) { dialog, _ ->
+                            val username = dialogView.findViewWithTag<android.widget.EditText>("auth_username")?.text?.toString() ?: ""
+                            val password = dialogView.findViewWithTag<android.widget.EditText>("auth_password")?.text?.toString() ?: ""
+                            // 保存凭据到 WebView 内置缓存，后续不再弹窗
+                            view.setHttpAuthUsernamePassword(host ?: "", realm ?: "", username, password)
+                            handler.proceed(username, password)
+                            AppLogger.i("WebViewManager", "HTTP Auth: 用户已登录 host=$host")
+                            dialog.dismiss()
+                        }
+                        .setNegativeButton(com.webtoapp.core.i18n.Strings.btnCancel) { dialog, _ ->
+                            handler.cancel()
+                            dialog.dismiss()
+                        }
+                        .setOnCancelListener {
+                            handler.cancel()
+                        }
+                        .create()
+                        .show()
+                }
             }
 
             @RequiresApi(Build.VERSION_CODES.O)
@@ -1771,6 +2194,89 @@ class WebViewManager(
         val host = extractHostFromUrl(url) ?: return false
         return MAP_TILE_HOST_SUFFIXES.any { suffix ->
             host == suffix || host.endsWith(".$suffix")
+        }
+    }
+
+    /**
+     * Check if a URL is a CAPTCHA / bot-verification service request.
+     * These must NEVER be blocked by tracker/ad filters, otherwise reCAPTCHA,
+     * hCaptcha, Cloudflare Turnstile, and Arkose FunCaptcha challenges break,
+     * causing login and form submission failures. (Issue #64)
+     *
+     * For broad domains like www.google.com, we additionally check that the
+     * URL path starts with /recaptcha to avoid blanket-safelisting all Google
+     * requests (which would disable ad blocking for Google Ads, etc.).
+     */
+    private fun isCaptchaServiceRequest(url: String): Boolean {
+        val host = extractHostFromUrl(url) ?: return false
+        // Broad domains that serve BOTH CAPTCHA and non-CAPTCHA content:
+        // only safelist when the path is /recaptcha
+        if (host == "www.google.com" || host == "www.gstatic.com") {
+            val pathStart = url.indexOf('/', url.indexOf(host) + host.length)
+            if (pathStart >= 0) {
+                return url.regionMatches(pathStart, "/recaptcha", 0, 10, ignoreCase = true)
+            }
+            return false
+        }
+        // All other CAPTCHA domains: full safelist
+        return CAPTCHA_HOST_SUFFIXES.any { suffix ->
+            host == suffix || host.endsWith(".$suffix")
+        }
+    }
+
+    /**
+     * Check if a URL is an OAuth / SSO login service request.
+     * These must NOT be proxied through CrossOriginIsolation because:
+     * - COOP: same-origin breaks cross-origin frame relationships
+     * - COEP: require-corp blocks sub-resources without CORP headers
+     * - Google's strict CSP (frame-ancestors, base-uri 'self') fails when
+     *   the response goes through our proxy. (Issue #69)
+     */
+    private fun isOAuthServiceRequest(url: String): Boolean {
+        val host = extractHostFromUrl(url) ?: return false
+        return OAUTH_HOST_SUFFIXES.any { suffix ->
+            host == suffix || host.endsWith(".$suffix")
+        }
+    }
+
+    /**
+     * Check if a Chrome Custom Tab (CCT) capable browser is installed.
+     * On Huawei and other non-GMS devices, Chrome may not be available.
+     * Without Chrome, CustomTabsIntent falls back to the default browser,
+     * which cannot share cookies with WebView — breaking the OAuth callback.
+     * (Issue #69)
+     */
+    private fun isCustomTabAvailable(): Boolean {
+        return try {
+            val pm = context.packageManager
+            // Check for Chrome first (primary CCT provider)
+            val chromePackages = listOf(
+                "com.android.chrome",            // Chrome
+                "com.chrome.beta",               // Chrome Beta
+                "com.chrome.dev",                // Chrome Dev
+                "com.chrome.canary",             // Chrome Canary
+                "com.brave.browser",             // Brave (CCT-capable)
+                "com.microsoft.emmx",            // Edge (CCT-capable)
+                "org.mozilla.firefox",           // Firefox (CCT-capable)
+                "com.opera.browser"              // Opera (CCT-capable)
+            )
+            val hasKnownCctBrowser = chromePackages.any { pkg ->
+                try {
+                    pm.getPackageInfo(pkg, 0)
+                    true
+                } catch (_: Exception) {
+                    false
+                }
+            }
+            if (hasKnownCctBrowser) return true
+
+            // Fallback: resolve CustomTabsService — any browser advertising this service supports CCT
+            val serviceIntent = android.content.Intent("android.support.customtabs.action.CustomTabsService")
+            val resolvedServices = pm.queryIntentServices(serviceIntent, 0)
+            resolvedServices.isNotEmpty()
+        } catch (e: Exception) {
+            AppLogger.w("WebViewManager", "Failed to check CCT availability", e)
+            false
         }
     }
 
@@ -2709,21 +3215,30 @@ class WebViewManager(
         }
         
         // Inject user custom scripts
-        scripts.filter { it.enabled && it.runAt == runAt && it.code.isNotBlank() }
+        scripts.filter { it.enabled && it.runAt == runAt }
             .forEach { script ->
                 try {
+                    // 懒加载：如果代码是文件引用，从文件中读取实际代码
+                    val actualCode = if (com.webtoapp.core.script.UserScriptStorage.isFileReference(script.code)) {
+                        com.webtoapp.core.script.UserScriptStorage.loadScriptCode(context, script.code)
+                    } else {
+                        script.code
+                    }
+                    
+                    if (actualCode.isBlank()) return@forEach
+                    
                     // Wrap script, add error handling
                     val wrappedCode = """
                         (function() {
                             try {
-                                ${script.code}
+                                $actualCode
                             } catch(e) {
                                 console.error('[UserScript: ${script.name}] Error:', e);
                             }
                         })();
                     """.trimIndent()
                     webView.evaluateJavascript(wrappedCode, null)
-                    AppLogger.d("WebViewManager", "Inject script: ${script.name} (${runAt.name})")
+                    AppLogger.d("WebViewManager", "Inject script: ${script.name} (${runAt.name}, ${actualCode.length} chars)")
                 } catch (e: Exception) {
                     AppLogger.e("WebViewManager", "Script injection failed: ${script.name}", e)
                 }
@@ -3004,8 +3519,108 @@ class WebViewManager(
                     })();
                 """.trimIndent())
             }
+
+            // 3. Notification API polyfill for Android WebView
+            if (!conservativeMode) {
+                scripts.add("""
+                    (function() {
+                        'use strict';
+
+                        if (window.__webtoapp_notification_polyfill__) return;
+                        window.__webtoapp_notification_polyfill__ = true;
+
+                        if (typeof NativeBridge === 'undefined') {
+                            console.log('[WebToApp] NativeBridge not found, notification polyfill skipped');
+                            return;
+                        }
+
+                        function getPermission() {
+                            try {
+                                return NativeBridge.getNotificationPermissionState() || 'default';
+                            } catch (e) {
+                                return 'default';
+                            }
+                        }
+
+                        function requestPermission(callback) {
+                            return new Promise(function(resolve) {
+                                var result = 'default';
+                                try {
+                                    result = NativeBridge.requestNotificationPermission() || getPermission();
+                                } catch (e) {}
+                                if (callback) callback(result);
+                                resolve(result);
+                            });
+                        }
+
+                        function showNativeNotification(title, options) {
+                            options = options || {};
+                            var ok = NativeBridge.showWebNotification(
+                                String(title || ''),
+                                String(options.body || ''),
+                                String(options.tag || '')
+                            );
+                            if (!ok) {
+                                throw new DOMException('Notification permission denied', 'NotAllowedError');
+                            }
+                        }
+
+                        function WebToAppNotification(title, options) {
+                            showNativeNotification(title, options);
+                            this.title = String(title || '');
+                            this.body = String((options && options.body) || '');
+                            this.tag = String((options && options.tag) || '');
+                            this.data = options && options.data;
+                            this.close = function() {};
+                        }
+
+                        Object.defineProperty(WebToAppNotification, 'permission', {
+                            get: getPermission,
+                            configurable: true
+                        });
+                        WebToAppNotification.requestPermission = requestPermission;
+                        WebToAppNotification.maxActions = 0;
+                        window.Notification = WebToAppNotification;
+
+                        if (navigator.permissions && navigator.permissions.query) {
+                            var originalQuery = navigator.permissions.query.bind(navigator.permissions);
+                            navigator.permissions.query = function(desc) {
+                                if (desc && desc.name === 'notifications') {
+                                    var state = getPermission();
+                                    return Promise.resolve({
+                                        state: state,
+                                        onchange: null,
+                                        addEventListener: function(){},
+                                        removeEventListener: function(){}
+                                    });
+                                }
+                                return originalQuery(desc);
+                            };
+                        }
+
+                        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+                            navigator.serviceWorker.ready.then(function(reg) {
+                                if (!reg.showNotification) {
+                                    reg.showNotification = function(title, options) {
+                                        return new Promise(function(resolve, reject) {
+                                            try {
+                                                showNativeNotification(title, options);
+                                                resolve();
+                                            } catch (e) {
+                                                reject(e);
+                                            }
+                                        });
+                                    };
+                                }
+                            }).catch(function(){});
+                        }
+
+                        console.log('[WebToApp] Notification API polyfill loaded');
+                    })();
+                """.trimIndent())
+            }
             
-            // 3. Clipboard API polyfill for non-HTTPS sites (e.g. code-server on http://localhost)
+            // 4. Clipboard API polyfill for non-HTTPS sites (e.g. code-server on http://localhost)
             // navigator.clipboard requires Secure Context (HTTPS), so we bridge it to NativeBridge
             if (!conservativeMode) {
                 scripts.add("""

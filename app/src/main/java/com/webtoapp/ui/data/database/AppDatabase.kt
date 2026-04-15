@@ -22,7 +22,7 @@ import com.webtoapp.core.stats.AppUsageStatsDao
  */
 @Database(
     entities = [WebApp::class, AppCategory::class, AppUsageStats::class, AppHealthRecord::class],
-    version = 33,
+    version = 34,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -458,6 +458,22 @@ abstract class AppDatabase : RoomDatabase() {
         // 迁移定义 - deviceDisguiseConfig (版本 32 -> 33)
         private val MIGRATION_32_33 = createAddColumnMigration(32, 33, "deviceDisguiseConfig")
         
+        // 迁移定义 - extensionEnabled (版本 33 -> 34)
+        // 修复扩展模块开关状态不持久化的 BUG：新增独立的 extensionEnabled 布尔字段。
+        // 迁移时根据已有的 extensionModuleIds 自动推断初始值。
+        private val MIGRATION_33_34 = object : Migration(33, 34) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                AppLogger.i("AppDatabase", "迁移 33->34: 添加 extensionEnabled 字段")
+                try {
+                    db.execSQL("ALTER TABLE web_apps ADD COLUMN extensionEnabled INTEGER NOT NULL DEFAULT 0")
+                    // 将已有配置了模块的记录自动设为开启
+                    db.execSQL("UPDATE web_apps SET extensionEnabled = 1 WHERE extensionModuleIds != '[]' AND extensionModuleIds != ''")
+                } catch (e: Exception) {
+                    AppLogger.w("AppDatabase", "迁移 33->34 extensionEnabled 跳过: ${e.message}")
+                }
+            }
+        }
+        
         // 迁移定义 - 删除 docsSiteConfig (版本 27 -> 28)
         // 使用 rebuildWebAppsTable 辅助方法简化表重建
         private val MIGRATION_27_28_COLUMNS = """
@@ -600,7 +616,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_29_30,
                     MIGRATION_30_31,
                     MIGRATION_31_32,
-                    MIGRATION_32_33
+                    MIGRATION_32_33,
+                    MIGRATION_33_34
                 )
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .fallbackToDestructiveMigrationFrom(1, 2, 3, 4, 5, 6, 7)

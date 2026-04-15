@@ -517,7 +517,8 @@ fun CreateMultiWebAppScreen(
                         exit = shrinkVertically() + fadeOut()
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // App name + icon
+                            // App name + icon（仅新建时显示，编辑时在通用配置中设置）
+                            if (!isEdit) {
                             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -541,21 +542,6 @@ fun CreateMultiWebAppScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
                                     )
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            Strings.njsLandscapeMode,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        PremiumSwitch(
-                                            checked = landscapeMode,
-                                            onCheckedChange = { landscapeMode = it }
-                                        )
-                                    }
                                 }
                             }
 
@@ -564,6 +550,7 @@ fun CreateMultiWebAppScreen(
                                 appIcon = appIcon,
                                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
                             )
+                            }
                         }
                     }
 

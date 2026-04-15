@@ -66,11 +66,13 @@ fun ModuleEditorScreen(
         }
     }
     
-    // Load现有模块或创建新模块
+    // Load现有模块或创建新模块（需要加载完整代码）
     val existingModule = remember(decodedModuleId) {
         decodedModuleId?.let { id ->
             try {
-                extensionManager.getAllModules().find { it.id == id }
+                extensionManager.getAllModules().find { it.id == id }?.let {
+                    extensionManager.ensureCodeLoaded(it)
+                }
             } catch (e: Exception) {
                 AppLogger.e("ModuleEditorScreen", "Failed to load module: $id", e)
                 null

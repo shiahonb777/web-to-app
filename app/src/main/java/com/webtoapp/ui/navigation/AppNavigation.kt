@@ -1,7 +1,9 @@
 package com.webtoapp.ui.navigation
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.util.Log
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -17,7 +20,9 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.waterfall
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.core.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.*
@@ -34,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,7 +58,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -66,6 +74,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.themedBackground
 import com.webtoapp.ui.screens.community.CommunityScreen
 import com.webtoapp.ui.screens.AiSettingsScreen
@@ -253,26 +262,69 @@ fun AppNavigation() {
 
     // ═══════ 自动检查更新 ═══════
     val context = LocalContext.current
+    val (currentVersionName, currentVersionCode) = remember {
+        com.webtoapp.util.AppUpdateChecker.getCurrentVersionInfo(context)
+    }
     var autoUpdateInfo by remember { mutableStateOf<com.webtoapp.util.AppUpdateChecker.UpdateInfo?>(null) }
     var showAutoUpdateDialog by remember { mutableStateOf(false) }
     var isAutoDownloading by remember { mutableStateOf(false) }
     var autoDownloadId by remember { mutableStateOf(-1L) }
+    var autoUpdateFailureReport by remember { mutableStateOf<AutoUpdateFailureReport?>(null) }
+
+    fun showAutoUpdateFailureReport(
+        title: String,
+        stage: String,
+        summary: String,
+        throwable: Throwable? = null,
+        extraContext: String? = null
+    ) {
+        autoUpdateFailureReport = buildAutoUpdateFailureReport(
+            title = title,
+            stage = stage,
+            summary = summary,
+            currentVersionName = currentVersionName,
+            currentVersionCode = currentVersionCode,
+            throwable = throwable,
+            extraContext = extraContext
+        )
+    }
 
     // 启动时自动检查更新（仅执行一次）
     LaunchedEffect(Unit) {
         if (com.webtoapp.util.AppUpdateChecker.shouldAutoCheck(context)) {
             try {
-                val (versionName, versionCode) = com.webtoapp.util.AppUpdateChecker.getCurrentVersionInfo(context)
                 com.webtoapp.util.AppUpdateChecker.recordAutoCheck(context)
-                val result = com.webtoapp.util.AppUpdateChecker.checkUpdate(versionName, versionCode)
+                val result = com.webtoapp.util.AppUpdateChecker.checkUpdate(currentVersionName, currentVersionCode)
                 result.onSuccess { info ->
                     if (info.hasUpdate) {
                         autoUpdateInfo = info
                         showAutoUpdateDialog = true
                     }
+                }.onFailure { error ->
+                    showAutoUpdateFailureReport(
+                        title = "自动检查更新失败",
+                        stage = "应用启动自动检查更新",
+                        summary = "自动更新检查失败，已停止继续处理。",
+                        throwable = error,
+                        extraContext = """
+                            trigger: auto
+                            current_version_name: v$currentVersionName
+                            current_version_code: $currentVersionCode
+                        """.trimIndent()
+                    )
                 }
-            } catch (_: Exception) {
-                // 静默失败，不打扰用户
+            } catch (error: Exception) {
+                showAutoUpdateFailureReport(
+                    title = "自动检查更新失败",
+                    stage = "应用启动自动检查更新",
+                    summary = "自动更新检查发生未捕获异常，已停止继续处理。",
+                    throwable = error,
+                    extraContext = """
+                        trigger: auto
+                        current_version_name: v$currentVersionName
+                        current_version_code: $currentVersionCode
+                    """.trimIndent()
+                )
             }
         }
     }
@@ -378,8 +430,36 @@ fun AppNavigation() {
                             )
                             if (autoDownloadId == -1L) {
                                 isAutoDownloading = false
+                                showAutoUpdateDialog = false
+                                showAutoUpdateFailureReport(
+                                    title = "自动更新下载启动失败",
+                                    stage = "启动自动更新下载",
+                                    summary = "系统下载任务创建失败，未继续执行安装流程。",
+                                    extraContext = """
+                                        trigger: auto
+                                        current_version_name: v$currentVersionName
+                                        current_version_code: $currentVersionCode
+                                        target_version_name: ${info.versionName}
+                                        download_url: ${info.downloadUrl}
+                                    """.trimIndent()
+                                )
+                            } else {
+                                showAutoUpdateDialog = false
                             }
+                        } else {
                             showAutoUpdateDialog = false
+                            showAutoUpdateFailureReport(
+                                title = "自动更新下载启动失败",
+                                stage = "准备自动更新下载",
+                                summary = "更新响应缺少有效下载链接，未继续执行下载流程。",
+                                extraContext = """
+                                    trigger: auto
+                                    current_version_name: v$currentVersionName
+                                    current_version_code: $currentVersionCode
+                                    target_version_name: ${info.versionName}
+                                    download_url: <empty>
+                                """.trimIndent()
+                            )
                         }
                     },
                     enabled = !isAutoDownloading
@@ -401,6 +481,13 @@ fun AppNavigation() {
                     Text(Strings.updateLater)
                 }
             }
+        )
+    }
+
+    autoUpdateFailureReport?.let { report ->
+        AutoUpdateFailureReportDialog(
+            report = report,
+            onDismiss = { autoUpdateFailureReport = null }
         )
     }
 
@@ -1489,6 +1576,114 @@ fun AppNavigation() {
     } // NavHost
     } // Box
     } // Scaffold
+}
+
+private data class AutoUpdateFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+private fun buildAutoUpdateFailureReport(
+    title: String,
+    stage: String,
+    summary: String,
+    currentVersionName: String,
+    currentVersionCode: Int,
+    throwable: Throwable? = null,
+    extraContext: String? = null
+): AutoUpdateFailureReport {
+    val details = buildString {
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        appendLine("current_version_name: v$currentVersionName")
+        appendLine("current_version_code: $currentVersionCode")
+
+        if (!extraContext.isNullOrBlank()) {
+            appendLine()
+            appendLine("context:")
+            appendLine(extraContext)
+        }
+
+        appendLine()
+        appendLine("error:")
+        appendLine(throwable?.message ?: "未返回异常对象")
+
+        throwable?.let {
+            appendLine()
+            appendLine("stacktrace:")
+            appendLine(Log.getStackTraceString(it))
+        }
+
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+
+    return AutoUpdateFailureReport(
+        title = title,
+        summary = summary,
+        details = details
+    )
+}
+
+@Composable
+private fun AutoUpdateFailureReportDialog(
+    report: AutoUpdateFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
 }
 
 @Composable

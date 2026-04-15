@@ -56,7 +56,6 @@ import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.data.model.SplashOrientation
 import com.webtoapp.data.model.SplashType
 import com.webtoapp.data.model.WebApp
-import com.webtoapp.data.model.getActivationCodeStrings
 import android.content.pm.ActivityInfo
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.util.DownloadHelper
@@ -142,6 +141,7 @@ class WebViewActivity : AppCompatActivity() {
     private var statusBarDarkIcons: Boolean? = null
     private var statusBarBackgroundType: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
     internal var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
+    internal var blockSystemNavigationGesture: Boolean = false
 
     private fun applyStatusBarColor(
         colorMode: com.webtoapp.data.model.StatusBarColorMode,
@@ -163,6 +163,7 @@ class WebViewActivity : AppCompatActivity() {
             statusBarDarkIcons = statusBarDarkIcons,
             statusBarBgType = statusBarBackgroundType.name,
             keyboardAdjustMode = keyboardAdjustMode,
+            blockSystemNavigationGesture = immersiveFullscreenEnabled && blockSystemNavigationGesture,
             tag = "WebViewActivity"
         )
     }
@@ -214,11 +215,12 @@ class WebViewActivity : AppCompatActivity() {
         filePathCallback = callback
         if (callback == null) return false
         
+        val needsCamera = isCameraRequiredForChooser(params)
         val hasCam = androidx.core.content.ContextCompat.checkSelfPermission(
             this, android.Manifest.permission.CAMERA
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         
-        if (!hasCam) {
+        if (needsCamera && !hasCam) {
             pendingFileChooserParams = params
             cameraForChooserPermLauncher.launch(android.Manifest.permission.CAMERA)
         } else {
@@ -227,9 +229,79 @@ class WebViewActivity : AppCompatActivity() {
         return true
     }
     
+    /**
+     * 判断网页文件选择是否需要相机
+     */
+    private fun isCameraRequiredForChooser(params: android.webkit.WebChromeClient.FileChooserParams?): Boolean {
+        if (params == null) return false
+        if (params.isCaptureEnabled) return true
+        
+        val acceptTypes = params.acceptTypes
+        if (acceptTypes == null || acceptTypes.isEmpty() || (acceptTypes.size == 1 && acceptTypes[0].isNullOrBlank())) {
+            return true // 无 accept 限制 — 提供相机选项
+        }
+        
+        for (type in acceptTypes) {
+            if (type.isNullOrBlank()) continue
+            val lower = type.lowercase()
+            if (lower.startsWith("image/") || lower.startsWith("video/")) return true
+            if (lower in setOf(".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif",
+                    ".bmp", ".svg", ".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp")) return true
+        }
+        
+        return false
+    }
+    
+    /**
+     * 将文件扩展名转换为 MIME 类型
+     */
+    private fun extensionToMimeTypeForChooser(ext: String): String {
+        return when (ext) {
+            ".json" -> "application/json"
+            ".xml" -> "application/xml"
+            ".csv" -> "text/csv"
+            ".txt" -> "text/plain"
+            ".pdf" -> "application/pdf"
+            ".doc" -> "application/msword"
+            ".docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ".xls" -> "application/vnd.ms-excel"
+            ".xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ".ppt" -> "application/vnd.ms-powerpoint"
+            ".pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            ".html", ".htm" -> "text/html"
+            ".css" -> "text/css"
+            ".js" -> "application/javascript"
+            ".py" -> "text/x-python"
+            ".yaml", ".yml" -> "application/x-yaml"
+            ".md" -> "text/markdown"
+            ".jpg", ".jpeg" -> "image/jpeg"
+            ".png" -> "image/png"
+            ".gif" -> "image/gif"
+            ".webp" -> "image/webp"
+            ".svg" -> "image/svg+xml"
+            ".bmp" -> "image/bmp"
+            ".mp3" -> "audio/mpeg"
+            ".wav" -> "audio/wav"
+            ".mp4" -> "video/mp4"
+            ".webm" -> "video/webm"
+            ".zip" -> "application/zip"
+            ".gz", ".gzip" -> "application/gzip"
+            ".rar" -> "application/vnd.rar"
+            ".7z" -> "application/x-7z-compressed"
+            ".apk" -> "application/vnd.android.package-archive"
+            ".sql" -> "application/sql"
+            else -> {
+                val extWithoutDot = ext.removePrefix(".")
+                android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extWithoutDot)
+                    ?: "application/octet-stream"
+            }
+        }
+    }
+    
     private fun launchFileChooserIntent(params: android.webkit.WebChromeClient.FileChooserParams?) {
         try {
-            val hasCam = androidx.core.content.ContextCompat.checkSelfPermission(
+            val needsCamera = isCameraRequiredForChooser(params)
+            val hasCam = needsCamera && androidx.core.content.ContextCompat.checkSelfPermission(
                 this, android.Manifest.permission.CAMERA
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
             
@@ -254,16 +326,29 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
             
-            val acceptTypes = params?.acceptTypes ?: arrayOf("*/*")
-            val mimeType = if (acceptTypes.isNotEmpty() && !acceptTypes[0].isNullOrBlank()) acceptTypes[0] else "*/*"
+            // 将文件扩展名转换为 MIME 类型
+            val rawAcceptTypes = params?.acceptTypes ?: arrayOf("*/*")
+            val resolvedMimeTypes = rawAcceptTypes
+                .filter { !it.isNullOrBlank() }
+                .map { type ->
+                    if (type.startsWith(".")) extensionToMimeTypeForChooser(type.lowercase()) else type
+                }
+                .distinct()
+            
+            val mimeType = when {
+                resolvedMimeTypes.isEmpty() -> "*/*"
+                resolvedMimeTypes.size == 1 -> resolvedMimeTypes[0]
+                else -> "*/*"
+            }
+            
             val contentIntent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
                 addCategory(android.content.Intent.CATEGORY_OPENABLE)
                 type = mimeType
                 if (params?.mode == android.webkit.WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE) {
                     putExtra(android.content.Intent.EXTRA_ALLOW_MULTIPLE, true)
                 }
-                if (acceptTypes.size > 1) {
-                    putExtra(android.content.Intent.EXTRA_MIME_TYPES, acceptTypes.filter { !it.isNullOrBlank() }.toTypedArray())
+                if (resolvedMimeTypes.size > 1) {
+                    putExtra(android.content.Intent.EXTRA_MIME_TYPES, resolvedMimeTypes.toTypedArray())
                     type = "*/*"
                 }
             }
@@ -332,6 +417,10 @@ class WebViewActivity : AppCompatActivity() {
     
     /**
      * 处理WebView权限请求，先请求Android系统权限
+     *
+     * 注意: MODIFY_AUDIO_SETTINGS 是 normal permission（安装时自动授权），
+     * 不需要也不能通过 runtime permission 请求，否则某些设备上
+     * 系统会忽略它并导致 allGranted 判断失败。
      */
     fun handlePermissionRequest(request: PermissionRequest) {
         val resources = request.resources
@@ -343,8 +432,9 @@ class WebViewActivity : AppCompatActivity() {
                     androidPermissions.add(android.Manifest.permission.CAMERA)
                 }
                 PermissionRequest.RESOURCE_AUDIO_CAPTURE -> {
+                    // 只添加 RECORD_AUDIO（dangerous permission，需要 runtime 请求）
+                    // MODIFY_AUDIO_SETTINGS 是 normal permission，安装时自动授权，不需要 runtime 请求
                     androidPermissions.add(android.Manifest.permission.RECORD_AUDIO)
-                    androidPermissions.add(android.Manifest.permission.MODIFY_AUDIO_SETTINGS)
                 }
                 PermissionRequest.RESOURCE_MIDI_SYSEX -> {
                     // MIDI SysEx 不需要额外 Android 运行时权限，直接授权
@@ -355,13 +445,28 @@ class WebViewActivity : AppCompatActivity() {
             }
         }
         
-        if (androidPermissions.isEmpty()) {
+        val uniquePermissions = androidPermissions.distinct()
+        
+        if (uniquePermissions.isEmpty()) {
             // 不需要Android权限，直接授权WebView
+            request.grant(resources)
+            return
+        }
+        
+        // 预检：过滤掉已经授权的权限，只请求尚未授权的
+        val notGranted = uniquePermissions.filter {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                this, it
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        
+        if (notGranted.isEmpty()) {
+            // 所有权限已授权，直接 grant WebView 请求
             request.grant(resources)
         } else {
             // 需要先请求Android权限
             pendingPermissionRequest = request
-            permissionLauncher.launch(androidPermissions.toTypedArray())
+            permissionLauncher.launch(notGranted.toTypedArray())
         }
     }
     
@@ -421,7 +526,10 @@ class WebViewActivity : AppCompatActivity() {
         val previewAppJson = intent.getStringExtra(EXTRA_PREVIEW_APP_JSON)
         val previewApp: com.webtoapp.data.model.WebApp? = if (!previewAppJson.isNullOrBlank()) {
             try {
-                com.google.gson.Gson().fromJson(previewAppJson, com.webtoapp.data.model.WebApp::class.java)
+                // 使用 Converters.gson（含 enum fallback），避免裸 Gson 解析时枚举值不匹配导致 crash
+                com.webtoapp.ui.data.converter.Converters.gson.fromJson(
+                    previewAppJson, com.webtoapp.data.model.WebApp::class.java
+                )
             } catch (e: Exception) {
                 AppLogger.w("WebViewActivity", "Failed to parse preview WebApp JSON: ${e.message}")
                 null
@@ -772,6 +880,18 @@ fun WebViewScreen(
             (context as? WebViewActivity)?.let { activity ->
                 activity.showNavigationBarInFullscreen = app.webViewConfig.showNavigationBarInFullscreen
                 activity.keyboardAdjustMode = app.webViewConfig.keyboardAdjustMode
+                activity.blockSystemNavigationGesture = app.webViewConfig.blockSystemNavigationGesture
+                // ★ 立即应用键盘模式（配置加载后必须生效，不能等到全屏切换时才设置）
+                WindowHelper.applyKeyboardModeOnly(
+                    activity = activity,
+                    keyboardAdjustMode = app.webViewConfig.keyboardAdjustMode,
+                    tag = "WebViewActivity"
+                )
+                WindowHelper.applySystemNavigationGestureBlocking(
+                    activity = activity,
+                    enabled = app.webViewConfig.hideToolbar && app.webViewConfig.blockSystemNavigationGesture,
+                    tag = "WebViewActivity"
+                )
             }
 
             if (!adCapabilityNoticeShown && hasConfiguredAds(app)) {
@@ -807,21 +927,34 @@ fun WebViewScreen(
                 adBlocker.setEnabled(true)
             }
             
-            // 设置屏幕方向模式
+            // 设置屏幕方向模式（必须覆盖所有 OrientationMode 枚举值）
             when (previewApp.webViewConfig.orientationMode) {
                 com.webtoapp.data.model.OrientationMode.LANDSCAPE -> {
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+                com.webtoapp.data.model.OrientationMode.REVERSE_PORTRAIT -> {
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+                }
+                com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE -> {
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                }
+                com.webtoapp.data.model.OrientationMode.SENSOR_PORTRAIT -> {
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                }
+                com.webtoapp.data.model.OrientationMode.SENSOR_LANDSCAPE -> {
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 }
                 com.webtoapp.data.model.OrientationMode.AUTO -> {
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
                 }
                 com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
-                    if (!com.webtoapp.util.TvUtils.isTv(context)) {
+                    if (com.webtoapp.util.TvUtils.isTv(context)) {
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    } else {
                         @android.annotation.SuppressLint("SourceLockedOrientationActivity")
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
                 }
-                else -> { /* keep default */ }
             }
             
             // 保持屏幕常亮
@@ -1448,6 +1581,20 @@ fun WebViewScreen(
             nodeJsAppPreviewState = NodeJsAppPreviewState.Error(Strings.nodeProjectNotFound)
             return@LaunchedEffect
         }
+        val internalProjectPath = nodeRuntime.getProjectDir(projectId).absolutePath
+        config.sourceProjectPath
+            .takeIf { it.isNotBlank() }
+            ?.let(nodeRuntime::resolveSourceProjectDir)
+            ?.takeIf { it.absolutePath != internalProjectPath }
+            ?.let { sourceDir ->
+                try {
+                    nodeRuntime.syncProjectFromSource(projectId, sourceDir)
+                    AppLogger.i("NodeJsAppPreview", "已从源目录同步 Node 项目: ${sourceDir.absolutePath}")
+                } catch (e: Exception) {
+                    AppLogger.w("NodeJsAppPreview", "同步源项目失败: ${sourceDir.absolutePath}", e)
+                }
+            }
+
         val projectDir = nodeRuntime.getProjectDir(projectId)
         AppLogger.i("NodeJsAppPreview", "项目目录: ${projectDir.absolutePath}, exists=${projectDir.exists()}")
         if (!projectDir.exists()) {
@@ -2107,9 +2254,14 @@ fun WebViewScreen(
                 if (htmlDir.exists()) {
                     try {
                         // Start本地服务器并获取 URL
-                        val baseUrl = localHttpServer.start(htmlDir)
+                        val enableLocalIsolation = app.webViewConfig.enableCrossOriginIsolation ||
+                            LocalHttpServer.shouldEnableCrossOriginIsolation(htmlDir)
+                        val baseUrl = localHttpServer.start(
+                            htmlDir,
+                            enableCrossOriginIsolation = enableLocalIsolation
+                        )
                         val targetUrl = "$baseUrl/$entryFile"
-                        AppLogger.d("WebViewActivity", "目标 URL: $targetUrl")
+                        AppLogger.d("WebViewActivity", "目标 URL: $targetUrl, crossOriginIsolation=$enableLocalIsolation")
                         targetUrl
                     } catch (e: Exception) {
                         AppLogger.e("WebViewActivity", "启动本地服务器失败", e)
@@ -2133,12 +2285,17 @@ fun WebViewScreen(
         }
     }
     
-    // Yes否隐藏工具栏（全屏模式）- 测试模式下始终显示工具栏
+    // Yes否隐藏工具栏（全屏模式 = 沉浸式）- 测试模式下始终显示工具栏
     val hideToolbar = !isTestMode && webApp?.webViewConfig?.hideToolbar == true
+    // 仅隐藏浏览器工具栏（不触发沉浸式，保留系统状态栏和导航栏）
+    val hideBrowserToolbar = !isTestMode && webApp?.webViewConfig?.hideBrowserToolbar == true
     // 是否在全屏模式下显示顶部导航栏
     val showToolbarInPreview = !hideToolbar || webApp?.webViewConfig?.showToolbarInFullscreen == true
+    // 最终是否显示 TopAppBar：全屏模式或仅隐藏工具栏模式都会隐藏
+    val shouldShowTopBar = showToolbarInPreview && !hideBrowserToolbar
     
     LaunchedEffect(hideToolbar) {
+        // 仅全屏模式触发沉浸式，hideBrowserToolbar 不触发
         onFullscreenModeChanged(hideToolbar)
     }
 
@@ -2146,10 +2303,11 @@ fun WebViewScreen(
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         // 在沉浸式模式下，不添加任何内边距（除非显示toolbar）
+        // hideBrowserToolbar 模式使用正常 contentWindowInsets（系统栏可见）
         contentWindowInsets = if (hideToolbar && !showToolbarInPreview) WindowInsets(0) else if (hideToolbar && showToolbarInPreview) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         modifier = if (hideToolbar && !showToolbarInPreview) Modifier.fillMaxSize() else if (hideToolbar) Modifier.fillMaxSize() else Modifier,
         topBar = {
-            if (showToolbarInPreview) {
+            if (shouldShowTopBar) {
                 TopAppBar(
                     title = {
                         Column {
@@ -2312,7 +2470,7 @@ fun WebViewScreen(
                 Modifier.fillMaxSize()
             }
             else -> {
-                // 非全屏模式：使用 Scaffold 的 padding
+                // 非全屏模式 / 仅隐藏浏览器工具栏模式：使用 Scaffold 的 padding
                 Modifier.fillMaxSize().padding(padding)
             }
         }
@@ -2412,6 +2570,7 @@ fun WebViewScreen(
                                         emptyList(), // embeddedExtensionModules
                                         webApp?.extensionFabIcon.orEmpty(),
                                         allowGlobalModuleFallback = false,
+                                        browserDisguiseConfig = webApp?.browserDisguiseConfig,
                                         deviceDisguiseConfig = webApp?.deviceDisguiseConfig
                                     )
                                     // HTML 应用需要额外配置以支持本地文件访问
@@ -2565,7 +2724,7 @@ fun WebViewScreen(
             // 全屏模式下的悬浮返回按钮（当工具栏隐藏且可以后退时显示）
             // 如果用户选择了显示toolbar则不需要悬浮按钮
             // 自动淡出：显示后 3 秒开始淡化，点击时重置透明度
-            if (hideToolbar && !showToolbarInPreview && canGoBack) {
+            if (((hideToolbar && !showToolbarInPreview) || hideBrowserToolbar) && canGoBack) {
                 var fabAlpha by remember { mutableFloatStateOf(0.9f) }
                 var fadeKey by remember { mutableIntStateOf(0) }
                 
@@ -2672,13 +2831,7 @@ fun WebViewScreen(
             onDismiss = { showActivationDialog = false },
             onActivate = { code ->
                 val allCodes = webApp?.activationCodeList ?: emptyList()
-                // 同时包含旧格式 activationCodes 中的遗留数据
-                val legacyCodes = webApp?.activationCodes
-                    ?.filter { !it.trimStart().startsWith("{") }
-                    ?.map { com.webtoapp.core.activation.ActivationCode.fromLegacyString(it) }
-                    ?: emptyList()
-                val combinedCodes = allCodes + legacyCodes
-                return@EnhancedActivationDialog activation.verifyActivationCodeWithObjects(appId, code, combinedCodes)
+                return@EnhancedActivationDialog activation.verifyActivationCodeWithObjects(appId, code, allCodes)
             },
             activationStatus = activationStatus,
             customTitle = webApp?.activationDialogConfig?.title ?: "",

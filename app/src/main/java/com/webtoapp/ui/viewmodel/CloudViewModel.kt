@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.*
+import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,12 +70,16 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _publishProgress = MutableStateFlow(0f)
     val publishProgress: StateFlow<Float> = _publishProgress.asStateFlow()
 
+    private val _publishErrorReport = MutableStateFlow<PublishErrorReport?>(null)
+    val publishErrorReport: StateFlow<PublishErrorReport?> = _publishErrorReport.asStateFlow()
+
     // ─── 通用 ───
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
     fun clearMessage() { _message.value = null }
+    fun clearPublishErrorReport() { _publishErrorReport.value = null }
 
     // ═══════════════════════════════════════════
     // ACTIVATION CODE
@@ -204,6 +209,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                        versionName: String, title: String? = null,
                        changelog: String? = null, uploadTo: String = "github") {
         _publishLoading.value = true
+        _publishErrorReport.value = null
         viewModelScope.launch {
             _message.value = "正在上传 APK 到服务器..."
             when (val result = cloudRepo.publishVersion(
@@ -213,7 +219,18 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                     _message.value = "版本发布成功！APK 已上传到 GitHub"
                     loadVersions(projectId)
                 }
-                is AuthResult.Error -> _message.value = result.message
+                is AuthResult.Error -> {
+                    _publishErrorReport.value = buildPublishErrorReport(
+                        stage = "服务器上传",
+                        summary = result.message,
+                        projectId = projectId,
+                        apkFile = apkFile,
+                        versionCode = versionCode,
+                        versionName = versionName,
+                        uploadTo = uploadTo
+                    )
+                    _message.value = result.message
+                }
             }
             _publishLoading.value = false
         }
@@ -228,17 +245,27 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     fun publishVersionDirect(projectId: Int, apkFile: java.io.File, versionCode: Int,
                               versionName: String, title: String? = null,
                               changelog: String? = null, uploadTo: String = "github") {
-        
-        // 智能路由：如果是纯 Gitee 或 两者都传，直接走服务器中转（国内服务器传国内 Gitee 最稳，选两者时也只需传给服务器一次）
-        if (uploadTo == "gitee" || uploadTo == "both") {
-            publishVersion(projectId, apkFile, versionCode, versionName, title, changelog, uploadTo)
-            return
-        }
-
         _publishLoading.value = true
         _publishProgress.value = 0f
+        _publishErrorReport.value = null
         viewModelScope.launch {
             try {
+                if (uploadTo != "github") {
+                    val report = buildPublishErrorReport(
+                        stage = "参数校验",
+                        summary = "直传模式仅支持 GitHub，当前目标为: $uploadTo",
+                        projectId = projectId,
+                        apkFile = apkFile,
+                        versionCode = versionCode,
+                        versionName = versionName,
+                        uploadTo = uploadTo
+                    )
+                    _publishErrorReport.value = report
+                    _message.value = report.summary
+                    _publishLoading.value = false
+                    return@launch
+                }
+
                 // Step 1: Get temporary upload token from our server
                 _message.value = "正在获取上传令牌..."
                 val tokenResult = cloudRepo.requestUploadToken(
@@ -246,12 +273,15 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                 )
                 when (tokenResult) {
                     is AuthResult.Error -> {
-                        // Fallback: if GitHub App not configured, use server relay
-                        if (tokenResult.message.contains("503") || tokenResult.message.contains("not configured")) {
-                            _message.value = "直传未配置，改用服务器中转..."
-                            publishVersion(projectId, apkFile, versionCode, versionName, title, changelog)
-                            return@launch
-                        }
+                        _publishErrorReport.value = buildPublishErrorReport(
+                            stage = "获取上传令牌",
+                            summary = tokenResult.message,
+                            projectId = projectId,
+                            apkFile = apkFile,
+                            versionCode = versionCode,
+                            versionName = versionName,
+                            uploadTo = uploadTo
+                        )
                         _message.value = tokenResult.message
                         _publishLoading.value = false
                         return@launch
@@ -269,9 +299,16 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
 
                         when (uploadResult) {
                             is AuthResult.Error -> {
-                                _message.value = "直连 GitHub 失败，切换服务器中转..."
-                                // 国内网络有可能连不上 GitHub，自动回退到服务器上传
-                                publishVersion(projectId, apkFile, versionCode, versionName, title, changelog, "github")
+                                _publishErrorReport.value = buildPublishErrorReport(
+                                    stage = "直传 GitHub",
+                                    summary = uploadResult.message,
+                                    projectId = projectId,
+                                    apkFile = apkFile,
+                                    versionCode = versionCode,
+                                    versionName = versionName,
+                                    uploadTo = uploadTo
+                                )
+                                _message.value = uploadResult.message
                                 return@launch
                             }
                             is AuthResult.Success -> {
@@ -290,7 +327,17 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                                         loadVersions(projectId)
                                     }
                                     is AuthResult.Error -> {
-                                        _message.value = "APK 已上传但记录失败: ${confirmResult.message}"
+                                        val summary = "APK 已上传但服务端记录失败: ${confirmResult.message}"
+                                        _publishErrorReport.value = buildPublishErrorReport(
+                                            stage = "确认版本",
+                                            summary = summary,
+                                            projectId = projectId,
+                                            apkFile = apkFile,
+                                            versionCode = versionCode,
+                                            versionName = versionName,
+                                            uploadTo = uploadTo
+                                        )
+                                        _message.value = summary
                                     }
                                 }
                             }
@@ -298,11 +345,61 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _message.value = "发布失败: ${e.message}"
+                val summary = "发布失败: ${e.message}"
+                _publishErrorReport.value = buildPublishErrorReport(
+                    stage = "未捕获异常",
+                    summary = summary,
+                    projectId = projectId,
+                    apkFile = apkFile,
+                    versionCode = versionCode,
+                    versionName = versionName,
+                    uploadTo = uploadTo,
+                    throwable = e
+                )
+                _message.value = summary
             }
             _publishLoading.value = false
             _publishProgress.value = 0f
         }
+    }
+
+    private fun buildPublishErrorReport(
+        stage: String,
+        summary: String,
+        projectId: Int,
+        apkFile: java.io.File,
+        versionCode: Int,
+        versionName: String,
+        uploadTo: String,
+        throwable: Throwable? = null
+    ): PublishErrorReport {
+        throwable?.let { AppLogger.e("CloudViewModel", "Publish failed at $stage", it) }
+        val details = buildString {
+            appendLine("WebToApp Publish Failure")
+            appendLine("stage: $stage")
+            appendLine("projectId: $projectId")
+            appendLine("uploadTo: $uploadTo")
+            appendLine("versionCode: $versionCode")
+            appendLine("versionName: $versionName")
+            appendLine("apkName: ${apkFile.name}")
+            appendLine("apkPath: ${apkFile.absolutePath}")
+            appendLine("apkSize: ${apkFile.length()}")
+            appendLine("summary: $summary")
+            if (throwable != null) {
+                appendLine()
+                appendLine("exception:")
+                appendLine(android.util.Log.getStackTraceString(throwable))
+            }
+            appendLine()
+            appendLine("recent_logs:")
+            append(AppLogger.getRecentLogTail())
+        }
+        return PublishErrorReport(
+            title = "发布失败",
+            summary = summary,
+            stage = stage,
+            details = details
+        )
     }
 
     fun loadVersions(projectId: Int) {
@@ -823,6 +920,13 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         }
     }
 }
+
+data class PublishErrorReport(
+    val title: String,
+    val summary: String,
+    val stage: String,
+    val details: String
+)
 
 data class ManifestSyncState(
     val syncing: Boolean = false,

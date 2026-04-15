@@ -14,9 +14,11 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.OvershootInterpolator
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.FloatingBorderStyle
 import com.webtoapp.data.model.FloatingWindowConfig
@@ -54,6 +56,13 @@ class FloatingWindowManager(private val context: Context) {
         private const val AUTO_HIDE_TITLE_DELAY_MS = 3000L
     }
 
+    private data class WindowBounds(
+        val x: Int,
+        val y: Int,
+        val width: Int,
+        val height: Int
+    )
+
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val handler = Handler(Looper.getMainLooper())
@@ -66,6 +75,11 @@ class FloatingWindowManager(private val context: Context) {
     private var webView: WebView? = null
     // 标题栏引用
     private var titleBarView: View? = null
+    private var backButtonView: TextView? = null
+    private var forwardButtonView: TextView? = null
+    private var fullscreenButtonView: TextView? = null
+    private var savedWindowBounds: WindowBounds? = null
+    private var isFullscreen: Boolean = false
     // 当前配置
     private var config: FloatingWindowConfig = FloatingWindowConfig()
     // 窗口参数
@@ -89,6 +103,7 @@ class FloatingWindowManager(private val context: Context) {
 
     // 回调
     var onWebViewCreated: ((WebView) -> Unit)? = null
+    var onWebViewPageFinished: ((WebView, String?) -> Unit)? = null
     var onDismiss: (() -> Unit)? = null
 
     /**
@@ -99,6 +114,8 @@ class FloatingWindowManager(private val context: Context) {
         if (isShowing) return
 
         this.config = config
+        isFullscreen = false
+        savedWindowBounds = null
 
         // 计算窗口尺寸（使用独立宽高，向后兼容 windowSizePercent）
         val displayMetrics = context.resources.displayMetrics
@@ -209,6 +226,18 @@ class FloatingWindowManager(private val context: Context) {
             settings.setSupportZoom(true)
             settings.builtInZoomControls = true
             settings.displayZoomControls = false
+            webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    updateNavigationButtons()
+                    view?.let { onWebViewPageFinished?.invoke(it, url) }
+                }
+
+                override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                    super.doUpdateVisitedHistory(view, url, isReload)
+                    updateNavigationButtons()
+                }
+            }
             // 触摸时恢复标题栏
             setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -216,6 +245,10 @@ class FloatingWindowManager(private val context: Context) {
                     scheduleAutoHideTitleBar()
                 }
                 false
+            }
+            post {
+                updateNavigationButtons()
+                updateFullscreenButton()
             }
         }
         webViewContainer.addView(webView, FrameLayout.LayoutParams(
@@ -282,13 +315,35 @@ class FloatingWindowManager(private val context: Context) {
             0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
         ))
 
+        backButtonView = createTitleButton("<", 0xFFD0D0E0.toInt(), density, Strings.goBack) {
+            navigateBack()
+        }
+        titleBar.addView(backButtonView)
+
+        forwardButtonView = createTitleButton(">", 0xFFD0D0E0.toInt(), density, Strings.goForward) {
+            navigateForward()
+        }
+        titleBar.addView(forwardButtonView)
+
+        fullscreenButtonView = createTitleButton("□", 0xFFD0D0E0.toInt(), density, Strings.floatingWindowEnterFullscreen) {
+            toggleFullscreen()
+        }
+        titleBar.addView(fullscreenButtonView)
+
         // 最小化按钮
-        val minimizeBtn = createTitleButton("─", 0xFFD0D0E0.toInt(), density) { minimize() }
+        val minimizeBtn = createTitleButton("─", 0xFFD0D0E0.toInt(), density, Strings.floatingWindowMinimize) {
+            minimize()
+        }
         titleBar.addView(minimizeBtn)
 
         // 关闭按钮
-        val closeBtn = createTitleButton("✕", 0xFFFF6B6B.toInt(), density) { dismiss() }
+        val closeBtn = createTitleButton("✕", 0xFFFF6B6B.toInt(), density, Strings.close) {
+            dismiss()
+        }
         titleBar.addView(closeBtn)
+
+        updateNavigationButtons()
+        updateFullscreenButton()
 
         // 拖拽逻辑（仅非锁定时）
         if (!config.lockPosition) {
@@ -301,13 +356,20 @@ class FloatingWindowManager(private val context: Context) {
     /**
      * 创建标题栏按钮
      */
-    private fun createTitleButton(symbol: String, color: Int, density: Float, onClick: () -> Unit): View {
+    private fun createTitleButton(
+        symbol: String,
+        color: Int,
+        density: Float,
+        contentDescriptionText: String,
+        onClick: () -> Unit
+    ): TextView {
         return TextView(context).apply {
             text = symbol
+            contentDescription = contentDescriptionText
             setTextColor(color)
-            textSize = 14f
+            textSize = 13f
             gravity = Gravity.CENTER
-            val size = (34 * density).toInt()
+            val size = (32 * density).toInt()
             minimumWidth = size
             minimumHeight = size
             setPadding((4 * density).toInt(), 0, (4 * density).toInt(), 0)
@@ -536,6 +598,80 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
+    private fun navigateBack() {
+        val currentWebView = webView ?: return
+        if (!currentWebView.canGoBack()) return
+        currentWebView.goBack()
+        currentWebView.postDelayed({ updateNavigationButtons() }, 120)
+    }
+
+    private fun navigateForward() {
+        val currentWebView = webView ?: return
+        if (!currentWebView.canGoForward()) return
+        currentWebView.goForward()
+        currentWebView.postDelayed({ updateNavigationButtons() }, 120)
+    }
+
+    private fun updateNavigationButtons() {
+        val currentWebView = webView
+        val canGoBack = currentWebView?.canGoBack() == true
+        val canGoForward = currentWebView?.canGoForward() == true
+
+        backButtonView?.apply {
+            isEnabled = canGoBack
+            alpha = if (canGoBack) 1f else 0.35f
+        }
+        forwardButtonView?.apply {
+            isEnabled = canGoForward
+            alpha = if (canGoForward) 1f else 0.35f
+        }
+    }
+
+    private fun updateFullscreenButton() {
+        fullscreenButtonView?.apply {
+            text = if (isFullscreen) "❐" else "□"
+            contentDescription = if (isFullscreen) {
+                Strings.floatingWindowExitFullscreen
+            } else {
+                Strings.floatingWindowEnterFullscreen
+            }
+        }
+    }
+
+    private fun toggleFullscreen() {
+        val params = windowParams ?: return
+        val density = context.resources.displayMetrics
+        if (!isFullscreen) {
+            savedWindowBounds = WindowBounds(
+                x = params.x,
+                y = params.y,
+                width = params.width,
+                height = params.height
+            )
+            params.x = 0
+            params.y = 0
+            params.width = density.widthPixels
+            params.height = density.heightPixels
+            isFullscreen = true
+        } else {
+            savedWindowBounds?.let { bounds ->
+                params.x = bounds.x
+                params.y = bounds.y
+                params.width = bounds.width
+                params.height = bounds.height
+            }
+            savedWindowBounds = null
+            isFullscreen = false
+        }
+
+        try {
+            windowManager.updateViewLayout(floatingView, params)
+            updateFullscreenButton()
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "切换悬浮窗全屏失败", e)
+        }
+    }
+
     /**
      * 最小化为悬浮按钮
      */
@@ -603,6 +739,7 @@ class FloatingWindowManager(private val context: Context) {
         val button = FrameLayout(context).apply {
             background = createCircleBackground()
             elevation = 12 * density
+            contentDescription = Strings.floatingWindowRestoreWindow
         }
 
         val icon = TextView(context).apply {
@@ -775,6 +912,11 @@ class FloatingWindowManager(private val context: Context) {
             }
             webView = null
             titleBarView = null
+            backButtonView = null
+            forwardButtonView = null
+            fullscreenButtonView = null
+            savedWindowBounds = null
+            isFullscreen = false
 
             // 移除最小化按钮
             miniButton?.let { windowManager.removeView(it) }

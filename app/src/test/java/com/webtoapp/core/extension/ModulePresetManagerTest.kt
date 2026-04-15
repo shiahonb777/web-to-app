@@ -77,4 +77,19 @@ class ModulePresetManagerTest {
         assertThat(all.map { it.id }).contains(created.id)
         assertThat(all.any { it.builtIn }).isTrue()
     }
+
+    @Test
+    fun `getUserPresets skips malformed items`() {
+        val validPreset = ModulePreset(
+            id = "preset-ok",
+            name = "Valid Preset",
+            moduleIds = listOf("builtin-dark-mode")
+        )
+        val validPresetJson = com.webtoapp.util.GsonProvider.gson.toJson(validPreset)
+        presetFile.writeText("[${validPresetJson},\"broken-item\"]")
+
+        val loaded = manager.getUserPresets()
+
+        assertThat(loaded.map { it.id }).containsExactly("preset-ok")
+    }
 }

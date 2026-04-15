@@ -223,7 +223,10 @@
 -keep class com.webtoapp.data.database.AppDatabase { *; }
 -keep class com.webtoapp.data.repository.** { *; }
 -keep class com.webtoapp.core.usecase.** { *; }
--keep class com.webtoapp.core.activation.ActivationManager { *; }
+-keep class com.webtoapp.core.activation.** { *; }
+-keepclassmembers class com.webtoapp.core.activation.** {
+    <init>(...);
+}
 -keep class com.webtoapp.core.announcement.AnnouncementManager { *; }
 -keep class com.webtoapp.core.adblock.AdBlocker { *; }
 -keep class com.webtoapp.core.shell.ShellModeManager { *; }

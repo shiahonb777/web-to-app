@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -30,8 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -49,11 +53,107 @@ import com.webtoapp.core.cloud.CloudApiClient
 import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.PostCommentItem
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.viewmodel.OperationFailureReport
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+
+private data class PostFailureReport(
+    val title: String,
+    val summary: String,
+    val details: String
+)
+
+private fun buildPostFailureReport(
+    title: String,
+    stage: String,
+    summary: String,
+    contextLines: List<String> = emptyList(),
+    throwable: Throwable? = null
+): PostFailureReport {
+    throwable?.let { AppLogger.e("PostDetailScreen", "$title failed at $stage", it) }
+    val details = buildString {
+        appendLine(title)
+        appendLine("stage: $stage")
+        appendLine("summary: $summary")
+        if (contextLines.isNotEmpty()) {
+            appendLine()
+            appendLine("context:")
+            contextLines.forEach { appendLine(it) }
+        }
+        if (throwable != null) {
+            appendLine()
+            appendLine("exception:")
+            appendLine(android.util.Log.getStackTraceString(throwable))
+        }
+        appendLine()
+        appendLine("recent_logs:")
+        append(AppLogger.getRecentLogTail())
+    }
+    return PostFailureReport(title = title, summary = summary, details = details)
+}
+
+@Composable
+private fun PostFailureReportDialog(
+    report: PostFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
 
 /**
  * 帖子详情页 — Premium Twitter/X Style
@@ -86,6 +186,7 @@ fun PostDetailScreen(
     var showEditSheet by remember { mutableStateOf(false) }
     var showReportSheet by remember { mutableStateOf(false) }
     var editContent by remember { mutableStateOf("") }
+    var failureReport by remember { mutableStateOf<PostFailureReport?>(null) }
     val commentFocusRequester = remember { FocusRequester() }
 
     // @mention state
@@ -93,6 +194,7 @@ fun PostDetailScreen(
     var mentionFilter by remember { mutableStateOf("") }
     val mentionResults by communityViewModel.mentionResults.collectAsState()
     val mentionLoading by communityViewModel.mentionLoading.collectAsState()
+    val feedFailureReport by communityViewModel.feedFailureReport.collectAsState()
 
     // Load post detail + comments
     LaunchedEffect(postId) {
@@ -100,6 +202,13 @@ fun PostDetailScreen(
         val postResult = apiClient.getCommunityPost(postId)
         if (postResult is AuthResult.Success) {
             post = postResult.data
+        } else if (postResult is AuthResult.Error) {
+            failureReport = buildPostFailureReport(
+                title = "帖子加载失败",
+                stage = "加载帖子详情",
+                summary = postResult.message,
+                contextLines = listOf("postId=$postId")
+            )
         }
         val commentsResult = apiClient.listPostComments(postId, page = 1)
         if (commentsResult is AuthResult.Success) {
@@ -108,6 +217,13 @@ fun PostDetailScreen(
             commentTotal = resp.total
             commentPage = 1
             hasMoreComments = resp.comments.size < resp.total
+        } else if (commentsResult is AuthResult.Error) {
+            failureReport = buildPostFailureReport(
+                title = "评论加载失败",
+                stage = "加载评论列表",
+                summary = commentsResult.message,
+                contextLines = listOf("postId=$postId", "page=1")
+            )
         }
         loading = false
     }
@@ -121,10 +237,25 @@ fun PostDetailScreen(
                 commentTotal = refreshed.data.total
                 commentPage = 1
                 hasMoreComments = refreshed.data.comments.size < refreshed.data.total
+            } else if (refreshed is AuthResult.Error) {
+                failureReport = buildPostFailureReport(
+                    title = "评论刷新失败",
+                    stage = "刷新评论列表",
+                    summary = refreshed.message,
+                    contextLines = listOf("postId=$postId", "page=1")
+                )
             }
             // Also refresh the post to get latest counts
             val refreshedPost = apiClient.getCommunityPost(postId)
             if (refreshedPost is AuthResult.Success) post = refreshedPost.data
+            else if (refreshedPost is AuthResult.Error) {
+                failureReport = buildPostFailureReport(
+                    title = "帖子刷新失败",
+                    stage = "刷新帖子详情",
+                    summary = refreshedPost.message,
+                    contextLines = listOf("postId=$postId")
+                )
+            }
         }
     }
 
@@ -139,6 +270,13 @@ fun PostDetailScreen(
                 comments = comments + result.data.comments
                 commentPage = nextPage
                 hasMoreComments = comments.size < result.data.total
+            } else if (result is AuthResult.Error) {
+                failureReport = buildPostFailureReport(
+                    title = "更多评论加载失败",
+                    stage = "加载更多评论",
+                    summary = result.message,
+                    contextLines = listOf("postId=$postId", "page=$nextPage")
+                )
             }
             loadingMoreComments = false
         }
@@ -375,9 +513,19 @@ fun PostDetailScreen(
                                         if (result is AuthResult.Success) {
                                             commentText = ""
                                             replyingTo = null
+                                            communityViewModel.pushMessage("评论已发布")
                                             refreshComments()
                                         } else if (result is AuthResult.Error) {
-                                            snackbarHostState.showSnackbar(result.message)
+                                            failureReport = buildPostFailureReport(
+                                                title = "评论提交失败",
+                                                stage = "提交评论",
+                                                summary = result.message,
+                                                contextLines = listOf(
+                                                    "postId=$postId",
+                                                    "parentId=${parentId ?: 0}",
+                                                    "comment=${commentText.trim()}"
+                                                )
+                                            )
                                         }
                                         submitting = false
                                     }
@@ -900,12 +1048,22 @@ fun PostDetailScreen(
                                             scope.launch {
                                                 val result = apiClient.togglePostLike(postId)
                                                 if (result is AuthResult.Success) {
-                                                    post = p.copy(
+                                                    val updatedPost = p.copy(
                                                         isLiked = result.data.liked,
                                                         likeCount = result.data.likeCount
                                                     )
+                                                    post = updatedPost
+                                                    communityViewModel.syncPost(updatedPost)
                                                 } else if (result is AuthResult.Error) {
-                                                    snackbarHostState.showSnackbar(result.message)
+                                                    failureReport = buildPostFailureReport(
+                                                        title = "帖子点赞失败",
+                                                        stage = "点赞帖子",
+                                                        summary = result.message,
+                                                        contextLines = listOf(
+                                                            "postId=$postId",
+                                                            "action=togglePostLike"
+                                                        )
+                                                    )
                                                 }
                                             }
                                         }
@@ -933,9 +1091,19 @@ fun PostDetailScreen(
                                             scope.launch {
                                                 val result = apiClient.sharePost(postId)
                                                 if (result is AuthResult.Success) {
-                                                    post = p.copy(shareCount = p.shareCount + 1)
+                                                    val updatedPost = p.copy(shareCount = p.shareCount + 1)
+                                                    post = updatedPost
+                                                    communityViewModel.syncPost(updatedPost)
                                                 } else if (result is AuthResult.Error) {
-                                                    snackbarHostState.showSnackbar(result.message)
+                                                    failureReport = buildPostFailureReport(
+                                                        title = "帖子转发失败",
+                                                        stage = "转发帖子",
+                                                        summary = result.message,
+                                                        contextLines = listOf(
+                                                            "postId=$postId",
+                                                            "action=sharePost"
+                                                        )
+                                                    )
                                                 }
                                             }
                                         }
@@ -1158,7 +1326,23 @@ fun PostDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm = false
-                    communityViewModel.deletePost(postId, onSuccess = { onBack() })
+                    scope.launch {
+                        when (val result = apiClient.deletePost(postId)) {
+                            is AuthResult.Success -> {
+                                communityViewModel.removePostFromCaches(postId)
+                                snackbarHostState.showSnackbar("帖子已删除")
+                                onBack()
+                            }
+                            is AuthResult.Error -> {
+                                failureReport = buildPostFailureReport(
+                                    title = "帖子删除失败",
+                                    stage = "删除帖子",
+                                    summary = result.message,
+                                    contextLines = listOf("postId=$postId")
+                                )
+                            }
+                        }
+                    }
                 }) {
                     Text(Strings.communityConfirmDelete, color = Color(0xFFE57373))
                 }
@@ -1197,10 +1381,27 @@ fun PostDetailScreen(
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            communityViewModel.editPost(postId, editContent.trim()) { updated ->
-                                post = updated
+                            scope.launch {
+                                when (val result = apiClient.editPost(postId, editContent.trim())) {
+                                    is AuthResult.Success -> {
+                                        post = result.data
+                                        communityViewModel.syncPost(result.data)
+                                        snackbarHostState.showSnackbar("帖子已更新")
+                                        showEditSheet = false
+                                    }
+                                    is AuthResult.Error -> {
+                                        failureReport = buildPostFailureReport(
+                                            title = "帖子编辑失败",
+                                            stage = "编辑帖子",
+                                            summary = result.message,
+                                            contextLines = listOf(
+                                                "postId=$postId",
+                                                "content=${editContent.trim()}"
+                                            )
+                                        )
+                                    }
+                                }
                             }
-                            showEditSheet = false
                         },
                         enabled = editContent.isNotBlank()
                     ) {
@@ -1218,8 +1419,37 @@ fun PostDetailScreen(
             onDismiss = { showReportSheet = false },
             onReasonSelected = { reason ->
                 showReportSheet = false
-                communityViewModel.reportPost(postId, reason)
+                scope.launch {
+                    when (val result = apiClient.reportPost(postId, reason)) {
+                        is AuthResult.Success -> snackbarHostState.showSnackbar("举报已提交")
+                        is AuthResult.Error -> {
+                            failureReport = buildPostFailureReport(
+                                title = "帖子举报失败",
+                                stage = "举报帖子",
+                                summary = result.message,
+                                contextLines = listOf(
+                                    "postId=$postId",
+                                    "reason=$reason"
+                                )
+                            )
+                        }
+                    }
+                }
             }
+        )
+    }
+
+    failureReport?.let { report ->
+        PostFailureReportDialog(
+            report = report,
+            onDismiss = { failureReport = null }
+        )
+    }
+
+    feedFailureReport?.let { report ->
+        OperationFailureReportDialog(
+            report = report,
+            onDismiss = { communityViewModel.clearFeedFailureReport() }
         )
     }
 }

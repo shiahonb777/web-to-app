@@ -38,17 +38,46 @@ class LocalHttpServer(
                 instance ?: LocalHttpServer(context.applicationContext).also { instance = it }
             }
         }
+
+        fun shouldEnableCrossOriginIsolation(rootDir: File): Boolean {
+            if (!rootDir.exists()) return false
+
+            return rootDir.walkTopDown()
+                .maxDepth(6)
+                .filter { it.isFile }
+                .take(2000)
+                .any { file ->
+                    val name = file.name.lowercase()
+                    val extension = file.extension.lowercase()
+                    extension == "wasm" ||
+                        extension == "onnx" ||
+                        name.contains("ort-wasm") ||
+                        name.contains("worker")
+                }
+        }
     }
     
     private var serverSocket: ServerSocket? = null
     // Bounded thread pool to prevent DoS via unlimited thread creation
-    private val executor = ThreadPoolExecutor(
-        2, 16, 60L, TimeUnit.SECONDS, LinkedBlockingQueue(64)
-    )
+    private var executor = createExecutor()
     private val isRunning = AtomicBoolean(false)
     
     // 当前服务的根目录
     private var rootDirectory: File? = null
+    private var crossOriginIsolationEnabled: Boolean = false
+
+    private fun createExecutor(): ThreadPoolExecutor {
+        return ThreadPoolExecutor(
+            2, 16, 60L, TimeUnit.SECONDS, LinkedBlockingQueue(64)
+        )
+    }
+
+    private fun ensureExecutor(): ThreadPoolExecutor {
+        if (executor.isShutdown || executor.isTerminated) {
+            executor = createExecutor()
+        }
+        return executor
+    }
     
     // 实际使用的端口
     var actualPort: Int = 0
@@ -60,9 +89,9 @@ class LocalHttpServer(
      * @return 服务器 URL (如 http://localhost:8080)
      */
     @Synchronized
-    fun start(rootDir: File): String {
-        if (isRunning.get() && rootDirectory == rootDir) {
-            // 已经在服务同一个目录
+    fun start(rootDir: File, enableCrossOriginIsolation: Boolean = false): String {
+        if (isRunning.get() && rootDirectory == rootDir && crossOriginIsolationEnabled == enableCrossOriginIsolation) {
+            // 已经在服务同一个目录，且隔离模式未变化
             return "http://localhost:$actualPort"
         }
         
@@ -70,6 +99,7 @@ class LocalHttpServer(
         stop()
         
         rootDirectory = rootDir
+        crossOriginIsolationEnabled = enableCrossOriginIsolation
         
         try {
             // 使用 PortManager 分配端口
@@ -88,11 +118,12 @@ class LocalHttpServer(
             AppLogger.i(TAG, "服务器启动在端口 $actualPort, 根目录: ${rootDir.absolutePath}")
             
             // Start接受连接的线程
-            executor.execute {
+            val activeExecutor = ensureExecutor()
+            activeExecutor.execute {
                 while (isRunning.get()) {
                     try {
                         val clientSocket = serverSocket?.accept() ?: break
-                        executor.execute { handleClient(clientSocket) }
+                        ensureExecutor().execute { handleClient(clientSocket) }
                     } catch (e: Exception) {
                         if (isRunning.get()) {
                             AppLogger.e(TAG, "接受连接失败", e)
@@ -252,7 +283,18 @@ class LocalHttpServer(
             append("Content-Length: $fileLength\r\n")
             // Only allow same-origin requests (server is localhost-only anyway)
             append("Access-Control-Allow-Origin: http://localhost:$actualPort\r\n")
+            append("Access-Control-Allow-Methods: GET, HEAD, OPTIONS\r\n")
+            append("Access-Control-Allow-Headers: *\r\n")
+            append("Vary: Origin\r\n")
             append("Cache-Control: no-cache\r\n")
+            append("X-Content-Type-Options: nosniff\r\n")
+            if (crossOriginIsolationEnabled) {
+                append("Cross-Origin-Opener-Policy: same-origin\r\n")
+                append("Cross-Origin-Embedder-Policy: credentialless\r\n")
+                append("Cross-Origin-Resource-Policy: same-origin\r\n")
+                append("Origin-Agent-Cluster: ?1\r\n")
+                append("Service-Worker-Allowed: /\r\n")
+            }
             append("Connection: close\r\n")
             append("\r\n")
         }
@@ -305,6 +347,8 @@ class LocalHttpServer(
             "css" -> "text/css; charset=utf-8"
             "js", "mjs" -> "application/javascript; charset=utf-8"
             "json" -> "application/json; charset=utf-8"
+            "wasm" -> "application/wasm"
+            "onnx" -> "application/onnx"
             "xml" -> "application/xml; charset=utf-8"
             "txt" -> "text/plain; charset=utf-8"
             "png" -> "image/png"

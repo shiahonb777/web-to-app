@@ -419,7 +419,8 @@ fun CreateMediaAppScreen(
                 }
             }
             
-            // ========== 4. 应用信息 ==========
+            // ========== 4. 应用信息（仅新建时显示，编辑时在通用配置中设置） ==========
+            if (!isEditMode) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -446,6 +447,7 @@ fun CreateMediaAppScreen(
                     )
                 }
             }
+            }
             
             // ========== 5. 显示配置 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -468,6 +470,8 @@ fun CreateMediaAppScreen(
                         )
                     }
                     
+                    // 横屏模式（仅新建时显示，编辑时在通用配置中设置）
+                    if (!isEditMode) {
                     SettingsRow(title = Strings.landscapeMode, subtitle = Strings.landscapeModeHint) {
                         PremiumSwitch(
                             checked = orientation == SplashOrientation.LANDSCAPE,
@@ -475,6 +479,7 @@ fun CreateMediaAppScreen(
                                 orientation = if (it) SplashOrientation.LANDSCAPE else SplashOrientation.PORTRAIT
                             },
                         )
+                    }
                     }
                     
                     // 增强：屏幕常亮

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.data.model.KeyboardAdjustMode
@@ -34,6 +35,7 @@ fun BoxScope.ShellScaffoldLayout(
     config: ShellConfig,
     appType: String,
     hideToolbar: Boolean,
+    hideBrowserToolbar: Boolean = false,
     // 状态
     isLoading: Boolean,
     loadProgress: Int,
@@ -71,8 +73,8 @@ fun BoxScope.ShellScaffoldLayout(
 ) {
     val context = LocalContext.current
 
-    // 是否显示顶部导航栏：非全屏模式或全屏模式下用户选择显示
-    val showToolbar = !hideToolbar || config.webViewConfig.showToolbarInFullscreen
+    // 是否显示顶部导航栏：非全屏模式或全屏模式下用户选择显示，且未开启独立的隐藏浏览器工具栏
+    val showToolbar = (!hideToolbar || config.webViewConfig.showToolbarInFullscreen) && !hideBrowserToolbar
 
     // 读取键盘调整模式
     val keyboardAdjustMode = remember {
@@ -86,8 +88,8 @@ fun BoxScope.ShellScaffoldLayout(
     Scaffold(
         // 根据键盘调整模式设置 contentWindowInsets
         // RESIZE 模式且全屏：保留 IME insets 以便 Compose 响应键盘
-        // blockSystemNavigationGesture=true 且全屏：屏蔽系统导航手势（consume gesture area）
-        // 全屏且未屏蔽导航手势：使用 ScaffoldDefaults 以保留系统手势区域
+        // blockSystemNavigationGesture=true 且全屏：不为内容额外预留系统手势区域
+        // 真正的系统返回手势屏蔽由 WindowHelper 中的 systemGestureExclusionRects 处理
         contentWindowInsets = when {
             keyboardAdjustMode == KeyboardAdjustMode.RESIZE && hideToolbar -> WindowInsets.ime
             hideToolbar && webViewConfig.blockSystemNavigationGesture -> WindowInsets(0)
@@ -336,10 +338,10 @@ private fun ShellContentArea(
                     tint = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("请先激活应用")
+                Text(Strings.pleaseActivateApp)
                 Spacer(modifier = Modifier.height(16.dp))
                 PremiumButton(onClick = onShowActivationDialog) {
-                    Text("输入激活码")
+                    Text(Strings.enterActivationCode)
                 }
             }
         }

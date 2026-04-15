@@ -1,5 +1,6 @@
 package com.webtoapp.ui.shell
 
+import android.net.Uri
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -149,7 +150,8 @@ fun WordPressShellMode(
                                     webViewCallbacks,
                                     config.extensionModuleIds,
                                     config.embeddedExtensionModules,
-                                    config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                    config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                    browserDisguiseConfig = config.browserDisguiseConfig)
                                 // WordPress 通过 localhost 加载，允许混合内容
                                 settings.mixedContentMode =
                                     android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -233,6 +235,159 @@ fun WordPressShellMode(
             }
         }
     }
+}
+
+/**
+ * HTML / FRONTEND 应用 Shell 模式
+ * 从 APK assets 提取静态站点文件后，通过 LocalHttpServer 以 localhost 方式加载，
+ * 以支持 WASM / ONNX / Worker / SharedArrayBuffer 等能力。
+ */
+@Composable
+fun HtmlFrontendShellMode(
+    config: ShellConfig,
+    webViewConfig: WebViewConfig,
+    webViewCallbacks: WebViewCallbacks,
+    webViewManager: com.webtoapp.core.webview.WebViewManager,
+    onWebViewCreated: (WebView) -> Unit,
+    onWebViewRefUpdated: (WebView) -> Unit,
+    swipeRefreshEnabled: Boolean = false,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    var phase by remember { mutableStateOf("extracting") }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
+    var targetUrl by remember { mutableStateOf<String?>(null) }
+    val httpServer = remember { com.webtoapp.core.webview.LocalHttpServer(context) }
+
+    DisposableEffect(httpServer) {
+        onDispose { httpServer.stop() }
+    }
+
+    LaunchedEffect(config.versionCode, config.htmlConfig.entryFile, config.webViewConfig.enableCrossOriginIsolation) {
+        withContext(Dispatchers.IO) {
+            try {
+                val siteDir = File(context.filesDir, "html_shell_site")
+                val marker = File(siteDir, ".html_extracted")
+                val configuredEntryFile = config.htmlConfig.getValidEntryFile()
+                val extractionToken = buildExtractionToken(
+                    context = context,
+                    scope = "html",
+                    configVersionCode = config.versionCode,
+                    extra = "${config.appType}|$configuredEntryFile|coi=${config.webViewConfig.enableCrossOriginIsolation}"
+                )
+
+                if (shouldReextractAssets(marker, extractionToken)) {
+                    AppLogger.i("HtmlShell", "提取 HTML 资源到 ${siteDir.absolutePath}")
+                    siteDir.deleteRecursively()
+                    extractAssetsRecursive(context, "html", siteDir)
+                    writeExtractionMarker(marker, extractionToken)
+                }
+
+                phase = "starting"
+                val resolvedEntry = resolveExtractedHtmlEntry(siteDir, configuredEntryFile)
+                val shouldEnableIsolation = config.webViewConfig.enableCrossOriginIsolation ||
+                    com.webtoapp.core.webview.LocalHttpServer.shouldEnableCrossOriginIsolation(siteDir)
+                val baseUrl = httpServer.start(siteDir, enableCrossOriginIsolation = shouldEnableIsolation)
+                targetUrl = buildLocalHttpTargetUrl(baseUrl, resolvedEntry)
+                phase = "ready"
+
+                AppLogger.i(
+                    "HtmlShell",
+                    "HTML Shell 就绪: url=$targetUrl, entry=$resolvedEntry, crossOriginIsolation=$shouldEnableIsolation"
+                )
+            } catch (e: Exception) {
+                AppLogger.e("HtmlShell", "HTML Shell 启动失败", e)
+                phase = "error"
+                errorMsg = e.message ?: Strings.serverStartFailed
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (phase) {
+            "ready" -> {
+                val url = targetUrl ?: return@Box
+                ShellLocalFileWebView(
+                    config = config,
+                    webViewConfig = webViewConfig,
+                    webViewCallbacks = webViewCallbacks,
+                    webViewManager = webViewManager,
+                    targetUrl = url,
+                    enableJavaScript = config.htmlConfig.enableJavaScript,
+                    enableLocalStorage = config.htmlConfig.enableLocalStorage,
+                    swipeRefreshEnabled = swipeRefreshEnabled,
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
+                    onWebViewCreated = onWebViewCreated,
+                    onWebViewRefUpdated = onWebViewRefUpdated
+                )
+            }
+
+            "extracting", "starting" -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = if (phase == "extracting") Strings.preparingEnv else Strings.startingServer,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            "error" -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = errorMsg ?: Strings.serverStartFailed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun resolveExtractedHtmlEntry(siteDir: File, configuredEntry: String): String {
+    val normalizedConfiguredEntry = configuredEntry.removePrefix("/")
+    if (normalizedConfiguredEntry.isNotBlank() && File(siteDir, normalizedConfiguredEntry).exists()) {
+        return normalizedConfiguredEntry
+    }
+
+    val preferredFallbacks = listOf("index.html", "index.htm", "main.html")
+    preferredFallbacks.firstOrNull { File(siteDir, it).exists() }?.let { return it }
+
+    return siteDir.walkTopDown()
+        .filter { it.isFile }
+        .firstOrNull {
+            it.extension.equals("html", ignoreCase = true) ||
+                it.extension.equals("htm", ignoreCase = true)
+        }
+        ?.relativeTo(siteDir)
+        ?.invariantSeparatorsPath
+        ?: normalizedConfiguredEntry.ifBlank { "index.html" }
+}
+
+private fun buildLocalHttpTargetUrl(baseUrl: String, relativePath: String): String {
+    val normalizedPath = relativePath.removePrefix("/").ifBlank { "index.html" }
+    return "$baseUrl/${Uri.encode(normalizedPath, "/")}"
 }
 
 /**
@@ -373,7 +528,8 @@ fun NodeJsShellMode(
                                 webViewManager.configureWebView(
                                     this, webViewConfig, webViewCallbacks,
                                     config.extensionModuleIds, config.embeddedExtensionModules,
-                                    config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                    config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                    browserDisguiseConfig = config.browserDisguiseConfig)
                                 settings.mixedContentMode =
                                     android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
@@ -562,7 +718,7 @@ fun PhpAppShellMode(
                             }
                             val createdWebView = WebView(ctx).apply {
                                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
                                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 var lastTouchX = 0f; var lastTouchY = 0f
                                 setOnTouchListener { view, event ->
@@ -782,7 +938,7 @@ fun PythonAppShellMode(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
                                 )
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
                                 settings.apply {
                                     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                     javaScriptEnabled = true
@@ -992,7 +1148,7 @@ fun GoAppShellMode(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
                                 )
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
                                 settings.apply {
                                     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                     javaScriptEnabled = true
@@ -1215,7 +1371,7 @@ fun ServerAppShellMode(
                             }
                             val createdWebView = WebView(ctx).apply {
                                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
                                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 settings.apply {
                                     allowFileAccess = true

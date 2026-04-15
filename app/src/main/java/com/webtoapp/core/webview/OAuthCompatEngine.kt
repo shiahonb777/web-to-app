@@ -948,10 +948,11 @@ object OAuthCompatEngine {
     })();""".trimIndent()
 
     private val ZOOM_ANTI_DETECTION_JS = """(function(){'use strict';
-        // Zoom 检测 MediaDevices (摄像头/麦克风)
+        // Zoom 检测 MediaDevices — 仅补全检测 API，不替换 getUserMedia
+        // 重要: getUserMedia 必须保持原生实现，否则会导致麦克风/摄像头无法使用
         try{if(!navigator.mediaDevices){Object.defineProperty(navigator,'mediaDevices',{get:function(){return{
             enumerateDevices:function(){return Promise.resolve([])},
-            getUserMedia:function(){return Promise.reject(new DOMException('NotAllowed'))},
+            getUserMedia:function(c){return navigator.getUserMedia?new Promise(function(ok,fail){navigator.getUserMedia(c,ok,fail)}):Promise.reject(new DOMException('getUserMedia not supported','NotSupportedError'))},
             getSupportedConstraints:function(){return{width:true,height:true,aspectRatio:true,frameRate:true,facingMode:true,deviceId:true}}
         }},enumerable:true,configurable:true})}}catch(e){}
         // Zoom Web SDK 依赖 AudioContext

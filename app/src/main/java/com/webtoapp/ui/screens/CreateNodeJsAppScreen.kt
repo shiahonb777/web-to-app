@@ -70,6 +70,7 @@ fun CreateNodeJsAppScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val nodeRuntime = remember(context) { NodeRuntime(context) }
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
     
@@ -187,15 +188,12 @@ fun CreateNodeJsAppScreen(
                 
                 try {
                     withContext(Dispatchers.IO) {
-                        // 解析 SAF URI 到文件路径
-                        val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
-                        val path = docId.substringAfter(":")
-                        val storageRoot = if (docId.startsWith("primary:")) {
-                            android.os.Environment.getExternalStorageDirectory().absolutePath
-                        } else {
-                            "/storage/${docId.substringBefore(":")}"
+                        val projectPath = getPathFromUri(context, treeUri)
+                        if (projectPath.isNullOrBlank()) {
+                            errorMessage = Strings.dirNotExists
+                            isCreating = false
+                            return@withContext
                         }
-                        val projectPath = "$storageRoot/$path"
                         val projectDir = File(projectPath)
                         
                         if (!projectDir.exists() || !File(projectDir, "package.json").exists()) {
@@ -378,7 +376,28 @@ fun CreateNodeJsAppScreen(
             }
         }
     }
-    
+
+    val resolvedProjectName = packageName?.takeIf { it.isNotBlank() }
+        ?: selectedProjectDir?.substringAfterLast("/")
+        ?: appName.ifBlank { "Node.js App" }
+
+    val buildNodeJsConfig: (String, Int) -> NodeJsConfig = { pid, finalPort ->
+        val internalProjectPath = nodeRuntime.getProjectDir(pid).absolutePath
+        NodeJsConfig(
+            projectId = pid,
+            projectName = resolvedProjectName,
+            sourceProjectPath = selectedProjectDir?.takeIf { it != internalProjectPath } ?: "",
+            framework = detectedFramework ?: "",
+            buildMode = buildMode,
+            entryFile = entryFile,
+            serverPort = finalPort,
+            envVars = envVars,
+            hasNodeModules = dependencies.isNotEmpty(),
+            nodeVersion = nodeEngineVersion ?: "",
+            landscapeMode = landscapeMode
+        )
+    }
+
     // 判断是否可以创建
     val canCreate = projectId != null
     
@@ -396,57 +415,43 @@ fun CreateNodeJsAppScreen(
                     TextButton(
                         onClick = {
                             projectId?.let { pid ->
-                                val finalPort = customPort.toIntOrNull() ?: detectedPort
-                                
-                                if (enableTsPreCompile && hasTypeScript && esbuildAvailable) {
-                                    // 先预编译 TypeScript 再创建
+                                scope.launch {
                                     isCreating = true
-                                    creationPhase = Strings.tsPreCompile
-                                    scope.launch {
-                                        val projectDir = File(context.filesDir, "nodejs_projects/$pid")
-                                        if (projectDir.exists()) {
-                                            HtmlProjectOptimizer.optimizeDirectory(
-                                                context = context,
-                                                projectDir = projectDir.absolutePath
-                                            )
+                                    errorMessage = null
+                                    try {
+                                        val internalProjectPath = nodeRuntime.getProjectDir(pid).absolutePath
+                                        selectedProjectDir
+                                            ?.takeIf { it.isNotBlank() && it != internalProjectPath }
+                                            ?.let(::File)
+                                            ?.takeIf { it.exists() && it.isDirectory }
+                                            ?.let { sourceDir ->
+                                                creationPhase = Strings.copyingProjectFiles
+                                                nodeRuntime.syncProjectFromSource(pid, sourceDir)
+                                            }
+
+                                        if (enableTsPreCompile && hasTypeScript && esbuildAvailable) {
+                                            creationPhase = Strings.tsPreCompile
+                                            val projectDir = File(context.filesDir, "nodejs_projects/$pid")
+                                            if (projectDir.exists()) {
+                                                HtmlProjectOptimizer.optimizeDirectory(
+                                                    context = context,
+                                                    projectDir = projectDir.absolutePath
+                                                )
+                                            }
                                         }
-                                        isCreating = false
+
+                                        val finalPort = customPort.toIntOrNull() ?: detectedPort ?: 3000
                                         onCreated(
                                             appName.ifBlank { "Node.js App" },
-                                            NodeJsConfig(
-                                                projectId = pid,
-                                                projectName = appName.ifBlank { "Node.js App" },
-                                                framework = detectedFramework ?: "",
-                                                buildMode = buildMode,
-                                                entryFile = entryFile,
-                                                serverPort = finalPort ?: 3000,
-                                                envVars = envVars,
-                                                hasNodeModules = dependencies.isNotEmpty(),
-                                                nodeVersion = nodeEngineVersion ?: "",
-                                                landscapeMode = landscapeMode
-                                            ),
+                                            buildNodeJsConfig(pid, finalPort),
                                             appIcon,
                                             "AURORA"
                                         )
+                                    } catch (e: Exception) {
+                                        errorMessage = e.message ?: "项目同步失败"
+                                    } finally {
+                                        isCreating = false
                                     }
-                                } else {
-                                    onCreated(
-                                        appName.ifBlank { "Node.js App" },
-                                        NodeJsConfig(
-                                            projectId = pid,
-                                            projectName = appName.ifBlank { "Node.js App" },
-                                            framework = detectedFramework ?: "",
-                                            buildMode = buildMode,
-                                            entryFile = entryFile,
-                                            serverPort = finalPort ?: 3000,
-                                            envVars = envVars,
-                                            hasNodeModules = dependencies.isNotEmpty(),
-                                            nodeVersion = nodeEngineVersion ?: "",
-                                            landscapeMode = landscapeMode
-                                        ),
-                                        appIcon,
-                                        "AURORA"
-                                    )
                                 }
                             }
                         },
@@ -478,18 +483,14 @@ fun CreateNodeJsAppScreen(
                 nodeEngineVersion = nodeEngineVersion
             )
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. 基本配置（仅新建时显示，编辑时在通用配置中设置） ==========
+            if (!isEdit) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Settings,
+                        title = Strings.njsBasicConfig
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     // 应用名称
@@ -500,17 +501,6 @@ fun CreateNodeJsAppScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // 横屏模式
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(Strings.njsLandscapeMode)
-                        PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
-                    }
                 }
             }
             
@@ -519,19 +509,15 @@ fun CreateNodeJsAppScreen(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
+            }
             
             // ========== 4. 项目选择 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsSelectProjectFolder, style = MaterialTheme.typography.titleMedium)
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Folder,
+                        title = Strings.njsSelectProjectFolder
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = Strings.njsSelectProjectDesc,
@@ -742,15 +728,10 @@ fun CreateNodeJsAppScreen(
                 // ========== 7. 构建模式 ==========
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) { Icon(Icons.Outlined.Build, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(Strings.njsBuildMode, style = MaterialTheme.typography.titleMedium)
-                        }
+                        RuntimeSectionHeader(
+                            icon = Icons.Outlined.Build,
+                            title = Strings.njsBuildMode
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         listOf(
@@ -827,15 +808,11 @@ fun CreateNodeJsAppScreen(
                 if (hasTypeScript && esbuildAvailable) {
                     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF3178C6).copy(alpha = 0.1f)),
-                                    contentAlignment = Alignment.Center
-                                ) { Icon(Icons.Outlined.Speed, null, tint = Color(0xFF3178C6), modifier = Modifier.size(22.dp)) }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(Strings.tsPreCompile, style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
+                            RuntimeSectionHeader(
+                                icon = Icons.Outlined.Speed,
+                                title = Strings.tsPreCompile,
+                                brandColor = Color(0xFF3178C6)
+                            ) {
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
                                     color = Color(0xFF3178C6).copy(alpha = 0.15f)
@@ -899,16 +876,12 @@ fun CreateNodeJsAppScreen(
                 if (buildMode != NodeJsBuildMode.STATIC) {
                     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                    contentAlignment = Alignment.Center
-                                ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(Strings.njsEnvVars, style = MaterialTheme.typography.titleMedium)
+                            RuntimeSectionHeader(
+                                icon = Icons.Outlined.Settings,
+                                title = Strings.njsEnvVars,
+                                brandColor = frameworkColor
+                            ) {
                                 if (envVars.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
                                         color = frameworkColor.copy(alpha = 0.12f)
@@ -1097,102 +1070,29 @@ private fun NodeJsHeroSection(
     packageManager: String,
     nodeEngineVersion: String?
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(frameworkColor.copy(alpha = 0.15f), frameworkColor.copy(alpha = 0.05f))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = frameworkColor.copy(alpha = 0.15f)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Code, null, modifier = Modifier.size(32.dp), tint = frameworkColor)
-                    }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Text(
-                        text = if (detectedFramework != null) "$detectedFramework ${Strings.njsHeroTitle}"
-                        else Strings.njsHeroTitle,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = frameworkColor
-                    )
-                    Text(
-                        text = Strings.njsHeroDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // Node 版本标签
-                        nodeEngineVersion?.let { ver ->
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = frameworkColor.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = "Node $ver",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = frameworkColor,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            }
-                        }
-                        // TypeScript 标签
-                        if (hasTypeScript) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFF3178C6).copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = "TypeScript",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF3178C6),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                        // 包管理器标签
-                        val pmColor = when (packageManager) {
-                            "yarn" -> Color(0xFF2C8EBB)
-                            "pnpm" -> Color(0xFFF69220)
-                            "bun" -> Color(0xFFF9F1E1)
-                            else -> Color(0xFFCB3837)
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = pmColor.copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = packageManager,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (packageManager == "bun") Color(0xFFB89B00) else pmColor,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    val title = if (detectedFramework != null) "$detectedFramework ${Strings.njsHeroTitle}"
+    else Strings.njsHeroTitle
+    
+    val pmColor = when (packageManager) {
+        "yarn" -> Color(0xFF2C8EBB)
+        "pnpm" -> Color(0xFFF69220)
+        "bun" -> Color(0xFFF9F1E1)
+        else -> Color(0xFFCB3837)
     }
+    
+    val tags = buildList {
+        nodeEngineVersion?.let { add("Node $it" to frameworkColor) }
+        if (hasTypeScript) add("TypeScript" to Color(0xFF3178C6))
+        add(packageManager to pmColor)
+    }
+    
+    RuntimeHeroSection(
+        icon = Icons.Outlined.Code,
+        title = title,
+        subtitle = Strings.njsHeroDesc,
+        brandColor = frameworkColor,
+        tags = tags
+    )
 }
 
 /**
@@ -1213,15 +1113,11 @@ private fun NodeJsProjectInfoCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Info, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsProjectInfo, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Info,
+                title = Strings.njsProjectInfo,
+                brandColor = frameworkColor
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(
@@ -1364,15 +1260,11 @@ private fun NodeJsScriptsCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Terminal, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsScripts, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.width(8.dp))
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Terminal,
+                title = Strings.njsScripts,
+                brandColor = frameworkColor
+            ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
                     color = frameworkColor.copy(alpha = 0.12f)
@@ -1468,15 +1360,11 @@ private fun NodeJsPortCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Lan, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsDetectedPort, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Lan,
+                title = Strings.njsDetectedPort,
+                brandColor = frameworkColor
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             // 检测到的端口
@@ -1552,15 +1440,11 @@ private fun NodeJsDependenciesCard(
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(frameworkColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Inventory2, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsDependencies, style = MaterialTheme.typography.titleMedium)
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Inventory2,
+                title = Strings.njsDependencies,
+                brandColor = frameworkColor
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             // 生产依赖
@@ -1702,8 +1586,27 @@ private fun NodeJsDependenciesCard(
 }
 
 /**
- * 框架特定提示卡片
+ * 将系统目录选择器返回的 Tree URI 转换为本地文件路径
  */
+private fun getPathFromUri(context: android.content.Context, uri: Uri): String? {
+    return try {
+        val docId = android.provider.DocumentsContract.getTreeDocumentId(uri)
+        val split = docId.split(":")
+        if (split.size >= 2) {
+            val type = split[0]
+            val path = split[1]
+            when (type) {
+                "primary" -> "/storage/emulated/0/$path"
+                else -> "/storage/$type/$path"
+            }
+        } else {
+            uri.path
+        }
+    } catch (e: Exception) {
+        uri.path
+    }
+}
+
 @Composable
 private fun NodeJsFrameworkTipsCard(
     framework: String,
@@ -1754,19 +1657,11 @@ private fun NodeJsFrameworkTipsCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFFFC107).copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Lightbulb, null, tint = Color(0xFFFFC107), modifier = Modifier.size(22.dp)) }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "$framework Tips",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = frameworkColor
-                )
-            }
+            RuntimeSectionHeader(
+                icon = Icons.Outlined.Lightbulb,
+                title = "$framework Tips",
+                brandColor = Color(0xFFFFC107)
+            )
             Spacer(modifier = Modifier.height(12.dp))
             
             tips.forEach { tip ->

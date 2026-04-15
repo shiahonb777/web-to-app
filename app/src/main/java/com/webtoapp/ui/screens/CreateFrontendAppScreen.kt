@@ -25,11 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.webtoapp.core.frontend.*
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.linux.*
@@ -133,6 +136,7 @@ fun CreateFrontendAppScreen(
     
     // Show日志对话框
     var showLogsDialog by remember { mutableStateOf(false) }
+    var showErrorReportDialog by remember { mutableStateOf(false) }
     
     // Check Linux 环境
     LaunchedEffect(Unit) {
@@ -234,28 +238,10 @@ fun CreateFrontendAppScreen(
             // ========== 选择项目 ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Outlined.Folder,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            Strings.selectProject,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    RuntimeSectionHeader(
+                        icon = Icons.Outlined.Folder,
+                        title = Strings.selectProject
+                    )
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
@@ -325,36 +311,18 @@ fun CreateFrontendAppScreen(
             AnimatedVisibility(visible = isDetecting || detectionResult != null) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
+                            RuntimeSectionHeader(
+                                icon = Icons.Outlined.Analytics,
+                                title = Strings.projectAnalysis,
+                                brandColor = MaterialTheme.colorScheme.secondary
                             ) {
-                                Icon(
-                                    Icons.Outlined.Analytics,
-                                    null,
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(22.dp)
-                                )
+                                if (isDetecting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                Strings.projectAnalysis,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            
-                            if (isDetecting) {
-                                Spacer(modifier = Modifier.width(12.dp))
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            }
-                        }
                         
                         if (detectionResult != null) {
                             Spacer(modifier = Modifier.height(16.dp))
@@ -437,33 +405,17 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 应用配置 ==========
+            // ========== 应用配置（仅新建时显示，编辑时在通用配置中设置） ==========
+            if (!isEditMode) {
             AnimatedVisibility(visible = detectionResult != null && 
                 detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Settings,
-                                    null,
-                                    tint = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                Strings.appConfig,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                        RuntimeSectionHeader(
+                            icon = Icons.Outlined.Settings,
+                            title = Strings.appConfig,
+                            brandColor = MaterialTheme.colorScheme.tertiary
+                        )
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
@@ -495,6 +447,7 @@ fun CreateFrontendAppScreen(
                         }
                     }
                 }
+            }
             }
             
             // ========== 构建状态 ==========
@@ -558,7 +511,10 @@ fun CreateFrontendAppScreen(
                         PremiumButton(
                             onClick = {
                                 scope.launch {
-                                    val result = nodeBuilder.buildProject(projectPath!!)
+                                    val result = nodeBuilder.buildProject(
+                                        projectPath!!,
+                                        NodeBuildConfig(allowBuiltinPackagerFallback = false)
+                                    )
                                     result.onSuccess { buildResult ->
                                         onCreated(
                                             projectName,
@@ -597,6 +553,15 @@ fun CreateFrontendAppScreen(
                 }
                 is BuildState.Error -> {
                     Column {
+                        PremiumOutlinedButton(
+                            onClick = { showErrorReportDialog = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Outlined.BugReport, null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("查看完整报错")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                         PremiumButton(
                             onClick = { 
                                 importBuilder.reset()
@@ -632,6 +597,21 @@ fun CreateFrontendAppScreen(
         BuildLogsDialog(
             logs = currentLogs,
             onDismiss = { showLogsDialog = false }
+        )
+    }
+
+    if (showErrorReportDialog && currentBuildState is BuildState.Error) {
+        FullErrorReportDialog(
+            title = "完整报错",
+            summary = currentBuildState.message,
+            report = buildFrontendErrorReport(
+                mode = buildMode,
+                projectPath = projectPath,
+                detectionResult = detectionResult,
+                logs = currentLogs,
+                summary = currentBuildState.message
+            ),
+            onDismiss = { showErrorReportDialog = false }
         )
     }
         }
@@ -996,6 +976,106 @@ private fun BuildLogsDialog(
                         color = color,
                         modifier = Modifier.padding(vertical = 2.dp)
                     )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
+}
+
+private fun buildFrontendErrorReport(
+    mode: BuildMode,
+    projectPath: String?,
+    detectionResult: ProjectDetectionResult?,
+    logs: List<BuildLogEntry>,
+    summary: String
+): String {
+    return buildString {
+        appendLine("WebToApp Frontend Build Failure")
+        appendLine("mode: ${mode.name}")
+        appendLine("projectPath: ${projectPath ?: "null"}")
+        appendLine("framework: ${detectionResult?.framework ?: "unknown"}")
+        appendLine("outputDir: ${detectionResult?.outputDir ?: "unknown"}")
+        appendLine("summary: $summary")
+        appendLine()
+        appendLine("issues:")
+        if (detectionResult?.issues.isNullOrEmpty()) {
+            appendLine("none")
+        } else {
+            detectionResult!!.issues.forEach { issue ->
+                appendLine("- ${issue.severity}: ${issue.message}")
+                issue.suggestion?.let { appendLine("  suggestion: $it") }
+            }
+        }
+        appendLine()
+        appendLine("logs:")
+        if (logs.isEmpty()) {
+            appendLine("no logs")
+        } else {
+            logs.forEach { entry ->
+                appendLine("[${entry.level}] ${entry.message}")
+            }
+        }
+    }
+}
+
+@Composable
+private fun FullErrorReportDialog(
+    title: String,
+    summary: String,
+    report: String,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title)
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            lineHeight = 18.sp
+                        )
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
                 }
             }
         },

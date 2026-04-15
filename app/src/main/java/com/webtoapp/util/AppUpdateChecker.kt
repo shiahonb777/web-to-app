@@ -20,7 +20,7 @@ import okhttp3.Request
  * 架构设计（最大化节省服务器流量）：
  * - 版本检查：通过自有服务器 API（仅几 KB 的 JSON 响应）
  * - APK 下载：直接走 GitHub Releases（免费无限流量，不消耗服务器带宽）
- * - 备用方案：如果服务器 API 不可用，fallback 到 GitHub releases 页面抓取
+ * - 版本检查失败时直接返回错误，不再切换到其他检测路径
  * 
  * 流量消耗对比：
  *   服务器 API：~1 KB/次检查
@@ -37,9 +37,6 @@ object AppUpdateChecker {
     // APK 下载地址模板（通过 gh-proxy 加速，全球可用，不消耗服务器流量）
     private const val DOWNLOAD_URL_TEMPLATE = "https://gh-proxy.org/https://github.com/shiahonb777/web-to-app/releases/download/v{VERSION}/web-to-app-{VERSION}.APK"
     
-    // GitHub releases 页面（备用版本检测）
-    private const val GITHUB_RELEASES_URL = "https://github.com/shiahonb777/web-to-app/releases"
-    
     // 重试配置
     private const val MAX_RETRIES = 3
     private const val RETRY_DELAY_MS = 1000L
@@ -52,9 +49,6 @@ object AppUpdateChecker {
     private const val KEY_AUTO_CHECK_UPDATE = "auto_check_update"
     private const val KEY_LAST_AUTO_CHECK_TIME = "last_auto_check_time"
     private const val AUTO_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000L // 6小时冷却
-    
-    // Pre-compiled regex for fallback version extraction
-    private val VERSION_REGEX = Regex("""releases/(?:tag|download)/v?(\d+\.\d+\.\d+)""")
     
     @Volatile
     private var cachedUpdateInfo: UpdateInfo? = null
@@ -133,11 +127,11 @@ object AppUpdateChecker {
             }
         }
         
-        // 带重试的请求：优先用服务器 API，失败后 fallback 到 GitHub
+        // 带重试的请求：仅使用服务器 API，失败后直接返回错误
         var lastException: Exception? = null
         repeat(MAX_RETRIES) { attempt ->
             try {
-                // 首选：自有服务器 API（几乎不消耗流量）
+                // 自有服务器 API（几乎不消耗流量）
                 val result = fetchFromServerApi(currentVersionName, currentVersionCode)
                 if (result.isSuccess) {
                     result.getOrNull()?.let { info ->
@@ -156,22 +150,7 @@ object AppUpdateChecker {
                 delay(RETRY_DELAY_MS * (attempt + 1))
             }
         }
-        
-        // Fallback：GitHub releases 页面抓取
-        AppLogger.i(TAG, "服务器 API 不可用，尝试 GitHub fallback")
-        try {
-            val fallbackResult = fetchFromGitHub(currentVersionName)
-            if (fallbackResult.isSuccess) {
-                fallbackResult.getOrNull()?.let { info ->
-                    cachedUpdateInfo = info
-                    cacheTimestamp = System.currentTimeMillis()
-                }
-                return@withContext fallbackResult
-            }
-        } catch (e: Exception) {
-            AppLogger.w(TAG, "GitHub fallback 也失败了", e)
-        }
-        
+
         Result.failure(lastException ?: Exception("检查更新失败"))
     }
     
@@ -239,43 +218,6 @@ object AppUpdateChecker {
     }
     
     /**
-     * Fallback：通过 GitHub releases 页面抓取版本（备用方案）
-     */
-    private fun fetchFromGitHub(currentVersionName: String): Result<UpdateInfo> {
-        return try {
-            val request = Request.Builder()
-                .url(GITHUB_RELEASES_URL)
-                .header("User-Agent", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36")
-                .get()
-                .build()
-            
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                return Result.failure(Exception("GitHub 请求失败: ${response.code}"))
-            }
-            
-            val html = response.body?.string() ?: ""
-            val latestVersion = extractLatestVersion(html)
-            if (latestVersion.isEmpty()) {
-                return Result.failure(Exception("未找到版本信息"))
-            }
-            
-            val hasUpdate = compareVersions(latestVersion, currentVersionName) > 0
-            val downloadUrl = buildGitHubDownloadUrl(latestVersion)
-            
-            Result.success(UpdateInfo(
-                versionName = "v$latestVersion",
-                versionCode = parseVersionToCode(latestVersion),
-                downloadUrl = downloadUrl,
-                hasUpdate = hasUpdate
-            ))
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "GitHub fallback 检查失败", e)
-            Result.failure(e)
-        }
-    }
-    
-    /**
      * 检查缓存是否有效
      */
     private fun isCacheValid(): Boolean {
@@ -289,26 +231,6 @@ object AppUpdateChecker {
     fun clearCache() {
         cachedUpdateInfo = null
         cacheTimestamp = 0
-    }
-    
-    /**
-     * 从 releases 页面提取最新版本号（fallback 用）
-     */
-    private fun extractLatestVersion(html: String): String {
-        var latestVersion = ""
-        var latestVersionCode = 0
-        
-        VERSION_REGEX.findAll(html).forEach { match ->
-            val version = match.groupValues[1]
-            val versionCode = parseVersionToCode(version)
-            if (versionCode > latestVersionCode) {
-                latestVersionCode = versionCode
-                latestVersion = version
-            }
-        }
-        
-        AppLogger.d(TAG, "检测到最新版本: $latestVersion")
-        return latestVersion
     }
     
     /**

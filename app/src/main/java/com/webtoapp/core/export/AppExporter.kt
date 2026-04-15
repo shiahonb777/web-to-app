@@ -16,6 +16,7 @@ import androidx.core.graphics.drawable.IconCompat
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.webtoapp.data.model.WebApp
+import com.webtoapp.data.model.getActivationCodeStrings
 import com.webtoapp.ui.webview.WebViewActivity
 import com.webtoapp.util.threadLocalCompat
 import java.io.File
@@ -489,7 +490,7 @@ object AppConfig {
     
     // Activation码配置
     const val ACTIVATION_ENABLED = ${webApp.activationEnabled}
-    val ACTIVATION_CODES = listOf(${webApp.activationCodes.joinToString { "\"$it\"" }})
+    val ACTIVATION_CODES = listOf(${webApp.getActivationCodeStrings().joinToString { gson.toJson(it) }})
     
     // Ad拦截配置
     const val AD_BLOCK_ENABLED = ${webApp.adBlockEnabled}
@@ -560,7 +561,7 @@ object AppConfig {
         "name" to name,
         "url" to url,
         "activationEnabled" to activationEnabled,
-        "activationCodes" to activationCodes,
+        "activationCodeList" to activationCodeList,
         "adBlockEnabled" to adBlockEnabled,
         "adBlockRules" to adBlockRules,
         "announcementEnabled" to announcementEnabled,

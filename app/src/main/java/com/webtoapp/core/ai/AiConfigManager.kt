@@ -9,7 +9,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonParser
 import com.webtoapp.util.GsonProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.*
@@ -17,7 +17,6 @@ import com.webtoapp.data.model.AiFeature
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.lang.reflect.Type
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -35,20 +34,12 @@ class AiConfigManager(private val context: Context) {
     companion object {
         private const val TAG = "AiConfigManager"
         private val KEY_API_KEYS = stringPreferencesKey("api_keys")
+        private val KEY_API_KEYS_BACKUP = stringPreferencesKey("api_keys_backup")  // 明文备份，防止 KeyStore 密钥丢失
         private val KEY_SAVED_MODELS = stringPreferencesKey("saved_models")
         private val KEY_DEFAULT_MODEL = stringPreferencesKey("default_model")
         
         // Gson 单例
         private val gson get() = GsonProvider.gson
-        
-        // TypeToken 缓存
-        private val apiKeyListType: Type by lazy {
-            object : TypeToken<List<ApiKeyConfig>>() {}.type
-        }
-        
-        private val savedModelListType: Type by lazy {
-            object : TypeToken<List<SavedModel>>() {}.type
-        }
 
         private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
         private const val KEY_ALIAS = "webtoapp_ai_api_keys"
@@ -60,25 +51,39 @@ class AiConfigManager(private val context: Context) {
     
     // API Keys Flow
     val apiKeysFlow: Flow<List<ApiKeyConfig>> = context.aiConfigDataStore.data.map { prefs ->
-        val stored = prefs[KEY_API_KEYS] ?: "[]"
-        val json = decodeSensitiveJson(stored) ?: "[]"
-        try {
-            val result: List<ApiKeyConfig> = gson.fromJson(json, apiKeyListType)
-            result ?: emptyList()
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to parse API keys JSON", e)
-            emptyList()
+        // 优先从加密存储读取
+        val stored = prefs[KEY_API_KEYS]
+        if (stored != null) {
+            val json = decodeSensitiveJson(stored)
+            if (json != null) {
+                val result = parseApiKeyConfigs(json)
+                if (result != null) return@map result
+                AppLogger.e(TAG, "Failed to parse API keys from primary")
+            }
         }
+        // 主存储解密/解析失败，尝试明文备份
+        val backup = prefs[KEY_API_KEYS_BACKUP]
+        if (backup != null) {
+            val result = parseApiKeyConfigs(backup)
+            if (result != null && result.isNotEmpty()) {
+                AppLogger.w(TAG, "apiKeysFlow: recovered ${result.size} keys from backup")
+                return@map result
+            }
+            if (result == null) {
+                AppLogger.e(TAG, "Failed to parse API keys from backup")
+            }
+        }
+        emptyList()
     }
     
     // Saved的模型 Flow
     val savedModelsFlow: Flow<List<SavedModel>> = context.aiConfigDataStore.data.map { prefs ->
         val json = prefs[KEY_SAVED_MODELS] ?: "[]"
-        try {
-            val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
-            result ?: emptyList()
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to parse saved models JSON", e)
+        val result = parseSavedModels(json)
+        if (result != null) {
+            result
+        } else {
+            AppLogger.e(TAG, "Failed to parse saved models JSON")
             emptyList()
         }
     }
@@ -95,9 +100,15 @@ class AiConfigManager(private val context: Context) {
         return try {
             context.aiConfigDataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
+                if (current == null) {
+                    // 解密失败，不覆盖现有数据，避免误删
+                    AppLogger.e(TAG, "Cannot add API key: failed to decrypt existing keys, aborting to prevent data loss")
+                    throw IllegalStateException("Decrypt failure, aborting write")
+                }
                 val updated = current + config
                 val jsonStr = gson.toJson(updated)
                 prefs[KEY_API_KEYS] = encodeSensitiveJson(jsonStr)
+                prefs[KEY_API_KEYS_BACKUP] = jsonStr  // 明文备份
                 AppLogger.d(TAG, "API key added: ${config.provider.name}, total: ${updated.size}")
             }
             true
@@ -114,8 +125,14 @@ class AiConfigManager(private val context: Context) {
         return try {
             context.aiConfigDataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
+                if (current == null) {
+                    AppLogger.e(TAG, "Cannot update API key: failed to decrypt existing keys, aborting")
+                    throw IllegalStateException("Decrypt failure, aborting write")
+                }
                 val updated = current.map { if (it.id == config.id) config else it }
-                prefs[KEY_API_KEYS] = encodeSensitiveJson(gson.toJson(updated))
+                val jsonStr = gson.toJson(updated)
+                prefs[KEY_API_KEYS] = encodeSensitiveJson(jsonStr)
+                prefs[KEY_API_KEYS_BACKUP] = jsonStr
                 AppLogger.d(TAG, "API key updated: ${config.provider.name}")
             }
             true
@@ -132,8 +149,14 @@ class AiConfigManager(private val context: Context) {
         return try {
             context.aiConfigDataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
+                if (current == null) {
+                    AppLogger.e(TAG, "Cannot delete API key: failed to decrypt existing keys, aborting")
+                    throw IllegalStateException("Decrypt failure, aborting write")
+                }
                 val updated = current.filter { it.id != id }
-                prefs[KEY_API_KEYS] = encodeSensitiveJson(gson.toJson(updated))
+                val jsonStr = gson.toJson(updated)
+                prefs[KEY_API_KEYS] = encodeSensitiveJson(jsonStr)
+                prefs[KEY_API_KEYS_BACKUP] = jsonStr
                 AppLogger.d(TAG, "API key deleted, remaining: ${updated.size}")
             }
             true
@@ -245,7 +268,7 @@ class AiConfigManager(private val context: Context) {
     suspend fun getApiKeyById(id: String): ApiKeyConfig? {
         // Use data.first() for reads instead of edit{} which acquires a write lock unnecessarily
         val prefs = context.aiConfigDataStore.data.first()
-        return getApiKeys(prefs).find { it.id == id }
+        return (getApiKeys(prefs) ?: emptyList()).find { it.id == id }
     }
     
     /**
@@ -257,29 +280,41 @@ class AiConfigManager(private val context: Context) {
     }
     
     // 辅助方法
-    private fun getApiKeys(prefs: Preferences): List<ApiKeyConfig> {
+    // 返回 null 表示解密失败（区别于空列表），用于写入操作中防止误覆盖
+    private fun getApiKeys(prefs: Preferences): List<ApiKeyConfig>? {
         val stored = prefs[KEY_API_KEYS] ?: return emptyList()
         val json = decodeSensitiveJson(stored)
+        if (json != null) {
+            val result = parseApiKeyConfigs(json)
+            if (result != null) {
+                return result
+            }
+            AppLogger.e(TAG, "Failed to deserialize API keys from primary")
+        }
+        // 主存储解密/解析失败，尝试从备份恢复
+        val backup = prefs[KEY_API_KEYS_BACKUP]
+        if (backup != null) {
+            val result = parseApiKeyConfigs(backup)
+            if (result != null && result.isNotEmpty()) {
+                AppLogger.w(TAG, "Recovered ${result.size} API keys from backup")
+                return result
+            }
+            if (result == null) {
+                AppLogger.e(TAG, "Failed to deserialize API keys from backup")
+            }
+        }
+        // 两个都失败了
         if (json == null) {
-            AppLogger.e(TAG, "Failed to decode API keys, data may be corrupted")
-            return emptyList()
+            AppLogger.e(TAG, "Failed to decode API keys from both primary and backup")
+            return null  // 返回 null 表示解密失败
         }
-        return try {
-            val result: List<ApiKeyConfig> = gson.fromJson(json, apiKeyListType)
-            result ?: emptyList()
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to deserialize API keys", e)
-            emptyList()
-        }
+        return emptyList()
     }
     
     private fun getSavedModels(prefs: Preferences): List<SavedModel> {
         val json = prefs[KEY_SAVED_MODELS] ?: return emptyList()
-        return try {
-            val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
-            result ?: emptyList()
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to deserialize saved models", e)
+        return parseSavedModels(json) ?: run {
+            AppLogger.e(TAG, "Failed to deserialize saved models")
             emptyList()
         }
     }
@@ -309,6 +344,35 @@ class AiConfigManager(private val context: Context) {
             } catch (_: Exception) {
                 null
             }
+        }
+    }
+
+    internal fun parseApiKeyConfigs(json: String): List<ApiKeyConfig>? {
+        return parseJsonArray(json, ApiKeyConfig::class.java)
+    }
+
+    internal fun parseSavedModels(json: String): List<SavedModel>? {
+        return parseJsonArray(json, SavedModel::class.java)
+    }
+
+    private fun <T> parseJsonArray(json: String, clazz: Class<T>): List<T>? {
+        return try {
+            val parsed = JsonParser.parseString(json)
+            if (parsed.isJsonNull) return emptyList()
+            if (!parsed.isJsonArray) return null
+
+            val jsonArray = parsed.asJsonArray
+            val result = jsonArray.mapNotNull { element ->
+                try {
+                    gson.fromJson(element, clazz)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            if (jsonArray.size() > 0 && result.isEmpty()) null else result
+        } catch (_: Exception) {
+            null
         }
     }
 

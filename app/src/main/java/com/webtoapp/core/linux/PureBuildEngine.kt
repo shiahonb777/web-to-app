@@ -30,7 +30,10 @@ import java.io.*
  * 
  * 但如果连 esbuild 都无法下载怎么办？
  * 
- * 终极方案：纯 Kotlin 实现的 JavaScript 打包器
+ * 我们仍然保留纯 Kotlin 打包器，但是否允许自动切换由调用方决定。
+ * 在严格模式下，esbuild 不可用会直接失败并暴露完整错误。
+ * 
+ * 纯 Kotlin 打包器：
  * - 不依赖任何外部二进制
  * - 完全在 JVM 上运行
  * - 支持基本的模块解析和打包
@@ -67,6 +70,8 @@ class PureBuildEngine(private val context: Context) {
     
     private val _logs = MutableStateFlow<List<String>>(emptyList())
     val logs: StateFlow<List<String>> = _logs
+
+    var allowBuiltinPackagerFallback: Boolean = true
     
     /**
      * 构建项目
@@ -74,7 +79,7 @@ class PureBuildEngine(private val context: Context) {
      * 策略：
      * 1. 如果项目已有 dist 目录，直接使用
      * 2. 如果有 esbuild，使用 esbuild 构建
-     * 3. 否则使用纯 Kotlin 打包器
+     * 3. 是否允许切到纯 Kotlin 打包器由 allowBuiltinPackagerFallback 决定
      */
     suspend fun build(
         projectPath: String,
@@ -131,6 +136,12 @@ class PureBuildEngine(private val context: Context) {
                 return@withContext buildWithEsbuild(projectDir, File(outputPath), onProgress)
             }
             
+            if (!allowBuiltinPackagerFallback) {
+                throw IllegalStateException(
+                    "esbuild 不可用，且当前已禁止自动切换到内置打包器。请先修复 esbuild 安装，或在电脑完成构建后再导入。"
+                )
+            }
+
             // 最后手段：纯 Kotlin 打包
             log("使用内置打包器")
             return@withContext buildWithPureKotlin(projectDir, File(outputPath), onProgress)

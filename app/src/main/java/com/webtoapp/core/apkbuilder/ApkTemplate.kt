@@ -142,6 +142,7 @@ class ApkTemplate(private val context: Context) {
                 "swipeRefreshEnabled": ${config.swipeRefreshEnabled},
                 "fullscreenEnabled": ${config.fullscreenEnabled},
                 "hideToolbar": ${config.hideToolbar},
+                "hideBrowserToolbar": ${config.hideBrowserToolbar},
                 "showStatusBarInFullscreen": ${config.showStatusBarInFullscreen},
                 "showNavigationBarInFullscreen": ${config.showNavigationBarInFullscreen},
                 "showToolbarInFullscreen": ${config.showToolbarInFullscreen},
@@ -177,6 +178,12 @@ class ApkTemplate(private val context: Context) {
                 "performanceOptimization": ${config.performanceOptimization},
                 "pwaOfflineEnabled": ${config.pwaOfflineEnabled},
                 "pwaOfflineStrategy": "${config.pwaOfflineStrategy}",
+                "proxyMode": "${config.proxyMode}",
+                "proxyHost": "${escapeJson(config.proxyHost)}",
+                "proxyPort": ${config.proxyPort},
+                "proxyType": "${config.proxyType}",
+                "pacUrl": "${escapeJson(config.pacUrl)}",
+                "proxyBypassRules": [${config.proxyBypassRules.joinToString(",") { "\"${escapeJson(it)}\"" }}],
                 "showFloatingBackButton": ${config.showFloatingBackButton},
                 "floatingWindowConfig": {
                     "enabled": ${config.floatingWindowEnabled},
@@ -277,6 +284,7 @@ class ApkTemplate(private val context: Context) {
             } else "null"},
             "blackTechConfig": ${gson.toJson(config.blackTechConfig)},
             "disguiseConfig": ${gson.toJson(config.disguiseConfig)},
+            "browserDisguiseConfig": ${gson.toJson(config.browserDisguiseConfig)},
             "language": "${config.language}",
             "engineType": "${config.engineType}",
             "wordpressConfig": {
@@ -347,7 +355,7 @@ class ApkTemplate(private val context: Context) {
      * 转义 JSON 字符串
      * 完整处理所有JSON特殊字符，确保JavaScript代码可以正确嵌入
      */
-    private fun escapeJson(str: String): String {
+    internal fun escapeJson(str: String): String {
         val sb = StringBuilder()
         for (char in str) {
             when (char) {
@@ -526,6 +534,7 @@ data class ApkConfig(
     val userAgentMode: String = "DEFAULT", // User-Agent 模式: DEFAULT, CHROME_MOBILE, CHROME_DESKTOP, SAFARI_MOBILE, SAFARI_DESKTOP, FIREFOX_MOBILE, FIREFOX_DESKTOP, EDGE_MOBILE, EDGE_DESKTOP, CUSTOM
     val customUserAgent: String? = null, // Custom User-Agent（仅 CUSTOM 模式使用）
     val hideToolbar: Boolean = false,
+    val hideBrowserToolbar: Boolean = false, // 仅隐藏浏览器工具栏（不触发沉浸式）
     val showStatusBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示状态栏
     val showNavigationBarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示导航栏
     val showToolbarInFullscreen: Boolean = false,  // Fullscreen模式下是否显示顶部导航栏
@@ -568,6 +577,14 @@ data class ApkConfig(
     val performanceOptimization: Boolean = false, // 运行时性能优化脚本
     val pwaOfflineEnabled: Boolean = false, // PWA Service Worker 离线缓存
     val pwaOfflineStrategy: String = "NETWORK_FIRST", // CACHE_FIRST, NETWORK_FIRST, STALE_WHILE_REVALIDATE
+    
+    // 代理配置
+    val proxyMode: String = "NONE",              // NONE, STATIC, PAC
+    val proxyHost: String = "",                   // 固定代理主机（STATIC 模式）
+    val proxyPort: Int = 0,                       // 固定代理端口（STATIC 模式）
+    val proxyType: String = "HTTP",               // HTTP, HTTPS, SOCKS5（STATIC 模式）
+    val pacUrl: String = "",                      // PAC 脚本 URL（PAC 模式）
+    val proxyBypassRules: List<String> = emptyList(), // 代理绕过规则
     
     // 网络错误页配置
     val errorPageMode: String = "BUILTIN_STYLE", // DEFAULT, BUILTIN_STYLE, CUSTOM_HTML, CUSTOM_MEDIA
@@ -678,6 +695,9 @@ data class ApkConfig(
     
     // App伪装配置（独立模块）
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
+    
+    // 浏览器伪装配置（反指纹引擎）
+    val browserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig? = null,
     
     // 界面语言配置
     val language: String = "CHINESE",  // CHINESE, ENGLISH, ARABIC

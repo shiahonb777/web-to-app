@@ -35,6 +35,7 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         openExternalLinks = config.webViewConfig.openExternalLinks,
         downloadEnabled = true, // 确保下载功能始终启用
         hideToolbar = config.webViewConfig.hideToolbar,
+        hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar,
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen,
         showNavigationBarInFullscreen = config.webViewConfig.showNavigationBarInFullscreen,
         showToolbarInFullscreen = config.webViewConfig.showToolbarInFullscreen,
@@ -118,6 +119,13 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         // 本地文件访问配置 - HTML/FRONTEND 应用必须启用
         allowFileAccessFromFileURLs = isLocalFileApp,
         allowUniversalAccessFromFileURLs = isLocalFileApp,
+        // 代理配置
+        proxyMode = config.webViewConfig.proxyMode,
+        proxyHost = config.webViewConfig.proxyHost,
+        proxyPort = config.webViewConfig.proxyPort,
+        proxyType = config.webViewConfig.proxyType,
+        pacUrl = config.webViewConfig.pacUrl,
+        proxyBypassRules = config.webViewConfig.proxyBypassRules,
         injectScripts = config.webViewConfig.injectScripts.map { shellScript ->
             com.webtoapp.data.model.UserScript(
                 name = shellScript.name,

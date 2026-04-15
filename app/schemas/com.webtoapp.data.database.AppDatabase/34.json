@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 33,
-    "identityHash": "de2119d05baefd3e317cf4995a013cdd",
+    "version": 34,
+    "identityHash": "7a5894e4e97fbc54f978ebed92fe8584",
     "entities": [
       {
         "tableName": "web_apps",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `url` TEXT NOT NULL, `iconPath` TEXT, `packageName` TEXT, `appType` TEXT NOT NULL, `mediaConfig` TEXT, `galleryConfig` TEXT, `htmlConfig` TEXT, `wordpressConfig` TEXT, `nodejsConfig` TEXT, `phpAppConfig` TEXT, `pythonAppConfig` TEXT, `goAppConfig` TEXT, `multiWebConfig` TEXT, `activationEnabled` INTEGER NOT NULL, `activationCodes` TEXT NOT NULL, `activationCodeList` TEXT NOT NULL, `activationRequireEveryTime` INTEGER NOT NULL, `isActivated` INTEGER NOT NULL, `adsEnabled` INTEGER NOT NULL, `adConfig` TEXT, `announcementEnabled` INTEGER NOT NULL, `announcement` TEXT, `adBlockEnabled` INTEGER NOT NULL, `adBlockRules` TEXT NOT NULL, `webViewConfig` TEXT NOT NULL, `splashEnabled` INTEGER NOT NULL, `splashConfig` TEXT, `bgmEnabled` INTEGER NOT NULL, `bgmConfig` TEXT, `apkExportConfig` TEXT, `themeType` TEXT NOT NULL, `translateEnabled` INTEGER NOT NULL, `translateConfig` TEXT, `extensionModuleIds` TEXT NOT NULL, `extensionFabIcon` TEXT, `autoStartConfig` TEXT, `forcedRunConfig` TEXT, `blackTechConfig` TEXT, `disguiseConfig` TEXT, `browserDisguiseConfig` TEXT, `deviceDisguiseConfig` TEXT, `activationDialogConfig` TEXT, `categoryId` INTEGER, `cloudConfig` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `url` TEXT NOT NULL, `iconPath` TEXT, `packageName` TEXT, `appType` TEXT NOT NULL, `mediaConfig` TEXT, `galleryConfig` TEXT, `htmlConfig` TEXT, `wordpressConfig` TEXT, `nodejsConfig` TEXT, `phpAppConfig` TEXT, `pythonAppConfig` TEXT, `goAppConfig` TEXT, `multiWebConfig` TEXT, `activationEnabled` INTEGER NOT NULL, `activationCodes` TEXT NOT NULL, `activationCodeList` TEXT NOT NULL, `activationRequireEveryTime` INTEGER NOT NULL, `isActivated` INTEGER NOT NULL, `adsEnabled` INTEGER NOT NULL, `adConfig` TEXT, `announcementEnabled` INTEGER NOT NULL, `announcement` TEXT, `adBlockEnabled` INTEGER NOT NULL, `adBlockRules` TEXT NOT NULL, `webViewConfig` TEXT NOT NULL, `splashEnabled` INTEGER NOT NULL, `splashConfig` TEXT, `bgmEnabled` INTEGER NOT NULL, `bgmConfig` TEXT, `apkExportConfig` TEXT, `themeType` TEXT NOT NULL, `translateEnabled` INTEGER NOT NULL, `translateConfig` TEXT, `extensionEnabled` INTEGER NOT NULL, `extensionModuleIds` TEXT NOT NULL, `extensionFabIcon` TEXT, `autoStartConfig` TEXT, `forcedRunConfig` TEXT, `blackTechConfig` TEXT, `disguiseConfig` TEXT, `browserDisguiseConfig` TEXT, `deviceDisguiseConfig` TEXT, `activationDialogConfig` TEXT, `categoryId` INTEGER, `cloudConfig` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -217,6 +217,12 @@
             "columnName": "translateConfig",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "extensionEnabled",
+            "columnName": "extensionEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "extensionModuleIds",
@@ -577,7 +583,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'de2119d05baefd3e317cf4995a013cdd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7a5894e4e97fbc54f978ebed92fe8584')"
     ]
   }
 }

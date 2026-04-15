@@ -186,12 +186,14 @@ private fun StatusCard(
 ) {
     val isReady = state is EnvironmentState.Ready
     val isInstalling = state is EnvironmentState.Downloading || state is EnvironmentState.Installing
+    val isError = state is EnvironmentState.Error
     
     // 使用主题色作为就绪状态的颜色
     val readyColor = themeColor
     
     val cardColor = when {
         isReady -> readyColor.copy(alpha = 0.15f)
+        isError -> MaterialTheme.colorScheme.errorContainer
         isInstalling -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
@@ -207,6 +209,7 @@ private fun StatusCard(
                         .background(
                             when {
                                 isReady -> readyColor
+                                isError -> MaterialTheme.colorScheme.error
                                 isInstalling -> MaterialTheme.colorScheme.primary
                                 else -> MaterialTheme.colorScheme.outline
                             }
@@ -215,6 +218,7 @@ private fun StatusCard(
                 ) {
                     when {
                         isReady -> Icon(Icons.Filled.CheckCircle, null, tint = Color.White, modifier = Modifier.size(32.dp))
+                        isError -> Icon(Icons.Filled.Error, null, tint = Color.White, modifier = Modifier.size(32.dp))
                         isInstalling -> CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color.White, strokeWidth = 3.dp)
                         else -> Icon(Icons.Outlined.Build, null, tint = Color.White, modifier = Modifier.size(32.dp))
                     }
@@ -229,6 +233,7 @@ private fun StatusCard(
                             is EnvironmentState.NotInstalled -> Strings.envNotInstalled
                             is EnvironmentState.Downloading -> "${Strings.envDownloading}: ${state.component}"
                             is EnvironmentState.Installing -> "${Strings.envInstalling}: ${state.step}"
+                            is EnvironmentState.Error -> "构建环境安装失败"
                             else -> Strings.ready
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -240,6 +245,7 @@ private fun StatusCard(
                             is EnvironmentState.NotInstalled -> Strings.builtInPackagerReady
                             is EnvironmentState.Downloading -> "${(state.progress * 100).toInt()}%"
                             is EnvironmentState.Installing -> "${(state.progress * 100).toInt()}%"
+                            is EnvironmentState.Error -> state.message
                             else -> Strings.canBuildFrontend
                         },
                         style = MaterialTheme.typography.bodyMedium,
@@ -273,16 +279,17 @@ private fun StatusCard(
                 }
             }
             
-            AnimatedVisibility(visible = state is EnvironmentState.NotInstalled) {
+            AnimatedVisibility(visible = state is EnvironmentState.NotInstalled || state is EnvironmentState.Error) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     PremiumButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Download, null)
+                        Icon(if (state is EnvironmentState.Error) Icons.Default.Refresh else Icons.Default.Download, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.installAdvancedBuildTool)
+                        Text(if (state is EnvironmentState.Error) "重新安装 esbuild" else Strings.installAdvancedBuildTool)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.optionalEsbuildHint,
+                        if (state is EnvironmentState.Error) "安装失败不会再伪装成可用状态。修复环境后再继续构建。"
+                        else Strings.optionalEsbuildHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

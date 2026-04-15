@@ -118,6 +118,7 @@ data class WebApp(
     val translateConfig: TranslateConfig? = null,
     
     // 扩展模块配置
+    val extensionEnabled: Boolean = false,  // 扩展模块功能开关（独立持久化）
     val extensionModuleIds: List<String> = emptyList(),  // Enable的扩展模块ID列表
     val extensionFabIcon: String? = null,  // 扩展模块悬浮按钮自定义图标（emoji，空=默认🧩）
     
@@ -341,12 +342,13 @@ data class WebViewConfig(
     val fullscreenEnabled: Boolean = true,
     val downloadEnabled: Boolean = true,
     val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
+    val hideBrowserToolbar: Boolean = false, // 仅隐藏浏览器工具栏（不触发沉浸式全屏，保留系统状态栏和导航栏）
     val hideToolbar: Boolean = false, // Hide工具栏（全屏模式，无浏览器特征）
     val showStatusBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示状态栏
     val showNavigationBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示导航栏
     val showToolbarInFullscreen: Boolean = false, // Fullscreen模式下是否显示顶部导航栏
     val landscapeMode: Boolean = false, // [已废弃] 向后兼容，使用 orientationMode 代替
-    val orientationMode: OrientationMode = if (landscapeMode) OrientationMode.LANDSCAPE else OrientationMode.PORTRAIT, // 屏幕方向模式
+    val orientationMode: OrientationMode = OrientationMode.PORTRAIT, // 屏幕方向模式（不要使用 computed default，否则 copy() 会覆盖用户设置）
     val injectScripts: List<UserScript> = emptyList(), // User自定义注入脚本
     val statusBarColorMode: StatusBarColorMode = StatusBarColorMode.THEME, // Status bar颜色模式
     val statusBarColor: String? = null, // Custom状态栏颜色（仅 CUSTOM 模式生效，如 "#FF5722"）
@@ -404,7 +406,15 @@ data class WebViewConfig(
     val blockSystemNavigationGesture: Boolean = false, // 是否屏蔽系统导航手势（全屏模式下生效，默认关闭）
 
     // ============ 悬浮小窗配置 ============
-    val floatingWindowConfig: FloatingWindowConfig = FloatingWindowConfig()
+    val floatingWindowConfig: FloatingWindowConfig = FloatingWindowConfig(),
+    
+    // ============ 代理配置（PAC / Static / None）============
+    val proxyMode: String = "NONE",              // NONE, STATIC, PAC
+    val proxyHost: String = "",                   // 固定代理主机（STATIC 模式）
+    val proxyPort: Int = 0,                       // 固定代理端口（STATIC 模式）
+    val proxyType: String = "HTTP",               // 代理协议: HTTP, HTTPS, SOCKS5（STATIC 模式）
+    val pacUrl: String = "",                      // PAC 脚本 URL（PAC 模式，如 http://proxy.example.com/proxy.pac）
+    val proxyBypassRules: List<String> = emptyList() // 代理绕过规则（不经过代理的域名/IP 列表）
 )
 
 /**
@@ -741,6 +751,7 @@ enum class NodeJsBuildMode {
 data class NodeJsConfig(
     val projectId: String = "",                      // 项目ID
     val projectName: String = "",                     // 项目名称
+    val sourceProjectPath: String = "",              // 源项目目录（用于后续自动同步新增/修改的文件）
     val framework: String = "",                       // 框架名称（express, fastify, koa, nest 等）
     val buildMode: NodeJsBuildMode = NodeJsBuildMode.API_BACKEND,  // 构建模式
     val entryFile: String = "index.js",              // 入口文件（如 server.js, index.js, app.js）
@@ -1302,49 +1313,17 @@ data class TranslateConfig(
 )
 
 /**
- * WebApp 扩展函数 - 获取所有激活码（兼容新旧格式）
+ * WebApp 扩展函数 - 获取所有激活码（仅使用新字段）
  */
 fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.ActivationCode> {
-    val codes = mutableListOf<com.webtoapp.core.activation.ActivationCode>()
-    
-    // 添加新格式激活码
-    codes.addAll(activationCodeList)
-    
-    // 添加旧格式激活码（转换为新格式）
-    activationCodes.forEach { codeStr ->
-        // 尝试解析为新格式
-        val code = com.webtoapp.core.activation.ActivationCode.fromJson(codeStr)
-        if (code != null) {
-            codes.add(code)
-        } else {
-            // 旧格式，转换为永久激活码
-            codes.add(com.webtoapp.core.activation.ActivationCode.fromLegacyString(codeStr))
-        }
-    }
-    
-    return codes
+    return activationCodeList
 }
 
 /**
- * WebApp 扩展函数 - 获取激活码字符串列表（用于兼容旧代码）
+ * WebApp 扩展函数 - 获取激活码字符串列表（从新字段序列化）
  */
 fun WebApp.getActivationCodeStrings(): List<String> {
-    val strings = mutableListOf<String>()
-    
-    // 添加新格式激活码的 JSON 字符串
-    activationCodeList.forEach { code ->
-        strings.add(code.toJson())
-    }
-    
-    // 添加旧格式激活码
-    activationCodes.forEach { codeStr ->
-        // If not JSON 格式，直接添加
-        if (!codeStr.trimStart().startsWith("{")) {
-            strings.add(codeStr)
-        }
-    }
-    
-    return strings
+    return activationCodeList.map { it.toJson() }
 }
 
 /**

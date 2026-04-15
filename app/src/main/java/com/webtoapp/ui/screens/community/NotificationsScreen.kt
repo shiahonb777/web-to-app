@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -19,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.FeedItem
 import com.webtoapp.core.cloud.NotificationItem
 import com.webtoapp.ui.viewmodel.CommunityViewModel
+import com.webtoapp.ui.viewmodel.OperationFailureReport
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.core.i18n.Strings
 
@@ -47,6 +52,7 @@ fun NotificationsScreen(
     val feedLoading by communityViewModel.activityFeedLoading.collectAsStateWithLifecycle()
     val unreadCount by communityViewModel.unreadCount.collectAsStateWithLifecycle()
     val message by communityViewModel.message.collectAsStateWithLifecycle()
+    val failureReport by communityViewModel.notificationFailureReport.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -98,6 +104,13 @@ fun NotificationsScreen(
                     1 -> FeedContent(feed, feedLoading, onNavigateToModule)
                 }
             }
+        }
+
+        failureReport?.let { report ->
+            NotificationFailureReportDialog(
+                report = report,
+                onDismiss = { communityViewModel.clearNotificationFailureReport() }
+            )
         }
     }
         }
@@ -183,10 +196,11 @@ private fun NotificationsContent(
             itemsIndexed(notifications, key = { _, n -> n.id }) { index, notification ->
                 StaggeredItem(index = index) {
                     NotificationRow(notification) {
-                        viewModel.markNotificationRead(notification.id)
-                        when (notification.refType) {
-                            "module" -> notification.refId?.let { onModule(it) }
-                            "user" -> notification.actorId?.let { onUser(it) }
+                        viewModel.markNotificationRead(notification.id) {
+                            when (notification.refType) {
+                                "module" -> notification.refId?.let { onModule(it) }
+                                "user" -> notification.actorId?.let { onUser(it) }
+                            }
                         }
                     }
                 }
@@ -194,6 +208,65 @@ private fun NotificationsContent(
             }
         }
     }
+}
+
+@Composable
+private fun NotificationFailureReportDialog(
+    report: OperationFailureReport,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(report.title)
+                Text(
+                    report.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = report.details,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .padding(bottom = 48.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    FilledTonalButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(report.details)) },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("复制")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        }
+    )
 }
 
 @Composable

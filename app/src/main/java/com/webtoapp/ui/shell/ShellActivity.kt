@@ -63,8 +63,12 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarHeightDp: Int = 0
     private var forceHideSystemUi: Boolean = false
     private var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
+    private var blockSystemNavigationGesture: Boolean = false
     private var forcedRunConfig: ForcedRunConfig? = null
     private val forcedRunManager by lazy { ForcedRunManager.getInstance(this) }
+    
+    // 悬浮窗模式：等待权限授予后重试
+    private var pendingFloatingWindowLaunch = false
     
     // 云 SDK 管理器（导出 APK 内的云服务运行时）
     internal var cloudSdkManager: CloudSdkManager? = null
@@ -90,6 +94,7 @@ class ShellActivity : AppCompatActivity() {
             statusBarDarkIcons = statusBarDarkIcons,
             statusBarBgType = statusBarBackgroundType,
             keyboardAdjustMode = keyboardAdjustMode,
+            blockSystemNavigationGesture = immersiveFullscreenEnabled && blockSystemNavigationGesture,
             tag = "ShellActivity"
         )
     }
@@ -279,6 +284,7 @@ class ShellActivity : AppCompatActivity() {
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
         showNavigationBarInFullscreen = config.webViewConfig.showNavigationBarInFullscreen
+        blockSystemNavigationGesture = config.webViewConfig.blockSystemNavigationGesture
         // 读取键盘调整模式
         keyboardAdjustMode = try {
             KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
@@ -337,29 +343,12 @@ class ShellActivity : AppCompatActivity() {
         if (floatingWindowConfig.enabled) {
             com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "悬浮窗配置: size=${floatingWindowConfig.windowSizePercent}%, opacity=${floatingWindowConfig.opacity}%")
             if (FloatingWindowService.canDrawOverlays(this)) {
-                // 有权限，启动悬浮窗服务
-                val fwConfig = com.webtoapp.data.model.FloatingWindowConfig(
-                    enabled = true,
-                    windowSizePercent = floatingWindowConfig.windowSizePercent,
-                    opacity = floatingWindowConfig.opacity,
-                    showTitleBar = floatingWindowConfig.showTitleBar,
-                    startMinimized = floatingWindowConfig.startMinimized,
-                    rememberPosition = floatingWindowConfig.rememberPosition
-                )
-                val intent = Intent(this, FloatingWindowService::class.java).apply {
-                    putExtra(FloatingWindowService.EXTRA_ACTION, FloatingWindowService.ACTION_SHOW)
-                    putExtra(FloatingWindowService.EXTRA_CONFIG, com.webtoapp.util.GsonProvider.gson.toJson(fwConfig))
-                    putExtra(FloatingWindowService.EXTRA_URL, config.targetUrl)
-                    putExtra(FloatingWindowService.EXTRA_APP_NAME, config.appName)
-                }
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    startForegroundService(intent)
-                } else {
-                    startService(intent)
-                }
-                com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "悬浮窗服务已启动")
+                // 有权限，启动悬浮窗服务并结束主 Activity（避免双窗口问题）
+                launchFloatingWindowAndFinish(config)
+                return
             } else {
-                // 无权限，引导用户授权
+                // 无权限，引导用户授权，等 onResume 重试
+                pendingFloatingWindowLaunch = true
                 com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "悬浮窗权限未授予，引导用户授权")
                 Toast.makeText(this, Strings.floatingWindowPermissionRequired, Toast.LENGTH_LONG).show()
                 FloatingWindowService.requestOverlayPermission(this)
@@ -470,6 +459,51 @@ class ShellActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 启动悬浮窗服务并立即结束主 Activity
+     * 避免悬浮窗和全屏窗口同时存在的双窗口问题
+     */
+    private fun launchFloatingWindowAndFinish(config: com.webtoapp.core.shell.ShellConfig) {
+        val floatingWindowConfig = config.webViewConfig.floatingWindowConfig
+        val fwConfig = com.webtoapp.data.model.FloatingWindowConfig(
+            enabled = true,
+            windowSizePercent = floatingWindowConfig.windowSizePercent,
+            widthPercent = floatingWindowConfig.widthPercent,
+            heightPercent = floatingWindowConfig.heightPercent,
+            lockAspectRatio = floatingWindowConfig.lockAspectRatio,
+            opacity = floatingWindowConfig.opacity,
+            cornerRadius = floatingWindowConfig.cornerRadius,
+            borderStyle = try {
+                com.webtoapp.data.model.FloatingBorderStyle.valueOf(floatingWindowConfig.borderStyle)
+            } catch (e: Exception) {
+                com.webtoapp.data.model.FloatingBorderStyle.SUBTLE
+            },
+            showTitleBar = floatingWindowConfig.showTitleBar,
+            autoHideTitleBar = floatingWindowConfig.autoHideTitleBar,
+            startMinimized = floatingWindowConfig.startMinimized,
+            rememberPosition = floatingWindowConfig.rememberPosition,
+            edgeSnapping = floatingWindowConfig.edgeSnapping,
+            showResizeHandle = floatingWindowConfig.showResizeHandle,
+            lockPosition = floatingWindowConfig.lockPosition
+        )
+        val intent = Intent(this, FloatingWindowService::class.java).apply {
+            putExtra(FloatingWindowService.EXTRA_ACTION, FloatingWindowService.ACTION_SHOW)
+            putExtra(FloatingWindowService.EXTRA_CONFIG, com.webtoapp.util.GsonProvider.gson.toJson(fwConfig))
+            putExtra(FloatingWindowService.EXTRA_URL, config.targetUrl)
+            putExtra(FloatingWindowService.EXTRA_APP_NAME, config.appName)
+            putExtra(FloatingWindowService.EXTRA_TRANSLATE_ENABLED, config.translateEnabled)
+            putExtra(FloatingWindowService.EXTRA_TRANSLATE_TARGET_LANGUAGE, config.translateTargetLanguage)
+            putExtra(FloatingWindowService.EXTRA_TRANSLATE_SHOW_BUTTON, config.translateShowButton)
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "悬浮窗服务已启动，关闭主 Activity")
+        finish()
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -496,6 +530,18 @@ class ShellActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
+        
+        // 悬浮窗模式：用户从权限设置页面返回后，检查权限并启动悬浮窗
+        if (pendingFloatingWindowLaunch) {
+            val config = WebToAppApplication.shellMode.getConfig()
+            if (config != null && FloatingWindowService.canDrawOverlays(this)) {
+                pendingFloatingWindowLaunch = false
+                launchFloatingWindowAndFinish(config)
+                return
+            }
+            // 用户未授权，继续以普通窗口模式运行
+        }
+        
         webView?.onResume()
         webView?.resumeTimers()
         com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onResume - WebView resumed")

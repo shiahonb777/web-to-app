@@ -189,24 +189,35 @@ fun ShellScreen(
         }
 
         // Set屏幕方向（根据应用类型判断）
-        // ★ 新版：优先使用 orientationMode（支持 7 种模式），
-        //       向后兼容旧版只有 landscapeMode 布尔值的 APK
+        // ★ Issue #66 fix: ALL app types now use webViewConfig.orientationMode as primary source.
+        // Previously, non-WEB types (PHP, Node.js, Python, Go, WordPress, HTML, etc.)
+        // only read their type-specific landscapeMode boolean, which meant AUTO rotation
+        // and all sensor modes were silently ignored.
+        //
+        // Resolution order:
+        // 1. webViewConfig.orientationMode (supports all 7 modes)
+        // 2. Type-specific landscapeMode boolean (backward compat for APKs built before orientationMode existed)
         val validOrientationModes = setOf("PORTRAIT", "LANDSCAPE", "REVERSE_PORTRAIT", "REVERSE_LANDSCAPE", "SENSOR_PORTRAIT", "SENSOR_LANDSCAPE", "AUTO")
-        val resolvedOrientationMode = when (appType) {
-            "HTML", "FRONTEND" -> config.htmlConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
-            "IMAGE", "VIDEO" -> if (config.mediaConfig.landscape) "LANDSCAPE" else "PORTRAIT"
-            "GALLERY" -> config.galleryConfig.orientation.uppercase().let { if (it == "LANDSCAPE") "LANDSCAPE" else "PORTRAIT" }
-            "WORDPRESS" -> config.wordpressConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
-            "NODEJS_APP" -> config.nodejsConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
-            "PHP_APP" -> config.phpAppConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
-            "PYTHON_APP" -> config.pythonAppConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
-            "GO_APP" -> config.goAppConfig.landscapeMode.let { if (it) "LANDSCAPE" else "PORTRAIT" }
-            else -> {
-                // WEB 应用：优先使用新的 orientationMode（支持全部 7 种模式）
-                val orientMode = config.webViewConfig.orientationMode.uppercase()
-                if (orientMode in validOrientationModes) orientMode
-                else if (config.webViewConfig.landscapeMode) "LANDSCAPE" else "PORTRAIT"
+        val orientModeFromConfig = config.webViewConfig.orientationMode.uppercase()
+        val resolvedOrientationMode = if (orientModeFromConfig in validOrientationModes && orientModeFromConfig != "PORTRAIT") {
+            // ★ orientationMode explicitly set to a non-default value → use it for ALL app types
+            orientModeFromConfig
+        } else {
+            // orientationMode is PORTRAIT (default) or invalid → check type-specific landscapeMode
+            // for backward compatibility with APKs built before orientationMode was added
+            val typeSpecificLandscape = when (appType) {
+                "HTML", "FRONTEND" -> config.htmlConfig.landscapeMode
+                "IMAGE", "VIDEO" -> config.mediaConfig.landscape
+                "GALLERY" -> config.galleryConfig.orientation.uppercase() == "LANDSCAPE"
+                "WORDPRESS" -> config.wordpressConfig.landscapeMode
+                "NODEJS_APP" -> config.nodejsConfig.landscapeMode
+                "PHP_APP" -> config.phpAppConfig.landscapeMode
+                "PYTHON_APP" -> config.pythonAppConfig.landscapeMode
+                "GO_APP" -> config.goAppConfig.landscapeMode
+                "MULTI_WEB" -> config.multiWebConfig.landscapeMode
+                else -> config.webViewConfig.landscapeMode
             }
+            if (typeSpecificLandscape) "LANDSCAPE" else "PORTRAIT"
         }
         
         when (resolvedOrientationMode) {
@@ -311,8 +322,10 @@ fun ShellScreen(
         com.webtoapp.core.webview.WebViewManager(context, adBlocker)
     }
 
-    // Yes否隐藏工具栏（全屏模式）
+    // Yes否隐藏工具栏（全屏模式 = 沉浸式）
     val hideToolbar = config.webViewConfig.hideToolbar
+    // 仅隐藏浏览器工具栏（不触发沉浸式，保留系统状态栏和导航栏）
+    val hideBrowserToolbar = config.webViewConfig.hideBrowserToolbar
     // 下拉刷新开关
     val swipeRefreshEnabled = config.webViewConfig.swipeRefreshEnabled
 
@@ -339,6 +352,7 @@ fun ShellScreen(
         config = config,
         appType = appType,
         hideToolbar = hideToolbar,
+        hideBrowserToolbar = hideBrowserToolbar,
         isLoading = isLoading,
         loadProgress = loadProgress,
         pageTitle = pageTitle,

@@ -115,6 +115,19 @@ class HtmlContentEmbedder : AppContentEmbedder {
         ctx.logger.logKeyValue("htmlFilesEmbeddedCount", count)
         if (count == 0) {
             ctx.logger.warn("HTML app failed to embed any files!")
+        } else {
+            // Validate that the configured entry file was actually embedded
+            val entryFile = ctx.config.htmlEntryFile
+            val embeddedNames = ctx.htmlFiles.map { it.name }
+            val entryFound = embeddedNames.any { it.equals(entryFile, ignoreCase = true) }
+            if (!entryFound) {
+                ctx.logger.warn("⚠️ Entry file '$entryFile' was NOT found in embedded file list!")
+                ctx.logger.warn("   Embedded files: ${embeddedNames.joinToString(", ")}")
+                ctx.logger.warn("   The app may show ERR_FILE_NOT_FOUND at runtime.")
+                ctx.logger.warn("   ShellContentRouter will attempt auto-discovery as fallback.")
+            } else {
+                ctx.logger.log("✓ Entry file '$entryFile' confirmed in embedded files")
+            }
         }
         return EmbedResult(count > 0, count, "$count HTML files embedded")
     }

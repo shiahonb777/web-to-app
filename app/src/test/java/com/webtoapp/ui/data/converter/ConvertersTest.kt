@@ -17,6 +17,19 @@ class ConvertersTest {
     }
 
     @Test
+    fun `toStringList skips malformed items instead of returning empty`() {
+        val encoded = """
+            [
+              "module-a",
+              {"broken":true},
+              "module-b"
+            ]
+        """.trimIndent()
+
+        assertThat(converters.toStringList(encoded)).containsExactly("module-a", "module-b").inOrder()
+    }
+
+    @Test
     fun `app type converter falls back to WEB for unknown value`() {
         assertThat(converters.toAppType("NOT_EXISTING_TYPE")).isEqualTo(AppType.WEB)
     }
@@ -46,6 +59,22 @@ class ConvertersTest {
 
         assertThat(decoded.map { it.code }).containsExactly("A", "B").inOrder()
         assertThat(decoded.map { it.note }).containsExactly("one", "two").inOrder()
+    }
+
+    @Test
+    fun `activation code list converter skips malformed items instead of returning empty`() {
+        val encoded = """
+            [
+              {"code":"GOOD","type":"PERMANENT","note":"ok"},
+              "broken-item",
+              {"code":"GOOD2","type":"DEVICE_BOUND","note":"ok2"}
+            ]
+        """.trimIndent()
+
+        val decoded = converters.toActivationCodeList(encoded)
+
+        assertThat(decoded.map { it.code }).containsExactly("GOOD", "GOOD2").inOrder()
+        assertThat(decoded.map { it.note }).containsExactly("ok", "ok2").inOrder()
     }
 
     @Test

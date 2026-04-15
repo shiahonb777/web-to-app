@@ -151,20 +151,29 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
      * 判断网页是否要求使用相机
      */
     private fun isCameraRequired(params: WebChromeClient.FileChooserParams?): Boolean {
-        if (params == null) return true // 默认包含相机
+        if (params == null) return false
         
         // capture="camera" / capture="camcorder" / capture="microphone"
         if (params.isCaptureEnabled) return true
         
-        // accept 类型为 image/* 或 video/* 时也提供相机选项
+        // accept 类型为 image/* 或 video/* 时提供相机选项
         val acceptTypes = params.acceptTypes
-        if (acceptTypes != null) {
-            for (type in acceptTypes) {
-                if (type.startsWith("image/") || type.startsWith("video/")) return true
-            }
+        if (acceptTypes == null || acceptTypes.isEmpty() || (acceptTypes.size == 1 && acceptTypes[0].isNullOrBlank())) {
+            // 无 accept 限制（accept="*/*" 或未设置）— 提供相机选项
+            return true
         }
         
-        return true // 默认总是提供相机选项
+        for (type in acceptTypes) {
+            if (type.isNullOrBlank()) continue
+            val lower = type.lowercase()
+            // MIME 类型匹配
+            if (lower.startsWith("image/") || lower.startsWith("video/")) return true
+            // 文件扩展名匹配
+            if (lower in setOf(".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif",
+                    ".bmp", ".svg", ".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp")) return true
+        }
+        
+        return false // 非图片/视频类型时不要求相机
     }
     
     /**
@@ -209,11 +218,24 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             }
             
             // 3. 文件/相册选择 Intent（主 Intent）
-            val acceptTypes = params?.acceptTypes ?: arrayOf("*/*")
-            val mimeType = if (acceptTypes.isNotEmpty() && !acceptTypes[0].isNullOrBlank()) {
-                acceptTypes[0]
-            } else {
-                "*/*"
+            val rawAcceptTypes = params?.acceptTypes ?: arrayOf("*/*")
+            // 将文件扩展名转换为 MIME 类型（Android Intent 不支持 .json 这类扩展名）
+            val resolvedMimeTypes = rawAcceptTypes
+                .filter { !it.isNullOrBlank() }
+                .map { type ->
+                    if (type.startsWith(".")) {
+                        // 文件扩展名 → MIME 类型
+                        extensionToMimeType(type.lowercase())
+                    } else {
+                        type
+                    }
+                }
+                .distinct()
+            
+            val mimeType = when {
+                resolvedMimeTypes.isEmpty() -> "*/*"
+                resolvedMimeTypes.size == 1 -> resolvedMimeTypes[0]
+                else -> "*/*" // 多类型时用 */* 配合 EXTRA_MIME_TYPES
             }
             
             val contentIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -225,9 +247,9 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                     putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                 }
                 
-                // 如果有多个 accept 类型，设置 EXTRA_MIME_TYPES
-                if (acceptTypes.size > 1) {
-                    putExtra(Intent.EXTRA_MIME_TYPES, acceptTypes.filter { !it.isNullOrBlank() }.toTypedArray())
+                // 如果有多个文件类型，设置 EXTRA_MIME_TYPES
+                if (resolvedMimeTypes.size > 1) {
+                    putExtra(Intent.EXTRA_MIME_TYPES, resolvedMimeTypes.toTypedArray())
                     type = "*/*"
                 }
             }
@@ -256,6 +278,86 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val imageDir = File(activity.cacheDir, "camera_photos").apply { mkdirs() }
         return File.createTempFile("IMG_${timestamp}_", ".jpg", imageDir)
+    }
+    
+    /**
+     * 将文件扩展名转换为 MIME 类型
+     * 
+     * WebView 的 FileChooserParams.acceptTypes 可能包含文件扩展名（如 ".json", ".csv"），
+     * 但 Android 的 Intent.ACTION_GET_CONTENT 只支持 MIME 类型过滤。
+     * 如果传入 ".json" 作为 type，系统找不到匹配的应用，会回退到只显示相机。
+     */
+    private fun extensionToMimeType(ext: String): String {
+        return when (ext) {
+            // 文档
+            ".json" -> "application/json"
+            ".xml" -> "application/xml"
+            ".csv" -> "text/csv"
+            ".txt" -> "text/plain"
+            ".pdf" -> "application/pdf"
+            ".doc" -> "application/msword"
+            ".docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ".xls" -> "application/vnd.ms-excel"
+            ".xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ".ppt" -> "application/vnd.ms-powerpoint"
+            ".pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            ".rtf" -> "application/rtf"
+            ".odt" -> "application/vnd.oasis.opendocument.text"
+            ".ods" -> "application/vnd.oasis.opendocument.spreadsheet"
+            // 代码/配置
+            ".html", ".htm" -> "text/html"
+            ".css" -> "text/css"
+            ".js" -> "application/javascript"
+            ".ts" -> "application/typescript"
+            ".py" -> "text/x-python"
+            ".java" -> "text/x-java-source"
+            ".kt" -> "text/x-kotlin"
+            ".yaml", ".yml" -> "application/x-yaml"
+            ".toml" -> "application/toml"
+            ".ini", ".conf", ".cfg" -> "text/plain"
+            ".md" -> "text/markdown"
+            ".log" -> "text/plain"
+            // 图片
+            ".jpg", ".jpeg" -> "image/jpeg"
+            ".png" -> "image/png"
+            ".gif" -> "image/gif"
+            ".webp" -> "image/webp"
+            ".svg" -> "image/svg+xml"
+            ".bmp" -> "image/bmp"
+            ".heic", ".heif" -> "image/heif"
+            ".ico" -> "image/x-icon"
+            // 音频
+            ".mp3" -> "audio/mpeg"
+            ".wav" -> "audio/wav"
+            ".ogg" -> "audio/ogg"
+            ".flac" -> "audio/flac"
+            ".aac" -> "audio/aac"
+            ".m4a" -> "audio/mp4"
+            // 视频
+            ".mp4" -> "video/mp4"
+            ".webm" -> "video/webm"
+            ".mkv" -> "video/x-matroska"
+            ".avi" -> "video/x-msvideo"
+            ".mov" -> "video/quicktime"
+            ".3gp" -> "video/3gpp"
+            // 压缩包
+            ".zip" -> "application/zip"
+            ".tar" -> "application/x-tar"
+            ".gz", ".gzip" -> "application/gzip"
+            ".rar" -> "application/vnd.rar"
+            ".7z" -> "application/x-7z-compressed"
+            // 其他
+            ".apk" -> "application/vnd.android.package-archive"
+            ".wasm" -> "application/wasm"
+            ".sql" -> "application/sql"
+            ".db", ".sqlite" -> "application/x-sqlite3"
+            else -> {
+                // 尝试使用系统 MimeTypeMap
+                val extWithoutDot = ext.removePrefix(".")
+                android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extWithoutDot)
+                    ?: "application/octet-stream"
+            }
+        }
     }
 
     // 外部设置的文件选择回调 (保留兼容旧 API)
@@ -360,6 +462,10 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
 
     /**
      * 处理WebView权限请求，先请求Android系统权限
+     *
+     * 注意: MODIFY_AUDIO_SETTINGS 是 normal permission（安装时自动授权），
+     * 不需要也不能通过 runtime permission 请求，否则某些设备上
+     * 系统会忽略它并导致 allGranted 判断失败。
      */
     fun handlePermissionRequest(request: PermissionRequest) {
         val resources = request.resources
@@ -375,9 +481,10 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                     AppLogger.d("ShellActivity", "Added CAMERA permission request")
                 }
                 PermissionRequest.RESOURCE_AUDIO_CAPTURE -> {
+                    // 只添加 RECORD_AUDIO（dangerous permission，需要 runtime 请求）
+                    // MODIFY_AUDIO_SETTINGS 是 normal permission，安装时自动授权，不需要 runtime 请求
                     androidPermissions.add(Manifest.permission.RECORD_AUDIO)
-                    androidPermissions.add(Manifest.permission.MODIFY_AUDIO_SETTINGS)
-                    AppLogger.d("ShellActivity", "Added RECORD_AUDIO + MODIFY_AUDIO_SETTINGS permission request")
+                    AppLogger.d("ShellActivity", "Added RECORD_AUDIO permission request (MODIFY_AUDIO_SETTINGS is normal, auto-granted)")
                 }
                 PermissionRequest.RESOURCE_MIDI_SYSEX -> {
                     // MIDI SysEx 不需要额外 Android 运行时权限，直接授权
@@ -393,17 +500,34 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             }
         }
 
-        AppLogger.d("ShellActivity", "Android permissions to request: ${androidPermissions.joinToString()}")
+        // 去重
+        val uniquePermissions = androidPermissions.distinct()
 
-        if (androidPermissions.isEmpty()) {
+        AppLogger.d("ShellActivity", "Android permissions to request: ${uniquePermissions.joinToString()}")
+
+        if (uniquePermissions.isEmpty()) {
             // 不需要Android权限，直接授权WebView
             AppLogger.d("ShellActivity", "No Android permissions needed, granting WebView request directly")
             request.grant(resources)
+            return
+        }
+
+        // 预检：过滤掉已经授权的权限，只请求尚未授权的
+        val notGranted = uniquePermissions.filter {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                activity, it
+            ) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (notGranted.isEmpty()) {
+            // 所有权限已授权，直接 grant WebView 请求
+            AppLogger.d("ShellActivity", "All permissions already granted, granting WebView request directly")
+            request.grant(resources)
         } else {
             // 需要先请求Android权限
-            AppLogger.d("ShellActivity", "Requesting Android permissions...")
+            AppLogger.d("ShellActivity", "Requesting Android permissions: ${notGranted.joinToString()}")
             pendingPermissionRequest = request
-            permissionLauncher.launch(androidPermissions.toTypedArray())
+            permissionLauncher.launch(notGranted.toTypedArray())
         }
     }
 

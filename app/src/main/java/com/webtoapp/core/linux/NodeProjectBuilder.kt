@@ -39,6 +39,7 @@ class NodeProjectBuilder(private val context: Context) {
         config: NodeBuildConfig = NodeBuildConfig()
     ): Result<NodeBuildResult> = withContext(Dispatchers.IO) {
         _buildLogs.value = emptyList()
+        buildEngine.allowBuiltinPackagerFallback = config.allowBuiltinPackagerFallback
         
         try {
             val projectDir = File(projectPath)
@@ -168,7 +169,8 @@ data class NodeBuildConfig(
     val cleanInstall: Boolean = false,
     val envVars: Map<String, String> = emptyMap(),
     val installTimeout: Long = 600_000,
-    val buildTimeout: Long = 600_000
+    val buildTimeout: Long = 600_000,
+    val allowBuiltinPackagerFallback: Boolean = false
 )
 
 /**

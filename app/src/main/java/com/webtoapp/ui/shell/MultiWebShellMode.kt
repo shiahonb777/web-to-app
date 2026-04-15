@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.MultiWebShellConfig
 import com.webtoapp.core.shell.MultiWebSiteShellConfig
@@ -193,7 +194,8 @@ private fun TabsMode(
                                             webViewManager.configureWebView(
                                                 this, webViewConfig, webViewCallbacks,
                                                 config.extensionModuleIds, config.embeddedExtensionModules,
-                                                config.extensionFabIcon, allowGlobalModuleFallback = false
+                                                config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                browserDisguiseConfig = config.browserDisguiseConfig
                                             )
                                             var lastTouchX = 0f; var lastTouchY = 0f
                                             setOnTouchListener { view, event ->
@@ -264,7 +266,7 @@ private fun CardsMode(
                     title = { Text(site.name.ifBlank { extractDomain(site.url) }) },
                     navigationIcon = {
                         IconButton(onClick = { openSite = null }) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
+                            Icon(Icons.Default.Close, contentDescription = Strings.close)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -301,7 +303,8 @@ private fun CardsMode(
                             webViewManager.configureWebView(
                                 this, webViewConfig, webViewCallbacks,
                                 config.extensionModuleIds, config.embeddedExtensionModules,
-                                config.extensionFabIcon, allowGlobalModuleFallback = false
+                                config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                browserDisguiseConfig = config.browserDisguiseConfig
                             )
                             var lastTouchX = 0f; var lastTouchY = 0f
                             setOnTouchListener { view, event ->
@@ -567,7 +570,7 @@ private fun FeedMode(
                     title = { Text(openTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         IconButton(onClick = { openUrl = null }) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
+                            Icon(Icons.Default.Close, contentDescription = Strings.close)
                         }
                     }
                 )
@@ -601,7 +604,8 @@ private fun FeedMode(
                             webViewManager.configureWebView(
                                 this, webViewConfig, webViewCallbacks,
                                 config.extensionModuleIds, config.embeddedExtensionModules,
-                                config.extensionFabIcon, allowGlobalModuleFallback = false
+                                config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                browserDisguiseConfig = config.browserDisguiseConfig
                             )
                             var lastTouchX = 0f; var lastTouchY = 0f
                             setOnTouchListener { view, event ->
@@ -644,7 +648,7 @@ private fun FeedMode(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text("Feed", fontWeight = FontWeight.Bold)
+                        Text(Strings.multiWebModeFeed, fontWeight = FontWeight.Bold)
                     },
                     actions = {
                         IconButton(
@@ -658,7 +662,7 @@ private fun FeedMode(
                                 }
                             }
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                            Icon(Icons.Default.Refresh, contentDescription = Strings.refresh)
                         }
                     }
                 )
@@ -674,7 +678,7 @@ private fun FeedMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Fetching articles...", style = MaterialTheme.typography.bodyMedium)
+                        Text(Strings.loading, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             } else if (feedItems.isEmpty()) {
@@ -897,7 +901,7 @@ private fun DrawerMode(
                         IconButton(onClick = {
                             drawerVisible = !drawerVisible
                         }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(Icons.Default.Menu, contentDescription = Strings.more)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -948,7 +952,8 @@ private fun DrawerMode(
                                                 webViewManager.configureWebView(
                                                     this, webViewConfig, webViewCallbacks,
                                                     config.extensionModuleIds, config.embeddedExtensionModules,
-                                                    config.extensionFabIcon, allowGlobalModuleFallback = false
+                                                    config.extensionFabIcon, allowGlobalModuleFallback = false,
+                                browserDisguiseConfig = config.browserDisguiseConfig
                                                 )
                                                 var lastTouchX = 0f; var lastTouchY = 0f
                                                 setOnTouchListener { view, event ->

@@ -37,6 +37,7 @@ import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.TeamWorkItem
 import com.webtoapp.core.cloud.UserActivityInfo
 import com.webtoapp.ui.viewmodel.CommunityViewModel
+import com.webtoapp.ui.viewmodel.OperationFailureReport
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.UserTitleBadges
@@ -62,6 +63,7 @@ fun UserProfileScreen(
     val userActivity by communityViewModel.userActivity.collectAsStateWithLifecycle()
     val loading by communityViewModel.userProfileLoading.collectAsStateWithLifecycle()
     val message by communityViewModel.message.collectAsStateWithLifecycle()
+    val failureReport by communityViewModel.profileFailureReport.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var selectedTab by remember { mutableStateOf(0) }
@@ -444,6 +446,13 @@ fun UserProfileScreen(
                 showFollowingSheet = false
                 onNavigateToUser(uid)
             }
+        )
+    }
+
+    failureReport?.let { report ->
+        OperationFailureReportDialog(
+            report = report,
+            onDismiss = { communityViewModel.clearProfileFailureReport() }
         )
     }
 }
