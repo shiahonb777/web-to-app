@@ -9,15 +9,15 @@ import org.junit.Test
 class AppNavigationRoutesTest {
 
     @Test
-    fun `detail route detection excludes tab host`() {
+    fun `detail route detection excludes top level tabs`() {
         assertFalse(isDetailRoute(null))
-        assertFalse(isDetailRoute(TAB_HOST_ROUTE))
+        assertFalse(isDetailRoute(Routes.HOME))
         assertTrue(isDetailRoute(Routes.STATS))
     }
 
     @Test
-    fun `bottom bar visibility follows top level routes`() {
-        assertTrue(shouldShowBottomBar(TAB_HOST_ROUTE))
+    fun `bottom bar visibility follows tab routes`() {
+        assertTrue(shouldShowBottomBar(null))
         assertTrue(shouldShowBottomBar(Routes.HOME))
         assertFalse(shouldShowBottomBar(Routes.STATS))
     }

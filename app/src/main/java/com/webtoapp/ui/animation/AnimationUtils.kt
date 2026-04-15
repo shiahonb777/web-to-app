@@ -12,16 +12,16 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 // ═══════════════════════════════════════════════════════════
-// 全局动画工具库
+// Global animation utilities
 // ═══════════════════════════════════════════════════════════
 
-// ==================== 1. Stagger 交错入场 ====================
+// ==================== 1. Staggered Entrance ====================
 
 /**
- * 列表项交错入场动画
- * 从下方滑入 + 淡入，每项间隔 [staggerDelayMs]
+ * Staggered enter animation for list items.
+ * Slide up + fade in, each item delayed by [staggerDelayMs].
  *
- * 用法：在 LazyColumn 的 items 中用 StaggeredAnimatedItem 包裹每个 item
+ * Usage: wrap each LazyColumn item with StaggeredAnimatedItem.
  */
 @Composable
 fun StaggeredAnimatedItem(
@@ -41,7 +41,7 @@ fun StaggeredAnimatedItem(
     val density = LocalDensity.current
     val slideOffsetPx = with(density) { slideOffsetDp.dp.roundToPx() }
 
-    // ★ 使用 spring 而非 tween，打断时保留速度
+    // Use spring instead of tween to keep velocity on interrupt
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(
@@ -62,11 +62,11 @@ fun StaggeredAnimatedItem(
     }
 }
 
-// ==================== 2. 空状态呼吸浮动 ====================
+// ==================== 2. Empty-State Breathing Float ====================
 
 /**
- * 呼吸浮动动画修饰符
- * 缓慢上下浮动 + 微旋转，让静态元素有生命力
+ * Breathing float modifier.
+ * Slow vertical drift + slight rotation for static elements.
  */
 @Composable
 fun Modifier.breathingFloat(
@@ -114,11 +114,11 @@ fun Modifier.breathingFloat(
     }
 }
 
-// ==================== 3. 对话框弹簧缩放 ====================
+// ==================== 3. Dialog Spring Scale ====================
 
 /**
- * 对话框入场缩放动画
- * scale 0.85→1.0 + alpha 0→1 弹簧效果
+ * Dialog enter scale animation.
+ * Spring effect: scale 0.85->1.0 + alpha 0->1.
  */
 @Composable
 fun AnimatedDialogContent(
@@ -151,10 +151,10 @@ fun AnimatedDialogContent(
     }
 }
 
-// ==================== 4. Snackbar 弹簧滑入 ====================
+// ==================== 4. Snackbar Spring Slide ====================
 
 /**
- * Snackbar 入场/退场动画规格
+ * Snackbar enter/exit animation specs.
  */
 val SnackbarEnterTransition: EnterTransition = slideInVertically(
     initialOffsetY = { it },
@@ -173,18 +173,18 @@ val SnackbarExitTransition: ExitTransition = slideOutHorizontally(
     animationSpec = tween(200)
 )
 
-// ==================== 5. Tab 切换滑动方向 ====================
+// ==================== 5. Tab Switch Direction ====================
 
 /**
- * 计算 Tab 切换动画方向
- * @return 正值=向左滑（目标在右侧），负值=向右滑（目标在左侧）
+ * Compute tab transition direction.
+ * @return Positive = slide left (target on right), negative = slide right (target on left).
  */
 fun tabSlideDirection(previousTab: Int, currentTab: Int): Int {
     return if (currentTab > previousTab) 1 else -1
 }
 
 /**
- * Tab 页面内容的入场动画
+ * Enter transition for tab page content.
  */
 fun tabEnterTransition(direction: Int): EnterTransition {
     return slideInHorizontally(
@@ -196,7 +196,7 @@ fun tabEnterTransition(direction: Int): EnterTransition {
 }
 
 /**
- * Tab 页面内容的退场动画
+ * Exit transition for tab page content.
  */
 fun tabExitTransition(direction: Int): ExitTransition {
     return slideOutHorizontally(
@@ -207,36 +207,36 @@ fun tabExitTransition(direction: Int): ExitTransition {
     )
 }
 
-// ==================== 6. 卡片折叠展开 ====================
+// ==================== 6. Card Collapse/Expand ====================
 
 /**
- * 可折叠卡片的内容展开/收起动画规格 (Apple/物理世界风格)
- * 去除所有的渐显渐隐(fadeIn/fadeOut)，完全依赖纯物理的边界剪裁(Cliping)与弹簧位移，
- * 实现如同物理拉伸般的空间展开体验。
+ * Expand/collapse specs for collapsible cards (Apple-like physical style).
+ * Removes fadeIn/fadeOut and relies on clipping + spring motion only.
+ * This gives a physical stretch-like expansion feel.
  */
 val CardExpandTransition: EnterTransition = expandVertically(
     animationSpec = spring(
-        dampingRatio = 0.82f, // 极为轻微的阻尼，保留"Q弹"但不会乱晃
-        stiffness = 350f      // 适中的刚度，确保响应迅速 (iOS默认约相似范围)
+        dampingRatio = 0.82f, // "Q"
+        stiffness = 350f      // (iOS)
     ),
     expandFrom = androidx.compose.ui.Alignment.Top,
     clip = true
 )
 
 val CardCollapseTransition: ExitTransition = shrinkVertically(
-    // 采用拟物化的贝塞尔曲线来模拟物理降落，强制插值到 0，解决物理弹簧计算因底层0点反弹导致遗留像素的硬切。
+    // Bezier easing mimics physical fall; force interpolate to 0 to avoid residual pixel snap at the base point.
     animationSpec = tween(
         durationMillis = 280,
-        easing = CubicBezierEasing(0.32f, 0.72f, 0f, 1f) // 一种模拟物理急停和无阻尼缓冲的缓动
+        easing = CubicBezierEasing(0.32f, 0.72f, 0f, 1f) // Comment
     ),
     shrinkTowards = androidx.compose.ui.Alignment.Top,
     clip = true
 )
 
-// ==================== 7. 开关涟漪效果 ====================
+// ==================== 7. Switch Ripple Effect ====================
 
 /**
- * 涟漪效果的动画参数
+ * Animation params for ripple effect.
  */
 data class RippleAnimState(
     val isActive: Boolean = false,

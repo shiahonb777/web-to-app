@@ -58,23 +58,23 @@ class PythonDependencyManagerTest {
         assertThat(depsDir.exists()).isTrue()
         assertThat(pythonDir.exists()).isTrue()
         assertThat(projectsDir.exists()).isTrue()
-        assertThat(pythonDir.absolutePath).contains("/python_deps/python")
+        assertThat(pythonDir.absolutePath).isEqualTo(File(depsDir, "python").absolutePath)
     }
 
     @Test
     fun `python readiness is false when runtime binaries are absent`() {
         assertThat(PythonDependencyManager.isPythonReady(context)).isFalse()
         assertThat(PythonDependencyManager.getPythonExecutablePath(context))
-            .contains("/python_deps/python/bin/python3")
+            .isEqualTo(File(PythonDependencyManager.getPythonDir(context), "bin/python3").absolutePath)
         assertThat(PythonDependencyManager.getPipPath(context))
-            .contains("/python_deps/python/bin/pip3")
+            .isEqualTo(File(PythonDependencyManager.getPythonDir(context), "bin/pip3").absolutePath)
     }
 
     @Test
-    fun `python readiness becomes true when binary exists in downloaded dir`() {
-        val binary = File(PythonDependencyManager.getPythonDir(context), "bin/python3").apply {
+    fun `python readiness becomes true when real binary exists in downloaded dir`() {
+        val binary = File(PythonDependencyManager.getPythonDir(context), "bin/python3.12").apply {
             parentFile?.mkdirs()
-            writeText("#!/system/bin/sh")
+            writeBytes(ByteArray(1024 * 1024 + 1) { 1 })
             setExecutable(true)
         }
 

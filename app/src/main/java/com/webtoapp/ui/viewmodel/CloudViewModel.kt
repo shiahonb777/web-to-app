@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * 云服务 ViewModel
+ * Cloud services ViewModel.
  *
- * 管理激活码兑换、设备管理、公告、项目等 UI 状态
+ * Manages UI state for activation, devices, announcements, and projects.
  */
 class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
 
-    // ─── 激活码 ───
+    // --- Activation Codes ---
 
     private val _redeemState = MutableStateFlow<FormState>(FormState.Idle)
     val redeemState: StateFlow<FormState> = _redeemState.asStateFlow()
@@ -24,7 +24,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _activationHistory = MutableStateFlow<List<ActivationRecord>>(emptyList())
     val activationHistory: StateFlow<List<ActivationRecord>> = _activationHistory.asStateFlow()
 
-    // ─── 设备 ───
+    // --- Devices ---
 
     private val _devices = MutableStateFlow<List<DeviceInfo>>(emptyList())
     val devices: StateFlow<List<DeviceInfo>> = _devices.asStateFlow()
@@ -32,12 +32,12 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _devicesLoading = MutableStateFlow(false)
     val devicesLoading: StateFlow<Boolean> = _devicesLoading.asStateFlow()
 
-    // ─── 公告 ───
+    // --- Announcements ---
 
     private val _announcements = MutableStateFlow<List<AnnouncementData>>(emptyList())
     val announcements: StateFlow<List<AnnouncementData>> = _announcements.asStateFlow()
 
-    // ─── 项目 ───
+    // --- Projects ---
 
     private val _projects = MutableStateFlow<List<CloudProject>>(emptyList())
     val projects: StateFlow<List<CloudProject>> = _projects.asStateFlow()
@@ -45,7 +45,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _projectsLoading = MutableStateFlow(false)
     val projectsLoading: StateFlow<Boolean> = _projectsLoading.asStateFlow()
 
-    // ─── 我的发布 ───
+    // --- My Publishes ---
 
     private val _myPublishedModules = MutableStateFlow<List<StoreModuleInfo>>(emptyList())
     val myPublishedModules: StateFlow<List<StoreModuleInfo>> = _myPublishedModules.asStateFlow()
@@ -53,12 +53,12 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _myPublishedLoading = MutableStateFlow(false)
     val myPublishedLoading: StateFlow<Boolean> = _myPublishedLoading.asStateFlow()
 
-    // ─── 分析 ───
+    // --- Analytics ---
 
     private val _analytics = MutableStateFlow<AnalyticsData?>(null)
     val analytics: StateFlow<AnalyticsData?> = _analytics.asStateFlow()
 
-    // ─── 版本 ───
+    // --- Versions ---
 
     private val _versions = MutableStateFlow<List<ProjectVersion>>(emptyList())
     val versions: StateFlow<List<ProjectVersion>> = _versions.asStateFlow()
@@ -69,7 +69,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _publishProgress = MutableStateFlow(0f)
     val publishProgress: StateFlow<Float> = _publishProgress.asStateFlow()
 
-    // ─── 通用 ───
+    // --- Common ---
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
@@ -128,7 +128,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             when (val result = cloudRepo.removeDevice(deviceId)) {
                 is AuthResult.Success -> {
                     _message.value = result.data
-                    loadDevices() // 刷新列表
+                    loadDevices() // Comment
                 }
                 is AuthResult.Error -> _message.value = result.message
             }
@@ -143,7 +143,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.getAnnouncements(appVersion)) {
                 is AuthResult.Success -> _announcements.value = result.data
-                is AuthResult.Error -> {} // 静默失败
+                is AuthResult.Error -> {} // Comment
             }
         }
     }
@@ -229,7 +229,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                               versionName: String, title: String? = null,
                               changelog: String? = null, uploadTo: String = "github") {
         
-        // 智能路由：如果是纯 Gitee 或 两者都传，直接走服务器中转（国内服务器传国内 Gitee 最稳，选两者时也只需传给服务器一次）
+        // Smart routing: for Gitee-only or dual targets, use server relay for stable mainland upload and single transfer
         if (uploadTo == "gitee" || uploadTo == "both") {
             publishVersion(projectId, apkFile, versionCode, versionName, title, changelog, uploadTo)
             return
@@ -270,7 +270,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                         when (uploadResult) {
                             is AuthResult.Error -> {
                                 _message.value = "直连 GitHub 失败，切换服务器中转..."
-                                // 国内网络有可能连不上 GitHub，自动回退到服务器上传
+                                // Mainland networks may fail GitHub access; auto-fallback to server upload
                                 publishVersion(projectId, apkFile, versionCode, versionName, title, changelog, "github")
                                 return@launch
                             }
@@ -344,7 +344,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             when (val result = cloudRepo.generateProjectCodes(projectId, count, maxUses, prefix)) {
                 is AuthResult.Success -> {
                     _message.value = "生成了 ${result.data.size} 个激活码"
-                    loadProjectCodes(projectId) // 刷新列表
+                    loadProjectCodes(projectId) // Comment
                 }
                 is AuthResult.Error -> _message.value = result.message
             }
@@ -515,7 +515,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     fun uploadManifest(projectId: Int, manifestJson: String, forceOverwrite: Boolean = false) {
         viewModelScope.launch {
             _manifestSyncState.value = _manifestSyncState.value.copy(syncing = true)
-            // forceOverwrite: 传 version=0 跳过服务端的乐观并发检查
+            // forceOverwrite: send version=0 to bypass server optimistic concurrency check
             val currentVersion = if (forceOverwrite) 0 else _manifestSyncState.value.localVersion
             when (val result = cloudRepo.uploadManifest(projectId, manifestJson, currentVersion)) {
                 is AuthResult.Success -> {

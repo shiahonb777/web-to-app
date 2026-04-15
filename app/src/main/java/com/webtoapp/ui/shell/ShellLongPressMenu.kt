@@ -5,18 +5,18 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.webview.LongPressHandler
 
 /**
- * 长按菜单 - 根据样式显示不同的菜单组件
+ * long- press- display
  *
- * @param menuStyle 菜单样式：SIMPLE, FULL, IOS, FLOATING, CONTEXT
- * @param result 长按结果
- * @param touchX 触摸 X 坐标（用于 FLOATING 和 CONTEXT 样式定位）
- * @param touchY 触摸 Y 坐标
- * @param longPressHandler 长按处理器（保存图片、复制链接等）
- * @param onDismiss 关闭菜单回调
+ * @param menuStyle: SIMPLE, FULL, IOS, FLOATING, CONTEXT
+ * @param result long- press
+ * @param touchX X( for FLOATING CONTEXT)
+ * @param touchY Y
+ * @param longPressHandler long- presshandle( save, )
+ * @param onDismiss close
  */
 @Composable
 fun ShellLongPressMenu(
@@ -31,7 +31,7 @@ fun ShellLongPressMenu(
     
     when (menuStyle) {
         "SIMPLE" -> {
-            // 简洁模式：仅保存图片和复制链接
+            // mode: onlysave
             com.webtoapp.ui.components.SimpleLongPressMenuSheet(
                 result = result,
                 onDismiss = onDismiss,
@@ -46,7 +46,7 @@ fun ShellLongPressMenu(
             )
         }
         "FULL" -> {
-            // 完整模式：BottomSheet
+            // mode: BottomSheet
             com.webtoapp.ui.components.LongPressMenuSheet(
                 result = result,
                 onDismiss = onDismiss,
@@ -68,13 +68,13 @@ fun ShellLongPressMenu(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalizeExternalUrlForIntent(url)))
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     }
                 }
             )
         }
         "IOS" -> {
-            // iOS 风格：毛玻璃卡片
+            // iOS: card
             com.webtoapp.ui.components.IosStyleLongPressMenu(
                 result = result,
                 onDismiss = onDismiss,
@@ -96,13 +96,13 @@ fun ShellLongPressMenu(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalizeExternalUrlForIntent(url)))
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     }
                 }
             )
         }
         "FLOATING" -> {
-            // 悬浮气泡风格
+            // Note
             com.webtoapp.ui.components.FloatingBubbleLongPressMenu(
                 result = result,
                 touchX = touchX,
@@ -126,13 +126,13 @@ fun ShellLongPressMenu(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalizeExternalUrlForIntent(url)))
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     }
                 }
             )
         }
         "CONTEXT" -> {
-            // 右键菜单风格
+            // Note
             com.webtoapp.ui.components.ContextMenuLongPressMenu(
                 result = result,
                 touchX = touchX,
@@ -156,13 +156,13 @@ fun ShellLongPressMenu(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalizeExternalUrlForIntent(url)))
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     }
                 }
             )
         }
         else -> {
-            // DISABLED 或其他情况
+            // DISABLED or
             onDismiss()
         }
     }

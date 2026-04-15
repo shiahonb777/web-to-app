@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.QrCodeShareDialog
 import com.webtoapp.ui.screens.extensionmodule.ExtensionModulesTabContent
 import com.webtoapp.ui.screens.extensionmodule.UserScriptsTabContent
@@ -61,21 +61,22 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import com.webtoapp.R
+import org.koin.compose.koinInject
 
 /**
- * 扩展模块管理页面
+ * modulemanagement
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExtensionModuleScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToEditor: (String?) -> Unit,  // null 表示新建
-    onNavigateToAiDeveloper: () -> Unit = {},  // AI 开发器入口
+    onNavigateToEditor: (String?) -> Unit,  // null new
+    onNavigateToAiDeveloper: () -> Unit = {},  // AI
 
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     
     val modules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
@@ -84,13 +85,13 @@ fun ExtensionModuleScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showImportDialog by remember { mutableStateOf(false) }
     
-    // 油猴脚本/Chrome 扩展导入相关状态
+    // /Chrome importrelatedstate
     val extensionFileManager = remember { ExtensionFileManager(context) }
     var showUserScriptPreview by remember { mutableStateOf<UserScriptParser.ParseResult?>(null) }
     var showChromeExtPreview by remember { mutableStateOf<ChromeExtensionParser.ParseResult?>(null) }
     var pendingChromeExtDir by remember { mutableStateOf<java.io.File?>(null) }
     
-    // File选择器 (.wtamod)
+    // Fileselect( . wtamod)
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -112,7 +113,7 @@ fun ExtensionModuleScreen(
         }
     }
     
-    // 油猴脚本文件选择器 (.user.js / .js)
+    // fileselect( . user. js /. js)
     val userScriptPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -132,7 +133,7 @@ fun ExtensionModuleScreen(
         }
     }
     
-    // Chrome 扩展文件选择器 (.crx / .zip)
+    // Chrome fileselect( . crx /. zip)
     val chromeExtPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -153,7 +154,7 @@ fun ExtensionModuleScreen(
         }
     }
     
-    // 二维码图片选择器
+    // select
     val qrCodeImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -171,10 +172,10 @@ fun ExtensionModuleScreen(
                                     Toast.makeText(context, context.getString(R.string.msg_import_failed, e.message ?: "Unknown error"), Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                Toast.makeText(context, Strings.qrCodeNotFound, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().qrCodeNotFound, Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, Strings.imageLoadFailed, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().imageLoadFailed, Toast.LENGTH_SHORT).show()
                         }
                     }
                 } catch (e: Exception) {
@@ -189,7 +190,7 @@ fun ExtensionModuleScreen(
     val extensionModules = allModules.filter { it.sourceType == ModuleSourceType.CUSTOM }
     val userScriptModules = allModules.filter { it.sourceType != ModuleSourceType.CUSTOM }
     
-    // Filter模块 - 直接计算而非使用 remember，确保 StateFlow 更新时 UI 正确响应
+    // Filtermodule- remember, ensure StateFlow update UI
     val filteredModules = extensionModules.filter { module ->
         val matchesCategory = selectedCategory == null || module.category == selectedCategory
         val matchesSearch = searchQuery.isBlank() ||
@@ -209,18 +210,18 @@ fun ExtensionModuleScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.extensionModule) },
+                title = { Text(AppStringsProvider.current().extensionModule) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     IconButton(onClick = { showImportDialog = true }) {
-                        Icon(Icons.Default.Download, contentDescription = Strings.btnImport)
+                        Icon(Icons.Default.Download, contentDescription = AppStringsProvider.current().btnImport)
                     }
                     IconButton(onClick = { onNavigateToEditor(null) }) {
-                        Icon(Icons.Default.Add, contentDescription = Strings.add)
+                        Icon(Icons.Default.Add, contentDescription = AppStringsProvider.current().add)
                     }
                 }
             )
@@ -229,7 +230,7 @@ fun ExtensionModuleScreen(
             var fabExpanded by remember { mutableStateOf(false) }
             
             Column(horizontalAlignment = Alignment.End) {
-                // AI 开发按钮
+                // AI button
                 AnimatedVisibility(
                     visible = fabExpanded,
                     enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + slideInVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) { it },
@@ -272,7 +273,7 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Text(
-                                Strings.aiDevelop,
+                                AppStringsProvider.current().aiDevelop,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -280,7 +281,7 @@ fun ExtensionModuleScreen(
                     }
                 }
                 
-                // 手动创建按钮
+                // createbutton
                 AnimatedVisibility(
                     visible = fabExpanded,
                     enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + slideInVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) { it },
@@ -323,7 +324,7 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Text(
-                                Strings.manualCreate,
+                                AppStringsProvider.current().manualCreate,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -331,7 +332,7 @@ fun ExtensionModuleScreen(
                     }
                 }
                 
-                // 主 FAB — Apple-style spring rotation
+                // FAB- Apple- style spring rotation
                 val fabRotation by animateFloatAsState(
                     targetValue = if (fabExpanded) 135f else 0f,
                     animationSpec = spring(
@@ -353,7 +354,7 @@ fun ExtensionModuleScreen(
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = Strings.createModule,
+                        contentDescription = AppStringsProvider.current().createModule,
                         modifier = Modifier.graphicsLayer {
                             rotationZ = fabRotation
                         }
@@ -370,21 +371,21 @@ fun ExtensionModuleScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Search栏 - MD3 SearchBar 风格
+            // Search- MD3 SearchBar
             PremiumTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text(Strings.searchModules) },
+                placeholder = { Text(AppStringsProvider.current().searchModules) },
                 leadingIcon = {
                     Icon(Icons.Outlined.Search, contentDescription = null)
                 },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Outlined.Close, contentDescription = Strings.clear)
+                            Icon(Icons.Outlined.Close, contentDescription = AppStringsProvider.current().clear)
                         }
                     }
                 },
@@ -392,11 +393,11 @@ fun ExtensionModuleScreen(
                 shape = RoundedCornerShape(28.dp)
             )
             
-            // Tab 分页: 扩展模块 / 油猴脚本
+            // Tab: module /
             val pagerState = rememberPagerState(pageCount = { 2 })
             val tabTitles = listOf(
-                Strings.extensionModulesTab,
-                Strings.userScriptsTab
+                AppStringsProvider.current().extensionModulesTab,
+                AppStringsProvider.current().userScriptsTab
             )
             
             // Apple-style Segmented Control
@@ -467,7 +468,7 @@ fun ExtensionModuleScreen(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 when (page) {
-                    // Tab 0: 扩展模块
+                    // Tab 0: module
                     0 -> ExtensionModulesTabContent(
                         filteredModules = filteredModules,
                         extensionManager = extensionManager,
@@ -478,7 +479,7 @@ fun ExtensionModuleScreen(
                         onNavigateToAiDeveloper = onNavigateToAiDeveloper,
                         onClearSearch = { searchQuery = "" }
                     )
-                    // Tab 1: 油猴脚本
+                    // Tab 1
                     1 -> UserScriptsTabContent(
                         filteredUserScripts = filteredUserScripts,
                         extensionManager = extensionManager,
@@ -493,14 +494,14 @@ fun ExtensionModuleScreen(
         }
     }
     
-    // Import对话框
+    // Import dialog
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text(Strings.importModule) },
+            title = { Text(AppStringsProvider.current().importModule) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 油猴脚本导入
+                    // Userscript import
                     Surface(
                         onClick = {
                             showImportDialog = false
@@ -537,9 +538,9 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importUserScript, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importUserScript, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.importUserScriptHint,
+                                    AppStringsProvider.current().importUserScriptHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -548,7 +549,7 @@ fun ExtensionModuleScreen(
                         }
                     }
                     
-                    // Chrome 扩展导入
+                    // Chrome import
                     Surface(
                         onClick = {
                             showImportDialog = false
@@ -585,9 +586,9 @@ fun ExtensionModuleScreen(
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importChromeExtension, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importChromeExtension, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.importChromeExtensionHint,
+                                    AppStringsProvider.current().importChromeExtensionHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -605,7 +606,7 @@ fun ExtensionModuleScreen(
                             .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     )
                     
-                    // .wtamod 文件导入
+                    // .wtamod file import
                     Surface(
                         onClick = {
                             showImportDialog = false
@@ -637,9 +638,9 @@ fun ExtensionModuleScreen(
                                 Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importFromFile, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importFromFile, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.selectWtamodFile,
+                                    AppStringsProvider.current().selectWtamodFile,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -648,7 +649,7 @@ fun ExtensionModuleScreen(
                         }
                     }
                     
-                    // 二维码导入
+                    // import
                     Surface(
                         onClick = {
                             showImportDialog = false
@@ -680,9 +681,9 @@ fun ExtensionModuleScreen(
                                 Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.tertiary)
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.importFromQrImage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().importFromQrImage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.selectQrImageHint,
+                                    AppStringsProvider.current().selectQrImageHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -695,20 +696,20 @@ fun ExtensionModuleScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showImportDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
     }
     
-    // 油猴脚本预览安装对话框
+    // Userscript preview install dialog
     showUserScriptPreview?.let { parseResult ->
         AlertDialog(
             onDismissRequest = { showUserScriptPreview = null },
-            title = { Text(Strings.installUserScript) },
+            title = { Text(AppStringsProvider.current().installUserScript) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 脚本信息
+                    // Script info
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
@@ -757,31 +758,31 @@ fun ExtensionModuleScreen(
                     
                     parseResult.module.author?.let { author ->
                         Text(
-                        "${Strings.scriptAuthor}: ${author.name}",
+                        "${AppStringsProvider.current().scriptAuthor}: ${author.name}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     
-                    // URL 匹配规则
+                    // URL match rules
                     if (parseResult.module.urlMatches.isNotEmpty()) {
                         Text(
-                        "${Strings.matchingSites}: ${parseResult.module.urlMatches.size} ${Strings.matchRules}",
+                        "${AppStringsProvider.current().matchingSites}: ${parseResult.module.urlMatches.size} ${AppStringsProvider.current().matchRules}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     
-                    // GM API 权限
+                    // GM API permissions
                     if (parseResult.module.gmGrants.isNotEmpty()) {
                         Text(
-                            "${Strings.requiredApis}: ${parseResult.module.gmGrants.joinToString(", ")}",
+                            "${AppStringsProvider.current().requiredApis}: ${parseResult.module.gmGrants.joinToString(", ")}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
                     }
                     
-                    // 警告
+                    // Warning
                     parseResult.warnings.forEach { warning ->
                         Text(
                             "⚠️ $warning",
@@ -795,7 +796,7 @@ fun ExtensionModuleScreen(
                 PremiumButton(onClick = {
                     scope.launch {
                         extensionManager.addModule(parseResult.module).onSuccess { module ->
-                            Toast.makeText(context, "${Strings.msgImportSuccess}: ${module.name}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${AppStringsProvider.current().msgImportSuccess}: ${module.name}", Toast.LENGTH_SHORT).show()
                             // Pre-load @require and @resource in background
                             val fileManager = com.webtoapp.core.extension.ExtensionFileManager(context)
                             if (module.requireUrls.isNotEmpty()) {
@@ -814,25 +815,25 @@ fun ExtensionModuleScreen(
                         showUserScriptPreview = null
                     }
                 }) {
-                    Text(Strings.install)
+                    Text(AppStringsProvider.current().install)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showUserScriptPreview = null }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
     }
     
-    // Chrome 扩展预览安装对话框
+    // Chrome extension preview install dialog
     showChromeExtPreview?.let { parseResult ->
         AlertDialog(
             onDismissRequest = {
                 showChromeExtPreview = null
                 pendingChromeExtDir = null
             },
-            title = { Text(Strings.installChromeExtension) },
+            title = { Text(AppStringsProvider.current().installChromeExtension) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -882,7 +883,7 @@ fun ExtensionModuleScreen(
                     }
                     
                     Text(
-                        "${Strings.contentScripts}: ${parseResult.modules.size}",
+                        "${AppStringsProvider.current().contentScripts}: ${parseResult.modules.size}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -890,7 +891,7 @@ fun ExtensionModuleScreen(
                     // Supported permissions
                     if (parseResult.supportedPermissions.isNotEmpty()) {
                         Text(
-                            "${Strings.requiredApis}: ${parseResult.supportedPermissions.joinToString(", ")}",
+                            "${AppStringsProvider.current().requiredApis}: ${parseResult.supportedPermissions.joinToString(", ")}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -899,13 +900,13 @@ fun ExtensionModuleScreen(
                     // Unsupported permissions
                     if (parseResult.unsupportedPermissions.isNotEmpty()) {
                         Text(
-                            "⚠️ ${Strings.unsupportedApis}: ${parseResult.unsupportedPermissions.joinToString(", ")}",
+                            "⚠️ ${AppStringsProvider.current().unsupportedApis}: ${parseResult.unsupportedPermissions.joinToString(", ")}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
                     }
                     
-                    // 警告
+                    // Warning
                     parseResult.warnings.filter { !it.startsWith("Unsupported permissions") }.forEach { warning ->
                         Text(
                             "⚠️ $warning",
@@ -925,7 +926,7 @@ fun ExtensionModuleScreen(
                         if (successCount > 0) {
                             Toast.makeText(
                                 context,
-                                "${context.getString(R.string.msg_import_success, parseResult.extensionName)} ($successCount ${Strings.contentScripts})",
+                                "${context.getString(R.string.msg_import_success, parseResult.extensionName)} ($successCount ${AppStringsProvider.current().contentScripts})",
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -935,7 +936,7 @@ fun ExtensionModuleScreen(
                         pendingChromeExtDir = null
                     }
                 }) {
-                    Text(Strings.install)
+                    Text(AppStringsProvider.current().install)
                 }
             },
             dismissButton = {
@@ -943,14 +944,13 @@ fun ExtensionModuleScreen(
                     showChromeExtPreview = null
                     pendingChromeExtDir = null
                 }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
     }
 }
 }
-
 
 
 

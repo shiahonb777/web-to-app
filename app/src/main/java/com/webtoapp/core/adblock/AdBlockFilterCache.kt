@@ -8,18 +8,18 @@ import java.io.*
 import java.security.MessageDigest
 
 /**
- * AdBlock 过滤规则编译缓存
+ * Note
  *
- * 将已编译的 ABP/Hosts 过滤规则序列化到磁盘，避免每次启动重新解析。
- * 同时缓存下载的过滤列表原始内容，避免重复网络请求。
+ * Note
+ * Note
  *
- * 缓存结构：
- * - adblock_cache/          缓存根目录
- *   ├─ compiled_state.bin   二进制编译状态（所有已解析规则）
- *   ├─ content_hash.txt     内容哈希（用于检测规则是否变化）
- *   └─ url_cache/           URL 内容缓存
- *      ├─ {urlHash}.txt     下载的过滤列表原始内容
- *      └─ {urlHash}.meta    元数据（URL、时间戳）
+ * Note
+ * Note
+ * Note
+ * Note
+ * Note
+ * Note
+ * Note
  */
 object AdBlockFilterCache {
 
@@ -34,7 +34,7 @@ object AdBlockFilterCache {
     // ==================== URL Content Cache ====================
 
     /**
-     * 获取 URL 内容的磁盘缓存（如果存在且未过期）
+     * Note
      */
     suspend fun getCachedUrlContent(context: Context, url: String): String? = withContext(Dispatchers.IO) {
         try {
@@ -62,7 +62,7 @@ object AdBlockFilterCache {
     }
 
     /**
-     * 缓存 URL 内容到磁盘
+     * Note
      */
     suspend fun cacheUrlContent(context: Context, url: String, content: String) = withContext(Dispatchers.IO) {
         try {
@@ -81,9 +81,9 @@ object AdBlockFilterCache {
     // ==================== Compiled State Cache ====================
 
     /**
-     * 保存已编译的过滤规则状态到磁盘
+     * Note
      *
-     * 序列化格式（DataOutputStream）：
+     * Note
      * - int: version
      * - String: contentHash
      * - int + Strings: exactHosts
@@ -174,7 +174,7 @@ object AdBlockFilterCache {
     }
 
     /**
-     * 加载已编译的过滤规则状态
+     * Note
      */
     suspend fun loadCompiledState(context: Context): CompiledState? = withContext(Dispatchers.IO) {
         try {
@@ -268,7 +268,7 @@ object AdBlockFilterCache {
     }
 
     /**
-     * 清除所有缓存
+     * Note
      */
     fun clearCache(context: Context) {
         try {
@@ -280,7 +280,7 @@ object AdBlockFilterCache {
     }
 
     /**
-     * 获取缓存大小（字节）
+     * Note
      */
     fun getCacheSize(context: Context): Long {
         val cacheDir = File(context.filesDir, CACHE_DIR)
@@ -377,7 +377,7 @@ object AdBlockFilterCache {
     // ==================== Data Classes ====================
 
     /**
-     * 可序列化的网络过滤器（不含 Regex 对象，加载后重新编译）
+     * Note
      */
     data class SerializableNetworkFilter(
         val pattern: String,
@@ -393,7 +393,7 @@ object AdBlockFilterCache {
     )
 
     /**
-     * 已编译的完整过滤状态
+     * Note
      */
     data class CompiledState(
         val contentHash: String,

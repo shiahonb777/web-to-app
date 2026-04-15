@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.QrCodeShareDialog
 import kotlinx.coroutines.launch
 
@@ -65,9 +65,9 @@ fun ModuleCard(
         uri?.let {
             scope.launch {
                 extensionManager.exportModuleToUri(module.id, it).onSuccess {
-                    Toast.makeText(context, Strings.exportSuccess, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().exportSuccess, Toast.LENGTH_SHORT).show()
                 }.onFailure { e ->
-                    Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -79,13 +79,13 @@ fun ModuleCard(
         if (isGranted) {
             scope.launch {
                 extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
-                    Toast.makeText(context, "${Strings.exportSuccess}: $path", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "${AppStringsProvider.current().exportSuccess}: $path", Toast.LENGTH_LONG).show()
                 }.onFailure { e ->
-                    Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
-            Toast.makeText(context, Strings.storagePermissionRequiredForExport, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().storagePermissionRequiredForExport, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -147,7 +147,7 @@ fun ModuleCard(
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    Strings.builtIn,
+                                    AppStringsProvider.current().builtIn,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium
@@ -182,7 +182,7 @@ fun ModuleCard(
 
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
+                        Icon(Icons.Default.MoreVert, contentDescription = AppStringsProvider.current().more)
                     }
 
                     DropdownMenu(
@@ -190,17 +190,17 @@ fun ModuleCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(Strings.btnEdit) },
+                            text = { Text(AppStringsProvider.current().btnEdit) },
                             onClick = { showMenu = false; onEdit() },
                             leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.export) },
+                            text = { Text(AppStringsProvider.current().export) },
                             onClick = { showMenu = false; showExportDialog = true },
                             leadingIcon = { Icon(Icons.Outlined.FileUpload, null) }
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.share) },
+                            text = { Text(AppStringsProvider.current().share) },
                             onClick = { showMenu = false; showQrCodeDialog = true },
                             leadingIcon = { Icon(Icons.Outlined.Share, null) }
                         )
@@ -220,7 +220,7 @@ fun ModuleCard(
                                     .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                             )
                             DropdownMenuItem(
-                                text = { Text(Strings.btnDelete, color = MaterialTheme.colorScheme.error) },
+                                text = { Text(AppStringsProvider.current().btnDelete, color = MaterialTheme.colorScheme.error) },
                                 onClick = { showMenu = false; onDelete() },
                                 leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error) }
                             )
@@ -295,7 +295,7 @@ fun ModuleCard(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                Strings.onlyEffectiveOnMatchingSites.format(module.urlMatches.size),
+                                AppStringsProvider.current().onlyEffectiveOnMatchingSites.format(module.urlMatches.size),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -314,7 +314,7 @@ fun ModuleCard(
                                 tint = MaterialTheme.colorScheme.error
                             )
                             Text(
-                                Strings.requiresSensitivePermissions.format(
+                                AppStringsProvider.current().requiresSensitivePermissions.format(
                                     dangerousPermissions.joinToString { it.displayName }
                                 ),
                                 style = MaterialTheme.typography.labelSmall,
@@ -340,7 +340,7 @@ fun ModuleCard(
     if (showExportDialog) {
         AlertDialog(
             onDismissRequest = { showExportDialog = false },
-            title = { Text(Strings.exportModule) },
+            title = { Text(AppStringsProvider.current().exportModule) },
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -354,9 +354,9 @@ fun ModuleCard(
                                 if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
                                     scope.launch {
                                         extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
-                                            Toast.makeText(context, "${Strings.exportSuccess}\n$path", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, "${AppStringsProvider.current().exportSuccess}\n$path", Toast.LENGTH_LONG).show()
                                         }.onFailure { e ->
-                                            Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 } else {
@@ -365,9 +365,9 @@ fun ModuleCard(
                             } else {
                                 scope.launch {
                                     extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
-                                        Toast.makeText(context, "${Strings.exportSuccess}\n$path", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "${AppStringsProvider.current().exportSuccess}\n$path", Toast.LENGTH_LONG).show()
                                     }.onFailure { e ->
-                                        Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "${AppStringsProvider.current().exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -403,9 +403,9 @@ fun ModuleCard(
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.exportToDownloads, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().exportToDownloads, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.exportToDownloadsHint,
+                                    AppStringsProvider.current().exportToDownloadsHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -456,9 +456,9 @@ fun ModuleCard(
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(Strings.exportToCustomPath, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                                Text(AppStringsProvider.current().exportToCustomPath, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                                 Text(
-                                    Strings.exportToCustomPathHint,
+                                    AppStringsProvider.current().exportToCustomPathHint,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -475,7 +475,7 @@ fun ModuleCard(
             },
             confirmButton = {
                 TextButton(onClick = { showExportDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )

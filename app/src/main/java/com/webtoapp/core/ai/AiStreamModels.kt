@@ -3,7 +3,7 @@ package com.webtoapp.core.ai
 import com.google.gson.JsonObject
 
 /**
- * 流式事件类型
+ * Streaming event types
  */
 sealed class StreamEvent {
     object Started : StreamEvent()
@@ -14,7 +14,7 @@ sealed class StreamEvent {
 }
 
 /**
- * Tool Calling 响应
+ * Tool calling response
  */
 data class ToolCallResponse(
     val textContent: String = "",
@@ -29,7 +29,7 @@ data class ToolCallData(
 )
 
 /**
- * 流式工具调用事件
+ * Streaming tool invocation events
  */
 sealed class ToolStreamEvent {
     object Started : ToolStreamEvent()
@@ -43,7 +43,7 @@ sealed class ToolStreamEvent {
 }
 
 /**
- * 工具调用信息
+ * Tool call information
  */
 data class ToolCallInfo(
     val id: String,
@@ -52,7 +52,7 @@ data class ToolCallInfo(
 )
 
 /**
- * 从 content 元素中提取文本（支持多种 JSON 格式）
+ * Extract text from a content element (supports multiple JSON formats)
  */
 internal fun extractTextFromContentElement(elem: com.google.gson.JsonElement?): String? {
     if (elem == null || elem.isJsonNull) return null
@@ -68,7 +68,7 @@ internal fun extractTextFromContentElement(elem: com.google.gson.JsonElement?): 
                     append(part.asString)
                 }
             }
-        }.ifEmpty { null }  // 改用 ifEmpty 而不是 ifBlank，保留空格
+        }.ifEmpty { null }  // Use ifEmpty instead of ifBlank so spaces are kept
         elem.isJsonObject -> {
             val obj = elem.asJsonObject
             obj.get("text")?.asString ?: obj.get("content")?.asString
@@ -78,7 +78,7 @@ internal fun extractTextFromContentElement(elem: com.google.gson.JsonElement?): 
 }
 
 /**
- * 从流式 choice 中提取 reasoning/thinking 内容
+ * Extract reasoning/thinking content from a streamed choice
  */
 internal fun extractReasoningFrom(choiceObj: JsonObject?, deltaObj: JsonObject?): String? {
     val fromDelta = sequenceOf(
@@ -108,12 +108,12 @@ internal fun extractReasoningFrom(choiceObj: JsonObject?, deltaObj: JsonObject?)
 }
 
 /**
- * 从流式 choice 中提取文本内容
+ * Extract the text content from a streamed choice
  */
 internal fun extractContentFrom(choiceObj: JsonObject?): String? {
     if (choiceObj == null) return null
     val delta = choiceObj.getAsJsonObject("delta")
-    // 注意：不要使用 isNotBlank()，因为空格也是有效内容（如 CSS 中的空格）
+    // Note: avoid isNotBlank() because whitespace (e.g., CSS) may be meaningful
     extractTextFromContentElement(delta?.get("content"))?.let { if (it.isNotEmpty()) return it }
     val message = choiceObj.getAsJsonObject("message")
     extractTextFromContentElement(message?.get("content"))?.let { if (it.isNotEmpty()) return it }

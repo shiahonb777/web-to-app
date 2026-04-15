@@ -1,12 +1,12 @@
 package com.webtoapp.core.python
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
 /**
- * Python 示例项目管理器
+ * project.
  */
 object PythonSampleManager {
     
@@ -15,29 +15,29 @@ object PythonSampleManager {
         return listOf(
             TypedSampleProject(
                 id = "python-flask$suffix",
-                name = Strings.samplePythonFlaskName,
-                description = Strings.samplePythonFlaskDesc,
+                name = AppStringsProvider.current().samplePythonFlaskName,
+                description = AppStringsProvider.current().samplePythonFlaskDesc,
                 frameworkName = "Flask",
                 icon = "science",
-                tags = listOf("Flask 3", Strings.sampleTagWsgi, "Jinja2"),
+                tags = listOf("Flask 3", AppStringsProvider.current().sampleTagWsgi, "Jinja2"),
                 brandColor = 0xFF333333
             ),
             TypedSampleProject(
                 id = "python-fastapi$suffix",
-                name = Strings.samplePythonFastapiName,
-                description = Strings.samplePythonFastapiDesc,
+                name = AppStringsProvider.current().samplePythonFastapiName,
+                description = AppStringsProvider.current().samplePythonFastapiDesc,
                 frameworkName = "FastAPI",
                 icon = "bolt",
-                tags = listOf("FastAPI", Strings.sampleTagAsgi, Strings.sampleTagOpenapi),
+                tags = listOf("FastAPI", AppStringsProvider.current().sampleTagAsgi, AppStringsProvider.current().sampleTagOpenapi),
                 brandColor = 0xFF009688
             ),
             TypedSampleProject(
                 id = "python-django$suffix",
-                name = Strings.samplePythonDjangoName,
-                description = Strings.samplePythonDjangoDesc,
+                name = AppStringsProvider.current().samplePythonDjangoName,
+                description = AppStringsProvider.current().samplePythonDjangoDesc,
                 frameworkName = "Django",
                 icon = "eco",
-                tags = listOf("Django 5", Strings.sampleTagOrm, Strings.sampleTagAdmin),
+                tags = listOf("Django 5", AppStringsProvider.current().sampleTagOrm, AppStringsProvider.current().sampleTagAdmin),
                 brandColor = 0xFF092E20
             )
         )

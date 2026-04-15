@@ -6,32 +6,32 @@ import java.io.File
 import java.util.zip.ZipOutputStream
 
 /**
- * 应用内容嵌入策略接口
+ * Note: brief English comment.
  *
- * 将 modifyApk 中按 AppType 分支的嵌入逻辑拆分为独立策略，
- * 每种 AppType 实现自己的 embed() 方法，消除 modifyApk 中的长 if-else 链。
+ * Note: brief English comment.
+ * Note: brief English comment.
  *
- * 设计原则：
- * - 每个策略只关注自己类型的资源嵌入
- * - 公共资源（splash、BGM、status bar bg）由调用方统一处理，不在策略内
- * - 策略通过 EmbedContext 获取所有需要的依赖和函数引用
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 interface AppContentEmbedder {
     
     /**
-     * 将应用特定内容嵌入到 APK 的 ZipOutputStream 中
+     * Note: brief English comment.
      *
-     * @param zipOut APK 输出流
-     * @param ctx 嵌入上下文（包含所有可能需要的资源引用和 ApkBuilder 委托函数）
-     * @return 嵌入结果
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult
 }
 
 /**
- * 嵌入上下文 — 传递给策略的数据和 ApkBuilder 委托函数
+ * Note: brief English comment.
  *
- * 函数引用（fn*）指向 ApkBuilder 的 private 方法，避免暴露 ApkBuilder 内部实现。
+ * Note: brief English comment.
  */
 class EmbedContext(
     val config: ApkConfig,
@@ -56,7 +56,7 @@ class EmbedContext(
 )
 
 /**
- * 嵌入结果
+ * Note: brief English comment.
  */
 data class EmbedResult(
     val success: Boolean,
@@ -65,7 +65,7 @@ data class EmbedResult(
 )
 
 /**
- * 策略工厂 — 根据 AppType 选择对应的嵌入策略
+ * Note: brief English comment.
  */
 object AppContentEmbedderFactory {
     
@@ -89,7 +89,7 @@ object AppContentEmbedderFactory {
 // ==================== Concrete Embedders ====================
 
 /**
- * 媒体内容嵌入（IMAGE/VIDEO 类型）
+ * Note: brief English comment.
  */
 class MediaContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -102,7 +102,7 @@ class MediaContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * HTML 文件嵌入
+ * Note: brief English comment.
  */
 class HtmlContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -121,7 +121,7 @@ class HtmlContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * Gallery 内容嵌入
+ * Note: brief English comment.
  */
 class GalleryContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -137,7 +137,7 @@ class GalleryContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * WordPress 项目嵌入
+ * Note: brief English comment.
  */
 class WordPressContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -153,7 +153,7 @@ class WordPressContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * Node.js 项目嵌入
+ * Note: brief English comment.
  */
 class NodeJsContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -169,7 +169,7 @@ class NodeJsContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * Frontend 项目嵌入
+ * Note: brief English comment.
  */
 class FrontendContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -191,7 +191,7 @@ class FrontendContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * PHP 应用嵌入
+ * Note: brief English comment.
  */
 class PhpAppContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -207,7 +207,7 @@ class PhpAppContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * Python 应用嵌入
+ * Note: brief English comment.
  */
 class PythonAppContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
@@ -223,7 +223,7 @@ class PythonAppContentEmbedder : AppContentEmbedder {
 }
 
 /**
- * Go 应用嵌入
+ * Note: brief English comment.
  */
 class GoAppContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {

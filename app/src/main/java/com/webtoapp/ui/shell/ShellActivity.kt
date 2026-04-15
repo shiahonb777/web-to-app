@@ -17,8 +17,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.WebToAppApplication
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.ShellTheme
 import com.webtoapp.ui.theme.LocalIsDarkTheme
 import com.webtoapp.core.webview.TranslateBridge
@@ -27,11 +26,12 @@ import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.floatingwindow.FloatingWindowService
 import com.webtoapp.core.shell.CloudSdkManager
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.ui.shared.WindowHelper
 
 /**
- * Shell Activity - 用于独立 WebApp 运行
- * 从 app_config.json 读取配置并显示 WebView
+ * Shell Activity- for WebApp run
+ * from app_config. json configanddisplay WebView
  */
 class ShellActivity : AppCompatActivity() {
 
@@ -42,18 +42,18 @@ class ShellActivity : AppCompatActivity() {
     // Deep link URL from intent
     private var deepLinkUrl = mutableStateOf<String?>(null)
     
-    // 权限处理委托（逻辑已提取到 ShellPermissionDelegate.kt）
+    // handle( ShellPermissionDelegate. kt)
     val permissionDelegate = ShellPermissionDelegate(this)
 
     private var immersiveFullscreenEnabled: Boolean = false
-    private var showStatusBarInFullscreen: Boolean = false  // Fullscreen模式下是否显示状态栏
-    private var showNavigationBarInFullscreen: Boolean = false  // Fullscreen模式下是否显示导航栏
+    private var showStatusBarInFullscreen: Boolean = false  // Fullscreenmode displaystatus bar
+    private var showNavigationBarInFullscreen: Boolean = false  // Fullscreenmode display
     private var translateBridge: TranslateBridge? = null
     
-    // Video全屏前的屏幕方向
+    // Video
     private var originalOrientationBeforeFullscreen: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     
-    // Status bar配置缓存
+    // Status barconfig
     private var statusBarColorMode: String = "THEME"
     private var statusBarCustomColor: String? = null
     private var statusBarDarkIcons: Boolean? = null
@@ -61,7 +61,7 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarBackgroundImage: String? = null
     private var statusBarBackgroundAlpha: Float = 1.0f
     private var statusBarHeightDp: Int = 0
-    // Status bar深色模式配置缓存
+    // Status bar modeconfig
     private var statusBarColorModeDark: String = "THEME"
     private var statusBarCustomColorDark: String? = null
     private var statusBarDarkIconsDark: Boolean? = null
@@ -69,13 +69,13 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarBackgroundImageDark: String? = null
     private var statusBarBackgroundAlphaDark: Float = 1.0f
     private var forceHideSystemUi: Boolean = false
-    // 当前深色主题状态（从 Compose 同步，用于 onWindowFocusChanged 等 Activity 级别回调）
+    // current state( from Compose sync, for onWindowFocusChanged Activity)
     private var currentIsDarkTheme: Boolean = false
-    private var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
+    private var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // keyboard mode
     private var forcedRunConfig: ForcedRunConfig? = null
     private val forcedRunManager by lazy { ForcedRunManager.getInstance(this) }
     
-    // 云 SDK 管理器（导出 APK 内的云服务运行时）
+    // SDK manager( export APK run)
     internal var cloudSdkManager: CloudSdkManager? = null
 
     private fun applyStatusBarColor(
@@ -87,7 +87,7 @@ class ShellActivity : AppCompatActivity() {
 
     private fun applyImmersiveFullscreen(enabled: Boolean, hideNavBar: Boolean? = null, isDarkTheme: Boolean = currentIsDarkTheme) {
         val shouldHideNavBar = hideNavBar ?: !showNavigationBarInFullscreen
-        // 使用深色/浅色模式对应的状态栏配置
+        // / mode status barconfig
         val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
         val effectiveCustomColor = if (isDarkTheme) statusBarCustomColorDark else statusBarCustomColor
         val effectiveDarkIcons = if (isDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
@@ -115,18 +115,18 @@ class ShellActivity : AppCompatActivity() {
         AppLogger.d("ShellActivity", "强制运行状态变化: active=$active, protection=${config?.protectionLevel}")
         
         if (active) {
-            // 保持屏幕常亮
+            // Note
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             
-            // 尝试 Lock Task Mode（作为额外防护层，可能需要用户确认）
+            // Lock Task Mode( , user)
             try {
                 startLockTask()
             } catch (e: Exception) {
                 AppLogger.w("ShellActivity", "startLockTask failed (expected without device admin)", e)
             }
             
-            // 注意：真正的防护由 ForcedRunManager 启动的 AccessibilityService 和 GuardService 提供
-            // 这里的 startLockTask 只是额外的防护层
+            // ForcedRunManager AccessibilityService GuardService
+            // startLockTask
             
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -159,7 +159,7 @@ class ShellActivity : AppCompatActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
         
-        // Check是否屏蔽音量键
+        // Check
         if (hardwareController.isBlockVolumeKeys) {
             when (event.keyCode) {
                 KeyEvent.KEYCODE_VOLUME_UP,
@@ -168,7 +168,7 @@ class ShellActivity : AppCompatActivity() {
             }
         }
         
-        // Check是否屏蔽电源键（注意：电源键在 Activity 中拦截有限）
+        // Check( : Activity intercept)
         if (hardwareController.isBlockPowerKey && event.keyCode == KeyEvent.KEYCODE_POWER) {
             return true
         }
@@ -189,7 +189,7 @@ class ShellActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
         
-        // 屏蔽音量键
+        // Note
         if (hardwareController.isBlockVolumeKeys) {
             when (keyCode) {
                 KeyEvent.KEYCODE_VOLUME_UP,
@@ -202,16 +202,16 @@ class ShellActivity : AppCompatActivity() {
     }
     
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        // Check是否启用了触摸屏蔽
+        // Check
         val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(this)
         if (hardwareController.isBlockTouch) {
-            // 屏蔽所有触摸事件
+            // Note
             return true
         }
         return super.dispatchTouchEvent(ev)
     }
     
-    // 公共 API 方法：委托到 ShellPermissionDelegate
+    // API: ShellPermissionDelegate
     fun handlePermissionRequest(request: PermissionRequest) = permissionDelegate.handlePermissionRequest(request)
     fun handleGeolocationPermission(origin: String?, callback: GeolocationPermissions.Callback?) = permissionDelegate.handleGeolocationPermission(origin, callback)
     
@@ -224,10 +224,10 @@ class ShellActivity : AppCompatActivity() {
     ) = permissionDelegate.handleDownloadWithPermission(url, userAgent, contentDisposition, mimeType, contentLength, webView)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Initialize日志系统（尽早初始化以捕获崩溃）
+        // Initialize system( initialize)
         ShellActivityInit.initLogger(this)
         
-        // Enable边到边显示（让内容延伸到系统栏区域）
+        // Enable display( content system area)
         try {
             enableEdgeToEdge()
             com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "enableEdgeToEdge 成功")
@@ -238,11 +238,11 @@ class ShellActivity : AppCompatActivity() {
         
         super.onCreate(savedInstanceState)
 
-        val config = WebToAppApplication.shellMode.getConfig()
+        val config = ShellRuntimeServices.shellMode.getConfig()
         if (config == null) {
             AppLogger.e("ShellActivity", "配置加载失败，无法启动应用")
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "配置加载失败，无法启动应用")
-            Toast.makeText(this, Strings.appConfigLoadFailed, Toast.LENGTH_LONG).show()
+            Toast.makeText(this, AppStringsProvider.current().appConfigLoadFailed, Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -250,7 +250,7 @@ class ShellActivity : AppCompatActivity() {
         com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "配置加载成功: ${config.appName}")
         AppLogger.d("ShellActivity", "WebView UA config from shell: userAgentMode=${config.webViewConfig.userAgentMode}, customUserAgent=${config.webViewConfig.customUserAgent}, userAgent=${config.webViewConfig.userAgent}")
         
-        // 初始化云 SDK（更新检查、公告、远程配置、统计上报）
+        // initialize SDK( updatecheck, announcement, remoteconfig, )
         if (config.cloudSdkConfig.isValid()) {
             cloudSdkManager = CloudSdkManager(this, config.cloudSdkConfig).also {
                 it.initialize(this)
@@ -260,21 +260,21 @@ class ShellActivity : AppCompatActivity() {
         
         forcedRunConfig = config.forcedRunConfig
         
-        // 记录配置详情
+        // config
         com.webtoapp.core.shell.ShellLogger.logFeature("Config", "加载配置", buildString {
             append("强制运行=${config.forcedRunConfig?.enabled ?: false}, ")
             append("后台运行=${config.backgroundRunEnabled}, ")
             append("独立环境=${config.isolationEnabled}")
         })
         
-        // 初始化各子系统（逻辑已提取到 ShellActivityInit.kt）
+        // initialize system( ShellActivityInit. kt)
         ShellActivityInit.initForcedRunManager(this, config, forcedRunManager, ::onForcedRunStateChanged)
         ShellActivityInit.initAutoStart(this, config)
         ShellActivityInit.initIsolation(this, config)
         ShellActivityInit.initBackgroundService(this, config)
         ShellActivityInit.setTaskDescription(this, config.appName)
         
-        // Request通知权限（Android 13+）
+        // Request( Android 13+)
         try {
             permissionDelegate.requestNotificationPermissionIfNeeded()
             com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "通知权限请求完成")
@@ -282,7 +282,7 @@ class ShellActivity : AppCompatActivity() {
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "通知权限请求失败", e)
         }
         
-        // 读取状态栏配置
+        // status barconfig
         com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "开始读取状态栏配置")
         statusBarColorMode = config.webViewConfig.statusBarColorMode
         statusBarCustomColor = config.webViewConfig.statusBarColor
@@ -291,7 +291,7 @@ class ShellActivity : AppCompatActivity() {
         statusBarBackgroundImage = config.webViewConfig.statusBarBackgroundImage
         statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp
-        // 读取深色模式状态栏配置
+        // modestatus barconfig
         statusBarColorModeDark = config.webViewConfig.statusBarColorModeDark
         statusBarCustomColorDark = config.webViewConfig.statusBarColorDark
         statusBarDarkIconsDark = config.webViewConfig.statusBarDarkIconsDark
@@ -300,7 +300,7 @@ class ShellActivity : AppCompatActivity() {
         statusBarBackgroundAlphaDark = config.webViewConfig.statusBarBackgroundAlphaDark
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
         showNavigationBarInFullscreen = config.webViewConfig.showNavigationBarInFullscreen
-        // 读取键盘调整模式
+        // keyboard mode
         keyboardAdjustMode = try {
             KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
         } catch (e: Exception) {
@@ -308,19 +308,19 @@ class ShellActivity : AppCompatActivity() {
             KeyboardAdjustMode.RESIZE
         }
 
-        // 计算初始深色主题状态（供 applyImmersiveFullscreen 和 onWindowFocusChanged 使用）
+        // state( applyImmersiveFullscreen onWindowFocusChanged)
         currentIsDarkTheme = when (config.darkMode.uppercase()) {
             "LIGHT" -> false
             "DARK" -> true
             else -> {
-                // SYSTEM: 根据系统设置判断
+                // SYSTEM: systemsettings
                 val uiMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                 uiMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
             }
         }
 
-        // 根据配置决定是否启用沉浸式全屏模式
-        // hideToolbar=true 时启用沉浸式（隐藏状态栏），否则显示状态栏
+        // config mode
+        // hideToolbar=true( hidestatus bar) , displaystatus bar
         immersiveFullscreenEnabled = config.webViewConfig.hideToolbar
         try {
             applyImmersiveFullscreen(immersiveFullscreenEnabled, isDarkTheme = currentIsDarkTheme)
@@ -329,7 +329,7 @@ class ShellActivity : AppCompatActivity() {
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "应用沉浸式全屏失败", e)
         }
         
-        // 保持屏幕常亮（支持三种模式）
+        // ( support mode)
         val shellAwakeMode = config.webViewConfig.screenAwakeMode.uppercase()
         when (shellAwakeMode) {
             "ALWAYS" -> {
@@ -347,7 +347,7 @@ class ShellActivity : AppCompatActivity() {
                 com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "屏幕常亮: 定时模式 ${timeoutMinutes} 分钟")
             }
             else -> {
-                // OFF 或未知值：向后兼容旧版 keepScreenOn 布尔值
+                // OFF or: keepScreenOn
                 if (config.webViewConfig.keepScreenOn) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "屏幕常亮: 已启用（向后兼容模式）")
@@ -355,7 +355,7 @@ class ShellActivity : AppCompatActivity() {
             }
         }
         
-        // 自定义屏幕亮度
+        // Note
         val shellBrightness = config.webViewConfig.screenBrightness
         if (shellBrightness in 0..100) {
             val lp = window.attributes
@@ -364,12 +364,12 @@ class ShellActivity : AppCompatActivity() {
             com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "屏幕亮度: ${shellBrightness}%")
         }
         
-        // 悬浮小窗模式
+        // floating windowmode
         val floatingWindowConfig = config.webViewConfig.floatingWindowConfig
         if (floatingWindowConfig.enabled) {
             com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "悬浮窗配置: size=${floatingWindowConfig.windowSizePercent}%, opacity=${floatingWindowConfig.opacity}%")
             if (FloatingWindowService.canDrawOverlays(this)) {
-                // 有权限，启动悬浮窗服务
+                // Note
                 val fwConfig = com.webtoapp.data.model.FloatingWindowConfig(
                     enabled = true,
                     windowSizePercent = floatingWindowConfig.windowSizePercent,
@@ -391,9 +391,9 @@ class ShellActivity : AppCompatActivity() {
                 }
                 com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "悬浮窗服务已启动")
             } else {
-                // 无权限，引导用户授权
+                // , user
                 com.webtoapp.core.shell.ShellLogger.w("ShellActivity", "悬浮窗权限未授予，引导用户授权")
-                Toast.makeText(this, Strings.floatingWindowPermissionRequired, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, AppStringsProvider.current().floatingWindowPermissionRequired, Toast.LENGTH_LONG).show()
                 FloatingWindowService.requestOverlayPermission(this)
             }
         }
@@ -416,15 +416,15 @@ class ShellActivity : AppCompatActivity() {
                 themeTypeName = config.themeType,
                 darkModeSetting = config.darkMode
             ) {
-                // Get当前主题状态
+                // Getcurrent state
                 val isDarkTheme = com.webtoapp.ui.theme.LocalIsDarkTheme.current
 
-                // 同步深色主题状态到 Activity 级别（供 onWindowFocusChanged 使用）
+                // sync state Activity( onWindowFocusChanged)
                 SideEffect {
                     currentIsDarkTheme = isDarkTheme
                 }
 
-                // 当主题变化时更新状态栏颜色（根据深色/浅色模式选择对应配置）
+                // when updatestatus barcolor( / modeselect config)
                 LaunchedEffect(isDarkTheme, statusBarColorMode, statusBarColorModeDark) {
                     if (!immersiveFullscreenEnabled) {
                         val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
@@ -441,13 +441,13 @@ class ShellActivity : AppCompatActivity() {
                         try {
                             webView = wv
                             com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "WebView 创建成功")
-                            // 添加翻译桥接
+                            // Note
                             translateBridge = TranslateBridge(wv, lifecycleScope)
                             wv.addJavascriptInterface(translateBridge!!, TranslateBridge.JS_INTERFACE_NAME)
-                            // 添加下载桥接（支持 Blob/Data URL 下载）
+                            // download( support Blob/Data URL download)
                             val downloadBridge = com.webtoapp.core.webview.DownloadBridge(this@ShellActivity, lifecycleScope)
                             wv.addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
-                            // 添加原生能力桥接（供扩展模块调用）
+                            // ( modulecall)
                             val nativeBridge = com.webtoapp.core.webview.NativeBridge(this@ShellActivity, lifecycleScope)
                             wv.addJavascriptInterface(nativeBridge, com.webtoapp.core.webview.NativeBridge.JS_INTERFACE_NAME)
                             com.webtoapp.core.shell.ShellLogger.d("ShellActivity", "JS 桥接接口注册完成")
@@ -475,7 +475,7 @@ class ShellActivity : AppCompatActivity() {
                     onForcedRunStateChanged = { active, forcedConfig ->
                         onForcedRunStateChanged(active, forcedConfig)
                     },
-                    // Status bar配置（根据深色/浅色模式选择对应配置）
+                    // Status barconfig( / modeselect config)
                     statusBarBackgroundType = if (isDarkTheme) statusBarBackgroundTypeDark else statusBarBackgroundType,
                     statusBarBackgroundColor = if (isDarkTheme) statusBarCustomColorDark else statusBarCustomColor,
                     statusBarBackgroundImage = if (isDarkTheme) statusBarBackgroundImageDark else statusBarBackgroundImage,
@@ -485,7 +485,7 @@ class ShellActivity : AppCompatActivity() {
             }
         }
 
-        // 返回键处理（逻辑已提取到 ShellActivityInit.kt）
+        // back handle( ShellActivityInit. kt)
         onBackPressedDispatcher.addCallback(this, ShellActivityInit.createBackPressedCallback(
             activity = this,
             forcedRunManager = forcedRunManager,
@@ -516,7 +516,7 @@ class ShellActivity : AppCompatActivity() {
             if (customView != null || immersiveFullscreenEnabled || forceHideSystemUi) {
                 applyImmersiveFullscreen(true, isDarkTheme = currentIsDarkTheme)
             } else {
-                // 非全屏模式：重新应用状态栏颜色（使用正确的深色/浅色模式值）
+                // mode: appstatus barcolor( / mode)
                 val effectiveColorMode = if (currentIsDarkTheme) statusBarColorModeDark else statusBarColorMode
                 val effectiveCustomColor = if (currentIsDarkTheme) statusBarCustomColorDark else statusBarCustomColor
                 val effectiveDarkIcons = if (currentIsDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
@@ -530,8 +530,8 @@ class ShellActivity : AppCompatActivity() {
         val url = intent?.data?.toString()
         if (!url.isNullOrBlank() && intent?.action == Intent.ACTION_VIEW) {
             val safeUrl = normalizeShellTargetUrlForSecurity(url)
-            // 验证 Deep Link 域名白名单
-            val config = WebToAppApplication.shellMode.getConfig()
+            // verify Deep Link
+            val config = ShellRuntimeServices.shellMode.getConfig()
             val validatedUrl = if (config?.deepLinkEnabled == true) {
                 validateDeepLinkUrl(safeUrl, config.deepLinkHosts, config.targetUrl)
             } else safeUrl
@@ -551,7 +551,7 @@ class ShellActivity : AppCompatActivity() {
     
     override fun onPause() {
         super.onPause()
-        // 暂停 WebView 渲染和 JS 定时器，释放 CPU
+        // WebView JS, CPU
         webView?.onPause()
         webView?.pauseTimers()
         // Persist cookies when app goes to background
@@ -583,22 +583,22 @@ class ShellActivity : AppCompatActivity() {
     override fun onDestroy() {
         com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onDestroy")
         
-        // 释放云 SDK 资源
+        // SDK
         cloudSdkManager?.destroy()
         cloudSdkManager = null
         
         // Persist cookies & WebStorage before destroying WebView
         android.webkit.CookieManager.getInstance().flush()
-        // 完整清理 WebView：先停止加载，移除父 View，再销毁
+        // WebView: load, View,
         webView?.let { wv ->
             wv.stopLoading()
-            // 注意：不再导航到 about:blank
-            // 在 destroy 前 loadUrl("about:blank") 会导致 WebView 切换 origin，
-            // 某些 Android 版本来不及将当前页面的 localStorage 刷盘，造成 H5 游戏存档丢失
+            // about: blank
+            // destroy loadUrl( "about: blank") WebView switch origin,
+            // Android version andmapcurrent localStorage, H5
             wv.onPause()
             wv.pauseTimers()
             wv.webChromeClient = null
-            // 从父 View 移除，防止内存泄漏
+            // from View,
             (wv.parent as? ViewGroup)?.removeView(wv)
             wv.removeAllViews()
             wv.destroy()
@@ -608,4 +608,4 @@ class ShellActivity : AppCompatActivity() {
     }
 }
 
-// ShellScreen composable 已提取到 ShellScreen.kt
+// ShellScreen composable ShellScreen. kt

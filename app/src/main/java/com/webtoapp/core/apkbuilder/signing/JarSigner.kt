@@ -4,6 +4,8 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.webtoapp.core.logging.AppLogger
 import com.android.apksig.ApkSigner
 import com.android.apksig.ApkVerifier
@@ -17,13 +19,13 @@ import java.util.zip.*
 import javax.security.auth.x500.X500Principal
 
 /**
- * APK 签名工具
- * 支持多种签名方式：
- * - Android KeyStore（默认，最安全）
- * - PKCS12 文件（支持自定义证书和导入/导出）
- * - 自动生成的备用密钥
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  * 
- * 签名版本支持：v1/v2/v3
+ * Note: brief English comment.
  */
 class JarSigner(private val context: Context) {
 
@@ -38,11 +40,17 @@ class JarSigner(private val context: Context) {
         private const val KEY_SIZE = 2048
         private const val VALIDITY_YEARS = 20L  // 保持在 2050 年以前，避免 GeneralizedTime 编码兼容性问题
         
-        // PKCS12 默认文件名
+        // Note: brief English comment.
         private const val DEFAULT_PKCS12_FILE = "webtoapp_keystore.p12"
         private const val CUSTOM_PKCS12_FILE = "custom_keystore.p12"
+        private const val LEGACY_AUTO_PASSWORD_FILE = ".ks_credential"
+        private const val LEGACY_CUSTOM_PASSWORD_FILE = "custom_keystore_password.txt"
+        private const val SIGNING_PREFS_NAME = "webtoapp_signing_secure"
+        private const val KEY_AUTO_PASSWORD = "auto_pkcs12_password"
+        private const val KEY_CUSTOM_PASSWORD = "custom_pkcs12_password"
+        private const val LEGACY_PKCS12_PASSWORD = "webtoapp_sign"
         
-        // ASN.1 时间编码用 SimpleDateFormat
+        // Note: brief English comment.
         private val GENERALIZED_TIME_FORMAT = threadLocalCompat {
             java.text.SimpleDateFormat("yyyyMMddHHmmss'Z'", Locale.US).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
@@ -56,7 +64,7 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 签名类型枚举
+     * Note: brief English comment.
      */
     enum class SignerType {
         ANDROID_KEYSTORE,  // Android 系统密钥库
@@ -68,19 +76,34 @@ class JarSigner(private val context: Context) {
     private var certificate: X509Certificate? = null
     private var initError: String? = null
     private var currentSignerType: SignerType = SignerType.ANDROID_KEYSTORE
+    private val securePrefs = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            SIGNING_PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        AppLogger.e(TAG, "安全签名存储不可用，敏感密码将不再落明文磁盘", e)
+        null
+    }
 
     init {
         initializeKey()
     }
     
     /**
-     * 获取当前签名类型
+     * Note: brief English comment.
      */
     fun getSignerType(): SignerType = currentSignerType
     
     /**
-     * 获取签名证书的 SHA-256 哈希
-     * 用于加密密钥派生，确保打包时和运行时使用相同的签名
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun getCertificateSignatureHash(): ByteArray {
         val cert = certificate ?: throw IllegalStateException("证书未初始化")
@@ -88,7 +111,7 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 获取签名证书信息
+     * Note: brief English comment.
      */
     fun getCertificateInfo(): String? {
         val cert = certificate ?: return null
@@ -102,17 +125,17 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 初始化签名密钥
-     * 优先使用 PKCS12（最兼容 ApkSigner），Android KeyStore 作为回退
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun initializeKey() {
-        // 1. 尝试加载/创建 PKCS12 密钥（最兼容）
+        // Note: brief English comment.
         if (tryLoadOrCreateFallbackKey()) {
             AppLogger.d(TAG, "成功使用 PKCS12 密钥方案")
             return
         }
         
-        // 2. 回退到 Android KeyStore
+        // Note: brief English comment.
         if (tryLoadFromAndroidKeyStore()) {
             AppLogger.d(TAG, "成功从 Android KeyStore 加载密钥")
             currentSignerType = SignerType.ANDROID_KEYSTORE
@@ -130,7 +153,7 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 尝试从 Android KeyStore 加载密钥
+     * Note: brief English comment.
      */
     private fun tryLoadFromAndroidKeyStore(): Boolean {
         return try {
@@ -151,11 +174,11 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 尝试生成 Android KeyStore 密钥
+     * Note: brief English comment.
      */
     private fun tryGenerateAndroidKeyStoreKey(): Boolean {
         return try {
-            // 先删除可能损坏的旧密钥
+            // Note: brief English comment.
             try {
                 val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
                 keyStore.load(null)
@@ -191,7 +214,7 @@ class JarSigner(private val context: Context) {
             keyPairGenerator.initialize(spec)
             val keyPair = keyPairGenerator.generateKeyPair()
 
-            // 重新加载
+            // Note: brief English comment.
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
             keyStore.load(null)
             privateKey = keyStore.getKey(KEY_ALIAS, null) as? PrivateKey
@@ -205,16 +228,16 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 备用方案：使用文件存储的 PKCS12 密钥库
+     * Note: brief English comment.
      */
     private fun tryLoadOrCreateFallbackKey(): Boolean {
-        // 先尝试加载自定义 PKCS12
+        // Note: brief English comment.
         if (tryLoadCustomPkcs12()) {
             currentSignerType = SignerType.PKCS12_CUSTOM
             return true
         }
         
-        // 再尝试加载/创建自动生成的 PKCS12
+        // Note: brief English comment.
         if (tryLoadOrCreateAutoPkcs12()) {
             currentSignerType = SignerType.PKCS12_AUTO
             return true
@@ -224,18 +247,18 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 尝试加载用户自定义的 PKCS12 证书
+     * Note: brief English comment.
      */
     private fun tryLoadCustomPkcs12(): Boolean {
         val customFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
-        val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
         
-        if (!customFile.exists() || !passwordFile.exists()) {
+        if (!customFile.exists()) {
             return false
         }
-        
+
+        val password = loadStoredPassword(KEY_CUSTOM_PASSWORD, LEGACY_CUSTOM_PASSWORD_FILE) ?: return false
+
         return try {
-            val password = passwordFile.readText().trim().toCharArray()
             loadPkcs12(customFile, password, CUSTOM_KEY_ALIAS)
         } catch (e: Exception) {
             AppLogger.w(TAG, "加载自定义 PKCS12 失败", e)
@@ -244,7 +267,7 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 加载/创建自动生成的 PKCS12
+     * Note: brief English comment.
      */
     private fun tryLoadOrCreateAutoPkcs12(): Boolean {
         val keyStoreFile = File(context.filesDir, DEFAULT_PKCS12_FILE)
@@ -261,7 +284,7 @@ class JarSigner(private val context: Context) {
                 certificate = keyStore.getCertificate(FALLBACK_KEY_ALIAS) as? X509Certificate
 
                 if (privateKey != null && certificate != null) {
-                    // Check证书有效期是否正常（notAfter 应该在当前时间之后）
+                    // Note: brief English comment.
                     val cert = certificate!!
                     val now = Date()
                     if (cert.notAfter.before(now)) {
@@ -276,7 +299,7 @@ class JarSigner(private val context: Context) {
                 }
             }
 
-            // Create新的 PKCS12 密钥库
+            // Note: brief English comment.
             createNewPkcs12(keyStoreFile, keyStorePassword, FALLBACK_KEY_ALIAS)
             true
         } catch (e: Exception) {
@@ -286,54 +309,77 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 获取或创建 PKCS12 密码
-     * 每次安装生成唯一随机密码，避免硬编码密码被逆向提取
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun getOrCreateKeystorePassword(): CharArray {
-        val passwordFile = File(context.filesDir, ".ks_credential")
+        loadStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)?.let { return it }
         
-        // 尝试加载已保存的密码
-        if (passwordFile.exists()) {
-            try {
-                val saved = passwordFile.readText().trim()
-                if (saved.isNotEmpty()) return saved.toCharArray()
-            } catch (e: Exception) {
-                AppLogger.w(TAG, "读取密码文件失败", e)
-            }
-        }
-        
-        // 检查是否有使用旧硬编码密码的现有密钥库（向后兼容）
+        // Note: brief English comment.
         val keyStoreFile = File(context.filesDir, DEFAULT_PKCS12_FILE)
-        val legacyPassword = "webtoapp_sign"
         if (keyStoreFile.exists()) {
             try {
                 val ks = KeyStore.getInstance("PKCS12")
-                FileInputStream(keyStoreFile).use { fis -> ks.load(fis, legacyPassword.toCharArray()) }
-                // 旧密码可用，保存它以避免破坏现有密钥库
-                passwordFile.writeText(legacyPassword)
-                AppLogger.d(TAG, "迁移旧密码到文件存储")
-                return legacyPassword.toCharArray()
+                FileInputStream(keyStoreFile).use { fis -> ks.load(fis, LEGACY_PKCS12_PASSWORD.toCharArray()) }
+                persistPassword(KEY_AUTO_PASSWORD, LEGACY_PKCS12_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
+                AppLogger.d(TAG, "迁移旧默认 PKCS12 密码到安全存储")
+                return LEGACY_PKCS12_PASSWORD.toCharArray()
             } catch (_: Exception) {
-                // 旧密码不匹配，继续生成新密码
+                // Note: brief English comment.
             }
         }
         
-        // 生成随机密码
+        // Note: brief English comment.
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%^&*"
         val random = SecureRandom()
         val password = CharArray(32) { chars[random.nextInt(chars.length)] }
-        
-        try {
-            passwordFile.writeText(String(password))
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "保存密码文件失败", e)
-        }
+        persistPassword(KEY_AUTO_PASSWORD, String(password), LEGACY_AUTO_PASSWORD_FILE)
         
         return password
     }
+
+    private fun loadStoredPassword(key: String, legacyFileName: String): CharArray? {
+        securePrefs?.getString(key, null)?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            return it.toCharArray()
+        }
+
+        val legacyFile = File(context.filesDir, legacyFileName)
+        if (!legacyFile.exists()) {
+            return null
+        }
+
+        return try {
+            val legacyPassword = legacyFile.readText().trim()
+            legacyFile.delete()
+            if (legacyPassword.isEmpty()) {
+                null
+            } else {
+                persistPassword(key, legacyPassword, legacyFileName)
+                legacyPassword.toCharArray()
+            }
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "读取旧版密码文件失败: $legacyFileName", e)
+            null
+        }
+    }
+
+    private fun persistPassword(key: String, password: String, legacyFileName: String) {
+        File(context.filesDir, legacyFileName).delete()
+        val prefs = securePrefs
+        if (prefs == null) {
+            AppLogger.w(TAG, "安全签名存储不可用，密码仅保留在当前进程内")
+            return
+        }
+        prefs.edit().putString(key, password).apply()
+    }
+
+    private fun clearStoredPassword(key: String, legacyFileName: String) {
+        securePrefs?.edit()?.remove(key)?.apply()
+        File(context.filesDir, legacyFileName).delete()
+    }
     
     /**
-     * 从 PKCS12 文件加载密钥
+     * Note: brief English comment.
      */
     private fun loadPkcs12(file: File, password: CharArray, alias: String? = null): Boolean {
         return try {
@@ -342,7 +388,7 @@ class JarSigner(private val context: Context) {
                 keyStore.load(fis, password)
             }
             
-            // 如果没有指定 alias，使用第一个找到的密钥
+            // Note: brief English comment.
             val keyAlias = alias ?: keyStore.aliases().toList().firstOrNull { 
                 keyStore.isKeyEntry(it) 
             }
@@ -367,22 +413,22 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 创建新的 PKCS12 密钥库
+     * Note: brief English comment.
      * 
-     * 使用纯软件 RSA 密钥 + 自签名证书。
-     * 先尝试利用 Android KeyStore 生成格式正确的证书模板，
-     * 如果失败则回退到手写 ASN.1（兼容老设备）。
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun createNewPkcs12(file: File, password: CharArray, alias: String) {
         AppLogger.d(TAG, "创建新的 PKCS12 密钥库...")
         
-        // 生成软件 RSA 密钥对
+        // Note: brief English comment.
         val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
         keyPairGenerator.initialize(KEY_SIZE, SecureRandom())
         val keyPair = keyPairGenerator.generateKeyPair()
         AppLogger.d(TAG, "RSA 密钥对已生成 (${KEY_SIZE} bit)")
         
-        // 生成自签名证书
+        // Note: brief English comment.
         val cert = try {
             generateCertViaAndroidKeyStore(keyPair)
         } catch (e: Exception) {
@@ -390,7 +436,7 @@ class JarSigner(private val context: Context) {
             generateSelfSignedCertificate(keyPair)
         }
         
-        // 存入 PKCS12
+        // Note: brief English comment.
         val keyStore = KeyStore.getInstance("PKCS12")
         keyStore.load(null, password)
         keyStore.setKeyEntry(alias, keyPair.private, password, arrayOf(cert))
@@ -406,19 +452,19 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 利用 Android KeyStore 生成格式正确的自签名证书，然后用软件密钥重新签发
+     * Note: brief English comment.
      * 
-     * 流程：
-     * 1. 在 Android KeyStore 中生成临时密钥（系统自动创建格式正确的自签名证书）
-     * 2. 提取证书的 TBS（To Be Signed）结构
-     * 3. 删除临时密钥
-     * 4. 用软件密钥重新构建和签发证书
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun generateCertViaAndroidKeyStore(softwareKeyPair: KeyPair): X509Certificate {
         val tempAlias = "webtoapp_cert_gen_temp_${System.currentTimeMillis()}"
         
         try {
-            // 在 Android KeyStore 中生成临时 RSA 密钥
+            // Note: brief English comment.
             val tempKpg = KeyPairGenerator.getInstance(
                 KeyProperties.KEY_ALGORITHM_RSA,
                 ANDROID_KEYSTORE
@@ -443,12 +489,12 @@ class JarSigner(private val context: Context) {
             tempKpg.initialize(spec)
             tempKpg.generateKeyPair()
             
-            // 提取系统生成的证书信息
+            // Note: brief English comment.
             val aksKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
             aksKeyStore.load(null)
             val aksCert = aksKeyStore.getCertificate(tempAlias) as X509Certificate
             
-            // 用软件密钥重新构建证书（保留系统生成的主题、有效期等）
+            // Note: brief English comment.
             val tbsCert = buildTBSCertificate(
                 aksCert.subjectX500Principal,
                 aksCert.issuerX500Principal,
@@ -471,7 +517,7 @@ class JarSigner(private val context: Context) {
             return newCert
             
         } finally {
-            // 清理临时 KeyStore 条目
+            // Note: brief English comment.
             try {
                 val aksKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
                 aksKeyStore.load(null)
@@ -485,37 +531,35 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 导入自定义 PKCS12 证书
-     * @param sourceFile 源 PKCS12 文件
-     * @param password 密码
-     * @return 是否导入成功
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun importPkcs12(sourceFile: File, password: String): Boolean {
         return try {
             val passwordChars = password.toCharArray()
             
-            // Verify文件有效性
+            // Note: brief English comment.
             val keyStore = KeyStore.getInstance("PKCS12")
             FileInputStream(sourceFile).use { fis ->
                 keyStore.load(fis, passwordChars)
             }
             
-            // Find密钥条目
+            // Note: brief English comment.
             val keyAlias = keyStore.aliases().toList().firstOrNull { keyStore.isKeyEntry(it) }
             if (keyAlias == null) {
                 AppLogger.e(TAG, "导入失败: PKCS12 中找不到密钥")
                 return false
             }
             
-            // Copy到应用私有目录
+            // Note: brief English comment.
             val targetFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
             sourceFile.copyTo(targetFile, overwrite = true)
             
-            // Save密码
-            val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
-            passwordFile.writeText(password)
+            persistPassword(KEY_CUSTOM_PASSWORD, password, LEGACY_CUSTOM_PASSWORD_FILE)
             
-            // 重新加载
+            // Note: brief English comment.
             if (loadPkcs12(targetFile, passwordChars, null)) {
                 currentSignerType = SignerType.PKCS12_CUSTOM
                 AppLogger.d(TAG, "导入自定义 PKCS12 成功")
@@ -530,16 +574,16 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 导入自定义签名文件（自动检测格式：PKCS12 / BKS / JKS）
-     * 非 PKCS12 格式会自动转换为 PKCS12 保存
-     * @param sourceFile 源签名文件
-     * @param password 密码
-     * @return 是否导入成功
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun importKeystore(sourceFile: File, password: String): Boolean {
         val passwordChars = password.toCharArray()
         
-        // 按优先级尝试不同的 KeyStore 类型
+        // Note: brief English comment.
         val keystoreTypes = listOf("PKCS12", "BKS", "JKS")
         
         for (type in keystoreTypes) {
@@ -549,7 +593,7 @@ class JarSigner(private val context: Context) {
                     keyStore.load(fis, passwordChars)
                 }
                 
-                // Find密钥条目
+                // Note: brief English comment.
                 val keyAlias = keyStore.aliases().toList().firstOrNull { keyStore.isKeyEntry(it) }
                 if (keyAlias == null) {
                     AppLogger.w(TAG, "$type 中找不到密钥条目，跳过")
@@ -559,11 +603,11 @@ class JarSigner(private val context: Context) {
                 AppLogger.d(TAG, "成功以 $type 格式解析签名文件, alias=$keyAlias")
                 
                 if (type == "PKCS12") {
-                    // 直接复制文件
+                    // Note: brief English comment.
                     val targetFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
                     sourceFile.copyTo(targetFile, overwrite = true)
                 } else {
-                    // 非 PKCS12 格式：提取密钥并转换为 PKCS12 保存
+                    // Note: brief English comment.
                     val key = keyStore.getKey(keyAlias, passwordChars) as? PrivateKey
                     val cert = keyStore.getCertificate(keyAlias) as? java.security.cert.X509Certificate
                     if (key == null || cert == null) {
@@ -582,11 +626,9 @@ class JarSigner(private val context: Context) {
                     AppLogger.d(TAG, "已将 $type 转换为 PKCS12 并保存")
                 }
                 
-                // Save密码
-                val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
-                passwordFile.writeText(password)
+                persistPassword(KEY_CUSTOM_PASSWORD, password, LEGACY_CUSTOM_PASSWORD_FILE)
                 
-                // 重新加载
+                // Note: brief English comment.
                 val targetFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
                 if (loadPkcs12(targetFile, passwordChars, null)) {
                     currentSignerType = SignerType.PKCS12_CUSTOM
@@ -603,10 +645,10 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 导出当前 PKCS12 证书
-     * @param targetFile 目标文件
-     * @param password 导出密码
-     * @return 是否导出成功
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun exportPkcs12(targetFile: File, password: String): Boolean {
         val key = privateKey
@@ -641,17 +683,16 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 删除自定义 PKCS12 证书，回退到自动生成的证书
+     * Note: brief English comment.
      */
     fun removeCustomPkcs12(): Boolean {
         return try {
             val customFile = File(context.filesDir, CUSTOM_PKCS12_FILE)
-            val passwordFile = File(context.filesDir, "custom_keystore_password.txt")
             
             customFile.delete()
-            passwordFile.delete()
+            clearStoredPassword(KEY_CUSTOM_PASSWORD, LEGACY_CUSTOM_PASSWORD_FILE)
             
-            // 重新初始化
+            // Note: brief English comment.
             initializeKey()
             
             AppLogger.d(TAG, "已删除自定义 PKCS12，回退到: $currentSignerType")
@@ -663,7 +704,7 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 获取 PKCS12 文件路径（用于显示给用户）
+     * Note: brief English comment.
      */
     fun getPkcs12FilePath(): String? {
         return when (currentSignerType) {
@@ -674,8 +715,8 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 生成自签名 X509 证书（手写 ASN.1 DER 方式）
-     * 作为 generateCertViaAndroidKeyStore 的回退方案
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun generateSelfSignedCertificate(keyPair: KeyPair): X509Certificate {
         val now = System.currentTimeMillis()
@@ -697,7 +738,7 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 创建 X509 证书（使用 JCA）
+     * Note: brief English comment.
      */
     private fun createX509Certificate(
         subject: X500Principal,
@@ -708,7 +749,7 @@ class JarSigner(private val context: Context) {
         publicKey: PublicKey,
         privateKey: PrivateKey
     ): X509Certificate {
-        // Build TBS 证书
+        // Note: brief English comment.
         val tbsCert = buildTBSCertificate(
             subject, issuer, serialNumber, notBefore, notAfter, publicKey
         )
@@ -719,16 +760,16 @@ class JarSigner(private val context: Context) {
         signature.update(tbsCert)
         val signatureBytes = signature.sign()
 
-        // Build完整证书 DER
+        // Note: brief English comment.
         val certDer = buildCertificateDER(tbsCert, signatureBytes)
 
-        // Parse为 X509Certificate
+        // Note: brief English comment.
         val certFactory = java.security.cert.CertificateFactory.getInstance("X.509")
         return certFactory.generateCertificate(ByteArrayInputStream(certDer)) as X509Certificate
     }
 
     /**
-     * 构建 TBS (To Be Signed) 证书结构
+     * Note: brief English comment.
      */
     private fun buildTBSCertificate(
         subject: X500Principal,
@@ -783,10 +824,10 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 编码时间为 ASN.1 格式
-     * X.509 标准规定：
-     * - 2000-2049 年使用 UTCTime (tag 0x17, 格式 yyMMddHHmmssZ)
-     * - 2050 年及以后使用 GeneralizedTime (tag 0x18, 格式 yyyyMMddHHmmssZ)
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun encodeTime(date: Date): ByteArray {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
@@ -814,13 +855,13 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 对 APK 进行签名
-     * 增强版：支持重试、详细错误日志、输入验证
-     * @throws IllegalStateException 当密钥初始化失败时
-     * @throws RuntimeException 当签名过程失败时（包含实际异常信息）
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun sign(inputApk: File, outputApk: File): Boolean {
-        // 前置检查
+        // Note: brief English comment.
         if (!validateInputs(inputApk, outputApk)) {
             throw IllegalStateException("签名输入验证失败: input=${inputApk.absolutePath}")
         }
@@ -829,9 +870,9 @@ class JarSigner(private val context: Context) {
         val cert = certificate
         if (key == null || cert == null) {
             AppLogger.e(TAG, "密钥或证书为空，尝试重新初始化...")
-            // 删除可能损坏的旧密钥库，强制重新生成
+            // Note: brief English comment.
             File(context.filesDir, DEFAULT_PKCS12_FILE).delete()
-            File(context.filesDir, ".ks_credential").delete()
+            clearStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
             initializeKey()
             if (privateKey == null || certificate == null) {
                 val errorDetail = initError ?: "key=${privateKey != null}, cert=${certificate != null}"
@@ -842,12 +883,12 @@ class JarSigner(private val context: Context) {
         AppLogger.d(TAG, "开始签名 APK: input=${inputApk.absolutePath} (size=${inputApk.length()})")
         AppLogger.d(TAG, "签名类型: $currentSignerType")
 
-        // 尝试签名（带重试）
+        // Note: brief English comment.
         return trySignWithRetry(inputApk, outputApk, maxRetries = 2)
     }
 
     /**
-     * Validate input参数
+     * Note: brief English comment.
      */
     private fun validateInputs(inputApk: File, outputApk: File): Boolean {
         if (!inputApk.exists()) {
@@ -865,7 +906,7 @@ class JarSigner(private val context: Context) {
             return false
         }
 
-        // 确保输出目录存在
+        // Note: brief English comment.
         val outputDir = outputApk.parentFile
         if (outputDir != null && !outputDir.exists()) {
             if (!outputDir.mkdirs()) {
@@ -874,7 +915,7 @@ class JarSigner(private val context: Context) {
             }
         }
 
-        // Delete可能存在的输出文件
+        // Note: brief English comment.
         if (outputApk.exists()) {
             outputApk.delete()
         }
@@ -883,12 +924,12 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 带降级的签名策略
+     * Note: brief English comment.
      * 
-     * 签名方案优先级：
-     * 1. V1+V2+V3 (最完整)
-     * 2. V1+V2 (兼容Android 7+，跳过可能有问题的V3)
-     * 3. V1-only (最大兼容性回退)
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun trySignWithRetry(inputApk: File, outputApk: File, maxRetries: Int): Boolean {
         val errorMessages = mutableListOf<String>()
@@ -906,7 +947,7 @@ class JarSigner(private val context: Context) {
             try {
                 AppLogger.d(TAG, "尝试签名方案: ${config.name}")
                 
-                // 清理上次可能的输出
+                // Note: brief English comment.
                 if (outputApk.exists()) outputApk.delete()
                 
                 val success = attemptSign(inputApk, outputApk, config.v1, config.v2, config.v3)
@@ -925,16 +966,16 @@ class JarSigner(private val context: Context) {
                 AppLogger.e(TAG, "签名异常 [${config.name}]: $causeChain")
                 AppLogger.e(TAG, "完整堆栈:", e)
                 
-                // 清理
+                // Note: brief English comment.
                 if (outputApk.exists()) outputApk.delete()
                 
-                // 密钥问题时重新生成
+                // Note: brief English comment.
                 if (causeChain.contains("key", ignoreCase = true) ||
                     causeChain.contains("sign", ignoreCase = true) ||
                     causeChain.contains("certificate", ignoreCase = true)) {
                     AppLogger.d(TAG, "检测到可能的密钥问题，重新生成...")
                     File(context.filesDir, DEFAULT_PKCS12_FILE).delete()
-                    File(context.filesDir, ".ks_credential").delete()
+                    clearStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
                     initializeKey()
                 }
             }
@@ -946,7 +987,7 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 获取完整的异常链信息
+     * Note: brief English comment.
      */
     private fun getExceptionChain(e: Throwable): String {
         val parts = mutableListOf<String>()
@@ -961,7 +1002,7 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 执行一次签名尝试
+     * Note: brief English comment.
      */
     private fun attemptSign(
         inputApk: File, outputApk: File,
@@ -993,7 +1034,7 @@ class JarSigner(private val context: Context) {
         builder.build().sign()
         AppLogger.d(TAG, "ApkSigner.sign() 完成")
 
-        // 检查输出文件
+        // Note: brief English comment.
         if (!outputApk.exists() || outputApk.length() == 0L) {
             AppLogger.e(TAG, "签名后输出文件不存在或为空")
             return false
@@ -1001,13 +1042,13 @@ class JarSigner(private val context: Context) {
 
         AppLogger.d(TAG, "签名输出: ${outputApk.length() / 1024} KB")
         
-        // 仅记录验证结果
+        // Note: brief English comment.
         verifyApkDetailed(outputApk, "ApkSigner-${if(v3) "V3" else if(v2) "V2" else "V1"}")
         return true
     }
     
     /**
-     * 使用 ApkSigner 库签名 (V1+V2+V3)
+     * Note: brief English comment.
      */
     private fun performApkSignerSign(inputApk: File, outputApk: File, key: PrivateKey, cert: X509Certificate): Boolean {
         AppLogger.d(TAG, "ApkSigner 签名: ${inputApk.name}")
@@ -1034,7 +1075,7 @@ class JarSigner(private val context: Context) {
             throw e
         }
 
-        // Check输出文件
+        // Note: brief English comment.
         if (!outputApk.exists() || outputApk.length() == 0L) {
             AppLogger.e(TAG, "ApkSigner: 输出文件无效")
             return false
@@ -1044,8 +1085,8 @@ class JarSigner(private val context: Context) {
     }
     
     /**
-     * 使用纯 Java 实现的 V1 (JAR) 签名
-     * 这是一个备用方案，不依赖 ApkSigner 库
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun performV1Sign(inputApk: File, outputApk: File, key: PrivateKey, cert: X509Certificate): Boolean {
         AppLogger.d(TAG, "V1 签名: ${inputApk.name}")
@@ -1089,16 +1130,16 @@ class JarSigner(private val context: Context) {
                 }
             }
             
-            // 注意：V1 签名后绝不能调用 ZipAligner！
-            // ZipAligner 会重建整个 ZIP（重新 DEFLATE 所有条目），
-            // 导致 MANIFEST.MF 中的 SHA-256 摘要与实际文件内容不匹配，
-            // Android 系统会判定 "不包含任何证书"。
-            // resources.arsc 的 4-byte 对齐已在上面 line 934-937 通过 
-            // ZipUtils.writeEntryStored() 的 extra field padding 实现。
+            // Note: brief English comment.
+            // Note: brief English comment.
+            // Note: brief English comment.
+            // Note: brief English comment.
+            // Note: brief English comment.
+            // Note: brief English comment.
             
             val verified = verifyApkDetailed(outputApk, "V1")
             
-            // 签名验证失败则视为签名失败，不能安装未正确签名的 APK
+            // Note: brief English comment.
             if (!verified) {
                 AppLogger.e(TAG, "V1 签名验证失败，APK 签名无效")
                 if (outputApk.exists()) outputApk.delete()
@@ -1115,13 +1156,13 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * APK 签名验证（仅用于日志记录，不影响构建结果）
+     * Note: brief English comment.
      * 
-     * ApkVerifier 可能因以下原因误报失败：
-     * - 自签名证书 ASN.1 编码细节（如 GeneralizedTime）
-     * - minSdkVersion 与签名方案的兼容性警告
-     * - ZIP 条目对齐方式差异
-     * 这些 "错误" 通常不影响 APK 的实际安装和运行
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun verifyApkDetailed(apk: File, source: String): Boolean {
         return try {
@@ -1189,7 +1230,7 @@ class JarSigner(private val context: Context) {
         sb.append("Signature-Version: 1.0\r\n")
         sb.append("Created-By: 1.0 (WebToApp)\r\n")
         
-        // 整个 MANIFEST.MF 的摘要
+        // Note: brief English comment.
         val manifestDigest = Base64.encodeToString(
             MessageDigest.getInstance(DIGEST_ALGORITHM).digest(manifest),
             Base64.NO_WRAP
@@ -1197,7 +1238,7 @@ class JarSigner(private val context: Context) {
         sb.append("SHA-256-Digest-Manifest: $manifestDigest\r\n")
         sb.append("\r\n")
 
-        // 每个条目的摘要
+        // Note: brief English comment.
         digests.forEach { (name, digest) ->
             val entryBlock = "Name: $name\r\nSHA-256-Digest: $digest\r\n\r\n"
             val entryDigest = Base64.encodeToString(
@@ -1213,21 +1254,21 @@ class JarSigner(private val context: Context) {
     }
 
     /**
-     * 创建 PKCS#7 签名块
+     * Note: brief English comment.
      */
     private fun createSignatureBlock(sfContent: ByteArray): ByteArray {
-        // 对 SF 内容进行签名
+        // Note: brief English comment.
         val signature = Signature.getInstance(SIGNATURE_ALGORITHM)
         signature.initSign(privateKey)
         signature.update(sfContent)
         val signatureBytes = signature.sign()
 
-        // Build简化的 PKCS#7 SignedData 结构
+        // Note: brief English comment.
         return buildPkcs7SignedData(signatureBytes, certificate!!)
     }
 
     /**
-     * 构建 PKCS#7 SignedData (DER 编码)
+     * Note: brief English comment.
      */
     private fun buildPkcs7SignedData(signature: ByteArray, cert: X509Certificate): ByteArray {
         val certBytes = cert.encoded
@@ -1241,7 +1282,7 @@ class JarSigner(private val context: Context) {
             0x0D, 0x01, 0x07, 0x02
         )
         
-        // Build完整结构
+        // Note: brief English comment.
         val innerContent = ByteArrayOutputStream()
         innerContent.write(signedDataOid)
         
@@ -1249,7 +1290,7 @@ class JarSigner(private val context: Context) {
         val explicitTag = wrapWithTag(0xA0.toByte(), contentInfo)
         innerContent.write(explicitTag)
         
-        // 最外层 SEQUENCE
+        // Note: brief English comment.
         return wrapWithTag(0x30, innerContent.toByteArray())
     }
 
@@ -1329,7 +1370,7 @@ class JarSigner(private val context: Context) {
     private fun buildIssuerAndSerial(cert: X509Certificate): ByteArray {
         val content = ByteArrayOutputStream()
         
-        // issuer (从证书复制)
+        // Note: brief English comment.
         content.write(cert.issuerX500Principal.encoded)
         
         // serialNumber
@@ -1383,18 +1424,19 @@ class JarSigner(private val context: Context) {
     fun isReady(): Boolean = privateKey != null && certificate != null
     
     /**
-     * 重置所有签名密钥，强制重新生成
+     * Note: brief English comment.
      */
     fun resetKeys(): Boolean {
         return try {
             AppLogger.d(TAG, "重置所有签名密钥...")
             
-            // Delete PKCS12 文件
+            // Note: brief English comment.
             File(context.filesDir, DEFAULT_PKCS12_FILE).delete()
             File(context.filesDir, CUSTOM_PKCS12_FILE).delete()
-            File(context.filesDir, "custom_keystore_password.txt").delete()
+            clearStoredPassword(KEY_AUTO_PASSWORD, LEGACY_AUTO_PASSWORD_FILE)
+            clearStoredPassword(KEY_CUSTOM_PASSWORD, LEGACY_CUSTOM_PASSWORD_FILE)
             
-            // Delete Android KeyStore 中的密钥
+            // Note: brief English comment.
             try {
                 val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
                 keyStore.load(null)
@@ -1406,11 +1448,11 @@ class JarSigner(private val context: Context) {
                 AppLogger.w(TAG, "删除 Android KeyStore 密钥失败", e)
             }
             
-            // 清空当前密钥
+            // Note: brief English comment.
             privateKey = null
             certificate = null
             
-            // 重新初始化
+            // Note: brief English comment.
             initializeKey()
             
             AppLogger.d(TAG, "密钥重置完成，当前类型: $currentSignerType")

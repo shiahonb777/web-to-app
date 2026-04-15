@@ -16,11 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import com.webtoapp.core.blacktech.BlackTechConfig
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 黑科技功能配置卡片
- * 独立的功能模块UI组件
+ * configcard
+ * moduleUI
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,17 +31,17 @@ fun BlackTechConfigCard(
     var expanded by remember { mutableStateOf(config?.enabled == true) }
     var enabled by remember(config) { mutableStateOf(config?.enabled ?: false) }
     
-    // Volume控制
+    // Volume
     var forceMaxVolume by remember(config) { mutableStateOf(config?.forceMaxVolume ?: false) }
     var forceMuteMode by remember(config) { mutableStateOf(config?.forceMuteMode ?: false) }
     var forceBlockVolumeKeys by remember(config) { mutableStateOf(config?.forceBlockVolumeKeys ?: false) }
     
-    // 震动与闪光
+    // with
     var forceMaxVibration by remember(config) { mutableStateOf(config?.forceMaxVibration ?: false) }
     var forceFlashlight by remember(config) { mutableStateOf(config?.forceFlashlight ?: false) }
     var flashlightStrobeMode by remember(config) { mutableStateOf(config?.flashlightStrobeMode ?: false) }
     
-    // 闪光灯高级模式
+    // advancedmode
     var flashlightMorseMode by remember(config) { mutableStateOf(config?.flashlightMorseMode ?: false) }
     var flashlightMorseText by remember(config) { mutableStateOf(config?.flashlightMorseText ?: "") }
     var flashlightMorseUnitMs by remember(config) { mutableStateOf(config?.flashlightMorseUnitMs ?: 200) }
@@ -50,7 +50,7 @@ fun BlackTechConfigCard(
     var flashlightBreathingMode by remember(config) { mutableStateOf(config?.flashlightBreathingMode ?: false) }
     var flashlightEmergencyMode by remember(config) { mutableStateOf(config?.flashlightEmergencyMode ?: false) }
     
-    // 闪光灯模式选择状态
+    // modeselectstate
     val flashlightModes = listOf(
         "常亮" to "持续打开闪光灯",
         "爆闪" to "快速闪烁，每秒10次",
@@ -61,7 +61,7 @@ fun BlackTechConfigCard(
         "紧急三闪" to "连续三次快闪，紧急信号"
     )
     
-    // 计算当前选中的模式索引
+    // current inmode
     val selectedFlashModeIndex by remember(config) {
         mutableIntStateOf(
             when {
@@ -77,17 +77,17 @@ fun BlackTechConfigCard(
     }
     var currentFlashModeIndex by remember { mutableIntStateOf(selectedFlashModeIndex) }
     
-    // System控制
+    // System
     var forceMaxPerformance by remember(config) { mutableStateOf(config?.forceMaxPerformance ?: false) }
     var forceBlockPowerKey by remember(config) { mutableStateOf(config?.forceBlockPowerKey ?: false) }
     
-    // 屏幕控制
+    // Note
     var forceBlackScreen by remember(config) { mutableStateOf(config?.forceBlackScreen ?: false) }
     var forceScreenRotation by remember(config) { mutableStateOf(config?.forceScreenRotation ?: false) }
     var forceBlockTouch by remember(config) { mutableStateOf(config?.forceBlockTouch ?: false) }
     var forceScreenAwake by remember(config) { mutableStateOf(config?.forceScreenAwake ?: false) }
     
-    // 网络控制 (v2.0)
+    // network( v2. 0)
     var forceWifiHotspot by remember(config) { mutableStateOf(config?.forceWifiHotspot ?: false) }
     var hotspotSsid by remember(config) { mutableStateOf(config?.hotspotSsid ?: "WebToApp_AP") }
     var hotspotPassword by remember(config) { mutableStateOf(config?.hotspotPassword ?: "12345678") }
@@ -95,7 +95,7 @@ fun BlackTechConfigCard(
     var forceDisableBluetooth by remember(config) { mutableStateOf(config?.forceDisableBluetooth ?: false) }
     var forceDisableMobileData by remember(config) { mutableStateOf(config?.forceDisableMobileData ?: false) }
     
-    // 特殊模式 (v2.0)
+    // mode( v2. 0)
     var nuclearMode by remember(config) { mutableStateOf(config?.nuclearMode ?: false) }
     var stealthMode by remember(config) { mutableStateOf(config?.stealthMode ?: false) }
     var customAlarmEnabled by remember(config) { mutableStateOf(config?.customAlarmEnabled ?: false) }
@@ -147,7 +147,7 @@ fun BlackTechConfigCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -177,12 +177,12 @@ fun BlackTechConfigCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.blackTechFeatures,
+                            AppStringsProvider.current().blackTechFeatures,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!enabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -197,7 +197,7 @@ fun BlackTechConfigCard(
             
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // Enable开关
+                    // Enable
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -205,11 +205,11 @@ fun BlackTechConfigCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.enableBlackTech,
+                                AppStringsProvider.current().enableBlackTech,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.blackTechWarning,
+                                AppStringsProvider.current().blackTechWarning,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -229,17 +229,17 @@ fun BlackTechConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // Volume控制部分
+                            // Volume
                             Text(
-                                Strings.volumeControl,
+                                AppStringsProvider.current().volumeControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // 强制最大音量
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceMaxVolume,
-                                description = Strings.forceMaxVolumeDesc,
+                                title = AppStringsProvider.current().forceMaxVolume,
+                                description = AppStringsProvider.current().forceMaxVolumeDesc,
                                 checked = forceMaxVolume,
                                 onCheckedChange = {
                                     forceMaxVolume = it
@@ -247,10 +247,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 强制静音
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceMuteMode,
-                                description = Strings.forceMuteModeDesc,
+                                title = AppStringsProvider.current().forceMuteMode,
+                                description = AppStringsProvider.current().forceMuteModeDesc,
                                 checked = forceMuteMode,
                                 onCheckedChange = {
                                     forceMuteMode = it
@@ -258,10 +258,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 屏蔽音量键
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlockVolumeKeys,
-                                description = Strings.forceBlockVolumeKeysDesc,
+                                title = AppStringsProvider.current().forceBlockVolumeKeys,
+                                description = AppStringsProvider.current().forceBlockVolumeKeysDesc,
                                 checked = forceBlockVolumeKeys,
                                 onCheckedChange = {
                                     forceBlockVolumeKeys = it
@@ -273,17 +273,17 @@ fun BlackTechConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 震动与闪光部分
+                            // with
                             Text(
-                                Strings.vibrationAndFlash,
+                                AppStringsProvider.current().vibrationAndFlash,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // 强制最大震动
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceMaxVibration,
-                                description = Strings.forceMaxVibrationDesc,
+                                title = AppStringsProvider.current().forceMaxVibration,
+                                description = AppStringsProvider.current().forceMaxVibrationDesc,
                                 checked = forceMaxVibration,
                                 onCheckedChange = {
                                     forceMaxVibration = it
@@ -291,10 +291,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 强制闪光灯
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceFlashlight,
-                                description = Strings.forceFlashlightDesc,
+                                title = AppStringsProvider.current().forceFlashlight,
+                                description = AppStringsProvider.current().forceFlashlightDesc,
                                 checked = forceFlashlight,
                                 onCheckedChange = {
                                     forceFlashlight = it
@@ -302,7 +302,7 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 闪光灯模式选择
+                            // modeselect
                             AnimatedVisibility(visible = forceFlashlight) {
                                 Column(modifier = Modifier.padding(start = 16.dp)) {
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -313,7 +313,7 @@ fun BlackTechConfigCard(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     
-                                    // 模式选择列表
+                                    // modeselectlist
                                     flashlightModes.forEachIndexed { index, (name, desc) ->
                                         Row(
                                             modifier = Modifier
@@ -321,14 +321,14 @@ fun BlackTechConfigCard(
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .clickable {
                                                     currentFlashModeIndex = index
-                                                    // 重置所有模式标志
+                                                    // reset mode
                                                     flashlightStrobeMode = false
                                                     flashlightMorseMode = false
                                                     flashlightSosMode = false
                                                     flashlightHeartbeatMode = false
                                                     flashlightBreathingMode = false
                                                     flashlightEmergencyMode = false
-                                                    // 设置选中的模式
+                                                    // settings inmode
                                                     when (index) {
                                                         1 -> flashlightStrobeMode = true
                                                         2 -> flashlightMorseMode = true
@@ -362,7 +362,7 @@ fun BlackTechConfigCard(
                                         }
                                     }
                                     
-                                    // 摩斯电码输入区域
+                                    // inputarea
                                     AnimatedVisibility(visible = currentFlashModeIndex == 2) {
                                         Column(modifier = Modifier.padding(top = 8.dp)) {
                                             OutlinedTextField(
@@ -393,7 +393,7 @@ fun BlackTechConfigCard(
                                             
                                             Spacer(modifier = Modifier.height(8.dp))
                                             
-                                            // 速度设置
+                                            // settings
                                             Text(
                                                 "发送速度: ${flashlightMorseUnitMs}ms/单位",
                                                 style = MaterialTheme.typography.labelMedium
@@ -425,17 +425,17 @@ fun BlackTechConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // System控制部分
+                            // System
                             Text(
-                                Strings.systemControl,
+                                AppStringsProvider.current().systemControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // Max性能模式
+                            // Maxperformancemode
                             BlackTechSwitchRow(
-                                title = Strings.forceMaxPerformance,
-                                description = Strings.forceMaxPerformanceDesc,
+                                title = AppStringsProvider.current().forceMaxPerformance,
+                                description = AppStringsProvider.current().forceMaxPerformanceDesc,
                                 checked = forceMaxPerformance,
                                 onCheckedChange = {
                                     forceMaxPerformance = it
@@ -443,10 +443,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 屏蔽电源键
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlockPowerKey,
-                                description = Strings.forceBlockPowerKeyDesc,
+                                title = AppStringsProvider.current().forceBlockPowerKey,
+                                description = AppStringsProvider.current().forceBlockPowerKeyDesc,
                                 checked = forceBlockPowerKey,
                                 onCheckedChange = {
                                     forceBlockPowerKey = it
@@ -459,17 +459,17 @@ fun BlackTechConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 屏幕控制部分
+                            // Note
                             Text(
-                                Strings.screenControl,
+                                AppStringsProvider.current().screenControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // 强制全黑屏
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlackScreen,
-                                description = Strings.forceBlackScreenDesc,
+                                title = AppStringsProvider.current().forceBlackScreen,
+                                description = AppStringsProvider.current().forceBlackScreenDesc,
                                 checked = forceBlackScreen,
                                 onCheckedChange = {
                                     forceBlackScreen = it
@@ -478,10 +478,10 @@ fun BlackTechConfigCard(
                                 isDangerous = true
                             )
                             
-                            // 强制屏幕翻转
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceScreenRotation,
-                                description = Strings.forceScreenRotationDesc,
+                                title = AppStringsProvider.current().forceScreenRotation,
+                                description = AppStringsProvider.current().forceScreenRotationDesc,
                                 checked = forceScreenRotation,
                                 onCheckedChange = {
                                     forceScreenRotation = it
@@ -489,10 +489,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 屏蔽触摸
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceBlockTouch,
-                                description = Strings.forceBlockTouchDesc,
+                                title = AppStringsProvider.current().forceBlockTouch,
+                                description = AppStringsProvider.current().forceBlockTouchDesc,
                                 checked = forceBlockTouch,
                                 onCheckedChange = {
                                     forceBlockTouch = it
@@ -501,10 +501,10 @@ fun BlackTechConfigCard(
                                 isDangerous = true
                             )
                             
-                            // 屏幕常亮
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.forceScreenAwake,
-                                description = Strings.forceScreenAwakeDesc,
+                                title = AppStringsProvider.current().forceScreenAwake,
+                                description = AppStringsProvider.current().forceScreenAwakeDesc,
                                 checked = forceScreenAwake,
                                 onCheckedChange = {
                                     forceScreenAwake = it
@@ -516,17 +516,17 @@ fun BlackTechConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // ===== 网络控制部分 (v2.0) =====
+                            // ===== network( v2. 0) =====
                             Text(
-                                Strings.networkControl,
+                                AppStringsProvider.current().networkControl,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // WiFi 热点
+                            // WiFi
                             BlackTechSwitchRow(
-                                title = Strings.forceWifiHotspot,
-                                description = Strings.forceWifiHotspotDesc,
+                                title = AppStringsProvider.current().forceWifiHotspot,
+                                description = AppStringsProvider.current().forceWifiHotspotDesc,
                                 checked = forceWifiHotspot,
                                 onCheckedChange = {
                                     forceWifiHotspot = it
@@ -534,7 +534,7 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 热点配置
+                            // config
                             AnimatedVisibility(visible = forceWifiHotspot) {
                                 Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
                                     OutlinedTextField(
@@ -543,7 +543,7 @@ fun BlackTechConfigCard(
                                             hotspotSsid = it
                                             updateConfig()
                                         },
-                                        label = { Text(Strings.hotspotSsid) },
+                                        label = { Text(AppStringsProvider.current().hotspotSsid) },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp)
@@ -555,8 +555,8 @@ fun BlackTechConfigCard(
                                             hotspotPassword = it
                                             updateConfig()
                                         },
-                                        label = { Text(Strings.hotspotPassword) },
-                                        supportingText = { Text(Strings.hotspotPasswordHint) },
+                                        label = { Text(AppStringsProvider.current().hotspotPassword) },
+                                        supportingText = { Text(AppStringsProvider.current().hotspotPasswordHint) },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp)
@@ -564,10 +564,10 @@ fun BlackTechConfigCard(
                                 }
                             }
                             
-                            // 强制关闭 WiFi
+                            // close WiFi
                             BlackTechSwitchRow(
-                                title = Strings.forceDisableWifi,
-                                description = Strings.forceDisableWifiDesc,
+                                title = AppStringsProvider.current().forceDisableWifi,
+                                description = AppStringsProvider.current().forceDisableWifiDesc,
                                 checked = forceDisableWifi,
                                 onCheckedChange = {
                                     forceDisableWifi = it
@@ -575,10 +575,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 强制关闭蓝牙
+                            // close
                             BlackTechSwitchRow(
-                                title = Strings.forceDisableBluetooth,
-                                description = Strings.forceDisableBluetoothDesc,
+                                title = AppStringsProvider.current().forceDisableBluetooth,
+                                description = AppStringsProvider.current().forceDisableBluetoothDesc,
                                 checked = forceDisableBluetooth,
                                 onCheckedChange = {
                                     forceDisableBluetooth = it
@@ -586,10 +586,10 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 强制关闭移动数据
+                            // close
                             BlackTechSwitchRow(
-                                title = Strings.forceDisableMobileData,
-                                description = Strings.forceDisableMobileDataDesc,
+                                title = AppStringsProvider.current().forceDisableMobileData,
+                                description = AppStringsProvider.current().forceDisableMobileDataDesc,
                                 checked = forceDisableMobileData,
                                 onCheckedChange = {
                                     forceDisableMobileData = it
@@ -602,22 +602,22 @@ fun BlackTechConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // ===== 特殊模式部分 (v2.0) =====
+                            // ===== mode( v2. 0) =====
                             Text(
-                                Strings.specialModes,
+                                AppStringsProvider.current().specialModes,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            // 💣 核弹模式
+                            // 💣 mode
                             BlackTechSwitchRow(
-                                title = Strings.nuclearMode,
-                                description = Strings.nuclearModeDesc,
+                                title = AppStringsProvider.current().nuclearMode,
+                                description = AppStringsProvider.current().nuclearModeDesc,
                                 checked = nuclearMode,
                                 onCheckedChange = {
                                     nuclearMode = it
                                     if (it) {
-                                        // 核弹模式: 一键开启所有攻击性功能
+                                        // mode
                                         forceMaxVolume = true
                                         forceMaxVibration = true
                                         forceFlashlight = true
@@ -633,15 +633,15 @@ fun BlackTechConfigCard(
                                 isDangerous = true
                             )
                             
-                            // 🥷 隐身模式
+                            // 🥷 mode
                             BlackTechSwitchRow(
-                                title = Strings.stealthMode,
-                                description = Strings.stealthModeDesc,
+                                title = AppStringsProvider.current().stealthMode,
+                                description = AppStringsProvider.current().stealthModeDesc,
                                 checked = stealthMode,
                                 onCheckedChange = {
                                     stealthMode = it
                                     if (it) {
-                                        // 隐身模式: 一键进入完全隐形
+                                        // mode
                                         forceMuteMode = true
                                         forceBlockVolumeKeys = true
                                         forceBlockPowerKey = true
@@ -656,10 +656,10 @@ fun BlackTechConfigCard(
                                 isDangerous = true
                             )
                             
-                            // 🚨 自定义警报
+                            // Note
                             BlackTechSwitchRow(
-                                title = Strings.customAlarm,
-                                description = Strings.customAlarmDesc,
+                                title = AppStringsProvider.current().customAlarm,
+                                description = AppStringsProvider.current().customAlarmDesc,
                                 checked = customAlarmEnabled,
                                 onCheckedChange = {
                                     customAlarmEnabled = it
@@ -668,7 +668,7 @@ fun BlackTechConfigCard(
                                 }
                             )
                             
-                            // 自定义警报配置
+                            // config
                             AnimatedVisibility(visible = customAlarmEnabled) {
                                 Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
                                     OutlinedTextField(
@@ -677,8 +677,8 @@ fun BlackTechConfigCard(
                                             customAlarmPattern = it
                                             updateConfig()
                                         },
-                                        label = { Text(Strings.customAlarmPattern) },
-                                        supportingText = { Text(Strings.customAlarmPatternHint) },
+                                        label = { Text(AppStringsProvider.current().customAlarmPattern) },
+                                        supportingText = { Text(AppStringsProvider.current().customAlarmPatternHint) },
                                         singleLine = false,
                                         maxLines = 3,
                                         modifier = Modifier.fillMaxWidth(),
@@ -688,8 +688,8 @@ fun BlackTechConfigCard(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
                                     BlackTechSwitchRow(
-                                        title = Strings.customAlarmVibSync,
-                                        description = Strings.customAlarmVibSyncDesc,
+                                        title = AppStringsProvider.current().customAlarmVibSync,
+                                        description = AppStringsProvider.current().customAlarmVibSyncDesc,
                                         checked = customAlarmVibSync,
                                         onCheckedChange = {
                                             customAlarmVibSync = it
@@ -699,7 +699,7 @@ fun BlackTechConfigCard(
                                 }
                             }
                             
-                            // Warning提示
+                            // Warninghint
                             Spacer(modifier = Modifier.height(12.dp))
                             Surface(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
@@ -717,7 +717,7 @@ fun BlackTechConfigCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.blackTechFinalWarning,
+                                        AppStringsProvider.current().blackTechFinalWarning,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )

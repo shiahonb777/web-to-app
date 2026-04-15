@@ -30,7 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 import com.webtoapp.core.wordpress.WordPressManager
 import com.webtoapp.core.wordpress.WordPressSampleManager
@@ -45,17 +45,17 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 创建 WordPress 应用页面
+ * create WordPress app
  * 
- * 增强功能：
- * - WordPress 品牌化 Hero 区域（WP蓝渐变）
- * - 主题管理面板（检测已安装主题、当前主题）
- * - 插件列表面板（检测已安装插件）
- * - 管理员配置（邮箱、密码）
- * - 数据库信息面板（SQLite 离线模式）
- * - 固定链接结构选择器
- * - 站点语言选择
- * - WordPress 版本信息
+ * Note
+ * WordPress Hero area( WP gradient)
+ * managementpanel( , current)
+ * listpanel( )
+ * management config( , )
+ * panel( SQLite offlinemode)
+ * select
+ * select
+ * WordPress version
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -72,45 +72,45 @@ fun CreateWordPressAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // WordPress 品牌色
+    // WordPress
     val wpBlue = Color(0xFF21759B)
     val wpDarkBlue = Color(0xFF0073AA)
     val wpGray = Color(0xFF464646)
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // WordPress 配置
+    // WordPress config
     var siteTitle by remember { mutableStateOf("My Site") }
     var adminUser by remember { mutableStateOf("admin") }
     var adminEmail by remember { mutableStateOf("") }
     var landscapeMode by remember { mutableStateOf(false) }
     
-    // 增强：固定链接
+    // Note
     var permalink by remember { mutableStateOf("postname") }
     
-    // 增强：站点语言
+    // Note
     var siteLanguage by remember { mutableStateOf("zh_CN") }
     
-    // 增强：主题/插件检测（导入模式）
+    // /( importmode)
     var detectedThemes by remember { mutableStateOf<List<String>>(emptyList()) }
     var activeTheme by remember { mutableStateOf<String?>(null) }
     var detectedPlugins by remember { mutableStateOf<List<String>>(emptyList()) }
     var wpVersion by remember { mutableStateOf<String?>(null) }
     var isImportMode by remember { mutableStateOf(false) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var projectId by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
-    // 依赖下载状态
+    // downloadstate
     val downloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     var showDownloadDialog by remember { mutableStateOf(false) }
     
-    // 文件选择器
+    // fileselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -121,40 +121,40 @@ fun CreateWordPressAppScreen(
         uri?.let { zipUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.wpCheckingDeps
+                creationPhase = AppStringsProvider.current().wpCheckingDeps
                 errorMessage = null
                 isImportMode = true
                 
                 try {
-                    // 检查并下载依赖
+                    // checkanddownload
                     if (!WordPressDependencyManager.isAllReady(context)) {
                         showDownloadDialog = true
                         val success = WordPressDependencyManager.downloadAllDependencies(context)
                         showDownloadDialog = false
                         if (!success) {
-                            errorMessage = Strings.wpDownloadFailed
+                            errorMessage = AppStringsProvider.current().wpDownloadFailed
                             isCreating = false
                             return@launch
                         }
                     }
                     
-                    // 创建项目
-                    creationPhase = Strings.wpCreatingProject
+                    // createitem
+                    creationPhase = AppStringsProvider.current().wpCreatingProject
                     val newProjectId = WordPressManager.createProject(context, siteTitle, adminUser)
                     
                     if (newProjectId != null) {
-                        // 导入 WordPress 压缩包
+                        // import WordPress
                         val importSuccess = WordPressManager.importFullProject(context, newProjectId, zipUri)
                         if (importSuccess) {
                             projectId = newProjectId
-                            creationPhase = Strings.wpProjectReady
+                            creationPhase = AppStringsProvider.current().wpProjectReady
                             
-                            // 增强：扫描导入项目的主题和插件
+                            // importitem
                             withContext(Dispatchers.IO) {
                                 try {
                                     val projectDir = WordPressManager.getProjectDir(context, newProjectId)
                                     if (projectDir != null) {
-                                        // 检测主题
+                                        // Note
                                         val themesDir = File(projectDir, "wp-content/themes")
                                         if (themesDir.exists() && themesDir.isDirectory) {
                                             detectedThemes = themesDir.listFiles()
@@ -164,7 +164,7 @@ fun CreateWordPressAppScreen(
                                             activeTheme = detectedThemes.firstOrNull { it != "index.php" }
                                         }
                                         
-                                        // 检测插件
+                                        // Note
                                         val pluginsDir = File(projectDir, "wp-content/plugins")
                                         if (pluginsDir.exists() && pluginsDir.isDirectory) {
                                             detectedPlugins = pluginsDir.listFiles()
@@ -173,7 +173,7 @@ fun CreateWordPressAppScreen(
                                                 ?: emptyList()
                                         }
                                         
-                                        // 检测 WP 版本
+                                        // WP version
                                         val versionFile = File(projectDir, "wp-includes/version.php")
                                         if (versionFile.exists()) {
                                             val content = versionFile.readText()
@@ -182,17 +182,17 @@ fun CreateWordPressAppScreen(
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    // 扫描失败不影响主流程
+                                    // failed
                                 }
                             }
                         } else {
-                            errorMessage = Strings.wpProjectCreateFailed
+                            errorMessage = AppStringsProvider.current().wpProjectCreateFailed
                         }
                     } else {
-                        errorMessage = Strings.wpProjectCreateFailed
+                        errorMessage = AppStringsProvider.current().wpProjectCreateFailed
                     }
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.wpProjectCreateFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().wpProjectCreateFailed
                 } finally {
                     isCreating = false
                 }
@@ -200,57 +200,57 @@ fun CreateWordPressAppScreen(
         }
     }
     
-    // 创建全新站点
+    // create
     fun createNewSite() {
         scope.launch {
             isCreating = true
-            creationPhase = Strings.wpCheckingDeps
+            creationPhase = AppStringsProvider.current().wpCheckingDeps
             errorMessage = null
             isImportMode = false
             
             try {
-                // 检查并下载依赖
+                // checkanddownload
                 if (!WordPressDependencyManager.isAllReady(context)) {
                     showDownloadDialog = true
                     val success = WordPressDependencyManager.downloadAllDependencies(context)
                     showDownloadDialog = false
                     if (!success) {
-                        errorMessage = Strings.wpDownloadFailed
+                        errorMessage = AppStringsProvider.current().wpDownloadFailed
                         isCreating = false
                         return@launch
                     }
                 }
                 
-                // 创建项目
-                creationPhase = Strings.wpCreatingProject
+                // createitem
+                creationPhase = AppStringsProvider.current().wpCreatingProject
                 val newProjectId = WordPressManager.createProject(context, siteTitle, adminUser)
                 
                 if (newProjectId != null) {
                     projectId = newProjectId
-                    creationPhase = Strings.wpProjectReady
-                    wpVersion = "6.4"  // 内置的 WP 版本
+                    creationPhase = AppStringsProvider.current().wpProjectReady
+                    wpVersion = "6.4"  // WP version
                 } else {
-                    errorMessage = Strings.wpProjectCreateFailed
+                    errorMessage = AppStringsProvider.current().wpProjectCreateFailed
                 }
             } catch (e: Exception) {
-                errorMessage = e.message ?: Strings.wpProjectCreateFailed
+                errorMessage = e.message ?: AppStringsProvider.current().wpProjectCreateFailed
             } finally {
                 isCreating = false
             }
         }
     }
     
-    // 判断是否可以创建
+    // create
     val canCreate = projectId != null
     
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.wpCreateTitle) },
+                title = { Text(AppStringsProvider.current().wpCreateTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -275,7 +275,7 @@ fun CreateWordPressAppScreen(
                         },
                         enabled = canCreate && !isCreating
                     ) {
-                        Text(Strings.btnCreate)
+                        Text(AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -292,48 +292,48 @@ fun CreateWordPressAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. WordPress 品牌化 Hero 区域 ==========
+            // ========== 1. WordPress Hero area ==========
             WpHeroSection(
                 wpBlue = wpBlue,
                 wpVersion = wpVersion,
                 isImportMode = isImportMode && projectId != null
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (projectId == null && !isCreating) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.sampleWpSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().sampleWpSubtitle,
                     samples = remember { WordPressSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = WordPressSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
                                 isCreating = true
-                                creationPhase = Strings.wpCheckingDeps
+                                creationPhase = AppStringsProvider.current().wpCheckingDeps
                                 errorMessage = null
                                 isImportMode = false
                                 try {
-                                    // 检查并下载依赖
+                                    // checkanddownload
                                     if (!WordPressDependencyManager.isAllReady(context)) {
                                         showDownloadDialog = true
                                         val success = WordPressDependencyManager.downloadAllDependencies(context)
                                         showDownloadDialog = false
                                         if (!success) {
-                                            errorMessage = Strings.wpDownloadFailed
+                                            errorMessage = AppStringsProvider.current().wpDownloadFailed
                                             isCreating = false
                                             return@onSuccess
                                         }
                                     }
                                     
-                                    creationPhase = Strings.wpCreatingProject
+                                    creationPhase = AppStringsProvider.current().wpCreatingProject
                                     val newProjectId = WordPressManager.createProject(context, sample.name, "admin")
                                     if (newProjectId != null) {
                                         projectId = newProjectId
                                         appName = sample.name
                                         wpVersion = "6.4"
                                         
-                                        // 检测示例项目中的主题
+                                        // itemin
                                         withContext(Dispatchers.IO) {
                                             try {
                                                 val sampleDir = java.io.File(path)
@@ -349,12 +349,12 @@ fun CreateWordPressAppScreen(
                                             } catch (e: Exception) { android.util.Log.w("CreateWPApp", "Failed to detect themes", e) }
                                         }
                                         
-                                        creationPhase = Strings.wpProjectReady
+                                        creationPhase = AppStringsProvider.current().wpProjectReady
                                     } else {
-                                        errorMessage = Strings.wpProjectCreateFailed
+                                        errorMessage = AppStringsProvider.current().wpProjectCreateFailed
                                     }
                                 } catch (e: Exception) {
-                                    errorMessage = e.message ?: Strings.wpProjectCreateFailed
+                                    errorMessage = e.message ?: AppStringsProvider.current().wpProjectCreateFailed
                                 } finally {
                                     isCreating = false
                                 }
@@ -364,7 +364,7 @@ fun CreateWordPressAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -374,44 +374,44 @@ fun CreateWordPressAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.wpBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().wpBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 应用名称
+                    // app
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 站点标题
+                    // Note
                     PremiumTextField(
                         value = siteTitle,
                         onValueChange = { siteTitle = it },
-                        label = { Text(Strings.wpSiteTitle) },
-                        placeholder = { Text(Strings.wpSiteTitleHint) },
+                        label = { Text(AppStringsProvider.current().wpSiteTitle) },
+                        placeholder = { Text(AppStringsProvider.current().wpSiteTitleHint) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 横屏模式
+                    // mode
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.wpLandscapeMode)
+                        Text(AppStringsProvider.current().wpLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -421,7 +421,7 @@ fun CreateWordPressAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Image, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.labelIcon, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().labelIcon, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     
@@ -444,13 +444,13 @@ fun CreateWordPressAppScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         PremiumOutlinedButton(onClick = { iconPickerLauncher.launch("image/*") }) {
-                            Text(Strings.selectIcon)
+                            Text(AppStringsProvider.current().selectIcon)
                         }
                     }
                 }
             }
             
-            // ========== 4. 项目创建/导入 ==========
+            // ========== 4. Project Create/Import ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -460,17 +460,17 @@ fun CreateWordPressAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.FolderOpen, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.wpImportProject, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().wpImportProject, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.wpImportProjectDesc,
+                        text = AppStringsProvider.current().wpImportProjectDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 导入 WordPress 压缩包按钮
+                    // Import WordPress archive button
                     PremiumOutlinedButton(
                         onClick = { zipPickerLauncher.launch("application/zip") },
                         enabled = !isCreating,
@@ -478,19 +478,19 @@ fun CreateWordPressAppScreen(
                     ) {
                         Icon(Icons.Outlined.FileUpload, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.btnImport)
+                        Text(AppStringsProvider.current().btnImport)
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 分隔线
+                    // Divider
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         HorizontalDivider(modifier = Modifier.weight(weight = 1f, fill = true))
                         Text(
-                            text = Strings.wpOrCreateNew,
+                            text = AppStringsProvider.current().wpOrCreateNew,
                             modifier = Modifier.padding(horizontal = 16.dp),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline
@@ -500,7 +500,7 @@ fun CreateWordPressAppScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 创建全新站点按钮
+                    // Create new site button
                     PremiumButton(
                         onClick = { createNewSite() },
                         enabled = !isCreating,
@@ -509,11 +509,11 @@ fun CreateWordPressAppScreen(
                     ) {
                         Icon(Icons.Outlined.Add, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.wpCreateNewSite)
+                        Text(AppStringsProvider.current().wpCreateNewSite)
                     }
                     
                     Text(
-                        text = Strings.wpCreateNewSiteDesc,
+                        text = AppStringsProvider.current().wpCreateNewSiteDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
@@ -521,10 +521,10 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // ========== 以下卡片仅在项目创建后显示 ==========
+            // ========== Cards below appear after project creation ==========
             if (projectId != null && !isCreating) {
                 
-                // ========== 5. 管理员配置 ==========
+                // ========== 5. Admin Settings ==========
                 WpAdminConfigCard(
                     adminUser = adminUser,
                     onAdminUserChange = { adminUser = it },
@@ -533,7 +533,7 @@ fun CreateWordPressAppScreen(
                     wpBlue = wpBlue
                 )
                 
-                // ========== 6. 主题管理 ==========
+                // ========== 6. Theme Management ==========
                 WpThemeCard(
                     themes = detectedThemes,
                     activeTheme = activeTheme,
@@ -542,32 +542,32 @@ fun CreateWordPressAppScreen(
                     wpBlue = wpBlue
                 )
                 
-                // ========== 7. 插件管理 ==========
+                // ========== 7. Plugin Management ==========
                 WpPluginCard(
                     plugins = detectedPlugins,
                     isImportMode = isImportMode,
                     wpBlue = wpBlue
                 )
                 
-                // ========== 8. 固定链接结构 ==========
+                // ========== 8. Permalink Structure ==========
                 WpPermalinkCard(
                     selected = permalink,
                     onSelect = { permalink = it },
                     wpBlue = wpBlue
                 )
                 
-                // ========== 9. 站点语言 ==========
+                // ========== 9. Site Language ==========
                 WpLanguageCard(
                     selected = siteLanguage,
                     onSelect = { siteLanguage = it },
                     wpBlue = wpBlue
                 )
                 
-                // ========== 10. 数据库信息 ==========
+                // ========== 10. Database Info ==========
                 WpDbInfoCard(wpBlue = wpBlue)
             }
             
-            // 状态显示
+            // Status display
             if (isCreating) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -583,7 +583,7 @@ fun CreateWordPressAppScreen(
                 }
             }
             
-            // 错误信息
+            // Error message
             errorMessage?.let { error ->
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -593,12 +593,12 @@ fun CreateWordPressAppScreen(
                         Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(error, modifier = Modifier.weight(weight = 1f, fill = true), color = MaterialTheme.colorScheme.onErrorContainer)
-                        TextButton(onClick = { errorMessage = null }) { Text(Strings.btnCancel) }
+                        TextButton(onClick = { errorMessage = null }) { Text(AppStringsProvider.current().btnCancel) }
                     }
                 }
             }
             
-            // 项目就绪状态
+            // Project ready state
             if (projectId != null && !isCreating) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -609,7 +609,7 @@ fun CreateWordPressAppScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = Strings.wpProjectReady,
+                                text = AppStringsProvider.current().wpProjectReady,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = wpBlue,
                                 fontWeight = FontWeight.Bold
@@ -629,16 +629,16 @@ fun CreateWordPressAppScreen(
         }
     }
     
-    // 下载进度对话框
+    // Download progress dialog
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text(Strings.wpDownloadDeps) },
+            title = { Text(AppStringsProvider.current().wpDownloadDeps) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     when (val state = downloadState) {
                         is WordPressDependencyManager.DownloadState.Downloading -> {
-                            Text("${Strings.wpDownloading}: ${state.currentFile}")
+                            Text("${AppStringsProvider.current().wpDownloading}: ${state.currentFile}")
                             Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(
                                 progress = { state.progress },
@@ -652,17 +652,17 @@ fun CreateWordPressAppScreen(
                             )
                         }
                         is WordPressDependencyManager.DownloadState.Extracting -> {
-                            Text("${Strings.wpExtracting}: ${state.fileName}")
+                            Text("${AppStringsProvider.current().wpExtracting}: ${state.fileName}")
                             Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = wpBlue)
                         }
                         is WordPressDependencyManager.DownloadState.Verifying -> {
-                            Text(Strings.verifyingFile.replaceFirst("%s", state.fileName))
+                            Text(AppStringsProvider.current().verifyingFile.replaceFirst("%s", state.fileName))
                             Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = wpBlue)
                         }
                         else -> {
-                            Text(Strings.wpCheckingDeps)
+                            Text(AppStringsProvider.current().wpCheckingDeps)
                             Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = wpBlue)
                         }
@@ -670,11 +670,11 @@ fun CreateWordPressAppScreen(
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${Strings.wpMirrorSource}: ${
+                        text = "${AppStringsProvider.current().wpMirrorSource}: ${
                             if (WordPressDependencyManager.getMirrorRegion() == WordPressDependencyManager.MirrorRegion.CN)
-                                Strings.wpMirrorCN
+                                AppStringsProvider.current().wpMirrorCN
                             else
-                                Strings.wpMirrorGlobal
+                                AppStringsProvider.current().wpMirrorGlobal
                         }",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -687,10 +687,10 @@ fun CreateWordPressAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * WordPress 品牌化 Hero 区域
+ * WordPress Hero area
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -728,19 +728,19 @@ private fun WpHeroSection(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        text = Strings.wpHeroTitle,
+                        text = AppStringsProvider.current().wpHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = wpBlue
                     )
                     Text(
-                        text = Strings.wpHeroDesc,
+                        text = AppStringsProvider.current().wpHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // WP 版本
+                        // WP version
                         wpVersion?.let { ver ->
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -756,7 +756,7 @@ private fun WpHeroSection(
                                 )
                             }
                         }
-                        // PHP 标签
+                        // PHP label
                         Surface(
                             shape = RoundedCornerShape(4.dp),
                             color = Color(0xFF777BB4).copy(alpha = 0.15f)
@@ -769,7 +769,7 @@ private fun WpHeroSection(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        // SQLite 标签
+                        // SQLite label
                         Surface(
                             shape = RoundedCornerShape(4.dp),
                             color = Color(0xFF003B57).copy(alpha = 0.15f)
@@ -782,7 +782,7 @@ private fun WpHeroSection(
                                 fontFamily = FontFamily.Monospace
                             )
                         }
-                        // 导入/新建标签
+                        // import/newlabel
                         if (isImportMode) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -805,7 +805,7 @@ private fun WpHeroSection(
 }
 
 /**
- * 管理员配置卡片
+ * management configcard
  */
 @Composable
 private fun WpAdminConfigCard(
@@ -824,15 +824,15 @@ private fun WpAdminConfigCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.AdminPanelSettings, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpAdminConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().wpAdminConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
                 value = adminUser,
                 onValueChange = onAdminUserChange,
-                label = { Text(Strings.wpAdminUser) },
-                placeholder = { Text(Strings.wpAdminUserHint) },
+                label = { Text(AppStringsProvider.current().wpAdminUser) },
+                placeholder = { Text(AppStringsProvider.current().wpAdminUserHint) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Outlined.Person, null, modifier = Modifier.size(20.dp)) }
@@ -842,7 +842,7 @@ private fun WpAdminConfigCard(
             PremiumTextField(
                 value = adminEmail,
                 onValueChange = onAdminEmailChange,
-                label = { Text(Strings.wpAdminEmail) },
+                label = { Text(AppStringsProvider.current().wpAdminEmail) },
                 placeholder = { Text("admin@example.com") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -862,7 +862,7 @@ private fun WpAdminConfigCard(
                     Icon(Icons.Outlined.Info, null, modifier = Modifier.size(16.dp), tint = Color(0xFFFF8F00))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = Strings.wpAdminPassword,
+                        text = AppStringsProvider.current().wpAdminPassword,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -880,7 +880,7 @@ private fun WpAdminConfigCard(
 }
 
 /**
- * 主题管理卡片
+ * managementcard
  */
 @Composable
 private fun WpThemeCard(
@@ -899,7 +899,7 @@ private fun WpThemeCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Palette, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpThemePanel, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().wpThemePanel, style = MaterialTheme.typography.titleMedium)
                 if (themes.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
@@ -919,7 +919,7 @@ private fun WpThemeCard(
             Spacer(modifier = Modifier.height(12.dp))
             
             if (themes.isNotEmpty()) {
-                // 当前主题
+                // current
                 activeTheme?.let { theme ->
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -934,7 +934,7 @@ private fun WpThemeCard(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    Strings.wpActiveTheme,
+                                    AppStringsProvider.current().wpActiveTheme,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -951,7 +951,7 @@ private fun WpThemeCard(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    Strings.wpInstalledThemes,
+                    AppStringsProvider.current().wpInstalledThemes,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1004,7 +1004,7 @@ private fun WpThemeCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            Strings.wpNoThemes,
+                            AppStringsProvider.current().wpNoThemes,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1016,7 +1016,7 @@ private fun WpThemeCard(
 }
 
 /**
- * 插件管理卡片
+ * managementcard
  */
 @Composable
 private fun WpPluginCard(
@@ -1033,7 +1033,7 @@ private fun WpPluginCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpPluginPanel, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().wpPluginPanel, style = MaterialTheme.typography.titleMedium)
                 if (plugins.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
@@ -1109,7 +1109,7 @@ private fun WpPluginCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            Strings.wpNoPlugins,
+                            AppStringsProvider.current().wpNoPlugins,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1121,7 +1121,7 @@ private fun WpPluginCard(
 }
 
 /**
- * 固定链接结构选择卡片
+ * selectcard
  */
 @Composable
 private fun WpPermalinkCard(
@@ -1130,9 +1130,9 @@ private fun WpPermalinkCard(
     wpBlue: Color
 ) {
     val options = listOf(
-        Triple("plain", Strings.wpPermalinkPlain, Icons.Outlined.Tag),
-        Triple("postname", Strings.wpPermalinkPostName, Icons.Outlined.Link),
-        Triple("numeric", Strings.wpPermalinkNumeric, Icons.Outlined.Numbers)
+        Triple("plain", AppStringsProvider.current().wpPermalinkPlain, Icons.Outlined.Tag),
+        Triple("postname", AppStringsProvider.current().wpPermalinkPostName, Icons.Outlined.Link),
+        Triple("numeric", AppStringsProvider.current().wpPermalinkNumeric, Icons.Outlined.Numbers)
     )
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -1144,7 +1144,7 @@ private fun WpPermalinkCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Link, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpPermalink, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().wpPermalink, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1184,7 +1184,7 @@ private fun WpPermalinkCard(
 }
 
 /**
- * 站点语言选择卡片
+ * selectcard
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1215,7 +1215,7 @@ private fun WpLanguageCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Translate, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpSiteLanguage, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().wpSiteLanguage, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1237,7 +1237,7 @@ private fun WpLanguageCard(
 }
 
 /**
- * 数据库信息卡片
+ * card
  */
 @Composable
 private fun WpDbInfoCard(wpBlue: Color) {
@@ -1250,7 +1250,7 @@ private fun WpDbInfoCard(wpBlue: Color) {
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Storage, null, tint = wpBlue, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.wpDbInfo, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().wpDbInfo, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1268,7 +1268,7 @@ private fun WpDbInfoCard(wpBlue: Color) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            Strings.wpDbType,
+                            AppStringsProvider.current().wpDbType,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface
                         )

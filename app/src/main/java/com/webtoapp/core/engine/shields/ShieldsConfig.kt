@@ -1,11 +1,11 @@
 package com.webtoapp.core.engine.shields
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 第三方 Cookie 策略
+ * Cookie.
  *
- * ★ displayName 改为使用 i18n 系统的动态 getter，而非硬编码中文
+ * system usage.
  */
 enum class ThirdPartyCookiePolicy {
     ALLOW_ALL,
@@ -13,16 +13,16 @@ enum class ThirdPartyCookiePolicy {
     BLOCK_ALL_THIRD_PARTY;
 
     val displayName: String get() = when (this) {
-        ALLOW_ALL -> Strings.shieldsCookieAllowAll
-        BLOCK_CROSS_SITE -> Strings.shieldsCookieBlockCrossSite
-        BLOCK_ALL_THIRD_PARTY -> Strings.shieldsCookieBlockAllThirdParty
+        ALLOW_ALL -> AppStringsProvider.current().shieldsCookieAllowAll
+        BLOCK_CROSS_SITE -> AppStringsProvider.current().shieldsCookieBlockCrossSite
+        BLOCK_ALL_THIRD_PARTY -> AppStringsProvider.current().shieldsCookieBlockAllThirdParty
     }
 }
 
 /**
- * Shields Referrer 策略
+ * Shields Referrer.
  *
- * ★ displayName 改为使用 i18n 系统的动态 getter
+ * system usage.
  */
 enum class ShieldsReferrerPolicy(val value: String) {
     NO_REFERRER("no-referrer"),
@@ -32,18 +32,18 @@ enum class ShieldsReferrerPolicy(val value: String) {
     UNSAFE_URL("unsafe-url");
 
     val displayName: String get() = when (this) {
-        NO_REFERRER -> Strings.shieldsRefNoReferrer
-        ORIGIN -> Strings.shieldsRefOrigin
-        STRICT_ORIGIN_CROSS -> Strings.shieldsRefStrictOriginCross
-        SAME_ORIGIN -> Strings.shieldsRefSameOrigin
-        UNSAFE_URL -> Strings.shieldsRefUnsafeUrl
+        NO_REFERRER -> AppStringsProvider.current().shieldsRefNoReferrer
+        ORIGIN -> AppStringsProvider.current().shieldsRefOrigin
+        STRICT_ORIGIN_CROSS -> AppStringsProvider.current().shieldsRefStrictOriginCross
+        SAME_ORIGIN -> AppStringsProvider.current().shieldsRefSameOrigin
+        UNSAFE_URL -> AppStringsProvider.current().shieldsRefUnsafeUrl
     }
 }
 
 /**
- * 跟踪器分类
+ * Note.
  *
- * ★ displayName 改为使用 i18n 系统的动态 getter
+ * system usage.
  */
 enum class TrackerCategory {
     ANALYTICS,
@@ -53,80 +53,80 @@ enum class TrackerCategory {
     AD_NETWORK;
 
     val displayName: String get() = when (this) {
-        ANALYTICS -> Strings.shieldsTrackerAnalytics
-        SOCIAL -> Strings.shieldsTrackerSocial
-        FINGERPRINTING -> Strings.shieldsTrackerFingerprinting
-        CRYPTOMINING -> Strings.shieldsTrackerCryptomining
-        AD_NETWORK -> Strings.shieldsTrackerAdNetwork
+        ANALYTICS -> AppStringsProvider.current().shieldsTrackerAnalytics
+        SOCIAL -> AppStringsProvider.current().shieldsTrackerSocial
+        FINGERPRINTING -> AppStringsProvider.current().shieldsTrackerFingerprinting
+        CRYPTOMINING -> AppStringsProvider.current().shieldsTrackerCryptomining
+        AD_NETWORK -> AppStringsProvider.current().shieldsTrackerAdNetwork
     }
 }
 
 /**
- * SSL 错误处理策略
+ * error.
  *
- * 当遇到 SSL 证书错误（过期、无效、自签名等）时的行为
+ * signature error.
  */
 enum class SslErrorPolicy {
-    /** 自动回退到 HTTP — 最兼容，大多数网站都能正常访问 */
+    /** compat fallback auto. */
     AUTO_HTTP_FALLBACK,
-    /** 询问用户 — 显示对话框让用户选择是否继续 */
+    /** user. */
     ASK_USER,
-    /** 阻止连接 — 直接拒绝（最安全） */
+    /** security. */
     BLOCK;
 
     val displayName: String get() = when (this) {
-        AUTO_HTTP_FALLBACK -> Strings.sslErrorPolicyAutoFallback
-        ASK_USER -> Strings.sslErrorPolicyAskUser
-        BLOCK -> Strings.sslErrorPolicyBlock
+        AUTO_HTTP_FALLBACK -> AppStringsProvider.current().sslErrorPolicyAutoFallback
+        ASK_USER -> AppStringsProvider.current().sslErrorPolicyAskUser
+        BLOCK -> AppStringsProvider.current().sslErrorPolicyBlock
     }
 
     val description: String get() = when (this) {
-        AUTO_HTTP_FALLBACK -> Strings.sslErrorPolicyAutoFallbackDesc
-        ASK_USER -> Strings.sslErrorPolicyAskUserDesc
-        BLOCK -> Strings.sslErrorPolicyBlockDesc
+        AUTO_HTTP_FALLBACK -> AppStringsProvider.current().sslErrorPolicyAutoFallbackDesc
+        ASK_USER -> AppStringsProvider.current().sslErrorPolicyAskUserDesc
+        BLOCK -> AppStringsProvider.current().sslErrorPolicyBlockDesc
     }
 }
 
 /**
- * Shields 统一配置
- * 管理所有浏览器隐私保护功能的开关
+ * config.
+ * protection.
  */
 data class ShieldsConfig(
-    /** 总开关 */
+    /** Note. */
     val enabled: Boolean = true,
     
-    /** HTTPS 自动升级（默认关闭，因为会破坏很多只支持HTTP的网站） */
+    /** default auto. */
     val httpsUpgrade: Boolean = false,
 
-    /** SSL 错误处理策略（默认自动回退到 HTTP，最兼容） */
+    /** default error compat. */
     val sslErrorPolicy: SslErrorPolicy = SslErrorPolicy.AUTO_HTTP_FALLBACK,
 
-    /** 跟踪器拦截 */
+    /** blocker. */
     val trackerBlocking: Boolean = true,
     
-    /** Cookie 弹窗自动关闭 */
+    /** auto. */
     val cookieConsentBlock: Boolean = true,
     
-    /** Global Privacy Control 信号 */
+    /** Global Privacy Control. */
     val gpcEnabled: Boolean = true,
     
-    /** 第三方 Cookie 策略 */
+    /** Cookie. */
     val thirdPartyCookiePolicy: ThirdPartyCookiePolicy = ThirdPartyCookiePolicy.BLOCK_CROSS_SITE,
     
-    /** Referrer 策略 */
+    /** Referrer. */
     val referrerPolicy: ShieldsReferrerPolicy = ShieldsReferrerPolicy.STRICT_ORIGIN_CROSS,
     
-    /** 阅读模式 */
+    /** Note. */
     val readerModeEnabled: Boolean = true
 ) {
     companion object {
-        /** 默认配置（推荐） */
+        /** config default. */
         val DEFAULT = ShieldsConfig()
         
-        /** 关闭所有防护 */
+        /** Note. */
         val DISABLED = ShieldsConfig(enabled = false)
         
-        /** 最大防护（默认关闭 HTTPS 升级以避免破坏网站） */
+        /** default. */
         val MAXIMUM = ShieldsConfig(
             enabled = true,
             httpsUpgrade = false,

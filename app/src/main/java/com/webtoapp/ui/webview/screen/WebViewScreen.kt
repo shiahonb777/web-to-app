@@ -44,13 +44,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
-import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.activation.ActivationManager
+import com.webtoapp.core.adblock.AdBlocker
+import com.webtoapp.core.announcement.AnnouncementManager
 import com.webtoapp.core.bgm.BgmPlayer
 import com.webtoapp.core.webview.LocalHttpServer
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
-import com.webtoapp.core.webview.WebViewManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.data.model.SplashOrientation
@@ -72,12 +73,15 @@ import com.webtoapp.core.wordpress.WordPressManager
 import com.webtoapp.data.model.WordPressConfig
 import com.webtoapp.core.php.PhpAppRuntime
 import com.webtoapp.core.stats.AppUsageTracker
+import com.webtoapp.data.repository.WebAppRepository
 import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.Job
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewScreen(
+    dependencies: WebViewScreenDependencies,
     appId: Long,
     directUrl: String?,
     previewApp: com.webtoapp.data.model.WebApp? = null,
@@ -92,15 +96,15 @@ fun WebViewScreen(
 ) {
     val context = LocalContext.current
     val activity = context as android.app.Activity
-    val repository = WebToAppApplication.repository
-    val activation = WebToAppApplication.activation
-    val announcement = WebToAppApplication.announcement
-    val adBlocker = WebToAppApplication.adBlock
+    val repository: WebAppRepository = dependencies.repository
+    val activation: ActivationManager = dependencies.activation
+    val announcement: AnnouncementManager = dependencies.announcement
+    val adBlocker: AdBlocker = dependencies.adBlocker
     
-    // Yes否为测试模式
+    // Yes mode
     val isTestMode = !testUrl.isNullOrBlank()
 
-    // 状态
+    // state
     var webApp by remember { mutableStateOf<WebApp?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var loadProgress by remember { mutableIntStateOf(0) }
@@ -109,11 +113,11 @@ fun WebViewScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showActivationDialog by remember { mutableStateOf(false) }
     var showAnnouncementDialog by remember { mutableStateOf(false) }
-    // Activation状态：默认未激活，防止 WebView 在检查完成前加载
+    // Activationstate: default, WebView check load
     var isActivated by remember { mutableStateOf(false) }
-    // Activation检查是否完成
+    // Activationcheck
     var isActivationChecked by remember { mutableStateOf(false) }
-    // 当渲染进程被杀死时自增，强制 AndroidView 重建
+    // when, AndroidView
     var webViewRecreationKey by remember { mutableIntStateOf(0) }
     var canGoBack by remember { mutableStateOf(false) }
     var canGoForward by remember { mutableStateOf(false) }
@@ -121,18 +125,18 @@ fun WebViewScreen(
     var adCapabilityNoticeShown by remember { mutableStateOf(false) }
     var strictHostFallbackTriggered by remember { mutableStateOf(false) }
     
-    // Start画面状态
+    // Start state
     var showSplash by remember { mutableStateOf(false) }
     var splashCountdown by remember { mutableIntStateOf(0) }
     var originalOrientation by remember { mutableIntStateOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
 
-    // Background music播放器
+    // Background music
     val bgmPlayer = remember { BgmPlayer(context) }
 
-    // WebView引用
+    // WebView
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
     
-    // 通过 JavaScript 追踪页面真实滚动位置（线程安全，JS Interface 在后台线程回调）
+    // JavaScript scroll( , JS Interface)
     val jsScrollTop = remember { AtomicInteger(0) }
     val scrollBridge = remember {
         object {
@@ -143,61 +147,63 @@ fun WebViewScreen(
         }
     }
     
-    // 长按菜单状态
+    // long- press state
     var showLongPressMenu by remember { mutableStateOf(false) }
     var longPressResult by remember { mutableStateOf<LongPressHandler.LongPressResult?>(null) }
     var longPressTouchX by remember { mutableFloatStateOf(0f) }
     var longPressTouchY by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
+    var keepScreenOnTimeoutJob by remember { mutableStateOf<Job?>(null) }
+    var keepScreenOnManagedByScreen by remember { mutableStateOf(false) }
     val longPressHandler = remember { LongPressHandler(context, scope) }
     
-    // 控制台状态
+    // state
     var showConsole by remember { mutableStateOf(false) }
     var consoleMessages by remember { mutableStateOf<List<ConsoleLogEntry>>(emptyList()) }
     
-    // Status bar背景配置（用于预览时显示）
+    // Status bar config( forpreviewdisplay)
     var statusBarBackgroundType by remember { mutableStateOf("COLOR") }
     var statusBarBackgroundColor by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundImage by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundAlpha by remember { mutableFloatStateOf(1.0f) }
     var statusBarHeightDp by remember { mutableIntStateOf(0) }
-    // Status bar深色模式背景配置
+    // Status bar mode config
     var statusBarBackgroundTypeDarkLocal by remember { mutableStateOf("COLOR") }
     var statusBarBackgroundColorDark by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundImageDark by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundAlphaDark by remember { mutableFloatStateOf(1.0f) }
     
-    // WordPress 预览状态
+    // WordPress previewstate
     var wordPressPreviewState by remember { mutableStateOf<WordPressPreviewState>(WordPressPreviewState.Idle) }
     val phpRuntime = remember { WordPressPhpRuntime(context) }
     val wpDownloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     var wpRetryTrigger by remember { mutableIntStateOf(0) }
     
-    // PHP 应用预览状态
+    // PHP apppreviewstate
     var phpAppPreviewState by remember { mutableStateOf<PhpAppPreviewState>(PhpAppPreviewState.Idle) }
     val phpAppRuntime = remember { PhpAppRuntime(context) }
     val phpAppDownloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     var phpAppRetryTrigger by remember { mutableIntStateOf(0) }
     
-    // Python 应用预览状态
+    // Python apppreviewstate
     var pythonAppPreviewState by remember { mutableStateOf<PythonAppPreviewState>(PythonAppPreviewState.Idle) }
     val pythonRuntime = remember { com.webtoapp.core.python.PythonRuntime(context) }
     val pythonHttpServer = remember { com.webtoapp.core.webview.LocalHttpServer(context) }
     var pythonAppRetryTrigger by remember { mutableIntStateOf(0) }
     
-    // Node.js 应用预览状态
+    // Node. js apppreviewstate
     var nodeJsAppPreviewState by remember { mutableStateOf<NodeJsAppPreviewState>(NodeJsAppPreviewState.Idle) }
     val nodeRuntime = remember { com.webtoapp.core.nodejs.NodeRuntime(context) }
     val nodeHttpServer = remember { com.webtoapp.core.webview.LocalHttpServer(context) }
     var nodeJsAppRetryTrigger by remember { mutableIntStateOf(0) }
     
-    // Go 应用预览状态
+    // Go apppreviewstate
     var goAppPreviewState by remember { mutableStateOf<GoAppPreviewState>(GoAppPreviewState.Idle) }
     val goRuntime = remember { com.webtoapp.core.golang.GoRuntime(context) }
     val goHttpServer = remember { com.webtoapp.core.webview.LocalHttpServer(context) }
     var goAppRetryTrigger by remember { mutableIntStateOf(0) }
     
-    // 当 webApp 加载完成后，通知状态栏配置并更新本地状态
+    // when webApp load, status barconfigandupdatelocalstate
     LaunchedEffect(webApp) {
         webApp?.let { app ->
             onStatusBarConfigChanged?.invoke(
@@ -211,18 +217,18 @@ fun WebViewScreen(
                 app.webViewConfig.statusBarDarkIconsDark,
                 app.webViewConfig.statusBarBackgroundTypeDark
             )
-            // Update state栏背景配置
+            // Update state config
             statusBarBackgroundType = app.webViewConfig.statusBarBackgroundType.name
             statusBarBackgroundColor = app.webViewConfig.statusBarColor
             statusBarBackgroundImage = app.webViewConfig.statusBarBackgroundImage
             statusBarBackgroundAlpha = app.webViewConfig.statusBarBackgroundAlpha
             statusBarHeightDp = app.webViewConfig.statusBarHeightDp
-            // Update深色模式状态栏背景配置
+            // Update modestatus bar config
             statusBarBackgroundTypeDarkLocal = app.webViewConfig.statusBarBackgroundTypeDark.name
             statusBarBackgroundColorDark = app.webViewConfig.statusBarColorDark
             statusBarBackgroundImageDark = app.webViewConfig.statusBarBackgroundImageDark
             statusBarBackgroundAlphaDark = app.webViewConfig.statusBarBackgroundAlphaDark
-            // Update导航栏配置和键盘调整模式
+            // Update config keyboard mode
             (context as? WebViewActivity)?.let { activity ->
                 activity.showNavigationBarInFullscreen = app.webViewConfig.showNavigationBarInFullscreen
                 activity.keyboardAdjustMode = app.webViewConfig.keyboardAdjustMode
@@ -234,34 +240,41 @@ fun WebViewScreen(
                     "WebViewActivity",
                     "Ad config detected for appId=${app.id}, but AdManager is placeholder-only and no ad SDK is integrated"
                 )
-                Toast.makeText(context, Strings.adSdkNotIntegrated, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, AppStringsProvider.current().adSdkNotIntegrated, Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    // Load应用配置
+    // Loadappconfig
     LaunchedEffect(appId, directUrl, testUrl, previewApp) {
-        // 测试模式：直接标记为已激活，不需要加载应用配置
+        keepScreenOnTimeoutJob?.cancel()
+        keepScreenOnTimeoutJob = null
+        if (keepScreenOnManagedByScreen) {
+            activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            keepScreenOnManagedByScreen = false
+        }
+
+        // mode: , loadappconfig
         if (isTestMode) {
             isActivated = true
             isActivationChecked = true
             return@LaunchedEffect
         }
         
-        // 预览模式：使用传入的完整 WebApp 配置（与保存后打开一致）
-        // 跳过激活码检查、启动画面、背景音乐、公告（预览不需要这些）
+        // previewmode: WebApp config( withsave open)
+        // activation codecheck, animation, , announcement( preview)
         if (previewApp != null) {
             webApp = previewApp
             isActivated = true
             isActivationChecked = true
             
-            // 应用广告拦截（预览时也生效）
+            // app intercept( preview)
             if (previewApp.adBlockEnabled) {
                 adBlocker.initialize(previewApp.adBlockRules, useDefaultRules = true)
                 adBlocker.setEnabled(true)
             }
             
-            // 设置屏幕方向模式
+            // settings mode
             when (previewApp.webViewConfig.orientationMode) {
                 com.webtoapp.data.model.OrientationMode.LANDSCAPE -> {
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -279,15 +292,16 @@ fun WebViewScreen(
                 else -> { /* keep default */ }
             }
             
-            // 保持屏幕常亮
+            // Note
             if (previewApp.webViewConfig.screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS) {
                 activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                keepScreenOnManagedByScreen = true
             }
             
             return@LaunchedEffect
         }
         
-        // If it is直接URL模式，不需要激活检查
+        // If it is URLmode, check
         if (!directUrl.isNullOrBlank()) {
             isActivated = true
             isActivationChecked = true
@@ -298,15 +312,15 @@ fun WebViewScreen(
             val app = repository.getWebApp(appId)
             webApp = app
             if (app != null) {
-                // Configure广告拦截
+                // Configure intercept
                 if (app.adBlockEnabled) {
                     adBlocker.initialize(app.adBlockRules, useDefaultRules = true)
                     adBlocker.setEnabled(true)
                 }
 
-                // Check激活状态
+                // Check state
                 if (app.activationEnabled) {
-                    // 如果配置为每次都需要验证，则重置激活状态
+                    // ifconfig verify, reset state
                     if (app.activationRequireEveryTime) {
                         activation.resetActivation(appId)
                         isActivated = false
@@ -321,12 +335,12 @@ fun WebViewScreen(
                         }
                     }
                 } else {
-                    // 未启用激活码，直接标记为已激活
+                    // activation code,
                     isActivated = true
                     isActivationChecked = true
                 }
 
-                // Check公告（启动时触发）
+                // Checkannouncement( )
                 if (app.announcementEnabled && isActivated && app.announcement?.triggerOnLaunch == true) {
                     val shouldShow = announcement.shouldShowAnnouncementForTrigger(
                         appId, 
@@ -336,14 +350,14 @@ fun WebViewScreen(
                     showAnnouncementDialog = shouldShow
                 }
 
-                // Check启动画面
+                // Check animation
                 if (app.splashEnabled && app.splashConfig != null && isActivated) {
                     val mediaPath = app.splashConfig.mediaPath
                     if (mediaPath != null && File(mediaPath).exists()) {
                         showSplash = true
                         splashCountdown = app.splashConfig.duration
                         
-                        // Handle横屏显示
+                        // Handle display
                         if (app.splashConfig.orientation == SplashOrientation.LANDSCAPE) {
                             originalOrientation = activity.requestedOrientation
                             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -351,12 +365,12 @@ fun WebViewScreen(
                     }
                 }
                 
-                // Initialize背景音乐
+                // Initialize
                 if (app.bgmEnabled && app.bgmConfig != null && isActivated) {
                     bgmPlayer.initialize(app.bgmConfig)
                 }
                 
-                // 设置屏幕方向模式
+                // settings mode
                 when (app.webViewConfig.orientationMode) {
                     com.webtoapp.data.model.OrientationMode.LANDSCAPE -> {
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -379,40 +393,44 @@ fun WebViewScreen(
                     }
                     com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
                         if (com.webtoapp.util.TvUtils.isTv(context)) {
-                            // TV 设备不锁定方向，保持默认横屏
+                            // TV, default
                             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         } else {
-                            // 手机/平板锁定为竖屏模式
+                            // / mode
                             @android.annotation.SuppressLint("SourceLockedOrientationActivity")
                             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         }
                     }
                 }
                 
-                // 保持屏幕常亮（支持三种模式）
+                // ( support mode)
                 val awakeMode = app.webViewConfig.screenAwakeMode
                 when (awakeMode) {
                     com.webtoapp.data.model.ScreenAwakeMode.ALWAYS -> {
                         activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        keepScreenOnManagedByScreen = true
                     }
                     com.webtoapp.data.model.ScreenAwakeMode.TIMED -> {
                         activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                        // 定时后移除常亮标志
+                        keepScreenOnManagedByScreen = true
+                        // Note
                         val timeoutMs = app.webViewConfig.screenAwakeTimeoutMinutes * 60 * 1000L
-                        kotlinx.coroutines.MainScope().launch {
-                            kotlinx.coroutines.delay(timeoutMs)
+                        keepScreenOnTimeoutJob = scope.launch {
+                            delay(timeoutMs)
                             activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            keepScreenOnManagedByScreen = false
                         }
                     }
                     com.webtoapp.data.model.ScreenAwakeMode.OFF -> {
-                        // 向后兼容：如果旧版 keepScreenOn=true 但新版 mode=OFF，仍然保持常亮
+                        // if keepScreenOn=true mode=OFF,
                         if (app.webViewConfig.keepScreenOn) {
                             activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            keepScreenOnManagedByScreen = true
                         }
                     }
                 }
                 
-                // 自定义屏幕亮度
+                // Note
                 val brightness = app.webViewConfig.screenBrightness
                 if (brightness in 0..100) {
                     val lp = activity.window.attributes
@@ -420,36 +438,42 @@ fun WebViewScreen(
                     activity.window.attributes = lp
                 }
             } else {
-                // app 不存在，直接标记为已激活
+                // app,
                 isActivated = true
                 isActivationChecked = true
             }
         } else {
-            // appId 无效，直接标记为已激活
+            // appId,
             isActivated = true
             isActivationChecked = true
         }
     }
     
-    // 释放背景音乐播放器和停止网络监听
+    // network
     DisposableEffect(Unit) {
-        // Start网络监听（如果需要）
+        // Startnetwork( if)
         if (webApp?.announcementEnabled == true && webApp?.announcement?.triggerOnNoNetwork == true) {
             announcement.startNetworkMonitoring()
         }
         
         onDispose {
+            keepScreenOnTimeoutJob?.cancel()
+            keepScreenOnTimeoutJob = null
+            if (keepScreenOnManagedByScreen) {
+                activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                keepScreenOnManagedByScreen = false
+            }
             bgmPlayer.release()
             announcement.stopNetworkMonitoring()
         }
     }
     
-    // Network状态监听 - 无网络时触发公告
+    // Networkstate- network announcement
     val networkAvailable by announcement.isNetworkAvailable.collectAsStateWithLifecycle()
     var lastNetworkState by remember { mutableStateOf(true) }
     
     LaunchedEffect(networkAvailable, webApp, isActivated) {
-        // 当网络从有变无时触发
+        // whennetworkfrom
         if (lastNetworkState && !networkAvailable && isActivated) {
             val app = webApp
             if (app != null && app.announcementEnabled && app.announcement?.triggerOnNoNetwork == true) {
@@ -466,7 +490,7 @@ fun WebViewScreen(
         lastNetworkState = networkAvailable
     }
     
-    // 定时间隔触发公告
+    // announcement
     LaunchedEffect(webApp, isActivated) {
         val app = webApp ?: return@LaunchedEffect
         if (!isActivated) return@LaunchedEffect
@@ -474,12 +498,12 @@ fun WebViewScreen(
         val intervalMinutes = app.announcement?.triggerIntervalMinutes ?: 0
         if (!app.announcementEnabled || intervalMinutes <= 0) return@LaunchedEffect
         
-        // 如果配置了启动时也触发，则重置定时器
+        // ifconfig, reset
         if (app.announcement?.triggerIntervalIncludeLaunch == true) {
             announcement.resetIntervalTrigger(appId)
         }
         
-        // 定时检查
+        // check
         while (true) {
             delay(intervalMinutes * 60 * 1000L)
             
@@ -497,9 +521,9 @@ fun WebViewScreen(
         }
     }
 
-    // Start画面倒计时（仅用于图片类型，视频类型由播放器控制）
+    // Start( onlyfor type, type)
     LaunchedEffect(showSplash, splashCountdown) {
-        // Video类型不使用倒计时，由视频播放器控制结束
+        // Videotype,
         if (webApp?.splashConfig?.type == SplashType.VIDEO) return@LaunchedEffect
         
         if (showSplash && splashCountdown > 0) {
@@ -507,7 +531,7 @@ fun WebViewScreen(
             splashCountdown--
         } else if (showSplash && splashCountdown <= 0) {
             showSplash = false
-            // 恢复原始方向
+            // Note
             if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
                 activity.requestedOrientation = originalOrientation
                 originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -588,7 +612,7 @@ fun WebViewScreen(
         )
     }
     
-    // WebView回调
+    // WebView
     val webViewCallbacks = remember {
         object : WebViewCallbacks {
             override fun onPageStarted(url: String?) {
@@ -627,7 +651,7 @@ fun WebViewScreen(
                     canGoBack = it.canGoBack()
                     canGoForward = it.canGoForward()
                     
-                    // 注入滚动位置追踪脚本，用于下拉刷新判断
+                    // scroll, forpull- to- refresh
                     it.evaluateJavascript("""
                         (function(){
                             if(window._wtaScrollTrackerInstalled) return;
@@ -646,7 +670,7 @@ fun WebViewScreen(
                         })();
                     """.trimIndent(), null)
                     
-                    // Inject长按增强脚本（绕过小红书等网站的长按限制）
+                    // Injectlong- press( long- press)
                     if (!shouldSkipLongPressEnhancer(url)) {
                         longPressHandler.injectLongPressEnhancer(it)
                     } else {
@@ -705,13 +729,13 @@ fun WebViewScreen(
                 origin: String?,
                 callback: GeolocationPermissions.Callback?
             ) {
-                // 通过Activity请求Android位置权限
+                // Activity Android
                 (activity as? WebViewActivity)?.handleGeolocationPermission(origin, callback)
                     ?: callback?.invoke(origin, true, false)
             }
 
             override fun onPermissionRequest(request: PermissionRequest?) {
-                // 通过Activity请求Android系统权限（摄像头、麦克风等）
+                // Activity Androidsystem( , )
                 request?.let { req ->
                     (activity as? WebViewActivity)?.handlePermissionRequest(req)
                         ?: req.grant(req.resources)
@@ -745,26 +769,26 @@ fun WebViewScreen(
             }
             
             override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
-                // 无论长按菜单是否启用，都先检查是否长按了链接
-                // 如果是链接，始终拦截以隐藏系统默认的链接预览弹窗
+                // long- press, check long- press
+                // if, alwaysintercept hidesystemdefault previewdialog
                 val hitResult = webView.hitTestResult
                 val hitType = hitResult.type
                 val isLink = hitType == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
                              hitType == WebView.HitTestResult.ANCHOR_TYPE
                 
-                // Check长按菜单是否启用
+                // Checklong- press
                 val menuEnabled = webApp?.webViewConfig?.longPressMenuEnabled ?: true
                 if (!menuEnabled) {
-                    return isLink // 链接长按始终拦截以隐藏预览弹窗
+                    return isLink // long- pressalwaysintercept hidepreviewdialog
                 }
                 
-                // If it is编辑框或未知类型，不拦截，让 WebView 处理默认的文字选择
+                // If it isedit or type, intercept, WebView handledefault select
                 if (hitType == WebView.HitTestResult.EDIT_TEXT_TYPE ||
                     hitType == WebView.HitTestResult.UNKNOWN_TYPE) {
                     return false
                 }
                 
-                // 通过 JS 获取长按元素详情
+                // JS long- press
                 longPressHandler.getLongPressDetails(webView, x, y) { result ->
                     when (result) {
                         is LongPressHandler.LongPressResult.Image,
@@ -778,20 +802,20 @@ fun WebViewScreen(
                         }
                         is LongPressHandler.LongPressResult.Text,
                         is LongPressHandler.LongPressResult.None -> {
-                            // 文字或空白区域，不显示菜单
-                            // 注意：由于已经返回 true 拦截了事件，这里无法触发默认选择
-                            // 但对于图片/视频/链接场景，这是正确的行为
+                            // or area, display
+                            // back true intercept, defaultselect
+                            // Note
                         }
                     }
                 }
                 
-                // 对于图片、链接等类型，拦截事件显示自定义菜单
+                // , type, intercept display
                 return when (hitType) {
                     WebView.HitTestResult.IMAGE_TYPE,
                     WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
                     WebView.HitTestResult.SRC_ANCHOR_TYPE,
                     WebView.HitTestResult.ANCHOR_TYPE -> true
-                    else -> false  // 其他情况不拦截，允许默认的文字选择
+                    else -> false  // intercept, default select
                 }
             }
             
@@ -817,56 +841,56 @@ fun WebViewScreen(
                 AppLogger.w("WebViewActivity", "Render process gone (crash=$didCrash), triggering WebView recreation")
                 webViewRef = null
                 errorMessage = null
-                // 自增 key 强制 AndroidView 重新创建并加载 URL
+                // key AndroidView createandload URL
                 webViewRecreationKey++
             }
         }
     }
 
-    val webViewManager = remember { WebViewManager(context, adBlocker) }
+    val webViewManager = rememberWebViewManager(context, adBlocker)
     
-    // Local HTTP 服务器
-    val localHttpServer = remember { LocalHttpServer.getInstance(context) }
+    // Local HTTP
+    val localHttpServer: LocalHttpServer = dependencies.localHttpServer
     
-    // 根据应用类型构建目标 URL
+    // apptype URL
     val targetUrl = remember(directUrl, webApp, testUrl) {
-        val app = webApp  // 捕获到局部变量以支持智能转换
+        val app = webApp  // support
         when {
-            // 测试模式优先
+            // modeprefer
             !testUrl.isNullOrBlank() -> normalizeWebUrlForSecurity(testUrl)
             !directUrl.isNullOrBlank() -> normalizeWebUrlForSecurity(directUrl)
             app?.appType == com.webtoapp.data.model.AppType.WORDPRESS -> {
-                // WordPress 应用：先显示 about:blank，PHP 服务器就绪后通过 LaunchedEffect 动态加载
+                // WordPress app: display about: blank, PHP LaunchedEffect load
                 "about:blank"
             }
             app?.appType == com.webtoapp.data.model.AppType.PHP_APP -> {
-                // PHP 应用：先显示 about:blank，PHP 服务器就绪后通过 LaunchedEffect 动态加载
+                // PHP app: display about: blank, PHP LaunchedEffect load
                 "about:blank"
             }
             app?.appType == com.webtoapp.data.model.AppType.PYTHON_APP -> {
-                // Python 应用：先显示 about:blank，服务器就绪后通过 LaunchedEffect 动态加载
+                // Python app: display about: blank, LaunchedEffect load
                 "about:blank"
             }
             app?.appType == com.webtoapp.data.model.AppType.NODEJS_APP -> {
-                // Node.js 应用：先显示 about:blank，服务器就绪后通过 LaunchedEffect 动态加载
+                // Node. js app: display about: blank, LaunchedEffect load
                 "about:blank"
             }
             app?.appType == com.webtoapp.data.model.AppType.GO_APP -> {
-                // Go 应用：先显示 about:blank，服务器就绪后通过 LaunchedEffect 动态加载
+                // Go app: display about: blank, LaunchedEffect load
                 "about:blank"
             }
             app?.appType == com.webtoapp.data.model.AppType.MULTI_WEB -> {
-                // 多站点聚合：加载第一个站点的 URL
+                // load URL
                 app.multiWebConfig?.sites?.firstOrNull { it.enabled && it.url.isNotBlank() }?.url ?: "about:blank"
             }
             app?.appType == com.webtoapp.data.model.AppType.HTML ||
             app?.appType == com.webtoapp.data.model.AppType.FRONTEND -> {
-                // HTML/FRONTEND 应用：启动本地 HTTP 服务器
+                // HTML/FRONTEND app: local HTTP
                 val projectId = app.htmlConfig?.projectId ?: ""
                 val entryFile = app.htmlConfig?.getValidEntryFile() ?: "index.html"
                 val htmlDir = File(context.filesDir, "html_projects/$projectId")
                 
-                // 调试日志
+                // Note
                 AppLogger.d("WebViewActivity", "========== HTML App Debug Info ==========")
                 AppLogger.d("WebViewActivity", "projectId: '$projectId'")
                 AppLogger.d("WebViewActivity", "entryFile: '$entryFile'")
@@ -875,7 +899,7 @@ fun WebViewScreen(
                 AppLogger.d("WebViewActivity", "htmlConfig: ${app.htmlConfig}")
                 AppLogger.d("WebViewActivity", "htmlConfig.files: ${app.htmlConfig?.files}")
                 
-                // 列出目录内容
+                // directorycontent
                 if (htmlDir.exists()) {
                     val files = htmlDir.listFiles()
                     AppLogger.d("WebViewActivity", "目录文件列表 (${files?.size ?: 0} 个):")
@@ -883,7 +907,7 @@ fun WebViewScreen(
                         AppLogger.d("WebViewActivity", "  - ${file.name} (${file.length()} bytes)")
                     }
                     
-                    // 检查入口文件是否存在
+                    // check file
                     val entryFilePath = File(htmlDir, entryFile)
                     AppLogger.d("WebViewActivity", "入口文件路径: ${entryFilePath.absolutePath}")
                     AppLogger.d("WebViewActivity", "入口文件存在: ${entryFilePath.exists()}")
@@ -892,14 +916,14 @@ fun WebViewScreen(
                 
                 if (htmlDir.exists()) {
                     try {
-                        // Start本地服务器并获取 URL
+                        // Startlocal and URL
                         val baseUrl = localHttpServer.start(htmlDir)
                         val targetUrl = "$baseUrl/$entryFile"
                         AppLogger.d("WebViewActivity", "目标 URL: $targetUrl")
                         targetUrl
                     } catch (e: Exception) {
                         AppLogger.e("WebViewActivity", "启动本地服务器失败", e)
-                        // 降级到 file:// 协议
+                        // file: //
                         "file://${htmlDir.absolutePath}/$entryFile"
                     }
                 } else {
@@ -911,18 +935,18 @@ fun WebViewScreen(
         }
     }
     
-    // Cleanup：停止本地服务器
+    // Cleanup: local
     DisposableEffect(Unit) {
         onDispose {
-            // 注意：不在这里停止服务器，因为可能有多个 WebView 使用
+            // , WebView
             // localHttpServer.stop()
         }
     }
     
-    // Yes否隐藏工具栏（全屏模式）- 测试模式下始终显示工具栏
+    // Yes hide( mode) - mode alwaysdisplay
     val hideToolbar = !isTestMode && webApp?.webViewConfig?.hideToolbar == true
     val hideBrowserToolbar = !isTestMode && webApp?.webViewConfig?.hideBrowserToolbar == true
-    // 是否在全屏模式下显示顶部导航栏
+    // mode displaytop
     val showToolbarInPreview = when {
         isTestMode -> true
         hideBrowserToolbar -> false
@@ -934,10 +958,10 @@ fun WebViewScreen(
         onFullscreenModeChanged(hideToolbar)
     }
 
-    // 外层 Box 用于放置状态栏覆盖层（需要在 Scaffold 外部才能正确覆盖状态栏区域）
+    // Box for status bar( Scaffold status bararea)
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
-        // 在沉浸式模式下，不添加任何内边距（除非显示toolbar）
+        // mode, ( displaytoolbar)
         contentWindowInsets = if (hideToolbar && !showToolbarInPreview) WindowInsets(0) else if (hideToolbar && showToolbarInPreview) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         modifier = if (hideToolbar && !showToolbarInPreview) Modifier.fillMaxSize() else if (hideToolbar) Modifier.fillMaxSize() else Modifier,
         topBar = {
@@ -953,7 +977,7 @@ fun WebViewScreen(
                             )
                             if (isTestMode && !testModuleIds.isNullOrEmpty()) {
                                 Text(
-                                    text = Strings.testingModules.format(testModuleIds.size),
+                                    text = AppStringsProvider.current().testingModules.format(testModuleIds.size),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1
@@ -991,7 +1015,7 @@ fun WebViewScreen(
                         }
                     },
                     actions = {
-                        // 控制台按钮
+                        // button
                         IconButton(
                             onClick = { showConsole = !showConsole },
                             modifier = Modifier.size(48.dp).offset(x = (-4).dp)
@@ -1007,12 +1031,12 @@ fun WebViewScreen(
                                 ) {
                                     Icon(
                                         if (showConsole) Icons.Filled.Terminal else Icons.Outlined.Terminal,
-                                        Strings.console
+                                        AppStringsProvider.current().console
                                     )
                                 }
                             }
                         }
-                        // 三点菜单（后退、前进、刷新）
+                        // ( , forward, refresh)
                         Box {
                             var showToolbarMenu by remember { mutableStateOf(false) }
                             IconButton(onClick = { showToolbarMenu = true }) {
@@ -1023,7 +1047,7 @@ fun WebViewScreen(
                                 onDismissRequest = { showToolbarMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(Strings.goBack) },
+                                    text = { Text(AppStringsProvider.current().goBack) },
                                     onClick = {
                                         showToolbarMenu = false
                                         webViewRef?.let { wv ->
@@ -1042,7 +1066,7 @@ fun WebViewScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(Strings.goForward) },
+                                    text = { Text(AppStringsProvider.current().goForward) },
                                     onClick = {
                                         showToolbarMenu = false
                                         webViewRef?.goForward()
@@ -1053,7 +1077,7 @@ fun WebViewScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(Strings.refresh) },
+                                    text = { Text(AppStringsProvider.current().refresh) },
                                     onClick = {
                                         showToolbarMenu = false
                                         webViewRef?.reload()
@@ -1075,8 +1099,8 @@ fun WebViewScreen(
             }
         }
     ) { padding ->
-        // 计算内容的 padding
-        // Fullscreen模式 + 显示状态栏时，需要给内容添加状态栏高度的 padding，避免被遮挡
+        // content padding
+        // Fullscreenmode + displaystatus bar, content status bar padding,
         val density = LocalDensity.current
 
         val topInsetPx = WindowInsets.statusBars.getTop(density)
@@ -1086,31 +1110,31 @@ fun WebViewScreen(
             24.dp
         }
         
-        // 计算实际需要的状态栏 padding（使用自定义高度或系统默认高度）
+        // status bar padding( orsystemdefault)
         val actualStatusBarPadding = if (statusBarHeightDp > 0) statusBarHeightDp.dp else systemStatusBarHeightDp
         
         val contentModifier = when {
             hideToolbar && showToolbarInPreview -> {
-                // Fullscreen模式但显示toolbar：使用 Scaffold 的 padding（toolbar高度）
+                // Fullscreenmode displaytoolbar: Scaffold padding( toolbar)
                 Modifier.fillMaxSize().padding(padding)
             }
             hideToolbar && webApp?.webViewConfig?.showStatusBarInFullscreen == true -> {
-                // Fullscreen模式但显示状态栏：内容需要在状态栏下方
-                // 使用自定义高度或系统默认高度作为顶部 padding
+                // Fullscreenmode displaystatus bar: content status bar
+                // orsystemdefault top padding
                 Modifier.fillMaxSize().padding(top = actualStatusBarPadding)
             }
             hideToolbar -> {
-                // 完全全屏模式：内容铺满整个屏幕
+                // mode: content
                 Modifier.fillMaxSize()
             }
             else -> {
-                // 非全屏模式：使用 Scaffold 的 padding
+                // mode: Scaffold padding
                 Modifier.fillMaxSize().padding(padding)
             }
         }
         
         Box(modifier = contentModifier) {
-            // 进度条
+            // Note
             AnimatedVisibility(
                 visible = isLoading,
                 enter = fadeIn(),
@@ -1122,7 +1146,7 @@ fun WebViewScreen(
                 )
             }
 
-            // Activation检查中，显示加载状态
+            // Activationcheck, displayloadstate
             if (!isActivationChecked && webApp?.activationEnabled == true) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -1131,7 +1155,7 @@ fun WebViewScreen(
                     CircularProgressIndicator()
                 }
             }
-            // 未激活提示
+            // hint
             else if (!isActivated && webApp?.activationEnabled == true) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -1145,18 +1169,18 @@ fun WebViewScreen(
                             tint = MaterialTheme.colorScheme.outline
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(Strings.pleaseActivateApp)
+                        Text(AppStringsProvider.current().pleaseActivateApp)
                         Spacer(modifier = Modifier.height(16.dp))
                         PremiumButton(onClick = { showActivationDialog = true }) {
-                            Text(Strings.enterActivationCode)
+                            Text(AppStringsProvider.current().enterActivationCode)
                         }
                     }
                 }
             } else if (targetUrl.isNotEmpty() && isActivationChecked) {
-                // 使用 key 包裹：当渲染进程被杀死后 webViewRecreationKey 自增，
-                // 强制整个 WebView 子树重建，自动重新加载页面
+                // key: when webViewRecreationKey,
+                // WebView, load
                 key(webViewRecreationKey) {
-                // 控制台展开状态
+                // expandstate
                 var isConsoleExpanded by remember { mutableStateOf(false) }
                 val swipeRefreshEnabled = webApp?.webViewConfig?.swipeRefreshEnabled != false
                 
@@ -1190,7 +1214,7 @@ fun WebViewScreen(
                                         ViewGroup.LayoutParams.MATCH_PARENT,
                                         ViewGroup.LayoutParams.MATCH_PARENT
                                     )
-                                    // 测试模式使用测试模块ID，否则使用应用配置的模块ID
+                                    // mode moduleID, appconfig moduleID
                                     val moduleIds = if (isTestMode && !testModuleIds.isNullOrEmpty()) {
                                         testModuleIds
                                     } else {
@@ -1206,7 +1230,7 @@ fun WebViewScreen(
                                         allowGlobalModuleFallback = false,
                                         deviceDisguiseConfig = webApp?.deviceDisguiseConfig
                                     )
-                                    // HTML 应用需要额外配置以支持本地文件访问
+                                    // HTML app config supportlocalfile
                                     val currentApp = webApp
                                     if (currentApp?.appType == com.webtoapp.data.model.AppType.HTML) {
                                         settings.apply {
@@ -1221,8 +1245,8 @@ fun WebViewScreen(
                                         }
                                     }
 
-                                    // 添加长按监听器
-                                    // 持续跟踪触摸位置，确保长按时使用最新坐标
+                                    // long- press
+                                    // , ensurelong- press
                                     var lastTouchX = 0f
                                     var lastTouchY = 0f
                                     setOnTouchListener { view, event ->
@@ -1234,7 +1258,7 @@ fun WebViewScreen(
                                             }
                                             MotionEvent.ACTION_UP -> view.performClick()
                                         }
-                                        false // 不消费事件，让 WebView 继续处理（包括JavaScript点击事件）
+                                        false // , WebView handle( JavaScript)
                                     }
                                     setOnLongClickListener {
                                         webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
@@ -1250,9 +1274,9 @@ fun WebViewScreen(
 
                                     webViewRef = this
 
-                                    // Load目标 URL
-                                    // HTML 应用通过 LocalHttpServer 提供 http://localhost:PORT 的 URL
-                                    // 这样可以正常加载外部 CDN 资源
+                                    // Load URL
+                                    // HTML app LocalHttpServer http: //localhost: PORT URL
+                                    // load CDN
                                     loadUrl(targetUrl)
                                 }
 
@@ -1269,7 +1293,7 @@ fun WebViewScreen(
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     
-                    // 控制台面板
+                    // panel
                     AnimatedVisibility(
                         visible = showConsole,
                         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -1297,7 +1321,7 @@ fun WebViewScreen(
                 }
                 } // key(webViewRecreationKey)
             } else if (webApp == null) {
-                // webApp 尚未从数据库加载完成，显示加载指示器
+                // webApp from load, displayloadindicator
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -1306,7 +1330,7 @@ fun WebViewScreen(
                 }
             }
 
-            // WordPress 加载覆盖层
+            // WordPress load
             val isWordPressLoading = webApp?.appType == com.webtoapp.data.model.AppType.WORDPRESS &&
                 wordPressPreviewState !is WordPressPreviewState.Ready &&
                 wordPressPreviewState !is WordPressPreviewState.Idle
@@ -1318,7 +1342,7 @@ fun WebViewScreen(
                 )
             }
 
-            // PHP 应用加载覆盖层
+            // PHP appload
             val isPhpAppLoading = webApp?.appType == com.webtoapp.data.model.AppType.PHP_APP &&
                 phpAppPreviewState !is PhpAppPreviewState.Ready &&
                 phpAppPreviewState !is PhpAppPreviewState.Idle
@@ -1330,7 +1354,7 @@ fun WebViewScreen(
                 )
             }
 
-            // Python 应用加载覆盖层
+            // Python appload
             val isPythonAppLoading = webApp?.appType == com.webtoapp.data.model.AppType.PYTHON_APP &&
                 pythonAppPreviewState !is PythonAppPreviewState.Ready &&
                 pythonAppPreviewState !is PythonAppPreviewState.Idle
@@ -1341,22 +1365,22 @@ fun WebViewScreen(
                 )
             }
 
-            // Go 应用加载覆盖层
+            // Go appload
             val isGoAppLoading = webApp?.appType == com.webtoapp.data.model.AppType.GO_APP &&
                 goAppPreviewState !is GoAppPreviewState.Ready &&
                 goAppPreviewState !is GoAppPreviewState.Idle
             if (isGoAppLoading) {
                 SimpleAppLoadingOverlay(
                     isStarting = goAppPreviewState is GoAppPreviewState.Starting || goAppPreviewState is GoAppPreviewState.StartingServer,
-                    startingText = Strings.goStartingPreview,
+                    startingText = AppStringsProvider.current().goStartingPreview,
                     errorMessage = (goAppPreviewState as? GoAppPreviewState.Error)?.message,
                     onRetry = { goAppRetryTrigger++ }
                 )
             }
 
-            // 全屏模式下的悬浮返回按钮（当工具栏隐藏且可以后退时显示）
-            // 如果用户选择了显示toolbar则不需要悬浮按钮
-            // 自动淡出：显示后 3 秒开始淡化，点击时重置透明度
+            // mode backbutton( when hide display)
+            // ifuserselect displaytoolbar button
+            // display 3, reset
             if ((hideToolbar || hideBrowserToolbar) && !showToolbarInPreview && canGoBack) {
                 var fabAlpha by remember { mutableFloatStateOf(0.9f) }
                 var fadeKey by remember { mutableIntStateOf(0) }
@@ -1364,7 +1388,7 @@ fun WebViewScreen(
                 LaunchedEffect(canGoBack, fadeKey) {
                     fabAlpha = 0.9f
                     delay(3000L)
-                    // 渐变淡出到 0.25
+                    // gradient 0. 25
                     val steps = 20
                     val stepDelay = 30L
                     for (i in 1..steps) {
@@ -1375,7 +1399,7 @@ fun WebViewScreen(
                 
                 androidx.compose.material3.SmallFloatingActionButton(
                     onClick = {
-                        fadeKey++ // 重置淡出计时
+                        fadeKey++ // reset
                         webViewRef?.let { wv ->
                             val list = wv.copyBackForwardList()
                             val prev = list.getItemAtIndex(list.currentIndex - 1)?.url
@@ -1399,11 +1423,11 @@ fun WebViewScreen(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.cdBack)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().cdBack)
                 }
             }
 
-            // Error提示
+            // Errorhint
             errorMessage?.let { error ->
                 Card(
                     modifier = Modifier
@@ -1425,17 +1449,17 @@ fun WebViewScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(error, modifier = Modifier.weight(weight = 1f, fill = true))
                         TextButton(onClick = { errorMessage = null }) {
-                            Text(Strings.close)
+                            Text(AppStringsProvider.current().close)
                         }
                     }
                 }
             }
             
-            // 注意：状态栏覆盖层已移到 Scaffold 外部
+            // status bar Scaffold
         }
     }
     
-    // Status bar背景覆盖层（根据深色/浅色模式选择对应配置）
+    // Status bar( / modeselect config)
     // Show overlay when: fullscreen with status bar visible, OR non-fullscreen with custom status bar config
     val isDarkThemeForOverlay = com.webtoapp.ui.theme.LocalIsDarkTheme.current
     val effectiveStatusBarBgType = if (isDarkThemeForOverlay) statusBarBackgroundTypeDarkLocal else statusBarBackgroundType
@@ -1471,9 +1495,9 @@ fun WebViewScreen(
             modifier = Modifier.align(Alignment.TopStart)
         )
     }
-    } // 关闭外层 Box
+    } // close Box
 
-    // Activation码对话框
+    // Activation dialog
     if (showActivationDialog) {
         val activationStatus by androidx.compose.runtime.produceState<com.webtoapp.core.activation.ActivationStatus?>(initialValue = null) {
             value = try {
@@ -1487,7 +1511,7 @@ fun WebViewScreen(
             onDismiss = { showActivationDialog = false },
             onActivate = { code ->
                 val allCodes = webApp?.activationCodeList ?: emptyList()
-                // 同时包含旧格式 activationCodes 中的遗留数据
+                // activationCodes in
                 val legacyCodes = webApp?.activationCodes
                     ?.filter { !it.trimStart().startsWith("{") }
                     ?.map { com.webtoapp.core.activation.ActivationCode.fromLegacyString(it) }
@@ -1502,13 +1526,13 @@ fun WebViewScreen(
             customButtonText = webApp?.activationDialogConfig?.buttonText ?: ""
         )
         
-        // Listen激活状态变化
+        // Listen state
         LaunchedEffect(Unit) {
             activation.isActivated(appId).collect { activated ->
                 if (activated) {
                     isActivated = true
                     showActivationDialog = false
-                    // Check公告
+                    // Checkannouncement
                     if (webApp?.announcementEnabled == true) {
                         val shouldShow = announcement.shouldShowAnnouncement(appId, webApp?.announcement)
                         showAnnouncementDialog = shouldShow
@@ -1518,7 +1542,7 @@ fun WebViewScreen(
         }
     }
 
-    // Announcement对话框 - 使用模板系统
+    // Announcementdialog- system
     if (showAnnouncementDialog && webApp?.announcement != null) {
         val ann = webApp!!.announcement!!
 com.webtoapp.ui.components.announcement.AnnouncementDialog(
@@ -1541,13 +1565,13 @@ com.webtoapp.ui.components.announcement.AnnouncementDialog(
                 try {
                     val safeUrl = normalizeExternalUrlForIntent(url)
                     if (safeUrl.isBlank()) {
-                        Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                     } else {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(safeUrl))
                         context.startActivity(intent)
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
                 }
             },
             onNeverShowChecked = { checked ->
@@ -1561,17 +1585,17 @@ com.webtoapp.ui.components.announcement.AnnouncementDialog(
         )
     }
 
-    // 关闭启动画面的回调
+    // close animation
     val closeSplash = {
         showSplash = false
-        // 恢复原始方向
+        // Note
         if (originalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             activity.requestedOrientation = originalOrientation
             originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
     
-    // Start画面覆盖层
+    // Start
     AnimatedVisibility(
         visible = showSplash,
         enter = fadeIn(animationSpec = tween(300)),
@@ -1581,15 +1605,15 @@ com.webtoapp.ui.components.announcement.AnnouncementDialog(
             SplashOverlay(
                 splashConfig = splashConfig,
                 countdown = splashCountdown,
-                // 点击跳过（仅当启用时）
+                // ( onlywhen)
                 onSkip = if (splashConfig.clickToSkip) { closeSplash } else null,
-                // Play完成回调（始终需要）
+                // Play( always)
                 onComplete = closeSplash
             )
         }
     }
     
-    // 长按菜单
+    // long- press
     if (showLongPressMenu && longPressResult != null) {
         WebViewLongPressMenu(
             menuStyle = webApp?.webViewConfig?.longPressMenuStyle ?: LongPressMenuStyle.FULL,

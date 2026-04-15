@@ -1,4 +1,4 @@
-﻿package com.webtoapp.ui.components
+package com.webtoapp.ui.components
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.StatusBarBackgroundType
 import com.webtoapp.data.model.StatusBarColorMode
 import com.webtoapp.data.model.WebViewConfig
@@ -112,13 +112,13 @@ fun StatusBarConfigCard(
         
         HorizontalDivider()
         
-        Text(Strings.backgroundType, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(AppStringsProvider.current().backgroundType, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PremiumFilterChip(
                 selected = config.statusBarBackgroundType == StatusBarBackgroundType.COLOR,
                 onClick = { onConfigChange(config.copy(statusBarBackgroundType = StatusBarBackgroundType.COLOR)) },
-                label = { Text(Strings.solidColor) },
+                label = { Text(AppStringsProvider.current().solidColor) },
                 leadingIcon = if (config.statusBarBackgroundType == StatusBarBackgroundType.COLOR) {
                     { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                 } else { { Icon(Icons.Outlined.Palette, null, Modifier.size(18.dp)) } }
@@ -126,7 +126,7 @@ fun StatusBarConfigCard(
             PremiumFilterChip(
                 selected = config.statusBarBackgroundType == StatusBarBackgroundType.IMAGE,
                 onClick = { onConfigChange(config.copy(statusBarBackgroundType = StatusBarBackgroundType.IMAGE)) },
-                label = { Text(Strings.image) },
+                label = { Text(AppStringsProvider.current().image) },
                 leadingIcon = if (config.statusBarBackgroundType == StatusBarBackgroundType.IMAGE) {
                     { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                 } else { { Icon(Icons.Outlined.Image, null, Modifier.size(18.dp)) } }
@@ -162,7 +162,7 @@ private fun StatusBarPreviewBox(
     val bgColor = remember(backgroundColor) { backgroundColor?.let { parseColor(it) } ?: Color.Black }
     
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(Strings.statusBarPreview, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(AppStringsProvider.current().statusBarPreview, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         
         Box(
             modifier = Modifier.fillMaxWidth().height(heightDp.dp).clip(RoundedCornerShape(4.dp))
@@ -180,7 +180,7 @@ private fun StatusBarPreviewBox(
                     } else {
                         Box(modifier = Modifier.fillMaxSize().background(Color.Gray.copy(alpha = 0.3f)),
                             contentAlignment = Alignment.Center) {
-                            Text(Strings.noImageSelected, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(AppStringsProvider.current().noImageSelected, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -202,14 +202,14 @@ private fun StatusBarPreviewBox(
 private fun HeightSlider(currentHeight: Int, systemDefaultHeight: Int, onHeightChange: (Int) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(Strings.statusBarHeight, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().statusBarHeight, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("${currentHeight}dp", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
         Slider(value = currentHeight.toFloat(), onValueChange = { onHeightChange(it.toInt()) }, valueRange = 16f..48f, steps = 31, modifier = Modifier.fillMaxWidth())
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("16dp", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = { onHeightChange(systemDefaultHeight) }, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
-                Text("${Strings.restoreDefault} (${systemDefaultHeight}dp)", fontSize = 12.sp)
+                Text("${AppStringsProvider.current().restoreDefault} (${systemDefaultHeight}dp)", fontSize = 12.sp)
             }
             Text("48dp", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -223,10 +223,10 @@ private fun ColorSelectionRow(currentColor: String?, onColorClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(color).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)))
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-            Text(Strings.backgroundColor, style = MaterialTheme.typography.bodyMedium)
+            Text(AppStringsProvider.current().backgroundColor, style = MaterialTheme.typography.bodyMedium)
             Text(currentColor?.uppercase() ?: "#000000", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Icon(Icons.Default.Edit, contentDescription = Strings.selectColor, tint = MaterialTheme.colorScheme.primary)
+        Icon(Icons.Default.Edit, contentDescription = AppStringsProvider.current().selectColor, tint = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -238,17 +238,17 @@ private fun ImageSelectionRow(currentImagePath: String?, onSelectImage: () -> Un
                 horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(model = currentImagePath, contentDescription = null, modifier = Modifier.width(80.dp).height(32.dp).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Crop)
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Text(Strings.imageSelected, style = MaterialTheme.typography.bodyMedium)
-                    Text(Strings.clickToChangeOrClear, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(AppStringsProvider.current().imageSelected, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStringsProvider.current().clickToChangeOrClear, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                IconButton(onClick = onSelectImage) { Icon(Icons.Default.Edit, Strings.changeImage) }
-                IconButton(onClick = onClearImage) { Icon(Icons.Default.Delete, Strings.clearImage, tint = MaterialTheme.colorScheme.error) }
+                IconButton(onClick = onSelectImage) { Icon(Icons.Default.Edit, AppStringsProvider.current().changeImage) }
+                IconButton(onClick = onClearImage) { Icon(Icons.Default.Delete, AppStringsProvider.current().clearImage, tint = MaterialTheme.colorScheme.error) }
             }
         } else {
             PremiumOutlinedButton(onClick = onSelectImage, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.AddPhotoAlternate, null, Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(Strings.selectBackgroundImage)
+                Text(AppStringsProvider.current().selectBackgroundImage)
             }
         }
     }
@@ -258,13 +258,13 @@ private fun ImageSelectionRow(currentImagePath: String?, onSelectImage: () -> Un
 private fun AlphaSlider(alpha: Float, onAlphaChange: (Float) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(Strings.backgroundAlpha, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().backgroundAlpha, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("${(alpha * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
         Slider(value = alpha, onValueChange = onAlphaChange, valueRange = 0f..1f, modifier = Modifier.fillMaxWidth())
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(Strings.transparent, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(Strings.opaque, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().transparent, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().opaque, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

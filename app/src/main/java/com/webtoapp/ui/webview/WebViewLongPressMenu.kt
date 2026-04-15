@@ -5,13 +5,13 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.ui.components.LongPressMenuSheet
 
 /**
- * WebView 长按菜单 - 根据菜单样式选择不同的显示方式
+ * WebView long- press- select display
  */
 @Composable
 fun WebViewLongPressMenu(
@@ -40,7 +40,7 @@ fun WebViewLongPressMenu(
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalizeExternalUrlForIntent(url)))
             context.startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(context, Strings.cannotOpenLink, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().cannotOpenLink, Toast.LENGTH_SHORT).show()
         }
     }
 

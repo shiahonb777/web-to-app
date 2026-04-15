@@ -1,12 +1,12 @@
 package com.webtoapp.core.golang
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
 /**
- * Go 示例项目管理器
+ * project.
  */
 object GoSampleManager {
     
@@ -15,29 +15,29 @@ object GoSampleManager {
         return listOf(
             TypedSampleProject(
                 id = "go-gin$suffix",
-                name = Strings.sampleGoGinName,
-                description = Strings.sampleGoGinDesc,
+                name = AppStringsProvider.current().sampleGoGinName,
+                description = AppStringsProvider.current().sampleGoGinDesc,
                 frameworkName = "Gin",
                 icon = "cocktail",
-                tags = listOf("Gin 1.9", Strings.sampleTagRest, Strings.sampleTagMiddleware),
+                tags = listOf("Gin 1.9", AppStringsProvider.current().sampleTagRest, AppStringsProvider.current().sampleTagMiddleware),
                 brandColor = 0xFF0090FF
             ),
             TypedSampleProject(
                 id = "go-fiber$suffix",
-                name = Strings.sampleGoFiberName,
-                description = Strings.sampleGoFiberDesc,
+                name = AppStringsProvider.current().sampleGoFiberName,
+                description = AppStringsProvider.current().sampleGoFiberDesc,
                 frameworkName = "Fiber",
                 icon = "rocket",
-                tags = listOf("Fiber 2", Strings.sampleTagHighPerf),
+                tags = listOf("Fiber 2", AppStringsProvider.current().sampleTagHighPerf),
                 brandColor = 0xFF7B2FBF
             ),
             TypedSampleProject(
                 id = "go-echo$suffix",
-                name = Strings.sampleGoEchoName,
-                description = Strings.sampleGoEchoDesc,
+                name = AppStringsProvider.current().sampleGoEchoName,
+                description = AppStringsProvider.current().sampleGoEchoDesc,
                 frameworkName = "Echo",
                 icon = "volume",
-                tags = listOf("Echo 4", Strings.sampleTagMinimalApi),
+                tags = listOf("Echo 4", AppStringsProvider.current().sampleTagMinimalApi),
                 brandColor = 0xFF00BCD4
             )
         )

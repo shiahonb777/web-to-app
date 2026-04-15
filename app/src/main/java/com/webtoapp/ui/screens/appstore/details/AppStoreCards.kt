@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -129,7 +129,7 @@ internal fun ModuleStoreCard(
                                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
                                     Icon(Icons.Filled.Star, null, modifier = Modifier.size(10.dp), tint = Color(0xFFFFA726))
-                                    Text(Strings.moduleStoreFeatured, fontSize = 9.sp, fontWeight = FontWeight.SemiBold,
+                                    Text(AppStringsProvider.current().moduleStoreFeatured, fontSize = 9.sp, fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFFFFA726), letterSpacing = 0.3.sp)
                                 }
                             }
@@ -229,7 +229,7 @@ internal fun ModuleStoreCard(
 
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
 
-                // Install button — shows Strings.storeInstalled if already installed
+                // Install button — shows AppStringsProvider.current().storeInstalled if already installed
                 if (isInstalled) {
                     FilledTonalButton(
                         onClick = onClick,
@@ -243,7 +243,7 @@ internal fun ModuleStoreCard(
                         Icon(Icons.Filled.CheckCircle, null, modifier = Modifier.size(14.dp),
                             tint = Color(0xFF4CAF50))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.storeInstalled, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                        Text(AppStringsProvider.current().storeInstalled, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF4CAF50))
                     }
                 } else {
@@ -255,7 +255,7 @@ internal fun ModuleStoreCard(
                     ) {
                         Icon(Icons.Outlined.Download, null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.moduleStoreInstall, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppStringsProvider.current().moduleStoreInstall, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -265,7 +265,7 @@ internal fun ModuleStoreCard(
 
 
 // ════════════════════════════════════════════════
-// 应用列表卡片 — Premium Design
+// applistcard- Premium Design
 // ════════════════════════════════════════════════
 
 @Composable
@@ -403,7 +403,7 @@ internal fun AppListCard(
                                         tint = Color(0xFFF59E0B)
                                     )
                                     Text(
-                                        Strings.selected,
+                                        AppStringsProvider.current().selected,
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFFF59E0B),
@@ -496,7 +496,7 @@ internal fun AppListCard(
                                 Icon(Icons.Filled.CheckCircle, null,
                                     modifier = Modifier.size(15.dp),
                                     tint = Color(0xFF4CAF50))
-                                Text(Strings.storeModulesInstalled, fontSize = 11.sp,
+                                Text(AppStringsProvider.current().storeModulesInstalled, fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color(0xFF4CAF50))
                             }
@@ -530,7 +530,7 @@ internal fun AppListCard(
                         ) {
                             Icon(Icons.Outlined.Download, null, modifier = Modifier.size(15.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.storeGet, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text(AppStringsProvider.current().storeGet, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -541,5 +541,5 @@ internal fun AppListCard(
 
 
 // ════════════════════════════════════════════════
-// 应用详情底部弹窗
+// app bottomdialog
 // ════════════════════════════════════════════════

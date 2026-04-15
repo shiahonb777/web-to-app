@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +28,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
 /**
- * WordPress 设置页面 — 镜像源切换、缓存管理
+ * WordPress settings- switch, management
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,14 +39,14 @@ fun WordPressSettingsScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // 依赖状态
+    // state
     var phpReady by remember { mutableStateOf(WordPressDependencyManager.isPhpReady(context)) }
     var wpReady by remember { mutableStateOf(WordPressDependencyManager.isWordPressReady(context)) }
     var sqliteReady by remember { mutableStateOf(WordPressDependencyManager.isSqlitePluginReady(context)) }
     var cacheSize by remember { mutableLongStateOf(0L) }
     var mirrorRegion by remember { mutableStateOf(WordPressDependencyManager.getMirrorRegion()) }
     
-    // 刷新缓存大小
+    // refresh
     LaunchedEffect(Unit) {
         cacheSize = withContext(Dispatchers.IO) { WordPressDependencyManager.getCacheSize(context) }
     }
@@ -63,10 +63,10 @@ fun WordPressSettingsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.wpSettings) },
+                title = { Text(AppStringsProvider.current().wpSettings) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 }
             )
@@ -83,7 +83,7 @@ fun WordPressSettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 依赖状态卡片
+            // statecard
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -103,7 +103,7 @@ fun WordPressSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = Strings.wpDownloadDeps,
+                            text = AppStringsProvider.current().wpDownloadDeps,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -115,7 +115,7 @@ fun WordPressSettingsScreen(
                 }
             }
             
-            // 镜像源设置卡片
+            // settingscard
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -135,22 +135,22 @@ fun WordPressSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = Strings.wpMirrorSource,
+                            text = AppStringsProvider.current().wpMirrorSource,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 自动检测
+                    // Note
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.wpAutoDetect)
+                            Text(AppStringsProvider.current().wpAutoDetect)
                             Text(
-                                text = Strings.wpDownloadDesc,
+                                text = AppStringsProvider.current().wpDownloadDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -159,7 +159,7 @@ fun WordPressSettingsScreen(
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // 镜像源选项
+                    // Note
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -170,7 +170,7 @@ fun WordPressSettingsScreen(
                                 mirrorRegion = WordPressDependencyManager.MirrorRegion.CN
                                 WordPressDependencyManager.setMirrorRegion(WordPressDependencyManager.MirrorRegion.CN)
                             },
-                            label = { Text(Strings.wpMirrorCN) },
+                            label = { Text(AppStringsProvider.current().wpMirrorCN) },
                             leadingIcon = if (mirrorRegion == WordPressDependencyManager.MirrorRegion.CN) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                             } else null
@@ -181,7 +181,7 @@ fun WordPressSettingsScreen(
                                 mirrorRegion = WordPressDependencyManager.MirrorRegion.GLOBAL
                                 WordPressDependencyManager.setMirrorRegion(WordPressDependencyManager.MirrorRegion.GLOBAL)
                             },
-                            label = { Text(Strings.wpMirrorGlobal) },
+                            label = { Text(AppStringsProvider.current().wpMirrorGlobal) },
                             leadingIcon = if (mirrorRegion == WordPressDependencyManager.MirrorRegion.GLOBAL) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                             } else null
@@ -193,13 +193,13 @@ fun WordPressSettingsScreen(
                                 WordPressDependencyManager.setMirrorRegion(null)
                                 mirrorRegion = WordPressDependencyManager.getMirrorRegion()
                             },
-                            label = { Text(Strings.wpAutoDetect) }
+                            label = { Text(AppStringsProvider.current().wpAutoDetect) }
                         )
                     }
                 }
             }
             
-            // 缓存管理卡片
+            // managementcard
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -219,7 +219,7 @@ fun WordPressSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = Strings.wpCacheSize,
+                            text = AppStringsProvider.current().wpCacheSize,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -248,7 +248,7 @@ fun WordPressSettingsScreen(
                     ) {
                         Icon(Icons.Outlined.DeleteSweep, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.wpClearCache)
+                        Text(AppStringsProvider.current().wpClearCache)
                     }
                 }
             }

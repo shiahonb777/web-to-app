@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 
 internal fun NavGraphBuilder.addToolRoutes(
     navController: NavHostController,
-    dependencies: AppNavigationGraphDependencies,
+    dependencies: ToolRoutesDeps,
 ) {
     val viewModel = dependencies.viewModel
     val statsRepository = dependencies.statsRepository
@@ -55,11 +55,6 @@ internal fun NavGraphBuilder.addToolRoutes(
             healthRecords = healthRecords,
             overallStats = overallStats,
             onBack = { navController.popBackStack() },
-            onCheckHealth = { app ->
-                statsScope.launch {
-                    healthMonitor.checkUrl(app.id, app.url)
-                }
-            },
             onCheckAllHealth = {
                 statsScope.launch {
                     healthMonitor.checkApps(apps)
@@ -116,6 +111,8 @@ internal fun NavGraphBuilder.addToolRoutes(
 
     composable(Routes.BROWSER_KERNEL) {
         BrowserKernelScreen(
+            engineManager = dependencies.browserKernel.engineManager,
+            shields = dependencies.browserKernel.shields,
             onBack = { navController.popBackStack() }
         )
     }

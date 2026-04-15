@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.webtoapp.core.appmodifier.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.ui.components.*
 import com.webtoapp.util.SplashStorage
@@ -42,7 +42,7 @@ import com.webtoapp.R
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 应用修改器主页面 - 应用列表
+ * app home- applist
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,21 +56,21 @@ fun AppModifierScreen(
     val appListProvider = remember { AppListProvider(context) }
     val appCloner = remember { AppCloner(context) }
     
-    // 状态
+    // state
     var apps by remember { mutableStateOf<List<InstalledAppInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     var filterType by remember { mutableStateOf(AppFilterType.USER) }
     var selectedApp by remember { mutableStateOf<InstalledAppInfo?>(null) }
     
-    // Load应用列表
+    // Loadapplist
     LaunchedEffect(filterType, searchQuery) {
         isLoading = true
         apps = appListProvider.getInstalledApps(filterType, searchQuery)
         isLoading = false
     }
     
-    // 如果选中了应用，显示修改页面
+    // if app, display
     if (selectedApp != null) {
         AppModifyFullScreen(
             app = selectedApp!!,
@@ -81,13 +81,13 @@ fun AppModifierScreen(
                 scope.launch {
                     when (result) {
                         is AppModifyResult.ShortcutSuccess -> {
-                            snackbarHostState.showSnackbar(Strings.shortcutCreated)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().shortcutCreated)
                         }
                         is AppModifyResult.CloneSuccess -> {
-                            snackbarHostState.showSnackbar(Strings.cloneSuccess)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().cloneSuccess)
                         }
                         is AppModifyResult.Error -> {
-                            snackbarHostState.showSnackbar("${Strings.failed}: ${result.message}")
+                            snackbarHostState.showSnackbar("${AppStringsProvider.current().failed}: ${result.message}")
                         }
                     }
                 }
@@ -100,10 +100,10 @@ fun AppModifierScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.appIconModifier) },
+                title = { Text(AppStringsProvider.current().appIconModifier) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 }
             )
@@ -118,16 +118,16 @@ fun AppModifierScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Search栏
+            // Search
             PremiumTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text(Strings.searchApps) },
+                placeholder = { Text(AppStringsProvider.current().searchApps) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, Strings.clear)
+                            Icon(Icons.Default.Clear, AppStringsProvider.current().clear)
                         }
                     }
                 },
@@ -137,7 +137,7 @@ fun AppModifierScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
             
-            // 筛选标签
+            // filterlabel
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -147,7 +147,7 @@ fun AppModifierScreen(
                 PremiumFilterChip(
                     selected = filterType == AppFilterType.USER,
                     onClick = { filterType = AppFilterType.USER },
-                    label = { Text(Strings.userApps) },
+                    label = { Text(AppStringsProvider.current().userApps) },
                     leadingIcon = if (filterType == AppFilterType.USER) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -155,7 +155,7 @@ fun AppModifierScreen(
                 PremiumFilterChip(
                     selected = filterType == AppFilterType.SYSTEM,
                     onClick = { filterType = AppFilterType.SYSTEM },
-                    label = { Text(Strings.systemApps) },
+                    label = { Text(AppStringsProvider.current().systemApps) },
                     leadingIcon = if (filterType == AppFilterType.SYSTEM) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -163,7 +163,7 @@ fun AppModifierScreen(
                 PremiumFilterChip(
                     selected = filterType == AppFilterType.ALL,
                     onClick = { filterType = AppFilterType.ALL },
-                    label = { Text(Strings.all) },
+                    label = { Text(AppStringsProvider.current().all) },
                     leadingIcon = if (filterType == AppFilterType.ALL) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -172,9 +172,9 @@ fun AppModifierScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // App数量
+            // App
             Text(
-                text = Strings.totalFilesCount.replace("%d", apps.size.toString()),
+                text = AppStringsProvider.current().totalFilesCount.replace("%d", apps.size.toString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -182,7 +182,7 @@ fun AppModifierScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // App列表
+            // Applist
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -209,7 +209,7 @@ fun AppModifierScreen(
 }
 
 /**
- * 应用列表项
+ * applist
  */
 @Composable
 fun AppListItem(
@@ -285,7 +285,7 @@ fun AppListItem(
 }
 
 /**
- * 应用修改全屏页面（和 CreateAppScreen 类似的布局）
+ * app( CreateAppScreen)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -299,7 +299,7 @@ fun AppModifyFullScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // 基本信息状态
+    // state
     var newAppName by remember { mutableStateOf(app.appName) }
     var newIconUri by remember { mutableStateOf<Uri?>(null) }
     var newIconPath by remember { mutableStateOf<String?>(null) }
@@ -307,7 +307,7 @@ fun AppModifyFullScreen(
     var progress by remember { mutableIntStateOf(0) }
     var progressText by remember { mutableStateOf("") }
     
-    // Start画面配置状态
+    // Start configstate
     var splashEnabled by remember { mutableStateOf(false) }
     var splashType by remember { mutableStateOf("IMAGE") }
     var splashPath by remember { mutableStateOf<String?>(null) }
@@ -320,33 +320,33 @@ fun AppModifyFullScreen(
     var splashVideoDurationMs by remember { mutableLongStateOf(0L) }
     var splashEnableAudio by remember { mutableStateOf(false) }
     
-    // Activation码配置状态
+    // Activation configstate
     var activationEnabled by remember { mutableStateOf(false) }
     var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
     var activationRequireEveryTime by remember { mutableStateOf(false) }
     var newActivationCode by remember { mutableStateOf("") }
     
-    // Announcement配置状态
+    // Announcementconfigstate
     var announcementEnabled by remember { mutableStateOf(false) }
     var announcementTitle by remember { mutableStateOf("") }
     var announcementContent by remember { mutableStateOf("") }
     var announcementLink by remember { mutableStateOf("") }
     
-    // Background music配置状态
+    // Background musicconfigstate
     var bgmEnabled by remember { mutableStateOf(false) }
     var bgmConfig by remember { mutableStateOf(BgmConfig()) }
     
-    // Image选择器（相册选择）
+    // Imageselect( select)
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { 
             newIconUri = it
-            newIconPath = null // 清除图标库路径
+            newIconPath = null // clearicon path
         }
     }
     
-    // Start画面图片选择器
+    // Start select
     val splashImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -362,7 +362,7 @@ fun AppModifyFullScreen(
         }
     }
     
-    // Start画面视频选择器
+    // Start select
     val splashVideoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -381,7 +381,7 @@ fun AppModifyFullScreen(
         }
     }
     
-    // Build配置并执行操作
+    // Buildconfigandexecute
     fun buildConfig(): AppModifyConfig {
         return AppModifyConfig(
             originalApp = app,
@@ -413,15 +413,15 @@ fun AppModifyFullScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.modifyApp) },
+                title = { Text(AppStringsProvider.current().modifyApp) },
                 navigationIcon = {
                     IconButton(onClick = { if (!isProcessing) onBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     if (!isProcessing) {
-                        // 克隆安装按钮（仅当没有自定义图标时可用）
+                        // button( onlywhen icon)
                         if (newIconUri == null && newIconPath == null) {
                             TextButton(
                                 onClick = {
@@ -436,16 +436,16 @@ fun AppModifyFullScreen(
                                             }
                                             onResult(result)
                                         } catch (e: Exception) {
-                                            onResult(AppModifyResult.Error(e.message ?: Strings.failed))
+                                            onResult(AppModifyResult.Error(e.message ?: AppStringsProvider.current().failed))
                                         }
                                     }
                                 },
                                 enabled = newAppName.isNotBlank()
                             ) {
-                                Text(Strings.cloneInstall)
+                                Text(AppStringsProvider.current().cloneInstall)
                             }
                         }
-                        // 快捷方式按钮
+                        // button
                         TextButton(
                             onClick = {
                                 isProcessing = true
@@ -459,13 +459,13 @@ fun AppModifyFullScreen(
                                         }
                                         onResult(result)
                                     } catch (e: Exception) {
-                                        onResult(AppModifyResult.Error(e.message ?: Strings.failed))
+                                        onResult(AppModifyResult.Error(e.message ?: AppStringsProvider.current().failed))
                                     }
                                 }
                             },
                             enabled = newAppName.isNotBlank()
                         ) {
-                            Text(Strings.btnShortcut)
+                            Text(AppStringsProvider.current().btnShortcut)
                         }
                     } else {
                         CircularProgressIndicator(
@@ -485,7 +485,7 @@ fun AppModifyFullScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 进度条
+            // Note
             if (isProcessing) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -503,7 +503,7 @@ fun AppModifyFullScreen(
                 }
             }
             
-            // 原应用信息卡片
+            // app card
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
@@ -529,7 +529,7 @@ fun AppModifyFullScreen(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(Strings.originalApp, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text(AppStringsProvider.current().originalApp, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         Text(app.appName, style = MaterialTheme.typography.titleMedium)
                         Text(
                             "${app.packageName} · v${app.versionName}",
@@ -540,15 +540,15 @@ fun AppModifyFullScreen(
                 }
             }
             
-            // 基本信息卡片
+            // card
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(Strings.labelBasicInfo, style = MaterialTheme.typography.titleMedium)
+                    Text(AppStringsProvider.current().labelBasicInfo, style = MaterialTheme.typography.titleMedium)
                     
-                    // Icon选择（带图标库功能）
+                    // Iconselect( icon)
                     IconPickerWithLibrary(
                         iconUri = newIconUri,
                         iconPath = newIconPath,
@@ -559,7 +559,7 @@ fun AppModifyFullScreen(
                         }
                     )
                     
-                    // 清除自定义图标按钮
+                    // Clear custom icon button
                     if (newIconUri != null || newIconPath != null) {
                         TextButton(
                             onClick = { 
@@ -570,11 +570,11 @@ fun AppModifyFullScreen(
                         ) {
                             Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text(Strings.useOriginalIcon, style = MaterialTheme.typography.labelMedium)
+                            Text(AppStringsProvider.current().useOriginalIcon, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                     
-                    // 新名称（带随机按钮）
+                    // New name (with random button)
                     AppNameTextFieldSimple(
                         value = newAppName,
                         onValueChange = { newAppName = it }
@@ -582,7 +582,7 @@ fun AppModifyFullScreen(
                 }
             }
             
-            // Activation码设置卡片
+            // Activation code settings card
             ActivationCard(
                 enabled = activationEnabled,
                 codes = activationCodes,
@@ -592,7 +592,7 @@ fun AppModifyFullScreen(
                 onRequireEveryTimeChange = { activationRequireEveryTime = it }
             )
             
-            // Announcement设置卡片
+            // Announcement settings card
             AnnouncementCardForModifier(
                 enabled = announcementEnabled,
                 title = announcementTitle,
@@ -604,7 +604,7 @@ fun AppModifyFullScreen(
                 onLinkChange = { announcementLink = it }
             )
             
-            // Start画面设置卡片
+            // Start screen settings card
             SplashCardForModifier(
                 enabled = splashEnabled,
                 splashType = splashType,
@@ -636,7 +636,7 @@ fun AppModifyFullScreen(
                 }
             )
             
-            // Background music卡片
+            // Background music card
             BgmCard(
                 enabled = bgmEnabled,
                 config = bgmConfig,
@@ -644,8 +644,8 @@ fun AppModifyFullScreen(
                 onConfigChange = { bgmConfig = it }
             )
             
-            // 提示信息
-            WarningCard(message = Strings.cloneInstallWarning)
+            // Hint message
+            WarningCard(message = AppStringsProvider.current().cloneInstallWarning)
             
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -653,7 +653,7 @@ fun AppModifyFullScreen(
 }
 
 /**
- * 激活码卡片（用于修改器）
+ * activation codecard( for)
  */
 @Composable
 private fun ActivationCard(
@@ -670,7 +670,7 @@ private fun ActivationCard(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Key,
-                title = Strings.activationCodeVerify,
+                title = AppStringsProvider.current().activationCodeVerify,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -678,12 +678,12 @@ private fun ActivationCard(
             if (enabled) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    Strings.activationCodeHint,
+                    AppStringsProvider.current().activationCodeHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                // 每次启动都需要验证选项
+                // verify
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -691,9 +691,9 @@ private fun ActivationCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                        Text(Strings.requireEveryLaunch, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().requireEveryLaunch, style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            if (requireEveryTime) Strings.requireEveryLaunchHintOn else Strings.requireEveryLaunchHintOff,
+                            if (requireEveryTime) AppStringsProvider.current().requireEveryLaunchHintOn else AppStringsProvider.current().requireEveryLaunchHintOff,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -710,7 +710,7 @@ private fun ActivationCard(
                     PremiumTextField(
                         value = newCode,
                         onValueChange = { newCode = it },
-                        placeholder = { Text(Strings.inputActivationCode) },
+                        placeholder = { Text(AppStringsProvider.current().inputActivationCode) },
                         singleLine = true,
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
@@ -723,7 +723,7 @@ private fun ActivationCard(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Add, Strings.add)
+                        Icon(Icons.Default.Add, AppStringsProvider.current().add)
                     }
                 }
                 
@@ -737,7 +737,7 @@ private fun ActivationCard(
                     ) {
                         Text(code, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(weight = 1f, fill = true))
                         IconButton(onClick = { onCodesChange(codes.filterIndexed { i, _ -> i != index }) }) {
-                            Icon(Icons.Outlined.Delete, Strings.btnDelete, tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Outlined.Delete, AppStringsProvider.current().btnDelete, tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -747,7 +747,7 @@ private fun ActivationCard(
 }
 
 /**
- * 公告卡片（用于修改器）
+ * announcementcard( for)
  */
 @Composable
 private fun AnnouncementCardForModifier(
@@ -764,7 +764,7 @@ private fun AnnouncementCardForModifier(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Campaign,
-                title = Strings.popupAnnouncement,
+                title = AppStringsProvider.current().popupAnnouncement,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -775,7 +775,7 @@ private fun AnnouncementCardForModifier(
                 PremiumTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    label = { Text(Strings.announcementTitle) },
+                    label = { Text(AppStringsProvider.current().announcementTitle) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -785,7 +785,7 @@ private fun AnnouncementCardForModifier(
                 PremiumTextField(
                     value = content,
                     onValueChange = onContentChange,
-                    label = { Text(Strings.announcementContent) },
+                    label = { Text(AppStringsProvider.current().announcementContent) },
                     minLines = 2,
                     maxLines = 4,
                     modifier = Modifier.fillMaxWidth()
@@ -796,7 +796,7 @@ private fun AnnouncementCardForModifier(
                 PremiumTextField(
                     value = link,
                     onValueChange = onLinkChange,
-                    label = { Text(Strings.linkUrl) },
+                    label = { Text(AppStringsProvider.current().linkUrl) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -806,7 +806,7 @@ private fun AnnouncementCardForModifier(
 }
 
 /**
- * 启动画面卡片（用于修改器）
+ * animation card( for)
  */
 @Composable
 private fun SplashCardForModifier(
@@ -836,7 +836,7 @@ private fun SplashCardForModifier(
         Column(modifier = Modifier.padding(16.dp)) {
             CollapsibleCardHeader(
                 icon = Icons.Outlined.PlayCircle,
-                title = Strings.splashScreen,
+                title = AppStringsProvider.current().splashScreen,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
@@ -851,12 +851,12 @@ private fun SplashCardForModifier(
                     PremiumOutlinedButton(onClick = onSelectImage, modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(Strings.selectImage)
+                        Text(AppStringsProvider.current().selectImage)
                     }
                     PremiumOutlinedButton(onClick = onSelectVideo, modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Icon(Icons.Outlined.VideoFile, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(Strings.selectVideo)
+                        Text(AppStringsProvider.current().selectVideo)
                     }
                 }
                 
@@ -886,11 +886,11 @@ private fun SplashCardForModifier(
                             }
                             Spacer(Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                                Text(if (splashType == "IMAGE") Strings.image else Strings.video, style = MaterialTheme.typography.bodyMedium)
+                                Text(if (splashType == "IMAGE") AppStringsProvider.current().image else AppStringsProvider.current().video, style = MaterialTheme.typography.bodyMedium)
                                 Text(File(splashPath).name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                             }
                             IconButton(onClick = onClearMedia) {
-                                Icon(Icons.Default.Clear, Strings.clear)
+                                Icon(Icons.Default.Clear, AppStringsProvider.current().clear)
                             }
                         }
                     }
@@ -907,7 +907,7 @@ private fun SplashCardForModifier(
                     
                     if (splashType == "IMAGE") {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("${Strings.splashScreen}: $duration ${Strings.seconds}", style = MaterialTheme.typography.bodyMedium)
+                        Text("${AppStringsProvider.current().splashScreen}: $duration ${AppStringsProvider.current().seconds}", style = MaterialTheme.typography.bodyMedium)
                         Slider(
                             value = duration.toFloat(),
                             onValueChange = { onDurationChange(it.toInt()) },
@@ -917,15 +917,14 @@ private fun SplashCardForModifier(
                         )
                     }
                     
-                    SettingsSwitchRow(Strings.allowClickToSkip, clickToSkip, onClickToSkipChange)
-                    SettingsSwitchRow(Strings.landscapeMode, landscape, onLandscapeChange)
-                    SettingsSwitchRow(Strings.fillScreen, fillScreen, onFillScreenChange)
+                    SettingsSwitchRow(AppStringsProvider.current().allowClickToSkip, clickToSkip, onClickToSkipChange)
+                    SettingsSwitchRow(AppStringsProvider.current().landscapeMode, landscape, onLandscapeChange)
+                    SettingsSwitchRow(AppStringsProvider.current().fillScreen, fillScreen, onFillScreenChange)
                     if (splashType == "VIDEO") {
-                        SettingsSwitchRow(Strings.enableAudioLabel, enableAudio, onEnableAudioChange)
+                        SettingsSwitchRow(AppStringsProvider.current().enableAudioLabel, enableAudio, onEnableAudioChange)
                     }
                 }
             }
         }
     }
 }
-

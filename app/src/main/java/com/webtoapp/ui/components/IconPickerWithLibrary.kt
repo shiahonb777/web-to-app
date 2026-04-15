@@ -17,19 +17,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.FaviconFetcher
 import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * 带图标库功能的图标选择器
+ * icon iconselect
  * 
- * @param iconUri 当前选中的图标 Uri（来自相册选择）
- * @param iconPath 当前选中的图标路径（来自图标库）
- * @param websiteUrl 网站地址（用于获取网站图标，仅 WEB 类型传入）
- * @param onSelectFromGallery 从相册选择图标的回调
- * @param onSelectFromLibrary 从图标库选择图标的回调（返回文件路径）
+ * @param iconUri current inicon Uri( select)
+ * @param iconPath current iniconpath( icon)
+ * @param websiteUrl( for icon, only WEB type)
+ * @param onSelectFromGallery from selecticon
+ * @param onSelectFromLibrary fromicon selecticon( backfilepath)
  */
 @Composable
 fun IconPickerWithLibrary(
@@ -45,10 +45,10 @@ fun IconPickerWithLibrary(
     var showAiGeneratorDialog by remember { mutableStateOf(false) }
     var isFetchingFavicon by remember { mutableStateOf(false) }
     
-    // 判断是否有图标
+    // icon
     val hasIcon = iconUri != null || iconPath != null
     
-    // 判断是否可以获取网站图标
+    // icon
     val canFetchFavicon = !websiteUrl.isNullOrBlank() && 
         (websiteUrl.contains(".") || websiteUrl.startsWith("http"))
     
@@ -56,7 +56,7 @@ fun IconPickerWithLibrary(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon预览
+        // Iconpreview
         Surface(
             modifier = Modifier
                 .size(72.dp)
@@ -77,7 +77,7 @@ fun IconPickerWithLibrary(
                             .data(iconUri)
                             .crossfade(true)
                             .build(),
-                        contentDescription = Strings.labelIcon,
+                        contentDescription = AppStringsProvider.current().labelIcon,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -88,7 +88,7 @@ fun IconPickerWithLibrary(
                             .data(File(iconPath))
                             .crossfade(true)
                             .build(),
-                        contentDescription = Strings.labelIcon,
+                        contentDescription = AppStringsProvider.current().labelIcon,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -100,7 +100,7 @@ fun IconPickerWithLibrary(
                     ) {
                         Icon(
                             Icons.Outlined.AddPhotoAlternate,
-                            contentDescription = Strings.selectIcon,
+                            contentDescription = AppStringsProvider.current().selectIcon,
                             modifier = Modifier.size(32.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -113,22 +113,22 @@ fun IconPickerWithLibrary(
 
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
-                text = Strings.labelIcon,
+                text = AppStringsProvider.current().labelIcon,
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = Strings.clickToSelectOrUseButton,
+                text = AppStringsProvider.current().clickToSelectOrUseButton,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 功能按钮行
+            // button
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Get网站图标按钮（仅当有网址时显示）
+                // Get iconbutton( onlywhen display)
                 if (canFetchFavicon) {
                     FilledTonalButton(
                         onClick = {
@@ -139,9 +139,9 @@ fun IconPickerWithLibrary(
                                     isFetchingFavicon = false
                                     if (iconPath != null) {
                                         onSelectFromLibrary(iconPath)
-                                        Toast.makeText(context, Strings.faviconFetchSuccess, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, AppStringsProvider.current().faviconFetchSuccess, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        Toast.makeText(context, Strings.faviconFetchFailed, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, AppStringsProvider.current().faviconFetchFailed, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -163,11 +163,11 @@ fun IconPickerWithLibrary(
                             )
                         }
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.fetchWebsiteIcon, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().fetchWebsiteIcon, style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 
-                // Icon库按钮
+                // Icon button
                 FilledTonalButton(
                     onClick = { showLibraryDialog = true },
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
@@ -179,13 +179,13 @@ fun IconPickerWithLibrary(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.iconLibrary, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().iconLibrary, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
     }
     
-    // Icon库对话框
+    // Icon dialog
     if (showLibraryDialog) {
         IconLibraryDialog(
             onDismiss = { showLibraryDialog = false },
@@ -197,7 +197,7 @@ fun IconPickerWithLibrary(
         )
     }
     
-    // AI 生成对话框
+    // AI dialog
     if (showAiGeneratorDialog) {
         IconGeneratorDialog(
             onDismiss = { showAiGeneratorDialog = false },

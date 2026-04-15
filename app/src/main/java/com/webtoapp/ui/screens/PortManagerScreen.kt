@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.core.port.PortManager
 import com.webtoapp.core.port.ProcessPortScanner
@@ -42,15 +42,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
 /**
- * 端口管理页面
+ * management
  * 
- * 功能：
- * - 扫描并显示所有运行中的服务（含响应延迟、运行时长）
- * - 支持终止单个服务 / 一键终止所有服务
- * - 支持在浏览器中打开服务
- * - 端口范围使用率仪表盘
- * - 可选自动刷新（5s 间隔）
- * - 僵尸端口自动检测与清理
+ * Note
+ * anddisplay runin( , run)
+ * support /
+ * support open
+ * Note
+ * optional refresh( 5s)
+ * with
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,17 +68,17 @@ fun PortManagerScreen(
     var autoRefresh by remember { mutableStateOf(false) }
     var showRangeStats by remember { mutableStateOf(false) }
     
-    // 扫描函数
+    // Note
     suspend fun doScan() {
         isScanning = true
         services = ProcessPortScanner.scanAllPorts(context)
         isScanning = false
     }
     
-    // 初始扫描
+    // Note
     LaunchedEffect(Unit) { doScan() }
     
-    // 自动刷新
+    // refresh
     LaunchedEffect(autoRefresh) {
         if (autoRefresh) {
             while (true) {
@@ -88,43 +88,43 @@ fun PortManagerScreen(
         }
     }
     
-    // 刷新函数
+    // refresh
     fun refresh() {
         scope.launch { doScan() }
     }
     
-    // 终止单个服务
+    // Note
     fun killService(service: RunningService) {
         scope.launch {
             val success = ProcessPortScanner.killProcess(service.port)
             if (success) {
                 snackbarHostState.showSnackbar(
-                    Strings.portManagerServiceKilled.format(service.port)
+                    AppStringsProvider.current().portManagerServiceKilled.format(service.port)
                 )
             } else {
-                snackbarHostState.showSnackbar(Strings.portManagerKillFailed)
+                snackbarHostState.showSnackbar(AppStringsProvider.current().portManagerKillFailed)
             }
             delay(300)
             doScan()
         }
     }
     
-    // 终止所有服务
+    // Note
     fun killAllServices() {
         scope.launch {
             val count = ProcessPortScanner.killAllProcesses(context)
-            snackbarHostState.showSnackbar(Strings.portManagerAllKilled.format(count))
+            snackbarHostState.showSnackbar(AppStringsProvider.current().portManagerAllKilled.format(count))
             delay(300)
             doScan()
         }
     }
     
-    // 在浏览器中打开
+    // open
     fun openInBrowser(url: String) {
         try {
             context.openUrl(url)
         } catch (_: Exception) {
-            scope.launch { snackbarHostState.showSnackbar(Strings.portManagerKillFailed) }
+            scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().portManagerKillFailed) }
         }
     }
     
@@ -132,23 +132,23 @@ fun PortManagerScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.portManagerTitle) },
+                title = { Text(AppStringsProvider.current().portManagerTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
-                    // 自动刷新开关
+                    // refresh
                     IconButton(onClick = { autoRefresh = !autoRefresh }) {
                         Icon(
                             if (autoRefresh) Icons.Default.SyncDisabled else Icons.Default.Sync,
-                            Strings.portManagerAutoRefresh,
+                            AppStringsProvider.current().portManagerAutoRefresh,
                             tint = if (autoRefresh) MaterialTheme.colorScheme.primary
                                    else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // 手动刷新按钮
+                    // refreshbutton
                     IconButton(
                         onClick = { refresh() },
                         enabled = !isScanning
@@ -159,15 +159,15 @@ fun PortManagerScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Icon(Icons.Default.Refresh, Strings.portManagerAutoRefresh)
+                            Icon(Icons.Default.Refresh, AppStringsProvider.current().portManagerAutoRefresh)
                         }
                     }
-                    // 终止所有按钮
+                    // button
                     if (services.isNotEmpty()) {
                         IconButton(onClick = { showKillAllDialog = true }) {
                             Icon(
                                 Icons.Default.DeleteSweep,
-                                Strings.portManagerKillAll,
+                                AppStringsProvider.current().portManagerKillAll,
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -185,14 +185,14 @@ fun PortManagerScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 统计卡片
+            // card
             PortStatsCard(
                 services = services,
                 showRangeStats = showRangeStats,
                 onToggleRangeStats = { showRangeStats = !showRangeStats }
             )
             
-            // 服务列表
+            // list
             if (services.isEmpty() && !isScanning) {
                 EmptyState()
             } else {
@@ -213,13 +213,13 @@ fun PortManagerScreen(
         }
     }
     
-    // 终止所有确认对话框
+    // dialog
     if (showKillAllDialog) {
         AlertDialog(
             onDismissRequest = { showKillAllDialog = false },
             icon = { Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text(Strings.portManagerKillAll) },
-            text = { Text(Strings.portManagerKillAllConfirm) },
+            title = { Text(AppStringsProvider.current().portManagerKillAll) },
+            text = { Text(AppStringsProvider.current().portManagerKillAllConfirm) },
             confirmButton = {
                 PremiumButton(
                     onClick = {
@@ -230,43 +230,43 @@ fun PortManagerScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.portManagerKillAll)
+                    Text(AppStringsProvider.current().portManagerKillAll)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showKillAllDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
     }
     
-    // 终止单个确认对话框
+    // dialog
     showKillDialog?.let { service ->
         AlertDialog(
             onDismissRequest = { showKillDialog = null },
             icon = { Icon(Icons.Default.Stop, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text(Strings.portManagerKillService) },
+            title = { Text(AppStringsProvider.current().portManagerKillService) },
             text = { 
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text(Strings.portManagerKillConfirmSingle)
+                    Text(AppStringsProvider.current().portManagerKillConfirmSingle)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "${Strings.portManagerPort}: ${service.port}",
+                        "${AppStringsProvider.current().portManagerPort}: ${service.port}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontFamily = FontFamily.Monospace
                     )
                     Text(
-                        "${Strings.portManagerType}: ${service.type.label}",
+                        "${AppStringsProvider.current().portManagerType}: ${service.type.label}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "${Strings.portManagerProject}: ${service.owner}",
+                        "${AppStringsProvider.current().portManagerProject}: ${service.owner}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     if (service.allocatedAt > 0) {
                         Text(
-                            "${Strings.portManagerUptime}: ${PortManager.formatDuration(System.currentTimeMillis() - service.allocatedAt)}",
+                            "${AppStringsProvider.current().portManagerUptime}: ${PortManager.formatDuration(System.currentTimeMillis() - service.allocatedAt)}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -283,12 +283,12 @@ fun PortManagerScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.portManagerKill)
+                    Text(AppStringsProvider.current().portManagerKill)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showKillDialog = null }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -297,7 +297,7 @@ fun PortManagerScreen(
 }
 
 /**
- * 端口统计卡片（含可展开的端口范围使用率面板）
+ * card( expand panel)
  */
 @Composable
 private fun PortStatsCard(
@@ -322,7 +322,7 @@ private fun PortStatsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    Strings.portManagerRunningServices,
+                    AppStringsProvider.current().portManagerRunningServices,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -339,14 +339,14 @@ private fun PortStatsCard(
                         else 
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    // 展开端口范围统计
+                    // expand
                     IconButton(
                         onClick = onToggleRangeStats,
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
                             Icons.Default.BarChart,
-                            Strings.portManagerPortRanges,
+                            AppStringsProvider.current().portManagerPortRanges,
                             modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -357,7 +357,7 @@ private fun PortStatsCard(
             if (services.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 按类型分组统计
+                // type
                 val grouped = services.groupBy { it.type }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -369,13 +369,13 @@ private fun PortStatsCard(
                 }
             }
             
-            // 端口范围使用率仪表盘
+            // Note
             AnimatedVisibility(visible = showRangeStats) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.portManagerPortRanges,
+                        AppStringsProvider.current().portManagerPortRanges,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -425,7 +425,7 @@ private fun PortStatsCard(
 }
 
 /**
- * 服务类型标签
+ * typelabel
  */
 @Composable
 private fun ServiceTypeChip(type: ServiceType, count: Int) {
@@ -454,7 +454,7 @@ private fun ServiceTypeChip(type: ServiceType, count: Int) {
 }
 
 /**
- * 服务卡片
+ * card
  */
 @Composable
 private fun ServiceCard(
@@ -463,7 +463,7 @@ private fun ServiceCard(
     onOpen: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // 实时更新运行时长
+    // updaterun
     var uptimeText by remember { mutableStateOf("") }
     LaunchedEffect(service.allocatedAt) {
         if (service.allocatedAt > 0) {
@@ -491,13 +491,13 @@ private fun ServiceCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左侧：类型指示器 + 端口
+                // left: typeindicator +
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(weight = 1f, fill = true)
                 ) {
-                    // 类型颜色指示器
+                    // typecolorindicator
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -519,12 +519,12 @@ private fun ServiceCard(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                "${Strings.portManagerPort} ${service.port}",
+                                "${AppStringsProvider.current().portManagerPort} ${service.port}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
                             )
-                            // 响应延迟标签
+                            // label
                             if (service.responseTimeMs >= 0) {
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
@@ -572,12 +572,12 @@ private fun ServiceCard(
                     }
                 }
                 
-                // 右侧：状态指示器
+                // right: stateindicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 响应状态
+                    // state
                     val statusColor by animateColorAsState(
                         if (service.isResponding) AppColors.Success else AppColors.Warning,
                         label = "statusColor"
@@ -589,7 +589,7 @@ private fun ServiceCard(
                             .background(statusColor)
                     )
                     
-                    // 展开/收起图标
+                    // expand/ icon
                     val rotation by animateFloatAsState(
                         if (expanded) 180f else 0f,
                         label = "rotation"
@@ -605,7 +605,7 @@ private fun ServiceCard(
                 }
             }
             
-            // 展开详情
+            // expand
             AnimatedVisibility(visible = expanded) {
                 Column(
                     modifier = Modifier.padding(top = 12.dp)
@@ -613,26 +613,26 @@ private fun ServiceCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 详细信息
+                    // Note
                     DetailRow("URL", service.url)
-                    DetailRow("PID", if (service.pid > 0) service.pid.toString() else Strings.portManagerUnknown)
-                    DetailRow(Strings.portManagerProcess, service.processName.ifEmpty { Strings.portManagerUnknown })
-                    DetailRow(Strings.portManagerStatus, if (service.isResponding) Strings.portManagerResponding else Strings.portManagerNotResponding)
+                    DetailRow("PID", if (service.pid > 0) service.pid.toString() else AppStringsProvider.current().portManagerUnknown)
+                    DetailRow(AppStringsProvider.current().portManagerProcess, service.processName.ifEmpty { AppStringsProvider.current().portManagerUnknown })
+                    DetailRow(AppStringsProvider.current().portManagerStatus, if (service.isResponding) AppStringsProvider.current().portManagerResponding else AppStringsProvider.current().portManagerNotResponding)
                     if (service.responseTimeMs >= 0) {
-                        DetailRow(Strings.portManagerLatency, "${service.responseTimeMs}ms")
+                        DetailRow(AppStringsProvider.current().portManagerLatency, "${service.responseTimeMs}ms")
                     }
                     if (uptimeText.isNotEmpty()) {
-                        DetailRow(Strings.portManagerUptime, uptimeText)
+                        DetailRow(AppStringsProvider.current().portManagerUptime, uptimeText)
                     }
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 操作按钮
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 打开按钮
+                        // openbutton
                         PremiumOutlinedButton(
                             onClick = onOpen,
                             modifier = Modifier.weight(weight = 1f, fill = true),
@@ -644,10 +644,10 @@ private fun ServiceCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.portManagerOpen)
+                            Text(AppStringsProvider.current().portManagerOpen)
                         }
                         
-                        // 终止按钮
+                        // button
                         PremiumButton(
                             onClick = onKill,
                             modifier = Modifier.weight(weight = 1f, fill = true),
@@ -661,7 +661,7 @@ private fun ServiceCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.portManagerKill)
+                            Text(AppStringsProvider.current().portManagerKill)
                         }
                     }
                 }
@@ -671,7 +671,7 @@ private fun ServiceCard(
 }
 
 /**
- * 详情行
+ * Note
  */
 @Composable
 private fun DetailRow(label: String, value: String) {
@@ -695,7 +695,7 @@ private fun DetailRow(label: String, value: String) {
 }
 
 /**
- * 空状态
+ * state
  */
 @Composable
 private fun EmptyState() {
@@ -716,12 +716,12 @@ private fun EmptyState() {
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )
             Text(
-                Strings.portManagerNoServices,
+                AppStringsProvider.current().portManagerNoServices,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                Strings.portManagerAllReleased,
+                AppStringsProvider.current().portManagerAllReleased,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )

@@ -6,25 +6,23 @@ import com.google.gson.JsonParser
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-
 /**
- * 模块开发 Agent 引擎
- * 
- * 核心 Agent 实现，包含：
- * - 完整的提示词工程
- * - 上下文管理
- * - 工具链调用
- * - 迭代式开发流程
- * - 流式输出支持
+ * Agent.
+ *
+ * Agent .
+ * -.
+ * - manage.
+ * - tool chain use.
+ * -.
+ * - Supports.
  */
 class ModuleAgentEngine(private val context: Context) {
     
     companion object {
-        // 代码块解析
         private val JSON_BLOCK_REGEX = Regex("```json\\s*([\\s\\S]*?)\\s*```")
         private val JS_BLOCK_REGEX = Regex("```(?:javascript|js)\\s*([\\s\\S]*?)\\s*```")
         private val CSS_BLOCK_REGEX = Regex("```css\\s*([\\s\\S]*?)\\s*```")
@@ -35,27 +33,24 @@ class ModuleAgentEngine(private val context: Context) {
     private val aiClient = AiApiClient(context)
     private val toolExecutor = AgentToolExecutor(context)
     
-    // 当前会话
+    // before.
     private var currentSession: AgentSession? = null
     
-    // 状态流
     private val _sessionState = MutableStateFlow<AgentSessionState>(AgentSessionState.IDLE)
     val sessionState: StateFlow<AgentSessionState> = _sessionState.asStateFlow()
     
-    // 思考流（用于流式输出）
     private val _thoughtStream = MutableSharedFlow<AgentThought>(replay = 0)
     val thoughtStream: SharedFlow<AgentThought> = _thoughtStream.asSharedFlow()
     
-    // Generate的模块流
+    // Generate.
     private val _moduleStream = MutableSharedFlow<GeneratedModuleData>(replay = 0)
     val moduleStream: SharedFlow<GeneratedModuleData> = _moduleStream.asSharedFlow()
     
-    // Error流
+    // Error.
     private val _errorStream = MutableSharedFlow<String>(replay = 0)
     val errorStream: SharedFlow<String> = _errorStream.asSharedFlow()
 
     /**
-     * 开始新的开发会话
      */
     fun startSession(config: AgentConfig = AgentConfig()): AgentSession {
         currentSession = AgentSession(maxIterations = config.maxIterations)
@@ -64,16 +59,15 @@ class ModuleAgentEngine(private val context: Context) {
     }
     
     /**
-     * 获取当前会话
+     * Get before.
      */
     fun getCurrentSession(): AgentSession? = currentSession
     
     /**
-     * 执行开发任务
-     * 
-     * @param requirement 用户需求描述
-     * @param category 可选的模块分类
-     * @param existingCode 可选的现有代码（用于修改）
+     *
+     * @param requirement use.
+     * @param category can.
+     * @param existingCode can.
      */
     suspend fun develop(
         requirement: String,
@@ -84,16 +78,16 @@ class ModuleAgentEngine(private val context: Context) {
         session.addUserMessage(requirement)
         
         try {
-            // Get AI 配置
+            // Get AI config.
             val apiKeys = aiConfigManager.apiKeysFlow.first()
             val savedModels = aiConfigManager.savedModelsFlow.first()
             
             if (apiKeys.isEmpty()) {
-                emit(AgentEvent.Error(Strings.aiErrorNoApiKey))
+                emit(AgentEvent.Error(AppStringsProvider.current().aiErrorNoApiKey))
                 return@flow
             }
             
-            // 优先使用支持模块开发功能的模型
+            // use Supports.
             val moduleDevModels = savedModels.filter { it.supportsFeature(AiFeature.MODULE_DEVELOPMENT) }
             val defaultModelId = aiConfigManager.defaultModelIdFlow.first()
             
@@ -103,62 +97,62 @@ class ModuleAgentEngine(private val context: Context) {
                 ?: savedModels.firstOrNull()
             
             if (savedModel == null) {
-                emit(AgentEvent.Error(Strings.aiErrorNoModel))
+                emit(AgentEvent.Error(AppStringsProvider.current().aiErrorNoModel))
                 return@flow
             }
             
             val apiKey = apiKeys.find { it.id == savedModel.apiKeyId }
             if (apiKey == null) {
-                emit(AgentEvent.Error(Strings.aiErrorNoApiKeyForModel))
+                emit(AgentEvent.Error(AppStringsProvider.current().aiErrorNoApiKeyForModel))
                 return@flow
             }
             
-            // Start开发流程
+            // Start.
             emit(AgentEvent.StateChange(AgentSessionState.THINKING))
             _sessionState.value = AgentSessionState.THINKING
             
-            // 第一步：分析需求
-            emit(AgentEvent.Thought(AgentThought(1, ThoughtType.ANALYSIS, "${Strings.agentAnalyzing}: $requirement")))
+            // .
+            emit(AgentEvent.Thought(AgentThought(1, ThoughtType.ANALYSIS, "${AppStringsProvider.current().agentAnalyzing}: $requirement")))
             
-            // Build系统提示词
+            // Build.
             val systemPrompt = buildSystemPrompt(category, existingCode)
             
-            // 第二步：规划开发步骤
+            // Step.
             emit(AgentEvent.StateChange(AgentSessionState.PLANNING))
             _sessionState.value = AgentSessionState.PLANNING
-            emit(AgentEvent.Thought(AgentThought(2, ThoughtType.PLANNING, Strings.agentPlanning)))
+            emit(AgentEvent.Thought(AgentThought(2, ThoughtType.PLANNING, AppStringsProvider.current().agentPlanning)))
             
-            // 调用 AI 生成代码
-            // Requirements: 2.5, 3.1, 3.2 - 使用具体状态消息替代通用加载提示
+            // use AI.
+            // Requirements: 2.5, 3.1, 3.2 - use use.
             emit(AgentEvent.StateChange(AgentSessionState.GENERATING))
             _sessionState.value = AgentSessionState.GENERATING
-            emit(AgentEvent.Thought(AgentThought(3, ThoughtType.GENERATION, Strings.agentCallingAi)))
+            emit(AgentEvent.Thought(AgentThought(3, ThoughtType.GENERATION, AppStringsProvider.current().agentCallingAi)))
             
             val messages = buildMessages(systemPrompt, requirement, category, existingCode)
             val aiResponse = aiClient.chat(apiKey, savedModel.model, messages)
             
             if (aiResponse.isFailure) {
-                emit(AgentEvent.Error("${Strings.agentAiCallFailed}: ${aiResponse.exceptionOrNull()?.message}"))
+                emit(AgentEvent.Error("${AppStringsProvider.current().agentAiCallFailed}: ${aiResponse.exceptionOrNull()?.message}"))
                 return@flow
             }
             
             val responseText = aiResponse.getOrNull() ?: ""
-            emit(AgentEvent.Thought(AgentThought(4, ThoughtType.GENERATION, Strings.agentParsing)))
+            emit(AgentEvent.Thought(AgentThought(4, ThoughtType.GENERATION, AppStringsProvider.current().agentParsing)))
             
-            // Parse生成的模块
+            // Parse.
             val generatedModule = parseGeneratedModule(responseText)
             if (generatedModule == null) {
-                emit(AgentEvent.Error(Strings.agentParseFailed))
+                emit(AgentEvent.Error(AppStringsProvider.current().agentParseFailed))
                 return@flow
             }
             
             session.workingModule = generatedModule
             emit(AgentEvent.ModuleGenerated(generatedModule))
             
-            // 第三步：语法检查
+            // syntax check.
             emit(AgentEvent.StateChange(AgentSessionState.REVIEWING))
             _sessionState.value = AgentSessionState.REVIEWING
-            emit(AgentEvent.Thought(AgentThought(5, ThoughtType.REVIEW, Strings.agentSyntaxChecking)))
+            emit(AgentEvent.Thought(AgentThought(5, ThoughtType.REVIEW, AppStringsProvider.current().agentSyntaxChecking)))
             
             val syntaxResult = toolExecutor.execute(ToolCallRequest(
                 toolName = "syntax_check",
@@ -170,25 +164,25 @@ class ModuleAgentEngine(private val context: Context) {
             val syntaxCheck = syntaxResult.result as? SyntaxCheckResult
             if (syntaxCheck != null && !syntaxCheck.valid) {
                 emit(AgentEvent.Thought(AgentThought(6, ThoughtType.REVIEW, 
-                    String.format(Strings.agentFoundErrors, syntaxCheck.errors.size, syntaxCheck.warnings.size))))
+                    String.format(AppStringsProvider.current().agentFoundErrors, syntaxCheck.errors.size, syntaxCheck.warnings.size))))
                 
-                // 尝试自动修复
+                // auto-fix.
                 emit(AgentEvent.StateChange(AgentSessionState.FIXING))
                 _sessionState.value = AgentSessionState.FIXING
-                emit(AgentEvent.Thought(AgentThought(7, ThoughtType.FIX, Strings.agentAutoFixing)))
+                emit(AgentEvent.Thought(AgentThought(7, ThoughtType.FIX, AppStringsProvider.current().agentAutoFixing)))
                 
                 val fixedModule = tryFixErrors(generatedModule, syntaxCheck, apiKey, savedModel)
                 if (fixedModule != null) {
                     session.workingModule = fixedModule
                     emit(AgentEvent.ModuleGenerated(fixedModule))
-                    emit(AgentEvent.Thought(AgentThought(8, ThoughtType.FIX, Strings.agentErrorsFixed)))
+                    emit(AgentEvent.Thought(AgentThought(8, ThoughtType.FIX, AppStringsProvider.current().agentErrorsFixed)))
                 }
             } else {
-                emit(AgentEvent.Thought(AgentThought(6, ThoughtType.REVIEW, Strings.agentSyntaxPassed)))
+                emit(AgentEvent.Thought(AgentThought(6, ThoughtType.REVIEW, AppStringsProvider.current().agentSyntaxPassed)))
             }
 
-            // 第四步：安全扫描
-            emit(AgentEvent.Thought(AgentThought(9, ThoughtType.REVIEW, Strings.agentSecurityScanning)))
+            // .
+            emit(AgentEvent.Thought(AgentThought(9, ThoughtType.REVIEW, AppStringsProvider.current().agentSecurityScanning)))
             
             val securityResult = toolExecutor.execute(ToolCallRequest(
                 toolName = "security_scan",
@@ -208,9 +202,9 @@ class ModuleAgentEngine(private val context: Context) {
                 
                 if (!securityScan.safe) {
                     emit(AgentEvent.Thought(AgentThought(10, ThoughtType.REVIEW, 
-                        String.format(Strings.agentSecurityIssues, securityScan.issues.size, securityScan.riskLevel))))
+                        String.format(AppStringsProvider.current().agentSecurityIssues, securityScan.issues.size, securityScan.riskLevel))))
                 } else {
-                    emit(AgentEvent.Thought(AgentThought(10, ThoughtType.REVIEW, Strings.agentSecurityPassed)))
+                    emit(AgentEvent.Thought(AgentThought(10, ThoughtType.REVIEW, AppStringsProvider.current().agentSecurityPassed)))
                 }
             }
             
@@ -221,12 +215,12 @@ class ModuleAgentEngine(private val context: Context) {
             val finalModule = session.workingModule
             if (finalModule != null) {
                 emit(AgentEvent.Thought(AgentThought(11, ThoughtType.CONCLUSION, 
-                    Strings.agentModuleCompleted.replace("%s", finalModule.name))))
+                    AppStringsProvider.current().agentModuleCompleted.replace("%s", finalModule.name))))
                 emit(AgentEvent.Completed(finalModule))
                 
-                // Save到会话
+                // Save to.
                 session.addAssistantMessage(
-                    content = Strings.agentModuleGenerated.replace("%s", finalModule.name),
+                    content = AppStringsProvider.current().agentModuleGenerated.replace("%s", finalModule.name),
                     thoughts = session.currentThoughts.toList(),
                     generatedModule = finalModule
                 )
@@ -235,12 +229,11 @@ class ModuleAgentEngine(private val context: Context) {
         } catch (e: Exception) {
             emit(AgentEvent.StateChange(AgentSessionState.ERROR))
             _sessionState.value = AgentSessionState.ERROR
-            emit(AgentEvent.Error(e.message ?: Strings.aiErrorUnknown))
+            emit(AgentEvent.Error(e.message ?: AppStringsProvider.current().aiErrorUnknown))
         }
     }.flowOn(Dispatchers.IO)
     
     /**
-     * 构建系统提示词
      */
     private fun buildSystemPrompt(category: ModuleCategory?, existingCode: String?): String {
         val categoryHint = category?.let {
@@ -270,13 +263,13 @@ WebToApp 扩展模块是注入到网页中执行的 JavaScript/CSS 代码，类�
 
 ## 可用的内置 API
 ```javascript
-// Get用户配置值
+// Get use config.
 getConfig(key: string, defaultValue: any): any
 
-// Module信息对象
+// Module.
 __MODULE_INFO__ = { id: string, name: string, version: string }
 
-// User配置值对象
+// Userconfig.
 __MODULE_CONFIG__ = { [key: string]: any }
 ```
 
@@ -340,7 +333,6 @@ $existingCodeHint
     }
 
     /**
-     * 构建消息列表
      */
     private fun buildMessages(
         systemPrompt: String,
@@ -350,10 +342,10 @@ $existingCodeHint
     ): List<Map<String, String>> {
         val messages = mutableListOf<Map<String, String>>()
         
-        // System消息
+        // System.
         messages.add(mapOf("role" to "system", "content" to systemPrompt))
         
-        // User消息
+        // User.
         val userMessage = buildString {
             append("请根据以下需求开发一个扩展模块：\n\n")
             append("**需求描述**：$requirement\n")
@@ -375,17 +367,15 @@ $existingCodeHint
     }
     
     /**
-     * 解析生成的模块
      */
     private fun parseGeneratedModule(response: String): GeneratedModuleData? {
         return try {
-            // 尝试提取 JSON 块
+            // Extract JSON.
             val jsonMatch = JSON_BLOCK_REGEX.find(response)
             
             val jsonStr = if (jsonMatch != null) {
                 jsonMatch.groupValues[1]
             } else {
-                // 尝试直接解析
                 response.trim()
             }
             
@@ -403,13 +393,13 @@ $existingCodeHint
                 runAt = json.get("run_at")?.asString ?: json.get("runAt")?.asString ?: "DOCUMENT_END"
             )
         } catch (e: Exception) {
-            // 尝试从纯代码响应中提取
+            // from in Extract.
             extractCodeFromResponse(response)
         }
     }
     
     /**
-     * 解析配置项
+     * config.
      */
     private fun parseConfigItems(json: JsonObject): List<Map<String, Any>> {
         val items = json.getAsJsonArray("config_items") ?: json.getAsJsonArray("configItems")
@@ -431,7 +421,7 @@ $existingCodeHint
     }
     
     /**
-     * 从纯代码响应中提取
+     * from in Extract.
      */
     private fun extractCodeFromResponse(response: String): GeneratedModuleData? {
         val jsCode = JS_BLOCK_REGEX.find(response)?.groupValues?.get(1)
@@ -442,8 +432,8 @@ $existingCodeHint
         }
         
         return GeneratedModuleData(
-            name = Strings.aiGeneratedModule,
-            description = Strings.aiGeneratedModuleDesc,
+            name = AppStringsProvider.current().aiGeneratedModule,
+            description = AppStringsProvider.current().aiGeneratedModuleDesc,
             icon = "smart_toy",
             category = "OTHER",
             jsCode = jsCode,
@@ -452,7 +442,7 @@ $existingCodeHint
     }
     
     /**
-     * 尝试修复错误
+     * fix.
      */
     private suspend fun tryFixErrors(
         module: GeneratedModuleData,
@@ -460,7 +450,7 @@ $existingCodeHint
         apiKey: ApiKeyConfig,
         savedModel: SavedModel
     ): GeneratedModuleData? {
-        // Build修复提示
+        // Buildfix.
         val errorMessages = syntaxResult.errors.joinToString("\n") { error ->
             "- 第 ${error.line} 行: ${error.message}"
         }
@@ -468,10 +458,10 @@ $existingCodeHint
         val fixPrompt = """
 请修复以下 JavaScript 代码中的语法错误：
 
-**错误列表**：
+* * **.
 $errorMessages
 
-**原始代码**：
+* * **.
 ```javascript
 ${module.jsCode}
 ```
@@ -498,7 +488,7 @@ ${module.jsCode}
 }
 
 /**
- * Agent 事件
+ * Agent.
  */
 sealed class AgentEvent {
     data class StateChange(val state: AgentSessionState) : AgentEvent()

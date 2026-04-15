@@ -19,9 +19,9 @@ class FingerprintGeneratorTest {
 
         assertThat(fp.screenWidth).isAtLeast(1000)
         assertThat(fp.screenHeight).isAtLeast(700)
-        assertThat(listOf(24, 32)).contains(fp.colorDepth)
-        assertThat(listOf(2, 4, 6, 8, 12, 16)).contains(fp.hardwareConcurrency)
-        assertThat(listOf(2, 4, 8, 16)).contains(fp.deviceMemory)
+        assertThat(listOf(24, 30, 32)).contains(fp.colorDepth)
+        assertThat(listOf(4, 6, 8, 10, 12, 16, 20, 24)).contains(fp.hardwareConcurrency)
+        assertThat(listOf(4, 8, 16, 32)).contains(fp.deviceMemory)
         assertThat(fp.canvasNoise).isAtLeast(0f)
         assertThat(fp.canvasNoise).isLessThan(0.0001f)
         assertThat(fp.audioNoise).isAtLeast(0f)

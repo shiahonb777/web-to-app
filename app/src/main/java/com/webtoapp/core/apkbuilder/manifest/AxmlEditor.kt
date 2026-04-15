@@ -3,10 +3,10 @@ package com.webtoapp.core.apkbuilder
 import com.webtoapp.core.logging.AppLogger
 
 /**
- * Android 二进制 XML (AXML) 编辑器
- * 用于修改 AndroidManifest.xml 中的包名
+ * Note: brief English comment.
+ * Note: brief English comment.
  * 
- * 采用原地字节替换策略，确保文件结构不被破坏
+ * Note: brief English comment.
  */
 class AxmlEditor {
 
@@ -16,27 +16,27 @@ class AxmlEditor {
     }
 
     /**
-     * 修改 AndroidManifest.xml 中的包名
-     * 使用原地替换策略，新包名长度必须 <= 原包名长度
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * @param axmlData 原始 AXML 数据
-     * @param newPackageName 新的包名
-     * @return 修改后的 AXML 数据
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun modifyPackageName(axmlData: ByteArray, newPackageName: String): ByteArray {
         val result = axmlData.copyOf()
         
-        // 检测编码格式并替换（UTF-8 和 UTF-16LE 都尝试）
+        // Note: brief English comment.
         val utf8Ok = replacePackageInUtf8(result, ORIGINAL_PACKAGE, newPackageName)
         val utf16Ok = replacePackageInUtf16(result, ORIGINAL_PACKAGE, newPackageName)
 
-        // 修复由 androidx.core 引入的动态接收器权限和 FileProvider authorities，避免与宿主包名冲突
+        // Note: brief English comment.
         fixDynamicPermissionAndAuthorities(result, newPackageName)
 
-        // 恢复关键组件（Application / Activity）的类名到原始包名，避免 ClassNotFound
+        // Note: brief English comment.
         restoreComponentClassNames(result, newPackageName)
 
-        // 尝试禁用 android:testOnly 标记，避免 INSTALL_FAILED_TEST_ONLY
+        // Note: brief English comment.
         stripTestOnlyFlag(result)
 
         AppLogger.d(
@@ -48,8 +48,8 @@ class AxmlEditor {
     }
 
     /**
-     * 在 UTF-8 编码的数据中直接按字节替换包名
-     * 保证新包名字节长度不大于旧包名，避免破坏结构
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replacePackageInUtf8(data: ByteArray, oldPkg: String, newPkg: String): Boolean {
         val oldBytes = oldPkg.toByteArray(Charsets.UTF_8)
@@ -69,12 +69,12 @@ class AxmlEditor {
     }
 
     /**
-     * 修复 androidx.core / androidx.startup 引入的权限和 Provider authorities：
+     * Note: brief English comment.
      * - <permission android:name="com.webtoapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
      * - <uses-permission android:name="com.webtoapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
      * - <provider android:authorities="com.webtoapp.fileprovider"/>
      * - <provider android:authorities="com.webtoapp.androidx-startup"/>
-     * 在导出 APK 中，这些前缀需要替换为新包名，避免与宿主 WebToApp 以及其它导出 APK 冲突。
+     * Note: brief English comment.
      */
     private fun fixDynamicPermissionAndAuthorities(data: ByteArray, newPackageName: String) {
         try {
@@ -96,8 +96,8 @@ class AxmlEditor {
     }
 
     /**
-     * 将字符串池中的完整字符串从 oldStr 替换为 newStr（支持 UTF-8 / UTF-16LE），
-     * 要求 newStr 的字节长度不大于 oldStr，以保证原地替换安全。
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replaceFullStringInData(data: ByteArray, oldStr: String, newStr: String): Boolean {
         var patched = false
@@ -148,10 +148,10 @@ class AxmlEditor {
     }
 
     /**
-     * 将因为包名替换而被改成 newPackageName 前缀的关键组件类名恢复回 ORIGINAL_PACKAGE
-     * 避免出现 "com.w2a.extn.WebToAppApplication" 这类在 dex 中不存在的类
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * 注意：由于包名替换时会用0填充，broken字符串实际上是 newPackageName + 填充的0 + suffix
+     * Note: brief English comment.
      */
     private fun restoreComponentClassNames(data: ByteArray, newPackageName: String) {
         val suffixes = listOf(
@@ -163,21 +163,21 @@ class AxmlEditor {
 
         var restored = false
         
-        // 计算填充长度（原包名和新包名的差值）
+        // Note: brief English comment.
         val padLen = ORIGINAL_PACKAGE.length - newPackageName.length
 
         for (suffix in suffixes) {
-            // 原始类名（正确的）
+            // Note: brief English comment.
             val original = "$ORIGINAL_PACKAGE.$suffix"
             
-            // 被破坏的类名：newPackageName + 填充的0字符 + "." + suffix
-            // 但实际上由于替换时0填充，破坏的模式是 newPackageName + 0*padLen + "." + suffix
+            // Note: brief English comment.
+            // Note: brief English comment.
             if (padLen >= 0) {
-                // 构造被破坏的字节模式
+                // Note: brief English comment.
                 val brokenPrefix = newPackageName + String(CharArray(padLen) { '\u0000' })
                 val broken = "$brokenPrefix.$suffix"
                 
-                // UTF-8 恢复
+                // Note: brief English comment.
                 val brokenUtf8 = broken.toByteArray(Charsets.UTF_8)
                 val originalUtf8 = original.toByteArray(Charsets.UTF_8)
                 if (brokenUtf8.size == originalUtf8.size) {
@@ -187,7 +187,7 @@ class AxmlEditor {
                     }
                 }
 
-                // UTF-16LE 恢复
+                // Note: brief English comment.
                 val brokenUtf16 = broken.toByteArray(Charsets.UTF_16LE)
                 val originalUtf16 = original.toByteArray(Charsets.UTF_16LE)
                 if (brokenUtf16.size == originalUtf16.size) {
@@ -203,8 +203,8 @@ class AxmlEditor {
     }
 
     /**
-     * 在 UTF-16LE 编码的数据中直接按字节替换包名
-     * 保证新包名字节长度不大于旧包名
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replacePackageInUtf16(data: ByteArray, oldPkg: String, newPkg: String): Boolean {
         val oldBytes = oldPkg.toByteArray(Charsets.UTF_16LE)
@@ -224,9 +224,9 @@ class AxmlEditor {
     }
 
     /**
-     * 在整个数据中查找并替换所有匹配的字节序列
-     * 直接替换所有匹配项，不做独立字符串检查
-     * 类名恢复由 restoreComponentClassNames 单独处理
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replaceBytesInData(data: ByteArray, pattern: ByteArray, replacement: ByteArray): Boolean {
         var found = false

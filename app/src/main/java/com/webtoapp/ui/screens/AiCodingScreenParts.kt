@@ -25,11 +25,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.ai.coding.*
-import com.webtoapp.core.i18n.Strings
-import com.webtoapp.ui.components.coding.*
-
-
-// ==================== 子组件 ====================
+import com.webtoapp.core.i18n.AppStringsProvider
+import com.webtoapp.ui.components.coding.* // Note
 
 @Composable
 internal fun WelcomeContent(
@@ -48,7 +45,7 @@ internal fun WelcomeContent(
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         
-        // Logo区域
+        // Logoarea
         Surface(
             modifier = Modifier.size(80.dp),
             shape = RoundedCornerShape(20.dp),
@@ -65,7 +62,7 @@ internal fun WelcomeContent(
         Spacer(modifier = Modifier.height(24.dp))
         
         Text(
-            Strings.htmlCodingAssistant,
+            AppStringsProvider.current().htmlCodingAssistant,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -73,14 +70,14 @@ internal fun WelcomeContent(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            Strings.aiHelpsGenerateWebpage,
+            AppStringsProvider.current().aiHelpsGenerateWebpage,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         
         Spacer(modifier = Modifier.height(40.dp))
         
-        // 主操作按钮
+        // button
         PremiumButton(
             onClick = onNewChat,
             modifier = Modifier
@@ -90,12 +87,12 @@ internal fun WelcomeContent(
         ) {
             Icon(Icons.Default.Add, null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(Strings.startNewConversation, style = MaterialTheme.typography.titleMedium)
+            Text(AppStringsProvider.current().startNewConversation, style = MaterialTheme.typography.titleMedium)
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 辅助操作按钮
+        // button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -109,7 +106,7 @@ internal fun WelcomeContent(
             ) {
                 Icon(Icons.Outlined.Palette, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.templates)
+                Text(AppStringsProvider.current().templates)
             }
             
             PremiumOutlinedButton(
@@ -121,13 +118,13 @@ internal fun WelcomeContent(
             ) {
                 Icon(Icons.Outlined.School, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.tutorial)
+                Text(AppStringsProvider.current().tutorial)
             }
         }
         
         Spacer(modifier = Modifier.height(40.dp))
         
-        // 快速提示词标题
+        // hint
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -148,7 +145,7 @@ internal fun WelcomeContent(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                Strings.quickStart,
+                AppStringsProvider.current().quickStart,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
@@ -156,7 +153,7 @@ internal fun WelcomeContent(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 快速提示词卡片 - 两列网格布局
+        // hint card
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -194,7 +191,7 @@ internal fun WelcomeContent(
                             }
                         }
                     }
-                    // 如果只有一个元素，添加空白占位
+                    // if,
                     if (rowPrompts.size == 1) {
                         Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                     }
@@ -221,7 +218,7 @@ private fun LoadingIndicator() {
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            Strings.aiThinking,
+            AppStringsProvider.current().aiThinking,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline
         )
@@ -245,7 +242,7 @@ internal fun ImageGeneratingIndicator(prompt: String) {
         Spacer(modifier = Modifier.width(12.dp))
         Column {
             Text(
-                Strings.generatingImage,
+                AppStringsProvider.current().generatingImage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.tertiary
             )
@@ -268,7 +265,7 @@ internal fun SessionDrawerContent(
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxHeight()) {
-        // 头部
+        // header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -276,13 +273,13 @@ internal fun SessionDrawerContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(Strings.conversationHistory, style = MaterialTheme.typography.titleLarge)
+            Text(AppStringsProvider.current().conversationHistory, style = MaterialTheme.typography.titleLarge)
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, Strings.close)
+                Icon(Icons.Default.Close, AppStringsProvider.current().close)
             }
         }
         
-        // 新建按钮
+        // newbutton
         FilledTonalButton(
             onClick = onNewSession,
             modifier = Modifier
@@ -291,13 +288,13 @@ internal fun SessionDrawerContent(
         ) {
             Icon(Icons.Default.Add, null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(Strings.newConversation)
+            Text(AppStringsProvider.current().newConversation)
         }
         
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
         
-        // Session列表
+        // Sessionlist
         LazyColumn(modifier = Modifier.weight(weight = 1f, fill = true)) {
             items(sessions, key = { it.id }) { session ->
                 SessionListItem(
@@ -311,7 +308,7 @@ internal fun SessionDrawerContent(
             if (sessions.isEmpty()) {
                 item {
                     Text(
-                        Strings.noConversationRecords,
+                        AppStringsProvider.current().noConversationRecords,
                         modifier = Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -338,25 +335,25 @@ internal fun TemplatesSheetContent(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        // 标题栏
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                Strings.selectStyleTemplate, 
+                AppStringsProvider.current().selectStyleTemplate, 
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            // 当前选中提示
+            // current hint
             if (selectedTemplateId != null || selectedStyleId != null) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
-                        text = Strings.selected,
+                        text = AppStringsProvider.current().selected,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -368,14 +365,14 @@ internal fun TemplatesSheetContent(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            Strings.selectTemplateHint,
+            AppStringsProvider.current().selectTemplateHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 分类标签
+        // label
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.Transparent,
@@ -384,13 +381,13 @@ internal fun TemplatesSheetContent(
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text(Strings.designTemplates) },
+                text = { Text(AppStringsProvider.current().designTemplates) },
                 icon = { Icon(Icons.Outlined.Palette, null, modifier = Modifier.size(18.dp)) }
             )
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text(Strings.styleReferences) },
+                text = { Text(AppStringsProvider.current().styleReferences) },
                 icon = { Icon(Icons.Outlined.Style, null, modifier = Modifier.size(18.dp)) }
             )
         }
@@ -399,9 +396,9 @@ internal fun TemplatesSheetContent(
         
         when (selectedTab) {
             0 -> {
-                // 模板网格 - 使用 LazyVerticalGrid 更好展示
+                // LazyVerticalGrid
                 Text(
-                    Strings.totalTemplates.replace("%d", "${templates.size}"),
+                    AppStringsProvider.current().totalTemplates.replace("%d", "${templates.size}"),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -427,9 +424,9 @@ internal fun TemplatesSheetContent(
                 }
             }
             1 -> {
-                // 风格参考列表
+                // list
                 Text(
-                    Strings.totalStyleReferences.replace("%d", "${styles.size}"),
+                    AppStringsProvider.current().totalStyleReferences.replace("%d", "${styles.size}"),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -472,19 +469,19 @@ internal fun TutorialSheetContent(
             .fillMaxHeight(0.85f)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // 标题栏
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                Strings.usageTutorial, 
+                AppStringsProvider.current().usageTutorial, 
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                Strings.chapters.replace("%d", "${chapters.size}"),
+                AppStringsProvider.current().chapters.replace("%d", "${chapters.size}"),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -493,15 +490,15 @@ internal fun TutorialSheetContent(
         Spacer(modifier = Modifier.height(16.dp))
         
         if (selectedChapterId == null) {
-            // 章节列表
+            // list
             if (chapters.isEmpty()) {
-                // Empty状态提示
+                // Emptystatehint
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(weight = 1f, fill = true),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        Strings.noTutorialContent,
+                        AppStringsProvider.current().noTutorialContent,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -543,7 +540,7 @@ internal fun TutorialSheetContent(
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
-                                        Strings.sections.replace("%d", "${chapter.sections.size}"),
+                                        AppStringsProvider.current().sections.replace("%d", "${chapter.sections.size}"),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.outline
                                     )
@@ -559,10 +556,10 @@ internal fun TutorialSheetContent(
                 }
             }
         } else {
-            // 章节内容
+            // content
             val chapter = chapters.find { it.id == selectedChapterId }
             chapter?.let {
-                // 返回按钮
+                // backbutton
                 Surface(
                     modifier = Modifier
                         .clickable { selectedChapterId = null },
@@ -589,7 +586,7 @@ internal fun TutorialSheetContent(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 小节标签
+                // label
                 ScrollableTabRow(
                     selectedTabIndex = selectedSectionIndex,
                     edgePadding = 0.dp
@@ -605,7 +602,7 @@ internal fun TutorialSheetContent(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 内容
+                // content
                 val section = it.sections.getOrNull(selectedSectionIndex)
                 section?.let { sec ->
                     Column(
@@ -613,7 +610,7 @@ internal fun TutorialSheetContent(
                             .weight(weight = 1f, fill = true)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // 内容文本
+                        // contenttext
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -628,11 +625,11 @@ internal fun TutorialSheetContent(
                             )
                         }
                         
-                        // 代码示例
+                        // code
                         sec.codeExample?.let { code ->
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                Strings.codeExample,
+                                AppStringsProvider.current().codeExample,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Medium
                             )
@@ -651,7 +648,7 @@ internal fun TutorialSheetContent(
                             }
                         }
                         
-                        // 提示
+                        // hint
                         if (sec.tips.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Surface(
@@ -669,7 +666,7 @@ internal fun TutorialSheetContent(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            Strings.tips,
+                                            AppStringsProvider.current().tips,
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Medium,
                                             color = MaterialTheme.colorScheme.tertiary
@@ -715,18 +712,18 @@ internal fun CheckpointsSheetContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(Strings.versionManagement, style = MaterialTheme.typography.titleLarge)
+            Text(AppStringsProvider.current().versionManagement, style = MaterialTheme.typography.titleLarge)
             Row {
                 FilledTonalButton(onClick = onCreateCheckpoint) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.saveVersion)
+                    Text(AppStringsProvider.current().saveVersion)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 PremiumButton(onClick = onSaveProject) {
                     Icon(Icons.Default.Save, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.export)
+                    Text(AppStringsProvider.current().export)
                 }
             }
         }
@@ -735,7 +732,7 @@ internal fun CheckpointsSheetContent(
         
         if (checkpoints.isEmpty()) {
             Text(
-                Strings.noSavedVersions,
+                AppStringsProvider.current().noSavedVersions,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(16.dp)
             )
@@ -770,7 +767,7 @@ internal fun EditMessageDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.editMessage) },
+        title = { Text(AppStringsProvider.current().editMessage) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
@@ -785,7 +782,7 @@ internal fun EditMessageDialog(
                 if (editedImages.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.imagesCount.replace("%d", "${editedImages.size}"),
+                        AppStringsProvider.current().imagesCount.replace("%d", "${editedImages.size}"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -793,7 +790,7 @@ internal fun EditMessageDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    Strings.editWarning,
+                    AppStringsProvider.current().editWarning,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -804,12 +801,12 @@ internal fun EditMessageDialog(
                 onClick = { onConfirm(editedContent, editedImages) },
                 enabled = editedContent.isNotBlank()
             ) {
-                Text(Strings.resend)
+                Text(AppStringsProvider.current().resend)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -830,18 +827,18 @@ internal fun SaveProjectDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.saveProject) },
+        title = { Text(AppStringsProvider.current().saveProject) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = projectName,
                     onValueChange = { projectName = it },
-                    label = { Text(Strings.projectName) },
+                    label = { Text(AppStringsProvider.current().projectName) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 
-                Text(Strings.saveLocation, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().saveLocation, style = MaterialTheme.typography.labelMedium)
                 
                 availableDirs.forEachIndexed { index, (name, _) ->
                     Row(
@@ -865,11 +862,11 @@ internal fun SaveProjectDialog(
                         checked = createFolder,
                         onCheckedChange = { createFolder = it }
                     )
-                    Text(Strings.createProjectFolder)
+                    Text(AppStringsProvider.current().createProjectFolder)
                 }
                 
                 Text(
-                    Strings.willSaveFiles.replace("%d", "${files.size}"),
+                    AppStringsProvider.current().willSaveFiles.replace("%d", "${files.size}"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -889,24 +886,24 @@ internal fun SaveProjectDialog(
                     result.onSuccess { savedDir ->
                         onSaved(savedDir.absolutePath)
                     }.onFailure { e ->
-                        // Error handling在调用处
+                        // Error handling call
                     }
                 },
                 enabled = projectName.isNotBlank() && files.isNotEmpty()
             ) {
-                Text(Strings.save)
+                Text(AppStringsProvider.current().save)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
 }
 
 /**
- * 代码库面板内容
+ * repositorypanelcontent
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -927,14 +924,14 @@ internal fun CodeLibrarySheetContent(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        // 标题栏
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                Strings.codeLibrary,
+                AppStringsProvider.current().codeLibrary,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -942,7 +939,7 @@ internal fun CodeLibrarySheetContent(
                 PremiumFilterChip(
                     selected = filterFavorites,
                     onClick = { filterFavorites = !filterFavorites },
-                    label = { Text(Strings.favorites) },
+                    label = { Text(AppStringsProvider.current().favorites) },
                     leadingIcon = if (filterFavorites) {
                         { Icon(Icons.Default.Favorite, null, modifier = Modifier.size(16.dp)) }
                     } else null
@@ -953,7 +950,7 @@ internal fun CodeLibrarySheetContent(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            Strings.aiCodeAutoSaved,
+            AppStringsProvider.current().aiCodeAutoSaved,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -976,7 +973,7 @@ internal fun CodeLibrarySheetContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        if (filterFavorites) Strings.noFavorites else Strings.codeLibraryEmpty,
+                        if (filterFavorites) AppStringsProvider.current().noFavorites else AppStringsProvider.current().codeLibraryEmpty,
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
@@ -1004,7 +1001,7 @@ internal fun CodeLibrarySheetContent(
 }
 
 /**
- * 代码库项目卡片
+ * repositoryitemcard
  */
 @Composable
 private fun CodeLibraryItemCard(
@@ -1067,7 +1064,7 @@ private fun CodeLibraryItemCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // File标签
+            // Filelabel
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 item.files.take(3).forEach { file ->
                     Surface(
@@ -1093,7 +1090,7 @@ private fun CodeLibraryItemCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 操作按钮
+            // button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1105,7 +1102,7 @@ private fun CodeLibraryItemCard(
                 ) {
                     Icon(Icons.Outlined.Visibility, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.preview, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().preview, style = MaterialTheme.typography.labelMedium)
                 }
                 PremiumOutlinedButton(
                     onClick = onUseContent,
@@ -1114,7 +1111,7 @@ private fun CodeLibraryItemCard(
                 ) {
                     Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.use, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().use, style = MaterialTheme.typography.labelMedium)
                 }
                 
                 Box {
@@ -1126,7 +1123,7 @@ private fun CodeLibraryItemCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(if (item.isFavorite) Strings.unfavorite else Strings.favorite) },
+                            text = { Text(if (item.isFavorite) AppStringsProvider.current().unfavorite else AppStringsProvider.current().favorite) },
                             onClick = { onToggleFavorite(); showMenu = false },
                             leadingIcon = {
                                 Icon(
@@ -1136,12 +1133,12 @@ private fun CodeLibraryItemCard(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.exportToProjectLibrary) },
+                            text = { Text(AppStringsProvider.current().exportToProjectLibrary) },
                             onClick = { onExportToProject(); showMenu = false },
                             leadingIcon = { Icon(Icons.Outlined.FolderCopy, null) }
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.delete, color = Color(0xFFE53935)) },
+                            text = { Text(AppStringsProvider.current().delete, color = Color(0xFFE53935)) },
                             onClick = { onDelete(); showMenu = false },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = Color(0xFFE53935)) }
                         )
@@ -1153,7 +1150,7 @@ private fun CodeLibraryItemCard(
 }
 
 /**
- * 对话检查点面板内容
+ * checkpointpanelcontent
  */
 @Composable
 internal fun ConversationCheckpointsSheetContent(
@@ -1170,7 +1167,7 @@ internal fun ConversationCheckpointsSheetContent(
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            Strings.conversationCheckpoints,
+            AppStringsProvider.current().conversationCheckpoints,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -1178,7 +1175,7 @@ internal fun ConversationCheckpointsSheetContent(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            Strings.rollbackHint,
+            AppStringsProvider.current().rollbackHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1200,9 +1197,9 @@ internal fun ConversationCheckpointsSheetContent(
                         tint = MaterialTheme.colorScheme.outline
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(Strings.noCheckpoints, color = MaterialTheme.colorScheme.outline)
+                    Text(AppStringsProvider.current().noCheckpoints, color = MaterialTheme.colorScheme.outline)
                     Text(
-                        Strings.autoCreateCheckpointHint,
+                        AppStringsProvider.current().autoCreateCheckpointHint,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -1246,7 +1243,7 @@ internal fun ConversationCheckpointsSheetContent(
                                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                     ) {
                                         Text(
-                                            Strings.messagesCount.replace("%d", "${checkpoint.messageCount}"),
+                                            AppStringsProvider.current().messagesCount.replace("%d", "${checkpoint.messageCount}"),
                                             style = MaterialTheme.typography.labelSmall,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                             color = MaterialTheme.colorScheme.primary
@@ -1258,7 +1255,7 @@ internal fun ConversationCheckpointsSheetContent(
                                             color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
                                         ) {
                                             Text(
-                                                Strings.codesCount.replace("%d", "${checkpoint.codeLibraryIds.size}"),
+                                                AppStringsProvider.current().codesCount.replace("%d", "${checkpoint.codeLibraryIds.size}"),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                 color = MaterialTheme.colorScheme.secondary
@@ -1272,14 +1269,14 @@ internal fun ConversationCheckpointsSheetContent(
                                 IconButton(onClick = { onRollback(checkpoint) }) {
                                     Icon(
                                         Icons.Outlined.Restore,
-                                        Strings.rollback,
+                                        AppStringsProvider.current().rollback,
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 IconButton(onClick = { onDelete(checkpoint) }) {
                                     Icon(
                                         Icons.Outlined.Delete,
-                                        Strings.delete,
+                                        AppStringsProvider.current().delete,
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }

@@ -11,38 +11,38 @@ import java.util.UUID
 import java.util.zip.ZipInputStream
 
 /**
- * WordPress 项目管理器
+ * Note: brief English comment.
  * 
- * 负责：
- * - 创建 WordPress 项目（从缓存的 WP 核心复制）
- * - 导入用户的主题/插件
- * - 自动配置 wp-config.php（SQLite 模式）
- * - 安装 SQLite Database Integration 插件
- * - 管理项目文件生命周期
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 object WordPressManager {
     
     private const val TAG = "WordPressManager"
     
-    /** 安装验证最大重试次数 */
+    /** Note: brief English comment. */
     private const val MAX_INSTALL_VERIFY_RETRIES = 10
     
-    /** 安装验证重试间隔（毫秒） */
+    /** Note: brief English comment. */
     private const val INSTALL_VERIFY_INTERVAL_MS = 500L
     
-    // ==================== 公开 API ====================
+    // Note: brief English comment.
     
     /**
-     * 创建新的 WordPress 项目
+     * Note: brief English comment.
      * 
-     * 从缓存的 WordPress 核心复制一份完整的 WP 文件，
-     * 自动配置 SQLite 数据库支持。
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
      * @param context Android Context
-     * @param siteTitle 站点标题
-     * @param adminUser 管理员用户名
-     * @param adminEmail 管理员邮箱
-     * @return 项目 ID，失败返回 null
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun createProject(
         context: Context,
@@ -51,7 +51,7 @@ object WordPressManager {
         adminEmail: String = ""
     ): String? = withContext(Dispatchers.IO) {
         try {
-            // 检查依赖是否就绪
+            // Note: brief English comment.
             if (!WordPressDependencyManager.isAllReady(context)) {
                 AppLogger.e(TAG, "依赖未就绪，无法创建项目")
                 return@withContext null
@@ -62,15 +62,15 @@ object WordPressManager {
             
             AppLogger.i(TAG, "创建 WordPress 项目: $projectId")
             
-            // 1. 复制 WordPress 核心文件
+            // Note: brief English comment.
             val wpSourceDir = File(WordPressDependencyManager.getDepsDir(context), "wordpress")
             copyDirectory(wpSourceDir, projectDir)
             AppLogger.i(TAG, "WordPress 核心已复制")
             
-            // 2. 安装 SQLite 插件
+            // Note: brief English comment.
             installSqlitePlugin(context, projectDir)
             
-            // 3. 生成 wp-config.php
+            // Note: brief English comment.
             generateWpConfig(projectDir, siteTitle)
             
             AppLogger.i(TAG, "WordPress 项目创建完成: $projectId (${projectDir.absolutePath})")
@@ -82,7 +82,7 @@ object WordPressManager {
     }
     
     /**
-     * 导入主题 zip 到项目
+     * Note: brief English comment.
      */
     suspend fun importTheme(
         context: Context,
@@ -94,7 +94,7 @@ object WordPressManager {
             val themesDir = File(projectDir, "wp-content/themes")
             themesDir.mkdirs()
             
-            // 解压主题 zip
+            // Note: brief English comment.
             val themeName = extractZipFromUri(context, themeZipUri, themesDir)
             AppLogger.i(TAG, "主题已导入: $themeName")
             themeName
@@ -105,7 +105,7 @@ object WordPressManager {
     }
     
     /**
-     * 导入插件 zip 到项目
+     * Note: brief English comment.
      */
     suspend fun importPlugin(
         context: Context,
@@ -127,7 +127,7 @@ object WordPressManager {
     }
     
     /**
-     * 导入完整 WordPress 压缩包（含主题和插件）
+     * Note: brief English comment.
      */
     suspend fun importFullProject(
         context: Context,
@@ -137,21 +137,21 @@ object WordPressManager {
         try {
             val projectDir = getProjectDir(context, projectId)
             
-            // 清空项目目录
+            // Note: brief English comment.
             projectDir.deleteRecursively()
             projectDir.mkdirs()
             
-            // 解压整个压缩包
+            // Note: brief English comment.
             extractZipFromUri(context, zipUri, projectDir)
             
-            // 检查是否解压到了子目录（常见：wordpress/xxx）
+            // Note: brief English comment.
             val wpIndicator = File(projectDir, "wp-includes/version.php")
             if (!wpIndicator.exists()) {
-                // 检查是否在子目录中
+                // Note: brief English comment.
                 val subdirs = projectDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
                 for (subdir in subdirs) {
                     if (File(subdir, "wp-includes/version.php").exists()) {
-                        // 将子目录内容移到项目根目录
+                        // Note: brief English comment.
                         moveDirectoryContents(subdir, projectDir)
                         subdir.deleteRecursively()
                         break
@@ -159,13 +159,13 @@ object WordPressManager {
                 }
             }
             
-            // 安装 SQLite 插件（如果尚未安装）
+            // Note: brief English comment.
             val sqlitePluginDir = File(projectDir, "wp-content/plugins/sqlite-database-integration")
             if (!sqlitePluginDir.exists()) {
                 installSqlitePlugin(context, projectDir)
             }
             
-            // 确保 wp-config.php 正确配置
+            // Note: brief English comment.
             generateWpConfig(projectDir, "My Site")
             
             AppLogger.i(TAG, "完整 WordPress 项目已导入: $projectId")
@@ -177,7 +177,7 @@ object WordPressManager {
     }
     
     /**
-     * 删除项目
+     * Note: brief English comment.
      */
     fun deleteProject(context: Context, projectId: String): Boolean {
         return try {
@@ -192,14 +192,14 @@ object WordPressManager {
     }
     
     /**
-     * 获取项目目录
+     * Note: brief English comment.
      */
     fun getProjectDir(context: Context, projectId: String): File {
         return File(WordPressDependencyManager.getWordPressProjectsDir(context), projectId)
     }
     
     /**
-     * 获取项目中已安装的主题列表
+     * Note: brief English comment.
      */
     fun getInstalledThemes(context: Context, projectId: String): List<String> {
         val themesDir = File(getProjectDir(context, projectId), "wp-content/themes")
@@ -210,7 +210,7 @@ object WordPressManager {
     }
     
     /**
-     * 获取项目中已安装的插件列表
+     * Note: brief English comment.
      */
     fun getInstalledPlugins(context: Context, projectId: String): List<String> {
         val pluginsDir = File(getProjectDir(context, projectId), "wp-content/plugins")
@@ -221,7 +221,7 @@ object WordPressManager {
     }
     
     /**
-     * 获取项目占用空间（字节）
+     * Note: brief English comment.
      */
     fun getProjectSize(context: Context, projectId: String): Long {
         return getProjectDir(context, projectId)
@@ -231,10 +231,10 @@ object WordPressManager {
     }
     
     /**
-     * 确保 wp-content/db.php drop-in 存在
+     * Note: brief English comment.
      * 
-     * 在启动 PHP 服务器之前调用，修复因 db.copy 缺失而导致 db.php 未生成的问题。
-     * 对于已存在的项目也会检查并修复。
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     fun ensureDbPhpExists(context: Context, projectDir: File) {
         val dbPhp = File(projectDir, "wp-content/db.php")
@@ -249,7 +249,7 @@ object WordPressManager {
             AppLogger.w(TAG, "db.php 不存在，正在生成...")
             generateDbPhp(dbPhp)
         } else {
-            // 验证已有 db.php 是否正确引用了 SQLite 插件
+            // Note: brief English comment.
             val content = dbPhp.readText()
             if (!content.contains("sqlite-database-integration")) {
                 AppLogger.w(TAG, "db.php 未正确引用 SQLite 插件，重新生成")
@@ -257,22 +257,22 @@ object WordPressManager {
             }
         }
         
-        // 确保数据库目录存在
+        // Note: brief English comment.
         File(projectDir, "wp-content/database").mkdirs()
     }
     
     /**
-     * 自动完成 WordPress 安装（如果尚未安装）
+     * Note: brief English comment.
      * 
-     * 检测 WordPress 是否需要安装（访问首页是否 302 到 install.php），
-     * 如果需要，自动 POST 安装参数完成安装流程。
+     * Note: brief English comment.
+     * Note: brief English comment.
      * 
-     * @param baseUrl PHP 服务器地址，如 http://127.0.0.1:18500
-     * @param siteTitle 站点标题
-     * @param adminUser 管理员用户名
-     * @param adminPassword 管理员密码
-     * @param adminEmail 管理员邮箱
-     * @return true=已安装或安装成功，false=安装失败
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun autoInstallIfNeeded(
         baseUrl: String,
@@ -282,7 +282,7 @@ object WordPressManager {
         adminEmail: String = "admin@localhost.local"
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            // 1. 检查是否需要安装：GET / 看是否 302 到 install.php
+            // Note: brief English comment.
             if (!isRedirectingToInstall(baseUrl)) {
                 AppLogger.d(TAG, "WordPress 已安装，跳过自动安装")
                 return@withContext true
@@ -290,7 +290,7 @@ object WordPressManager {
             
             AppLogger.i(TAG, "WordPress 未安装，开始自动安装...")
             
-            // 2. POST 安装参数到 /wp-admin/install.php?step=2
+            // Note: brief English comment.
             val installUrl = java.net.URL("$baseUrl/wp-admin/install.php?step=2")
             val installConn = installUrl.openConnection() as java.net.HttpURLConnection
             installConn.requestMethod = "POST"
@@ -312,8 +312,8 @@ object WordPressManager {
             
             installConn.outputStream.use { it.write(params.toByteArray(Charsets.UTF_8)) }
             val installCode = installConn.responseCode
-            // 读取完整响应体，确保服务端 PHP 进程完整执行完毕（包括 SQLite 写入提交）
-            // 不读取 body 就 disconnect 可能导致服务端写管道断裂，安装未完成
+            // Note: brief English comment.
+            // Note: brief English comment.
             var installSuccess = false
             try {
                 val responseBody = if (installCode in 200..299) {
@@ -321,10 +321,10 @@ object WordPressManager {
                 } else {
                     installConn.errorStream?.bufferedReader()?.readText() ?: ""
                 }
-                // 记录响应摘要，用于诊断安装是否真正成功
+                // Note: brief English comment.
                 val snippet = responseBody.take(500).replace(Regex("<[^>]+>"), " ").replace(Regex("\\s+"), " ").trim()
                 AppLogger.d(TAG, "安装响应: code=$installCode, bodyLen=${responseBody.length}, snippet=$snippet")
-                // 检查响应中是否包含安装成功标志
+                // Note: brief English comment.
                 installSuccess = responseBody.contains("wp-login.php") || 
                     responseBody.contains("installed") ||
                     responseBody.contains("Success") ||
@@ -344,8 +344,8 @@ object WordPressManager {
             
             AppLogger.i(TAG, "WordPress 自动安装请求完成 (code=$installCode)")
             
-            // 3. 验证安装是否成功：重试检查 GET / 是否不再重定向到 install.php
-            // SQLite 数据库写入可能存在延迟（WAL 模式、文件系统同步等）
+            // Note: brief English comment.
+            // Note: brief English comment.
             repeat(MAX_INSTALL_VERIFY_RETRIES) { attempt ->
                 kotlinx.coroutines.delay(INSTALL_VERIFY_INTERVAL_MS)
                 try {
@@ -359,7 +359,7 @@ object WordPressManager {
                 }
             }
             
-            // 验证超时，仍然返回 true 让 WebView 尝试加载（可能需要更长时间）
+            // Note: brief English comment.
             AppLogger.w(TAG, "WordPress 安装验证超时 (${MAX_INSTALL_VERIFY_RETRIES} 次)，继续加载")
             true
         } catch (e: Exception) {
@@ -369,9 +369,9 @@ object WordPressManager {
     }
     
     /**
-     * 检查 GET baseUrl/ 是否重定向到 install.php
+     * Note: brief English comment.
      * 
-     * @return true 如果重定向到 install.php（即 WordPress 未安装），false 否则
+     * Note: brief English comment.
      */
     private fun isRedirectingToInstall(baseUrl: String): Boolean {
         val checkUrl = java.net.URL("$baseUrl/")
@@ -382,7 +382,7 @@ object WordPressManager {
         return try {
             val checkCode = checkConn.responseCode
             val location = checkConn.getHeaderField("Location") ?: ""
-            // 读取响应体以确保服务端完整处理
+            // Note: brief English comment.
             try {
                 val stream = if (checkCode in 200..299) checkConn.inputStream else checkConn.errorStream
                 stream?.bufferedReader()?.readText()
@@ -393,19 +393,19 @@ object WordPressManager {
         }
     }
     
-    // ==================== 内部方法 ====================
+    // Note: brief English comment.
     
     /**
-     * 安装 SQLite Database Integration 插件到项目
+     * Note: brief English comment.
      */
     private fun installSqlitePlugin(context: Context, projectDir: File) {
         val sqliteSourceDir = File(WordPressDependencyManager.getDepsDir(context), "sqlite-database-integration")
         val pluginsDir = File(projectDir, "wp-content/plugins/sqlite-database-integration")
         
-        // 复制插件文件
+        // Note: brief English comment.
         copyDirectory(sqliteSourceDir, pluginsDir)
         
-        // 复制 db.php drop-in 到 wp-content/
+        // Note: brief English comment.
         val dbCopy = File(pluginsDir, "db.copy")
         val dbPhp = File(projectDir, "wp-content/db.php")
         if (dbCopy.exists()) {
@@ -413,15 +413,15 @@ object WordPressManager {
             AppLogger.d(TAG, "db.copy 已复制为 db.php")
         }
         
-        // 如果 db.php 仍不存在（db.copy 在某些插件版本中可能缺失或路径不同），
-        // 则手动生成 db.php drop-in，确保 SQLite 集成正常加载
+        // Note: brief English comment.
+        // Note: brief English comment.
         if (!dbPhp.exists()) {
             AppLogger.w(TAG, "db.copy 不存在，手动生成 db.php drop-in")
             generateDbPhp(dbPhp)
         }
         
-        // 验证 db.php 内容是否正确引用了 SQLite 插件
-        // 某些版本的 db.copy 可能包含占位符或错误路径
+        // Note: brief English comment.
+        // Note: brief English comment.
         val loadPhp = File(pluginsDir, "load.php")
         if (dbPhp.exists() && loadPhp.exists()) {
             val dbPhpContent = dbPhp.readText()
@@ -431,28 +431,28 @@ object WordPressManager {
             }
         }
         
-        // 确保数据库目录存在
+        // Note: brief English comment.
         File(projectDir, "wp-content/database").mkdirs()
         
         AppLogger.i(TAG, "SQLite 插件已安装 (db.php=${dbPhp.exists()}, load.php=${loadPhp.exists()})")
     }
     
     /**
-     * 生成 db.php drop-in 文件
+     * Note: brief English comment.
      * 
-     * 当 SQLite Database Integration 插件的 db.copy 缺失或内容不正确时，
-     * 手动生成正确的 db.php，确保 WordPress 使用 SQLite 而非 MySQL。
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun generateDbPhp(dbPhp: File) {
         dbPhp.writeText("""<?php
 /**
- * SQLite Database Integration drop-in — WebToApp 自动生成
+ * Note: brief English comment.
  * 
- * 加载 SQLite Database Integration 插件，使 WordPress 使用 SQLite 替代 MySQL。
- * 此文件必须位于 wp-content/db.php。
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 
-// 确定插件路径（db.php 加载时 WP_PLUGIN_DIR 可能尚未定义）
+// Note: brief English comment.
 ${'$'}sqlite_plugin = defined('WP_PLUGIN_DIR')
     ? WP_PLUGIN_DIR . '/sqlite-database-integration/load.php'
     : __DIR__ . '/plugins/sqlite-database-integration/load.php';
@@ -460,7 +460,7 @@ ${'$'}sqlite_plugin = defined('WP_PLUGIN_DIR')
 if (is_readable(${'$'}sqlite_plugin)) {
     require_once ${'$'}sqlite_plugin;
 } else {
-    // 尝试备用路径
+    // Note: brief English comment.
     ${'$'}alt_path = dirname(__DIR__) . '/wp-content/plugins/sqlite-database-integration/load.php';
     if (is_readable(${'$'}alt_path)) {
         require_once ${'$'}alt_path;
@@ -470,12 +470,12 @@ if (is_readable(${'$'}sqlite_plugin)) {
     }
     
     /**
-     * 生成 wp-config.php
+     * Note: brief English comment.
      */
     private fun generateWpConfig(projectDir: File, siteTitle: String) {
         val wpConfig = File(projectDir, "wp-config.php")
         
-        // 生成随机的安全密钥
+        // Note: brief English comment.
         val keys = listOf(
             "AUTH_KEY", "SECURE_AUTH_KEY", "LOGGED_IN_KEY", "NONCE_KEY",
             "AUTH_SALT", "SECURE_AUTH_SALT", "LOGGED_IN_SALT", "NONCE_SALT"
@@ -488,16 +488,16 @@ if (is_readable(${'$'}sqlite_plugin)) {
         
         wpConfig.writeText("""<?php
 /**
- * WordPress 配置文件 - WebToApp 自动生成
- * 配置为使用 SQLite 数据库（通过 SQLite Database Integration 插件）
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 
-// ** SQLite 数据库配置 ** //
+// Note: brief English comment.
 define('DB_ENGINE', 'sqlite');
 define('DB_DIR', __DIR__ . '/wp-content/database/');
 define('DB_FILE', '.ht.sqlite');
 
-// MySQL 配置保留为空（不使用）
+// Note: brief English comment.
 define('DB_NAME', '');
 define('DB_USER', '');
 define('DB_PASSWORD', '');
@@ -505,38 +505,38 @@ define('DB_HOST', '');
 define('DB_CHARSET', 'utf8mb4');
 define('DB_COLLATE', '');
 
-// ** 安全密钥 ** //
+// Note: brief English comment.
 $keyDefinitions
 
 ${'$'}table_prefix = 'wp_';
 
-// ** WordPress 地址配置 ** //
-// 由 PHP 服务器动态设置
+// Note: brief English comment.
+// Note: brief English comment.
 if (isset(${'$'}_SERVER['HTTP_HOST'])) {
     ${'$'}protocol = 'http://';
     define('WP_HOME', ${'$'}protocol . ${'$'}_SERVER['HTTP_HOST']);
     define('WP_SITEURL', ${'$'}protocol . ${'$'}_SERVER['HTTP_HOST']);
 }
 
-// ** 禁用自动更新（离线环境） ** //
+// Note: brief English comment.
 define('WP_AUTO_UPDATE_CORE', false);
 define('AUTOMATIC_UPDATER_DISABLED', true);
 define('DISALLOW_FILE_MODS', false);
 define('DISALLOW_FILE_EDIT', true);
 
-// ** 调试模式 ** //
+// Note: brief English comment.
 define('WP_DEBUG', false);
 define('WP_DEBUG_LOG', false);
 define('WP_DEBUG_DISPLAY', false);
 
-// ** 文件系统方法 ** //
+// Note: brief English comment.
 define('FS_METHOD', 'direct');
 
-// ** 内存限制 ** //
+// Note: brief English comment.
 define('WP_MEMORY_LIMIT', '256M');
 define('WP_MAX_MEMORY_LIMIT', '256M');
 
-// ** 禁用 Cron（由 PHP 直接处理） ** //
+// Note: brief English comment.
 define('DISABLE_WP_CRON', true);
 
 // ** ABSPATH ** //
@@ -544,7 +544,7 @@ if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/');
 }
 
-/** 加载 WordPress */
+/** Note: brief English comment. */
 require_once ABSPATH . 'wp-settings.php';
 """)
         
@@ -552,7 +552,7 @@ require_once ABSPATH . 'wp-settings.php';
     }
     
     /**
-     * 生成随机安全密钥
+     * Note: brief English comment.
      */
     private fun generateRandomSalt(length: Int = 64): String {
         val chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_+=[]{}|;:,.<>?"
@@ -560,7 +560,7 @@ require_once ABSPATH . 'wp-settings.php';
     }
     
     /**
-     * 复制目录
+     * Note: brief English comment.
      */
     private fun copyDirectory(source: File, dest: File) {
         dest.mkdirs()
@@ -577,7 +577,7 @@ require_once ABSPATH . 'wp-settings.php';
     }
     
     /**
-     * 移动目录内容到目标目录
+     * Note: brief English comment.
      */
     private fun moveDirectoryContents(source: File, dest: File) {
         source.listFiles()?.forEach { file ->
@@ -590,7 +590,7 @@ require_once ABSPATH . 'wp-settings.php';
     }
     
     /**
-     * 从 Uri 解压 zip 文件，返回解压出的顶层目录名
+     * Note: brief English comment.
      */
     private fun extractZipFromUri(context: Context, uri: Uri, destDir: File): String? {
         var topLevelDir: String? = null
@@ -600,14 +600,14 @@ require_once ABSPATH . 'wp-settings.php';
             var entry = zipInputStream.nextEntry
             
             while (entry != null) {
-                // 记录顶层目录名
+                // Note: brief English comment.
                 if (topLevelDir == null && entry.name.contains("/")) {
                     topLevelDir = entry.name.substringBefore("/")
                 }
                 
                 val outFile = File(destDir, entry.name)
                 
-                // 安全检查：防止 zip slip 攻击
+                // Note: brief English comment.
                 if (!outFile.canonicalPath.startsWith(destDir.canonicalPath)) {
                     AppLogger.w(TAG, "跳过不安全的 zip 条目: ${entry.name}")
                     zipInputStream.closeEntry()

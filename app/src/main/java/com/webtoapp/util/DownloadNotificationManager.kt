@@ -18,19 +18,19 @@ import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * 下载通知管理器
+ * Download notification manager
  * 
- * 提供增强的下载通知功能：
- * - 实时下载进度显示
- * - 下载完成通知带打开按钮
- * - 下载失败提示
- * - 支持 Blob/Data URL 下载的通知
- * - 支持媒体保存到相册的通知
+ * ：
+ * -
+ * -
+ * -
+ * - Blob/Data URL
+ * -
  */
 @SuppressLint("StaticFieldLeak")
 class DownloadNotificationManager(private val context: Context) {
@@ -38,7 +38,7 @@ class DownloadNotificationManager(private val context: Context) {
     companion object {
         private const val TAG = "DownloadNotification"
         private const val CHANNEL_ID = "download_channel"
-        private val CHANNEL_NAME get() = Strings.notifDownloadChannel
+        private val CHANNEL_NAME get() = AppStringsProvider.current().notifDownloadChannel
         private const val PROGRESS_NOTIFICATION_ID = 1001
         private const val COMPLETE_NOTIFICATION_ID_BASE = 2000
         private const val CUSTOM_NOTIFICATION_ID_BASE = 3000
@@ -53,7 +53,7 @@ class DownloadNotificationManager(private val context: Context) {
         }
         
         /**
-         * 释放单例（应用退出时调用）
+         * （）
          */
         fun release() {
             synchronized(this) {
@@ -63,18 +63,18 @@ class DownloadNotificationManager(private val context: Context) {
         }
     }
     
-    // Custom通知 ID 计数器
+    // Custom notification ID counter
     private val customNotificationIdCounter = AtomicInteger(0)
     
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     private val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     private val handler = Handler(Looper.getMainLooper())
     
-    // 跟踪活跃的下载
+    // Track active downloads
     private val activeDownloads = mutableMapOf<Long, DownloadInfo>()
     private var progressRunnable: Runnable? = null
     
-    // Download完成广播接收器
+    // Download complete broadcast receiver
     private var downloadReceiver: BroadcastReceiver? = null
     
     init {
@@ -83,7 +83,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 创建通知渠道
+     * Create notification channel
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -92,7 +92,7 @@ class DownloadNotificationManager(private val context: Context) {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = Strings.notifDownloadChannelDesc
+                description = AppStringsProvider.current().notifDownloadChannelDesc
                 setShowBadge(false)
             }
             notificationManager.createNotificationChannel(channel)
@@ -100,7 +100,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 注册下载完成广播接收器
+     * Register download complete receiver
      */
     private fun registerDownloadReceiver() {
         if (downloadReceiver != null) return
@@ -126,7 +126,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
 
     /**
-     * 开始跟踪下载
+     * Start download tracking
      */
     fun trackDownload(downloadId: Long, fileName: String, mimeType: String) {
         activeDownloads[downloadId] = DownloadInfo(
@@ -138,15 +138,15 @@ class DownloadNotificationManager(private val context: Context) {
             downloadedBytes = 0
         )
         
-        // Show初始进度通知
+        // Show
         showProgressNotification()
         
-        // Start轮询进度
+        // Start
         startProgressPolling()
     }
     
     /**
-     * 开始轮询下载进度
+     * Start polling download progress
      */
     private fun startProgressPolling() {
         progressRunnable?.let { handler.removeCallbacks(it) }
@@ -161,7 +161,7 @@ class DownloadNotificationManager(private val context: Context) {
                 updateDownloadProgress()
                 showProgressNotification()
                 
-                // 每500ms更新一次
+                // Update every 500ms
                 handler.postDelayed(this, 500)
             }
         }
@@ -170,7 +170,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 更新下载进度
+     * Update download progress
      */
     private fun updateDownloadProgress() {
         val idsToRemove = mutableListOf<Long>()
@@ -198,7 +198,7 @@ class DownloadNotificationManager(private val context: Context) {
                             0
                         }
                         
-                        // Check是否完成或失败
+                        // Check
                         when (status) {
                             DownloadManager.STATUS_SUCCESSFUL,
                             DownloadManager.STATUS_FAILED -> {
@@ -207,18 +207,18 @@ class DownloadNotificationManager(private val context: Context) {
                         }
                     }
                 } else {
-                    // Download记录不存在，移除
+                    // Download，
                     idsToRemove.add(downloadId)
                 }
             }
         }
         
-        // 移除已完成的下载
+        // Note.
         idsToRemove.forEach { activeDownloads.remove(it) }
     }
     
     /**
-     * 显示进度通知
+     * Show progress notification
      */
     private fun showProgressNotification() {
         if (activeDownloads.isEmpty()) {
@@ -236,7 +236,7 @@ class DownloadNotificationManager(private val context: Context) {
             "Downloading $downloadingCount files"
         }
         
-        // 计算总下载速度信息
+        // Note.
         val totalDownloaded = activeDownloads.values.sumOf { it.downloadedBytes }
         val totalSize = activeDownloads.values.sumOf { it.totalBytes }
         val progressText = if (totalSize > 0) {
@@ -259,7 +259,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
 
     /**
-     * 处理下载完成
+     * Handle download completion
      */
     private fun handleDownloadComplete(downloadId: Long) {
         val info = activeDownloads.remove(downloadId)
@@ -292,14 +292,14 @@ class DownloadNotificationManager(private val context: Context) {
             }
         }
         
-        // 如果没有活跃下载，取消进度通知
+        // Cancel progress notification if no active downloads
         if (activeDownloads.isEmpty()) {
             notificationManager.cancel(PROGRESS_NOTIFICATION_ID)
         }
     }
     
     /**
-     * 显示下载完成通知
+     * Show download complete notification
      */
     private fun showDownloadCompleteNotification(
         downloadId: Long,
@@ -309,7 +309,7 @@ class DownloadNotificationManager(private val context: Context) {
     ) {
         val notificationId = (COMPLETE_NOTIFICATION_ID_BASE + downloadId).toInt()
         
-        // Create打开文件的 Intent
+        // Create Intent
         val openIntent = createOpenFileIntent(localUri, mimeType)
         val openPendingIntent = if (openIntent != null) {
             PendingIntent.getActivity(
@@ -320,39 +320,39 @@ class DownloadNotificationManager(private val context: Context) {
             )
         } else null
         
-        // Create分享文件的 Intent
+        // Create Intent
         val shareIntent = createShareFileIntent(localUri, mimeType)
         val sharePendingIntent = if (shareIntent != null) {
             PendingIntent.getActivity(
                 context,
                 notificationId + 10000,
-                Intent.createChooser(shareIntent, Strings.notifShare),
+                Intent.createChooser(shareIntent, AppStringsProvider.current().notifShare),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         } else null
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.notifDownloadComplete)
+            .setContentTitle(AppStringsProvider.current().notifDownloadComplete)
             .setContentText(fileName)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         
-        // 添加打开按钮
+        // Add open action
         if (openPendingIntent != null) {
             builder.setContentIntent(openPendingIntent)
             builder.addAction(
                 android.R.drawable.ic_menu_view,
-                Strings.notifOpen,
+                AppStringsProvider.current().notifOpen,
                 openPendingIntent
             )
         }
         
-        // 添加分享按钮
+        // Add share action
         if (sharePendingIntent != null) {
             builder.addAction(
                 android.R.drawable.ic_menu_share,
-                Strings.notifShare,
+                AppStringsProvider.current().notifShare,
                 sharePendingIntent
             )
         }
@@ -361,14 +361,14 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 显示下载失败通知
+     * Show download failure notification
      */
     private fun showDownloadFailedNotification(downloadId: Long, fileName: String) {
         val notificationId = (COMPLETE_NOTIFICATION_ID_BASE + downloadId).toInt()
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle(Strings.notifDownloadFailed)
+            .setContentTitle(AppStringsProvider.current().notifDownloadFailed)
             .setContentText(fileName)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -377,7 +377,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 创建打开文件的 Intent
+     * Create open-file intent
      */
     private fun createOpenFileIntent(localUri: String?, mimeType: String): Intent? {
         if (localUri == null) return null
@@ -401,7 +401,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 创建分享文件的 Intent
+     * Create share intent
      */
     private fun createShareFileIntent(localUri: String?, mimeType: String): Intent? {
         if (localUri == null) return null
@@ -425,15 +425,15 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 显示不确定进度通知（用于开始下载/保存时）
-     * @return 通知 ID
+     * Show indeterminate progress notification
+     * @return result
      */
     fun showIndeterminateProgress(fileName: String): Int {
         val notificationId = CUSTOM_NOTIFICATION_ID_BASE + customNotificationIdCounter.incrementAndGet()
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle(Strings.notifDownloading)
+            .setContentTitle(AppStringsProvider.current().notifDownloading)
             .setContentText(fileName)
             .setProgress(0, 0, true)
             .setOngoing(true)
@@ -446,7 +446,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 更新下载进度通知
+     * Update download progress
      */
     fun updateProgress(notificationId: Int, fileName: String, progress: Int) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -463,7 +463,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 显示媒体保存完成通知
+     * Show media save complete notification
      */
     fun showMediaSaveComplete(
         fileName: String,
@@ -472,11 +472,11 @@ class DownloadNotificationManager(private val context: Context) {
         isImage: Boolean,
         progressNotificationId: Int
     ) {
-        // 取消进度通知
+        // Note.
         notificationManager.cancel(progressNotificationId)
         
         val notificationId = CUSTOM_NOTIFICATION_ID_BASE + customNotificationIdCounter.incrementAndGet()
-        val typeText = if (isImage) Strings.image else Strings.video
+        val typeText = if (isImage) AppStringsProvider.current().image else AppStringsProvider.current().video
         
         val viewIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, mimeType)
@@ -490,7 +490,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.savedToGallery.replace("%s", typeText))
+            .setContentTitle(AppStringsProvider.current().savedToGallery.replace("%s", typeText))
             .setContentText(fileName)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
@@ -501,7 +501,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 显示文件保存完成通知
+     * Show file save complete notification
      */
     fun showSaveComplete(
         fileName: String,
@@ -523,7 +523,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.notifDownloadComplete)
+            .setContentTitle(AppStringsProvider.current().notifDownloadComplete)
             .setContentText(fileName)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -536,7 +536,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 显示保存失败通知
+     * Show save failure notification
      */
     fun showSaveFailed(fileName: String, reason: String, progressNotificationId: Int) {
         notificationManager.cancel(progressNotificationId)
@@ -545,7 +545,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle(Strings.notifDownloadFailed)
+            .setContentTitle(AppStringsProvider.current().notifDownloadFailed)
             .setContentText("$fileName: $reason")
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -555,14 +555,14 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 格式化文件大小
+     * Format file size
      */
     private fun formatFileSize(bytes: Long): String {
         return android.text.format.Formatter.formatFileSize(context, bytes)
     }
     
     /**
-     * 清理资源
+     * Clean up resources
      */
     private fun cleanup() {
         try {
@@ -580,7 +580,7 @@ class DownloadNotificationManager(private val context: Context) {
     }
     
     /**
-     * 下载信息
+     * Download info
      */
     data class DownloadInfo(
         val id: Long,

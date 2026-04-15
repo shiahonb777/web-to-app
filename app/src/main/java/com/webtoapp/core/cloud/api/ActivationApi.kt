@@ -1,7 +1,13 @@
-package com.webtoapp.core.cloud
+package com.webtoapp.core.cloud.api
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.webtoapp.core.cloud.CloudApiClient
+import com.webtoapp.core.cloud.internal.CloudApiSupport
+import com.webtoapp.core.cloud.model.ActivationRecord
+import com.webtoapp.core.cloud.model.DeviceInfo
+import com.webtoapp.core.cloud.model.RedeemPreview
+import com.webtoapp.core.cloud.model.RedeemResult
 import com.webtoapp.core.auth.AuthResult
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody

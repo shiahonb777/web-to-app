@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.download.DependencyDownloadEngine
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.golang.GoDependencyManager
 import com.webtoapp.core.nodejs.NodeDependencyManager
 import com.webtoapp.core.python.PythonDependencyManager
@@ -42,10 +42,10 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 统一运行时 & 依赖管理页面
+ * unifiedrun & management
  * 
- * 整合 WordPress/PHP 依赖、Node.js 运行时、
- * Python/Go/Docs 项目文件管理、镜像源设置、缓存管理。
+ * WordPress/PHP, Node. js run,
+ * Python/Go/Docs itemfilemanagement, settings, management.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,14 +56,14 @@ fun RuntimeDepsScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // ===== 运行时状态 =====
+    // ===== runstate =====
     var phpReady by remember { mutableStateOf(WordPressDependencyManager.isPhpReady(context)) }
     var wpReady by remember { mutableStateOf(WordPressDependencyManager.isWordPressReady(context)) }
     var sqliteReady by remember { mutableStateOf(WordPressDependencyManager.isSqlitePluginReady(context)) }
     var nodeReady by remember { mutableStateOf(NodeDependencyManager.isNodeReady(context)) }
     var pythonReady by remember { mutableStateOf(PythonDependencyManager.isPythonReady(context)) }
     
-    // ===== 缓存 =====
+    // Note
     var wpCacheSize by remember { mutableLongStateOf(0L) }
     var nodeCacheSize by remember { mutableLongStateOf(0L) }
     var pythonCacheSize by remember { mutableLongStateOf(0L) }
@@ -71,18 +71,18 @@ fun RuntimeDepsScreen(
     var phpCacheSize by remember { mutableLongStateOf(0L) }
     var sqliteCacheSize by remember { mutableLongStateOf(0L) }
     
-    // ===== 项目文件统计 =====
+    // ===== itemfile =====
     var wpProjectCount by remember { mutableIntStateOf(0) }
     var nodeProjectCount by remember { mutableIntStateOf(0) }
     var pythonProjectCount by remember { mutableIntStateOf(0) }
     var goProjectCount by remember { mutableIntStateOf(0) }
     var docsProjectCount by remember { mutableIntStateOf(0) }
     
-    // ===== 镜像源 =====
+    // Note
     var wpMirrorRegion by remember { mutableStateOf(WordPressDependencyManager.getMirrorRegion()) }
     var nodeMirrorRegion by remember { mutableStateOf(NodeDependencyManager.getMirrorRegion()) }
     
-    // ===== UI 状态 =====
+    // ===== UI state =====
     var isDownloading by remember { mutableStateOf(false) }
     var isPaused by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableFloatStateOf(0f) }
@@ -90,10 +90,10 @@ fun RuntimeDepsScreen(
     var showClearDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // ===== 引擎丰富状态 =====
+    // ===== state =====
     val engineState by DependencyDownloadEngine.state.collectAsStateWithLifecycle()
     
-    // 刷新数据
+    // refresh
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             wpCacheSize = WordPressDependencyManager.getCacheSize(context)
@@ -111,12 +111,12 @@ fun RuntimeDepsScreen(
         }
     }
     
-    // 监听下载状态
+    // downloadstate
     val wpDownloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     val nodeDownloadState by NodeDependencyManager.downloadState.collectAsStateWithLifecycle()
     val pythonDownloadState by PythonDependencyManager.downloadState.collectAsStateWithLifecycle()
     
-    // 引擎状态驱动 UI
+    // state UI
     LaunchedEffect(engineState) {
         when (val es = engineState) {
             is DependencyDownloadEngine.State.Downloading -> {
@@ -162,7 +162,7 @@ fun RuntimeDepsScreen(
         }
     }
     
-    // 后备：继续监听各 Manager 的补充事件（Complete 刷新缓存大小）
+    // Manager( Complete refresh)
     LaunchedEffect(wpDownloadState) {
         when (wpDownloadState) {
             is WordPressDependencyManager.DownloadState.Complete -> {
@@ -209,13 +209,13 @@ fun RuntimeDepsScreen(
     val allRuntimesReady = phpReady && wpReady && sqliteReady && nodeReady && pythonReady
     val readyCount = listOf(phpReady, wpReady, sqliteReady, nodeReady, pythonReady).count { it }
     
-    // ===== 清理确认对话框 =====
+    // ===== dialog =====
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             icon = { Icon(Icons.Outlined.DeleteSweep, null) },
-            title = { Text(Strings.depClearAll) },
-            text = { Text(Strings.depClearConfirm) },
+            title = { Text(AppStringsProvider.current().depClearAll) },
+            text = { Text(AppStringsProvider.current().depClearConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -238,17 +238,17 @@ fun RuntimeDepsScreen(
                             sqliteReady = false
                             nodeReady = false
                             pythonReady = false
-                            snackbarHostState.showSnackbar(Strings.depClearDone)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().depClearDone)
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text(Strings.btnConfirm) }
+                ) { Text(AppStringsProvider.current().btnConfirm) }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -261,11 +261,11 @@ fun RuntimeDepsScreen(
                 title = {
                     Column {
                         Text(
-                            Strings.runtimeDepsTitle,
+                            AppStringsProvider.current().runtimeDepsTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            Strings.runtimeDepsSubtitle,
+                            AppStringsProvider.current().runtimeDepsSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -273,7 +273,7 @@ fun RuntimeDepsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -297,7 +297,7 @@ fun RuntimeDepsScreen(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
             
-            // ============ 1. 状态概览卡片 ============
+            // ============ 1. state card ============
             StatusOverviewCard(
                 readyCount = readyCount,
                 totalCount = 5,
@@ -312,13 +312,13 @@ fun RuntimeDepsScreen(
                 onResume = { DependencyDownloadEngine.resume() }
             )
             
-            // ============ 2. 运行时环境 ============
+            // ============ 2. run ============
             SectionHeader(
                 icon = Icons.Outlined.Memory,
-                title = Strings.depSectionRuntimes
+                title = AppStringsProvider.current().depSectionRuntimes
             )
             
-            // 统一下载 WordPress 依赖的安装逻辑（PHP/WP/SQLite 共用）
+            // unifieddownload WordPress( PHP/WP/SQLite)
             val installWpDeps: () -> Unit = {
                 scope.launch {
                     isDownloading = true
@@ -339,18 +339,18 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Code,
                 iconColor = Color(0xFF777BB3),
-                title = Strings.depPhpRuntime,
-                description = Strings.depPhpDesc,
+                title = AppStringsProvider.current().depPhpRuntime,
+                description = AppStringsProvider.current().depPhpDesc,
                 isReady = phpReady,
                 onInstall = installWpDeps
             )
             
-            // WordPress Core（允许单独点击安装，本质调用统一安装）
+            // WordPress Core( , callunified)
             RuntimeItemCard(
                 icon = Icons.Outlined.Language,
                 iconColor = Color(0xFF21759B),
-                title = Strings.depWpCore,
-                description = Strings.depWpCoreDesc,
+                title = AppStringsProvider.current().depWpCore,
+                description = AppStringsProvider.current().depWpCoreDesc,
                 isReady = wpReady,
                 onInstall = installWpDeps
             )
@@ -359,8 +359,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Javascript,
                 iconColor = Color(0xFF68A063),
-                title = Strings.depNodeRuntime,
-                description = Strings.depNodeDesc,
+                title = AppStringsProvider.current().depNodeRuntime,
+                description = AppStringsProvider.current().depNodeDesc,
                 isReady = nodeReady,
                 onInstall = {
                     scope.launch {
@@ -379,8 +379,8 @@ fun RuntimeDepsScreen(
             RuntimeItemCard(
                 icon = Icons.Outlined.Terminal,
                 iconColor = Color(0xFF3776AB),
-                title = Strings.depPythonRuntime,
-                description = Strings.depPythonDesc,
+                title = AppStringsProvider.current().depPythonRuntime,
+                description = AppStringsProvider.current().depPythonDesc,
                 isReady = pythonReady,
                 onInstall = {
                     scope.launch {
@@ -395,52 +395,52 @@ fun RuntimeDepsScreen(
                 }
             )
             
-            // Go（不需要运行时下载，提供信息说明）
+            // Go( rundownload, )
             RuntimeItemCard(
                 icon = Icons.Outlined.RocketLaunch,
                 iconColor = Color(0xFF00ADD8),
-                title = Strings.depGoInfo,
-                description = Strings.depGoDesc,
+                title = AppStringsProvider.current().depGoInfo,
+                description = AppStringsProvider.current().depGoDesc,
                 isReady = true,
                 onInstall = {}
             )
 
-            // ============ 运行时插件 ============
+            // ============ run ============
             SectionHeader(
                 icon = Icons.Outlined.Extension,
-                title = Strings.depSectionRuntimePlugins
+                title = AppStringsProvider.current().depSectionRuntimePlugins
             )
 
-            // SQLite Plugin（允许单独点击安装，本质调用统一安装）
+            // SQLite Plugin( , callunified)
             RuntimeItemCard(
                 icon = Icons.Outlined.Storage,
                 iconColor = Color(0xFF003B57),
-                title = Strings.depSqlitePlugin,
-                description = Strings.depSqliteDesc,
+                title = AppStringsProvider.current().depSqlitePlugin,
+                description = AppStringsProvider.current().depSqliteDesc,
                 isReady = sqliteReady,
                 onInstall = installWpDeps
             )
 
-            // ============ 3. 项目文件 ============
+            // ============ 3. itemfile ============
             SectionHeader(
                 icon = Icons.Outlined.Folder,
-                title = Strings.depSectionProjects
+                title = AppStringsProvider.current().depSectionProjects
             )
             
             ProjectFilesCard(
                 items = listOf(
-                    ProjectEntry(Strings.depWpProjects, wpProjectCount, Color(0xFF21759B)),
-                    ProjectEntry(Strings.depNodeProjects, nodeProjectCount, Color(0xFF68A063)),
-                    ProjectEntry(Strings.depPythonProjects, pythonProjectCount, Color(0xFF3776AB)),
-                    ProjectEntry(Strings.depGoProjects, goProjectCount, Color(0xFF00ADD8)),
-                    ProjectEntry(Strings.depDocsProjects, docsProjectCount, Color(0xFFE97627))
+                    ProjectEntry(AppStringsProvider.current().depWpProjects, wpProjectCount, Color(0xFF21759B)),
+                    ProjectEntry(AppStringsProvider.current().depNodeProjects, nodeProjectCount, Color(0xFF68A063)),
+                    ProjectEntry(AppStringsProvider.current().depPythonProjects, pythonProjectCount, Color(0xFF3776AB)),
+                    ProjectEntry(AppStringsProvider.current().depGoProjects, goProjectCount, Color(0xFF00ADD8)),
+                    ProjectEntry(AppStringsProvider.current().depDocsProjects, docsProjectCount, Color(0xFFE97627))
                 )
             )
             
-            // ============ 4. 镜像源 & 下载 ============
+            // ============ 4. & download ============
             SectionHeader(
                 icon = Icons.Outlined.CloudDownload,
-                title = Strings.depSectionDownload
+                title = AppStringsProvider.current().depSectionDownload
             )
             
             MirrorAndDownloadCard(
@@ -453,7 +453,7 @@ fun RuntimeDepsScreen(
                             else -> null
                         }
                     )
-                    // 同步设置 Node 镜像
+                    // syncsettings Node
                     NodeDependencyManager.setMirrorRegion(
                         when (regionStr) {
                             "cn" -> NodeDependencyManager.MirrorRegion.CN
@@ -469,7 +469,7 @@ fun RuntimeDepsScreen(
                 onDownloadAll = {
                     scope.launch {
                         isDownloading = true
-                        // 下载 WordPress 依赖
+                        // download WordPress
                         val wpSuccess = WordPressDependencyManager.downloadAllDependencies(context)
                         if (wpSuccess) {
                             phpReady = WordPressDependencyManager.isPhpReady(context)
@@ -477,13 +477,13 @@ fun RuntimeDepsScreen(
                             sqliteReady = WordPressDependencyManager.isSqlitePluginReady(context)
                             wpCacheSize = withContext(Dispatchers.IO) { WordPressDependencyManager.getCacheSize(context) }
                         }
-                        // 下载 Node.js 运行时
+                        // download Node. js run
                         val nodeSuccess = NodeDependencyManager.downloadNodeRuntime(context)
                         if (nodeSuccess) {
                             nodeReady = NodeDependencyManager.isNodeReady(context)
                             nodeCacheSize = withContext(Dispatchers.IO) { NodeDependencyManager.getCacheSize(context) }
                         }
-                        // 下载 Python 运行时
+                        // download Python run
                         val pythonSuccess = PythonDependencyManager.downloadPythonRuntime(context)
                         if (pythonSuccess) {
                             pythonReady = PythonDependencyManager.isPythonReady(context)
@@ -491,16 +491,16 @@ fun RuntimeDepsScreen(
                         }
                         isDownloading = false
                         if (wpSuccess && nodeSuccess && pythonSuccess) {
-                            snackbarHostState.showSnackbar(Strings.depAllReady)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().depAllReady)
                         }
                     }
                 }
             )
             
-            // ============ 5. 存储空间 ============
+            // ============ 5. ============
             SectionHeader(
                 icon = Icons.Outlined.PieChart,
-                title = Strings.depSectionStorage
+                title = AppStringsProvider.current().depSectionStorage
             )
             
             StorageCard(
@@ -570,10 +570,10 @@ fun RuntimeDepsScreen(
         }
 }
 
-// ==================== 子组件 ====================
+// Note
 
 /**
- * 状态概览 — 顶部渐变卡片
+ * state- topgradientcard
  */
 @Composable
 private fun StatusOverviewCard(
@@ -614,7 +614,7 @@ private fun StatusOverviewCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // 状态图标
+                    // stateicon
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -642,7 +642,7 @@ private fun StatusOverviewCard(
                     
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = if (allReady) Strings.depAllReady else Strings.depSomeNotReady,
+                            text = if (allReady) AppStringsProvider.current().depAllReady else AppStringsProvider.current().depSomeNotReady,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold
@@ -655,7 +655,7 @@ private fun StatusOverviewCard(
                         )
                     }
                     
-                    // 缓存总量
+                    // Note
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = formatSize(totalCacheSize),
@@ -664,36 +664,36 @@ private fun StatusOverviewCard(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = Strings.depTotalStorage,
+                            text = AppStringsProvider.current().depTotalStorage,
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.75f)
                         )
                     }
                 }
                 
-                // 下载进度条 + 详细信息
+                // download +
                 if (isDownloading) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Column {
-                        // 第一行：文件名 + 暂停/继续按钮 + 百分比
+                        // file + / button +
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (isPaused) "${Strings.depDlPaused} · $downloadLabel" else downloadLabel,
+                                text = if (isPaused) "${AppStringsProvider.current().depDlPaused} · $downloadLabel" else downloadLabel,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.9f),
                                 modifier = Modifier.weight(weight = 1f, fill = true)
                             )
-                            // 暂停/继续按钮
+                            // / button
                             IconButton(
                                 onClick = { if (isPaused) onResume() else onPause() }
                             ) {
                                 Icon(
                                     imageVector = if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-                                    contentDescription = if (isPaused) Strings.depDlResume else Strings.depDlPause,
+                                    contentDescription = if (isPaused) AppStringsProvider.current().depDlResume else AppStringsProvider.current().depDlPause,
                                     tint = Color.White,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -716,7 +716,7 @@ private fun StatusOverviewCard(
                             trackColor = Color.White.copy(alpha = 0.25f)
                         )
                         
-                        // 第二行：大小 + 速度 + ETA
+                        // + + ETA
                         val dlState = engineState
                         if (dlState is DependencyDownloadEngine.State.Downloading) {
                             Spacer(modifier = Modifier.height(8.dp))
@@ -735,15 +735,15 @@ private fun StatusOverviewCard(
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
                                 Text(
-                                    text = "${Strings.depDlEta} ${DependencyDownloadEngine.formatEta(dlState.etaSeconds)}",
+                                    text = "${AppStringsProvider.current().depDlEta} ${DependencyDownloadEngine.formatEta(dlState.etaSeconds)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
                             }
-                            // 第三行：开始时间 + 下载地址
+                            // + download
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${Strings.depDlStartTime} ${DependencyDownloadEngine.formatTime(dlState.startTimeMillis)}",
+                                text = "${AppStringsProvider.current().depDlStartTime} ${DependencyDownloadEngine.formatTime(dlState.startTimeMillis)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.65f)
                             )
@@ -757,7 +757,7 @@ private fun StatusOverviewCard(
                         } else if (dlState is DependencyDownloadEngine.State.Paused) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "${DependencyDownloadEngine.formatSize(dlState.bytesDownloaded)} / ${DependencyDownloadEngine.formatSize(dlState.totalBytes)} · ${Strings.depDlPaused}",
+                                text = "${DependencyDownloadEngine.formatSize(dlState.bytesDownloaded)} / ${DependencyDownloadEngine.formatSize(dlState.totalBytes)} · ${AppStringsProvider.current().depDlPaused}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
@@ -777,7 +777,7 @@ private fun StatusOverviewCard(
 }
 
 /**
- * 区域标题
+ * area
  */
 @Composable
 private fun SectionHeader(
@@ -813,7 +813,7 @@ private fun SectionHeader(
 }
 
 /**
- * 运行时项目卡片
+ * runitemcard
  */
 @Composable
 private fun RuntimeItemCard(
@@ -838,7 +838,7 @@ private fun RuntimeItemCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 图标
+            // icon
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -856,7 +856,7 @@ private fun RuntimeItemCard(
             
             Spacer(modifier = Modifier.width(14.dp))
             
-            // 文本
+            // text
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
                     text = title,
@@ -873,7 +873,7 @@ private fun RuntimeItemCard(
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            // 状态
+            // state
             if (isReady) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
@@ -891,7 +891,7 @@ private fun RuntimeItemCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            Strings.depStatusReady,
+                            AppStringsProvider.current().depStatusReady,
                             style = MaterialTheme.typography.labelSmall,
                             color = AppColors.Success,
                             fontWeight = FontWeight.Medium
@@ -912,7 +912,7 @@ private fun RuntimeItemCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        Strings.depInstall,
+                        AppStringsProvider.current().depInstall,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
@@ -922,7 +922,7 @@ private fun RuntimeItemCard(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                 ) {
                     Text(
-                        Strings.depStatusNotInstalled,
+                        AppStringsProvider.current().depStatusNotInstalled,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
@@ -934,7 +934,7 @@ private fun RuntimeItemCard(
 }
 
 /**
- * 项目文件卡片
+ * itemfilecard
  */
 private data class ProjectEntry(
     val name: String,
@@ -960,7 +960,7 @@ private fun ProjectFilesCard(items: List<ProjectEntry>) {
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 色块指示
+                    // Note
                     Box(
                         modifier = Modifier
                             .size(8.dp)
@@ -976,7 +976,7 @@ private fun ProjectFilesCard(items: List<ProjectEntry>) {
                     )
                     
                     Text(
-                        text = Strings.depProjectCount(entry.count),
+                        text = AppStringsProvider.current().depProjectCount(entry.count),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (entry.count > 0) {
                             MaterialTheme.colorScheme.onSurface
@@ -998,7 +998,7 @@ private fun ProjectFilesCard(items: List<ProjectEntry>) {
 }
 
 /**
- * 镜像源 & 下载卡片
+ * & downloadcard
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1018,22 +1018,22 @@ private fun MirrorAndDownloadCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 镜像源标题
+            // Note
             Text(
-                text = Strings.depMirrorSource,
+                text = AppStringsProvider.current().depMirrorSource,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = Strings.depMirrorDesc,
+                text = AppStringsProvider.current().depMirrorDesc,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 镜像源选择芯片
+            // select
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1043,7 +1043,7 @@ private fun MirrorAndDownloadCard(
                 PremiumFilterChip(
                     selected = currentRegion == WordPressDependencyManager.MirrorRegion.CN,
                     onClick = { onWpMirrorChange("cn") },
-                    label = { Text(Strings.depMirrorCN) },
+                    label = { Text(AppStringsProvider.current().depMirrorCN) },
                     leadingIcon = if (currentRegion == WordPressDependencyManager.MirrorRegion.CN) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -1051,7 +1051,7 @@ private fun MirrorAndDownloadCard(
                 PremiumFilterChip(
                     selected = currentRegion == WordPressDependencyManager.MirrorRegion.GLOBAL,
                     onClick = { onWpMirrorChange("global") },
-                    label = { Text(Strings.depMirrorGlobal) },
+                    label = { Text(AppStringsProvider.current().depMirrorGlobal) },
                     leadingIcon = if (currentRegion == WordPressDependencyManager.MirrorRegion.GLOBAL) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null
@@ -1060,11 +1060,11 @@ private fun MirrorAndDownloadCard(
                     selected = currentRegion != WordPressDependencyManager.MirrorRegion.CN
                             && currentRegion != WordPressDependencyManager.MirrorRegion.GLOBAL,
                     onClick = { onWpMirrorChange("auto") },
-                    label = { Text(Strings.depMirrorAuto) }
+                    label = { Text(AppStringsProvider.current().depMirrorAuto) }
                 )
             }
             
-            // 一键下载按钮
+            // downloadbutton
             if (!allReady) {
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -1084,16 +1084,16 @@ private fun MirrorAndDownloadCard(
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.depStatusDownloading)
+                        Text(AppStringsProvider.current().depStatusDownloading)
                     } else {
                         Icon(Icons.Outlined.CloudDownload, null, Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.depDownloadAll)
+                        Text(AppStringsProvider.current().depDownloadAll)
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = Strings.depDownloadAllDesc,
+                    text = AppStringsProvider.current().depDownloadAllDesc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp)
@@ -1104,7 +1104,7 @@ private fun MirrorAndDownloadCard(
 }
 
 /**
- * 存储空间卡片 — 支持 WordPress / Node.js / Python / Go / PHP / SQLite 六种运行时
+ * card- support WordPress / Node. js / Python / Go / PHP / SQLite run
  */
 @Composable
 private fun StorageCard(
@@ -1139,14 +1139,14 @@ private fun StorageCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 总占用
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = Strings.depTotalStorage,
+                    text = AppStringsProvider.current().depTotalStorage,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -1160,7 +1160,7 @@ private fun StorageCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 存储条 — 4 段
+            // 4
             if (totalSize > 0) {
                 val segments = listOf(
                     wpCacheSize to wpColor,
@@ -1188,7 +1188,7 @@ private fun StorageCard(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 图例 — 三行两列
+                // Note
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1218,7 +1218,7 @@ private fun StorageCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 清理按钮组 — 第一行 WordPress & Node.js & PHP
+            // button- WordPress & Node. js & PHP
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -1231,7 +1231,7 @@ private fun StorageCard(
                     enabled = wpCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearWpCache,
+                        AppStringsProvider.current().depClearWpCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1244,7 +1244,7 @@ private fun StorageCard(
                     enabled = nodeCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearNodeCache,
+                        AppStringsProvider.current().depClearNodeCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1257,7 +1257,7 @@ private fun StorageCard(
                     enabled = phpCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearPhpCache,
+                        AppStringsProvider.current().depClearPhpCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1266,7 +1266,7 @@ private fun StorageCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // 清理按钮组 — 第二行 Python & Go & SQLite
+            // button- Python & Go & SQLite
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -1279,7 +1279,7 @@ private fun StorageCard(
                     enabled = pythonCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearPythonCache,
+                        AppStringsProvider.current().depClearPythonCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1292,7 +1292,7 @@ private fun StorageCard(
                     enabled = goCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearGoCache,
+                        AppStringsProvider.current().depClearGoCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1305,7 +1305,7 @@ private fun StorageCard(
                     enabled = sqliteCacheSize > 0
                 ) {
                     Text(
-                        Strings.depClearSqliteCache,
+                        AppStringsProvider.current().depClearSqliteCache,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
@@ -1326,7 +1326,7 @@ private fun StorageCard(
             ) {
                 Icon(Icons.Outlined.DeleteSweep, null, Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.depClearAll)
+                Text(AppStringsProvider.current().depClearAll)
             }
         }
     }
@@ -1350,7 +1350,7 @@ private fun StorageLegendItem(label: String, size: Long, color: Color) {
     }
 }
 
-// ==================== 工具函数 ====================
+// Note
 
 private fun formatSize(bytes: Long): String {
     return when {

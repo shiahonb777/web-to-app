@@ -14,20 +14,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import org.koin.compose.koinInject
 
 /**
- * Extension module selector卡片
+ * Extension module selectorcard
  * 
- * 用于在创建应用页面中选择要启用的扩展模块
+ * forcreateapp select module
  */
 @Composable
 fun ExtensionModuleSelectorCard(
@@ -35,8 +35,7 @@ fun ExtensionModuleSelectorCard(
     onSelectionChange: (Set<String>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val modules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
@@ -50,7 +49,7 @@ fun ExtensionModuleSelectorCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -74,13 +73,13 @@ fun ExtensionModuleSelectorCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.extensionModuleTitle,
+                            AppStringsProvider.current().extensionModuleTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            if (enabledModules.isEmpty()) Strings.noModuleSelected
-                            else Strings.modulesSelected.format(enabledModules.size),
+                            if (enabledModules.isEmpty()) AppStringsProvider.current().noModuleSelected
+                            else AppStringsProvider.current().modulesSelected.format(enabledModules.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -89,18 +88,18 @@ fun ExtensionModuleSelectorCard(
                 
                 Row {
                     IconButton(onClick = { showModuleDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = Strings.addModule)
+                        Icon(Icons.Default.Add, contentDescription = AppStringsProvider.current().addModule)
                     }
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (expanded) Strings.collapse else Strings.expand
+                            contentDescription = if (expanded) AppStringsProvider.current().collapse else AppStringsProvider.current().expand
                         )
                     }
                 }
             }
             
-            // 已选模块列表
+            // modulelist
             if (expanded && enabledModules.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider()
@@ -142,7 +141,7 @@ fun ExtensionModuleSelectorCard(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = Strings.cdRemove,
+                                contentDescription = AppStringsProvider.current().cdRemove,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -150,7 +149,7 @@ fun ExtensionModuleSelectorCard(
                 }
             }
             
-            // 快速提示
+            // hint
             if (enabledModules.isEmpty() && expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
@@ -169,7 +168,7 @@ fun ExtensionModuleSelectorCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            Strings.extensionModuleHint,
+                            AppStringsProvider.current().extensionModuleHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -179,7 +178,7 @@ fun ExtensionModuleSelectorCard(
         }
     }
     
-    // Module选择对话框
+    // Moduleselectdialog
     if (showModuleDialog) {
         ModuleSelectionDialog(
             allModules = allModules,
@@ -191,7 +190,7 @@ fun ExtensionModuleSelectorCard(
 }
 
 /**
- * 模块选择对话框
+ * moduleselectdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -204,7 +203,7 @@ fun ModuleSelectionDialog(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     
-    // 直接计算过滤后的模块列表，确保列表更新时 UI 正确响应
+    // modulelist, ensurelistupdate UI
     val filteredModules = allModules.filter { module ->
         val matchesSearch = searchQuery.isBlank() ||
             module.name.contains(searchQuery, ignoreCase = true) ||
@@ -215,15 +214,15 @@ fun ModuleSelectionDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectExtensionModules) },
+        title = { Text(AppStringsProvider.current().selectExtensionModules) },
         text = {
             Column {
-                // Search框
+                // Search
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(Strings.searchModulesPlaceholder) },
+                    placeholder = { Text(AppStringsProvider.current().searchModulesPlaceholder) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
                     shape = RoundedCornerShape(8.dp)
@@ -231,7 +230,7 @@ fun ModuleSelectionDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 分类筛选
+                // filter
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -239,7 +238,7 @@ fun ModuleSelectionDialog(
                     PremiumFilterChip(
                         selected = selectedCategory == null,
                         onClick = { selectedCategory = null },
-                        label = { Text(Strings.filterAll, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(AppStringsProvider.current().filterAll, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                     PremiumFilterChip(
@@ -248,7 +247,7 @@ fun ModuleSelectionDialog(
                             selectedCategory = if (selectedCategory == ModuleCategory.CONTENT_FILTER) null 
                                               else ModuleCategory.CONTENT_FILTER 
                         },
-                        label = { Text(Strings.filterContent, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(AppStringsProvider.current().filterContent, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                     PremiumFilterChip(
@@ -257,7 +256,7 @@ fun ModuleSelectionDialog(
                             selectedCategory = if (selectedCategory == ModuleCategory.STYLE_MODIFIER) null 
                                               else ModuleCategory.STYLE_MODIFIER 
                         },
-                        label = { Text(Strings.filterStyle, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(AppStringsProvider.current().filterStyle, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                     PremiumFilterChip(
@@ -266,14 +265,14 @@ fun ModuleSelectionDialog(
                             selectedCategory = if (selectedCategory == ModuleCategory.FUNCTION_ENHANCE) null 
                                               else ModuleCategory.FUNCTION_ENHANCE 
                         },
-                        label = { Text(Strings.filterFunction, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(AppStringsProvider.current().filterFunction, style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.height(28.dp)
                     )
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Module列表
+                // Modulelist
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 400.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -318,7 +317,7 @@ fun ModuleSelectionDialog(
                                                 color = MaterialTheme.colorScheme.secondaryContainer
                                             ) {
                                                 Text(
-                                                    Strings.builtIn,
+                                                    AppStringsProvider.current().builtIn,
                                                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
                                                     style = MaterialTheme.typography.labelSmall
                                                 )
@@ -358,7 +357,7 @@ fun ModuleSelectionDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    Strings.noMatchingModules,
+                                    AppStringsProvider.current().noMatchingModules,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -370,19 +369,19 @@ fun ModuleSelectionDialog(
         },
         confirmButton = {
             PremiumButton(onClick = onDismiss) {
-                Text(Strings.done)
+                Text(AppStringsProvider.current().done)
             }
         },
         dismissButton = {
             TextButton(onClick = { onSelectionChange(emptySet()) }) {
-                Text(Strings.clearSelection)
+                Text(AppStringsProvider.current().clearSelection)
             }
         }
     )
 }
 
 /**
- * 简化版模块选择器 - 用于快速选择
+ * moduleselect- for select
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -391,16 +390,15 @@ fun QuickModuleSelector(
     onSelectionChange: (Set<String>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
-    // 只显示常用的内置模块
+    // display module
     val quickModules = builtInModules.take(5)
     
     Column(modifier = modifier) {
         Text(
-            Strings.quickEnable,
+            AppStringsProvider.current().quickEnable,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

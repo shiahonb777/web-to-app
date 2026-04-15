@@ -5,48 +5,47 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 /**
- * Chrome webRequest API 原生桥接
+ * Chrome webRequest API.
  *
- * 由于 shouldInterceptRequest 在后台线程运行，无法同步回调 JS，
- * 本类将扩展注册的 URL filter 预解析为原生数据结构，
- * 在 shouldInterceptRequest 中直接匹配，实现请求拦截。
+ * shouldInterceptRequest in after JS.
+ * extension URL filter as .
+ * in shouldInterceptRequest in requestintercept.
  *
- * 支持:
- * - chrome.webRequest.onBeforeRequest 的 filter.urls 注册
- * - 请求拦截 (cancel=true)
- * - 按 resourceType 过滤
- * - 异步通知 JS 侧事件
+ * - chrome.webRequest.onBeforeRequest filter.urls.
+ * - requestintercept (cancel=true)
+ * - by resourceType.
+ * - asynchronously JS.
  */
 object WebRequestBridge {
 
     private const val TAG = "WebRequestBridge"
 
     /**
-     * 单条 webRequest 规则
+     * single webRequest rules.
      */
     data class WebRequestRule(
         val extensionId: String,
-        val urlPatterns: List<Pattern>,      // 编译后的 URL 正则
-        val resourceTypes: Set<String>,       // "script", "image", "stylesheet", etc. 空=全部
-        val blocking: Boolean                 // 是否阻断请求
+        val urlPatterns: List<Pattern>,      // URL.
+        val resourceTypes: Set<String>,       // script image stylesheet etc..
+        val blocking: Boolean                 // Note.
     )
 
-    // 每个扩展的 webRequest 规则列表 (extId -> rules)
+    // extension webRequest rules (extId -> rules)
     private val rules = ConcurrentHashMap<String, MutableList<WebRequestRule>>()
 
-    // 已拦截请求计数
+    // interceptrequest.
     @Volatile
     var blockedCount: Long = 0
         private set
 
     /**
-     * 注册 webRequest filter 规则。
-     * 由 JS 侧 chrome.webRequest.onBeforeRequest.addListener() 通过 native bridge 调用。
+     * webRequest filter rules.
+     * JS chrome.webRequest.onBeforeRequest.addListener() native bridge use .
      *
-     * @param extensionId 扩展 ID
-     * @param urlPatternsJson JSON URL pattern 数组字符串
-     * @param resourceTypesJson JSON 资源类型数组字符串
-     * @param blocking 是否为 blocking 模式
+     * @param extensionId extension ID.
+     * @param urlPatternsJson JSON URL pattern.
+     * @param resourceTypesJson JSON resource type.
+     * @param blocking is as blocking.
      */
     fun registerFilter(
         extensionId: String,
@@ -87,7 +86,7 @@ object WebRequestBridge {
     }
 
     /**
-     * 移除指定扩展的所有 webRequest 规则。
+     * extension webRequest rules.
      */
     fun unregisterAll(extensionId: String) {
         rules.remove(extensionId)
@@ -95,12 +94,12 @@ object WebRequestBridge {
     }
 
     /**
-     * 检查 URL 是否应被拦截。
-     * 在 shouldInterceptRequest 后台线程中调用，必须线程安全。
+     * Check URL is intercept.
+     * in shouldInterceptRequest after in use thread-safe.
      *
-     * @param url 请求 URL
-     * @param resourceType 资源类型 (script/image/stylesheet/xmlhttprequest/other)
-     * @return true 如果应阻断请求
+     * @param url request URL.
+     * @param resourceType resource type (script/image/stylesheet/xmlhttprequest/other)
+     * @return true request.
      */
     fun shouldBlock(url: String, resourceType: String = ""): Boolean {
         if (rules.isEmpty()) return false
@@ -109,12 +108,12 @@ object WebRequestBridge {
             for (rule in ruleList) {
                 if (!rule.blocking) continue
 
-                // 检查 resourceType 过滤
+                // Check resourceType.
                 if (rule.resourceTypes.isNotEmpty() && resourceType.isNotEmpty()) {
                     if (resourceType !in rule.resourceTypes) continue
                 }
 
-                // 检查 URL 匹配
+                // Check URL.
                 for (pattern in rule.urlPatterns) {
                     if (pattern.matcher(url).matches()) {
                         blockedCount++
@@ -128,22 +127,22 @@ object WebRequestBridge {
     }
 
     /**
-     * 获取所有已注册规则数量。
+     * Get rules .
      */
     fun getRuleCount(): Int {
         return rules.values.sumOf { it.size }
     }
 
     /**
-     * 清除所有规则和计数器。
+     * rules .
      */
     fun clear() {
         rules.clear()
         blockedCount = 0
     }
 
-    // 将 Chrome 扩展 URL match pattern 编译为 Java 正则。
-    // 支持: <all_urls>, scheme wildcard, domain wildcard, path wildcard
+    // Chrome extension URL match pattern as Java .
+    // Supports: <all_urls>, scheme wildcard, domain wildcard, path wildcard.
     private fun compileUrlPattern(pattern: String): Pattern? {
         return try {
             if (pattern == "<all_urls>") {
@@ -178,7 +177,7 @@ object WebRequestBridge {
     }
 
     /**
-     * 简易 JSON 数组解析。
+     * JSON .
      */
     private fun parseJsonArray(json: String): List<String> {
         val trimmed = json.trim()

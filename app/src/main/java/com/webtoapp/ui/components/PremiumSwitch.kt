@@ -12,13 +12,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 
 /**
- * MD3 Switch + 弹簧物理引擎 + 按压拉伸
+ * MD3 Switch + +
  *
- * 视觉上完全是 Material Design 3 Switch，
- * 交互时增加：
- *   - 按压横向拉伸 + 纵向压缩（液态挤压感）
- *   - 松手弹簧过冲回弹
- *   - 触觉反馈
+ * Material Design 3 Switch,
+ * Note
+ * Note
+ * Note
+ * Note
  */
 @Composable
 fun PremiumSwitch(
@@ -31,8 +31,8 @@ fun PremiumSwitch(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    // ── 弹簧物理：按压拉伸 ──
-    // 按下时横向微扩 + 纵向微缩 → 液态挤压感
+    // Note
+    // Note
     val stretchX by animateFloatAsState(
         targetValue = if (isPressed && enabled) 1.08f else 1f,
         animationSpec = spring(
@@ -53,7 +53,7 @@ fun PremiumSwitch(
     Switch(
         checked = checked,
         onCheckedChange = { newValue ->
-            // 触觉反馈
+            // Note
             if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                 view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             }

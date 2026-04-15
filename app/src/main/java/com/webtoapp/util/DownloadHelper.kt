@@ -9,7 +9,7 @@ import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.widget.Toast
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,13 +17,13 @@ import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 
 /**
- * 下载处理工具类
+ * Download helper
  */
 object DownloadHelper {
     
     private const val TAG = "DownloadHelper"
     
-    // Download重试配置
+    // Download
     private const val MAX_RETRY_COUNT = 3
     private const val RETRY_DELAY_MS = 1000L
     private val DOWNLOAD_ALLOWED_SCHEMES = setOf("http", "https")
@@ -33,47 +33,47 @@ object DownloadHelper {
     private val QUOTED_FILENAME_REGEX = Regex("""filename\s*=\s*"([^"]+)""""", RegexOption.IGNORE_CASE)
     private val UNQUOTED_FILENAME_REGEX = Regex("""filename\s*=\s*([^;\s]+)""", RegexOption.IGNORE_CASE)
     
-    // 记录下载重试次数
+    // Note.
     private val retryCountMap = mutableMapOf<String, Int>()
     
     /**
-     * 从 Content-Disposition 和 URL 中智能解析文件名
-     * Priority:Content-Disposition > URL路径 > 系统猜测
+     * Content-Disposition URL
+     * Priority:Content-Disposition > URL >
      */
     fun parseFileName(url: String, contentDisposition: String?, mimeType: String?): String {
         var fileName: String? = null
         
-        // 1. 优先从 Content-Disposition 解析
+        // 1. Content-Disposition
         if (!contentDisposition.isNullOrBlank()) {
             fileName = parseContentDisposition(contentDisposition)
         }
         
-        // 2. 从 URL 路径解析
+        // 2. URL
         if (fileName.isNullOrBlank()) {
             fileName = parseFileNameFromUrl(url)
         }
         
-        // 3. 降级到系统方法
+        // 3.
         if (fileName.isNullOrBlank()) {
             fileName = URLUtil.guessFileName(url, contentDisposition, mimeType) ?: "download"
         }
         
-        // 4. 确保有正确的扩展名
+        // 4.
         fileName = ensureExtension(fileName, mimeType)
         
         return fileName
     }
     
     /**
-     * 解析 Content-Disposition 头获取文件名
-     * 支持多种格式：
+     * Content-Disposition
+     * ：
      * - filename="xxx.pdf"
      * - filename=xxx.pdf
      * - filename*=UTF-8''xxx.pdf (RFC 5987)
      * - filename*=utf-8'zh-CN'xxx.pdf
      */
     private fun parseContentDisposition(contentDisposition: String): String? {
-        // 尝试 RFC 5987 格式 (filename*=)
+        // RFC 5987 (filename*=)
         RFC5987_REGEX.find(contentDisposition)?.let { match ->
             val encoding = match.groupValues[1].ifBlank { "UTF-8" }
             val encodedName = match.groupValues[3]
@@ -81,12 +81,12 @@ object DownloadHelper {
                 try {
                     return URLDecoder.decode(encodedName, encoding)
                 } catch (e: UnsupportedEncodingException) {
-                    // 忽略，继续尝试其他方式
+                    // ，
                 }
             }
         }
         
-        // 尝试带引号的 filename="xxx"
+        // filename="xxx"
         QUOTED_FILENAME_REGEX.find(contentDisposition)?.let { match ->
             val name = match.groupValues[1]
             if (name.isNotBlank()) {
@@ -94,7 +94,7 @@ object DownloadHelper {
             }
         }
         
-        // 尝试不带引号的 filename=xxx
+        // filename=xxx
         UNQUOTED_FILENAME_REGEX.find(contentDisposition)?.let { match ->
             val name = match.groupValues[1]
             if (name.isNotBlank()) {
@@ -106,67 +106,67 @@ object DownloadHelper {
     }
     
     /**
-     * 解码文件名（处理 URL 编码和特殊字符）
+     * （ URL ）
      */
     private fun decodeFileName(name: String): String {
         var decoded = name
         try {
-            // 尝试 URL 解码
+            // URL
             if (name.contains("%")) {
                 decoded = URLDecoder.decode(name, "UTF-8")
             }
         } catch (e: Exception) {
-            // 忽略解码错误
+            // Note.
         }
-        // 移除可能的引号
+        // Note.
         return decoded.trim().removeSurrounding("\"").removeSurrounding("'")
     }
     
     /**
-     * 从 URL 路径中解析文件名
+     * URL
      */
     private fun parseFileNameFromUrl(url: String): String? {
         try {
             val uri = Uri.parse(url)
             val path = uri.path ?: return null
             
-            // Get路径最后一段
+            // Get
             val lastSegment = path.substringAfterLast('/')
             if (lastSegment.isBlank()) return null
             
-            // Check是否像一个有效的文件名（包含扩展名）
+            // Check（）
             if (lastSegment.contains('.') && !lastSegment.startsWith('.')) {
                 val decoded = try {
                     URLDecoder.decode(lastSegment, "UTF-8")
                 } catch (e: Exception) {
                     lastSegment
                 }
-                // Filter掉明显不是文件名的情况
+                // Filter
                 if (decoded.length <= 255 && !decoded.contains('?') && !decoded.contains('&')) {
                     return decoded
                 }
             }
         } catch (e: Exception) {
-            // 忽略解析错误
+            // Note.
         }
         return null
     }
     
     /**
-     * 确保文件名有正确的扩展名
+     * Note.
      */
     private fun ensureExtension(fileName: String, mimeType: String?): String {
-        // 如果已经有扩展名，直接返回
+        // ，
         val lastDot = fileName.lastIndexOf('.')
         if (lastDot > 0 && lastDot < fileName.length - 1) {
             val ext = fileName.substring(lastDot + 1).lowercase()
-            // Check是否是有效扩展名（不是 bin 这种通用的）
+            // Check（ bin ）
             if (ext.length in 2..5 && ext != "bin") {
                 return fileName
             }
         }
         
-        // 尝试从 MIME 类型获取扩展名
+        // MIME
         if (!mimeType.isNullOrBlank()) {
             val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
             if (!ext.isNullOrBlank()) {
@@ -179,26 +179,26 @@ object DownloadHelper {
     }
     
     /**
-     * 下载方式
+     * Note.
      */
     enum class DownloadMethod {
-        DOWNLOAD_MANAGER,  // 使用系统下载管理器
-        BROWSER           // 跳转浏览器下载
+        DOWNLOAD_MANAGER,  // Note.
+        BROWSER           // Note.
     }
     
     /**
-     * 处理下载请求
-     * @param context 上下文
-     * @param url 下载链接
+     * Note.
+     * @param context parameter
+     * @param url parameter
      * @param userAgent User-Agent
-     * @param contentDisposition Content-Disposition 头
-     * @param mimeType MIME类型
-     * @param contentLength 文件大小
-     * @param method 下载方式
-     * @param showEnhancedNotification 是否显示增强通知（带进度和打开按钮）
-     * @param saveToGallery 是否将媒体文件保存到相册（默认 true）
-     * @param scope 协程作用域（保存到相册时需要）
-     * @param onBlobDownload Blob URL 下载回调，用于通过 WebView 执行 JS 处理
+     * @param contentDisposition parameter
+     * @param mimeType parameter
+     * @param contentLength parameter
+     * @param method parameter
+     * @param showEnhancedNotification parameter
+     * @param saveToGallery parameter
+     * @param scope parameter
+     * @param onBlobDownload parameter
      */
     fun handleDownload(
         context: Context,
@@ -213,27 +213,27 @@ object DownloadHelper {
         scope: CoroutineScope? = null,
         onBlobDownload: ((blobUrl: String, filename: String) -> Unit)? = null
     ) {
-        // Check是否为 Blob URL（blob: 协议无法通过 DownloadManager 下载）
+        // Check Blob URL（blob: DownloadManager ）
         if (url.startsWith("blob:")) {
             val filename = parseFileName(url, contentDisposition, mimeType)
             if (onBlobDownload != null) {
-                Toast.makeText(context, Strings.blobDownloadProcessing, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadProcessing, Toast.LENGTH_SHORT).show()
                 onBlobDownload(url, filename)
             } else {
-                // 没有回调，显示提示
-                Toast.makeText(context, Strings.blobDownloadFailed, Toast.LENGTH_SHORT).show()
+                // ，
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadFailed, Toast.LENGTH_SHORT).show()
             }
             return
         }
         
-        // Check是否为 Data URL
+        // Check Data URL
         if (url.startsWith("data:")) {
             val filename = parseFileName(url, contentDisposition, mimeType)
             if (onBlobDownload != null) {
-                Toast.makeText(context, Strings.blobDownloadProcessing, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadProcessing, Toast.LENGTH_SHORT).show()
                 onBlobDownload(url, filename)
             } else {
-                Toast.makeText(context, Strings.blobDownloadFailed, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().blobDownloadFailed, Toast.LENGTH_SHORT).show()
             }
             return
         }
@@ -241,13 +241,13 @@ object DownloadHelper {
         val safeUrl = sanitizeDownloadUrl(url)
         if (safeUrl.isEmpty()) {
             AppLogger.w(TAG, "Blocked unsafe download URL: $url")
-            Toast.makeText(context, Strings.downloadFailed, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadFailed, Toast.LENGTH_SHORT).show()
             return
         }
         
         val fileName = parseFileName(safeUrl, contentDisposition, mimeType)
         
-        // Check是否为媒体文件，如果是且启用了保存到相册，则使用 MediaSaver
+        // Check，， MediaSaver
         if (saveToGallery && MediaSaver.isMediaFile(mimeType, fileName) && scope != null) {
             saveMediaToGallery(context, safeUrl, fileName, mimeType, scope)
             return
@@ -264,7 +264,7 @@ object DownloadHelper {
     }
     
     /**
-     * 保存媒体文件到相册
+     * Note.
      */
     private fun saveMediaToGallery(
         context: Context,
@@ -274,19 +274,13 @@ object DownloadHelper {
         scope: CoroutineScope
     ) {
         val mediaType = MediaSaver.getMediaType(mimeType) ?: MediaSaver.getMediaTypeByExtension(fileName)
-        val typeText = when (mediaType) {
-            MediaSaver.MediaType.IMAGE -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "图片" else "image"
-            MediaSaver.MediaType.VIDEO -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "视频" else "video"
-            else -> if (Strings.currentLanguage.value == com.webtoapp.core.i18n.AppLanguage.CHINESE) "文件" else "file"
-        }
-        
         val notificationManager = DownloadNotificationManager.getInstance(context)
         val progressNotificationId = notificationManager.showIndeterminateProgress(fileName)
         
         val savingMsg = when (mediaType) {
-            MediaSaver.MediaType.IMAGE -> Strings.savingImageToGallery
-            MediaSaver.MediaType.VIDEO -> Strings.savingVideoToGallery
-            else -> Strings.savingToGallery
+            MediaSaver.MediaType.IMAGE -> AppStringsProvider.current().savingImageToGallery
+            MediaSaver.MediaType.VIDEO -> AppStringsProvider.current().savingVideoToGallery
+            else -> AppStringsProvider.current().savingToGallery
         }
         Toast.makeText(context, savingMsg, Toast.LENGTH_SHORT).show()
         
@@ -296,13 +290,13 @@ object DownloadHelper {
             when (result) {
                 is MediaSaver.SaveResult.Success -> {
                     val savedMsg = when (mediaType) {
-                        MediaSaver.MediaType.IMAGE -> Strings.imageSavedToGallery
-                        MediaSaver.MediaType.VIDEO -> Strings.videoSavedToGallery
-                        else -> Strings.imageSavedToGallery
+                        MediaSaver.MediaType.IMAGE -> AppStringsProvider.current().imageSavedToGallery
+                        MediaSaver.MediaType.VIDEO -> AppStringsProvider.current().videoSavedToGallery
+                        else -> AppStringsProvider.current().imageSavedToGallery
                     }
                     Toast.makeText(context, savedMsg, Toast.LENGTH_SHORT).show()
                     
-                    // Show完成通知
+                    // Show
                     notificationManager.showMediaSaveComplete(
                         fileName = fileName,
                         uri = result.uri,
@@ -312,7 +306,7 @@ object DownloadHelper {
                     )
                 }
                 is MediaSaver.SaveResult.Error -> {
-                    Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStringsProvider.current().saveFailedWithReason.replace("%s", result.message), Toast.LENGTH_SHORT).show()
                     notificationManager.showSaveFailed(fileName, result.message, progressNotificationId)
                 }
             }
@@ -320,7 +314,7 @@ object DownloadHelper {
     }
     
     /**
-     * 使用系统下载管理器下载（带重试机制）
+     * （）
      */
     fun downloadWithManager(
         context: Context,
@@ -334,12 +328,12 @@ object DownloadHelper {
         val safeUrl = sanitizeDownloadUrl(url)
         if (safeUrl.isEmpty()) {
             AppLogger.w(TAG, "Blocked unsafe download URL in downloadWithManager: $url")
-            Toast.makeText(context, Strings.downloadFailed, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadFailed, Toast.LENGTH_SHORT).show()
             return
         }
 
         try {
-            // 使用智能文件名解析
+            // Note.
             val fileName = parseFileName(safeUrl, contentDisposition, mimeType)
             val originHeader = buildOriginHeader(safeUrl)
             
@@ -362,9 +356,9 @@ object DownloadHelper {
                     addRequestHeader("Referer", "$origin/")
                 }
                 
-                // Set通知栏显示
+                // Set
                 if (showEnhancedNotification) {
-                    // 使用增强通知时，隐藏系统默认通知，由我们自己管理
+                    // ，，
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
                 } else {
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
@@ -372,16 +366,16 @@ object DownloadHelper {
                 setTitle(fileName)
                 setDescription("正在下载...")
                 
-                // Set保存位置到Download文件夹
+                // SetDownload
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
                 
-                // Allow在移动网络和WiFi下下载
+                // AllowWiFi
                 setAllowedNetworkTypes(
                     DownloadManager.Request.NETWORK_WIFI or 
                     DownloadManager.Request.NETWORK_MOBILE
                 )
                 
-                // SetMIME类型
+                // SetMIME
                 if (mimeType.isNotBlank()) {
                     setMimeType(mimeType)
                 }
@@ -390,32 +384,32 @@ object DownloadHelper {
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val downloadId = downloadManager.enqueue(request)
             
-            // 使用增强通知管理器跟踪下载
+            // Note.
             if (showEnhancedNotification) {
                 val notificationManager = DownloadNotificationManager.getInstance(context)
                 notificationManager.trackDownload(downloadId, fileName, mimeType)
             }
             
-            // 清除重试计数
+            // Note.
             retryCountMap.remove(safeUrl)
             
-            Toast.makeText(context, Strings.startDownload.replace("%s", fileName), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().startDownload.replace("%s", fileName), Toast.LENGTH_SHORT).show()
             
         } catch (e: Exception) {
             AppLogger.e(TAG, "Operation failed", e)
             
-            // 重试逻辑
+            // Note.
             if (retryOnFailure) {
                 val currentRetry = retryCountMap[safeUrl] ?: 0
                 if (currentRetry < MAX_RETRY_COUNT) {
                     retryCountMap[safeUrl] = currentRetry + 1
                     Toast.makeText(
                         context, 
-                        "${Strings.downloadFailed}, ${Strings.retry} (${currentRetry + 1}/$MAX_RETRY_COUNT)...", 
+                        "${AppStringsProvider.current().downloadFailed}, ${AppStringsProvider.current().retry} (${currentRetry + 1}/$MAX_RETRY_COUNT)...", 
                         Toast.LENGTH_SHORT
                     ).show()
                     
-                    // 延迟重试
+                    // Note.
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         downloadWithManager(context, safeUrl, userAgent, contentDisposition, mimeType, showEnhancedNotification, true)
                     }, RETRY_DELAY_MS * (currentRetry + 1))
@@ -423,22 +417,22 @@ object DownloadHelper {
                 }
             }
             
-            // 重试次数用尽，清除计数并降级到浏览器
+            // ，
             retryCountMap.remove(safeUrl)
-            Toast.makeText(context, Strings.downloadFailedTryBrowser, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().downloadFailedTryBrowser, Toast.LENGTH_SHORT).show()
             openInBrowser(context, safeUrl)
         }
     }
     
     /**
-     * 跳转到浏览器下载
+     * Note.
      */
     fun openInBrowser(context: Context, url: String) {
         try {
             context.openUrl(url)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Operation failed", e)
-            Toast.makeText(context, Strings.cannotOpenBrowser, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStringsProvider.current().cannotOpenBrowser, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -461,16 +455,16 @@ object DownloadHelper {
     }
     
     /**
-     * 从URL猜测文件扩展名
+     * URL
      */
     fun guessExtension(url: String, mimeType: String?): String {
-        // 尝试从MIME类型获取
+        // MIME
         mimeType?.let {
             val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(it)
             if (!ext.isNullOrBlank()) return ".$ext"
         }
         
-        // 尝试从URL获取
+        // URL
         val path = Uri.parse(url).path ?: return ""
         val lastDot = path.lastIndexOf('.')
         if (lastDot >= 0 && lastDot < path.length - 1) {

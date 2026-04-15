@@ -36,15 +36,15 @@ import androidx.core.content.FileProvider
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.QrCodeUtils
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.io.FileOutputStream
 
-// shareModuleFile() 文件名清理
+// shareModuleFile( ) file
 private val SAFE_MODULE_FILENAME_REGEX = Regex("[^a-zA-Z0-9\u4e00-\u9fa5_-]")
 
 /**
- * 二维码海报分享对话框
+ * dialog
  */
 @Composable
 fun QrCodeShareDialog(
@@ -54,15 +54,15 @@ fun QrCodeShareDialog(
 ) {
     val context = LocalContext.current
     
-    // Check是否可以生成二维码
+    // Check
     val canGenerate = QrCodeUtils.canGenerateQrCode(shareCode)
     val contentSize = QrCodeUtils.getContentSize(shareCode)
     
-    // Get当前语言的海报文本
-    val scanText = Strings.scanToImportModule
-    val subtitleText = Strings.extensionModuleSubtitle
+    // Getcurrent text
+    val scanText = AppStringsProvider.current().scanToImportModule
+    val subtitleText = AppStringsProvider.current().extensionModuleSubtitle
     
-    // Generate海报
+    // Generate
     val posterBitmap = remember(shareCode, module, scanText, subtitleText) {
         if (canGenerate) {
             generatePoster(module, shareCode, scanText, subtitleText)
@@ -91,21 +91,21 @@ fun QrCodeShareDialog(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 标题栏
+                // Note
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = Strings.shareModule,
+                        text = AppStringsProvider.current().shareModule,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = Strings.close
+                            contentDescription = AppStringsProvider.current().close
                         )
                     }
                 }
@@ -113,7 +113,7 @@ fun QrCodeShareDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 if (canGenerate && posterBitmap != null) {
-                    // 海报预览
+                    // preview
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -123,7 +123,7 @@ fun QrCodeShareDialog(
                     ) {
                         Image(
                             bitmap = posterBitmap.asImageBitmap(),
-                            contentDescription = Strings.sharePoster,
+                            contentDescription = AppStringsProvider.current().sharePoster,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp)
@@ -133,12 +133,12 @@ fun QrCodeShareDialog(
                     
                     Spacer(modifier = Modifier.height(20.dp))
                     
-                    // 操作按钮
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Save海报
+                        // Save
                         PremiumOutlinedButton(
                             onClick = {
                                 savePosterToGallery(context, posterBitmap, module.name)
@@ -152,10 +152,10 @@ fun QrCodeShareDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.savePoster)
+                            Text(AppStringsProvider.current().savePoster)
                         }
                         
-                        // 分享海报
+                        // Note
                         PremiumButton(
                             onClick = {
                                 sharePoster(context, posterBitmap, module.name)
@@ -172,21 +172,21 @@ fun QrCodeShareDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.sharePosterBtn)
+                            Text(AppStringsProvider.current().sharePosterBtn)
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 提示文字
+                    // hint
                     Text(
-                        text = Strings.scanQrToImport,
+                        text = AppStringsProvider.current().scanQrToImport,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
                     )
                 } else {
-                    // 分享码太长，无法生成二维码，提供文件分享替代方案
+                    // , , file
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -203,7 +203,7 @@ fun QrCodeShareDialog(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            text = Strings.moduleTooLargeTitle,
+                            text = AppStringsProvider.current().moduleTooLargeTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -211,7 +211,7 @@ fun QrCodeShareDialog(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            text = Strings.moduleTooLargeDesc.format(contentSize),
+                            text = AppStringsProvider.current().moduleTooLargeDesc.format(contentSize),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -219,7 +219,7 @@ fun QrCodeShareDialog(
                         
                         Spacer(modifier = Modifier.height(20.dp))
                         
-                        // File分享按钮
+                        // File button
                         PremiumButton(
                             onClick = {
                                 shareModuleFile(context, module)
@@ -233,13 +233,13 @@ fun QrCodeShareDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.shareModuleFile)
+                            Text(AppStringsProvider.current().shareModuleFile)
                         }
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         Text(
-                            text = Strings.shareFileHint,
+                            text = AppStringsProvider.current().shareFileHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
@@ -252,23 +252,23 @@ fun QrCodeShareDialog(
 }
 
 /**
- * 生成分享海报
+ * Note
  */
 private fun generatePoster(module: ExtensionModule, shareCode: String, scanText: String, subtitleText: String): Bitmap? {
     val qrCodeBitmap = QrCodeUtils.generateQrCode(shareCode, 400) ?: return null
     
-    // 海报尺寸
+    // Note
     val posterWidth = 720
     val posterHeight = 1080
     
     val poster = Bitmap.createBitmap(posterWidth, posterHeight, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(poster)
     
-    // Get分类颜色
+    // Get color
     val categoryColor = getCategoryColor(module.category)
     val categoryColorLight = adjustAlpha(categoryColor, 0.15f)
     
-    // 绘制渐变背景
+    // gradient
     val bgGradient = LinearGradient(
         0f, 0f, posterWidth.toFloat(), posterHeight.toFloat(),
         intArrayOf(
@@ -284,7 +284,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
     }
     canvas.drawRect(0f, 0f, posterWidth.toFloat(), posterHeight.toFloat(), bgPaint)
     
-    // 顶部装饰条
+    // top
     val headerPaint = Paint().apply {
         shader = LinearGradient(
             0f, 0f, posterWidth.toFloat(), 0f,
@@ -295,7 +295,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
     }
     canvas.drawRect(0f, 0f, posterWidth.toFloat(), 8f, headerPaint)
     
-    // 分类图标和名称区域
+    // icon area
     val categoryY = 60f
     val categoryPaint = Paint().apply {
         isAntiAlias = true
@@ -304,7 +304,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
         typeface = Typeface.DEFAULT_BOLD
     }
     
-    // 分类背景圆角矩形
+    // Note
     val categoryBgPaint = Paint().apply {
         isAntiAlias = true
         color = categoryColorLight
@@ -319,11 +319,11 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
     )
     canvas.drawRoundRect(categoryRect, 32f, 32f, categoryBgPaint)
     
-    // 绘制分类文字
+    // Note
     categoryPaint.textAlign = Paint.Align.CENTER
     canvas.drawText(categoryText, posterWidth / 2f, categoryY + 46f, categoryPaint)
     
-    // Module名称
+    // Module
     val namePaint = Paint().apply {
         isAntiAlias = true
         color = Color.parseColor("#1a1a1a")
@@ -332,7 +332,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
         textAlign = Paint.Align.CENTER
     }
     
-    // Handle长名称换行
+    // Handle
     val nameLines = wrapText(module.name, namePaint, posterWidth - 80f)
     var nameY = 180f
     for (line in nameLines) {
@@ -340,7 +340,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
         nameY += 68f
     }
     
-    // Module描述
+    // Module
     if (module.description.isNotBlank()) {
         val descPaint = Paint().apply {
             isAntiAlias = true
@@ -357,12 +357,12 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
         }
     }
     
-    // 二维码区域
+    // area
     val qrSize = 320
     val qrX = (posterWidth - qrSize) / 2
     val qrY = 420
     
-    // 二维码背景卡片
+    // card
     val cardPaint = Paint().apply {
         isAntiAlias = true
         color = Color.WHITE
@@ -374,10 +374,10 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
     )
     canvas.drawRoundRect(cardRect, 24f, 24f, cardPaint)
     
-    // 绘制二维码
+    // Note
     canvas.drawBitmap(qrCodeBitmap, qrX.toFloat(), qrY.toFloat(), null)
     
-    // 扫码提示
+    // hint
     val scanPaint = Paint().apply {
         isAntiAlias = true
         color = categoryColor
@@ -387,7 +387,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
     }
     canvas.drawText(scanText, posterWidth / 2f, qrY + qrSize + 80f, scanPaint)
     
-    // 标签区域
+    // labelarea
     if (module.tags.isNotEmpty()) {
         val tagPaint = Paint().apply {
             isAntiAlias = true
@@ -412,14 +412,14 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
             val tagWidth = tagPaint.measureText(tagText) + tagPadding * 2
             
             if (currentRowWidth + tagWidth > maxTagWidth && currentRowWidth > 0) {
-                break // 一行放不下就不放了
+                break // Note
             }
             
-            // 标签背景
+            // label
             val tagRect = RectF(tagX, tagY, tagX + tagWidth, tagY + tagHeight)
             canvas.drawRoundRect(tagRect, tagHeight / 2, tagHeight / 2, tagBgPaint)
             
-            // 标签文字
+            // label
             canvas.drawText(tagText, tagX + tagPadding, tagY + 30f, tagPaint)
             
             tagX += tagWidth + 12f
@@ -427,17 +427,17 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
         }
     }
     
-    // 底部品牌区域
+    // bottom area
     val bottomY = posterHeight - 100f
     
-    // 分隔线
+    // Note
     val linePaint = Paint().apply {
         color = Color.parseColor("#e0e0e0")
         strokeWidth = 1f
     }
     canvas.drawLine(60f, bottomY - 40f, posterWidth - 60f, bottomY - 40f, linePaint)
     
-    // 品牌 logo 文字
+    // logo
     val brandPaint = Paint().apply {
         isAntiAlias = true
         color = categoryColor
@@ -447,7 +447,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
     }
     canvas.drawText("WebToApp", posterWidth / 2f, bottomY + 10f, brandPaint)
     
-    // 副标题
+    // Note
     val subtitlePaint = Paint().apply {
         isAntiAlias = true
         color = Color.parseColor("#999999")
@@ -460,7 +460,7 @@ private fun generatePoster(module: ExtensionModule, shareCode: String, scanText:
 }
 
 /**
- * 文字换行处理
+ * handle
  */
 private fun wrapText(text: String, paint: Paint, maxWidth: Float, maxLines: Int = 2): List<String> {
     val lines = mutableListOf<String>()
@@ -484,7 +484,7 @@ private fun wrapText(text: String, paint: Paint, maxWidth: Float, maxLines: Int 
 }
 
 /**
- * 获取分类颜色
+ * color
  */
 private fun getCategoryColor(category: ModuleCategory): Int {
     return when (category) {
@@ -515,7 +515,7 @@ private fun getCategoryColor(category: ModuleCategory): Int {
 }
 
 /**
- * 调整颜色透明度
+ * color
  */
 private fun adjustAlpha(color: Int, factor: Float): Int {
     val alpha = (Color.alpha(color) * factor).toInt().coerceIn(0, 255)
@@ -523,7 +523,7 @@ private fun adjustAlpha(color: Int, factor: Float): Int {
 }
 
 /**
- * 保存海报到相册
+ * save
  */
 private fun savePosterToGallery(context: Context, bitmap: Bitmap, moduleName: String) {
     try {
@@ -558,15 +558,15 @@ private fun savePosterToGallery(context: Context, bitmap: Bitmap, moduleName: St
             }
         }
         
-        Toast.makeText(context, Strings.posterSavedToGallery, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().posterSavedToGallery, Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
         AppLogger.e("QrCodeShareDialog", "Operation failed", e)
-        Toast.makeText(context, Strings.saveFailed.format(e.message), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().saveFailed.format(e.message), Toast.LENGTH_SHORT).show()
     }
 }
 
 /**
- * 分享海报
+ * Note
  */
 private fun sharePoster(context: Context, bitmap: Bitmap, moduleName: String) {
     try {
@@ -588,33 +588,33 @@ private fun sharePoster(context: Context, bitmap: Bitmap, moduleName: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "image/png"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_TEXT, Strings.shareModuleText.format(moduleName))
+            putExtra(Intent.EXTRA_TEXT, AppStringsProvider.current().shareModuleText.format(moduleName))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         
-        context.startActivity(Intent.createChooser(shareIntent, Strings.shareModule))
+        context.startActivity(Intent.createChooser(shareIntent, AppStringsProvider.current().shareModule))
     } catch (e: Exception) {
         AppLogger.e("QrCodeShareDialog", "Operation failed", e)
-        Toast.makeText(context, Strings.shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
     }
 }
 
 /**
- * 分享模块文件
+ * modulefile
  */
 private fun shareModuleFile(context: Context, module: ExtensionModule) {
     try {
-        // Create临时文件
+        // Create file
         val cacheDir = File(context.cacheDir, "share_modules")
         if (!cacheDir.exists()) {
             cacheDir.mkdirs()
         }
         
-        // File名使用模块名称
+        // File module
         val safeFileName = module.name.replace(SAFE_MODULE_FILENAME_REGEX, "_")
         val file = File(cacheDir, "${safeFileName}.wtamod")
         
-        // 写入模块 JSON 数据
+        // module JSON
         file.writeText(module.toJson())
         
         val uri = FileProvider.getUriForFile(
@@ -626,14 +626,14 @@ private fun shareModuleFile(context: Context, module: ExtensionModule) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, Strings.shareModuleFileSubject.format(module.name))
-            putExtra(Intent.EXTRA_TEXT, Strings.shareModuleFileText.format(module.name))
+            putExtra(Intent.EXTRA_SUBJECT, AppStringsProvider.current().shareModuleFileSubject.format(module.name))
+            putExtra(Intent.EXTRA_TEXT, AppStringsProvider.current().shareModuleFileText.format(module.name))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         
-        context.startActivity(Intent.createChooser(shareIntent, Strings.shareModuleFile))
+        context.startActivity(Intent.createChooser(shareIntent, AppStringsProvider.current().shareModuleFile))
     } catch (e: Exception) {
         AppLogger.e("QrCodeShareDialog", "Operation failed", e)
-        Toast.makeText(context, Strings.shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStringsProvider.current().shareFailed.format(e.message), Toast.LENGTH_SHORT).show()
     }
 }

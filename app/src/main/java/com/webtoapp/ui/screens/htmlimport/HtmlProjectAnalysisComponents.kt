@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.data.model.HtmlConfig
@@ -59,7 +59,7 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 项目分析结果对话框
+ * item dialog
  */
 @Composable
 internal fun ProjectAnalysisDialog(
@@ -85,17 +85,17 @@ internal fun ProjectAnalysisDialog(
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.projectAnalysisResult)
+                Text(AppStringsProvider.current().projectAnalysisResult)
             }
         },
         text = {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // File信息
+                // File
                 item {
                     Text(
-                        text = Strings.fileInfo,
+                        text = AppStringsProvider.current().fileInfo,
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -115,12 +115,12 @@ internal fun ProjectAnalysisDialog(
                     }
                 }
                 
-                // 问题列表
+                // list
                 if (analysis.issues.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = Strings.detectedIssues,
+                            text = AppStringsProvider.current().detectedIssues,
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -131,12 +131,12 @@ internal fun ProjectAnalysisDialog(
                     }
                 }
                 
-                // 建议
+                // Note
                 if (analysis.suggestions.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = Strings.suggestions,
+                            text = AppStringsProvider.current().suggestions,
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -163,7 +163,7 @@ internal fun ProjectAnalysisDialog(
                     }
                 }
                 
-                // Auto修复说明
+                // Auto
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     EnhancedElevatedCard(
@@ -183,7 +183,7 @@ internal fun ProjectAnalysisDialog(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = Strings.autoProcessHint,
+                                text = AppStringsProvider.current().autoProcessHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -194,14 +194,14 @@ internal fun ProjectAnalysisDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.gotIt)
+                Text(AppStringsProvider.current().gotIt)
             }
         }
     )
 }
 
 /**
- * 文件信息行
+ * file
  */
 @Composable
 internal fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
@@ -235,7 +235,7 @@ internal fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = Strings.encodingAndSize.format(file.encoding ?: "UTF-8", formatHtmlProjectFileSize(file.size)),
+                text = AppStringsProvider.current().encodingAndSize.format(file.encoding ?: "UTF-8", formatHtmlProjectFileSize(file.size)),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -244,7 +244,7 @@ internal fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
 }
 
 /**
- * 问题卡片
+ * card
  */
 @Composable
 internal fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
@@ -287,7 +287,7 @@ internal fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
             if (issue.file != null) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = Strings.fileLabel.format(issue.file),
+                    text = AppStringsProvider.current().fileLabel.format(issue.file),
                     style = MaterialTheme.typography.labelSmall,
                     color = contentColor.copy(alpha = 0.7f)
                 )
@@ -295,7 +295,7 @@ internal fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
             if (issue.suggestion != null) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${Strings.suggestions}: ${issue.suggestion}",
+                    text = "${AppStringsProvider.current().suggestions}: ${issue.suggestion}",
                     style = MaterialTheme.typography.labelSmall,
                     color = contentColor.copy(alpha = 0.8f)
                 )
@@ -305,7 +305,7 @@ internal fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
 }
 
 /**
- * 格式化文件大小
+ * file
  */
 internal fun formatHtmlProjectFileSize(size: Long): String {
     return when {
@@ -316,5 +316,5 @@ internal fun formatHtmlProjectFileSize(size: Long): String {
 }
 
 /**
- * 文件槽位组件
+ * file
  */

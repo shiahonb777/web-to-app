@@ -25,7 +25,7 @@ import com.webtoapp.core.disguise.DeviceType
 import com.webtoapp.core.disguise.DeviceOS
 import com.webtoapp.core.disguise.DeviceBrand
 import com.webtoapp.core.disguise.DevicePresets
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import com.webtoapp.ui.components.EnhancedElevatedCard
@@ -34,18 +34,18 @@ import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.ui.components.SettingsSwitch
 
 /**
- * 设备伪装卡片 — 独立一级功能卡片 v2.0
+ * card- card v2. 0
  *
- * 设计哲学: 极客美学 — 仅分类使用 emoji，品牌和型号纯文字显示
+ * only emoji, display
  *
- * 功能:
- * - 设备类型切换 (手机/平板/桌面/笔记本/手表/电视)
- * - 热门设备一键选择 (30+ 预设，全部 2025-2026 最新型号)
- * - 自定义设备配置 (品牌/型号/分辨率 完全可控)
- * - 自动生成 User-Agent
- * - 自定义 UA 覆盖
- * - 强制桌面视口选项
- * - 当前伪装状态实时预览
+ * Note
+ * typeswitch( / / / / /)
+ * select( 30+, all 2025- 2026)
+ * config( / /)
+ * User- Agent
+ * UA
+ * Note
+ * current state preview
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -57,7 +57,7 @@ fun DeviceDisguiseCard(
     var showCustomUA by remember { mutableStateOf(false) }
     var showCustomDevice by remember { mutableStateOf(false) }
 
-    // 自定义设备的临时编辑状态
+    // editstate
     var customModelName by remember { mutableStateOf("") }
     var customModelId by remember { mutableStateOf("") }
     var customScreenW by remember { mutableStateOf("") }
@@ -69,7 +69,7 @@ fun DeviceDisguiseCard(
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // ═══════ 卡片头部 ═══════
+            // ═══════ cardheader ═══════
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -101,13 +101,13 @@ fun DeviceDisguiseCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.deviceDisguiseTitle,
+                            text = AppStringsProvider.current().deviceDisguiseTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
                             text = if (isEnabled && config.deviceModelName.isNotBlank())
-                                "${Strings.deviceDisguiseActive} ${config.deviceModelName}"
-                            else Strings.notEnabled,
+                                "${AppStringsProvider.current().deviceDisguiseActive} ${config.deviceModelName}"
+                            else AppStringsProvider.current().notEnabled,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -122,14 +122,14 @@ fun DeviceDisguiseCard(
                 )
             }
 
-            // ═══════ 展开内容 ═══════
+            // ═══════ expandcontent ═══════
             AnimatedVisibility(
                 visible = expanded,
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // ── 总开关 ──
+                    // Note
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -137,12 +137,12 @@ fun DeviceDisguiseCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = Strings.deviceDisguiseTitle,
+                                text = AppStringsProvider.current().deviceDisguiseTitle,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = if (isEnabled) Strings.deviceDisguiseActive else Strings.deviceDisguiseOff,
+                                text = if (isEnabled) AppStringsProvider.current().deviceDisguiseActive else AppStringsProvider.current().deviceDisguiseOff,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -161,7 +161,7 @@ fun DeviceDisguiseCard(
                         Column {
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // ── 提示信息 ──
+                            // hint
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
                                 shape = RoundedCornerShape(10.dp)
@@ -178,7 +178,7 @@ fun DeviceDisguiseCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = Strings.deviceDisguiseHint,
+                                        text = AppStringsProvider.current().deviceDisguiseHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                                         lineHeight = 18.sp
@@ -188,20 +188,20 @@ fun DeviceDisguiseCard(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // ── 设备类型选择 (仅此处使用 emoji) ──
+                            // typeselect( only emoji)
                             Text(
-                                text = Strings.deviceQuickSelect,
+                                text = AppStringsProvider.current().deviceQuickSelect,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.height(8.dp))
 
                             val deviceTypes = listOf(
-                                DeviceType.PHONE to Strings.deviceTypePhone,
-                                DeviceType.TABLET to Strings.deviceTypeTablet,
-                                DeviceType.DESKTOP to Strings.deviceTypeDesktop,
-                                DeviceType.LAPTOP to Strings.deviceTypeLaptop,
-                                DeviceType.WATCH to Strings.deviceTypeWatch
+                                DeviceType.PHONE to AppStringsProvider.current().deviceTypePhone,
+                                DeviceType.TABLET to AppStringsProvider.current().deviceTypeTablet,
+                                DeviceType.DESKTOP to AppStringsProvider.current().deviceTypeDesktop,
+                                DeviceType.LAPTOP to AppStringsProvider.current().deviceTypeLaptop,
+                                DeviceType.WATCH to AppStringsProvider.current().deviceTypeWatch
                             )
 
                             FlowRow(
@@ -224,8 +224,8 @@ fun DeviceDisguiseCard(
 
                                     Surface(
                                         onClick = {
-                                            // 切换设备类型时，仅更新 deviceType，不自动选到第一个预设
-                                            // 用户需要手动选择具体型号
+                                            // switch type, onlyupdate deviceType,
+                                            // user select
                                             val presets = DevicePresets.getPresetsForType(type)
                                             if (presets.isNotEmpty()) {
                                                 onConfigChange(presets.first().toConfig())
@@ -243,7 +243,7 @@ fun DeviceDisguiseCard(
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                                         ) {
-                                            // 设备类型分类 emoji
+                                            // type emoji
                                             Text(
                                                 text = type.emoji,
                                                 fontSize = 20.sp
@@ -265,9 +265,9 @@ fun DeviceDisguiseCard(
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // ── 热门设备预设列表 (纯文字，无 emoji) ──
+                            // list( , emoji)
                             Text(
-                                text = Strings.devicePopularPresets,
+                                text = AppStringsProvider.current().devicePopularPresets,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
@@ -281,7 +281,7 @@ fun DeviceDisguiseCard(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 presets.forEach { preset ->
-                                    // 使用唯一 model ID 进行匹配，避免空 model 导致的多重选中
+                                    // model ID, model
                                     val isSelected = config.deviceModel == preset.model &&
                                             config.deviceBrand == preset.brand
                                     val chipBg by animateColorAsState(
@@ -292,7 +292,7 @@ fun DeviceDisguiseCard(
 
                                     Surface(
                                         onClick = {
-                                            // 选择预设时保持当前 deviceType（不跟随预设切换分类）
+                                            // select current deviceType( switch)
                                             onConfigChange(preset.toConfig().copy(
                                                 deviceType = config.deviceType
                                             ))
@@ -310,7 +310,7 @@ fun DeviceDisguiseCard(
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            // 纯文字：品牌·型号·分辨率
+                                            // Note
                                             Column {
                                                 Text(
                                                     text = preset.name,
@@ -345,10 +345,10 @@ fun DeviceDisguiseCard(
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // ── 当前伪装信息预览 ──
+                            // current preview
                             if (config.deviceModelName.isNotBlank()) {
                                 Text(
-                                    text = Strings.deviceCurrentDisguise,
+                                    text = AppStringsProvider.current().deviceCurrentDisguise,
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -363,7 +363,7 @@ fun DeviceDisguiseCard(
                                 ) {
                                     Column(modifier = Modifier.padding(14.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            // 仅设备类型使用 emoji
+                                            // only type emoji
                                             Text(
                                                 text = config.deviceType.emoji,
                                                 fontSize = 24.sp
@@ -384,7 +384,7 @@ fun DeviceDisguiseCard(
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
 
-                                        // UA 预览
+                                        // UA preview
                                         val ua = config.generateUserAgent()
                                         if (ua.isNotBlank()) {
                                             Surface(
@@ -393,7 +393,7 @@ fun DeviceDisguiseCard(
                                             ) {
                                                 Column(modifier = Modifier.padding(10.dp)) {
                                                     Text(
-                                                        text = Strings.deviceGeneratedUA,
+                                                        text = AppStringsProvider.current().deviceGeneratedUA,
                                                         style = MaterialTheme.typography.labelSmall,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                                     )
@@ -411,7 +411,7 @@ fun DeviceDisguiseCard(
                                             }
                                         }
 
-                                        // 屏幕尺寸 (纯文字标签)
+                                        // ( label)
                                         if (config.screenWidth > 0 && config.screenHeight > 0) {
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Row(
@@ -433,11 +433,11 @@ fun DeviceDisguiseCard(
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
 
-                            // ── 强制桌面视口 ──
+                            // Note
                             if (config.deviceType !in listOf(DeviceType.DESKTOP, DeviceType.LAPTOP)) {
                                 SettingsSwitch(
-                                    title = Strings.deviceDesktopViewport,
-                                    subtitle = Strings.deviceDesktopViewportHint,
+                                    title = AppStringsProvider.current().deviceDesktopViewport,
+                                    subtitle = AppStringsProvider.current().deviceDesktopViewportHint,
                                     checked = config.isDesktopViewport,
                                     onCheckedChange = {
                                         onConfigChange(config.copy(isDesktopViewport = it))
@@ -446,18 +446,18 @@ fun DeviceDisguiseCard(
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
 
-                            // ── 自定义设备区域 ──
+                            // area
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                             Spacer(modifier = Modifier.height(8.dp))
 
                             SettingsSwitch(
-                                title = Strings.deviceCustomDevice,
-                                subtitle = Strings.deviceCustomDeviceHint,
+                                title = AppStringsProvider.current().deviceCustomDevice,
+                                subtitle = AppStringsProvider.current().deviceCustomDeviceHint,
                                 checked = showCustomDevice || config.isCustomDevice,
                                 onCheckedChange = {
                                     showCustomDevice = it
                                     if (it && config.deviceModelName.isNotBlank()) {
-                                        // 预填充当前值
+                                        // current
                                         customModelName = config.deviceModelName
                                         customModelId = config.deviceModel
                                         customScreenW = if (config.screenWidth > 0) config.screenWidth.toString() else ""
@@ -473,29 +473,29 @@ fun DeviceDisguiseCard(
                                 exit = CardCollapseTransition
                             ) {
                                 Column(modifier = Modifier.padding(top = 8.dp)) {
-                                    // 设备名称
+                                    // Note
                                     PremiumTextField(
                                         value = customModelName,
                                         onValueChange = { customModelName = it },
-                                        label = { Text(Strings.deviceCustomName) },
+                                        label = { Text(AppStringsProvider.current().deviceCustomName) },
                                         placeholder = { Text("Galaxy S26 Ultra") },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
 
-                                    // 设备型号标识
+                                    // Note
                                     PremiumTextField(
                                         value = customModelId,
                                         onValueChange = { customModelId = it },
-                                        label = { Text(Strings.deviceCustomModelId) },
+                                        label = { Text(AppStringsProvider.current().deviceCustomModelId) },
                                         placeholder = { Text("SM-S938B") },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
 
-                                    // 屏幕分辨率
+                                    // Note
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -503,7 +503,7 @@ fun DeviceDisguiseCard(
                                         PremiumTextField(
                                             value = customScreenW,
                                             onValueChange = { customScreenW = it.filter { c -> c.isDigit() } },
-                                            label = { Text(Strings.deviceCustomWidth) },
+                                            label = { Text(AppStringsProvider.current().deviceCustomWidth) },
                                             placeholder = { Text("1920") },
                                             modifier = Modifier.weight(1f),
                                             singleLine = true
@@ -511,7 +511,7 @@ fun DeviceDisguiseCard(
                                         PremiumTextField(
                                             value = customScreenH,
                                             onValueChange = { customScreenH = it.filter { c -> c.isDigit() } },
-                                            label = { Text(Strings.deviceCustomHeight) },
+                                            label = { Text(AppStringsProvider.current().deviceCustomHeight) },
                                             placeholder = { Text("1080") },
                                             modifier = Modifier.weight(1f),
                                             singleLine = true
@@ -519,18 +519,18 @@ fun DeviceDisguiseCard(
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
 
-                                    // 像素密度
+                                    // Note
                                     PremiumTextField(
                                         value = customDensity,
                                         onValueChange = { customDensity = it },
-                                        label = { Text(Strings.deviceCustomDensity) },
+                                        label = { Text(AppStringsProvider.current().deviceCustomDensity) },
                                         placeholder = { Text("2.0") },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
 
-                                    // 应用自定义设备按钮
+                                    // app button
                                     FilledTonalButton(
                                         onClick = {
                                             onConfigChange(config.copy(
@@ -552,20 +552,20 @@ fun DeviceDisguiseCard(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(Strings.deviceCustomApply)
+                                        Text(AppStringsProvider.current().deviceCustomApply)
                                     }
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // ── 自定义 UA 区域 ──
+                            // UA area
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                             Spacer(modifier = Modifier.height(8.dp))
 
                             SettingsSwitch(
-                                title = Strings.deviceCustomUA,
-                                subtitle = Strings.deviceCustomUAHint,
+                                title = AppStringsProvider.current().deviceCustomUA,
+                                subtitle = AppStringsProvider.current().deviceCustomUAHint,
                                 checked = showCustomUA || !config.customUserAgent.isNullOrBlank(),
                                 onCheckedChange = {
                                     showCustomUA = it

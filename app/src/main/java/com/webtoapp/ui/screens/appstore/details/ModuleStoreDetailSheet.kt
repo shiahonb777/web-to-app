@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -177,7 +177,7 @@ internal fun ModuleStoreDetailSheet(
                                 if (success) {
                                     isInstalled = true
                                     installedTracker.markInstalled(module.id)
-                                    scope.launch { snackbarHostState.showSnackbar("✅ " + Strings.storeModuleInstallSuccess) }
+                                    scope.launch { snackbarHostState.showSnackbar("✅ " + AppStringsProvider.current().storeModuleInstallSuccess) }
                                 } else {
                                     scope.launch { snackbarHostState.showSnackbar("❌ " + msg) }
                                 }
@@ -193,15 +193,15 @@ internal fun ModuleStoreDetailSheet(
                         if (isDownloading) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                             Spacer(Modifier.width(8.dp))
-                            Text(Strings.storeDownloading, fontWeight = FontWeight.SemiBold)
+                            Text(AppStringsProvider.current().storeDownloading, fontWeight = FontWeight.SemiBold)
                         } else if (isInstalled) {
                             Icon(Icons.Filled.CheckCircle, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(Strings.storeInstalled, fontWeight = FontWeight.SemiBold)
+                            Text(AppStringsProvider.current().storeInstalled, fontWeight = FontWeight.SemiBold)
                         } else {
                             Icon(Icons.Outlined.Download, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(Strings.moduleStoreInstall, fontWeight = FontWeight.SemiBold)
+                            Text(AppStringsProvider.current().moduleStoreInstall, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -228,7 +228,7 @@ internal fun ModuleStoreDetailSheet(
 
             // ── Reviews ──
             if (reviews.isEmpty() && !isLoadingReviews) {
-                item { Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(Strings.storeNoReviewsYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(2.dp)); Text(Strings.storeBeFirstToReview, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)) } } }
+                item { Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(AppStringsProvider.current().storeNoReviewsYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(2.dp)); Text(AppStringsProvider.current().storeBeFirstToReview, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)) } } }
             }
             items(reviews.size) { index ->
                 val review = reviews[index]
@@ -255,9 +255,9 @@ internal fun ModuleStoreDetailSheet(
 
     // Report dialog
     if (showReportDialog) {
-        ReportDialog(appName = Strings.storeReportAppTitle + " \"" + module.name + "\"", onDismiss = { showReportDialog = false }, onSubmit = { reason, _ ->
+        ReportDialog(appName = AppStringsProvider.current().storeReportAppTitle + " \"" + module.name + "\"", onDismiss = { showReportDialog = false }, onSubmit = { reason, _ ->
             scope.launch {
-                when (val r = apiClient.reportStoreModule(module.id, reason)) { is com.webtoapp.core.auth.AuthResult.Success -> snackbarHostState.showSnackbar(Strings.storeReportSuccess); is com.webtoapp.core.auth.AuthResult.Error -> snackbarHostState.showSnackbar(Strings.storeReportFailed + ": ${r.message}") }
+                when (val r = apiClient.reportStoreModule(module.id, reason)) { is com.webtoapp.core.auth.AuthResult.Success -> snackbarHostState.showSnackbar(AppStringsProvider.current().storeReportSuccess); is com.webtoapp.core.auth.AuthResult.Error -> snackbarHostState.showSnackbar(AppStringsProvider.current().storeReportFailed + ": ${r.message}") }
                 showReportDialog = false
             }
         })
@@ -271,17 +271,17 @@ internal fun ModuleStoreDetailSheet(
         AlertDialog(
             onDismissRequest = { if (!isSubmittingReview) showReviewDialog = false },
             icon = { Surface(shape = RoundedCornerShape(16.dp), color = Color.Transparent, modifier = Modifier.size(48.dp)) { Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f), MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.RateReview, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.tertiary) } } },
-            title = { Text("\"" + Strings.storeReviewSubmitTitle + " \"" + module.name + "\"", fontWeight = FontWeight.Bold) },
+            title = { Text("\"" + AppStringsProvider.current().storeReviewSubmitTitle + " \"" + module.name + "\"", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Text(Strings.storeReviewRatingLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(AppStringsProvider.current().storeReviewRatingLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             (1..5).forEach { star -> IconButton(onClick = { reviewRating = star }, modifier = Modifier.size(36.dp)) { Icon(if (star <= reviewRating) Icons.Filled.Star else Icons.Outlined.StarBorder, "Star $star", tint = if (star <= reviewRating) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f), modifier = Modifier.size(28.dp)) } }
                         }
                     }
-                    OutlinedTextField(value = reviewComment, onValueChange = { reviewComment = it }, label = { Text(Strings.storeReviewCommentLabel) }, placeholder = { Text(Strings.storeReviewPlaceholder) }, minLines = 2, maxLines = 4, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = reviewComment, onValueChange = { reviewComment = it }, label = { Text(AppStringsProvider.current().storeReviewCommentLabel) }, placeholder = { Text(AppStringsProvider.current().storeReviewPlaceholder) }, minLines = 2, maxLines = 4, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 }
             },
             confirmButton = {
@@ -289,21 +289,21 @@ internal fun ModuleStoreDetailSheet(
                     isSubmittingReview = true
                     scope.launch {
                         when (val result = apiClient.reviewStoreModule(module.id, reviewRating, reviewComment.ifBlank { null })) {
-                            is com.webtoapp.core.auth.AuthResult.Success -> { isSubmittingReview = false; showReviewDialog = false; apiClient.getModuleReviews(module.id, page = 1, size = 5).onSuccess { reviews = it.reviews; reviewsTotal = it.total }; snackbarHostState.showSnackbar(Strings.storeReviewSuccess) }
-                            is com.webtoapp.core.auth.AuthResult.Error -> { isSubmittingReview = false; snackbarHostState.showSnackbar(Strings.storeReviewFailed + ": \${result.message}") }
+                            is com.webtoapp.core.auth.AuthResult.Success -> { isSubmittingReview = false; showReviewDialog = false; apiClient.getModuleReviews(module.id, page = 1, size = 5).onSuccess { reviews = it.reviews; reviewsTotal = it.total }; snackbarHostState.showSnackbar(AppStringsProvider.current().storeReviewSuccess) }
+                            is com.webtoapp.core.auth.AuthResult.Error -> { isSubmittingReview = false; snackbarHostState.showSnackbar(AppStringsProvider.current().storeReviewFailed + ": \${result.message}") }
                         }
                     }
                 }, enabled = !isSubmittingReview, shape = RoundedCornerShape(10.dp)) {
                     if (isSubmittingReview) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary); Spacer(Modifier.width(8.dp)) }
-                    Text(Strings.storeReviewSubmit)
+                    Text(AppStringsProvider.current().storeReviewSubmit)
                 }
             },
-            dismissButton = { TextButton(onClick = { showReviewDialog = false }, enabled = !isSubmittingReview) { Text(Strings.storeReviewCancel) } }
+            dismissButton = { TextButton(onClick = { showReviewDialog = false }, enabled = !isSubmittingReview) { Text(AppStringsProvider.current().storeReviewCancel) } }
         )
     }
 }
 
 
 // ════════════════════════════════════════════════
-// 模块列表卡片
+// modulelistcard
 // ════════════════════════════════════════════════

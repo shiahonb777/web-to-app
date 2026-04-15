@@ -10,7 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.webkit.WebView
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.FloatingWindowConfig
 
@@ -160,10 +160,10 @@ class FloatingWindowService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                Strings.floatingWindowNotificationChannel,
+                AppStringsProvider.current().floatingWindowNotificationChannel,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = Strings.floatingWindowNotificationChannelDesc
+                description = AppStringsProvider.current().floatingWindowNotificationChannelDesc
                 setShowBadge(false)
             }
             val notificationManager = getSystemService(NotificationManager::class.java)
@@ -175,11 +175,11 @@ class FloatingWindowService : Service() {
      * 创建前台通知
      */
     private fun createNotification(appName: String = ""): Notification {
-        val title = Strings.floatingWindowNotificationTitle
+        val title = AppStringsProvider.current().floatingWindowNotificationTitle
         val content = if (appName.isNotBlank()) {
-            String.format(Strings.floatingWindowNotificationContent, appName)
+            String.format(AppStringsProvider.current().floatingWindowNotificationContent, appName)
         } else {
-            Strings.floatingWindowNotificationContentDefault
+            AppStringsProvider.current().floatingWindowNotificationContentDefault
         }
         
         // 关闭悬浮窗的 PendingIntent
@@ -205,7 +205,7 @@ class FloatingWindowService : Service() {
             .setOngoing(true)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                Strings.floatingWindowClose,
+                AppStringsProvider.current().floatingWindowClose,
                 dismissPendingIntent
             )
             .build()

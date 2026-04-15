@@ -15,14 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.isolation.*
 import androidx.compose.ui.graphics.Color
 
 /**
- * 应用隔离/多开配置卡片
+ * app / configcard
  * 
- * 用于在构建应用时配置独立环境选项
+ * for appconfig
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -40,7 +40,7 @@ fun IsolationConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -72,12 +72,12 @@ fun IsolationConfigCard(
                     }
                     Column {
                         Text(
-                            text = Strings.isolatedEnvironment,
+                            text = AppStringsProvider.current().isolatedEnvironment,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = if (config.enabled) Strings.antiDetectionEnabled else Strings.notEnabled,
+                            text = if (config.enabled) AppStringsProvider.current().antiDetectionEnabled else AppStringsProvider.current().notEnabled,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -92,15 +92,15 @@ fun IsolationConfigCard(
                 )
             }
             
-            // Expand详细配置
+            // Expand config
             AnimatedVisibility(visible = config.enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 快捷预设
+                    // Note
                     Text(
-                        text = Strings.isolationLevel,
+                        text = AppStringsProvider.current().isolationLevel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -113,7 +113,7 @@ fun IsolationConfigCard(
                         PremiumFilterChip(
                             selected = isBasicConfig(config),
                             onClick = { onConfigChange(IsolationConfig.BASIC) },
-                            label = { Text(Strings.basic) },
+                            label = { Text(AppStringsProvider.current().basic) },
                             leadingIcon = if (isBasicConfig(config)) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -122,7 +122,7 @@ fun IsolationConfigCard(
                         PremiumFilterChip(
                             selected = isStandardConfig(config),
                             onClick = { onConfigChange(IsolationConfig.STANDARD) },
-                            label = { Text(Strings.standard) },
+                            label = { Text(AppStringsProvider.current().standard) },
                             leadingIcon = if (isStandardConfig(config)) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -131,7 +131,7 @@ fun IsolationConfigCard(
                         PremiumFilterChip(
                             selected = isMaximumConfig(config),
                             onClick = { onConfigChange(IsolationConfig.MAXIMUM) },
-                            label = { Text(Strings.maximum) },
+                            label = { Text(AppStringsProvider.current().maximum) },
                             leadingIcon = if (isMaximumConfig(config)) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -140,7 +140,7 @@ fun IsolationConfigCard(
                         PremiumFilterChip(
                             selected = expanded,
                             onClick = { expanded = !expanded },
-                            label = { Text(Strings.custom) },
+                            label = { Text(AppStringsProvider.current().custom) },
                             leadingIcon = {
                                 Icon(
                                     if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -151,23 +151,23 @@ fun IsolationConfigCard(
                         )
                     }
                     
-                    // Custom配置
+                    // Customconfig
                     AnimatedVisibility(visible = expanded) {
                         Column(
                             modifier = Modifier.padding(top = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // 指纹防护
+                            // Note
                             Text(
-                                text = Strings.fingerprintProtection,
+                                text = AppStringsProvider.current().fingerprintProtection,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.padding(vertical = 4.dp)
                             )
                             
                             IsolationOption(
-                                title = Strings.randomFingerprint,
-                                description = Strings.randomFingerprintHint,
+                                title = AppStringsProvider.current().randomFingerprint,
+                                description = AppStringsProvider.current().randomFingerprintHint,
                                 icon = Icons.Outlined.Fingerprint,
                                 checked = config.fingerprintConfig.randomize,
                                 onCheckedChange = {
@@ -178,32 +178,32 @@ fun IsolationConfigCard(
                             )
                             
                             IsolationOption(
-                                title = Strings.canvasProtection,
-                                description = Strings.canvasProtectionHint,
+                                title = AppStringsProvider.current().canvasProtection,
+                                description = AppStringsProvider.current().canvasProtectionHint,
                                 icon = Icons.Outlined.Palette,
                                 checked = config.protectCanvas,
                                 onCheckedChange = { onConfigChange(config.copy(protectCanvas = it)) }
                             )
                             
                             IsolationOption(
-                                title = Strings.webglProtection,
-                                description = Strings.webglProtectionHint,
+                                title = AppStringsProvider.current().webglProtection,
+                                description = AppStringsProvider.current().webglProtectionHint,
                                 icon = Icons.Outlined.Brush,
                                 checked = config.protectWebGL,
                                 onCheckedChange = { onConfigChange(config.copy(protectWebGL = it)) }
                             )
                             
                             IsolationOption(
-                                title = Strings.audioProtection,
-                                description = Strings.audioProtectionHint,
+                                title = AppStringsProvider.current().audioProtection,
+                                description = AppStringsProvider.current().audioProtectionHint,
                                 icon = Icons.Outlined.VolumeUp,
                                 checked = config.protectAudio,
                                 onCheckedChange = { onConfigChange(config.copy(protectAudio = it)) }
                             )
                             
                             IsolationOption(
-                                title = Strings.fontProtection,
-                                description = Strings.fontProtectionHint,
+                                title = AppStringsProvider.current().fontProtection,
+                                description = AppStringsProvider.current().fontProtectionHint,
                                 icon = Icons.Outlined.FontDownload,
                                 checked = config.protectFonts,
                                 onCheckedChange = { onConfigChange(config.copy(protectFonts = it)) }
@@ -211,25 +211,25 @@ fun IsolationConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // Network防护
+                            // Network
                             Text(
-                                text = Strings.networkProtection,
+                                text = AppStringsProvider.current().networkProtection,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.padding(vertical = 4.dp)
                             )
                             
                             IsolationOption(
-                                title = Strings.webrtcProtection,
-                                description = Strings.webrtcProtectionHint,
+                                title = AppStringsProvider.current().webrtcProtection,
+                                description = AppStringsProvider.current().webrtcProtectionHint,
                                 icon = Icons.Outlined.Wifi,
                                 checked = config.blockWebRTC,
                                 onCheckedChange = { onConfigChange(config.copy(blockWebRTC = it)) }
                             )
                             
                             IsolationOption(
-                                title = Strings.headerSpoofing,
-                                description = Strings.headerSpoofingHint,
+                                title = AppStringsProvider.current().headerSpoofing,
+                                description = AppStringsProvider.current().headerSpoofingHint,
                                 icon = Icons.Outlined.Http,
                                 checked = config.headerConfig.enabled,
                                 onCheckedChange = {
@@ -240,8 +240,8 @@ fun IsolationConfigCard(
                             )
                             
                             IsolationOption(
-                                title = Strings.ipSpoofing,
-                                description = Strings.ipSpoofingHint,
+                                title = AppStringsProvider.current().ipSpoofing,
+                                description = AppStringsProvider.current().ipSpoofingHint,
                                 icon = Icons.Outlined.VpnKey,
                                 checked = config.ipSpoofConfig.enabled,
                                 onCheckedChange = {
@@ -251,13 +251,13 @@ fun IsolationConfigCard(
                                 }
                             )
                             
-                            // IP 范围选择
+                            // IP select
                             AnimatedVisibility(visible = config.ipSpoofConfig.enabled) {
                                 Column(
                                     modifier = Modifier.padding(start = 16.dp, top = 8.dp)
                                 ) {
                                     Text(
-                                        text = Strings.ipRegion,
+                                        text = AppStringsProvider.current().ipRegion,
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -279,7 +279,7 @@ fun IsolationConfigCard(
                                         }
                                     }
                                     
-                                    // Search输入框（仅在选择"搜索"时显示）
+                                    // Searchinput( only select" "display)
                                     AnimatedVisibility(visible = config.ipSpoofConfig.randomIpRange == IpRange.SEARCH) {
                                         Column(
                                             modifier = Modifier.padding(top = 8.dp)
@@ -291,8 +291,8 @@ fun IsolationConfigCard(
                                                         ipSpoofConfig = config.ipSpoofConfig.copy(searchKeyword = keyword)
                                                     ))
                                                 },
-                                                label = { Text(Strings.countryRegion) },
-                                                placeholder = { Text(Strings.countryRegionHint) },
+                                                label = { Text(AppStringsProvider.current().countryRegion) },
+                                                placeholder = { Text(AppStringsProvider.current().countryRegionHint) },
                                                 singleLine = true,
                                                 modifier = Modifier.fillMaxWidth(),
                                                 textStyle = MaterialTheme.typography.bodySmall,
@@ -305,7 +305,7 @@ fun IsolationConfigCard(
                                                 }
                                             )
                                             Text(
-                                                text = Strings.supportedCountriesHint,
+                                                text = AppStringsProvider.current().supportedCountriesHint,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                                 modifier = Modifier.padding(top = 4.dp)
@@ -317,21 +317,21 @@ fun IsolationConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // 高级选项
+                            // advanced
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = Strings.advancedOptions,
+                                    text = AppStringsProvider.current().advancedOptions,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.tertiary
                                 )
                                 TextButton(
                                     onClick = { showAdvanced = !showAdvanced }
                                 ) {
-                                    Text(if (showAdvanced) Strings.collapse else Strings.expand)
+                                    Text(if (showAdvanced) AppStringsProvider.current().collapse else AppStringsProvider.current().expand)
                                     Icon(
                                         if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                         contentDescription = null,
@@ -345,40 +345,40 @@ fun IsolationConfigCard(
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     IsolationOption(
-                                        title = Strings.storageIsolation,
-                                        description = Strings.storageIsolationHint,
+                                        title = AppStringsProvider.current().storageIsolation,
+                                        description = AppStringsProvider.current().storageIsolationHint,
                                         icon = Icons.Outlined.Storage,
                                         checked = config.storageIsolation,
                                         onCheckedChange = { onConfigChange(config.copy(storageIsolation = it)) }
                                     )
                                     
                                     IsolationOption(
-                                        title = Strings.timezoneSpoofing,
-                                        description = Strings.timezoneSpoofingHint,
+                                        title = AppStringsProvider.current().timezoneSpoofing,
+                                        description = AppStringsProvider.current().timezoneSpoofingHint,
                                         icon = Icons.Outlined.Schedule,
                                         checked = config.spoofTimezone,
                                         onCheckedChange = { onConfigChange(config.copy(spoofTimezone = it)) }
                                     )
                                     
                                     IsolationOption(
-                                        title = Strings.languageSpoofing,
-                                        description = Strings.languageSpoofingHint,
+                                        title = AppStringsProvider.current().languageSpoofing,
+                                        description = AppStringsProvider.current().languageSpoofingHint,
                                         icon = Icons.Outlined.Language,
                                         checked = config.spoofLanguage,
                                         onCheckedChange = { onConfigChange(config.copy(spoofLanguage = it)) }
                                     )
                                     
                                     IsolationOption(
-                                        title = Strings.resolutionSpoofing,
-                                        description = Strings.resolutionSpoofingHint,
+                                        title = AppStringsProvider.current().resolutionSpoofing,
+                                        description = AppStringsProvider.current().resolutionSpoofingHint,
                                         icon = Icons.Outlined.AspectRatio,
                                         checked = config.spoofScreen,
                                         onCheckedChange = { onConfigChange(config.copy(spoofScreen = it)) }
                                     )
                                     
                                     IsolationOption(
-                                        title = Strings.regenerateOnLaunch,
-                                        description = Strings.regenerateOnLaunchHint,
+                                        title = AppStringsProvider.current().regenerateOnLaunch,
+                                        description = AppStringsProvider.current().regenerateOnLaunchHint,
                                         icon = Icons.Outlined.Refresh,
                                         checked = config.fingerprintConfig.regenerateOnLaunch,
                                         onCheckedChange = {
@@ -392,7 +392,7 @@ fun IsolationConfigCard(
                         }
                     }
                     
-                    // 功能说明
+                    // Note
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -410,7 +410,7 @@ fun IsolationConfigCard(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = Strings.isolationDescription,
+                                text = AppStringsProvider.current().isolationDescription,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -482,7 +482,7 @@ private fun IsolationOption(
     }
 }
 
-// 辅助函数：判断是否为预设配置
+// config
 private fun isBasicConfig(config: IsolationConfig): Boolean {
     return config.enabled &&
             config.storageIsolation &&

@@ -19,8 +19,8 @@ import com.webtoapp.data.model.GalleryConfig
 import com.webtoapp.data.model.SplashOrientation
 
 /**
- * 媒体画廊播放器 Activity
- * 支持全屏沉浸式播放图片和视频
+ * Media gallery player Activity.
+ * Supports full-screen immersive playback for images and videos.
  */
 class GalleryPlayerActivity : ComponentActivity() {
     
@@ -30,7 +30,7 @@ class GalleryPlayerActivity : ComponentActivity() {
         private val gson = com.webtoapp.util.GsonProvider.gson
         
         /**
-         * 启动画廊播放器
+         * Launch gallery player.
          */
         fun launch(
             context: Context, 
@@ -51,7 +51,7 @@ class GalleryPlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Parse配置
+        // Parse config
         val configJson = intent.getStringExtra(EXTRA_CONFIG)
         config = configJson?.let {
             try {
@@ -68,16 +68,16 @@ class GalleryPlayerActivity : ComponentActivity() {
             return
         }
         
-        // Set屏幕方向
+        // Set screen orientation
         requestedOrientation = when (galleryConfig.orientation) {
             SplashOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             SplashOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         
-        // Set全屏沉浸模式
+        // Set immersive full-screen mode
         setupImmersiveMode()
         
-        // 保持屏幕常亮
+        // Keep screen on
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         
         setContent {

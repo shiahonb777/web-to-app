@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -76,7 +76,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
 // ════════════════════════════════════════════════
-// 下载管理 Bottom Sheet (统一：活跃下载 + 已下载应用)
+// downloadmanagement Bottom Sheet( unified: download + downloadapp)
 // ════════════════════════════════════════════════
 
 @Composable
@@ -132,7 +132,7 @@ internal fun ActiveDownloadCard(
                         modifier = Modifier.padding(top = 2.dp)
                     ) {
                         Text(
-                            if (task.status == AppDownloadManager.DownloadStatus.PENDING) Strings.preparing
+                            if (task.status == AppDownloadManager.DownloadStatus.PENDING) AppStringsProvider.current().preparing
                             else "${downloadManager.formatSize(task.downloadedBytes)} / ${
                                 if (task.totalBytes > 0) downloadManager.formatSize(task.totalBytes) else "?"
                             }",
@@ -164,7 +164,7 @@ internal fun ActiveDownloadCard(
                         onClick = { downloadManager.cancelDownload(task.appId) },
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        Icon(Icons.Filled.Close, Strings.storeReviewCancel,
+                        Icon(Icons.Filled.Close, AppStringsProvider.current().storeReviewCancel,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -258,7 +258,7 @@ internal fun FailedDownloadCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    task.error ?: Strings.storeDownloadFailed,
+                    task.error ?: AppStringsProvider.current().storeDownloadFailed,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                     maxLines = 1,
@@ -275,7 +275,7 @@ internal fun FailedDownloadCard(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     Icon(
-                        Icons.Outlined.Close, Strings.remove,
+                        Icons.Outlined.Close, AppStringsProvider.current().remove,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -364,10 +364,10 @@ internal fun DownloadedAppCard(
                                 val hours = mins / 60
                                 val days = hours / 24
                                 append(when {
-                                    days > 0 -> "\${days} " + Strings.daysAgo
-                                    hours > 0 -> "\${hours} " + Strings.hoursAgo
-                                    mins > 1 -> "\${mins} " + Strings.minutesAgo
-                                    else -> Strings.justNow
+                                    days > 0 -> "\${days} " + AppStringsProvider.current().daysAgo
+                                    hours > 0 -> "\${hours} " + AppStringsProvider.current().hoursAgo
+                                    mins > 1 -> "\${mins} " + AppStringsProvider.current().minutesAgo
+                                    else -> AppStringsProvider.current().justNow
                                 })
                             },
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -390,7 +390,7 @@ internal fun DownloadedAppCard(
             ) {
                 Icon(Icons.Outlined.InstallMobile, null, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.installApp, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().installApp, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
             Spacer(modifier = Modifier.width(4.dp))
             // Delete button
@@ -404,7 +404,7 @@ internal fun DownloadedAppCard(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     Icon(
-                        Icons.Outlined.Delete, Strings.delete,
+                        Icons.Outlined.Delete, AppStringsProvider.current().delete,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.error
                     )
@@ -416,5 +416,5 @@ internal fun DownloadedAppCard(
 
 
 // ════════════════════════════════════════════════
-// 我的发布 — 共享组件
+// Note
 // ════════════════════════════════════════════════

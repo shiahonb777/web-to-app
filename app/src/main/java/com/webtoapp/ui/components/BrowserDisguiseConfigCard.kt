@@ -23,16 +23,16 @@ import com.webtoapp.core.disguise.BrowserDisguiseConfig
 import com.webtoapp.core.disguise.BrowserDisguisePreset
 import com.webtoapp.core.disguise.WebGLRenderer
 import com.webtoapp.core.disguise.ScreenProfile
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 浏览器伪装配置卡片 v2.0
+ * configcard v2. 0
  * 
  * 🕶️ Browser Disguise Engine UI
- * - 5 级预设选择器
- * - 22 向量覆盖率仪表盘
- * - 分层细粒度开关
- * - WebGL/Screen 配置选择器
+ * 5 select
+ * 22
+ * Note
+ * WebGL/Screen configselect
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,12 +43,12 @@ fun BrowserDisguiseConfigCard(
     var expanded by remember { mutableStateOf(config?.enabled == true) }
     var showAdvanced by remember { mutableStateOf(false) }
     
-    // 使用配置或默认值
+    // configordefault
     val currentConfig = config ?: BrowserDisguiseConfig.DISABLED
     var enabled by remember(config) { mutableStateOf(currentConfig.enabled) }
     var preset by remember(config) { mutableStateOf(currentConfig.preset) }
     
-    // 各向量开关
+    // Note
     var canvasNoise by remember(config) { mutableStateOf(currentConfig.canvasNoise) }
     var webglSpoof by remember(config) { mutableStateOf(currentConfig.webglSpoof) }
     var webglRenderer by remember(config) { mutableStateOf(currentConfig.webglRenderer) }
@@ -135,7 +135,7 @@ fun BrowserDisguiseConfigCard(
         updateConfig()
     }
     
-    // 覆盖率计算
+    // Note
     val coverage = BrowserDisguiseConfig.calculateCoverage(buildConfig() ?: BrowserDisguiseConfig.DISABLED)
     val level = BrowserDisguiseConfig.getDisguiseLevel(coverage)
     
@@ -156,7 +156,7 @@ fun BrowserDisguiseConfigCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // ===== 标题行 =====
+            // Note
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -191,18 +191,18 @@ fun BrowserDisguiseConfigCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.browserDisguiseTitle,
+                            AppStringsProvider.current().browserDisguiseTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (enabled) {
                             Text(
-                                "${level} · ${"%.0f".format(coverage * 100)}% ${Strings.browserDisguiseCoverage}",
+                                "${level} · ${"%.0f".format(coverage * 100)}% ${AppStringsProvider.current().browserDisguiseCoverage}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = levelColor
                             )
                         } else {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -217,15 +217,15 @@ fun BrowserDisguiseConfigCard(
             
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // ===== Enable 开关 =====
+                    // ===== Enable =====
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.browserDisguiseEnable, style = MaterialTheme.typography.bodyLarge)
-                            Text(Strings.browserDisguiseEnableDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(AppStringsProvider.current().browserDisguiseEnable, style = MaterialTheme.typography.bodyLarge)
+                            Text(AppStringsProvider.current().browserDisguiseEnableDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         PremiumSwitch(
                             checked = enabled,
@@ -248,8 +248,8 @@ fun BrowserDisguiseConfigCard(
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // ===== 预设选择器 =====
-                            Text(Strings.browserDisguisePreset, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
+                            // ===== select =====
+                            Text(AppStringsProvider.current().browserDisguisePreset, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                             
                             val presets = BrowserDisguisePreset.entries.filter { it != BrowserDisguisePreset.OFF }
                             Row(
@@ -300,7 +300,7 @@ fun BrowserDisguiseConfigCard(
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // ===== 覆盖率仪表盘 =====
+                            // Note
                             CoverageDashboard(
                                 coverage = coverage,
                                 level = level,
@@ -310,7 +310,7 @@ fun BrowserDisguiseConfigCard(
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // ===== 高级开关展开 =====
+                            // ===== advanced expand =====
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -328,7 +328,7 @@ fun BrowserDisguiseConfigCard(
                                         Icon(Icons.Outlined.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            Strings.browserDisguiseAdvanced,
+                                            AppStringsProvider.current().browserDisguiseAdvanced,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
@@ -342,79 +342,79 @@ fun BrowserDisguiseConfigCard(
                             
                             AnimatedVisibility(visible = showAdvanced) {
                                 Column(modifier = Modifier.padding(top = 8.dp)) {
-                                    // Level 2: 指纹向量
-                                    SectionHeader(Strings.browserDisguiseL2Title)
+                                    // Level 2
+                                    SectionHeader(AppStringsProvider.current().browserDisguiseL2Title)
                                     
-                                    VectorSwitch(Strings.browserDisguiseCanvasNoise, Strings.browserDisguiseCanvasNoiseDesc, canvasNoise) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseCanvasNoise, AppStringsProvider.current().browserDisguiseCanvasNoiseDesc, canvasNoise) {
                                         canvasNoise = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseWebGL, Strings.browserDisguiseWebGLDesc, webglSpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseWebGL, AppStringsProvider.current().browserDisguiseWebGLDesc, webglSpoof) {
                                         webglSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseAudio, Strings.browserDisguiseAudioDesc, audioNoise) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseAudio, AppStringsProvider.current().browserDisguiseAudioDesc, audioNoise) {
                                         audioNoise = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseScreen, Strings.browserDisguiseScreenDesc, screenSpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseScreen, AppStringsProvider.current().browserDisguiseScreenDesc, screenSpoof) {
                                         screenSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseClientRects, Strings.browserDisguiseClientRectsDesc, clientRectsNoise) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseClientRects, AppStringsProvider.current().browserDisguiseClientRectsDesc, clientRectsNoise) {
                                         clientRectsNoise = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
-                                    // Level 3: 环境伪装
-                                    SectionHeader(Strings.browserDisguiseL3Title)
+                                    // Level 3
+                                    SectionHeader(AppStringsProvider.current().browserDisguiseL3Title)
                                     
-                                    VectorSwitch(Strings.browserDisguiseTimezone, Strings.browserDisguiseTimezoneDesc, timezoneSpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseTimezone, AppStringsProvider.current().browserDisguiseTimezoneDesc, timezoneSpoof) {
                                         timezoneSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseLanguage, Strings.browserDisguiseLanguageDesc, languageSpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseLanguage, AppStringsProvider.current().browserDisguiseLanguageDesc, languageSpoof) {
                                         languageSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguisePlatform, Strings.browserDisguisePlatformDesc, platformSpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguisePlatform, AppStringsProvider.current().browserDisguisePlatformDesc, platformSpoof) {
                                         platformSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseHardware, Strings.browserDisguiseHardwareDesc, hardwareConcurrencySpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseHardware, AppStringsProvider.current().browserDisguiseHardwareDesc, hardwareConcurrencySpoof) {
                                         hardwareConcurrencySpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseMemory, Strings.browserDisguiseMemoryDesc, deviceMemorySpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseMemory, AppStringsProvider.current().browserDisguiseMemoryDesc, deviceMemorySpoof) {
                                         deviceMemorySpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
-                                    // Level 4: 深度伪装
-                                    SectionHeader(Strings.browserDisguiseL4Title)
+                                    // Level 4
+                                    SectionHeader(AppStringsProvider.current().browserDisguiseL4Title)
                                     
-                                    VectorSwitch(Strings.browserDisguiseMediaDevices, Strings.browserDisguiseMediaDevicesDesc, mediaDevicesSpoof) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseMediaDevices, AppStringsProvider.current().browserDisguiseMediaDevicesDesc, mediaDevicesSpoof) {
                                         mediaDevicesSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseWebRTC, Strings.browserDisguiseWebRTCDesc, webrtcIpShield) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseWebRTC, AppStringsProvider.current().browserDisguiseWebRTCDesc, webrtcIpShield) {
                                         webrtcIpShield = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseFonts, Strings.browserDisguiseFontsDesc, fontEnumerationBlock) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseFonts, AppStringsProvider.current().browserDisguiseFontsDesc, fontEnumerationBlock) {
                                         fontEnumerationBlock = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseBattery, Strings.browserDisguiseBatteryDesc, batteryShield) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseBattery, AppStringsProvider.current().browserDisguiseBatteryDesc, batteryShield) {
                                         batteryShield = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
-                                    // Level 5: 原型链保护
-                                    SectionHeader(Strings.browserDisguiseL5Title)
+                                    // Level 5
+                                    SectionHeader(AppStringsProvider.current().browserDisguiseL5Title)
                                     
-                                    VectorSwitch(Strings.browserDisguisePrototype, Strings.browserDisguisePrototypeDesc, nativeToStringProtection) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguisePrototype, AppStringsProvider.current().browserDisguisePrototypeDesc, nativeToStringProtection) {
                                         nativeToStringProtection = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    VectorSwitch(Strings.browserDisguiseIframe, Strings.browserDisguiseIframeDesc, iframeDisguisePropagation) {
+                                    VectorSwitch(AppStringsProvider.current().browserDisguiseIframe, AppStringsProvider.current().browserDisguiseIframeDesc, iframeDisguisePropagation) {
                                         iframeDisguisePropagation = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
                                 }
                             }
                             
-                            // ===== 技术说明 =====
+                            // Note
                             Spacer(modifier = Modifier.height(12.dp))
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
@@ -432,7 +432,7 @@ fun BrowserDisguiseConfigCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.browserDisguiseTip,
+                                        AppStringsProvider.current().browserDisguiseTip,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -504,7 +504,7 @@ private fun CoverageDashboard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    Strings.browserDisguiseCoverageTitle,
+                    AppStringsProvider.current().browserDisguiseCoverageTitle,
                     style = MaterialTheme.typography.labelMedium,
                     color = levelColor
                 )
@@ -524,7 +524,7 @@ private fun CoverageDashboard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 覆盖率进度条
+            // Note
             LinearProgressIndicator(
                 progress = { coverage },
                 modifier = Modifier
@@ -543,7 +543,7 @@ private fun CoverageDashboard(
             ) {
                 Column {
                     Text(
-                        Strings.browserDisguiseActiveVectors,
+                        AppStringsProvider.current().browserDisguiseActiveVectors,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -556,7 +556,7 @@ private fun CoverageDashboard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        Strings.browserDisguiseCoverage,
+                        AppStringsProvider.current().browserDisguiseCoverage,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

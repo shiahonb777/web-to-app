@@ -1,12 +1,12 @@
 package com.webtoapp.core.wordpress
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
 /**
- * WordPress 示例项目管理器
+ * Note: brief English comment.
  */
 object WordPressSampleManager {
     
@@ -15,29 +15,29 @@ object WordPressSampleManager {
         return listOf(
             TypedSampleProject(
                 id = "wp-blog$suffix",
-                name = Strings.sampleWpBlogName,
-                description = Strings.sampleWpBlogDesc,
+                name = AppStringsProvider.current().sampleWpBlogName,
+                description = AppStringsProvider.current().sampleWpBlogDesc,
                 frameworkName = "WordPress",
                 icon = "📝",
-                tags = listOf("WP 6.4", Strings.sampleTagBlog, Strings.sampleTagSqlite),
+                tags = listOf("WP 6.4", AppStringsProvider.current().sampleTagBlog, AppStringsProvider.current().sampleTagSqlite),
                 brandColor = 0xFF21759B
             ),
             TypedSampleProject(
                 id = "wp-woocommerce$suffix",
-                name = Strings.sampleWpWooName,
-                description = Strings.sampleWpWooDesc,
+                name = AppStringsProvider.current().sampleWpWooName,
+                description = AppStringsProvider.current().sampleWpWooDesc,
                 frameworkName = "WooCommerce",
                 icon = "🛒",
-                tags = listOf("WooCommerce", Strings.sampleTagEcommerce, Strings.sampleTagSqlite),
+                tags = listOf("WooCommerce", AppStringsProvider.current().sampleTagEcommerce, AppStringsProvider.current().sampleTagSqlite),
                 brandColor = 0xFF96588A
             ),
             TypedSampleProject(
                 id = "wp-portfolio$suffix",
-                name = Strings.sampleWpPortfolioName,
-                description = Strings.sampleWpPortfolioDesc,
+                name = AppStringsProvider.current().sampleWpPortfolioName,
+                description = AppStringsProvider.current().sampleWpPortfolioDesc,
                 frameworkName = "WordPress",
                 icon = "🎨",
-                tags = listOf(Strings.sampleTagPortfolio, Strings.sampleTagResponsive, Strings.sampleTagSqlite),
+                tags = listOf(AppStringsProvider.current().sampleTagPortfolio, AppStringsProvider.current().sampleTagResponsive, AppStringsProvider.current().sampleTagSqlite),
                 brandColor = 0xFF0073AA
             )
         )

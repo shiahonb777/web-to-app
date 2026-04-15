@@ -31,14 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * 画廊播放器主界面
+ * Main gallery player screen.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -50,7 +50,7 @@ fun GalleryPlayerScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    // Get排序后的媒体列表
+    // Get sorted media list
     val items = remember(config) {
         when (config.playMode) {
             GalleryPlayMode.SHUFFLE -> config.getSortedItems().shuffled()
@@ -58,26 +58,26 @@ fun GalleryPlayerScreen(
         }
     }
     
-    // Pager 状态
+    // Pager state
     val pagerState = rememberPagerState(
         initialPage = startIndex,
         pageCount = { items.size }
     )
     
-    // 当前项索引 - 使用 settledPage 确保页面完全稳定后才更新
+    // Current index - update only when settledPage is stable
     val currentIndex by remember { derivedStateOf { pagerState.settledPage } }
     val currentItem = items.getOrNull(currentIndex)
     
-    // 控制 UI 显示状态
+    // UI visibility state
     var showControls by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(config.autoPlay) }
     
-    // Image自动播放计时器
+    // Image autoplay timer
     LaunchedEffect(currentIndex, isPlaying) {
-        // 只在页面完全停止后才开始计时
+        // Start timer only after page is fully settled
         if (isPlaying && currentItem?.type == GalleryItemType.IMAGE && !pagerState.isScrollInProgress) {
             delay(config.imageInterval * 1000L)
-            // Play下一个
+            // Play next
             if (currentIndex < items.size - 1) {
                 pagerState.animateScrollToPage(currentIndex + 1)
             } else if (config.loop) {
@@ -88,7 +88,7 @@ fun GalleryPlayerScreen(
         }
     }
     
-    // Auto隐藏控制 UI
+    // Auto-hide controls UI
     LaunchedEffect(showControls) {
         if (showControls) {
             delay(3000)
@@ -96,7 +96,7 @@ fun GalleryPlayerScreen(
         }
     }
     
-    // 背景颜色
+    // Background color
     val bgColor = remember(config.backgroundColor) {
         try {
             Color(android.graphics.Color.parseColor(config.backgroundColor))
@@ -115,7 +115,7 @@ fun GalleryPlayerScreen(
                 )
             }
     ) {
-        // 主内容 - HorizontalPager
+        // Main content - HorizontalPager
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -156,7 +156,7 @@ fun GalleryPlayerScreen(
             }
         }
         
-        // 顶部信息栏
+        // Top info bar
         AnimatedVisibility(
             visible = showControls && config.showMediaInfo,
             enter = fadeIn() + slideInVertically(),
@@ -171,7 +171,7 @@ fun GalleryPlayerScreen(
             )
         }
         
-        // 底部缩略图栏
+        // Bottom thumbnail bar
         if (config.showThumbnailBar) {
             AnimatedVisibility(
                 visible = showControls,
@@ -191,7 +191,7 @@ fun GalleryPlayerScreen(
             }
         }
         
-        // Play/暂停按钮（仅图片模式）
+        // Play/pause button (image mode only)
         if (currentItem?.type == GalleryItemType.IMAGE) {
             AnimatedVisibility(
                 visible = showControls,
@@ -210,7 +210,7 @@ fun GalleryPlayerScreen(
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) Strings.galleryPlayerPause else Strings.galleryPlayerPlay,
+                        contentDescription = if (isPlaying) AppStringsProvider.current().galleryPlayerPause else AppStringsProvider.current().galleryPlayerPlay,
                         modifier = Modifier.size(36.dp),
                         tint = Color.White
                     )
@@ -218,7 +218,7 @@ fun GalleryPlayerScreen(
             }
         }
         
-        // 左右导航箭头
+        // Left/right navigation arrows
         AnimatedVisibility(
             visible = showControls && currentIndex > 0,
             enter = fadeIn(),
@@ -242,7 +242,7 @@ fun GalleryPlayerScreen(
             ) {
                 Icon(
                     Icons.Default.ChevronLeft,
-                    contentDescription = Strings.galleryPlayerPrevious,
+                    contentDescription = AppStringsProvider.current().galleryPlayerPrevious,
                     tint = Color.White
                 )
             }
@@ -271,7 +271,7 @@ fun GalleryPlayerScreen(
             ) {
                 Icon(
                     Icons.Default.ChevronRight,
-                    contentDescription = Strings.galleryPlayerNext,
+                    contentDescription = AppStringsProvider.current().galleryPlayerNext,
                     tint = Color.White
                 )
             }
@@ -280,7 +280,7 @@ fun GalleryPlayerScreen(
 }
 
 /**
- * 顶部信息栏
+ * Top info bar.
  */
 @Composable
 private fun TopInfoBar(
@@ -303,7 +303,7 @@ private fun TopInfoBar(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = Strings.back,
+                    contentDescription = AppStringsProvider.current().back,
                     tint = Color.White
                 )
             }
@@ -327,7 +327,7 @@ private fun TopInfoBar(
                 )
             }
             
-            // Media类型图标
+            // Media type icon
             currentItem?.let { item ->
                 Icon(
                     if (item.type == GalleryItemType.VIDEO) Icons.Outlined.Videocam 
@@ -342,7 +342,7 @@ private fun TopInfoBar(
 }
 
 /**
- * 底部缩略图栏
+ * Bottom thumbnail bar.
  */
 @Composable
 private fun ThumbnailBar(
@@ -353,12 +353,12 @@ private fun ThumbnailBar(
     val context = LocalContext.current
     val listState = rememberLazyListState()
     
-    // Auto滚动到当前项
+    // Auto-scroll to current item
     LaunchedEffect(currentIndex) {
         if (currentIndex in items.indices) {
             listState.animateScrollToItem(
                 index = currentIndex,
-                scrollOffset = -100 // 偏移以居中显示
+                scrollOffset = -100 // Comment
             )
         }
     }
@@ -401,7 +401,7 @@ private fun ThumbnailBar(
                         contentScale = ContentScale.Crop
                     )
                     
-                    // Video标记
+                    // Video badge
                     if (item.type == GalleryItemType.VIDEO) {
                         Icon(
                             Icons.Default.PlayCircle,
@@ -419,7 +419,7 @@ private fun ThumbnailBar(
 }
 
 /**
- * 图片查看器
+ * Image viewer.
  */
 @Composable
 fun GalleryImageViewer(
@@ -445,7 +445,7 @@ fun GalleryImageViewer(
 }
 
 /**
- * 视频播放器
+ * Video player.
  */
 @Composable
 fun GalleryVideoPlayer(
@@ -469,7 +469,7 @@ fun GalleryVideoPlayer(
     var isFastForwarding by remember { mutableStateOf(false) }
     var playbackSpeed by remember { mutableFloatStateOf(1f) }
     
-    // Create和释放 MediaPlayer
+    // Create and release MediaPlayer
     DisposableEffect(item.path) {
         val mediaPlayer = android.media.MediaPlayer().apply {
             try {
@@ -503,7 +503,7 @@ fun GalleryVideoPlayer(
         }
     }
     
-    // Handle播放状态变化
+    // Handle playback state changes
     LaunchedEffect(isPlaying, isPrepared, isCurrentPage) {
         player?.let { mp ->
             if (isPrepared) {
@@ -516,7 +516,7 @@ fun GalleryVideoPlayer(
         }
     }
     
-    // Handle音量
+    // Handle volume
     LaunchedEffect(enableAudio, isPrepared) {
         player?.let { mp ->
             if (isPrepared) {
@@ -528,7 +528,7 @@ fun GalleryVideoPlayer(
         }
     }
     
-    // Update播放进度
+    // Update playback progress
     LaunchedEffect(isPlaying, isPrepared) {
         while (isPlaying && isPrepared) {
             player?.let { mp ->
@@ -542,12 +542,12 @@ fun GalleryVideoPlayer(
         }
     }
     
-    // 长按快进
+    // Long-press fast forward
     LaunchedEffect(isFastForwarding) {
         if (isFastForwarding) {
             player?.let { mp ->
                 try {
-                    // 使用 2x 速度播放
+                    // Play at 2x speed
                     mp.playbackParams = mp.playbackParams.setSpeed(2f)
                 } catch (e: Exception) {
                     // ignore
@@ -575,10 +575,10 @@ fun GalleryVideoPlayer(
                         player?.let { mp ->
                             if (isPrepared) {
                                 val newPosition = if (offset.x < width / 2) {
-                                    // 双击左侧，后退
+                                    // Double tap left to rewind
                                     (mp.currentPosition - seekAmount).coerceAtLeast(0)
                                 } else {
-                                    // 双击右侧，快进
+                                    // Double tap right to fast forward
                                     (mp.currentPosition + seekAmount).coerceAtMost(mp.duration)
                                 }
                                 mp.seekTo(newPosition)
@@ -620,7 +620,7 @@ fun GalleryVideoPlayer(
             modifier = Modifier.fillMaxSize()
         )
         
-        // Video控制层
+        // Video controls layer
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn(),
@@ -650,7 +650,7 @@ fun GalleryVideoPlayer(
             )
         }
         
-        // 快进指示
+        // Fast-forward indicator
         AnimatedVisibility(
             visible = isFastForwarding,
             enter = fadeIn(),
@@ -679,7 +679,7 @@ fun GalleryVideoPlayer(
 }
 
 /**
- * 视频控制栏
+ * Video control bar.
  */
 @Composable
 private fun VideoControlBar(
@@ -703,7 +703,7 @@ private fun VideoControlBar(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .navigationBarsPadding()
         ) {
-            // 进度条
+            // Progress bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -734,13 +734,13 @@ private fun VideoControlBar(
                 )
             }
             
-            // 控制按钮
+            // Control buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 倍速按钮
+                // Speed button
                 Box {
                     TextButton(onClick = { showSpeedMenu = true }) {
                         Text(
@@ -764,38 +764,38 @@ private fun VideoControlBar(
                     }
                 }
                 
-                // 后退 10 秒
+                // Rewind 10 seconds
                 IconButton(onClick = { onSeek((currentPosition - 10000).coerceAtLeast(0)) }) {
                     Icon(
                         Icons.Default.Replay10,
-                        contentDescription = Strings.galleryPlayerSeekBack,
+                        contentDescription = AppStringsProvider.current().galleryPlayerSeekBack,
                         tint = Color.White
                     )
                 }
                 
-                // Play/暂停
+                // Play/pause
                 IconButton(
                     onClick = onPlayPause,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) Strings.galleryPlayerPause else Strings.galleryPlayerPlay,
+                        contentDescription = if (isPlaying) AppStringsProvider.current().galleryPlayerPause else AppStringsProvider.current().galleryPlayerPlay,
                         modifier = Modifier.size(36.dp),
                         tint = Color.White
                     )
                 }
                 
-                // 快进 10 秒
+                // Forward 10 seconds
                 IconButton(onClick = { onSeek((currentPosition + 10000).coerceAtMost(duration)) }) {
                     Icon(
                         Icons.Default.Forward10,
-                        contentDescription = Strings.galleryPlayerSeekForward,
+                        contentDescription = AppStringsProvider.current().galleryPlayerSeekForward,
                         tint = Color.White
                     )
                 }
                 
-                // 占位
+                // Spacer
                 Spacer(modifier = Modifier.width(48.dp))
             }
         }
@@ -803,7 +803,7 @@ private fun VideoControlBar(
 }
 
 /**
- * 格式化时间
+ * Format time.
  */
 private fun formatTime(ms: Long): String {
     val seconds = (ms / 1000) % 60

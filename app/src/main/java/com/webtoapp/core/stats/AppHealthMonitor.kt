@@ -34,6 +34,14 @@ class AppHealthMonitor(
             }
         }
     }
+
+    init {
+        synchronized(Companion) {
+            if (INSTANCE == null) {
+                INSTANCE = this
+            }
+        }
+    }
     
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var monitorJob: Job? = null

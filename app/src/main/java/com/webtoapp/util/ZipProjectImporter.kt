@@ -11,13 +11,13 @@ import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 
 /**
- * ZIP 项目导入工具
+ * ZIP project importer
  * 
- * 功能：
- * 1. 解压 ZIP 文件到临时目录（自动处理嵌套根目录）
- * 2. 扫描并分类所有文件（HTML/CSS/JS/图片/字体/音频/视频/其他）
- * 3. 自动识别入口文件（index.html 优先）
- * 4. 生成项目分析报告（统计信息、问题检测）
+ * Features:
+ * 1. Extract ZIP to temp directory.
+ * 2. Scan and classify project files.
+ * 3. Detect entry file (prefer index.html).
+ * 4. Build analysis summary and warnings.
  */
 object ZipProjectImporter {
 
@@ -25,7 +25,7 @@ object ZipProjectImporter {
     private const val MAX_ZIP_SIZE = 500L * 1024 * 1024 // 500MB
     private const val MAX_ENTRY_COUNT = 10_000
 
-    // ==================== 文件分类扩展名 ====================
+    // ==================== File type extensions ====================
 
     private val HTML_EXTENSIONS = setOf("html", "htm", "xhtml")
     private val CSS_EXTENSIONS = setOf("css")
@@ -38,15 +38,15 @@ object ZipProjectImporter {
     private val VIDEO_EXTENSIONS = setOf("mp4", "webm", "mkv", "avi", "mov", "flv", "m4v")
     private val DATA_EXTENSIONS = setOf("json", "xml", "csv", "txt", "md", "yaml", "yml", "toml")
 
-    /** 应当跳过的文件/目录（macOS 元数据、版本控制等） */
+    /** Files/directories to skip (metadata and VCS folders). */
     private val SKIP_PATTERNS = setOf(
         "__MACOSX", ".DS_Store", "Thumbs.db", ".git", ".svn", ".hg",
         "node_modules", ".idea", ".vscode"
     )
 
-    // ==================== 数据模型 ====================
+    // ==================== Data models ====================
 
-    /** 文件资源类型（比 HtmlFileType 更细粒度） */
+    /** Resource type (more detailed than HtmlFileType). */
     enum class ResourceType(val icon: String, val label: String) {
         HTML("globe", "HTML"),
         CSS("palette", "CSS"),
@@ -59,17 +59,17 @@ object ZipProjectImporter {
         OTHER("attachment", "其他")
     }
 
-    /** 单个文件信息 */
+    /** Note. */
     data class ProjectFile(
-        val relativePath: String,   // 相对路径（如 "css/style.css"）
-        val absolutePath: String,   // 绝对路径
-        val size: Long,             // 文件大小（字节）
+        val relativePath: String,   // （ "css/style.css"）
+        val absolutePath: String,   // Note.
+        val size: Long,             // （）
         val resourceType: ResourceType
     ) {
         val fileName: String get() = relativePath.substringAfterLast('/')
         val extension: String get() = fileName.substringAfterLast('.', "").lowercase()
         
-        /** 转换为 HtmlFile */
+        /** HtmlFile */
         fun toHtmlFile(): HtmlFile = HtmlFile(
             name = relativePath,
             path = absolutePath,
@@ -84,7 +84,7 @@ object ZipProjectImporter {
         )
     }
 
-    /** 资源统计信息 */
+    /** Resource stats */
     data class ResourceStats(
         val type: ResourceType,
         val count: Int,
@@ -93,17 +93,17 @@ object ZipProjectImporter {
         val formattedSize: String get() = totalSize.toFileSizeString()
     }
 
-    /** ZIP 项目分析结果 */
+    /** ZIP */
     data class ZipProjectAnalysis(
-        val extractDir: String,                     // 解压目录路径
-        val allFiles: List<ProjectFile>,            // 所有文件列表
-        val entryFile: String,                      // 自动识别的入口文件（相对路径）
-        val htmlFiles: List<ProjectFile>,            // HTML 文件列表
-        val stats: List<ResourceStats>,             // 各类型资源统计
-        val totalFileCount: Int,                    // 文件总数
-        val totalSize: Long,                        // 总大小
-        val warnings: List<String>,                 // 警告信息
-        val zipFileName: String                     // 原始 ZIP 文件名
+        val extractDir: String,                     // Note.
+        val allFiles: List<ProjectFile>,            // Note.
+        val entryFile: String,                      // （）
+        val htmlFiles: List<ProjectFile>,            // HTML
+        val stats: List<ResourceStats>,             // Note.
+        val totalFileCount: Int,                    // Note.
+        val totalSize: Long,                        // Note.
+        val warnings: List<String>,                 // Note.
+        val zipFileName: String                     // ZIP
     ) {
         val suggestedAppName: String
             get() = zipFileName
@@ -116,24 +116,24 @@ object ZipProjectImporter {
         val formattedTotalSize: String get() = totalSize.toFileSizeString()
     }
 
-    // ==================== 核心方法 ====================
+    // ==================== ====================
 
     /**
-     * 从 URI 解压 ZIP 并分析项目
-     * @return 分析结果，失败时抛异常
+     * URI ZIP
+     * @return result
      */
     suspend fun importZip(context: Context, zipUri: Uri): ZipProjectAnalysis {
         val zipFileName = getZipFileName(context, zipUri) ?: "project.zip"
         AppLogger.i(TAG, "开始导入 ZIP: $zipFileName")
 
-        // 1. 解压
+        // 1.
         val extractDir = extractZip(context, zipUri)
         AppLogger.i(TAG, "解压完成: ${extractDir.absolutePath}")
 
-        // 2. 处理嵌套根目录（如 ZIP 内只有一个文件夹包裹了所有内容）
+        // 2. （ ZIP ）
         val projectRoot = unwrapSingleRootDir(extractDir)
 
-        // 3. 分析
+        // 3.
         val analysis = analyzeProject(projectRoot, zipFileName)
         AppLogger.i(TAG, "分析完成: ${analysis.totalFileCount} 个文件, ${analysis.formattedTotalSize}")
 
@@ -141,7 +141,7 @@ object ZipProjectImporter {
     }
 
     /**
-     * 解压 ZIP 到临时目录
+     * ZIP
      */
     private fun extractZip(context: Context, zipUri: Uri): File {
         val tempDir = File(context.cacheDir, "zip_import_${System.currentTimeMillis()}").apply {
@@ -157,7 +157,7 @@ object ZipProjectImporter {
                 ZipInputStream(inputStream).use { zis ->
                     var entry = zis.nextEntry
                     while (entry != null) {
-                        // 安全检查
+                        // Note.
                         entryCount++
                         if (entryCount > MAX_ENTRY_COUNT) {
                             throw ZipImportException("ZIP 文件包含过多条目（超过 $MAX_ENTRY_COUNT）")
@@ -165,14 +165,14 @@ object ZipProjectImporter {
 
                         val entryName = entry.name
 
-                        // 跳过不需要的文件/目录
+                        // /
                         if (shouldSkipEntry(entryName)) {
                             zis.closeEntry()
                             entry = zis.nextEntry
                             continue
                         }
 
-                        // Zip Slip 防护
+                        // Zip Slip
                         val targetFile = File(tempDir, entryName).canonicalFile
                         if (!targetFile.path.startsWith(tempDir.canonicalPath)) {
                             AppLogger.w(TAG, "跳过不安全的 ZIP 条目: $entryName")
@@ -222,7 +222,7 @@ object ZipProjectImporter {
     }
 
     /**
-     * 如果解压目录中只有一个子目录（常见的 ZIP 打包方式），展开它
+     * （ ZIP ），
      */
     private fun unwrapSingleRootDir(dir: File): File {
         val children = dir.listFiles() ?: return dir
@@ -234,13 +234,13 @@ object ZipProjectImporter {
     }
 
     /**
-     * 分析项目目录
+     * Note.
      */
     private fun analyzeProject(projectDir: File, zipFileName: String): ZipProjectAnalysis {
         val allFiles = mutableListOf<ProjectFile>()
         val warnings = mutableListOf<String>()
 
-        // 遍历所有文件
+        // Note.
         projectDir.walkTopDown()
             .filter { it.isFile }
             .filter { !shouldSkipEntry(it.name) }
@@ -257,16 +257,16 @@ object ZipProjectImporter {
                 )
             }
 
-        // 分类
+        // Note.
         val htmlFiles = allFiles.filter { it.resourceType == ResourceType.HTML }
 
-        // 自动识别入口文件
+        // Note.
         val entryFile = detectEntryFile(htmlFiles)
         if (entryFile == null && htmlFiles.isEmpty()) {
             warnings.add("未找到 HTML 文件，请确认 ZIP 内容正确")
         }
 
-        // 统计
+        // Note.
         val stats = ResourceType.entries
             .map { type ->
                 val files = allFiles.filter { it.resourceType == type }
@@ -278,7 +278,7 @@ object ZipProjectImporter {
             }
             .filter { it.count > 0 }
 
-        // 额外检查
+        // Note.
         if (allFiles.any { it.size > 50 * 1024 * 1024 }) {
             warnings.add("存在超过 50MB 的大文件，打包 APK 时可能影响安装包大小")
         }
@@ -297,35 +297,35 @@ object ZipProjectImporter {
     }
 
     /**
-     * 自动识别入口文件
-     * 优先级: index.html > index.htm > 根目录下的 HTML > 子目录的 HTML
+     * Note.
+     * : index.html > index.htm > HTML > HTML
      */
     private fun detectEntryFile(htmlFiles: List<ProjectFile>): String? {
         if (htmlFiles.isEmpty()) return null
 
-        // 1. 精确匹配 index.html（根目录）
+        // 1. index.html（）
         htmlFiles.find { it.relativePath.equals("index.html", ignoreCase = true) }
             ?.let { return it.relativePath }
 
-        // 2. 精确匹配 index.htm
+        // 2. index.htm
         htmlFiles.find { it.relativePath.equals("index.htm", ignoreCase = true) }
             ?.let { return it.relativePath }
 
-        // 3. 任意目录下的 index.html
+        // 3. index.html
         htmlFiles.find { it.fileName.equals("index.html", ignoreCase = true) }
             ?.let { return it.relativePath }
 
-        // 4. 根目录下的任意 HTML 文件
+        // 4. HTML
         htmlFiles.find { !it.relativePath.contains('/') }
             ?.let { return it.relativePath }
 
-        // 5. 第一个 HTML 文件
+        // 5. HTML
         return htmlFiles.firstOrNull()?.relativePath
     }
 
-    // ==================== 辅助方法 ====================
+    // ==================== ====================
 
-    /** 根据文件名分类资源类型 */
+    /** Note. */
     private fun classifyFile(fileName: String): ResourceType {
         val ext = fileName.substringAfterLast('.', "").lowercase()
         return when (ext) {
@@ -341,13 +341,13 @@ object ZipProjectImporter {
         }
     }
 
-    /** 是否应跳过此条目 */
+    /** Note. */
     private fun shouldSkipEntry(name: String): Boolean {
         val parts = name.split('/', '\\')
         return parts.any { part -> SKIP_PATTERNS.any { pattern -> part.equals(pattern, ignoreCase = true) } }
     }
 
-    /** 获取 ZIP 文件名 */
+    /** ZIP */
     private fun getZipFileName(context: Context, uri: Uri): String? {
         if (uri.scheme == "content") {
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -361,7 +361,7 @@ object ZipProjectImporter {
     }
 
     /**
-     * 清理导入临时文件
+     * Note.
      */
     fun cleanupTempFiles(context: Context) {
         try {
@@ -376,6 +376,6 @@ object ZipProjectImporter {
         }
     }
 
-    /** ZIP 导入异常 */
+    /** ZIP */
     class ZipImportException(message: String, cause: Throwable? = null) : Exception(message, cause)
 }

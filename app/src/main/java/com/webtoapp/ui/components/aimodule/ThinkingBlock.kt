@@ -1,6 +1,6 @@
 package com.webtoapp.ui.components.aimodule
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -26,14 +26,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * 思考块组件
+ * Note
  * 
- * 用于显示 AI 的思考过程，具有独特的视觉样式，与普通消息区分开来
+ * show AI, , with message
  * 
- * @param content 思考内容
- * @param isStreaming 是否正在流式输出
- * @param isExpanded 是否展开显示完整内容
- * @param onExpandToggle 展开/折叠切换回调
+ * @param content content
+ * @param isStreaming output
+ * @param isExpanded expanddisplay content
+ * @param onExpandToggle expand/collapseswitch
  * @param modifier Modifier
  * 
  * Requirements: 2.2
@@ -48,13 +48,13 @@ fun ThinkingBlock(
 ) {
     var expanded by remember { mutableStateOf(isExpanded) }
     
-    // 思考块的渐变背景色
+    // gradient
     val gradientColors = listOf(
         MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
         MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
     )
     
-    // 边框颜色动画（流式输出时）
+    // coloranimation( output)
     val infiniteTransition = rememberInfiniteTransition(label = "thinking")
     val borderAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -100,7 +100,7 @@ fun ThinkingBlock(
                 .padding(12.dp)
         ) {
             Column {
-                // 头部
+                // header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -110,7 +110,7 @@ fun ThinkingBlock(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 思考图标（带动画）
+                        // icon( animation)
                         ThinkingIcon(isAnimating = isStreaming)
                         
                         Text(
@@ -125,16 +125,16 @@ fun ThinkingBlock(
                         }
                     }
                     
-                    // Expand/折叠按钮
+                    // Expand/collapsebutton
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (expanded) Strings.cdCollapse else Strings.cdExpand,
+                        contentDescription = if (expanded) AppStringsProvider.current().cdCollapse else AppStringsProvider.current().cdExpand,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
                 
-                // 内容区域
+                // contentarea
                 AnimatedVisibility(
                     visible = expanded,
                     enter = expandVertically() + fadeIn(),
@@ -143,7 +143,7 @@ fun ThinkingBlock(
                     Column {
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // 分隔线
+                        // Note
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                             thickness = 0.5.dp
@@ -151,9 +151,9 @@ fun ThinkingBlock(
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // 思考内容
+                        // content
                         if (content.isBlank() && isStreaming) {
-                            // 等待内容时显示占位符
+                            // contentdisplay
                             Text(
                                 "正在分析...",
                                 style = MaterialTheme.typography.bodySmall,
@@ -171,7 +171,7 @@ fun ThinkingBlock(
                                     modifier = Modifier.weight(weight = 1f, fill = false)
                                 )
                                 
-                                // 流式输出时显示光标
+                                // outputdisplay
                                 if (isStreaming) {
                                     TypingCursor(
                                         modifier = Modifier.padding(start = 2.dp)
@@ -182,7 +182,7 @@ fun ThinkingBlock(
                     }
                 }
                 
-                // Collapse时显示预览
+                // Collapsedisplaypreview
                 if (!expanded && content.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -200,7 +200,7 @@ fun ThinkingBlock(
 }
 
 /**
- * 思考图标（带旋转动画）
+ * icon( animation)
  */
 @Composable
 private fun ThinkingIcon(
@@ -238,7 +238,7 @@ private fun ThinkingIcon(
 }
 
 /**
- * 思考中的动态点
+ * in
  */
 @Composable
 private fun ThinkingDots(
@@ -278,8 +278,8 @@ private fun ThinkingDots(
 }
 
 /**
- * 简化版思考块
- * 用于在消息列表中显示思考过程的简洁版本
+ * Note
+ * formessagelist display version
  */
 @Composable
 fun CompactThinkingBlock(
@@ -334,8 +334,8 @@ fun CompactThinkingBlock(
 }
 
 /**
- * 思考步骤列表项
- * 用于显示多个思考步骤
+ * list
+ * show
  */
 @Composable
 fun ThinkingStepItem(
@@ -353,7 +353,7 @@ fun ThinkingStepItem(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // 步骤编号
+        // Note
         Surface(
             shape = CircleShape,
             color = when {
@@ -386,7 +386,7 @@ fun ThinkingStepItem(
             }
         }
         
-        // 内容
+        // content
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 title,
@@ -410,7 +410,7 @@ fun ThinkingStepItem(
             }
         }
         
-        // 活动指示器
+        // indicator
         if (isActive) {
             ThinkingDots()
         }

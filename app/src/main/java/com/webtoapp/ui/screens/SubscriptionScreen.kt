@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -31,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.billing.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.AuthState
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
@@ -49,7 +50,7 @@ private fun Context.findActivity(): Activity? {
 }
 
 /**
- * 用户当前套餐层级
+ * usercurrent
  */
 private enum class UserTier {
     FREE, PRO_MONTHLY, PRO_QUARTERLY, PRO_YEARLY, PRO_LIFETIME, ULTRA_MONTHLY, ULTRA_QUARTERLY, ULTRA_YEARLY, ULTRA_LIFETIME
@@ -60,10 +61,10 @@ private fun UserTier.isUltra() = this in listOf(UserTier.ULTRA_MONTHLY, UserTier
 private fun UserTier.isLifetime() = this == UserTier.PRO_LIFETIME || this == UserTier.ULTRA_LIFETIME
 
 /**
- * 订阅购买页面
+ * Note
  *
- * 展示 Free、Pro、Ultra 三个层级的订阅方案。
- * 支持月度、年度和终身套餐切换。
+ * Free, Pro, Ultra.
+ * support, switch.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,19 +76,17 @@ fun SubscriptionScreen(
     val context = LocalContext.current
     val activity = context.findActivity()
     val isConnected by billingManager.isConnected.collectAsStateWithLifecycle()
-    val products by billingManager.products.collectAsStateWithLifecycle()
     val purchaseState by billingManager.purchaseState.collectAsStateWithLifecycle()
-    val currentSub by billingManager.currentSubscription.collectAsStateWithLifecycle()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
-    // 确保 Billing 已连接（如果 Application 预初始化失败则在此重试）
+    // ensure Billing( if Application initializefailed)
     LaunchedEffect(Unit) {
         if (!isConnected) {
             billingManager.connect()
         }
     }
 
-    // 从用户登录信息推断当前套餐
+    // fromuser current
     val userTier = remember(authState) {
         when (val state = authState) {
             is AuthState.LoggedIn -> {
@@ -109,7 +108,7 @@ fun SubscriptionScreen(
         }
     }
 
-    // 0=月度, 1=季度, 2=年度, 3=终身
+    // 0=, 1=, 2=, 3=
     var selectedPeriod by remember { mutableIntStateOf(
         when {
             userTier.isLifetime() -> 3
@@ -122,11 +121,11 @@ fun SubscriptionScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // 处理购买结果
+    // handle
     LaunchedEffect(purchaseState) {
         when (val state = purchaseState) {
             is PurchaseState.Success -> {
-                snackbarHostState.showSnackbar(Strings.subscriptionSuccess.format(state.plan.displayName))
+                snackbarHostState.showSnackbar(AppStringsProvider.current().subscriptionSuccess.format(state.plan.displayName))
                 billingManager.resetPurchaseState()
             }
             is PurchaseState.Error -> {
@@ -141,10 +140,10 @@ fun SubscriptionScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.selectPlan) },
+                title = { Text(AppStringsProvider.current().selectPlan) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -164,24 +163,24 @@ fun SubscriptionScreen(
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 标题
+            // Note
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        Strings.unlockAllFeatures,
+                        AppStringsProvider.current().unlockAllFeatures,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        Strings.chooseYourPlan,
+                        AppStringsProvider.current().chooseYourPlan,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // 周期切换: 月度 / 年度 / 终身
+            // switch: / /
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -193,22 +192,22 @@ fun SubscriptionScreen(
                     ) {
                         Row(modifier = Modifier.padding(4.dp)) {
                             PeriodChip(
-                                text = Strings.periodMonthly,
+                                text = AppStringsProvider.current().periodMonthly,
                                 selected = selectedPeriod == 0,
                                 onClick = { selectedPeriod = 0 }
                             )
                             PeriodChip(
-                                text = Strings.periodQuarterly,
+                                text = AppStringsProvider.current().periodQuarterly,
                                 selected = selectedPeriod == 1,
                                 onClick = { selectedPeriod = 1 }
                             )
                             PeriodChip(
-                                text = Strings.periodYearly,
+                                text = AppStringsProvider.current().periodYearly,
                                 selected = selectedPeriod == 2,
                                 onClick = { selectedPeriod = 2 }
                             )
                             PeriodChip(
-                                text = Strings.periodLifetime,
+                                text = AppStringsProvider.current().periodLifetime,
                                 selected = selectedPeriod == 3,
                                 onClick = { selectedPeriod = 3 }
                             )
@@ -217,19 +216,19 @@ fun SubscriptionScreen(
                 }
             }
 
-            // 当前用户状态提示（非 Free）
+            // currentuserstatehint( Free)
             if (userTier != UserTier.FREE) {
                 item {
                     val planDisplayName = when (userTier) {
-                        UserTier.PRO_MONTHLY -> Strings.proMonthly
-                        UserTier.PRO_QUARTERLY -> Strings.proQuarterly
-                        UserTier.PRO_YEARLY -> Strings.proYearly
-                        UserTier.PRO_LIFETIME -> Strings.proLifetime
-                        UserTier.ULTRA_MONTHLY -> Strings.ultraMonthly
-                        UserTier.ULTRA_QUARTERLY -> Strings.ultraQuarterly
-                        UserTier.ULTRA_YEARLY -> Strings.ultraYearly
-                        UserTier.ULTRA_LIFETIME -> Strings.ultraLifetime
-                        else -> Strings.tierFree
+                        UserTier.PRO_MONTHLY -> AppStringsProvider.current().proMonthly
+                        UserTier.PRO_QUARTERLY -> AppStringsProvider.current().proQuarterly
+                        UserTier.PRO_YEARLY -> AppStringsProvider.current().proYearly
+                        UserTier.PRO_LIFETIME -> AppStringsProvider.current().proLifetime
+                        UserTier.ULTRA_MONTHLY -> AppStringsProvider.current().ultraMonthly
+                        UserTier.ULTRA_QUARTERLY -> AppStringsProvider.current().ultraQuarterly
+                        UserTier.ULTRA_YEARLY -> AppStringsProvider.current().ultraYearly
+                        UserTier.ULTRA_LIFETIME -> AppStringsProvider.current().ultraLifetime
+                        else -> AppStringsProvider.current().tierFree
                     }
                     Surface(
                         shape = RoundedCornerShape(12.dp),
@@ -249,13 +248,13 @@ fun SubscriptionScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    Strings.currentPlan.format(planDisplayName),
+                                    AppStringsProvider.current().currentPlan.format(planDisplayName),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 if (userTier.isLifetime()) {
                                     Text(
-                                        Strings.validForever,
+                                        AppStringsProvider.current().validForever,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
@@ -266,12 +265,12 @@ fun SubscriptionScreen(
                 }
             }
 
-            // ═══ Free 方案 ═══
+            // ═══ Free ═══
             item {
                 FreeCard(isCurrent = userTier == UserTier.FREE)
             }
 
-            // ═══ Pro 方案 ═══
+            // ═══ Pro ═══
             item {
                 val isCurrentPro = when (selectedPeriod) {
                     0 -> userTier == UserTier.PRO_MONTHLY
@@ -280,7 +279,7 @@ fun SubscriptionScreen(
                     3 -> userTier == UserTier.PRO_LIFETIME
                     else -> false
                 }
-                // 如果用户已经是 Ultra 任意等级，Pro 也不需要显示"订阅"
+                // ifuser Ultra, Pro display" "
                 val isDowngrade = userTier.isUltra()
 
                 when (selectedPeriod) {
@@ -288,9 +287,9 @@ fun SubscriptionScreen(
                         val plan = SubscriptionPlan.PRO_MONTHLY
                         val price = billingManager.getFormattedPrice(plan) ?: "$3"
                         SubscriptionCard(
-                            tierName = Strings.tierPro,
+                            tierName = AppStringsProvider.current().tierPro,
                             price = price,
-                            period = Strings.perMonth,
+                            period = AppStringsProvider.current().perMonth,
                             gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
                             features = proFeatures(),
                             isCurrent = isCurrentPro,
@@ -303,9 +302,9 @@ fun SubscriptionScreen(
                         val plan = SubscriptionPlan.PRO_QUARTERLY
                         val price = billingManager.getFormattedPrice(plan) ?: "$8.10"
                         SubscriptionCard(
-                            tierName = Strings.tierPro,
+                            tierName = AppStringsProvider.current().tierPro,
                             price = price,
-                            period = Strings.perQuarter,
+                            period = AppStringsProvider.current().perQuarter,
                             gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
                             features = proFeatures(),
                             isCurrent = isCurrentPro,
@@ -318,9 +317,9 @@ fun SubscriptionScreen(
                         val plan = SubscriptionPlan.PRO_YEARLY
                         val price = billingManager.getFormattedPrice(plan) ?: "$28.80"
                         SubscriptionCard(
-                            tierName = Strings.tierPro,
+                            tierName = AppStringsProvider.current().tierPro,
                             price = price,
-                            period = Strings.perYear,
+                            period = AppStringsProvider.current().perYear,
                             gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
                             features = proFeatures(),
                             isCurrent = isCurrentPro,
@@ -331,12 +330,12 @@ fun SubscriptionScreen(
                     }
                     3 -> {
                         SubscriptionCard(
-                            tierName = Strings.tierPro,
+                            tierName = AppStringsProvider.current().tierPro,
                             price = "$99",
-                            period = Strings.oneTime,
+                            period = AppStringsProvider.current().oneTime,
                             gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
                             features = proFeatures() + listOf(
-                                FeatureItem(Icons.Outlined.AllInclusive, Strings.neverExpires, Strings.oneTimePurchaseLifetime)
+                                FeatureItem(Icons.Outlined.AllInclusive, AppStringsProvider.current().neverExpires, AppStringsProvider.current().oneTimePurchaseLifetime)
                             ),
                             isCurrent = isCurrentPro,
                             isDowngrade = isDowngrade,
@@ -344,7 +343,7 @@ fun SubscriptionScreen(
                             isLifetime = true,
                             onSubscribe = {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar(Strings.redeemWithActivationCode)
+                                    snackbarHostState.showSnackbar(AppStringsProvider.current().redeemWithActivationCode)
                                 }
                             }
                         )
@@ -352,7 +351,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // ═══ Ultra 方案 ═══
+            // ═══ Ultra ═══
             item {
                 val isCurrentUltra = when (selectedPeriod) {
                     0 -> userTier == UserTier.ULTRA_MONTHLY
@@ -367,9 +366,9 @@ fun SubscriptionScreen(
                         val plan = SubscriptionPlan.ULTRA_MONTHLY
                         val price = billingManager.getFormattedPrice(plan) ?: "$9"
                         SubscriptionCard(
-                            tierName = Strings.tierUltra,
+                            tierName = AppStringsProvider.current().tierUltra,
                             price = price,
-                            period = Strings.perMonth,
+                            period = AppStringsProvider.current().perMonth,
                             gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
                             isRecommended = true,
                             features = ultraFeatures(),
@@ -382,9 +381,9 @@ fun SubscriptionScreen(
                         val plan = SubscriptionPlan.ULTRA_QUARTERLY
                         val price = billingManager.getFormattedPrice(plan) ?: "$24.30"
                         SubscriptionCard(
-                            tierName = Strings.tierUltra,
+                            tierName = AppStringsProvider.current().tierUltra,
                             price = price,
-                            period = Strings.perQuarter,
+                            period = AppStringsProvider.current().perQuarter,
                             gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
                             isRecommended = true,
                             features = ultraFeatures(),
@@ -397,9 +396,9 @@ fun SubscriptionScreen(
                         val plan = SubscriptionPlan.ULTRA_YEARLY
                         val price = billingManager.getFormattedPrice(plan) ?: "$86.40"
                         SubscriptionCard(
-                            tierName = Strings.tierUltra,
+                            tierName = AppStringsProvider.current().tierUltra,
                             price = price,
-                            period = Strings.perYear,
+                            period = AppStringsProvider.current().perYear,
                             gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
                             isRecommended = true,
                             features = ultraFeatures(),
@@ -410,21 +409,21 @@ fun SubscriptionScreen(
                     }
                     3 -> {
                         SubscriptionCard(
-                            tierName = Strings.tierUltra,
+                            tierName = AppStringsProvider.current().tierUltra,
                             price = "$199",
-                            period = Strings.oneTime,
+                            period = AppStringsProvider.current().oneTime,
                             gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
                             isRecommended = true,
                             features = ultraFeatures() + listOf(
-                                FeatureItem(Icons.Outlined.AllInclusive, Strings.neverExpires, Strings.oneTimePurchaseLifetime)
+                                FeatureItem(Icons.Outlined.AllInclusive, AppStringsProvider.current().neverExpires, AppStringsProvider.current().oneTimePurchaseLifetime)
                             ),
                             isCurrent = isCurrentUltra,
                             isLoading = purchaseState is PurchaseState.Loading,
                             isLifetime = true,
-                            upgradeNote = if (userTier == UserTier.PRO_LIFETIME) Strings.proUpgradeNote else null,
+                            upgradeNote = if (userTier == UserTier.PRO_LIFETIME) AppStringsProvider.current().proUpgradeNote else null,
                             onSubscribe = {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar(Strings.redeemWithActivationCode)
+                                    snackbarHostState.showSnackbar(AppStringsProvider.current().redeemWithActivationCode)
                                 }
                             }
                         )
@@ -432,7 +431,7 @@ fun SubscriptionScreen(
                 }
             }
 
-            // 恢复购买
+            // Note
             item {
                 TextButton(
                     onClick = {
@@ -442,14 +441,14 @@ fun SubscriptionScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(Strings.restorePurchase, textDecoration = TextDecoration.Underline)
+                    Text(AppStringsProvider.current().restorePurchase, textDecoration = TextDecoration.Underline)
                 }
             }
 
-            // 说明
+            // Note
             item {
                 Text(
-                    Strings.subscriptionDisclaimer,
+                    AppStringsProvider.current().subscriptionDisclaimer,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
@@ -463,29 +462,29 @@ fun SubscriptionScreen(
         }
 }
 
-// ─── 功能列表 ───
+// list
 
 private fun proFeatures() = listOf(
-    FeatureItem(Icons.Outlined.Cloud, Strings.proCloudProjects, Strings.proCloudProjectsDesc),
-    FeatureItem(Icons.Outlined.VpnKey, Strings.proActivationCodeSystem, Strings.proActivationCodeSystemDesc),
-    FeatureItem(Icons.Outlined.Update, Strings.proAutoUpdates, Strings.proAutoUpdatesDesc),
-    FeatureItem(Icons.Outlined.Campaign, Strings.proAnnouncements, Strings.proAnnouncementsDesc),
-    FeatureItem(Icons.Outlined.Settings, Strings.proRemoteConfig, Strings.proRemoteConfigDesc),
-    FeatureItem(Icons.Outlined.Webhook, Strings.proWebhook, Strings.proWebhookDesc),
-    FeatureItem(Icons.Outlined.Analytics, Strings.proAnalytics, Strings.proAnalyticsDesc),
+    FeatureItem(Icons.Outlined.Cloud, AppStringsProvider.current().proCloudProjects, AppStringsProvider.current().proCloudProjectsDesc),
+    FeatureItem(Icons.Outlined.VpnKey, AppStringsProvider.current().proActivationCodeSystem, AppStringsProvider.current().proActivationCodeSystemDesc),
+    FeatureItem(Icons.Outlined.Update, AppStringsProvider.current().proAutoUpdates, AppStringsProvider.current().proAutoUpdatesDesc),
+    FeatureItem(Icons.Outlined.Campaign, AppStringsProvider.current().proAnnouncements, AppStringsProvider.current().proAnnouncementsDesc),
+    FeatureItem(Icons.Outlined.Settings, AppStringsProvider.current().proRemoteConfig, AppStringsProvider.current().proRemoteConfigDesc),
+    FeatureItem(Icons.Outlined.Webhook, AppStringsProvider.current().proWebhook, AppStringsProvider.current().proWebhookDesc),
+    FeatureItem(Icons.Outlined.Analytics, AppStringsProvider.current().proAnalytics, AppStringsProvider.current().proAnalyticsDesc),
 )
 
 private fun ultraFeatures() = listOf(
-    FeatureItem(Icons.Filled.Star, Strings.ultraIncludesAllPro, ""),
-    FeatureItem(Icons.Outlined.Notifications, Strings.ultraFcmPush, Strings.ultraFcmPushDesc),
-    FeatureItem(Icons.Outlined.VpnKey, Strings.ultraActivationCodeLimit, Strings.ultraActivationCodeLimitDesc),
-    FeatureItem(Icons.Outlined.Campaign, Strings.ultraAnnouncementLimit, Strings.ultraAnnouncementLimitDesc),
-    FeatureItem(Icons.Outlined.Cloud, Strings.ultraProjectLimit, Strings.ultraProjectLimitDesc),
-    FeatureItem(Icons.Outlined.Storage, Strings.ultraR2Storage, Strings.ultraR2StorageDesc),
-    FeatureItem(Icons.Outlined.Speed, Strings.ultraPrioritySupport, Strings.ultraPrioritySupportDesc),
+    FeatureItem(Icons.Filled.Star, AppStringsProvider.current().ultraIncludesAllPro, ""),
+    FeatureItem(Icons.Outlined.Notifications, AppStringsProvider.current().ultraFcmPush, AppStringsProvider.current().ultraFcmPushDesc),
+    FeatureItem(Icons.Outlined.VpnKey, AppStringsProvider.current().ultraActivationCodeLimit, AppStringsProvider.current().ultraActivationCodeLimitDesc),
+    FeatureItem(Icons.Outlined.Campaign, AppStringsProvider.current().ultraAnnouncementLimit, AppStringsProvider.current().ultraAnnouncementLimitDesc),
+    FeatureItem(Icons.Outlined.Cloud, AppStringsProvider.current().ultraProjectLimit, AppStringsProvider.current().ultraProjectLimitDesc),
+    FeatureItem(Icons.Outlined.Storage, AppStringsProvider.current().ultraR2Storage, AppStringsProvider.current().ultraR2StorageDesc),
+    FeatureItem(Icons.Outlined.Speed, AppStringsProvider.current().ultraPrioritySupport, AppStringsProvider.current().ultraPrioritySupportDesc),
 )
 
-// ─── 组件 ───
+// Note
 
 private data class FeatureItem(
     val icon: ImageVector,
@@ -511,7 +510,7 @@ private fun PeriodChip(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Free 套餐卡片 — 展示免费版功能
+ * Free card
  */
 @Composable
 private fun FreeCard(isCurrent: Boolean) {
@@ -520,7 +519,7 @@ private fun FreeCard(isCurrent: Boolean) {
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column {
-            // 头部
+            // header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -536,7 +535,7 @@ private fun FreeCard(isCurrent: Boolean) {
             ) {
                 Column {
                     Text(
-                        Strings.tierFree,
+                        AppStringsProvider.current().tierFree,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -551,7 +550,7 @@ private fun FreeCard(isCurrent: Boolean) {
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            Strings.freeForever,
+                            AppStringsProvider.current().freeForever,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontSize = 14.sp,
                             modifier = Modifier.padding(bottom = 4.dp)
@@ -560,7 +559,7 @@ private fun FreeCard(isCurrent: Boolean) {
                 }
             }
 
-            // 功能列表
+            // list
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -569,11 +568,11 @@ private fun FreeCard(isCurrent: Boolean) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 val freeFeatures = listOf(
-                    FeatureItem(Icons.Outlined.PhoneAndroid, Strings.freeUnlimitedApps, Strings.freeUnlimitedAppsDesc),
-                    FeatureItem(Icons.Outlined.Build, Strings.freeLocalBuild, Strings.freeLocalBuildDesc),
-                    FeatureItem(Icons.Outlined.Extension, Strings.freeExtensionSystem, Strings.freeExtensionSystemDesc),
-                    FeatureItem(Icons.Outlined.Storefront, Strings.freeMarketplace, Strings.freeMarketplaceDesc),
-                    FeatureItem(Icons.Outlined.SmartToy, Strings.freeAiAssistant, Strings.freeAiAssistantDesc),
+                    FeatureItem(Icons.Outlined.PhoneAndroid, AppStringsProvider.current().freeUnlimitedApps, AppStringsProvider.current().freeUnlimitedAppsDesc),
+                    FeatureItem(Icons.Outlined.Build, AppStringsProvider.current().freeLocalBuild, AppStringsProvider.current().freeLocalBuildDesc),
+                    FeatureItem(Icons.Outlined.Extension, AppStringsProvider.current().freeExtensionSystem, AppStringsProvider.current().freeExtensionSystemDesc),
+                    FeatureItem(Icons.Outlined.Storefront, AppStringsProvider.current().freeMarketplace, AppStringsProvider.current().freeMarketplaceDesc),
+                    FeatureItem(Icons.Outlined.SmartToy, AppStringsProvider.current().freeAiAssistant, AppStringsProvider.current().freeAiAssistantDesc),
                 )
                 freeFeatures.forEach { feature ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -612,7 +611,7 @@ private fun FreeCard(isCurrent: Boolean) {
                     enabled = false
                 ) {
                     Text(
-                        if (isCurrent) Strings.currentScheme else Strings.basicPlan,
+                        if (isCurrent) AppStringsProvider.current().currentScheme else AppStringsProvider.current().basicPlan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -645,7 +644,7 @@ private fun SubscriptionCard(
         } else Modifier
     ) {
         Column {
-            // 头部（渐变）
+            // header( gradient)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -659,7 +658,7 @@ private fun SubscriptionCard(
                             color = Color.White.copy(alpha = 0.25f)
                         ) {
                             Text(
-                                Strings.recommended,
+                                AppStringsProvider.current().recommended,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
                                 color = Color.White,
                                 fontSize = 11.sp,
@@ -683,7 +682,7 @@ private fun SubscriptionCard(
                                 color = Color.White.copy(alpha = 0.2f)
                             ) {
                                 Text(
-                                    "∞ " + Strings.periodLifetime,
+                                    "∞ " + AppStringsProvider.current().periodLifetime,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                     color = Color.White,
                                     fontSize = 12.sp,
@@ -711,7 +710,7 @@ private fun SubscriptionCard(
                         }
                     }
 
-                    // 升级提示
+                    // hint
                     if (upgradeNote != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
@@ -723,7 +722,7 @@ private fun SubscriptionCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    Icons.Outlined.TrendingUp,
+                                    Icons.AutoMirrored.Outlined.TrendingUp,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                     tint = Color.White
@@ -741,7 +740,7 @@ private fun SubscriptionCard(
                 }
             }
 
-            // 功能列表
+            // list
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -777,7 +776,7 @@ private fun SubscriptionCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 订阅按钮
+                // button
                 PremiumButton(
                     onClick = onSubscribe,
                     modifier = Modifier
@@ -798,10 +797,10 @@ private fun SubscriptionCard(
                     } else {
                         Text(
                             when {
-                                isCurrent -> Strings.currentScheme
-                                isDowngrade -> Strings.hasHigherPlan
-                                isLifetime -> Strings.redeemWithActivationCode
-                                else -> Strings.subscribeTierName.format(tierName)
+                                isCurrent -> AppStringsProvider.current().currentScheme
+                                isDowngrade -> AppStringsProvider.current().hasHigherPlan
+                                isLifetime -> AppStringsProvider.current().redeemWithActivationCode
+                                else -> AppStringsProvider.current().subscribeTierName.format(tierName)
                             },
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp

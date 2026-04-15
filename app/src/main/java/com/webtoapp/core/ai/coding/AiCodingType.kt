@@ -1,11 +1,11 @@
 package com.webtoapp.core.ai.coding
 
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * AI 编程支持的应用类型
+ * AI Coding.
  * 
- * 7种需要代码构建的应用类型（排除网页、媒体、画廊）
+ * Note.
  */
 enum class AiCodingType(
     val icon: String,
@@ -57,33 +57,33 @@ enum class AiCodingType(
     );
 
     /**
-     * 获取本地化显示名称
+     * Note.
      */
     fun getDisplayName(): String = when (this) {
-        HTML -> Strings.codingTypeHtml
-        FRONTEND -> Strings.codingTypeFrontend
-        NODEJS -> Strings.codingTypeNodejs
-        WORDPRESS -> Strings.codingTypeWordpress
-        PHP -> Strings.codingTypePhp
-        PYTHON -> Strings.codingTypePython
-        GO -> Strings.codingTypeGo
+        HTML -> AppStringsProvider.current().codingTypeHtml
+        FRONTEND -> AppStringsProvider.current().codingTypeFrontend
+        NODEJS -> AppStringsProvider.current().codingTypeNodejs
+        WORDPRESS -> AppStringsProvider.current().codingTypeWordpress
+        PHP -> AppStringsProvider.current().codingTypePhp
+        PYTHON -> AppStringsProvider.current().codingTypePython
+        GO -> AppStringsProvider.current().codingTypeGo
     }
 
     /**
-     * 获取本地化描述
+     * Note.
      */
     fun getDescription(): String = when (this) {
-        HTML -> Strings.codingTypeHtmlDesc
-        FRONTEND -> Strings.codingTypeFrontendDesc
-        NODEJS -> Strings.codingTypeNodejsDesc
-        WORDPRESS -> Strings.codingTypeWordpressDesc
-        PHP -> Strings.codingTypePhpDesc
-        PYTHON -> Strings.codingTypePythonDesc
-        GO -> Strings.codingTypeGoDesc
+        HTML -> AppStringsProvider.current().codingTypeHtmlDesc
+        FRONTEND -> AppStringsProvider.current().codingTypeFrontendDesc
+        NODEJS -> AppStringsProvider.current().codingTypeNodejsDesc
+        WORDPRESS -> AppStringsProvider.current().codingTypeWordpressDesc
+        PHP -> AppStringsProvider.current().codingTypePhpDesc
+        PYTHON -> AppStringsProvider.current().codingTypePythonDesc
+        GO -> AppStringsProvider.current().codingTypeGoDesc
     }
 
     /**
-     * 获取主要编程语言
+     * Note.
      */
     fun getPrimaryLanguage(): String = when (this) {
         HTML -> "html"
@@ -96,33 +96,33 @@ enum class AiCodingType(
     }
 
     /**
-     * 获取写入文件的工具名称
+     * Note.
      */
     fun getWriteToolName(): String = "write_file"
 
     /**
-     * 获取写入文件的工具描述（已本地化）
+     * Note.
      */
     fun getWriteToolDescription(): String = when (this) {
-        HTML -> Strings.writeToolDescHtml
-        FRONTEND -> Strings.writeToolDescFrontend
-        NODEJS -> Strings.writeToolDescNodejs
-        WORDPRESS -> Strings.writeToolDescWordpress
-        PHP -> Strings.writeToolDescPhp
-        PYTHON -> Strings.writeToolDescPython
-        GO -> Strings.writeToolDescGo
+        HTML -> AppStringsProvider.current().writeToolDescHtml
+        FRONTEND -> AppStringsProvider.current().writeToolDescFrontend
+        NODEJS -> AppStringsProvider.current().writeToolDescNodejs
+        WORDPRESS -> AppStringsProvider.current().writeToolDescWordpress
+        PHP -> AppStringsProvider.current().writeToolDescPhp
+        PYTHON -> AppStringsProvider.current().writeToolDescPython
+        GO -> AppStringsProvider.current().writeToolDescGo
     }
 
     /**
-     * 获取本地化示例提示词
+     * Note.
      */
     fun getExamplePrompts(): List<String> = when (this) {
-        HTML -> listOf(Strings.aiPromptHtml1, Strings.aiPromptHtml2)
-        FRONTEND -> listOf(Strings.aiPromptFrontend1, Strings.aiPromptFrontend2)
-        NODEJS -> listOf(Strings.aiPromptNodejs1, Strings.aiPromptNodejs2)
-        WORDPRESS -> listOf(Strings.aiPromptWordpress1, Strings.aiPromptWordpress2)
-        PHP -> listOf(Strings.aiPromptPhp1, Strings.aiPromptPhp2)
-        PYTHON -> listOf(Strings.aiPromptPython1, Strings.aiPromptPython2)
-        GO -> listOf(Strings.aiPromptGo1, Strings.aiPromptGo2)
+        HTML -> listOf(AppStringsProvider.current().aiPromptHtml1, AppStringsProvider.current().aiPromptHtml2)
+        FRONTEND -> listOf(AppStringsProvider.current().aiPromptFrontend1, AppStringsProvider.current().aiPromptFrontend2)
+        NODEJS -> listOf(AppStringsProvider.current().aiPromptNodejs1, AppStringsProvider.current().aiPromptNodejs2)
+        WORDPRESS -> listOf(AppStringsProvider.current().aiPromptWordpress1, AppStringsProvider.current().aiPromptWordpress2)
+        PHP -> listOf(AppStringsProvider.current().aiPromptPhp1, AppStringsProvider.current().aiPromptPhp2)
+        PYTHON -> listOf(AppStringsProvider.current().aiPromptPython1, AppStringsProvider.current().aiPromptPython2)
+        GO -> listOf(AppStringsProvider.current().aiPromptGo1, AppStringsProvider.current().aiPromptGo2)
     }
 }

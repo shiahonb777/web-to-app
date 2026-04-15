@@ -5,26 +5,26 @@ import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.forcedrun.ForcedRunManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.shell.ShellRuntimeServices
 
 /**
- * ShellActivity 的 onCreate 初始化辅助
+ * ShellActivity onCreate initialize
  *
- * 将 onCreate 中大量的配置初始化逻辑提取到独立函数中，
- * 减少 ShellActivity.onCreate() 的行数。
+ * map onCreate configinitialize,
+ * ShellActivity. onCreate( ) .
  */
 object ShellActivityInit {
 
     /**
-     * 初始化日志系统（尽早调用以捕获崩溃）
+     * initialize system( call)
      */
     fun initLogger(activity: AppCompatActivity) {
         try {
-            val tempConfig = WebToAppApplication.shellMode.getConfig()
+            val tempConfig = ShellRuntimeServices.shellMode.getConfig()
             val versionName = try {
                 activity.packageManager.getPackageInfo(activity.packageName, 0).versionName ?: "1.0.0"
             } catch (e: Exception) { "1.0.0" }
@@ -36,7 +36,7 @@ object ShellActivityInit {
             )
             com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "onCreate 开始")
             
-            // C 级系统层 Activity 优化 (Window flags, CPU 亲和性, 动画自适应)
+            // C system Activity( Window flags, CPU, animation)
             com.webtoapp.core.perf.SystemPerfOptimizer.optimizeActivity(activity)
         } catch (e: Exception) {
             AppLogger.e("ShellActivity", "日志系统初始化失败", e)
@@ -44,7 +44,7 @@ object ShellActivityInit {
     }
 
     /**
-     * 初始化强制运行管理器
+     * initializeforce- runmanager
      */
     fun initForcedRunManager(
         activity: AppCompatActivity,
@@ -52,7 +52,7 @@ object ShellActivityInit {
         forcedRunManager: ForcedRunManager,
         onStateChanged: (Boolean, com.webtoapp.core.forcedrun.ForcedRunConfig?) -> Unit
     ) {
-        // 设置硬件控制器的目标 Activity
+        // settingshardware Activity
         try {
             val hardwareController = com.webtoapp.core.forcedrun.ForcedRunHardwareController.getInstance(activity)
             hardwareController.setTargetActivity(activity)
@@ -61,7 +61,7 @@ object ShellActivityInit {
             com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "硬件控制器初始化失败", e)
         }
 
-        // 初始化强制运行管理器
+        // initializeforce- runmanager
         if (config.forcedRunConfig?.enabled == true) {
             try {
                 forcedRunManager.setTargetActivity(
@@ -81,22 +81,22 @@ object ShellActivityInit {
     }
 
     /**
-     * 注册自启动配置
-     * 仅在配置变更时重新调度，避免每次 Activity 创建都重复注册
+     * register config
+     * only config, Activity create register
      */
     fun initAutoStart(activity: AppCompatActivity, config: ShellConfig) {
         config.autoStartConfig?.let { autoStartConfig ->
             try {
                 val autoStartManager = com.webtoapp.core.autostart.AutoStartManager(activity)
                 
-                // 注册开机自启动
+                // register
                 autoStartManager.setBootStart(
                     appId = 0L, 
                     enabled = autoStartConfig.bootStartEnabled,
                     delayMs = com.webtoapp.core.autostart.AutoStartManager.DEFAULT_BOOT_DELAY_MS
                 )
                 
-                // 注册定时自启动
+                // register
                 if (autoStartConfig.scheduledStartEnabled) {
                     autoStartManager.setScheduledStart(
                         appId = 0L,
@@ -116,7 +116,7 @@ object ShellActivityInit {
     }
 
     /**
-     * 初始化独立环境/多开配置
+     * initialize / config
      */
     fun initIsolation(activity: AppCompatActivity, config: ShellConfig) {
         if (config.isolationEnabled && config.isolationConfig != null) {
@@ -134,7 +134,7 @@ object ShellActivityInit {
     }
 
     /**
-     * 初始化后台运行服务
+     * initialize run
      */
     fun initBackgroundService(activity: AppCompatActivity, config: ShellConfig) {
         if (config.backgroundRunEnabled) {
@@ -157,7 +157,7 @@ object ShellActivityInit {
     }
 
     /**
-     * 设置任务列表中显示的应用名称
+     * settings list display app
      */
     fun setTaskDescription(activity: AppCompatActivity, appName: String) {
         try {
@@ -169,7 +169,7 @@ object ShellActivityInit {
     }
 
     /**
-     * 创建返回键处理回调
+     * createback handle
      */
     fun createBackPressedCallback(
         activity: AppCompatActivity,
@@ -181,13 +181,13 @@ object ShellActivityInit {
         return object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (forcedRunManager.handleKeyEvent(KeyEvent.KEYCODE_BACK)) {
-                    Toast.makeText(activity, Strings.cannotExitDuringForcedRun, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, AppStringsProvider.current().cannotExitDuringForcedRun, Toast.LENGTH_SHORT).show()
                     return
                 }
                 when {
                     getCustomView() != null -> hideCustomView()
                     else -> {
-                        // 先向 WebView 派发 ESC 按键事件，让 JS 脚本有机会处理
+                        // WebView dispatch ESC, JS handle
                         val wv = getWebView()
                         if (wv != null) {
                             wv.evaluateJavascript("""
@@ -201,10 +201,10 @@ object ShellActivityInit {
                                 })();
                             """.trimIndent()) { result ->
                                 if (result == "true") {
-                                    // JS 脚本调用了 preventDefault()，不执行原生返回
+                                    // JS call preventDefault( ) , execute back
                                     return@evaluateJavascript
                                 }
-                                // JS 未拦截，执行原生返回行为
+                                // JS intercept, execute back
                                 // Skip about:blank in history to avoid flashing blank page
                                 val backList = wv.copyBackForwardList()
                                 val currentIndex = backList.currentIndex

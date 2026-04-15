@@ -9,11 +9,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -41,7 +42,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.CommunityUserProfile
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,14 +80,14 @@ fun SearchUsersSheet(
         Column(
             Modifier.padding(horizontal = 20.dp).padding(bottom = 24.dp)
         ) {
-            Text(Strings.communitySearchAll, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(AppStringsProvider.current().communitySearchAll, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("users" to Strings.communityTabUsers, "posts" to Strings.communityTabPostsSearch).forEach { (key, label) ->
+                listOf("users" to AppStringsProvider.current().communityTabUsers, "posts" to AppStringsProvider.current().communityTabPostsSearch).forEach { (key, label) ->
                     val isSelected = activeTab == key
                     Surface(
                         onClick = {
@@ -127,7 +128,7 @@ fun SearchUsersSheet(
                 onValueChange = { dispatchSearch(it) },
                 placeholder = {
                     Text(
-                        if (activeTab == "users") Strings.communitySearchHint else Strings.communitySearchPostsHint,
+                        if (activeTab == "users") AppStringsProvider.current().communitySearchHint else AppStringsProvider.current().communitySearchPostsHint,
                         fontSize = 14.sp
                     )
                 },
@@ -153,11 +154,11 @@ fun SearchUsersSheet(
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         val postTypeFilters = listOf(
-                            null to Strings.communityAllTags,
-                            "discussion" to Strings.communityPostTypeDiscussion,
-                            "showcase" to Strings.communityPostTypeShowcase,
-                            "tutorial" to Strings.communityPostTypeTutorial,
-                            "question" to Strings.communityPostTypeQuestion,
+                            null to AppStringsProvider.current().communityAllTags,
+                            "discussion" to AppStringsProvider.current().communityPostTypeDiscussion,
+                            "showcase" to AppStringsProvider.current().communityPostTypeShowcase,
+                            "tutorial" to AppStringsProvider.current().communityPostTypeTutorial,
+                            "question" to AppStringsProvider.current().communityPostTypeQuestion,
                         )
                         postTypeFilters.forEach { (type, label) ->
                             val isSelected = selectedPostType == type
@@ -192,7 +193,7 @@ fun SearchUsersSheet(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.Sort, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                        Icon(Icons.AutoMirrored.Outlined.Sort, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                         val sortOptions = listOf(
                             "relevance" to "相关度",
                             "newest" to "最新",
@@ -239,7 +240,7 @@ fun SearchUsersSheet(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Outlined.PersonOff, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                                 Spacer(Modifier.height(8.dp))
-                                Text(Strings.communityNoUsersFound, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                Text(AppStringsProvider.current().communityNoUsersFound, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                             }
                         }
                     } else {
@@ -274,7 +275,7 @@ fun SearchUsersSheet(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Outlined.SearchOff, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                                 Spacer(Modifier.height(8.dp))
-                                Text(Strings.communityNoPostsFound, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                Text(AppStringsProvider.current().communityNoPostsFound, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                             }
                         }
                     } else {
@@ -314,8 +315,8 @@ private fun SearchPostRow(
     ) {
         val (typeIcon, typeColor) = when (post.postType) {
             "showcase" -> Icons.Filled.Palette to Color(0xFF6C5CE7)
-            "tutorial" -> Icons.Filled.MenuBook to Color(0xFF4CAF50)
-            "question" -> Icons.Filled.HelpOutline to Color(0xFFFF9800)
+            "tutorial" -> Icons.AutoMirrored.Filled.MenuBook to Color(0xFF4CAF50)
+            "question" -> Icons.AutoMirrored.Filled.HelpOutline to Color(0xFFFF9800)
             else -> Icons.Filled.ChatBubble to Color(0xFF9E9E9E)
         }
         Surface(
@@ -389,7 +390,7 @@ fun FollowerListSheet(
                             username = user.username,
                             avatarUrl = user.avatarUrl,
                             isDeveloper = user.isDeveloper,
-                            subtitle = if (user.followerCount > 0) "${user.followerCount} ${Strings.communityFollowersList}" else null,
+                            subtitle = if (user.followerCount > 0) "${user.followerCount} ${AppStringsProvider.current().communityFollowersList}" else null,
                             onClick = { onUserClick(user.id) }
                         )
                         if (user != users.last()) {

@@ -9,10 +9,13 @@ import org.koin.androidx.compose.koinViewModel
 fun AppNavigation() {
     val viewModel: MainViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
+    val dependencies = rememberAppNavigationRootDeps(
+        viewModel = viewModel,
+        authViewModel = authViewModel,
+    )
 
     AppNavigationEffects()
     AppNavigationScaffold(
-        viewModel = viewModel,
-        authViewModel = authViewModel
+        dependencies = dependencies,
     )
 }

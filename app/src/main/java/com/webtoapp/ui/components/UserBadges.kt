@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.webtoapp.core.cloud.TeamBadgeInfo
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 
 // ═══════════════════════════════════════════
@@ -62,7 +62,7 @@ fun DeveloperBadge(modifier: Modifier = Modifier) {
                     tint = Color.White
                 )
                 Text(
-                    Strings.badgeDeveloper,
+                    AppStringsProvider.current().badgeDeveloper,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -98,9 +98,9 @@ fun TeamBadge(
     }
 
     val roleLabel = when (badge.role) {
-        "owner" -> Strings.badgeTeamOwner
-        "admin" -> Strings.badgeTeamAdmin
-        else -> Strings.badgeTeamMember
+        "owner" -> AppStringsProvider.current().badgeTeamOwner
+        "admin" -> AppStringsProvider.current().badgeTeamAdmin
+        else -> AppStringsProvider.current().badgeTeamMember
     }
 
     Surface(

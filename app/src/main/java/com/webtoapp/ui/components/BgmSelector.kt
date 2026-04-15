@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -35,7 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.util.BgmStorage
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +46,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * BGM selector对话框
+ * BGM selectordialog
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -57,79 +58,62 @@ fun BgmSelectorDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    // 可用音乐列表
+    // list
     var availableBgm by remember { mutableStateOf<List<BgmItem>>(emptyList()) }
     
-    // 已选播放列表
+    // list
     var selectedPlaylist by remember { mutableStateOf(currentConfig.playlist) }
     
-    // Play模式
+    // Playmode
     var playMode by remember { mutableStateOf(currentConfig.playMode) }
     
     // Volume
     var volume by remember { mutableFloatStateOf(currentConfig.volume) }
     
-    // Auto播放
+    // Auto
     var autoPlay by remember { mutableStateOf(currentConfig.autoPlay) }
     
-    // Show歌词
+    // Show
     var showLyrics by remember { mutableStateOf(currentConfig.showLyrics) }
     
-    // 字幕主题
+    // Note
     var selectedTheme by remember { mutableStateOf(currentConfig.lrcTheme ?: PresetLrcThemes.themes.first()) }
     
-    // 当前播放预览的音乐
+    // current preview
     var previewingBgm by remember { mutableStateOf<BgmItem?>(null) }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     
-    // Upload对话框
+    // Uploaddialog
     var showUploadDialog by remember { mutableStateOf(false) }
     
-    // 在线音乐搜索对话框
+    // dialog
     var showOnlineMusicDialog by remember { mutableStateOf(false) }
     
-    // 标签筛选
+    // labelfilter
     var selectedTagFilter by remember { mutableStateOf<BgmTag?>(null) }
     
-    // 当前编辑标签的音乐
+    // currenteditlabel
     var editingTagsBgm by remember { mutableStateOf<BgmItem?>(null) }
     
-    // 字幕主题选择对话框
+    // selectdialog
     var showThemeDialog by remember { mutableStateOf(false) }
     
-    // LRC 预览对话框
+    // LRC previewdialog
     var showLrcPreviewDialog by remember { mutableStateOf(false) }
     var previewLrcBgm by remember { mutableStateOf<BgmItem?>(null) }
     
-    // 手动对齐对话框
+    // dialog
     var showManualAlignerDialog by remember { mutableStateOf(false) }
     var manualAlignerBgm by remember { mutableStateOf<BgmItem?>(null) }
     
-    // LRC 编辑器对话框
+    // LRC edit dialog
     var showLrcEditorDialog by remember { mutableStateOf(false) }
     var lrcEditorBgm by remember { mutableStateOf<BgmItem?>(null) }
     
-    // 拖动排序状态
-    var draggedItemIndex by remember { mutableIntStateOf(-1) }
-    var draggedOverItemIndex by remember { mutableIntStateOf(-1) }
-    
-    // Snackbar 提示状态
+    // Snackbar hintstate
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // Refresh音乐列表的函数
-    val refreshBgmList: () -> Unit = {
-        scope.launch {
-            withContext(Dispatchers.IO) {
-                availableBgm = BgmStorage.scanAllBgm(context)
-            }
-            // 同步更新已选列表的 LRC 数据
-            selectedPlaylist = selectedPlaylist.map { selected ->
-                availableBgm.find { it.path == selected.path } ?: selected
-            }
-        }
-    }
-    
-    // Load音乐列表
+    // Load list
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             availableBgm = BgmStorage.scanAllBgm(context)
@@ -143,7 +127,7 @@ fun BgmSelectorDialog(
         }
     }
     
-    // 预览播放
+    // preview
     fun previewBgm(bgm: BgmItem) {
         if (previewingBgm == bgm) {
             mediaPlayer?.stop()
@@ -190,12 +174,12 @@ fun BgmSelectorDialog(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
-                    // 标题栏
+                    // Note
                     TopAppBar(
-                    title = { Text(Strings.selectBgm) },
+                    title = { Text(AppStringsProvider.current().selectBgm) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     },
                     actions = {
@@ -213,18 +197,18 @@ fun BgmSelectorDialog(
                                 ))
                             }
                         ) {
-                            Text(Strings.btnOk)
+                            Text(AppStringsProvider.current().btnOk)
                         }
                     }
                 )
                 
-                // 内容区
+                // content
                 Column(
                     modifier = Modifier
                         .weight(weight = 1f, fill = true)
                         .padding(horizontal = 16.dp)
                 ) {
-                    // 已选音乐（支持拖动排序）
+                    // ( support)
                     if (selectedPlaylist.isNotEmpty()) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -232,12 +216,12 @@ fun BgmSelectorDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "${Strings.selectedMusic} (${selectedPlaylist.size})",
+                                "${AppStringsProvider.current().selectedMusic} (${selectedPlaylist.size})",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                Strings.clickArrowToReorder,
+                                AppStringsProvider.current().clickArrowToReorder,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -295,18 +279,18 @@ fun BgmSelectorDialog(
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                     
-                    // 可用音乐列表
+                    // list
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.availableMusic,
+                            AppStringsProvider.current().availableMusic,
                             style = MaterialTheme.typography.labelMedium
                         )
                         Row {
-                            // 在线音乐搜索按钮
+                            // button
                             TextButton(onClick = { showOnlineMusicDialog = true }) {
                                 Icon(
                                     Icons.Outlined.CloudDownload,
@@ -314,9 +298,9 @@ fun BgmSelectorDialog(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.onlineMusic)
+                                Text(AppStringsProvider.current().onlineMusic)
                             }
-                            // Upload音乐按钮
+                            // Upload button
                             TextButton(onClick = { showUploadDialog = true }) {
                                 Icon(
                                     Icons.Outlined.Add,
@@ -324,12 +308,12 @@ fun BgmSelectorDialog(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.uploadMusic)
+                                Text(AppStringsProvider.current().uploadMusic)
                             }
                         }
                     }
                     
-                    // 标签筛选
+                    // labelfilter
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -338,7 +322,7 @@ fun BgmSelectorDialog(
                             PremiumFilterChip(
                                 selected = selectedTagFilter == null,
                                 onClick = { selectedTagFilter = null },
-                                label = { Text(Strings.allTag) }
+                                label = { Text(AppStringsProvider.current().allTag) }
                             )
                         }
                         items(BgmTag.entries.take(10)) { tag ->
@@ -370,19 +354,19 @@ fun BgmSelectorDialog(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    Strings.noMusicAvailable,
+                                    AppStringsProvider.current().noMusicAvailable,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    Strings.clickToUploadMusic,
+                                    AppStringsProvider.current().clickToUploadMusic,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     } else {
-                        // 根据标签筛选
+                        // labelfilter
                         val filteredBgm = if (selectedTagFilter != null) {
                             availableBgm.filter { it.tags.contains(selectedTagFilter) }
                         } else {
@@ -397,7 +381,7 @@ fun BgmSelectorDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    Strings.noMusicWithTag,
+                                    AppStringsProvider.current().noMusicWithTag,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -451,7 +435,7 @@ fun BgmSelectorDialog(
                     }
                 }
                 
-                // 底部设置区（可滚动）
+                // bottomsettings( scroll)
                 HorizontalDivider()
                 Column(
                     modifier = Modifier
@@ -460,28 +444,28 @@ fun BgmSelectorDialog(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Play模式
+                    // Playmode
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.playMode, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().playMode, style = MaterialTheme.typography.bodyMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             PremiumFilterChip(
                                 selected = playMode == BgmPlayMode.LOOP,
                                 onClick = { playMode = BgmPlayMode.LOOP },
-                                label = { Text(Strings.loopMode, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(AppStringsProvider.current().loopMode, style = MaterialTheme.typography.labelSmall) }
                             )
                             PremiumFilterChip(
                                 selected = playMode == BgmPlayMode.SEQUENTIAL,
                                 onClick = { playMode = BgmPlayMode.SEQUENTIAL },
-                                label = { Text(Strings.sequentialMode, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(AppStringsProvider.current().sequentialMode, style = MaterialTheme.typography.labelSmall) }
                             )
                             PremiumFilterChip(
                                 selected = playMode == BgmPlayMode.SHUFFLE,
                                 onClick = { playMode = BgmPlayMode.SHUFFLE },
-                                label = { Text(Strings.shuffleMode, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(AppStringsProvider.current().shuffleMode, style = MaterialTheme.typography.labelSmall) }
                             )
                         }
                     }
@@ -491,7 +475,7 @@ fun BgmSelectorDialog(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.volume, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().volume, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.width(16.dp))
                         Slider(
                             value = volume,
@@ -505,27 +489,27 @@ fun BgmSelectorDialog(
                         )
                     }
                     
-                    // Auto播放
+                    // Auto
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.autoPlay, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().autoPlay, style = MaterialTheme.typography.bodyMedium)
                         PremiumSwitch(checked = autoPlay, onCheckedChange = { autoPlay = it })
                     }
                     
-                    // Show歌词
+                    // Show
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.showLyrics, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStringsProvider.current().showLyrics, style = MaterialTheme.typography.bodyMedium)
                         PremiumSwitch(checked = showLyrics, onCheckedChange = { showLyrics = it })
                     }
                     
-                    // 字幕主题选择
+                    // select
                     if (showLyrics) {
                         Row(
                             modifier = Modifier
@@ -535,7 +519,7 @@ fun BgmSelectorDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(Strings.lyricsTheme, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().lyricsTheme, style = MaterialTheme.typography.bodyMedium)
                                 Text(
                                     selectedTheme.name,
                                     style = MaterialTheme.typography.bodySmall,
@@ -548,7 +532,7 @@ fun BgmSelectorDialog(
                 }
                 }
                 
-                // Snackbar 提示（显示在底部）
+                // Snackbar hint( display bottom)
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier
@@ -571,7 +555,7 @@ fun BgmSelectorDialog(
         }
     }
     
-    // Upload音乐对话框
+    // Upload dialog
     if (showUploadDialog) {
         UploadBgmDialog(
             onDismiss = { showUploadDialog = false },
@@ -586,7 +570,7 @@ fun BgmSelectorDialog(
         )
     }
     
-    // 在线音乐搜索对话框
+    // dialog
     if (showOnlineMusicDialog) {
         OnlineMusicSearchDialog(
             onDismiss = { showOnlineMusicDialog = false },
@@ -600,7 +584,7 @@ fun BgmSelectorDialog(
         )
     }
     
-    // 编辑标签对话框
+    // editlabeldialog
     editingTagsBgm?.let { bgm ->
         EditTagsDialog(
             bgm = bgm,
@@ -617,7 +601,7 @@ fun BgmSelectorDialog(
         )
     }
     
-    // 字幕主题选择对话框
+    // selectdialog
     if (showThemeDialog) {
         LrcThemeDialog(
             currentTheme = selectedTheme,
@@ -629,7 +613,7 @@ fun BgmSelectorDialog(
         )
     }
     
-    // LRC 预览对话框
+    // LRC previewdialog
     if (showLrcPreviewDialog && previewLrcBgm != null) {
         LrcPreviewDialog(
             bgm = previewLrcBgm!!,
@@ -638,7 +622,7 @@ fun BgmSelectorDialog(
                 previewLrcBgm = null
             },
             onEdit = {
-                // 打开 LRC 编辑器
+                // open LRC edit
                 lrcEditorBgm = previewLrcBgm
                 showLrcPreviewDialog = false
                 previewLrcBgm = null
@@ -647,7 +631,7 @@ fun BgmSelectorDialog(
         )
     }
     
-    // 手动对齐对话框
+    // dialog
     if (showManualAlignerDialog && manualAlignerBgm != null) {
         ManualLrcAlignerDialog(
             bgm = manualAlignerBgm!!,
@@ -657,7 +641,7 @@ fun BgmSelectorDialog(
                 manualAlignerBgm = null
             },
             onSave = { newLrcData ->
-                // Update音乐项的 LRC 数据
+                // Update LRC
                 val updatedBgm = manualAlignerBgm!!.copy(lrcData = newLrcData)
                 availableBgm = availableBgm.map { 
                     if (it.path == updatedBgm.path) updatedBgm else it 
@@ -667,10 +651,10 @@ fun BgmSelectorDialog(
                 }
                 showManualAlignerDialog = false
                 manualAlignerBgm = null
-                // Show成功提示
+                // Showsuccesshint
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = Strings.lyricsSaved,
+                        message = AppStringsProvider.current().lyricsSaved,
                         duration = SnackbarDuration.Short
                     )
                 }
@@ -678,7 +662,7 @@ fun BgmSelectorDialog(
         )
     }
     
-    // LRC 编辑器对话框
+    // LRC edit dialog
     if (showLrcEditorDialog && lrcEditorBgm != null && lrcEditorBgm!!.lrcData != null) {
         LrcEditorDialog(
             bgm = lrcEditorBgm!!,
@@ -688,7 +672,7 @@ fun BgmSelectorDialog(
                 lrcEditorBgm = null
             },
             onSave = { newLrcData ->
-                // Update音乐项的 LRC 数据
+                // Update LRC
                 val updatedBgm = lrcEditorBgm!!.copy(lrcData = newLrcData)
                 availableBgm = availableBgm.map { 
                     if (it.path == updatedBgm.path) updatedBgm else it 
@@ -698,10 +682,10 @@ fun BgmSelectorDialog(
                 }
                 showLrcEditorDialog = false
                 lrcEditorBgm = null
-                // Show成功提示
+                // Showsuccesshint
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = Strings.lyricsUpdated,
+                        message = AppStringsProvider.current().lyricsUpdated,
                         duration = SnackbarDuration.Short
                     )
                 }
@@ -711,7 +695,7 @@ fun BgmSelectorDialog(
 }
 
 /**
- * 已选音乐项
+ * Note
  */
 @Composable
 private fun SelectedBgmItem(
@@ -745,14 +729,14 @@ private fun SelectedBgmItem(
             IconButton(onClick = onPlay) {
                 Icon(
                     if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) Strings.stop else Strings.play,
+                    contentDescription = if (isPlaying) AppStringsProvider.current().stop else AppStringsProvider.current().play,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = Strings.remove,
+                    contentDescription = AppStringsProvider.current().remove,
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -761,7 +745,7 @@ private fun SelectedBgmItem(
 }
 
 /**
- * 带上下移动按钮的已选音乐项
+ * button
  */
 @Composable
 private fun SelectedBgmItemWithReorder(
@@ -790,7 +774,7 @@ private fun SelectedBgmItemWithReorder(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 上下移动按钮
+            // button
             Column {
                 IconButton(
                     onClick = { onMoveUp?.invoke() },
@@ -799,7 +783,7 @@ private fun SelectedBgmItemWithReorder(
                 ) {
                     Icon(
                         Icons.Default.KeyboardArrowUp,
-                        contentDescription = Strings.moveUp,
+                        contentDescription = AppStringsProvider.current().moveUp,
                         modifier = Modifier.size(20.dp),
                         tint = if (onMoveUp != null) MaterialTheme.colorScheme.primary 
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -812,7 +796,7 @@ private fun SelectedBgmItemWithReorder(
                 ) {
                     Icon(
                         Icons.Default.KeyboardArrowDown,
-                        contentDescription = Strings.moveDown,
+                        contentDescription = AppStringsProvider.current().moveDown,
                         modifier = Modifier.size(20.dp),
                         tint = if (onMoveDown != null) MaterialTheme.colorScheme.primary 
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -838,12 +822,12 @@ private fun SelectedBgmItemWithReorder(
                     )
                 }
             }
-            // Lyrics状态指示/预览按钮
+            // Lyricsstate /previewbutton
             if (bgm.lrcData != null && onPreviewLrc != null) {
                 IconButton(onClick = onPreviewLrc, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Outlined.Subtitles,
-                        contentDescription = Strings.previewLyrics,
+                        contentDescription = AppStringsProvider.current().previewLyrics,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -851,7 +835,7 @@ private fun SelectedBgmItemWithReorder(
             } else if (bgm.lrcData != null) {
                 Icon(
                     Icons.Outlined.Subtitles,
-                    contentDescription = Strings.hasLyrics,
+                    contentDescription = AppStringsProvider.current().hasLyrics,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -859,15 +843,15 @@ private fun SelectedBgmItemWithReorder(
             IconButton(onClick = onGenerateLrc, modifier = Modifier.size(32.dp)) {
                 Icon(
                     com.webtoapp.ui.icons.LrcAlignIcon,
-                    contentDescription = Strings.aiGenerateLyrics,
+                    contentDescription = AppStringsProvider.current().aiGenerateLyrics,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.secondary
                 )
             }
             IconButton(onClick = onEditTags, modifier = Modifier.size(32.dp)) {
                 Icon(
-                    Icons.Outlined.Label,
-                    contentDescription = Strings.editTags,
+                    Icons.AutoMirrored.Outlined.Label,
+                    contentDescription = AppStringsProvider.current().editTags,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -875,14 +859,14 @@ private fun SelectedBgmItemWithReorder(
             IconButton(onClick = onPlay) {
                 Icon(
                     if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) Strings.stop else Strings.play,
+                    contentDescription = if (isPlaying) AppStringsProvider.current().stop else AppStringsProvider.current().play,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = Strings.remove,
+                    contentDescription = AppStringsProvider.current().remove,
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -891,7 +875,7 @@ private fun SelectedBgmItemWithReorder(
 }
 
 /**
- * 可用音乐项
+ * Note
  */
 @Composable
 private fun AvailableBgmItem(
@@ -936,17 +920,17 @@ private fun AvailableBgmItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    if (bgm.isAsset) Strings.presetMusic else Strings.userUploaded,
+                    if (bgm.isAsset) AppStringsProvider.current().presetMusic else AppStringsProvider.current().userUploaded,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            // Lyrics状态指示/预览按钮
+            // Lyricsstate /previewbutton
             if (bgm.lrcData != null && onPreviewLrc != null) {
                 IconButton(onClick = onPreviewLrc, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Outlined.Subtitles,
-                        contentDescription = Strings.previewLyrics,
+                        contentDescription = AppStringsProvider.current().previewLyrics,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -954,7 +938,7 @@ private fun AvailableBgmItem(
             } else if (bgm.lrcData != null) {
                 Icon(
                     Icons.Outlined.Subtitles,
-                    contentDescription = Strings.hasLyrics,
+                    contentDescription = AppStringsProvider.current().hasLyrics,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -962,7 +946,7 @@ private fun AvailableBgmItem(
             IconButton(onClick = onGenerateLrc, modifier = Modifier.size(32.dp)) {
                 Icon(
                     com.webtoapp.ui.icons.LrcAlignIcon,
-                    contentDescription = Strings.aiGenerateLyrics,
+                    contentDescription = AppStringsProvider.current().aiGenerateLyrics,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -970,7 +954,7 @@ private fun AvailableBgmItem(
             IconButton(onClick = onPlay) {
                 Icon(
                     if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) Strings.stop else Strings.preview,
+                    contentDescription = if (isPlaying) AppStringsProvider.current().stop else AppStringsProvider.current().preview,
                     tint = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -978,7 +962,7 @@ private fun AvailableBgmItem(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = Strings.btnDelete,
+                        contentDescription = AppStringsProvider.current().btnDelete,
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -988,7 +972,7 @@ private fun AvailableBgmItem(
 }
 
 /**
- * 封面图组件
+ * Note
  */
 @Composable
 private fun BgmCover(bgm: BgmItem, context: android.content.Context, modifier: Modifier) {
@@ -1007,7 +991,7 @@ private fun BgmCover(bgm: BgmItem, context: android.content.Context, modifier: M
                     .data(coverData)
                     .crossfade(true)
                     .build(),
-                contentDescription = Strings.cdCover,
+                contentDescription = AppStringsProvider.current().cdCover,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -1027,7 +1011,7 @@ private fun BgmCover(bgm: BgmItem, context: android.content.Context, modifier: M
 }
 
 /**
- * 自适应封面图组件
+ * Note
  */
 @Composable
 private fun BgmCoverAdaptive(bgm: BgmItem, context: android.content.Context, modifier: Modifier) {
@@ -1046,7 +1030,7 @@ private fun BgmCoverAdaptive(bgm: BgmItem, context: android.content.Context, mod
                     .data(coverData)
                     .crossfade(true)
                     .build(),
-                contentDescription = Strings.cdCover,
+                contentDescription = AppStringsProvider.current().cdCover,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -1067,7 +1051,7 @@ private fun BgmCoverAdaptive(bgm: BgmItem, context: android.content.Context, mod
 }
 
 /**
- * 上传音乐对话框
+ * upload dialog
  */
 @Composable
 private fun UploadBgmDialog(
@@ -1100,13 +1084,13 @@ private fun UploadBgmDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.uploadMusicTitle) },
+        title = { Text(AppStringsProvider.current().uploadMusicTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 PremiumTextField(
                     value = bgmName,
                     onValueChange = { bgmName = it },
-                    label = { Text(Strings.musicName) },
+                    label = { Text(AppStringsProvider.current().musicName) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1121,11 +1105,11 @@ private fun UploadBgmDialog(
                     ) {
                         Icon(Icons.Outlined.AudioFile, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(if (bgmUri != null) Strings.selected else Strings.selectMusic)
+                        Text(if (bgmUri != null) AppStringsProvider.current().selected else AppStringsProvider.current().selectMusic)
                     }
                     if (bgmUri != null) {
                         IconButton(onClick = { bgmUri = null }) {
-                            Icon(Icons.Default.Close, Strings.clear)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().clear)
                         }
                     }
                 }
@@ -1140,17 +1124,17 @@ private fun UploadBgmDialog(
                     ) {
                         Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(if (coverUri != null) Strings.selected else Strings.selectCoverOptional)
+                        Text(if (coverUri != null) AppStringsProvider.current().selected else AppStringsProvider.current().selectCoverOptional)
                     }
                     if (coverUri != null) {
                         IconButton(onClick = { coverUri = null }) {
-                            Icon(Icons.Default.Close, Strings.clear)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().clear)
                         }
                     }
                 }
                 
                 Text(
-                    Strings.coverTip,
+                    AppStringsProvider.current().coverTip,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1198,20 +1182,20 @@ private fun UploadBgmDialog(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(Strings.upload)
+                    Text(AppStringsProvider.current().upload)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
 }
 
 /**
- * 标签编辑对话框
+ * labeleditdialog
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1224,7 +1208,7 @@ private fun EditTagsDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.editTagsTitle) },
+        title = { Text(AppStringsProvider.current().editTagsTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
@@ -1234,7 +1218,7 @@ private fun EditTagsDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    Strings.selectTagsHint,
+                    AppStringsProvider.current().selectTagsHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1267,19 +1251,19 @@ private fun EditTagsDialog(
                     onConfirm(bgm.copy(tags = selectedTags.toList()))
                 }
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
 }
 
 /**
- * 字幕主题选择对话框
+ * selectdialog
  */
 @Composable
 private fun LrcThemeDialog(
@@ -1298,11 +1282,11 @@ private fun LrcThemeDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    Strings.selectLyricsTheme,
+                    AppStringsProvider.current().selectLyricsTheme,
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    Strings.selectLyricsThemeHint,
+                    AppStringsProvider.current().selectLyricsThemeHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1329,7 +1313,7 @@ private fun LrcThemeDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                 }
             }
@@ -1338,7 +1322,7 @@ private fun LrcThemeDialog(
 }
 
 /**
- * 字幕主题预览卡片
+ * previewcard
  */
 @Composable
 private fun LrcThemePreviewCard(
@@ -1403,7 +1387,7 @@ private fun LrcThemePreviewCard(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        Strings.sampleLyricsText,
+                        AppStringsProvider.current().sampleLyricsText,
                         color = highlightColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -1427,8 +1411,8 @@ private fun LrcThemePreviewCard(
 }
 
 /**
- * LRC 歌词预览对话框
- * 支持播放音乐并同步显示歌词
+ * LRC previewdialog
+ * support andsyncdisplay
  */
 @Composable
 private fun LrcPreviewDialog(
@@ -1439,18 +1423,18 @@ private fun LrcPreviewDialog(
     val context = LocalContext.current
     val lrcData = bgm.lrcData ?: return onDismiss()
     
-    // Play器状态
+    // Play state
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     var currentLineIndex by remember { mutableIntStateOf(-1) }
     
-    // List滚动状态
+    // Listscrollstate
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     
-    // Initialize播放器
+    // Initialize
     LaunchedEffect(bgm.path) {
         try {
             mediaPlayer = MediaPlayer().apply {
@@ -1470,17 +1454,17 @@ private fun LrcPreviewDialog(
         }
     }
     
-    // Update播放进度
+    // Update
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
             mediaPlayer?.let { mp ->
                 currentPosition = mp.currentPosition.toLong()
                 
-                // Find当前歌词行
+                // Findcurrent
                 val newIndex = lrcData.lines.indexOfLast { it.startTime <= currentPosition }
                 if (newIndex != currentLineIndex && newIndex >= 0) {
                     currentLineIndex = newIndex
-                    // Auto滚动到当前行
+                    // Autoscroll current
                     scope.launch {
                         listState.animateScrollToItem(
                             index = maxOf(0, newIndex - 2),
@@ -1493,7 +1477,7 @@ private fun LrcPreviewDialog(
         }
     }
     
-    // Cleanup播放器
+    // Cleanup
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
@@ -1515,7 +1499,7 @@ private fun LrcPreviewDialog(
             tonalElevation = 6.dp
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // 标题栏
+                // Note
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1531,19 +1515,19 @@ private fun LrcPreviewDialog(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            "${Strings.lyricsPreview} · ${lrcData.lines.size} ${Strings.lines}",
+                            "${AppStringsProvider.current().lyricsPreview} · ${lrcData.lines.size} ${AppStringsProvider.current().lines}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // 编辑按钮
+                    // editbutton
                     if (onEdit != null) {
                         IconButton(onClick = {
                             mediaPlayer?.release()
                             mediaPlayer = null
                             onEdit()
                         }) {
-                            Icon(Icons.Outlined.Edit, Strings.edit)
+                            Icon(Icons.Outlined.Edit, AppStringsProvider.current().edit)
                         }
                     }
                     
@@ -1552,13 +1536,13 @@ private fun LrcPreviewDialog(
                         mediaPlayer = null
                         onDismiss()
                     }) {
-                        Icon(Icons.Default.Close, Strings.close)
+                        Icon(Icons.Default.Close, AppStringsProvider.current().close)
                     }
                 }
                 
                 HorizontalDivider()
                 
-                // Lyrics列表
+                // Lyricslist
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -1590,13 +1574,13 @@ private fun LrcPreviewDialog(
                 
                 HorizontalDivider()
                 
-                // Play控制
+                // Play
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    // 进度条
+                    // Note
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -1624,12 +1608,12 @@ private fun LrcPreviewDialog(
                         )
                     }
                     
-                    // Play按钮
+                    // Playbutton
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        // 后退 10 秒
+                        // 10
                         IconButton(onClick = {
                             mediaPlayer?.let { mp ->
                                 val newPos = maxOf(0, mp.currentPosition - 10000)
@@ -1637,12 +1621,12 @@ private fun LrcPreviewDialog(
                                 currentPosition = newPos.toLong()
                             }
                         }) {
-                            Icon(Icons.Default.Replay10, Strings.backward10s)
+                            Icon(Icons.Default.Replay10, AppStringsProvider.current().backward10s)
                         }
                         
                         Spacer(modifier = Modifier.width(16.dp))
                         
-                        // Play/暂停
+                        // Play/
                         FilledIconButton(
                             onClick = {
                                 mediaPlayer?.let { mp ->
@@ -1658,14 +1642,14 @@ private fun LrcPreviewDialog(
                         ) {
                             Icon(
                                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) Strings.pause else Strings.play,
+                                contentDescription = if (isPlaying) AppStringsProvider.current().pause else AppStringsProvider.current().play,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
                         
                         Spacer(modifier = Modifier.width(16.dp))
                         
-                        // 前进 10 秒
+                        // forward 10
                         IconButton(onClick = {
                             mediaPlayer?.let { mp ->
                                 val newPos = minOf(mp.duration, mp.currentPosition + 10000)
@@ -1673,7 +1657,7 @@ private fun LrcPreviewDialog(
                                 currentPosition = newPos.toLong()
                             }
                         }) {
-                            Icon(Icons.Default.Forward10, Strings.forward10s)
+                            Icon(Icons.Default.Forward10, AppStringsProvider.current().forward10s)
                         }
                     }
                 }
@@ -1683,7 +1667,7 @@ private fun LrcPreviewDialog(
 }
 
 /**
- * 格式化时间（毫秒 -> mm:ss）
+ * ( - > mm: ss)
  */
 private fun formatTime(millis: Long): String {
     val totalSeconds = millis / 1000

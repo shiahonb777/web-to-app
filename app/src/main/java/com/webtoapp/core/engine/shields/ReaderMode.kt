@@ -1,18 +1,18 @@
 package com.webtoapp.core.engine.shields
 
 /**
- * ReaderMode — 阅读模式 / SpeedReader
+ * ReaderMode SpeedReader.
  *
- * 功能：
- * - 提取页面正文内容（类 Readability 算法）
- * - 移除广告、导航、侧边栏
- * - 生成纯净阅读 HTML
- * - 支持字体大小、背景色、行距调节
+ * Note.
+ * page.
+ * Note.
+ * generate.
+ * Note.
  */
 class ReaderMode {
 
     /**
-     * 阅读模式主题
+     * theme.
      */
     enum class Theme(val bgColor: String, val textColor: String, val displayName: String) {
         LIGHT("#FFFFFF", "#1A1A1A", "浅色"),
@@ -22,8 +22,8 @@ class ReaderMode {
     }
 
     /**
-     * 生成提取正文的 JavaScript 代码
-     * 返回一个 JS 表达式，执行后通过回调返回提取的 HTML 内容
+     * generate.
+     * JS HTML.
      */
     fun generateExtractScript(): String {
         return """
@@ -162,16 +162,16 @@ class ReaderMode {
     }
 
     /**
-     * 生成阅读模式 HTML 页面
+     * generate page.
      *
-     * @param title 文章标题
-     * @param siteName 站点名称
-     * @param author 作者
-     * @param content HTML 正文内容
-     * @param url 原文 URL
-     * @param theme 阅读主题
-     * @param fontSize 字体大小 (px)
-     * @param lineHeight 行高倍数
+     * param title.
+     * param siteName.
+     * param author.
+     * param content HTML.
+     * param url URL.
+     * theme.
+     * param fontSize px.
+     * param lineHeight.
      */
     fun generateReaderHtml(
         title: String,
@@ -334,8 +334,8 @@ class ReaderMode {
     }
 
     /**
-     * 检测当前页面是否适合阅读模式的 JS 脚本
-     * 返回 "true" 或 "false"
+     * detect page script.
+     * true false.
      */
     fun generateDetectScript(): String {
         return """

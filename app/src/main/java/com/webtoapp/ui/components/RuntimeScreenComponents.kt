@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Shared Composable components for runtime Create*Screen pages
@@ -50,7 +50,7 @@ fun RuntimeIconPickerCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Image, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.labelIcon, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().labelIcon, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -75,7 +75,7 @@ fun RuntimeIconPickerCard(
                 PremiumOutlinedButton(onClick = onSelectIcon) {
                     Icon(Icons.Default.Image, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.labelIcon)
+                    Text(AppStringsProvider.current().labelIcon)
                 }
             }
         }
@@ -107,7 +107,7 @@ fun RuntimeEnvVarsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Terminal, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsEnvVars, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsEnvVars, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -133,7 +133,7 @@ fun RuntimeEnvVarsCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(value = newEnvValue, onValueChange = onNewValueChange, label = { Text("Value") }, modifier = Modifier.weight(weight = 1f, fill = true), singleLine = true)
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onAdd) { Icon(Icons.Default.Add, Strings.njsAddEnvVar) }
+                IconButton(onClick = onAdd) { Icon(Icons.Default.Add, AppStringsProvider.current().njsAddEnvVar) }
             }
         }
     }
@@ -174,7 +174,7 @@ fun RuntimeErrorCard(
             Icon(Icons.Default.Error, null, tint = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.width(12.dp))
             Text(error, modifier = Modifier.weight(weight = 1f, fill = true))
-            TextButton(onClick = onDismiss) { Text(Strings.btnCancel) }
+            TextButton(onClick = onDismiss) { Text(AppStringsProvider.current().btnCancel) }
         }
     }
 }

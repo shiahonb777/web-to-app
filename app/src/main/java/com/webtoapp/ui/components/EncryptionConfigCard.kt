@@ -13,13 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.ApkEncryptionConfig
 import androidx.compose.ui.graphics.Color
 
 /**
  * Encryption config card
- * 用于在创建应用时配置 APK 加密选项
+ * forcreateappconfig APK
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -39,7 +39,7 @@ fun EncryptionConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -69,12 +69,12 @@ fun EncryptionConfigCard(
                     }
                     Column {
                         Text(
-                            text = Strings.resourceEncryption,
+                            text = AppStringsProvider.current().resourceEncryption,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = if (config.enabled) Strings.encryptionEnabled else Strings.notEnabled,
+                            text = if (config.enabled) AppStringsProvider.current().encryptionEnabled else AppStringsProvider.current().notEnabled,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -89,15 +89,15 @@ fun EncryptionConfigCard(
                 )
             }
             
-            // Expand详细配置
+            // Expand config
             AnimatedVisibility(visible = config.enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 快捷预设
+                    // Note
                     Text(
-                        text = Strings.encryptionLevel,
+                        text = AppStringsProvider.current().encryptionLevel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -112,7 +112,7 @@ fun EncryptionConfigCard(
                             onClick = {
                                 onConfigChange(ApkEncryptionConfig.BASIC)
                             },
-                            label = { Text(Strings.basic) },
+                            label = { Text(AppStringsProvider.current().basic) },
                             leadingIcon = if (config == ApkEncryptionConfig.BASIC.copy(enabled = true)) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -123,7 +123,7 @@ fun EncryptionConfigCard(
                             onClick = {
                                 onConfigChange(ApkEncryptionConfig.FULL)
                             },
-                            label = { Text(Strings.full) },
+                            label = { Text(AppStringsProvider.current().full) },
                             leadingIcon = if (config == ApkEncryptionConfig.FULL) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -134,7 +134,7 @@ fun EncryptionConfigCard(
                             onClick = {
                                 onConfigChange(ApkEncryptionConfig.MAXIMUM)
                             },
-                            label = { Text(Strings.maximum) },
+                            label = { Text(AppStringsProvider.current().maximum) },
                             leadingIcon = if (config == ApkEncryptionConfig.MAXIMUM) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
@@ -143,7 +143,7 @@ fun EncryptionConfigCard(
                         PremiumFilterChip(
                             selected = expanded,
                             onClick = { expanded = !expanded },
-                            label = { Text(Strings.custom) },
+                            label = { Text(AppStringsProvider.current().custom) },
                             leadingIcon = {
                                 Icon(
                                     if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -154,60 +154,60 @@ fun EncryptionConfigCard(
                         )
                     }
                     
-                    // Custom配置
+                    // Customconfig
                     AnimatedVisibility(visible = expanded) {
                         Column(
                             modifier = Modifier.padding(top = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // Resource加密选项
+                            // Resource
                             Text(
-                                text = Strings.resourceEncryption,
+                                text = AppStringsProvider.current().resourceEncryption,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(vertical = 4.dp)
                             )
                             
                             EncryptionOption(
-                                title = Strings.configFileEncryption,
-                                description = Strings.configFileEncryptionHint,
+                                title = AppStringsProvider.current().configFileEncryption,
+                                description = AppStringsProvider.current().configFileEncryptionHint,
                                 checked = config.encryptConfig,
                                 onCheckedChange = { onConfigChange(config.copy(encryptConfig = it)) }
                             )
                             
                             EncryptionOption(
-                                title = Strings.htmlCssJsEncryption,
-                                description = Strings.htmlCssJsEncryptionHint,
+                                title = AppStringsProvider.current().htmlCssJsEncryption,
+                                description = AppStringsProvider.current().htmlCssJsEncryptionHint,
                                 checked = config.encryptHtml,
                                 onCheckedChange = { onConfigChange(config.copy(encryptHtml = it)) }
                             )
                             
                             EncryptionOption(
-                                title = Strings.mediaFileEncryption,
-                                description = Strings.mediaFileEncryptionHint,
+                                title = AppStringsProvider.current().mediaFileEncryption,
+                                description = AppStringsProvider.current().mediaFileEncryptionHint,
                                 checked = config.encryptMedia,
                                 onCheckedChange = { onConfigChange(config.copy(encryptMedia = it)) }
                             )
                             
                             EncryptionOption(
-                                title = Strings.splashEncryption,
-                                description = Strings.splashEncryptionHint,
+                                title = AppStringsProvider.current().splashEncryption,
+                                description = AppStringsProvider.current().splashEncryptionHint,
                                 checked = config.encryptSplash,
                                 onCheckedChange = { onConfigChange(config.copy(encryptSplash = it)) }
                             )
                             
                             EncryptionOption(
-                                title = Strings.bgmEncryption,
-                                description = Strings.bgmEncryptionHint,
+                                title = AppStringsProvider.current().bgmEncryption,
+                                description = AppStringsProvider.current().bgmEncryptionHint,
                                 checked = config.encryptBgm,
                                 onCheckedChange = { onConfigChange(config.copy(encryptBgm = it)) }
                             )
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // Encryption强度选择
+                            // Encryption select
                             Text(
-                                text = Strings.encryptionStrength,
+                                text = AppStringsProvider.current().encryptionStrength,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(vertical = 4.dp)
@@ -220,21 +220,21 @@ fun EncryptionConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             
-                            // Security保护选项
+                            // Security
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = Strings.securityProtection,
+                                    text = AppStringsProvider.current().securityProtection,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 TextButton(
                                     onClick = { showSecurityOptions = !showSecurityOptions }
                                 ) {
-                                    Text(if (showSecurityOptions) Strings.collapse else Strings.expand)
+                                    Text(if (showSecurityOptions) AppStringsProvider.current().collapse else AppStringsProvider.current().expand)
                                     Icon(
                                         if (showSecurityOptions) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                         contentDescription = null,
@@ -248,34 +248,34 @@ fun EncryptionConfigCard(
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     EncryptionOption(
-                                        title = Strings.integrityCheck,
-                                        description = Strings.integrityCheckHint,
+                                        title = AppStringsProvider.current().integrityCheck,
+                                        description = AppStringsProvider.current().integrityCheckHint,
                                         checked = config.enableIntegrityCheck,
                                         onCheckedChange = { onConfigChange(config.copy(enableIntegrityCheck = it)) }
                                     )
                                     
                                     EncryptionOption(
-                                        title = Strings.antiDebugProtection,
-                                        description = Strings.antiDebugProtectionHint,
+                                        title = AppStringsProvider.current().antiDebugProtection,
+                                        description = AppStringsProvider.current().antiDebugProtectionHint,
                                         checked = config.enableAntiDebug,
                                         onCheckedChange = { onConfigChange(config.copy(enableAntiDebug = it)) }
                                     )
                                     
                                     EncryptionOption(
-                                        title = Strings.antiTamperProtection,
-                                        description = Strings.antiTamperProtectionHint,
+                                        title = AppStringsProvider.current().antiTamperProtection,
+                                        description = AppStringsProvider.current().antiTamperProtectionHint,
                                         checked = config.enableAntiTamper,
                                         onCheckedChange = { onConfigChange(config.copy(enableAntiTamper = it)) }
                                     )
                                     
                                     EncryptionOption(
-                                        title = Strings.stringObfuscation,
-                                        description = Strings.stringObfuscationHint,
+                                        title = AppStringsProvider.current().stringObfuscation,
+                                        description = AppStringsProvider.current().stringObfuscationHint,
                                         checked = config.obfuscateStrings,
                                         onCheckedChange = { onConfigChange(config.copy(obfuscateStrings = it)) }
                                     )
                                     
-                                    // Security保护说明
+                                    // Security
                                     Card(
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
@@ -293,7 +293,7 @@ fun EncryptionConfigCard(
                                                 modifier = Modifier.size(16.dp)
                                             )
                                             Text(
-                                                text = Strings.securityWarning,
+                                                text = AppStringsProvider.current().securityWarning,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onErrorContainer
                                             )
@@ -304,7 +304,7 @@ fun EncryptionConfigCard(
                         }
                     }
                     
-                    // Encryption说明
+                    // Encryption
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -322,7 +322,7 @@ fun EncryptionConfigCard(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = Strings.encryptionDescription,
+                                text = AppStringsProvider.current().encryptionDescription,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -335,17 +335,17 @@ fun EncryptionConfigCard(
 }
 
 /**
- * 加密强度选择器
+ * select
  */
 @Composable
 private fun EncryptionLevelSelector(
-    selectedLevel: ApkEncryptionConfig.EncryptionLevel,
-    onLevelChange: (ApkEncryptionConfig.EncryptionLevel) -> Unit
+    selectedLevel: com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel,
+    onLevelChange: (com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        ApkEncryptionConfig.EncryptionLevel.entries.forEach { level ->
+        com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel.entries.forEach { level ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -362,7 +362,7 @@ private fun EncryptionLevelSelector(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "${Strings.pbkdf2Iterations}: ${level.iterations}",
+                        text = "${AppStringsProvider.current().pbkdf2Iterations}: ${level.iterations}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

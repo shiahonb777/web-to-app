@@ -25,16 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * 团队管理界面
+ * teammanagement
  *
- * 功能: 创建团队、搜索团队、查看成员排名、申请加入、审核申请
+ * createteam, team, , ,
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,7 +140,7 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(Strings.teamTitle, fontWeight = FontWeight.Bold)
+                    Text(AppStringsProvider.current().teamTitle, fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
                     onBack?.let {
@@ -177,12 +177,12 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text(Strings.teamMyTeams, fontSize = 14.sp) }
+                        text = { Text(AppStringsProvider.current().teamMyTeams, fontSize = 14.sp) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1; if (!hasSearched) doSearch() },
-                        text = { Text(Strings.teamDiscover, fontSize = 14.sp) }
+                        text = { Text(AppStringsProvider.current().teamDiscover, fontSize = 14.sp) }
                     )
                 }
 
@@ -249,8 +249,7 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                         searchResults = searchResults,
                         isSearching = isSearching,
                         hasSearched = hasSearched,
-                        onJoin = { showJoinDialog = it },
-                        snackbarHostState = snackbarHostState
+                        onJoin = { showJoinDialog = it }
                     )
                 }
             }
@@ -295,7 +294,7 @@ fun TeamScreen(onBack: (() -> Unit)? = null) {
                 scope.launch {
                     when (apiClient.requestJoinTeam(team.id, message)) {
                         is AuthResult.Success -> {
-                            snackbarHostState.showSnackbar(Strings.teamJoinSent)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().teamJoinSent)
                             doSearch() // refresh search results
                         }
                         is AuthResult.Error -> {
@@ -352,12 +351,12 @@ private fun MyTeamsTab(
                     ) {
                         Column {
                             Text(
-                                "${Strings.teamQuota}: $quotaUsed / $quotaLimit",
+                                "${AppStringsProvider.current().teamQuota}: $quotaUsed / $quotaLimit",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                "$tier · ${Strings.teamMembers}: $memberLimit max",
+                                "$tier · ${AppStringsProvider.current().teamMembers}: $memberLimit max",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -369,7 +368,7 @@ private fun MyTeamsTab(
                             ) {
                                 Icon(Icons.Outlined.Add, null, Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.teamCreate, fontSize = 13.sp)
+                                Text(AppStringsProvider.current().teamCreate, fontSize = 13.sp)
                             }
                         }
                     }
@@ -416,7 +415,7 @@ private fun MyTeamsTab(
                         )
                     }
                     Text(
-                        Strings.teamEmpty,
+                        AppStringsProvider.current().teamEmpty,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -428,7 +427,7 @@ private fun MyTeamsTab(
                         ) {
                             Icon(Icons.Outlined.Add, null, Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(Strings.teamCreate)
+                            Text(AppStringsProvider.current().teamCreate)
                         }
                     }
                 }
@@ -469,8 +468,7 @@ private fun DiscoverTab(
     searchResults: List<TeamSearchItem>,
     isSearching: Boolean,
     hasSearched: Boolean,
-    onJoin: (TeamSearchItem) -> Unit,
-    snackbarHostState: SnackbarHostState
+    onJoin: (TeamSearchItem) -> Unit
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -482,7 +480,7 @@ private fun DiscoverTab(
                 value = searchQuery,
                 onValueChange = onQueryChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(Strings.teamSearch) },
+                placeholder = { Text(AppStringsProvider.current().teamSearch) },
                 leadingIcon = { Icon(Icons.Outlined.Search, null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -511,7 +509,7 @@ private fun DiscoverTab(
             ) {
                 Icon(Icons.Outlined.Search, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(Strings.teamSearch)
+                Text(AppStringsProvider.current().teamSearch)
             }
         }
 
@@ -545,7 +543,7 @@ private fun DiscoverTab(
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        Strings.teamSearchEmpty,
+                        AppStringsProvider.current().teamSearchEmpty,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -606,7 +604,7 @@ private fun SearchResultCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    "${team.memberCount} ${Strings.teamMembers} · ${team.ownerName}",
+                    "${team.memberCount} ${AppStringsProvider.current().teamMembers} · ${team.ownerName}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -632,7 +630,7 @@ private fun SearchResultCard(
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                     ) {
                         Text(
-                            Strings.teamJoined,
+                            AppStringsProvider.current().teamJoined,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
@@ -646,7 +644,7 @@ private fun SearchResultCard(
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                     ) {
                         Text(
-                            Strings.teamJoinPending,
+                            AppStringsProvider.current().teamJoinPending,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
@@ -662,7 +660,7 @@ private fun SearchResultCard(
                     ) {
                         Icon(Icons.Outlined.PersonAdd, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(Strings.teamJoin, fontSize = 13.sp)
+                        Text(AppStringsProvider.current().teamJoin, fontSize = 13.sp)
                     }
                 }
             }
@@ -739,7 +737,7 @@ private fun TeamCard(
                         }
                     }
                     Text(
-                        "${team.memberCount} ${Strings.teamMembers} · ${team.ownerName}",
+                        "${team.memberCount} ${AppStringsProvider.current().teamMembers} · ${team.ownerName}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -772,19 +770,19 @@ private fun TeamCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         SectionChip(
-                            label = Strings.teamMembers,
+                            label = AppStringsProvider.current().teamMembers,
                             icon = Icons.Outlined.People,
                             selected = expandedSection == "members",
                             onClick = { onSectionChange("members") }
                         )
                         SectionChip(
-                            label = Strings.teamRanking,
+                            label = AppStringsProvider.current().teamRanking,
                             icon = Icons.Outlined.EmojiEvents,
                             selected = expandedSection == "ranking",
                             onClick = { onSectionChange("ranking") }
                         )
                         SectionChip(
-                            label = Strings.teamJoinRequests,
+                            label = AppStringsProvider.current().teamJoinRequests,
                             icon = Icons.Outlined.PersonAdd,
                             selected = expandedSection == "requests",
                             badge = team.pendingRequests,
@@ -820,7 +818,7 @@ private fun TeamCard(
                     ) {
                         Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(Strings.teamDelete, fontSize = 13.sp)
+                        Text(AppStringsProvider.current().teamDelete, fontSize = 13.sp)
                     }
                 }
             }
@@ -951,7 +949,7 @@ private fun MembersSection(
             ) {
                 Icon(Icons.Outlined.PersonAdd, null, Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(Strings.teamInvite, fontSize = 13.sp)
+                Text(AppStringsProvider.current().teamInvite, fontSize = 13.sp)
             }
         }
     }
@@ -1072,7 +1070,7 @@ private fun JoinRequestsSection(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    Strings.teamJoinNoRequests,
+                    AppStringsProvider.current().teamJoinNoRequests,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1150,7 +1148,7 @@ private fun JoinRequestsSection(
                             contentColor = Color(0xFF16A34A)
                         )
                     ) {
-                        Text(Strings.teamJoinApprove, fontSize = 12.sp)
+                        Text(AppStringsProvider.current().teamJoinApprove, fontSize = 12.sp)
                     }
                     OutlinedButton(
                         onClick = { onReview(request.id, "reject") },
@@ -1160,7 +1158,7 @@ private fun JoinRequestsSection(
                             contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
                         )
                     ) {
-                        Text(Strings.teamJoinReject, fontSize = 12.sp)
+                        Text(AppStringsProvider.current().teamJoinReject, fontSize = 12.sp)
                     }
                 }
             }
@@ -1180,20 +1178,20 @@ private fun CreateTeamDialog(onDismiss: () -> Unit, onCreate: (String, String?) 
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.teamCreate) },
+        title = { Text(AppStringsProvider.current().teamCreate) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.teamName) },
+                    label = { Text(AppStringsProvider.current().teamName) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text(Strings.teamDesc) },
+                    label = { Text(AppStringsProvider.current().teamDesc) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3
                 )
@@ -1204,12 +1202,12 @@ private fun CreateTeamDialog(onDismiss: () -> Unit, onCreate: (String, String?) 
                 onClick = { onCreate(name, desc.ifBlank { null }) },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.teamCreate)
+                Text(AppStringsProvider.current().teamCreate)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -1223,18 +1221,18 @@ private fun InviteMemberDialog(onDismiss: () -> Unit, onInvite: (String, String)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.teamInvite) },
+        title = { Text(AppStringsProvider.current().teamInvite) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text(Strings.teamUsername) },
+                    label = { Text(AppStringsProvider.current().teamUsername) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 Text(
-                    Strings.teamRole,
+                    AppStringsProvider.current().teamRole,
                     style = MaterialTheme.typography.labelMedium
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1253,12 +1251,12 @@ private fun InviteMemberDialog(onDismiss: () -> Unit, onInvite: (String, String)
                 onClick = { onInvite(username.trim(), selectedRole) },
                 enabled = username.isNotBlank()
             ) {
-                Text(Strings.teamInvite)
+                Text(AppStringsProvider.current().teamInvite)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -1274,24 +1272,24 @@ private fun JoinTeamDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${Strings.teamJoin} · $teamName") },
+        title = { Text("${AppStringsProvider.current().teamJoin} · $teamName") },
         text = {
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
-                label = { Text(Strings.teamJoinMessage) },
+                label = { Text(AppStringsProvider.current().teamJoinMessage) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
         },
         confirmButton = {
             TextButton(onClick = { onJoin(message.ifBlank { null }) }) {
-                Text(Strings.teamJoin)
+                Text(AppStringsProvider.current().teamJoin)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -1308,9 +1306,9 @@ private fun roleColor(role: String): Color = when (role) {
 }
 
 private fun roleLabel(role: String): String = when (role) {
-    "owner" -> Strings.teamRoleOwner
-    "admin" -> Strings.teamRoleAdmin
-    "editor" -> Strings.teamRoleEditor
-    "viewer" -> Strings.teamRoleViewer
+    "owner" -> AppStringsProvider.current().teamRoleOwner
+    "admin" -> AppStringsProvider.current().teamRoleAdmin
+    "editor" -> AppStringsProvider.current().teamRoleEditor
+    "viewer" -> AppStringsProvider.current().teamRoleViewer
     else -> role
 }

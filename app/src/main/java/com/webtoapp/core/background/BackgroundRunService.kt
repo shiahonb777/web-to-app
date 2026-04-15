@@ -13,12 +13,12 @@ import android.os.PowerManager
 import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 后台运行服务
+ * Note.
  * 
- * 使用前台服务保持应用在后台持续运行，即使用户退出应用界面
+ * ，
  */
 class BackgroundRunService : Service() {
     
@@ -36,7 +36,7 @@ class BackgroundRunService : Service() {
         private var isRunning = false
         
         /**
-         * 启动后台运行服务
+         * Note.
          */
         fun start(
             context: Context,
@@ -72,7 +72,7 @@ class BackgroundRunService : Service() {
         }
         
         /**
-         * 停止后台运行服务
+         * Note.
          */
         fun stop(context: Context) {
             try {
@@ -84,7 +84,7 @@ class BackgroundRunService : Service() {
         }
         
         /**
-         * 检查服务是否正在运行
+         * Note.
          */
         fun isServiceRunning(): Boolean = isRunning
     }
@@ -108,15 +108,15 @@ class BackgroundRunService : Service() {
         val showNotification = intent?.getBooleanExtra(EXTRA_SHOW_NOTIFICATION, true) ?: true
         keepCpuAwake = intent?.getBooleanExtra(EXTRA_KEEP_CPU_AWAKE, true) ?: true
         
-        // Start前台服务
+        // Start
         val notification = createNotification(
-            title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${Strings.appRunningInBackground}",
-            content = notificationContent ?: Strings.tapToReturnToApp
+            title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${AppStringsProvider.current().appRunningInBackground}",
+            content = notificationContent ?: AppStringsProvider.current().tapToReturnToApp
         )
         startForeground(NOTIFICATION_ID, notification)
         isRunning = true
         
-        // Get WakeLock 保持 CPU 运行
+        // Get WakeLock CPU
         if (keepCpuAwake) {
             acquireWakeLock()
         }

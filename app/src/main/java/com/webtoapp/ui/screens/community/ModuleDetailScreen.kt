@@ -35,10 +35,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.ModuleComment
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 模块详情 — Jobs-style frosted glass + spring physics
+ * module- Jobs- style frosted glass + spring physics
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +73,7 @@ fun ModuleDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp))
@@ -81,7 +81,7 @@ fun ModuleDetailScreen(
                 }
             )
         },
-        // 毛玻璃底部输入栏
+        // bottominput
         bottomBar = {
             FrostedBottomBar {
                 Row(
@@ -92,7 +92,7 @@ fun ModuleDetailScreen(
                         value = commentText,
                         onValueChange = { commentText = it },
                         placeholder = {
-                             Text(Strings.communityPostYourReply, fontSize = 14.sp,
+                             Text(AppStringsProvider.current().communityPostYourReply, fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         },
                         modifier = Modifier.weight(weight = 1f, fill = true).heightIn(max = 96.dp),
@@ -138,11 +138,11 @@ fun ModuleDetailScreen(
         } else {
             module?.let { mod ->
                 LazyColumn(Modifier) {
-                    // === 主体 ===
+                    // Note
                     item {
                         StaggeredItem(index = 0) {
                             Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                                // 作者
+                                // Note
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.clickable { onNavigateToUser(mod.authorId) }
@@ -194,7 +194,7 @@ fun ModuleDetailScreen(
                                 Text(
                                     buildAnnotatedString {
                                         mod.versionName?.let { append("v$it  ·  ") }
-                                        append("${String.format(Strings.communityDownloads, mod.downloads)}  ·  ${String.format(Strings.communityRatings, mod.ratingCount)}")
+                                        append("${String.format(AppStringsProvider.current().communityDownloads, mod.downloads)}  ·  ${String.format(AppStringsProvider.current().communityRatings, mod.ratingCount)}")
                                     },
                                     fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
@@ -204,7 +204,7 @@ fun ModuleDetailScreen(
                         GlassDivider()
                     }
 
-                    // === 操作栏 ===
+                    // Note
                     item {
                         StaggeredItem(index = 1) {
                             Row(
@@ -252,14 +252,14 @@ fun ModuleDetailScreen(
                         GlassDivider()
                     }
 
-                    // === 评论 ===
+                    // Note
                     if (comments.isEmpty() && !commentsLoading) {
                         item {
                             Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(Strings.communityNoRepliesYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(AppStringsProvider.current().communityNoRepliesYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                     Spacer(Modifier.height(2.dp))
-                                    Text(Strings.communityBeFirstReply, fontSize = 14.sp,
+                                    Text(AppStringsProvider.current().communityBeFirstReply, fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
                                 }
                             }
@@ -292,7 +292,7 @@ fun ModuleDetailScreen(
 }
 
 // ═══════════════════════════════════════════
-// 物理弹簧操作按钮
+// spring button
 // ═══════════════════════════════════════════
 
 @Composable
@@ -307,11 +307,11 @@ private fun PhysicsActionButton(
         tween(280), label = "btnClr"
     )
 
-    // 粒子爆炸触发
+    // Note
     var burstKey by remember { mutableIntStateOf(0) }
     var showBurst by remember { mutableStateOf(false) }
 
-    // 弹簧缩放
+    // Note
     var bouncing by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         if (bouncing) 1.35f else 1f,
@@ -321,7 +321,7 @@ private fun PhysicsActionButton(
     )
 
     Box(contentAlignment = Alignment.Center) {
-        // 粒子层
+        // Note
         LikeBurstEffect(
             trigger = showBurst,
             color = activeColor,
@@ -355,7 +355,7 @@ private fun PhysicsActionButton(
         }
     }
 
-    // 重置粒子
+    // reset
     LaunchedEffect(burstKey) {
         if (showBurst) {
             kotlinx.coroutines.delay(500)
@@ -365,7 +365,7 @@ private fun PhysicsActionButton(
 }
 
 // ═══════════════════════════════════════════
-// 评论行
+// Note
 // ═══════════════════════════════════════════
 
 @Composable
@@ -401,7 +401,7 @@ private fun CommentRow(comment: ModuleComment, onUserClick: () -> Unit) {
                     }
                 }
                 if (comment.replies.size > 3) {
-                    Text(Strings.communityShowMoreReplies, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary,
+                    Text(AppStringsProvider.current().communityShowMoreReplies, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 2.dp))
                 }
             }
@@ -410,7 +410,7 @@ private fun CommentRow(comment: ModuleComment, onUserClick: () -> Unit) {
 }
 
 // ═══════════════════════════════════════════
-// Shimmer 骨架
+// Shimmer
 // ═══════════════════════════════════════════
 
 @Composable
@@ -457,7 +457,7 @@ private fun DetailShimmer(modifier: Modifier = Modifier) {
 }
 
 // ═══════════════════════════════════════════
-// 举报 Sheet
+// Sheet
 // ═══════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -465,15 +465,15 @@ private fun DetailShimmer(modifier: Modifier = Modifier) {
 private fun ReportSheet(onDismiss: () -> Unit, onReport: (String) -> Unit) {
     var selected by remember { mutableStateOf("") }
     val reasons = listOf(
-        "spam" to Strings.communityReportSpam, "inappropriate" to Strings.communityReportInappropriate,
-        "malicious" to Strings.communityReportMalicious, "copyright" to Strings.communityReportCopyright, "other" to Strings.communityReportOther
+        "spam" to AppStringsProvider.current().communityReportSpam, "inappropriate" to AppStringsProvider.current().communityReportInappropriate,
+        "malicious" to AppStringsProvider.current().communityReportMalicious, "copyright" to AppStringsProvider.current().communityReportCopyright, "other" to AppStringsProvider.current().communityReportOther
     )
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp)) {
-            Text(Strings.communityReportTitle, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(AppStringsProvider.current().communityReportTitle, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Spacer(Modifier.height(4.dp))
-            Text(Strings.communityReportWhy, fontSize = 14.sp,
+            Text(AppStringsProvider.current().communityReportWhy, fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f))
             Spacer(Modifier.height(16.dp))
             reasons.forEach { (key, label) ->
@@ -492,7 +492,7 @@ private fun ReportSheet(onDismiss: () -> Unit, onReport: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 enabled = selected.isNotBlank()
-            ) { Text(Strings.communityReportSubmit, fontWeight = FontWeight.Bold) }
+            ) { Text(AppStringsProvider.current().communityReportSubmit, fontWeight = FontWeight.Bold) }
             Spacer(Modifier.height(28.dp))
         }
     }

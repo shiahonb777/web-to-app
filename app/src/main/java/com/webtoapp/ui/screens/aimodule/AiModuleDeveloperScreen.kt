@@ -18,6 +18,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -45,18 +48,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.agent.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.aimodule.*
 import kotlinx.coroutines.flow.collectLatest
 
 /**
- * AI 模块开发器界面（重构版）
+ * AI module( refactored)
  * 
- * 使用新组件重构的聊天式界面，集成：
- * - ModelSelector: 模型选择器
- * - StreamingMessageBubble: 流式消息气泡
- * - ToolCallCard: 工具调用卡片
- * - CodePreviewPanel: 代码预览面板
+ * Note
+ * ModelSelector: select
+ * StreamingMessageBubble: message
+ * ToolCallCard: callcard
+ * CodePreviewPanel: codepreviewpanel
  * 
  * Requirements: 4.1, 4.2, 4.4, 4.5, 4.7
  */
@@ -68,7 +71,6 @@ fun AiModuleDeveloperScreen(
     onNavigateToAiSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val clipboardManager = LocalClipboardManager.current
     
@@ -78,10 +80,10 @@ fun AiModuleDeveloperScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
-    // 滚动状态
+    // scrollstate
     val listState = rememberLazyListState()
     
-    // Handle一次性事件
+    // Handle
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -97,7 +99,7 @@ fun AiModuleDeveloperScreen(
                     }
                 }
                 is AiModuleDeveloperEvent.ModuleCreated -> {
-                    // Module创建成功，由外部处理
+                    // Modulecreatesuccess, handle
                 }
                 is AiModuleDeveloperEvent.NavigateToAiSettings -> {
                     onNavigateToAiSettings()
@@ -124,8 +126,8 @@ fun AiModuleDeveloperScreen(
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Text(Strings.aiModuleDeveloper, fontWeight = FontWeight.Bold)
-                        // 状态徽章
+                        Text(AppStringsProvider.current().aiModuleDeveloper, fontWeight = FontWeight.Bold)
+                        // state
                         if (uiState.isDeveloping) {
                             Spacer(modifier = Modifier.width(4.dp))
                             StreamingStatusBadge(state = uiState.agentState)
@@ -134,19 +136,19 @@ fun AiModuleDeveloperScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
-                    // Reset按钮
+                    // Resetbutton
                     if (uiState.messages.isNotEmpty() || uiState.generatedModule != null) {
                         IconButton(onClick = { viewModel.resetState() }) {
-                            Icon(Icons.Default.Refresh, Strings.btnReset)
+                            Icon(Icons.Default.Refresh, AppStringsProvider.current().btnReset)
                         }
                     }
-                    // 帮助按钮
+                    // helpbutton
                     IconButton(onClick = { viewModel.toggleHelpDialog(true) }) {
-                        Icon(Icons.Outlined.Help, Strings.help)
+                        Icon(Icons.AutoMirrored.Outlined.Help, AppStringsProvider.current().help)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -160,7 +162,7 @@ fun AiModuleDeveloperScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // 主内容区域
+            // contentarea
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -169,7 +171,7 @@ fun AiModuleDeveloperScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 欢迎界面
+                // welcome
                 if (uiState.showWelcome) {
                     item { WelcomeCard() }
                     item { FeatureChips() }
@@ -180,17 +182,16 @@ fun AiModuleDeveloperScreen(
                     }
                 }
                 
-                // 对话消息
+                // message
                 items(uiState.messages, key = { it.id }) { message ->
                     ConversationMessageItem(
-                        message = message,
-                        onToolCallExpand = { /* 可选：处理工具调用展开 */ }
+                        message = message
                     )
                 }
                 
-                // 流式输出中的内容
+                // outputincontent
                 if (uiState.isStreaming) {
-                    // 思考内容
+                    // content
                     if (uiState.thinkingContent.isNotBlank()) {
                         item {
                             ThinkingBlock(
@@ -200,7 +201,7 @@ fun AiModuleDeveloperScreen(
                         }
                     }
                     
-                    // 流式内容
+                    // content
                     if (uiState.streamingContent.isNotBlank()) {
                         item {
                             AssistantMessageBubble(
@@ -210,20 +211,20 @@ fun AiModuleDeveloperScreen(
                         }
                     }
                     
-                    // 当前工具调用
+                    // current call
                     if (uiState.currentToolCalls.isNotEmpty()) {
                         item {
                             ToolCallGroup(toolCalls = uiState.currentToolCalls)
                         }
                     }
                     
-                    // 状态指示器
+                    // stateindicator
                     item {
                         StreamingStatusCard(state = uiState.agentState)
                     }
                 }
                 
-                // Generate的模块预览
+                // Generate modulepreview
                 if (uiState.generatedModule != null && !uiState.isStreaming) {
                     item {
                         GeneratedModuleSection(
@@ -240,7 +241,7 @@ fun AiModuleDeveloperScreen(
                     }
                 }
                 
-                // Error信息
+                // Error
                 if (uiState.error != null) {
                     item {
                         com.webtoapp.ui.components.aimodule.ErrorCard(
@@ -255,11 +256,11 @@ fun AiModuleDeveloperScreen(
                     }
                 }
                 
-                // 底部间距
+                // bottom
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
             
-            // 输入区域
+            // inputarea
             InputSection(
                 userInput = uiState.userInput,
                 onInputChange = { viewModel.updateUserInput(it) },
@@ -279,7 +280,7 @@ fun AiModuleDeveloperScreen(
         }
     }
     
-    // 分类选择对话框
+    // selectdialog
     if (uiState.showCategorySelector) {
         CategorySelectorDialog(
             selectedCategory = uiState.selectedCategory,
@@ -288,7 +289,7 @@ fun AiModuleDeveloperScreen(
         )
     }
     
-    // 帮助对话框
+    // helpdialog
     if (uiState.showHelpDialog) {
         HelpDialog(onDismiss = { viewModel.toggleHelpDialog(false) })
     }
@@ -296,12 +297,11 @@ fun AiModuleDeveloperScreen(
 
 
 /**
- * 对话消息项
+ * message
  */
 @Composable
 private fun ConversationMessageItem(
-    message: ConversationMessage,
-    onToolCallExpand: (ToolCallInfo) -> Unit
+    message: ConversationMessage
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -312,7 +312,7 @@ private fun ConversationMessageItem(
                 UserMessageBubble(content = message.content)
             }
             MessageRole.ASSISTANT -> {
-                // 思考内容
+                // content
                 if (!message.thinkingContent.isNullOrBlank()) {
                     ThinkingBlock(
                         content = message.thinkingContent,
@@ -320,7 +320,7 @@ private fun ConversationMessageItem(
                     )
                 }
                 
-                // 消息内容
+                // messagecontent
                 if (message.content.isNotBlank()) {
                     AssistantMessageBubble(
                         content = message.content,
@@ -328,13 +328,13 @@ private fun ConversationMessageItem(
                     )
                 }
                 
-                // 工具调用
+                // call
                 if (message.toolCalls.isNotEmpty()) {
                     ToolCallGroup(toolCalls = message.toolCalls)
                 }
             }
             else -> {
-                // System消息或工具消息
+                // Systemmessageor message
                 Text(
                     text = message.content,
                     style = MaterialTheme.typography.bodySmall,
@@ -346,7 +346,7 @@ private fun ConversationMessageItem(
 }
 
 /**
- * 输入区域组件
+ * inputarea
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -373,7 +373,7 @@ private fun InputSection(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 模型选择器
+            // select
             ModelSelector(
                 selectedModel = selectedModel,
                 availableModels = availableModels,
@@ -381,7 +381,7 @@ private fun InputSection(
                 onConfigureClick = onConfigureModels
             )
             
-            // 分类选择
+            // select
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -394,7 +394,7 @@ private fun InputSection(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    Strings.categoryLabel,
+                    AppStringsProvider.current().categoryLabel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -404,7 +404,7 @@ private fun InputSection(
                     onClick = onCategoryClick,
                     label = { 
                         Text(
-                            selectedCategory?.let { "${it.icon} ${it.getDisplayName()}" } ?: Strings.autoDetectCategory,
+                            selectedCategory?.let { "${it.icon} ${it.getDisplayName()}" } ?: AppStringsProvider.current().autoDetectCategory,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -417,7 +417,7 @@ private fun InputSection(
                     ) {
                         Icon(
                             Icons.Default.Clear,
-                            contentDescription = Strings.clear,
+                            contentDescription = AppStringsProvider.current().clear,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -425,14 +425,14 @@ private fun InputSection(
                 }
             }
             
-            // 输入框
+            // input
             OutlinedTextField(
                 value = userInput,
                 onValueChange = onInputChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { 
                     Text(
-                        Strings.inputPlaceholder,
+                        AppStringsProvider.current().inputPlaceholder,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 },
@@ -447,8 +447,8 @@ private fun InputSection(
                             SendingIndicator()
                         } else {
                             Icon(
-                                Icons.Default.Send,
-                                contentDescription = Strings.startDevelopment,
+                                Icons.AutoMirrored.Filled.Send,
+                                contentDescription = AppStringsProvider.current().startDevelopment,
                                 tint = if (userInput.isNotBlank()) 
                                     MaterialTheme.colorScheme.primary 
                                 else 
@@ -468,7 +468,7 @@ private fun InputSection(
 }
 
 /**
- * 生成的模块区域
+ * modulearea
  */
 @Composable
 private fun GeneratedModuleSection(
@@ -486,10 +486,10 @@ private fun GeneratedModuleSection(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Module信息卡片
+        // Module card
         ModuleInfoCard(module = module)
         
-        // 代码预览面板
+        // codepreviewpanel
         CodePreviewPanel(
             jsCode = editedJsCode.ifBlank { module.jsCode },
             cssCode = editedCssCode.ifBlank { module.cssCode },
@@ -501,7 +501,7 @@ private fun GeneratedModuleSection(
             isEditable = true
         )
         
-        // 编辑提示
+        // edithint
         if (hasEdits) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
@@ -519,7 +519,7 @@ private fun GeneratedModuleSection(
                         tint = MaterialTheme.colorScheme.tertiary
                     )
                     Text(
-                        Strings.codeModifiedHint,
+                        AppStringsProvider.current().codeModifiedHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary
                     )
@@ -530,7 +530,7 @@ private fun GeneratedModuleSection(
 }
 
 /**
- * 模块信息卡片
+ * module card
  */
 @Composable
 private fun ModuleInfoCard(module: GeneratedModuleData) {
@@ -542,7 +542,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Success标识
+            // Success
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
@@ -559,7 +559,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        Strings.moduleGeneratedSuccess,
+                        AppStringsProvider.current().moduleGeneratedSuccess,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -569,7 +569,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Module信息
+            // Module
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -602,13 +602,13 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 状态标签
+            // statelabel
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (module.syntaxValid) {
-                    StatusChip(iconVector = Icons.Outlined.CheckCircle, text = Strings.syntaxCorrect, color = MaterialTheme.colorScheme.primary)
+                    StatusChip(iconVector = Icons.Outlined.CheckCircle, text = AppStringsProvider.current().syntaxCorrect, color = MaterialTheme.colorScheme.primary)
                 }
                 if (module.securitySafe) {
-                    StatusChip(iconVector = Icons.Outlined.Lock, text = Strings.secureStatus, color = MaterialTheme.colorScheme.secondary)
+                    StatusChip(iconVector = Icons.Outlined.Lock, text = AppStringsProvider.current().secureStatus, color = MaterialTheme.colorScheme.secondary)
                 }
             }
             
@@ -626,7 +626,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
 }
 
 /**
- * 状态标签
+ * statelabel
  */
 @Composable
 private fun StatusChip(iconVector: ImageVector, text: String, color: Color) {
@@ -656,7 +656,7 @@ private fun StatusChip(iconVector: ImageVector, text: String, color: Color) {
 
 
 /**
- * 流式状态卡片
+ * statecard
  */
 @Composable
 private fun StreamingStatusCard(state: AgentState) {
@@ -670,13 +670,13 @@ private fun StreamingStatusCard(state: AgentState) {
         else -> Icons.Outlined.HourglassEmpty
     }
     val stateText = when (state) {
-        AgentState.THINKING -> Strings.analyzingRequirements
-        AgentState.GENERATING -> Strings.generatingCodeStatus
-        AgentState.TOOL_CALLING -> Strings.executingToolCalls
-        AgentState.SYNTAX_CHECKING -> Strings.syntaxCheckingStatus
-        AgentState.FIXING -> Strings.fixingIssuesStatus
-        AgentState.SECURITY_SCANNING -> Strings.securityScanningStatus
-        else -> Strings.processing
+        AgentState.THINKING -> AppStringsProvider.current().analyzingRequirements
+        AgentState.GENERATING -> AppStringsProvider.current().generatingCodeStatus
+        AgentState.TOOL_CALLING -> AppStringsProvider.current().executingToolCalls
+        AgentState.SYNTAX_CHECKING -> AppStringsProvider.current().syntaxCheckingStatus
+        AgentState.FIXING -> AppStringsProvider.current().fixingIssuesStatus
+        AgentState.SECURITY_SCANNING -> AppStringsProvider.current().securityScanningStatus
+        else -> AppStringsProvider.current().processing
     }
     val color = when (state) {
         AgentState.THINKING, AgentState.GENERATING -> MaterialTheme.colorScheme.primary
@@ -714,18 +714,18 @@ private fun StreamingStatusCard(state: AgentState) {
 }
 
 /**
- * 流式状态徽章
+ * state
  */
 @Composable
 private fun StreamingStatusBadge(state: AgentState) {
     val text = when (state) {
-        AgentState.THINKING -> Strings.statusAnalyzing
-        AgentState.GENERATING -> Strings.statusGenerating
-        AgentState.TOOL_CALLING -> Strings.statusExecuting
-        AgentState.SYNTAX_CHECKING -> Strings.statusChecking
-        AgentState.FIXING -> Strings.statusFixing
-        AgentState.SECURITY_SCANNING -> Strings.statusScanning
-        else -> Strings.statusProcessing
+        AgentState.THINKING -> AppStringsProvider.current().statusAnalyzing
+        AgentState.GENERATING -> AppStringsProvider.current().statusGenerating
+        AgentState.TOOL_CALLING -> AppStringsProvider.current().statusExecuting
+        AgentState.SYNTAX_CHECKING -> AppStringsProvider.current().statusChecking
+        AgentState.FIXING -> AppStringsProvider.current().statusFixing
+        AgentState.SECURITY_SCANNING -> AppStringsProvider.current().statusScanning
+        else -> AppStringsProvider.current().statusProcessing
     }
     
     val infiniteTransition = rememberInfiniteTransition(label = "badge")
@@ -754,7 +754,7 @@ private fun StreamingStatusBadge(state: AgentState) {
 }
 
 /**
- * 流式动画点
+ * animation
  */
 @Composable
 private fun StreamingDots(
@@ -795,7 +795,7 @@ private fun StreamingDots(
 }
 
 /**
- * 发送中指示器
+ * indicator
  */
 @Composable
 private fun SendingIndicator(modifier: Modifier = Modifier) {
@@ -834,10 +834,10 @@ private fun SendingIndicator(modifier: Modifier = Modifier) {
     }
 }
 
-// ==================== 欢迎界面组件 ====================
+// ==================== welcome ====================
 
 /**
- * 欢迎卡片
+ * welcomecard
  */
 @Composable
 private fun WelcomeCard() {
@@ -854,7 +854,7 @@ private fun WelcomeCard() {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // AI 图标
+            // AI icon
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -880,7 +880,7 @@ private fun WelcomeCard() {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                Strings.aiAssistant,
+                AppStringsProvider.current().aiAssistant,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -890,7 +890,7 @@ private fun WelcomeCard() {
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                Strings.aiAssistantDesc,
+                AppStringsProvider.current().aiAssistantDesc,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -901,7 +901,7 @@ private fun WelcomeCard() {
 }
 
 /**
- * 功能特性标签
+ * label
  */
 @Composable
 private fun FeatureChips() {
@@ -911,11 +911,11 @@ private fun FeatureChips() {
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FeatureChip(iconVector = Icons.Outlined.Search, text = Strings.syntaxCheck)
-        FeatureChip(iconVector = Icons.Outlined.Lock, text = Strings.securityScan)
-        FeatureChip(iconVector = Icons.Outlined.Healing, text = Strings.autoFix)
-        FeatureChip(iconVector = Icons.Outlined.Inventory2, text = Strings.codeTemplate)
-        FeatureChip(iconVector = Icons.Outlined.Science, text = Strings.instantTest)
+        FeatureChip(iconVector = Icons.Outlined.Search, text = AppStringsProvider.current().syntaxCheck)
+        FeatureChip(iconVector = Icons.Outlined.Lock, text = AppStringsProvider.current().securityScan)
+        FeatureChip(iconVector = Icons.Outlined.Healing, text = AppStringsProvider.current().autoFix)
+        FeatureChip(iconVector = Icons.Outlined.Inventory2, text = AppStringsProvider.current().codeTemplate)
+        FeatureChip(iconVector = Icons.Outlined.Science, text = AppStringsProvider.current().instantTest)
     }
 }
 
@@ -946,17 +946,17 @@ private fun FeatureChip(iconVector: ImageVector, text: String) {
 }
 
 /**
- * 示例需求
+ * Note
  */
 @Composable
 private fun ExampleRequirements(onSelect: (String) -> Unit) {
     val examples = listOf(
-        Icons.Outlined.Block to Strings.exampleBlockAds,
-        Icons.Outlined.DarkMode to Strings.exampleDarkMode,
-        Icons.Outlined.SwipeDown to Strings.exampleAutoScroll,
-        Icons.Outlined.ContentCopy to Strings.exampleUnlockCopy,
-        Icons.Outlined.FastForward to Strings.exampleVideoSpeed,
-        Icons.Outlined.KeyboardArrowUp to Strings.exampleBackToTop
+        Icons.Outlined.Block to AppStringsProvider.current().exampleBlockAds,
+        Icons.Outlined.DarkMode to AppStringsProvider.current().exampleDarkMode,
+        Icons.Outlined.SwipeDown to AppStringsProvider.current().exampleAutoScroll,
+        Icons.Outlined.ContentCopy to AppStringsProvider.current().exampleUnlockCopy,
+        Icons.Outlined.FastForward to AppStringsProvider.current().exampleVideoSpeed,
+        Icons.Outlined.KeyboardArrowUp to AppStringsProvider.current().exampleBackToTop
     )
     
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -971,7 +971,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                Strings.tryTheseExamples,
+                AppStringsProvider.current().tryTheseExamples,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -1025,10 +1025,10 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
 }
 
 
-// ==================== 对话框组件 ====================
+// ==================== dialog ====================
 
 /**
- * 分类选择对话框
+ * selectdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1050,7 +1050,7 @@ private fun CategorySelectorDialog(
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Text(Strings.selectModuleCategory)
+                Text(AppStringsProvider.current().selectModuleCategory)
             }
         },
         text = {
@@ -1060,8 +1060,8 @@ private fun CategorySelectorDialog(
                 item {
                     CategoryItem(
                         iconVector = Icons.Outlined.SmartToy,
-                        name = Strings.autoDetect,
-                        description = Strings.autoDetectCategoryHint,
+                        name = AppStringsProvider.current().autoDetect,
+                        description = AppStringsProvider.current().autoDetectCategoryHint,
                         selected = selectedCategory == null,
                         onClick = { onSelect(null) }
                     )
@@ -1081,7 +1081,7 @@ private fun CategorySelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -1151,7 +1151,7 @@ private fun CategoryItem(
 }
 
 /**
- * 帮助对话框
+ * helpdialog
  */
 @Composable
 private fun HelpDialog(onDismiss: () -> Unit) {
@@ -1163,12 +1163,12 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    Icons.Outlined.Help,
+                    Icons.AutoMirrored.Outlined.Help,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Text(Strings.usageHelp)
+                Text(AppStringsProvider.current().usageHelp)
             }
         },
         text = {
@@ -1177,57 +1177,57 @@ private fun HelpDialog(onDismiss: () -> Unit) {
             ) {
                 item {
                     HelpSection(
-                        iconVector = Icons.Outlined.Chat,
-                        title = Strings.helpHowToUse,
-                        content = Strings.helpHowToUseContent
+                        iconVector = Icons.AutoMirrored.Outlined.Chat,
+                        title = AppStringsProvider.current().helpHowToUse,
+                        content = AppStringsProvider.current().helpHowToUseContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Edit,
-                        title = Strings.helpRequirementTips,
-                        content = Strings.helpRequirementTipsContent
+                        title = AppStringsProvider.current().helpRequirementTips,
+                        content = AppStringsProvider.current().helpRequirementTipsContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.SmartToy,
-                        title = Strings.helpModelSelection,
-                        content = Strings.helpModelSelectionContent
+                        title = AppStringsProvider.current().helpModelSelection,
+                        content = AppStringsProvider.current().helpModelSelectionContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.FolderOpen,
-                        title = Strings.helpCategorySelection,
-                        content = Strings.helpCategorySelectionContent
+                        title = AppStringsProvider.current().helpCategorySelection,
+                        content = AppStringsProvider.current().helpCategorySelectionContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Search,
-                        title = Strings.helpAutoCheck,
-                        content = Strings.helpAutoCheckContent
+                        title = AppStringsProvider.current().helpAutoCheck,
+                        content = AppStringsProvider.current().helpAutoCheckContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Edit,
-                        title = Strings.helpCodeEdit,
-                        content = Strings.helpCodeEditContent
+                        title = AppStringsProvider.current().helpCodeEdit,
+                        content = AppStringsProvider.current().helpCodeEditContent
                     )
                 }
                 
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Save,
-                        title = Strings.helpSaveModule,
-                        content = Strings.helpSaveModuleContent
+                        title = AppStringsProvider.current().helpSaveModule,
+                        content = AppStringsProvider.current().helpSaveModuleContent
                     )
                 }
             }
@@ -1237,7 +1237,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                 onClick = onDismiss,
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(Strings.iUnderstand)
+                Text(AppStringsProvider.current().iUnderstand)
             }
         }
     )

@@ -1,7 +1,7 @@
 package com.webtoapp.core.extension
 
 import com.google.gson.annotations.SerializedName
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.GsonProvider
 import java.util.UUID
 import java.util.concurrent.Executors
@@ -55,9 +55,6 @@ private fun String.escapeForJsTemplate(): String =
         .replace("\n", "\\n")
         .replace("\r", "\\r")
 
-/**
- * 扩展模块分类
- */
 enum class ModuleCategory(val icon: String) {
     CONTENT_FILTER("block"),
     CONTENT_ENHANCE("auto_awesome"),
@@ -84,61 +81,58 @@ enum class ModuleCategory(val icon: String) {
     OTHER("package");
     
     fun getDisplayName(): String = when (this) {
-        CONTENT_FILTER -> Strings.catContentFilter
-        CONTENT_ENHANCE -> Strings.catContentEnhance
-        STYLE_MODIFIER -> Strings.catStyleModifier
-        THEME -> Strings.catTheme
-        FUNCTION_ENHANCE -> Strings.catFunctionEnhance
-        AUTOMATION -> Strings.catAutomation
-        NAVIGATION -> Strings.catNavigation
-        DATA_EXTRACT -> Strings.catDataExtract
-        DATA_SAVE -> Strings.catDataSave
-        INTERACTION -> Strings.catInteraction
-        ACCESSIBILITY -> Strings.catAccessibility
-        MEDIA -> Strings.catMedia
-        VIDEO -> Strings.catVideo
-        IMAGE -> Strings.catImage
-        AUDIO -> Strings.catAudio
-        SECURITY -> Strings.catSecurity
-        ANTI_TRACKING -> Strings.catAntiTracking
-        SOCIAL -> Strings.catSocial
-        SHOPPING -> Strings.catShopping
-        READING -> Strings.catReading
-        TRANSLATE -> Strings.catTranslate
-        DEVELOPER -> Strings.catDeveloper
-        OTHER -> Strings.catOther
+        CONTENT_FILTER -> AppStringsProvider.current().catContentFilter
+        CONTENT_ENHANCE -> AppStringsProvider.current().catContentEnhance
+        STYLE_MODIFIER -> AppStringsProvider.current().catStyleModifier
+        THEME -> AppStringsProvider.current().catTheme
+        FUNCTION_ENHANCE -> AppStringsProvider.current().catFunctionEnhance
+        AUTOMATION -> AppStringsProvider.current().catAutomation
+        NAVIGATION -> AppStringsProvider.current().catNavigation
+        DATA_EXTRACT -> AppStringsProvider.current().catDataExtract
+        DATA_SAVE -> AppStringsProvider.current().catDataSave
+        INTERACTION -> AppStringsProvider.current().catInteraction
+        ACCESSIBILITY -> AppStringsProvider.current().catAccessibility
+        MEDIA -> AppStringsProvider.current().catMedia
+        VIDEO -> AppStringsProvider.current().catVideo
+        IMAGE -> AppStringsProvider.current().catImage
+        AUDIO -> AppStringsProvider.current().catAudio
+        SECURITY -> AppStringsProvider.current().catSecurity
+        ANTI_TRACKING -> AppStringsProvider.current().catAntiTracking
+        SOCIAL -> AppStringsProvider.current().catSocial
+        SHOPPING -> AppStringsProvider.current().catShopping
+        READING -> AppStringsProvider.current().catReading
+        TRANSLATE -> AppStringsProvider.current().catTranslate
+        DEVELOPER -> AppStringsProvider.current().catDeveloper
+        OTHER -> AppStringsProvider.current().catOther
     }
     
     fun getDescription(): String = when (this) {
-        CONTENT_FILTER -> Strings.catContentFilterDesc
-        CONTENT_ENHANCE -> Strings.catContentEnhanceDesc
-        STYLE_MODIFIER -> Strings.catStyleModifierDesc
-        THEME -> Strings.catThemeDesc
-        FUNCTION_ENHANCE -> Strings.catFunctionEnhanceDesc
-        AUTOMATION -> Strings.catAutomationDesc
-        NAVIGATION -> Strings.catNavigationDesc
-        DATA_EXTRACT -> Strings.catDataExtractDesc
-        DATA_SAVE -> Strings.catDataSaveDesc
-        INTERACTION -> Strings.catInteractionDesc
-        ACCESSIBILITY -> Strings.catAccessibilityDesc
-        MEDIA -> Strings.catMediaDesc
-        VIDEO -> Strings.catVideoDesc
-        IMAGE -> Strings.catImageDesc
-        AUDIO -> Strings.catAudioDesc
-        SECURITY -> Strings.catSecurityDesc
-        ANTI_TRACKING -> Strings.catAntiTrackingDesc
-        SOCIAL -> Strings.catSocialDesc
-        SHOPPING -> Strings.catShoppingDesc
-        READING -> Strings.catReadingDesc
-        TRANSLATE -> Strings.catTranslateDesc
-        DEVELOPER -> Strings.catDeveloperDesc
-        OTHER -> Strings.catOtherDesc
+        CONTENT_FILTER -> AppStringsProvider.current().catContentFilterDesc
+        CONTENT_ENHANCE -> AppStringsProvider.current().catContentEnhanceDesc
+        STYLE_MODIFIER -> AppStringsProvider.current().catStyleModifierDesc
+        THEME -> AppStringsProvider.current().catThemeDesc
+        FUNCTION_ENHANCE -> AppStringsProvider.current().catFunctionEnhanceDesc
+        AUTOMATION -> AppStringsProvider.current().catAutomationDesc
+        NAVIGATION -> AppStringsProvider.current().catNavigationDesc
+        DATA_EXTRACT -> AppStringsProvider.current().catDataExtractDesc
+        DATA_SAVE -> AppStringsProvider.current().catDataSaveDesc
+        INTERACTION -> AppStringsProvider.current().catInteractionDesc
+        ACCESSIBILITY -> AppStringsProvider.current().catAccessibilityDesc
+        MEDIA -> AppStringsProvider.current().catMediaDesc
+        VIDEO -> AppStringsProvider.current().catVideoDesc
+        IMAGE -> AppStringsProvider.current().catImageDesc
+        AUDIO -> AppStringsProvider.current().catAudioDesc
+        SECURITY -> AppStringsProvider.current().catSecurityDesc
+        ANTI_TRACKING -> AppStringsProvider.current().catAntiTrackingDesc
+        SOCIAL -> AppStringsProvider.current().catSocialDesc
+        SHOPPING -> AppStringsProvider.current().catShoppingDesc
+        READING -> AppStringsProvider.current().catReadingDesc
+        TRANSLATE -> AppStringsProvider.current().catTranslateDesc
+        DEVELOPER -> AppStringsProvider.current().catDeveloperDesc
+        OTHER -> AppStringsProvider.current().catOtherDesc
     }
 }
 
-/**
- * 模块执行时机
- */
 enum class ModuleRunTime(val jsEvent: String) {
     DOCUMENT_START(""),
     DOCUMENT_END("DOMContentLoaded"),
@@ -147,25 +141,22 @@ enum class ModuleRunTime(val jsEvent: String) {
     BEFORE_UNLOAD("beforeunload");
     
     fun getDisplayName(): String = when (this) {
-        DOCUMENT_START -> Strings.runTimeDocStart
-        DOCUMENT_END -> Strings.runTimeDocEnd
-        DOCUMENT_IDLE -> Strings.runTimeDocIdle
-        CONTEXT_MENU -> Strings.runTimeContextMenu
-        BEFORE_UNLOAD -> Strings.runTimeBeforeUnload
+        DOCUMENT_START -> AppStringsProvider.current().runTimeDocStart
+        DOCUMENT_END -> AppStringsProvider.current().runTimeDocEnd
+        DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdle
+        CONTEXT_MENU -> AppStringsProvider.current().runTimeContextMenu
+        BEFORE_UNLOAD -> AppStringsProvider.current().runTimeBeforeUnload
     }
     
     fun getDescription(): String = when (this) {
-        DOCUMENT_START -> Strings.runTimeDocStartDesc
-        DOCUMENT_END -> Strings.runTimeDocEndDesc
-        DOCUMENT_IDLE -> Strings.runTimeDocIdleDesc
-        CONTEXT_MENU -> Strings.runTimeContextMenuDesc
-        BEFORE_UNLOAD -> Strings.runTimeBeforeUnloadDesc
+        DOCUMENT_START -> AppStringsProvider.current().runTimeDocStartDesc
+        DOCUMENT_END -> AppStringsProvider.current().runTimeDocEndDesc
+        DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdleDesc
+        CONTEXT_MENU -> AppStringsProvider.current().runTimeContextMenuDesc
+        BEFORE_UNLOAD -> AppStringsProvider.current().runTimeBeforeUnloadDesc
     }
 }
 
-/**
- * 模块触发条件
- */
 enum class ModuleTrigger {
     AUTO,
     MANUAL,
@@ -179,35 +170,32 @@ enum class ModuleTrigger {
     VISIBILITY;
     
     val displayName: String get() = when (this) {
-        AUTO -> Strings.triggerAuto
-        MANUAL -> Strings.triggerManual
-        INTERVAL -> Strings.triggerInterval
-        MUTATION -> Strings.triggerMutation
-        SCROLL -> Strings.triggerScroll
-        CLICK -> Strings.triggerClick
-        HOVER -> Strings.triggerHover
-        FOCUS -> Strings.triggerFocus
-        INPUT -> Strings.triggerInput
-        VISIBILITY -> Strings.triggerVisibility
+        AUTO -> AppStringsProvider.current().triggerAuto
+        MANUAL -> AppStringsProvider.current().triggerManual
+        INTERVAL -> AppStringsProvider.current().triggerInterval
+        MUTATION -> AppStringsProvider.current().triggerMutation
+        SCROLL -> AppStringsProvider.current().triggerScroll
+        CLICK -> AppStringsProvider.current().triggerClick
+        HOVER -> AppStringsProvider.current().triggerHover
+        FOCUS -> AppStringsProvider.current().triggerFocus
+        INPUT -> AppStringsProvider.current().triggerInput
+        VISIBILITY -> AppStringsProvider.current().triggerVisibility
     }
     
     val description: String get() = when (this) {
-        AUTO -> Strings.triggerAutoDesc
-        MANUAL -> Strings.triggerManualDesc
-        INTERVAL -> Strings.triggerIntervalDesc
-        MUTATION -> Strings.triggerMutationDesc
-        SCROLL -> Strings.triggerScrollDesc
-        CLICK -> Strings.triggerClickDesc
-        HOVER -> Strings.triggerHoverDesc
-        FOCUS -> Strings.triggerFocusDesc
-        INPUT -> Strings.triggerInputDesc
-        VISIBILITY -> Strings.triggerVisibilityDesc
+        AUTO -> AppStringsProvider.current().triggerAutoDesc
+        MANUAL -> AppStringsProvider.current().triggerManualDesc
+        INTERVAL -> AppStringsProvider.current().triggerIntervalDesc
+        MUTATION -> AppStringsProvider.current().triggerMutationDesc
+        SCROLL -> AppStringsProvider.current().triggerScrollDesc
+        CLICK -> AppStringsProvider.current().triggerClickDesc
+        HOVER -> AppStringsProvider.current().triggerHoverDesc
+        FOCUS -> AppStringsProvider.current().triggerFocusDesc
+        INPUT -> AppStringsProvider.current().triggerInputDesc
+        VISIBILITY -> AppStringsProvider.current().triggerVisibilityDesc
     }
 }
 
-/**
- * 模块权限
- */
 enum class ModulePermission(val dangerous: Boolean = false) {
     DOM_ACCESS,
     DOM_OBSERVE,
@@ -242,77 +230,74 @@ enum class ModulePermission(val dangerous: Boolean = false) {
     NAVIGATION;
     
     val displayName: String get() = when (this) {
-        DOM_ACCESS -> Strings.permDomAccess
-        DOM_OBSERVE -> Strings.permDomObserve
-        CSS_INJECT -> Strings.permCssInject
-        STORAGE -> Strings.permStorage
-        COOKIE -> Strings.permCookie
-        INDEXED_DB -> Strings.permIndexedDb
-        CACHE -> Strings.permCache
-        NETWORK -> Strings.permNetwork
-        WEBSOCKET -> Strings.permWebsocket
-        FETCH_INTERCEPT -> Strings.permFetchIntercept
-        CLIPBOARD -> Strings.permClipboard
-        NOTIFICATION -> Strings.permNotification
-        ALERT -> Strings.permAlert
-        KEYBOARD -> Strings.permKeyboard
-        MOUSE -> Strings.permMouse
-        TOUCH -> Strings.permTouch
-        LOCATION -> Strings.permLocation
-        CAMERA -> Strings.permCamera
-        MICROPHONE -> Strings.permMicrophone
-        DEVICE_INFO -> Strings.permDeviceInfo
-        MEDIA -> Strings.permMedia
-        FULLSCREEN -> Strings.permFullscreen
-        PICTURE_IN_PICTURE -> Strings.permPip
-        SCREEN_CAPTURE -> Strings.permScreenCapture
-        DOWNLOAD -> Strings.permDownload
-        FILE_ACCESS -> Strings.permFileAccess
-        EVAL -> Strings.permEval
-        IFRAME -> Strings.permIframe
-        WINDOW_OPEN -> Strings.permWindowOpen
-        HISTORY -> Strings.permHistory
-        NAVIGATION -> Strings.permNavigation
+        DOM_ACCESS -> AppStringsProvider.current().permDomAccess
+        DOM_OBSERVE -> AppStringsProvider.current().permDomObserve
+        CSS_INJECT -> AppStringsProvider.current().permCssInject
+        STORAGE -> AppStringsProvider.current().permStorage
+        COOKIE -> AppStringsProvider.current().permCookie
+        INDEXED_DB -> AppStringsProvider.current().permIndexedDb
+        CACHE -> AppStringsProvider.current().permCache
+        NETWORK -> AppStringsProvider.current().permNetwork
+        WEBSOCKET -> AppStringsProvider.current().permWebsocket
+        FETCH_INTERCEPT -> AppStringsProvider.current().permFetchIntercept
+        CLIPBOARD -> AppStringsProvider.current().permClipboard
+        NOTIFICATION -> AppStringsProvider.current().permNotification
+        ALERT -> AppStringsProvider.current().permAlert
+        KEYBOARD -> AppStringsProvider.current().permKeyboard
+        MOUSE -> AppStringsProvider.current().permMouse
+        TOUCH -> AppStringsProvider.current().permTouch
+        LOCATION -> AppStringsProvider.current().permLocation
+        CAMERA -> AppStringsProvider.current().permCamera
+        MICROPHONE -> AppStringsProvider.current().permMicrophone
+        DEVICE_INFO -> AppStringsProvider.current().permDeviceInfo
+        MEDIA -> AppStringsProvider.current().permMedia
+        FULLSCREEN -> AppStringsProvider.current().permFullscreen
+        PICTURE_IN_PICTURE -> AppStringsProvider.current().permPip
+        SCREEN_CAPTURE -> AppStringsProvider.current().permScreenCapture
+        DOWNLOAD -> AppStringsProvider.current().permDownload
+        FILE_ACCESS -> AppStringsProvider.current().permFileAccess
+        EVAL -> AppStringsProvider.current().permEval
+        IFRAME -> AppStringsProvider.current().permIframe
+        WINDOW_OPEN -> AppStringsProvider.current().permWindowOpen
+        HISTORY -> AppStringsProvider.current().permHistory
+        NAVIGATION -> AppStringsProvider.current().permNavigation
     }
     
     val description: String get() = when (this) {
-        DOM_ACCESS -> Strings.permDomAccessDesc
-        DOM_OBSERVE -> Strings.permDomObserveDesc
-        CSS_INJECT -> Strings.permCssInjectDesc
-        STORAGE -> Strings.permStorageDesc
-        COOKIE -> Strings.permCookieDesc
-        INDEXED_DB -> Strings.permIndexedDbDesc
-        CACHE -> Strings.permCacheDesc
-        NETWORK -> Strings.permNetworkDesc
-        WEBSOCKET -> Strings.permWebsocketDesc
-        FETCH_INTERCEPT -> Strings.permFetchInterceptDesc
-        CLIPBOARD -> Strings.permClipboardDesc
-        NOTIFICATION -> Strings.permNotificationDesc
-        ALERT -> Strings.permAlertDesc
-        KEYBOARD -> Strings.permKeyboardDesc
-        MOUSE -> Strings.permMouseDesc
-        TOUCH -> Strings.permTouchDesc
-        LOCATION -> Strings.permLocationDesc
-        CAMERA -> Strings.permCameraDesc
-        MICROPHONE -> Strings.permMicrophoneDesc
-        DEVICE_INFO -> Strings.permDeviceInfoDesc
-        MEDIA -> Strings.permMediaDesc
-        FULLSCREEN -> Strings.permFullscreenDesc
-        PICTURE_IN_PICTURE -> Strings.permPipDesc
-        SCREEN_CAPTURE -> Strings.permScreenCaptureDesc
-        DOWNLOAD -> Strings.permDownloadDesc
-        FILE_ACCESS -> Strings.permFileAccessDesc
-        EVAL -> Strings.permEvalDesc
-        IFRAME -> Strings.permIframeDesc
-        WINDOW_OPEN -> Strings.permWindowOpenDesc
-        HISTORY -> Strings.permHistoryDesc
-        NAVIGATION -> Strings.permNavigationDesc
+        DOM_ACCESS -> AppStringsProvider.current().permDomAccessDesc
+        DOM_OBSERVE -> AppStringsProvider.current().permDomObserveDesc
+        CSS_INJECT -> AppStringsProvider.current().permCssInjectDesc
+        STORAGE -> AppStringsProvider.current().permStorageDesc
+        COOKIE -> AppStringsProvider.current().permCookieDesc
+        INDEXED_DB -> AppStringsProvider.current().permIndexedDbDesc
+        CACHE -> AppStringsProvider.current().permCacheDesc
+        NETWORK -> AppStringsProvider.current().permNetworkDesc
+        WEBSOCKET -> AppStringsProvider.current().permWebsocketDesc
+        FETCH_INTERCEPT -> AppStringsProvider.current().permFetchInterceptDesc
+        CLIPBOARD -> AppStringsProvider.current().permClipboardDesc
+        NOTIFICATION -> AppStringsProvider.current().permNotificationDesc
+        ALERT -> AppStringsProvider.current().permAlertDesc
+        KEYBOARD -> AppStringsProvider.current().permKeyboardDesc
+        MOUSE -> AppStringsProvider.current().permMouseDesc
+        TOUCH -> AppStringsProvider.current().permTouchDesc
+        LOCATION -> AppStringsProvider.current().permLocationDesc
+        CAMERA -> AppStringsProvider.current().permCameraDesc
+        MICROPHONE -> AppStringsProvider.current().permMicrophoneDesc
+        DEVICE_INFO -> AppStringsProvider.current().permDeviceInfoDesc
+        MEDIA -> AppStringsProvider.current().permMediaDesc
+        FULLSCREEN -> AppStringsProvider.current().permFullscreenDesc
+        PICTURE_IN_PICTURE -> AppStringsProvider.current().permPipDesc
+        SCREEN_CAPTURE -> AppStringsProvider.current().permScreenCaptureDesc
+        DOWNLOAD -> AppStringsProvider.current().permDownloadDesc
+        FILE_ACCESS -> AppStringsProvider.current().permFileAccessDesc
+        EVAL -> AppStringsProvider.current().permEvalDesc
+        IFRAME -> AppStringsProvider.current().permIframeDesc
+        WINDOW_OPEN -> AppStringsProvider.current().permWindowOpenDesc
+        HISTORY -> AppStringsProvider.current().permHistoryDesc
+        NAVIGATION -> AppStringsProvider.current().permNavigationDesc
     }
 }
 
-/**
- * 模块配置项类型
- */
 enum class ConfigItemType {
     TEXT, TEXTAREA, NUMBER, BOOLEAN,
     SELECT, MULTI_SELECT, RADIO, CHECKBOX,
@@ -322,111 +307,104 @@ enum class ConfigItemType {
     FILE, IMAGE;
     
     val displayName: String get() = when (this) {
-        TEXT -> Strings.configTypeText
-        TEXTAREA -> Strings.configTypeTextarea
-        NUMBER -> Strings.configTypeNumber
-        BOOLEAN -> Strings.configTypeBoolean
-        SELECT -> Strings.configTypeSelect
-        MULTI_SELECT -> Strings.configTypeMultiSelect
-        RADIO -> Strings.configTypeRadio
-        CHECKBOX -> Strings.configTypeCheckbox
-        COLOR -> Strings.configTypeColor
-        URL -> Strings.configTypeUrl
-        EMAIL -> Strings.configTypeEmail
-        PASSWORD -> Strings.configTypePassword
-        REGEX -> Strings.configTypeRegex
-        CSS_SELECTOR -> Strings.configTypeCssSelector
-        JAVASCRIPT -> Strings.configTypeJavascript
-        JSON -> Strings.configTypeJson
-        RANGE -> Strings.configTypeRange
-        DATE -> Strings.configTypeDate
-        TIME -> Strings.configTypeTime
-        DATETIME -> Strings.configTypeDatetime
-        FILE -> Strings.configTypeFile
-        IMAGE -> Strings.configTypeImage
+        TEXT -> AppStringsProvider.current().configTypeText
+        TEXTAREA -> AppStringsProvider.current().configTypeTextarea
+        NUMBER -> AppStringsProvider.current().configTypeNumber
+        BOOLEAN -> AppStringsProvider.current().configTypeBoolean
+        SELECT -> AppStringsProvider.current().configTypeSelect
+        MULTI_SELECT -> AppStringsProvider.current().configTypeMultiSelect
+        RADIO -> AppStringsProvider.current().configTypeRadio
+        CHECKBOX -> AppStringsProvider.current().configTypeCheckbox
+        COLOR -> AppStringsProvider.current().configTypeColor
+        URL -> AppStringsProvider.current().configTypeUrl
+        EMAIL -> AppStringsProvider.current().configTypeEmail
+        PASSWORD -> AppStringsProvider.current().configTypePassword
+        REGEX -> AppStringsProvider.current().configTypeRegex
+        CSS_SELECTOR -> AppStringsProvider.current().configTypeCssSelector
+        JAVASCRIPT -> AppStringsProvider.current().configTypeJavascript
+        JSON -> AppStringsProvider.current().configTypeJson
+        RANGE -> AppStringsProvider.current().configTypeRange
+        DATE -> AppStringsProvider.current().configTypeDate
+        TIME -> AppStringsProvider.current().configTypeTime
+        DATETIME -> AppStringsProvider.current().configTypeDatetime
+        FILE -> AppStringsProvider.current().configTypeFile
+        IMAGE -> AppStringsProvider.current().configTypeImage
     }
     
     val description: String get() = when (this) {
-        TEXT -> Strings.configTypeTextDesc
-        TEXTAREA -> Strings.configTypeTextareaDesc
-        NUMBER -> Strings.configTypeNumberDesc
-        BOOLEAN -> Strings.configTypeBooleanDesc
-        SELECT -> Strings.configTypeSelectDesc
-        MULTI_SELECT -> Strings.configTypeMultiSelectDesc
-        RADIO -> Strings.configTypeRadioDesc
-        CHECKBOX -> Strings.configTypeCheckboxDesc
-        COLOR -> Strings.configTypeColorDesc
-        URL -> Strings.configTypeUrlDesc
-        EMAIL -> Strings.configTypeEmailDesc
-        PASSWORD -> Strings.configTypePasswordDesc
-        REGEX -> Strings.configTypeRegexDesc
-        CSS_SELECTOR -> Strings.configTypeCssSelectorDesc
-        JAVASCRIPT -> Strings.configTypeJavascriptDesc
-        JSON -> Strings.configTypeJsonDesc
-        RANGE -> Strings.configTypeRangeDesc
-        DATE -> Strings.configTypeDateDesc
-        TIME -> Strings.configTypeTimeDesc
-        DATETIME -> Strings.configTypeDatetimeDesc
-        FILE -> Strings.configTypeFileDesc
-        IMAGE -> Strings.configTypeImageDesc
+        TEXT -> AppStringsProvider.current().configTypeTextDesc
+        TEXTAREA -> AppStringsProvider.current().configTypeTextareaDesc
+        NUMBER -> AppStringsProvider.current().configTypeNumberDesc
+        BOOLEAN -> AppStringsProvider.current().configTypeBooleanDesc
+        SELECT -> AppStringsProvider.current().configTypeSelectDesc
+        MULTI_SELECT -> AppStringsProvider.current().configTypeMultiSelectDesc
+        RADIO -> AppStringsProvider.current().configTypeRadioDesc
+        CHECKBOX -> AppStringsProvider.current().configTypeCheckboxDesc
+        COLOR -> AppStringsProvider.current().configTypeColorDesc
+        URL -> AppStringsProvider.current().configTypeUrlDesc
+        EMAIL -> AppStringsProvider.current().configTypeEmailDesc
+        PASSWORD -> AppStringsProvider.current().configTypePasswordDesc
+        REGEX -> AppStringsProvider.current().configTypeRegexDesc
+        CSS_SELECTOR -> AppStringsProvider.current().configTypeCssSelectorDesc
+        JAVASCRIPT -> AppStringsProvider.current().configTypeJavascriptDesc
+        JSON -> AppStringsProvider.current().configTypeJsonDesc
+        RANGE -> AppStringsProvider.current().configTypeRangeDesc
+        DATE -> AppStringsProvider.current().configTypeDateDesc
+        TIME -> AppStringsProvider.current().configTypeTimeDesc
+        DATETIME -> AppStringsProvider.current().configTypeDatetimeDesc
+        FILE -> AppStringsProvider.current().configTypeFileDesc
+        IMAGE -> AppStringsProvider.current().configTypeImageDesc
     }
 }
 
-/**
- * 模块配置项定义
- */
 data class ModuleConfigItem(
     @SerializedName("key")
-    val key: String,                              // Configure键名
+    val key: String,
     @SerializedName("name")
-    val name: String,                             // Show名称
+    val name: String,
     @SerializedName("description")
-    val description: String = "",                 // Configure说明
+    val description: String = "",
     @SerializedName("type")
-    val type: ConfigItemType = ConfigItemType.TEXT, // Configure类型
+    val type: ConfigItemType = ConfigItemType.TEXT,
     @SerializedName("defaultValue")
-    val defaultValue: String = "",                // Default值
+    val defaultValue: String = "",
     @SerializedName("options")
-    val options: List<String> = emptyList(),      // Options列表（SELECT/MULTI_SELECT 类型）
+    val options: List<String> = emptyList(),
     @SerializedName("required")
-    val required: Boolean = false,                // Yes否必填
+    val required: Boolean = false,
     @SerializedName("placeholder")
-    val placeholder: String = "",                 // 占位提示
+    val placeholder: String = "",
     @SerializedName("validation")
-    val validation: String? = null                // Verify正则（可选）
+    val validation: String? = null
 )
 
-/**
- * 模块 UI 类型
- * 定义模块在网页中的展示形式
- */
 enum class ModuleUiType {
-    FLOATING_BUTTON,    // 悬浮按钮（默认，点击显示面板）
-    FLOATING_TOOLBAR,   // 悬浮工具栏（多个按钮水平/垂直排列）
-    SIDEBAR,            // 侧边栏（可展开/收起的面板）
-    BOTTOM_BAR,         // 底部操作栏（固定在底部）
-    FLOATING_PANEL,     // 可拖动悬浮面板
-    MINI_BUTTON,        // 迷你悬浮按钮（更小，不显示模块数量）
-    CUSTOM;             // 完全自定义（使用 customHtml）
+    FLOATING_BUTTON,
+    FLOATING_TOOLBAR,
+    SIDEBAR,
+    BOTTOM_BAR,
+    FLOATING_PANEL,
+    MINI_BUTTON,
+    CUSTOM;
     
     fun getDisplayName(): String = when (this) {
-        FLOATING_BUTTON -> Strings.uiTypeFloatingButton
-        FLOATING_TOOLBAR -> Strings.uiTypeFloatingToolbar
-        SIDEBAR -> Strings.uiTypeSidebar
-        BOTTOM_BAR -> Strings.uiTypeBottomBar
-        FLOATING_PANEL -> Strings.uiTypeFloatingPanel
-        MINI_BUTTON -> Strings.uiTypeMiniButton
-        CUSTOM -> Strings.uiTypeCustom
+        FLOATING_BUTTON -> AppStringsProvider.current().uiTypeFloatingButton
+        FLOATING_TOOLBAR -> AppStringsProvider.current().uiTypeFloatingToolbar
+        SIDEBAR -> AppStringsProvider.current().uiTypeSidebar
+        BOTTOM_BAR -> AppStringsProvider.current().uiTypeBottomBar
+        FLOATING_PANEL -> AppStringsProvider.current().uiTypeFloatingPanel
+        MINI_BUTTON -> AppStringsProvider.current().uiTypeMiniButton
+        CUSTOM -> AppStringsProvider.current().uiTypeCustom
     }
     
     fun getDescription(): String = when (this) {
-        FLOATING_BUTTON -> Strings.uiTypeFloatingButtonDesc
-        FLOATING_TOOLBAR -> Strings.uiTypeFloatingToolbarDesc
-        SIDEBAR -> Strings.uiTypeSidebarDesc
-        BOTTOM_BAR -> Strings.uiTypeBottomBarDesc
-        FLOATING_PANEL -> Strings.uiTypeFloatingPanelDesc
-        MINI_BUTTON -> Strings.uiTypeMiniButtonDesc
-        CUSTOM -> Strings.uiTypeCustomDesc
+        FLOATING_BUTTON -> AppStringsProvider.current().uiTypeFloatingButtonDesc
+        FLOATING_TOOLBAR -> AppStringsProvider.current().uiTypeFloatingToolbarDesc
+        SIDEBAR -> AppStringsProvider.current().uiTypeSidebarDesc
+        BOTTOM_BAR -> AppStringsProvider.current().uiTypeBottomBarDesc
+        FLOATING_PANEL -> AppStringsProvider.current().uiTypeFloatingPanelDesc
+        MINI_BUTTON -> AppStringsProvider.current().uiTypeMiniButtonDesc
+        CUSTOM -> AppStringsProvider.current().uiTypeCustomDesc
     }
     
     fun getIcon(): String = when (this) {
@@ -440,9 +418,6 @@ enum class ModuleUiType {
     }
 }
 
-/**
- * UI 位置
- */
 enum class UiPosition {
     TOP_LEFT, TOP_CENTER, TOP_RIGHT,
     MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT,
@@ -461,157 +436,125 @@ enum class UiPosition {
     }
     
     fun getDisplayName(): String = when (this) {
-        TOP_LEFT -> Strings.posTopLeft
-        TOP_CENTER -> Strings.posTopCenter
-        TOP_RIGHT -> Strings.posTopRight
-        MIDDLE_LEFT -> Strings.posMiddleLeft
-        MIDDLE_CENTER -> Strings.posMiddleCenter
-        MIDDLE_RIGHT -> Strings.posMiddleRight
-        BOTTOM_LEFT -> Strings.posBottomLeft
-        BOTTOM_CENTER -> Strings.posBottomCenter
-        BOTTOM_RIGHT -> Strings.posBottomRight
+        TOP_LEFT -> AppStringsProvider.current().posTopLeft
+        TOP_CENTER -> AppStringsProvider.current().posTopCenter
+        TOP_RIGHT -> AppStringsProvider.current().posTopRight
+        MIDDLE_LEFT -> AppStringsProvider.current().posMiddleLeft
+        MIDDLE_CENTER -> AppStringsProvider.current().posMiddleCenter
+        MIDDLE_RIGHT -> AppStringsProvider.current().posMiddleRight
+        BOTTOM_LEFT -> AppStringsProvider.current().posBottomLeft
+        BOTTOM_CENTER -> AppStringsProvider.current().posBottomCenter
+        BOTTOM_RIGHT -> AppStringsProvider.current().posBottomRight
     }
 }
 
-/**
- * 工具栏方向
- */
 enum class ToolbarOrientation {
-    HORIZONTAL,  // 水平排列
-    VERTICAL;    // 垂直排列
+    HORIZONTAL,
+    VERTICAL;
     
     fun getDisplayName(): String = when (this) {
-        HORIZONTAL -> Strings.orientationHorizontal
-        VERTICAL -> Strings.orientationVertical
+        HORIZONTAL -> AppStringsProvider.current().orientationHorizontal
+        VERTICAL -> AppStringsProvider.current().orientationVertical
     }
 }
 
-/**
- * 侧边栏位置
- */
 enum class SidebarPosition {
-    LEFT,   // 左侧
-    RIGHT;  // 右侧
+    LEFT,
+    RIGHT;
     
     fun getDisplayName(): String = when (this) {
-        LEFT -> Strings.sidebarLeft
-        RIGHT -> Strings.sidebarRight
+        LEFT -> AppStringsProvider.current().sidebarLeft
+        RIGHT -> AppStringsProvider.current().sidebarRight
     }
 }
 
-/**
- * 工具栏项 - 定义工具栏中的单个按钮
- */
 data class ToolbarItem(
     @SerializedName("id")
-    val id: String = UUID.randomUUID().toString(),  // 唯一ID
+    val id: String = UUID.randomUUID().toString(),
     @SerializedName("icon")
-    val icon: String,                               // Icon（emoji）
+    val icon: String,
     @SerializedName("label")
-    val label: String = "",                         // 标签文字（可选）
+    val label: String = "",
     @SerializedName("tooltip")
-    val tooltip: String = "",                       // 悬停提示
+    val tooltip: String = "",
     @SerializedName("action")
-    val action: String,                             // 点击时执行的 JS 代码或函数名
+    val action: String,
     @SerializedName("showLabel")
-    val showLabel: Boolean = false,                 // Yes否显示标签
+    val showLabel: Boolean = false,
     @SerializedName("badge")
-    val badge: String = ""                          // 徽章文字（如数量）
+    val badge: String = ""
 )
 
-/**
- * 模块 UI 配置
- * 定义模块的 UI 样式和行为
- */
 data class ModuleUiConfig(
     @SerializedName("type")
     val type: ModuleUiType = ModuleUiType.FLOATING_BUTTON,
-    
-    // 通用配置
     @SerializedName("position")
-    val position: UiPosition = UiPosition.BOTTOM_RIGHT,  // UI 位置
+    val position: UiPosition = UiPosition.BOTTOM_RIGHT,
     @SerializedName("draggable")
-    val draggable: Boolean = false,                      // Yes否可拖动
+    val draggable: Boolean = false,
     @SerializedName("autoHide")
-    val autoHide: Boolean = false,                       // 滚动时自动隐藏
+    val autoHide: Boolean = false,
     @SerializedName("autoHideDelay")
-    val autoHideDelay: Int = 3000,                       // Auto隐藏延迟（毫秒）
+    val autoHideDelay: Int = 3000,
     @SerializedName("initiallyHidden")
-    val initiallyHidden: Boolean = false,                // 初始是否隐藏
+    val initiallyHidden: Boolean = false,
     @SerializedName("showOnlyOnMatch")
-    val showOnlyOnMatch: Boolean = true,                 // 仅在匹配 URL 时显示
-    
-    // 悬浮按钮配置
+    val showOnlyOnMatch: Boolean = true,
     @SerializedName("buttonSize")
-    val buttonSize: Int = 56,                            // 按钮大小（dp）
+    val buttonSize: Int = 56,
     @SerializedName("buttonColor")
-    val buttonColor: String = "",                        // 按钮颜色（空则使用主题色）
-    
-    // Toolbar配置
+    val buttonColor: String = "",
     @SerializedName("toolbarItems")
-    val toolbarItems: List<ToolbarItem> = emptyList(),   // Toolbar按钮列表
+    val toolbarItems: List<ToolbarItem> = emptyList(),
     @SerializedName("toolbarOrientation")
     val toolbarOrientation: ToolbarOrientation = ToolbarOrientation.HORIZONTAL,
     @SerializedName("toolbarCollapsible")
-    val toolbarCollapsible: Boolean = true,              // Yes否可折叠
+    val toolbarCollapsible: Boolean = true,
     @SerializedName("toolbarCollapsed")
-    val toolbarCollapsed: Boolean = false,               // 初始是否折叠
-    
-    // 侧边栏配置
+    val toolbarCollapsed: Boolean = false,
     @SerializedName("sidebarPosition")
     val sidebarPosition: SidebarPosition = SidebarPosition.RIGHT,
     @SerializedName("sidebarWidth")
-    val sidebarWidth: Int = 300,                         // 侧边栏宽度（px）
+    val sidebarWidth: Int = 300,
     @SerializedName("sidebarCollapsed")
-    val sidebarCollapsed: Boolean = true,                // 初始是否折叠
-    
-    // 底部栏配置
+    val sidebarCollapsed: Boolean = true,
     @SerializedName("bottomBarHeight")
-    val bottomBarHeight: Int = 56,                       // 底部栏高度（px）
+    val bottomBarHeight: Int = 56,
     @SerializedName("bottomBarTransparent")
-    val bottomBarTransparent: Boolean = false,           // Yes否半透明背景
-    
-    // 悬浮面板配置
+    val bottomBarTransparent: Boolean = false,
     @SerializedName("panelWidth")
-    val panelWidth: Int = 320,                           // 面板宽度（px）
+    val panelWidth: Int = 320,
     @SerializedName("panelHeight")
-    val panelHeight: Int = 400,                          // 面板高度（px）
+    val panelHeight: Int = 400,
     @SerializedName("panelResizable")
-    val panelResizable: Boolean = true,                  // Yes否可调整大小
+    val panelResizable: Boolean = true,
     @SerializedName("panelMinimizable")
-    val panelMinimizable: Boolean = true,                // Yes否可最小化
-    
-    // Custom HTML（仅 CUSTOM 类型）
+    val panelMinimizable: Boolean = true,
     @SerializedName("customHtml")
-    val customHtml: String = "",                         // Custom HTML 模板
+    val customHtml: String = "",
     @SerializedName("customCss")
-    val customCss: String = ""                           // Custom CSS
+    val customCss: String = ""
 ) {
     companion object {
-        /** 默认悬浮按钮配置 */
         val DEFAULT = ModuleUiConfig()
         
-        /** 视频增强工具栏预设 */
         val VIDEO_TOOLBAR = ModuleUiConfig(
             type = ModuleUiType.FLOATING_TOOLBAR,
             position = UiPosition.BOTTOM_CENTER,
             toolbarCollapsible = true
         )
         
-        /** 侧边栏预设 */
         val SIDEBAR_DEFAULT = ModuleUiConfig(
             type = ModuleUiType.SIDEBAR,
             sidebarPosition = SidebarPosition.RIGHT,
             sidebarWidth = 300
         )
         
-        /** 底部栏预设 */
         val BOTTOM_BAR_DEFAULT = ModuleUiConfig(
             type = ModuleUiType.BOTTOM_BAR,
             bottomBarHeight = 56
         )
         
-        /** 迷你按钮预设 */
         val MINI_BUTTON_DEFAULT = ModuleUiConfig(
             type = ModuleUiType.MINI_BUTTON,
             position = UiPosition.BOTTOM_RIGHT,
@@ -620,70 +563,54 @@ data class ModuleUiConfig(
     }
 }
 
-/**
- * 模块作者信息
- */
 data class ModuleAuthor(
     @SerializedName("name")
-    val name: String,                             // 作者名称
+    val name: String,
     @SerializedName("email")
-    val email: String? = null,                    // 邮箱
+    val email: String? = null,
     @SerializedName("url")
-    val url: String? = null,                      // 主页
+    val url: String? = null,
     @SerializedName("qq")
-    val qq: String? = null                        // QQ
+    val qq: String? = null
 )
 
-/**
- * 模块版本信息
- */
 data class ModuleVersion(
     @SerializedName("code")
-    val code: Int = 1,                            // Version号
+    val code: Int = 1,
     @SerializedName("name")
-    val name: String = "1.0.0",                   // Version名
+    val name: String = "1.0.0",
     @SerializedName("changelog")
-    val changelog: String = ""                    // Update日志
+    val changelog: String = ""
 )
 
-/**
- * URL 匹配规则
- */
 data class UrlMatchRule(
     @SerializedName("pattern")
-    val pattern: String,                          // 匹配模式（支持通配符和正则）
+    val pattern: String,
     @SerializedName("isRegex")
-    val isRegex: Boolean = false,                 // Yes否为正则表达式
+    val isRegex: Boolean = false,
     @SerializedName("exclude")
-    val exclude: Boolean = false                  // Yes否为排除规则
+    val exclude: Boolean = false
 )
 
 
-/**
- * 模块来源类型
- */
 enum class ModuleSourceType {
-    CUSTOM,              // 用户自建 / AI 生成
-    USERSCRIPT,          // 油猴脚本 (.user.js)
-    CHROME_EXTENSION     // Chrome 扩展 (manifest.json)
+    CUSTOM,
+    USERSCRIPT,
+    CHROME_EXTENSION
 }
 
-/**
- * 模块运行方式
- * 定义模块是否需要 UI 交互
- */
 enum class ModuleRunMode {
-    INTERACTIVE,         // 交互模式：可在管理面板中操作简单UI，也可启动独立窗口使用完整UI
-    AUTO;                // 自动模式：自动加载运行，无UI操作界面，不可交互
+    INTERACTIVE,
+    AUTO;
     
     fun getDisplayName(): String = when (this) {
-        INTERACTIVE -> Strings.runModeInteractive
-        AUTO -> Strings.runModeAuto
+        INTERACTIVE -> AppStringsProvider.current().runModeInteractive
+        AUTO -> AppStringsProvider.current().runModeAuto
     }
     
     fun getDescription(): String = when (this) {
-        INTERACTIVE -> Strings.runModeInteractiveDesc
-        AUTO -> Strings.runModeAutoDesc
+        INTERACTIVE -> AppStringsProvider.current().runModeInteractiveDesc
+        AUTO -> AppStringsProvider.current().runModeAutoDesc
     }
     
     fun getIcon(): String = when (this) {
@@ -692,97 +619,63 @@ enum class ModuleRunMode {
     }
 }
 
-/**
- * 扩展模块 - 核心数据模型
- * 
- * 这是整个扩展系统的核心，定义了一个可复用、可分享的功能模块
- */
 data class ExtensionModule(
-    // 基本标识
     @SerializedName("id")
-    val id: String = UUID.randomUUID().toString(),  // 唯一ID
+    val id: String = UUID.randomUUID().toString(),
     @SerializedName("name")
-    val name: String,                               // Module名称
+    val name: String,
     @SerializedName("description")
-    val description: String = "",                   // Module描述
+    val description: String = "",
     @SerializedName("icon")
-    val icon: String = "package",                        // Module图标（icon ID）
-    
-    // 分类与标签
+    val icon: String = "package",
     @SerializedName("category")
-    val category: ModuleCategory = ModuleCategory.OTHER, // Module分类
+    val category: ModuleCategory = ModuleCategory.OTHER,
     @SerializedName("tags")
-    val tags: List<String> = emptyList(),           // 标签列表
-    
-    // Version与作者
+    val tags: List<String> = emptyList(),
     @SerializedName("version")
-    val version: ModuleVersion = ModuleVersion(),   // Version信息
+    val version: ModuleVersion = ModuleVersion(),
     @SerializedName("author")
-    val author: ModuleAuthor? = null,               // 作者信息
-    
-    // 代码内容
+    val author: ModuleAuthor? = null,
     @SerializedName("code")
-    val code: String = "",                          // JavaScript 代码
+    val code: String = "",
     @SerializedName("cssCode")
-    val cssCode: String = "",                       // CSS 代码（可选）
-    
-    // Execute配置
+    val cssCode: String = "",
     @SerializedName("runAt")
-    val runAt: ModuleRunTime = ModuleRunTime.DOCUMENT_END, // Execute时机
+    val runAt: ModuleRunTime = ModuleRunTime.DOCUMENT_END,
     @SerializedName("urlMatches")
-    val urlMatches: List<UrlMatchRule> = emptyList(), // URL 匹配规则（空则匹配所有）
-    
-    // Permission声明
+    val urlMatches: List<UrlMatchRule> = emptyList(),
     @SerializedName("permissions")
-    val permissions: List<ModulePermission> = emptyList(), // 所需权限
-    
-    // Configure项定义
+    val permissions: List<ModulePermission> = emptyList(),
     @SerializedName("configItems")
-    val configItems: List<ModuleConfigItem> = emptyList(), // User可配置项
+    val configItems: List<ModuleConfigItem> = emptyList(),
     @SerializedName("configValues")
-    val configValues: Map<String, String> = emptyMap(),    // User配置值
-    
-    // 依赖关系
+    val configValues: Map<String, String> = emptyMap(),
     @SerializedName("dependencies")
-    val dependencies: List<String> = emptyList(),   // 依赖的其他模块ID
-    
-    // 状态
+    val dependencies: List<String> = emptyList(),
     @SerializedName("enabled")
-    val enabled: Boolean = true,                    // Yes否启用
+    val enabled: Boolean = true,
     @SerializedName("builtIn")
-    val builtIn: Boolean = false,                   // Yes否为内置模块
-    
-    // UI 配置
+    val builtIn: Boolean = false,
     @SerializedName("uiConfig")
-    val uiConfig: ModuleUiConfig = ModuleUiConfig.DEFAULT, // UI 类型和配置
-    
-    // 运行方式（必填）
+    val uiConfig: ModuleUiConfig = ModuleUiConfig.DEFAULT,
     @SerializedName("runMode")
-    val runMode: ModuleRunMode = ModuleRunMode.INTERACTIVE, // 运行方式：交互模式或自动模式
-    
-    // 模块来源
+    val runMode: ModuleRunMode = ModuleRunMode.INTERACTIVE,
     @SerializedName("sourceType")
     val sourceType: ModuleSourceType = ModuleSourceType.CUSTOM,
-    
-    // Chrome 扩展特有字段
     @SerializedName("chromeExtId")
-    val chromeExtId: String = "",                        // Chrome 扩展标识符（用于 storage 命名空间隔离和 runtime.id）
+    val chromeExtId: String = "",
     @SerializedName("world")
-    val world: String = "ISOLATED",                      // 内容脚本执行世界: "ISOLATED" 或 "MAIN"
+    val world: String = "ISOLATED",
     @SerializedName("backgroundScript")
-    val backgroundScript: String = "",                   // Background script 相对路径（如 "background/index.js"）
-    
-    // 油猴脚本特有字段
+    val backgroundScript: String = "",
     @SerializedName("gmGrants")
-    val gmGrants: List<String> = emptyList(),          // @grant 声明的 GM_* API 列表
+    val gmGrants: List<String> = emptyList(),
     @SerializedName("requireUrls")
-    val requireUrls: List<String> = emptyList(),        // @require 外部依赖 URL
+    val requireUrls: List<String> = emptyList(),
     @SerializedName("resources")
-    val resources: Map<String, String> = emptyMap(),    // @resource 命名资源 (name -> url)
+    val resources: Map<String, String> = emptyMap(),
     @SerializedName("noframes")
-    val noframes: Boolean = false,                      // @noframes 仅主框架执行
-    
-    // 元数据
+    val noframes: Boolean = false,
     @SerializedName("createdAt")
     val createdAt: Long = System.currentTimeMillis(),
     @SerializedName("updatedAt")
@@ -790,14 +683,9 @@ data class ExtensionModule(
 ) {
     companion object {
         private val gson get() = GsonProvider.gson
-        
-        // 分享码前缀标识
-        private const val SHARE_CODE_PREFIX_V1 = "WTA1:"  // Compression版
-        private const val SHARE_CODE_PREFIX_V0 = ""       // 旧版（无前缀）
-        
-        /**
-         * 从 JSON 字符串解析模块
-         */
+        private const val SHARE_CODE_PREFIX_V1 = "WTA1:"
+        private const val SHARE_CODE_PREFIX_V0 = ""
+
         fun fromJson(json: String): ExtensionModule? {
             return try {
                 gson.fromJson(json, ExtensionModule::class.java)
@@ -806,14 +694,9 @@ data class ExtensionModule(
             }
         }
         
-        /**
-         * 从分享码解析模块
-         * 支持新版压缩格式和旧版未压缩格式
-         */
         fun fromShareCode(shareCode: String): ExtensionModule? {
             return try {
                 val json = when {
-                    // V1: 压缩版（GZIP + Base64）
                     shareCode.startsWith(SHARE_CODE_PREFIX_V1) -> {
                         val compressed = android.util.Base64.decode(
                             shareCode.removePrefix(SHARE_CODE_PREFIX_V1), 
@@ -821,7 +704,6 @@ data class ExtensionModule(
                         )
                         decompressGzip(compressed)
                     }
-                    // V0: 旧版未压缩（纯 Base64）
                     else -> {
                         String(android.util.Base64.decode(shareCode, android.util.Base64.DEFAULT))
                     }
@@ -832,18 +714,12 @@ data class ExtensionModule(
             }
         }
         
-        /**
-         * GZIP 解压缩
-         */
         private fun decompressGzip(compressed: ByteArray): String {
             java.util.zip.GZIPInputStream(java.io.ByteArrayInputStream(compressed)).use { gzip ->
                 return gzip.bufferedReader().readText()
             }
         }
         
-        /**
-         * GZIP 压缩
-         */
         private fun compressGzip(data: String): ByteArray {
             val bos = java.io.ByteArrayOutputStream()
             java.util.zip.GZIPOutputStream(bos).use { gzip ->
@@ -853,45 +729,29 @@ data class ExtensionModule(
         }
     }
     
-    /**
-     * 转换为 JSON 字符串
-     */
     fun toJson(): String = gson.toJson(this)
     
-    /**
-     * 生成分享码（压缩版）
-     * 使用 GZIP 压缩后 Base64 编码，通常可缩短 50-70%
-     */
     fun toShareCode(): String {
         val compressed = compressGzip(toJson())
         return SHARE_CODE_PREFIX_V1 + android.util.Base64.encodeToString(compressed, android.util.Base64.NO_WRAP)
     }
     
-    /**
-     * 生成旧版分享码（未压缩，用于兼容性）
-     */
     fun toShareCodeLegacy(): String {
         return android.util.Base64.encodeToString(toJson().toByteArray(), android.util.Base64.NO_WRAP)
     }
     
-    /**
-     * 检查 URL 是否匹配此模块
-     */
     fun matchesUrl(url: String): Boolean {
         if (urlMatches.isEmpty()) return true
         
         val includeRules = urlMatches.filter { !it.exclude }
         val excludeRules = urlMatches.filter { it.exclude }
         
-        // 先检查排除规则
         for (rule in excludeRules) {
             if (matchRule(url, rule)) return false
         }
         
-        // 如果没有包含规则，默认匹配
         if (includeRules.isEmpty()) return true
         
-        // Check包含规则
         return includeRules.any { matchRule(url, it) }
     }
     
@@ -915,12 +775,12 @@ data class ExtensionModule(
                 while (i < pattern.length) {
                     val c = pattern[i]
                     when {
-                        // Handle *:// → (https?|ftp|file)://
+                        // Handle *:// (https?|ftp|file)://
                         c == '*' && pattern.startsWith("*://", i) -> {
                             append("(https?|ftp|file)://")
                             i += 4 // skip *://
                         }
-                        // Regular wildcard * → .*
+                        // Regular wildcard * .*
                         c == '*' -> {
                             append(".*")
                             i++
@@ -948,14 +808,12 @@ data class ExtensionModule(
         }
     }
     
-    // Cache generated executable code per module instance (data class is immutable)
     @Transient
     @Volatile
     private var _cachedExecutableCode: String? = null
     
     /**
-     * 生成最终执行的代码（注入配置值）
-     * 结果会缓存，避免每次页面加载时重复 Gson 序列化和字符串拼接
+     * when Gson.
      */
     fun generateExecutableCode(): String {
         _cachedExecutableCode?.let { return it }
@@ -1000,7 +858,7 @@ data class ExtensionModule(
         return """
             (function() {
                 'use strict';
-                // Module配置
+                // Moduleconfig.
                 const __MODULE_CONFIG__ = $configJson;
                 const __MODULE_UI_CONFIG__ = $uiConfigJson;
                 const __MODULE_RUN_MODE__ = '$runModeStr';
@@ -1013,12 +871,12 @@ data class ExtensionModule(
                     runMode: __MODULE_RUN_MODE__
                 };
                 
-                // Configure访问函数
+                // Configure.
                 function getConfig(key, defaultValue) {
                     return __MODULE_CONFIG__[key] !== undefined ? __MODULE_CONFIG__[key] : defaultValue;
                 }
                 
-                // CSS 注入
+                // CSS.
                 ${if (cssCode.isNotBlank()) """
                 (function() {
                     const style = document.createElement('style');
@@ -1028,36 +886,36 @@ data class ExtensionModule(
                 })();
                 """ else ""}
                 
-                // User代码
+                // User.
                 try {
                     $code
                 } catch(e) {
                     console.error('[ExtModule: ${name.escapeForJsSingleQuote()}] Error:', e);
                 }
                 
-                // 自动注册模块到面板系统（使用配置的 uiConfig）
-                // 如果用户代码已经调用了 register，面板系统会更新已有注册
-                // 注意：只在用户代码未传递 uiConfig 时才补充注册
+                // to.
+                // use use register.
+                // in use uiConfig when.
                 (function __autoRegister__() {
                     if (typeof __WTA_MODULE_UI__ === 'undefined') {
                         setTimeout(__autoRegister__, 100);
                         return;
                     }
-                    // 等待面板完全初始化后再检查，避免面板未就绪时误判为"未注册"
+                    // etc after Check when as " ".
                     var panel = window.__WTA_PANEL__;
                     if (!panel || !panel._initialized) {
                         setTimeout(__autoRegister__, 100);
                         return;
                     }
-                    // 检查用户代码是否已经用正确的 uiConfig 注册过
+                    // Check use is use uiConfig.
                     if (panel.modules) {
                         var existing = panel.modules.find(function(m) { return m.id === __MODULE_INFO__.id; });
                         if (existing && existing.uiConfig && existing.uiConfig.type) {
-                            // 用户代码已注册且包含 uiConfig，跳过自动注册
+                            // use uiConfig.
                             return;
                         }
                     }
-                    // 用户代码未注册或未传递 uiConfig，补充注册
+                    // use or uiConfig.
                     __WTA_MODULE_UI__.register({
                         id: __MODULE_INFO__.id,
                         name: __MODULE_INFO__.name,
@@ -1071,18 +929,15 @@ data class ExtensionModule(
     }
     
     /**
-     * 验证模块完整性
      */
     fun validate(): List<String> {
         val errors = mutableListOf<String>()
         
-        if (name.isBlank()) errors.add(Strings.validateNameEmpty)
-        if (code.isBlank() && cssCode.isBlank()) errors.add(Strings.validateCodeEmpty)
-        
-        // Verify配置项
+        if (name.isBlank()) errors.add(AppStringsProvider.current().validateNameEmpty)
+        if (code.isBlank() && cssCode.isBlank()) errors.add(AppStringsProvider.current().validateCodeEmpty)
         configItems.forEach { item ->
             if (item.required && configValues[item.key].isNullOrBlank()) {
-                errors.add(Strings.validateConfigRequired.replace("%s", item.name))
+                errors.add(AppStringsProvider.current().validateConfigRequired.replace("%s", item.name))
             }
         }
         
@@ -1090,20 +945,17 @@ data class ExtensionModule(
     }
 }
 
-/**
- * 模块包 - 用于导出/导入多个模块
- */
 data class ModulePackage(
     @SerializedName("name")
-    val name: String,                               // Package name称
+    val name: String,
     @SerializedName("description")
-    val description: String = "",                   // 包描述
+    val description: String = "",
     @SerializedName("author")
-    val author: ModuleAuthor? = null,               // 作者
+    val author: ModuleAuthor? = null,
     @SerializedName("modules")
-    val modules: List<ExtensionModule>,             // Module列表
+    val modules: List<ExtensionModule>,
     @SerializedName("version")
-    val version: String = "1.0.0",                  // 包版本
+    val version: String = "1.0.0",
     @SerializedName("createdAt")
     val createdAt: Long = System.currentTimeMillis()
 ) {
@@ -1122,17 +974,10 @@ data class ModulePackage(
     fun toJson(): String = gson.toJson(this)
 }
 
-/**
- * 模块分类分组 - 用于 UI 展示
- */
 object ModuleCategoryGroups {
-    
-    /**
-     * 分类分组定义
-     */
     val groups = listOf(
         CategoryGroup(
-            name = Strings.categoryGroupContent,
+            name = AppStringsProvider.current().categoryGroupContent,
             icon = "edit_note",
             categories = listOf(
                 ModuleCategory.CONTENT_FILTER,
@@ -1141,7 +986,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupAppearance,
+            name = AppStringsProvider.current().categoryGroupAppearance,
             icon = "palette",
             categories = listOf(
                 ModuleCategory.STYLE_MODIFIER,
@@ -1149,7 +994,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupFunction,
+            name = AppStringsProvider.current().categoryGroupFunction,
             icon = "bolt",
             categories = listOf(
                 ModuleCategory.FUNCTION_ENHANCE,
@@ -1159,7 +1004,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupData,
+            name = AppStringsProvider.current().categoryGroupData,
             icon = "analytics",
             categories = listOf(
                 ModuleCategory.DATA_EXTRACT,
@@ -1168,7 +1013,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupMedia,
+            name = AppStringsProvider.current().categoryGroupMedia,
             icon = "movie",
             categories = listOf(
                 ModuleCategory.MEDIA,
@@ -1178,7 +1023,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupSecurity,
+            name = AppStringsProvider.current().categoryGroupSecurity,
             icon = "lock",
             categories = listOf(
                 ModuleCategory.SECURITY,
@@ -1186,7 +1031,7 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupLife,
+            name = AppStringsProvider.current().categoryGroupLife,
             icon = "build",
             categories = listOf(
                 ModuleCategory.SOCIAL,
@@ -1195,46 +1040,36 @@ object ModuleCategoryGroups {
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupDeveloper,
+            name = AppStringsProvider.current().categoryGroupDeveloper,
             icon = "computer",
             categories = listOf(
                 ModuleCategory.DEVELOPER
             )
         ),
         CategoryGroup(
-            name = Strings.categoryGroupOther,
+            name = AppStringsProvider.current().categoryGroupOther,
             icon = "package",
             categories = listOf(
                 ModuleCategory.OTHER
             )
         )
     )
-    
-    /**
-     * 获取分类所属的分组
-     */
     fun getGroupForCategory(category: ModuleCategory): CategoryGroup? {
         return groups.find { it.categories.contains(category) }
     }
 }
 
-/**
- * 分类分组
- */
 data class CategoryGroup(
     val name: String,
     val icon: String,
     val categories: List<ModuleCategory>
 )
 
-/**
- * 权限分组 - 用于 UI 展示
- */
 object ModulePermissionGroups {
     
     val groups = listOf(
         PermissionGroup(
-            name = Strings.permGroupBasic,
+            name = AppStringsProvider.current().permGroupBasic,
             permissions = listOf(
                 ModulePermission.DOM_ACCESS,
                 ModulePermission.DOM_OBSERVE,
@@ -1242,7 +1077,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupStorage,
+            name = AppStringsProvider.current().permGroupStorage,
             permissions = listOf(
                 ModulePermission.STORAGE,
                 ModulePermission.COOKIE,
@@ -1251,7 +1086,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupNetwork,
+            name = AppStringsProvider.current().permGroupNetwork,
             permissions = listOf(
                 ModulePermission.NETWORK,
                 ModulePermission.WEBSOCKET,
@@ -1259,7 +1094,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupInteraction,
+            name = AppStringsProvider.current().permGroupInteraction,
             permissions = listOf(
                 ModulePermission.CLIPBOARD,
                 ModulePermission.NOTIFICATION,
@@ -1270,7 +1105,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupDevice,
+            name = AppStringsProvider.current().permGroupDevice,
             permissions = listOf(
                 ModulePermission.LOCATION,
                 ModulePermission.CAMERA,
@@ -1279,7 +1114,7 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupMediaPerm,
+            name = AppStringsProvider.current().permGroupMediaPerm,
             permissions = listOf(
                 ModulePermission.MEDIA,
                 ModulePermission.FULLSCREEN,
@@ -1288,14 +1123,14 @@ object ModulePermissionGroups {
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupFile,
+            name = AppStringsProvider.current().permGroupFile,
             permissions = listOf(
                 ModulePermission.DOWNLOAD,
                 ModulePermission.FILE_ACCESS
             )
         ),
         PermissionGroup(
-            name = Strings.permGroupAdvanced,
+            name = AppStringsProvider.current().permGroupAdvanced,
             permissions = listOf(
                 ModulePermission.EVAL,
                 ModulePermission.IFRAME,
@@ -1307,33 +1142,23 @@ object ModulePermissionGroups {
     )
 }
 
-/**
- * 权限分组
- */
 data class PermissionGroup(
     val name: String,
     val permissions: List<ModulePermission>
 )
 
-/**
- * 常用模块预设 - 快速创建常见类型模块
- */
 object ModulePresets {
-    
-    /**
-     * 创建元素屏蔽模块
-     */
     fun createElementBlocker(
         name: String,
         selectors: List<String>,
-        description: String = Strings.presetBlockElements
+        description: String = AppStringsProvider.current().presetBlockElements
     ): ExtensionModule {
         return ExtensionModule(
             name = name,
             description = description,
             icon = "block",
             category = ModuleCategory.CONTENT_FILTER,
-            tags = listOf(Strings.tagBlock, Strings.tagHideElement),
+            tags = listOf(AppStringsProvider.current().tagBlock, AppStringsProvider.current().tagHideElement),
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.DOM_OBSERVE),
             code = """
@@ -1349,41 +1174,35 @@ object ModulePresets {
         )
     }
     
-    /**
-     * 创建样式注入模块
-     */
     fun createStyleInjector(
         name: String,
         cssCode: String,
-        description: String = Strings.presetInjectStyle
+        description: String = AppStringsProvider.current().presetInjectStyle
     ): ExtensionModule {
         return ExtensionModule(
             name = name,
             description = description,
             icon = "palette",
             category = ModuleCategory.STYLE_MODIFIER,
-            tags = listOf(Strings.tagStyleCss, "CSS"),
+            tags = listOf(AppStringsProvider.current().tagStyleCss, "CSS"),
             runAt = ModuleRunTime.DOCUMENT_START,
             permissions = listOf(ModulePermission.CSS_INJECT),
             cssCode = cssCode
         )
     }
     
-    /**
-     * 创建自动点击模块
-     */
     fun createAutoClicker(
         name: String,
         selector: String,
         delay: Int = 1000,
-        description: String = Strings.presetAutoClick
+        description: String = AppStringsProvider.current().presetAutoClick
     ): ExtensionModule {
         return ExtensionModule(
             name = name,
             description = description,
             icon = "mouse",
             category = ModuleCategory.AUTOMATION,
-            tags = listOf(Strings.tagAuto, Strings.tagClickAction),
+            tags = listOf(AppStringsProvider.current().tagAuto, AppStringsProvider.current().tagClickAction),
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS),
             code = """
@@ -1395,15 +1214,12 @@ object ModulePresets {
         )
     }
     
-    /**
-     * 创建悬浮按钮模块
-     */
     fun createFloatingButton(
         name: String,
         buttonText: String,
         onClick: String,
         position: String = "bottom-right",
-        description: String = Strings.presetFloatingButton
+        description: String = AppStringsProvider.current().presetFloatingButton
     ): ExtensionModule {
         val positionStyle = when (position) {
             "bottom-left" -> "bottom: 80px; left: 20px;"
@@ -1417,7 +1233,7 @@ object ModulePresets {
             description = description,
             icon = "radio_button",
             category = ModuleCategory.FUNCTION_ENHANCE,
-            tags = listOf(Strings.tagButton, Strings.tagFloatingWidget),
+            tags = listOf(AppStringsProvider.current().tagButton, AppStringsProvider.current().tagFloatingWidget),
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS),
             code = """

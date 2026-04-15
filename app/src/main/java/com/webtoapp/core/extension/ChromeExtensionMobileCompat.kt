@@ -2,57 +2,56 @@ package com.webtoapp.core.extension
 
 /**
  * Chrome Extension Mobile Compatibility Layer
- * 
- * 在移动设备上运行桌面 Chrome 扩展的全面兼容层。
- * 
- * 设计原则：
- * - 对扩展代码透明：扩展认为自己运行在桌面 Chrome 中
- * - 所有桌面交互在移动端有对应实现（hover→touch, right-click→long-press 等）
- * - 不修改扩展源码，仅通过环境适配实现兼容
- * - 通用逻辑，不针对任何特定扩展
- * 
- * 覆盖的桌面→移动适配：
- *  1. 设备检测（触摸能力检测，不依赖 UA）
- *  2. CSS 桌面模拟层（视口约束、触摸目标、滚动条、safe area）
- *  3. 完整指针事件桥（touch→mouse/pointer 全链路映射）
- *  4. 右键菜单桥（长按→contextmenu）
- *  5. Hover 状态管理（CSS :hover 粘滞修复 + JS hover 事件）
- *  6. Tooltip 桥（title 属性→触摸友好提示）
- *  7. 拖放桥（touch drag→HTML5 DnD 事件）
- *  8. 窗口/方向变化桥（orientation→resize 事件统一）
- *  9. SPA 导航（pushState/replaceState 拦截）
- * 10. Viewport 保护
- * 11. 桌面 API Shim（matchMedia 桌面模拟、requestIdleCallback、PointerEvent 等）
- * 12. 滚动/溢出修复（scroll lock、overscroll、-webkit-overflow-scrolling）
- * 13. 性能优化（passive listeners、双击缩放抑制）
- * 14. 虚拟键盘适配（视口高度变化检测）
- * 
- * 注入时机：DOCUMENT_START，先于所有扩展内容脚本
+ *
+ * in Chrome extension .
+ *
+ * .
+ * - extension extension as in Chrome in.
+ * - in.
+ * - not extension .
+ * - use not extension.
+ *
+ * .
+ * 1.
+ * 2. CSS.
+ * 3.
+ * 4. single.
+ * 5. Hover manage.
+ * 6. Tooltip.
+ * 7.
+ * 8. /.
+ * 9. SPA pushState/replaceState intercept.
+ * 10. Viewport.
+ * 11. API Shim.
+ * 12. / fixscroll lockoverscroll-webkit-overflow-scrolling.
+ * 13.
+ * 14.
+ *
+ * when DOCUMENT_START extension.
  */
 object ChromeExtensionMobileCompat {
 
     /**
-     * 生成移动端兼容性脚本（CSS + JS）
-     * 在 DOCUMENT_START 时注入，先于扩展内容脚本
+     * CSS + JS.
+     * in DOCUMENT_START when extension.
      */
     fun generateCompatScript(): String = """
 (function() {
     'use strict';
     
-    // ===== 防止重复注入 =====
+    // ===== =====.
     if (window.__WTA_MOBILE_COMPAT__) return;
     window.__WTA_MOBILE_COMPAT__ = true;
     
-    // ==================== 0. 设备检测 ====================
-    // 不依赖 UA（因为可能已设置桌面 UA），改用触摸能力检测
+    // not UA use.
     var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     var isSmallScreen = (screen.width <= 1024) || (screen.height <= 1024);
     var isMobileDevice = isTouchDevice && isSmallScreen;
     
-    // 如果不是移动设备，不需要兼容层
+    // not is not.
     if (!isTouchDevice) return;
     
-    // 导出设备信息供其他脚本使用
+    // use.
     window.__WTA_DEVICE__ = {
         isTouchDevice: isTouchDevice,
         isSmallScreen: isSmallScreen,
@@ -64,17 +63,16 @@ object ChromeExtensionMobileCompat {
         safeAreaBottom: 0
     };
     
-    // ==================== 1. CSS 桌面模拟层 ====================
     (function injectCompatCSS() {
         var css = [
-            // --- 视口约束 ---
-            // 防止扩展注入的元素导致水平滚动
+            // --- ---.
+            // extension.
             'html, body { overflow-x: hidden !important; max-width: 100vw !important; }',
             
-            // 扩展注入的元素：约束到视口
+            // extension to.
             '[data-wta-ext] { max-width: 100vw !important; box-sizing: border-box !important; }',
             
-            // 扩展注入的 fixed 定位弹出层：移动端自适应
+            // extension fixed .
             '[data-wta-ext] [style*="position: fixed"], [data-wta-ext] [style*="position:fixed"] {',
             '  max-width: 100vw !important;',
             '  max-height: 100vh !important;',
@@ -83,25 +81,25 @@ object ChromeExtensionMobileCompat {
             '  -webkit-overflow-scrolling: touch !important;',
             '}',
             
-            // --- 触摸目标 ---
-            // 确保可交互元素的最小触摸目标（WCAG 2.5.5）
+            // --- ---.
+            // can small WCAG 2.5.5.
             '[data-wta-ext] button, [data-wta-ext] a, [data-wta-ext] [role="button"],',
             '[data-wta-ext] input[type="checkbox"], [data-wta-ext] input[type="radio"],',
             '[data-wta-ext] select, [data-wta-ext] [tabindex] {',
             '  min-width: 36px; min-height: 36px;',
             '}',
             
-            // --- 滚动条 ---
-            // 桌面扩展可能自定义滚动条样式，确保在移动端可见
+            // --- ---.
+            // extension can in can.
             '[data-wta-ext] ::-webkit-scrollbar { width: 4px !important; height: 4px !important; }',
             '[data-wta-ext] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.3) !important; border-radius: 2px !important; }',
             '[data-wta-ext] ::-webkit-scrollbar-track { background: transparent !important; }',
             
-            // --- 双击缩放抑制 ---
-            // 防止扩展 UI 上的快速操作触发浏览器双击缩放
+            // --- ---.
+            // extension UI.
             '[data-wta-ext] { touch-action: manipulation; }',
             
-            // --- Tooltip 容器 ---
+            // --- Tooltip ---.
             '#__wta_tooltip__ {',
             '  position: fixed; z-index: 2147483645; pointer-events: none;',
             '  background: rgba(30,30,30,0.92); color: #fff; border-radius: 6px;',
@@ -112,7 +110,7 @@ object ChromeExtensionMobileCompat {
             '#__wta_tooltip__.visible { opacity: 1; }',
             
             // --- Safe Area ---
-            // 支持刘海屏/圆角屏
+            // Supports /.
             '[data-wta-ext] [style*="position: fixed"][style*="bottom: 0"],',
             '[data-wta-ext] [style*="position:fixed"][style*="bottom:0"] {',
             '  padding-bottom: env(safe-area-inset-bottom, 0px) !important;',
@@ -122,8 +120,8 @@ object ChromeExtensionMobileCompat {
             '  padding-top: env(safe-area-inset-top, 0px) !important;',
             '}',
             
-            // --- 文本选择 ---
-            // 防止扩展 UI 中误触发文本选择
+            // --- ---.
+            // extension UI in.
             '[data-wta-ext] button, [data-wta-ext] [role="button"] {',
             '  -webkit-user-select: none; user-select: none;',
             '}'
@@ -149,14 +147,13 @@ object ChromeExtensionMobileCompat {
         }
     })();
     
-    // ==================== 2. 完整指针事件桥 ====================
-    // 桌面扩展依赖 mouse/pointer 事件，移动端只有 touch 事件。
-    // 此桥完整映射 touch→mouse+pointer 事件链。
+    // extension mouse/pointer touch .
+    // touchmouse+pointer .
     (function patchPointerEvents() {
         var lastTouchTarget = null;
         var activeTouchId = null;
         
-        // 创建合成鼠标事件，携带正确的坐标
+        // .
         function syntheticMouse(type, touch, target, bubbles) {
             try {
                 return new MouseEvent(type, {
@@ -173,7 +170,6 @@ object ChromeExtensionMobileCompat {
             } catch(e) { return null; }
         }
         
-        // 创建合成指针事件
         function syntheticPointer(type, touch, target, isPrimary) {
             try {
                 return new PointerEvent(type, {
@@ -201,13 +197,12 @@ object ChromeExtensionMobileCompat {
         }
         
         document.addEventListener('touchstart', function(e) {
-            if (activeTouchId !== null) return; // 只跟踪第一个触点
+            if (activeTouchId !== null) return; // Note.
             var touch = e.changedTouches[0];
             if (!touch) return;
             activeTouchId = touch.identifier;
             var target = e.target;
             
-            // 离开上一个元素
             if (lastTouchTarget && lastTouchTarget !== target) {
                 dispatch(lastTouchTarget, syntheticPointer('pointerout', touch, lastTouchTarget));
                 dispatch(lastTouchTarget, syntheticPointer('pointerleave', touch, lastTouchTarget));
@@ -217,7 +212,7 @@ object ChromeExtensionMobileCompat {
             
             lastTouchTarget = target;
             
-            // 进入+按下
+            // + by.
             dispatch(target, syntheticPointer('pointerover', touch, target));
             dispatch(target, syntheticPointer('pointerenter', touch, target));
             dispatch(target, syntheticPointer('pointerdown', touch, target));
@@ -239,7 +234,7 @@ object ChromeExtensionMobileCompat {
             dispatch(target, syntheticPointer('pointermove', touch, target));
             dispatch(target, syntheticMouse('mousemove', touch, target));
             
-            // 如果移动到了新元素
+            // to.
             if (target !== lastTouchTarget) {
                 if (lastTouchTarget) {
                     dispatch(lastTouchTarget, syntheticMouse('mouseout', touch, lastTouchTarget, true));
@@ -262,11 +257,11 @@ object ChromeExtensionMobileCompat {
             activeTouchId = null;
             var target = lastTouchTarget || e.target;
             
-            // 释放
+            // Release.
             dispatch(target, syntheticPointer('pointerup', touch, target));
             dispatch(target, syntheticMouse('mouseup', touch, target));
             
-            // 延迟清除 hover 状态
+            // hover.
             var hoverTarget = target;
             setTimeout(function() {
                 dispatch(hoverTarget, syntheticPointer('pointerout', touch, hoverTarget));
@@ -288,8 +283,7 @@ object ChromeExtensionMobileCompat {
         }, { passive: true, capture: true });
     })();
     
-    // ==================== 3. 右键菜单桥 ====================
-    // 桌面：右键触发 contextmenu → 移动端：长按 500ms 触发
+    // contextmenu by 500ms.
     (function patchContextMenu() {
         var longPressTimer = null;
         var longPressTarget = null;
@@ -340,8 +334,7 @@ object ChromeExtensionMobileCompat {
         }, { passive: true, capture: false });
     })();
     
-    // ==================== 4. Tooltip 桥 ====================
-    // 桌面：hover 显示 title 属性 → 移动端：长按显示 tooltip
+    // hover title by tooltip.
     (function patchTooltips() {
         var tooltipEl = null;
         var tooltipTimer = null;
@@ -358,7 +351,7 @@ object ChromeExtensionMobileCompat {
             var tip = getTooltip();
             tip.textContent = text;
             if (!tip.parentNode) document.body.appendChild(tip);
-            // 定位：显示在触摸点上方
+            // in.
             var tipWidth = 260;
             var left = Math.max(8, Math.min(x - tipWidth / 2, window.innerWidth - tipWidth - 8));
             var top = Math.max(8, y - 50);
@@ -379,7 +372,7 @@ object ChromeExtensionMobileCompat {
             var touch = e.touches[0];
             if (!touch) return;
             
-            // 查找带 title 的最近祖先
+            // title.
             var el = target;
             var title = '';
             while (el && el !== document.body) {
@@ -405,8 +398,7 @@ object ChromeExtensionMobileCompat {
         }, { passive: true, capture: true });
     })();
     
-    // ==================== 5. 拖放桥 ====================
-    // 桌面拖放 → 移动端触摸拖动
+    // .
     (function patchDragDrop() {
         var dragSource = null;
         var dragData = {};
@@ -416,7 +408,7 @@ object ChromeExtensionMobileCompat {
         
         document.addEventListener('touchstart', function(e) {
             var target = e.target;
-            // 只对 draggable 元素启用
+            // draggable use.
             var draggable = target.closest('[draggable="true"]');
             if (!draggable) return;
             var touch = e.touches[0];
@@ -436,7 +428,6 @@ object ChromeExtensionMobileCompat {
             
             if (!isDragging && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
                 isDragging = true;
-                // 开始拖动
                 try {
                     var dtStub = {
                         setData: function(t,v) { dragData[t] = v; },
@@ -491,13 +482,12 @@ object ChromeExtensionMobileCompat {
         }, { passive: true, capture: false });
     })();
     
-    // ==================== 6. 窗口/方向变化桥 ====================
-    // 移动端方向变化 → 桌面的 window resize 事件
+    // window resize.
     (function patchResizeEvents() {
         var lastWidth = window.innerWidth;
         var lastHeight = window.innerHeight;
         
-        // 监听 orientationchange 并派发 resize
+        // observe orientationchange and resize.
         window.addEventListener('orientationchange', function() {
             setTimeout(function() {
                 if (window.innerWidth !== lastWidth || window.innerHeight !== lastHeight) {
@@ -507,10 +497,10 @@ object ChromeExtensionMobileCompat {
                         window.dispatchEvent(new Event('resize'));
                     } catch(e) { /* resize dispatch failed */ }
                 }
-            }, 200); // 延迟等待方向变化完成
+            }, 200); // Note.
         });
         
-        // 视觉视口 resize 也通知（处理虚拟键盘弹出）
+        // resize.
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', function() {
                 try {
@@ -527,7 +517,6 @@ object ChromeExtensionMobileCompat {
         }
     })();
     
-    // ==================== 7. SPA 导航事件 ====================
     (function patchSPANavigation() {
         var _pushState = history.pushState;
         var _replaceState = history.replaceState;
@@ -556,7 +545,6 @@ object ChromeExtensionMobileCompat {
         };
     })();
     
-    // ==================== 8. Viewport 保护 ====================
     (function protectViewport() {
         var locked = false;
         var obs = new MutationObserver(function(mutations) {
@@ -585,35 +573,34 @@ object ChromeExtensionMobileCompat {
         } else { lock(); }
     })();
     
-    // ==================== 9. 桌面 API Shim ====================
     (function shimDesktopAPIs() {
-        // --- matchMedia: 假装为桌面设备 ---
-        // 扩展用 hover/pointer 媒体查询检测桌面端，决定是否显示 hover UI。
-        // 我们假装为桌面，配合触摸事件桥让 hover UI 实际可用。
+        // --- matchMedia: as ---.
+        // extension use hover/pointer is hover UI.
+        // as hover UI can use .
         var _matchMedia = window.matchMedia;
         if (_matchMedia) {
             window.matchMedia = function(query) {
                 var result = _matchMedia.call(window, query);
                 
-                // hover: hover → true（我们的触摸桥让 hover 可用）
+                // hover: hover true.
                 if (/\(hover:\s*hover\)/.test(query) && !result.matches) {
                     return Object.create(result, {
                         matches: { get: function() { return true; } }
                     });
                 }
-                // hover: none → false
+                // hover: none false
                 if (/\(hover:\s*none\)/.test(query) && result.matches) {
                     return Object.create(result, {
                         matches: { get: function() { return false; } }
                     });
                 }
-                // pointer: fine → true
+                // pointer: fine true
                 if (/\(pointer:\s*fine\)/.test(query) && !result.matches) {
                     return Object.create(result, {
                         matches: { get: function() { return true; } }
                     });
                 }
-                // pointer: coarse → false
+                // pointer: coarse false
                 if (/\(pointer:\s*coarse\)/.test(query) && result.matches) {
                     return Object.create(result, {
                         matches: { get: function() { return false; } }
@@ -638,7 +625,7 @@ object ChromeExtensionMobileCompat {
         }
         
         // --- navigator.userAgentData shim ---
-        // 部分扩展使用 navigator.userAgentData 检测平台
+        // extension use navigator.userAgentData.
         if (!navigator.userAgentData) {
             try {
                 Object.defineProperty(navigator, 'userAgentData', {
@@ -648,7 +635,7 @@ object ChromeExtensionMobileCompat {
                             { brand: 'Google Chrome', version: '120' },
                             { brand: 'Not_A Brand', version: '8' }
                         ],
-                        mobile: false, // 假装桌面
+                        mobile: false, // Note.
                         platform: 'Windows',
                         getHighEntropyValues: function(hints) {
                             return Promise.resolve({
@@ -668,7 +655,7 @@ object ChromeExtensionMobileCompat {
             } catch(e) { /* userAgentData override failed */ }
         }
         
-        // --- 设备信息辅助 ---
+        // --- ---.
         if (!window.__WTA_VIEWPORT_INFO__) {
             Object.defineProperty(window, '__WTA_VIEWPORT_INFO__', {
                 value: {
@@ -681,7 +668,6 @@ object ChromeExtensionMobileCompat {
         }
     })();
     
-    // ==================== 10. 滚动/溢出修复 ====================
     (function fixScrolling() {
         var bodyObserver = null;
         
@@ -709,7 +695,7 @@ object ChromeExtensionMobileCompat {
             }
         };
         
-        // 防止扩展弹出层的 wheel 事件泄漏到 body
+        // extension wheel to body.
         document.addEventListener('wheel', function(e) {
             var el = e.target;
             while (el && el !== document.body) {
@@ -717,7 +703,7 @@ object ChromeExtensionMobileCompat {
                     var s = window.getComputedStyle(el);
                     if (s.overflow === 'auto' || s.overflow === 'scroll' ||
                         s.overflowY === 'auto' || s.overflowY === 'scroll') {
-                        // 在扩展弹出层内，检查是否到达滚动边界
+                        // in extension Check is to.
                         var atTop = el.scrollTop <= 0 && e.deltaY < 0;
                         var atBottom = (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) && e.deltaY > 0;
                         if (atTop || atBottom) {
@@ -731,8 +717,7 @@ object ChromeExtensionMobileCompat {
         }, { passive: false });
     })();
     
-    // ==================== 11. 虚拟键盘适配 ====================
-    // 虚拟键盘弹出时 viewport 高度变化，fixed 定位元素可能偏移
+    // when viewport fixed can.
     (function patchVirtualKeyboard() {
         if (!window.visualViewport) return;
         
@@ -743,7 +728,7 @@ object ChromeExtensionMobileCompat {
             var currentHeight = window.visualViewport.height;
             var heightDiff = initialHeight - currentHeight;
             var wasVisible = keyboardVisible;
-            keyboardVisible = heightDiff > 100; // 键盘通常 > 100px
+            keyboardVisible = heightDiff > 100; // px.
             
             if (keyboardVisible !== wasVisible) {
                 try {
@@ -756,7 +741,7 @@ object ChromeExtensionMobileCompat {
                     }));
                 } catch(e) { /* keyboard event dispatch failed */ }
                 
-                // 调整扩展的 fixed 底部元素，避免被键盘遮挡
+                // extension fixed .
                 document.documentElement.style.setProperty(
                     '--wta-keyboard-height',
                     keyboardVisible ? heightDiff + 'px' : '0px'
@@ -765,8 +750,7 @@ object ChromeExtensionMobileCompat {
         });
     })();
     
-    // ==================== 12. 双击事件桥 ====================
-    // 某些扩展使用 dblclick 事件，移动端需要模拟
+    // extension use dblclick .
     (function patchDblClick() {
         var lastTapTime = 0;
         var lastTapTarget = null;
@@ -794,9 +778,8 @@ object ChromeExtensionMobileCompat {
         }, { passive: true, capture: true });
     })();
     
-    // ==================== 13. 滚轮事件模拟 ====================
-    // 桌面扩展可能监听 wheel 事件（如自定义滚动），移动端没有滚轮
-    // 将两指捏合缩放手势映射为 wheel 事件（ctrl+wheel = zoom 是桌面惯例）
+    // extension can observe wheel .
+    // as wheel.
     (function patchWheelEvents() {
         var lastScale = 1;
         
@@ -836,14 +819,14 @@ object ChromeExtensionMobileCompat {
 """.trimIndent()
 
     /**
-     * 生成扩展 Popup 集成脚本
-     * 
-     * 当扩展有 popup.html 时，在面板注册中添加 onClick 回调，
-     * 点击时通过 JS bridge 通知原生端打开 popup WebView。
-     * 
-     * @param extensionId 扩展 ID
-     * @param popupPath popup.html 的相对路径
-     * @return 面板注册中使用的 onClick 脚本片段
+     * extension Popup.
+     *
+     * extension popup.html when in in onClick .
+     * when JS bridge popup WebView.
+     *
+     * @param extensionId extension ID.
+     * @param popupPath popup.html.
+     * @return in use onClick.
      */
     fun getPopupOnClickScript(extensionId: String, popupPath: String): String {
         val safeExtId = extensionId.replace("'", "\\'")
@@ -853,7 +836,7 @@ object ChromeExtensionMobileCompat {
                 if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.openPopup === 'function') {
                     WtaExtBridge.openPopup('$safeExtId', '$safePath');
                 } else {
-                    // Fallback: 在面板 iframe 中加载 popup
+                    // Fallback: in iframe in popup.
                     var url = 'chrome-extension://$safeExtId/$safePath';
                     console.log('[WTA] Opening popup: ' + url);
                 }

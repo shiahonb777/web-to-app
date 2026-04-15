@@ -38,37 +38,37 @@ import kotlin.math.*
 import kotlin.random.Random
 
 // ═══════════════════════════════════════════════════════════
-// 社区物理动画工具包
-// Jobs-style: 毛玻璃、高斯模糊、弹簧物理、粒子系统
+// animation
+// Jobs- style: , , , system
 // ═══════════════════════════════════════════════════════════
 
-// ─── 物理弹簧常量 ───
+// spring
 
 object CommunityPhysics {
-    // 点赞弹跳 — 大阻尼、高弹性
+    // Note
     val LikeBounce = spring<Float>(dampingRatio = 0.35f, stiffness = Spring.StiffnessHigh)
-    // 按压回弹 — iOS 触觉感
+    // iOS
     val PressDown = spring<Float>(dampingRatio = 0.6f, stiffness = Spring.StiffnessHigh)
-    // 列表入场 — 自然阻尼
+    // list
     val ItemEntrance = spring<Float>(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)
-    // 形态变化 — 中等弹性
+    // Note
     val MorphButton = spring<Float>(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium)
-    // Tab 指示器
+    // Tab indicator
     val TabIndicator = spring<Dp>(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow)
-    // 毛玻璃渐入
+    // Note
     val GlassFade = spring<Float>(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow)
 }
 
 // ═══════════════════════════════════════════════════════════
-// 毛玻璃 / 高斯模糊 — Jobs-style Frosted Glass
+// /- Jobs- style Frosted Glass
 // ═══════════════════════════════════════════════════════════
 
 /**
- * 毛玻璃 Surface — API 31+ 使用真实 blur，低版本降级为半透明
- * 参数:
- *   blurRadius — 高斯模糊半径（px）
- *   tintAlpha  — 表面着色透明度
- *   noiseAlpha — 噪点颗粒感透明度
+ * Surface- API 31+ blur, version
+ * Note
+ * blurRadius- ( px)
+ * tintAlpha
+ * noiseAlpha
  */
 @Composable
 fun FrostedGlassSurface(
@@ -82,7 +82,7 @@ fun FrostedGlassSurface(
     val shape = RoundedCornerShape(cornerRadius)
 
     Box(modifier) {
-        // 模糊层
+        // Note
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Box(
                 Modifier
@@ -92,7 +92,7 @@ fun FrostedGlassSurface(
                     .background(surfaceColor.copy(alpha = tintAlpha))
             )
         } else {
-            // 降级方案 — 更高的不透明度
+            // Note
             Box(
                 Modifier
                     .matchParentSize()
@@ -100,13 +100,13 @@ fun FrostedGlassSurface(
                     .background(surfaceColor.copy(alpha = 0.92f))
             )
         }
-        // 内容
+        // content
         content()
     }
 }
 
 /**
- * 毛玻璃顶栏 Modifier — 用于 TopAppBar 底层
+ * Modifier- for TopAppBar
  */
 fun Modifier.frostedTopBar(
     blurRadius: Dp = 24.dp
@@ -122,7 +122,7 @@ fun Modifier.frostedTopBar(
 }
 
 /**
- * 毛玻璃底栏 — 带顶部微光线条
+ * top
  */
 @Composable
 fun FrostedBottomBar(
@@ -134,7 +134,7 @@ fun FrostedBottomBar(
     val divider = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
 
     Box(modifier) {
-        // 毛玻璃背景
+        // Note
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Box(
                 Modifier
@@ -149,7 +149,7 @@ fun FrostedBottomBar(
                     .background(surfaceColor.copy(alpha = 0.95f))
             )
         }
-        // 顶部微光线
+        // top
         Box(
             Modifier
                 .fillMaxWidth()
@@ -162,7 +162,7 @@ fun FrostedBottomBar(
 }
 
 // ═══════════════════════════════════════════════════════════
-// iOS-style 按压缩放
+// iOS- style
 // ═══════════════════════════════════════════════════════════
 
 fun Modifier.pressScale(pressedScale: Float = 0.96f): Modifier = composed {
@@ -176,7 +176,7 @@ fun Modifier.pressScale(pressedScale: Float = 0.96f): Modifier = composed {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 渐变横扫 Shimmer
+// gradient Shimmer
 // ═══════════════════════════════════════════════════════════
 
 @Composable
@@ -204,7 +204,7 @@ fun GradientShimmer(
 }
 
 // ═══════════════════════════════════════════════════════════
-// 粒子爆炸 — 点赞时的光点扩散
+// Note
 // ═══════════════════════════════════════════════════════════
 
 data class BurstParticle(
@@ -262,7 +262,7 @@ fun LikeBurstEffect(
 }
 
 // ═══════════════════════════════════════════════════════════
-// Stagger 列表入场 — 弹簧物理
+// Stagger list
 // ═══════════════════════════════════════════════════════════
 
 @Composable
@@ -289,7 +289,7 @@ fun StaggeredItem(
 }
 
 // ═══════════════════════════════════════════════════════════
-// 通用组件
+// Note
 // ═══════════════════════════════════════════════════════════
 
 @Composable
@@ -381,7 +381,7 @@ fun AnimatedCounter(
 }
 
 // ═══════════════════════════════════════════════════════════
-// 毛玻璃分隔区域 — 半透明带微模糊的段落分隔器
+// area
 // ═══════════════════════════════════════════════════════════
 
 @Composable
@@ -393,7 +393,7 @@ fun GlassDivider(modifier: Modifier = Modifier) {
             .height(0.5.dp)
             .drawBehind {
                 drawRect(color)
-                // 微光高亮线
+                // Note
                 drawRect(
                     Brush.horizontalGradient(
                         0f to Color.Transparent,

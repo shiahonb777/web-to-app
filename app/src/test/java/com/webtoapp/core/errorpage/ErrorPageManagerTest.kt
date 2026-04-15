@@ -83,7 +83,8 @@ class ErrorPageManagerTest {
         )
 
         assertThat(html).contains("再试一次")
-        assertThat(html).contains("自动重试中")
+        assertThat(html).contains("将在 ")
+        assertThat(html).contains(" 秒后重试")
         assertThat(html).contains("showGame()")
         assertThat(html).contains("gameCanvas")
         assertThat(html).contains("\\'1\\'")

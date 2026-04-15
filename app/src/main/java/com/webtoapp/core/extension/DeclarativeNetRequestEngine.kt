@@ -7,30 +7,30 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 /**
- * MV3 declarativeNetRequest 规则引擎
+ * MV3 declarativeNetRequest rules.
  *
- * 解析扩展的 declarativeNetRequest JSON 规则文件，在原生层高效匹配。
- * 支持的 action types:
- * - block: 阻断请求
- * - allow: 允许请求（优先级高于 block）
- * - redirect: 重定向到指定 URL
- * - modifyHeaders: 修改请求/响应头
+ * extension declarativeNetRequest JSON rules in .
+ * Supports action types:
+ * - block: request.
+ * - allow: request.
+ * - redirect: to URL.
+ * - modifyHeaders: request/.
  *
- * 规则格式参考: https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
+ * rules: https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest.
  */
 object DeclarativeNetRequestEngine {
 
     private const val TAG = "DNREngine"
 
     /**
-     * 规则 action 类型
+     * rules action.
      */
     enum class ActionType {
         BLOCK, ALLOW, REDIRECT, MODIFY_HEADERS, UPGRADE_SCHEME, ALLOW_ALL_REQUESTS
     }
 
     /**
-     * 资源类型
+     * resource type.
      */
     enum class ResourceType {
         MAIN_FRAME, SUB_FRAME, STYLESHEET, SCRIPT, IMAGE, FONT,
@@ -46,38 +46,37 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 单条 DNR 规则
+     * single DNR rules.
      */
     data class DnrRule(
         val id: Int,
         val priority: Int,
         val action: ActionType,
-        val redirectUrl: String?,               // 仅 REDIRECT 使用
-        val urlFilter: Pattern?,                // 编译后的 URL 过滤正则
-        val regexFilter: Pattern?,              // 正则过滤 (与 urlFilter 互斥)
-        val resourceTypes: Set<ResourceType>,   // 空=匹配全部
+        val redirectUrl: String?,               // REDIRECT.
+        val urlFilter: Pattern?,                // URL.
+        val regexFilter: Pattern?,              // urlFilter.
+        val resourceTypes: Set<ResourceType>,   // Note.
         val excludedResourceTypes: Set<ResourceType>,
-        val domains: Set<String>,               // initiator domains (空=全部)
+        val domains: Set<String>,               // initiator domains.
         val excludedDomains: Set<String>,
-        val requestMethods: Set<String>,        // 空=全部
+        val requestMethods: Set<String>,        // Note.
         val excludedRequestMethods: Set<String>
     )
 
-    // 每个扩展的规则: extId -> (static rules + dynamic rules)
+    // extension rules: extId -> (static rules + dynamic rules)
     private val staticRules = ConcurrentHashMap<String, List<DnrRule>>()
     private val dynamicRules = ConcurrentHashMap<String, MutableList<DnrRule>>()
     private val sessionRules = ConcurrentHashMap<String, MutableList<DnrRule>>()
 
-    // 匹配统计
     @Volatile
     var matchedCount: Long = 0
         private set
 
     /**
-     * 加载扩展的静态规则文件。
+     * extension rules .
      *
-     * @param extensionId 扩展 ID
-     * @param rulesJson JSON 数组字符串（从 rule_resources 文件读取）
+     * @param extensionId extension ID.
+     * @param rulesJson JSON.
      */
     fun loadStaticRules(extensionId: String, rulesJson: String) {
         try {
@@ -90,11 +89,11 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 更新扩展的动态规则。
+     * extension rules.
      *
-     * @param extensionId 扩展 ID
-     * @param addRulesJson 要添加的规则 JSON 数组
-     * @param removeRuleIdsJson 要移除的规则 ID JSON 数组
+     * @param extensionId extension ID.
+     * @param addRulesJson rules JSON.
+     * @param removeRuleIdsJson rules ID JSON.
      */
     fun updateDynamicRules(
         extensionId: String,
@@ -117,7 +116,7 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 更新扩展的会话规则。
+     * extension rules.
      */
     fun updateSessionRules(
         extensionId: String,
@@ -140,7 +139,7 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 获取扩展的动态规则 JSON。
+     * Getextension rules JSON.
      */
     fun getDynamicRulesJson(extensionId: String): String {
         val rules = dynamicRules[extensionId] ?: return "[]"
@@ -150,14 +149,14 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 评估请求是否应被拦截。
-     * 在 shouldInterceptRequest 后台线程调用，必须线程安全。
+     * request is intercept.
+     * in shouldInterceptRequest after use thread-safe.
      *
-     * @param url 请求 URL
-     * @param resourceType 资源类型字符串
-     * @param initiatorDomain 发起请求的域名
-     * @param method HTTP 方法
-     * @return 匹配结果: null=不匹配, BLOCK=阻断, REDIRECT=重定向(url in redirectUrl), ALLOW=明确允许
+     * @param url request URL.
+     * @param resourceType resource type.
+     * @param initiatorDomain request.
+     * @param method HTTP.
+     * @return: null= not, BLOCK=, REDIRECT= (url in redirectUrl), ALLOW=.
      */
     fun evaluate(
         url: String,
@@ -209,7 +208,7 @@ object DeclarativeNetRequestEngine {
     )
 
     /**
-     * 清除指定扩展的所有规则。
+     * extension rules.
      */
     fun clearExtension(extensionId: String) {
         staticRules.remove(extensionId)
@@ -218,7 +217,7 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 清除所有规则。
+     * rules.
      */
     fun clear() {
         staticRules.clear()
@@ -227,7 +226,7 @@ object DeclarativeNetRequestEngine {
         matchedCount = 0
     }
 
-    // ===== 内部方法 =====
+    // ===== =====.
 
     private fun matchesRule(
         rule: DnrRule,
@@ -272,7 +271,7 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 解析 DNR 规则 JSON 数组。
+     * DNR rules JSON .
      */
     private fun parseRules(json: String): List<DnrRule> {
         val trimmed = json.trim()
@@ -347,12 +346,12 @@ object DeclarativeNetRequestEngine {
     }
 
     /**
-     * 编译 DNR urlFilter 为正则。
-     * DNR urlFilter 语法:
-     * - || 锚定到域名开始
-     * - | 锚定到 URL 开始或结尾
-     * - * 通配符
-     * - ^ 分隔符 (非字母数字和 -._~)
+     * DNR urlFilter as .
+     * DNR urlFilter:
+     * - || to.
+     * - | to URL or.
+     * - *.
+     * - ^.
      */
     private fun compileUrlFilter(filter: String): Pattern? {
         return try {

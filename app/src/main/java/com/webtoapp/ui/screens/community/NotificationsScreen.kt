@@ -28,10 +28,10 @@ import com.webtoapp.core.cloud.FeedItem
 import com.webtoapp.core.cloud.NotificationItem
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 通知与动态 — Jobs-style: 毛玻璃 Tab + 弹簧物理滑动指示器 + 精致入场动画
+ * with- Jobs- style: Tab + indicator + animation
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +62,7 @@ fun NotificationsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityNotifications, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().communityNotifications, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp)) }
                 },
@@ -82,16 +82,16 @@ fun NotificationsScreen(
                 .padding(padding)
         ) {
         Column(Modifier) {
-            // === 弹簧物理 Tab ===
+            // === Tab ===
             SpringTab(
-                tabs = listOf(Strings.communityTabAll, Strings.communityTabActivity),
+                tabs = listOf(AppStringsProvider.current().communityTabAll, AppStringsProvider.current().communityTabActivity),
                 selectedIndex = selectedTab,
                 badge = if (unreadCount > 0) unreadCount else null,
                 onSelect = { selectedTab = it }
             )
             GlassDivider()
 
-            // === 内容区 Crossfade 平滑过渡 ===
+            // === content Crossfade ===
             Crossfade(targetState = selectedTab, animationSpec = tween(280), label = "tabCross") { tab ->
                 when (tab) {
                     0 -> NotificationsContent(notifications, notificationsLoading, communityViewModel, onNavigateToModule, onNavigateToUser)
@@ -103,7 +103,7 @@ fun NotificationsScreen(
         }
 }
 
-// ═══ 弹簧 Tab ═══
+// ═══ Tab ═══
 
 @Composable
 private fun SpringTab(
@@ -112,13 +112,7 @@ private fun SpringTab(
     badge: Int?,
     onSelect: (Int) -> Unit
 ) {
-    // 指示器位置用弹簧物理
-    val indicatorOffset by animateDpAsState(
-        targetValue = (selectedIndex * 180).dp, // 近似
-        CommunityPhysics.TabIndicator,
-        label = "tabOffset"
-    )
-
+    // indicator
     Row(Modifier.fillMaxWidth()) {
         tabs.forEachIndexed { index, label ->
             Box(
@@ -145,7 +139,7 @@ private fun SpringTab(
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    // 弹簧动画指示器
+                    // animationindicator
                     val indicatorAlpha by animateFloatAsState(
                         if (index == selectedIndex) 1f else 0f,
                         CommunityPhysics.ItemEntrance, label = "indAlpha"
@@ -166,7 +160,7 @@ private fun SpringTab(
     }
 }
 
-// ═══ 通知列表 ═══
+// ═══ list ═══
 
 @Composable
 private fun NotificationsContent(
@@ -177,7 +171,7 @@ private fun NotificationsContent(
     if (loading) {
         ListShimmer()
     } else if (notifications.isEmpty()) {
-        EmptyState(Strings.communityNothingYet, Strings.communityNothingYetHint)
+        EmptyState(AppStringsProvider.current().communityNothingYet, AppStringsProvider.current().communityNothingYetHint)
     } else {
         LazyColumn {
             itemsIndexed(notifications, key = { _, n -> n.id }) { index, notification ->
@@ -242,14 +236,14 @@ private fun NotificationRow(notification: NotificationItem, onClick: () -> Unit)
     }
 }
 
-// ═══ 动态 Feed ═══
+// ═══ Feed ═══
 
 @Composable
 private fun FeedContent(feed: List<FeedItem>, loading: Boolean, onModule: (Int) -> Unit) {
     if (loading) {
         ListShimmer()
     } else if (feed.isEmpty()) {
-        EmptyState(Strings.communityNoFeedYet, Strings.communityNoFeedYetHint)
+        EmptyState(AppStringsProvider.current().communityNoFeedYet, AppStringsProvider.current().communityNoFeedYetHint)
     } else {
         LazyColumn {
             itemsIndexed(feed, key = { _, f -> f.id }) { index, item ->
@@ -265,8 +259,8 @@ private fun FeedContent(feed: List<FeedItem>, loading: Boolean, onModule: (Int) 
 @Composable
 private fun FeedRow(item: FeedItem, onTargetClick: () -> Unit) {
     val action = when (item.type) {
-        "publish" -> Strings.communityActionPublished; "vote" -> Strings.communityActionLiked; "comment" -> Strings.communityActionReplied
-        "favorite" -> Strings.communityActionBookmarked; "follow" -> Strings.communityActionFollowed; else -> Strings.communityActionInteracted
+        "publish" -> AppStringsProvider.current().communityActionPublished; "vote" -> AppStringsProvider.current().communityActionLiked; "comment" -> AppStringsProvider.current().communityActionReplied
+        "favorite" -> AppStringsProvider.current().communityActionBookmarked; "follow" -> AppStringsProvider.current().communityActionFollowed; else -> AppStringsProvider.current().communityActionInteracted
     }
 
     Row(
@@ -285,7 +279,7 @@ private fun FeedRow(item: FeedItem, onTargetClick: () -> Unit) {
     }
 }
 
-// ═══ 通用 ═══
+// Note
 
 @Composable
 private fun EmptyState(title: String, subtitle: String) {

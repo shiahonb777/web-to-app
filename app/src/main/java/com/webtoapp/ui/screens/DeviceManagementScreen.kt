@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.DeviceInfo
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
@@ -46,10 +46,10 @@ fun DeviceManagementScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.cloudDeviceManagement) },
+                title = { Text(AppStringsProvider.current().cloudDeviceManagement) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -91,7 +91,7 @@ fun DeviceManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            Strings.cloudNoDevices,
+                            AppStringsProvider.current().cloudNoDevices,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -106,10 +106,10 @@ fun DeviceManagementScreen(
                     contentPadding = PaddingValues(20.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    // 设备数量
+                    // Note
                     item {
                         Text(
-                            text = "${Strings.cloudDeviceCount} · ${devices.size}",
+                            text = "${AppStringsProvider.current().cloudDeviceCount} · ${devices.size}",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -136,9 +136,9 @@ fun DeviceManagementScreen(
         showRemoveDialog?.let { device ->
             AlertDialog(
                 onDismissRequest = { showRemoveDialog = null },
-                title = { Text(Strings.cloudRemoveDevice) },
+                title = { Text(AppStringsProvider.current().cloudRemoveDevice) },
                 text = {
-                    Text("${Strings.cloudRemoveDeviceConfirm}\n\n${device.deviceName} · ${device.deviceOs}")
+                    Text("${AppStringsProvider.current().cloudRemoveDeviceConfirm}\n\n${device.deviceName} · ${device.deviceOs}")
                 },
                 confirmButton = {
                     TextButton(
@@ -149,11 +149,11 @@ fun DeviceManagementScreen(
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
                         )
-                    ) { Text(Strings.cloudRemoveDevice) }
+                    ) { Text(AppStringsProvider.current().cloudRemoveDevice) }
                 },
                 dismissButton = {
                     TextButton(onClick = { showRemoveDialog = null }) {
-                        Text(Strings.cancel)
+                        Text(AppStringsProvider.current().cancel)
                     }
                 }
             )
@@ -193,7 +193,7 @@ private fun DeviceRow(
                 if (device.isCurrent) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = Strings.cloudCurrentDevice,
+                        text = AppStringsProvider.current().cloudCurrentDevice,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -218,7 +218,7 @@ private fun DeviceRow(
                 )
             ) {
                 Text(
-                    Strings.cloudRemoveDevice,
+                    AppStringsProvider.current().cloudRemoveDevice,
                     style = MaterialTheme.typography.labelMedium
                 )
             }

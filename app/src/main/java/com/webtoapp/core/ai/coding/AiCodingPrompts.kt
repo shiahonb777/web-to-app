@@ -1,20 +1,20 @@
 package com.webtoapp.core.ai.coding
 
 import com.webtoapp.core.i18n.AiPromptManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * HTML编程AI - 提示词与模板管理
+ * HTML AI -.
  * 
- * 优化原则：
- * 1. 简洁明确，避免冗余
- * 2. 关键规则前置
- * 3. 减少示例代码，让AI自由发挥
+ * Note.
+ * Note.
+ * Note.
+ * 3. AI.
  */
 object AiCodingPrompts {
 
     /**
-     * 构建系统提示词 - 根据语言设置生成对应语言的提示词
+     * Note.
      */
     fun buildSystemPrompt(
         config: SessionConfig,
@@ -23,7 +23,7 @@ object AiCodingPrompts {
         selectedStyle: StyleReference? = null
     ): String {
         return AiPromptManager.getAiCodingSystemPrompt(
-            language = Strings.currentLanguage.value,
+            language = AppStringsProvider.currentLanguage,
             rules = config.getEffectiveRules(),
             hasImageModel = hasImageModel,
             templateName = selectedTemplate?.name,
@@ -40,28 +40,28 @@ object AiCodingPrompts {
     }
 
     /**
-     * 根据模板ID获取模板
+     * ID.
      */
     fun getTemplateById(id: String): StyleTemplate? {
         return styleTemplates.find { it.id == id }
     }
 
     /**
-     * 根据风格ID获取风格
+     * ID.
      */
     fun getStyleById(id: String): StyleReference? {
         return styleReferences.find { it.id == id }
     }
 
     /**
-     * 预置的风格模板库
+     * Note.
      */
     val styleTemplates = listOf(
         StyleTemplate(
             id = "modern-minimal",
-            name = Strings.styleModernMinimal,
+            name = AppStringsProvider.current().styleModernMinimal,
             category = TemplateCategory.MODERN,
-            description = Strings.styleModernMinimalDesc,
+            description = AppStringsProvider.current().styleModernMinimalDesc,
             cssFramework = null,
             colorScheme = ColorScheme(
                 primary = "#3B82F6",
@@ -71,13 +71,13 @@ object AiCodingPrompts {
                 text = "#111827",
                 accent = "#10B981"
             ),
-            promptHint = Strings.hintModernMinimal
+            promptHint = AppStringsProvider.current().hintModernMinimal
         ),
         StyleTemplate(
             id = "glassmorphism",
-            name = Strings.styleGlassmorphism,
+            name = AppStringsProvider.current().styleGlassmorphism,
             category = TemplateCategory.GLASSMORPHISM,
-            description = Strings.styleGlassmorphismDesc,
+            description = AppStringsProvider.current().styleGlassmorphismDesc,
             colorScheme = ColorScheme(
                 primary = "#667EEA",
                 secondary = "#764BA2",
@@ -86,13 +86,13 @@ object AiCodingPrompts {
                 text = "#FFFFFF",
                 accent = "#F093FB"
             ),
-            promptHint = Strings.hintGlassmorphism
+            promptHint = AppStringsProvider.current().hintGlassmorphism
         ),
         StyleTemplate(
             id = "neumorphism",
-            name = Strings.styleNeumorphism,
+            name = AppStringsProvider.current().styleNeumorphism,
             category = TemplateCategory.NEUMORPHISM,
-            description = Strings.styleNeumorphismDesc,
+            description = AppStringsProvider.current().styleNeumorphismDesc,
             colorScheme = ColorScheme(
                 primary = "#6C63FF",
                 secondary = "#A29BFE",
@@ -101,13 +101,13 @@ object AiCodingPrompts {
                 text = "#495057",
                 accent = "#6C63FF"
             ),
-            promptHint = Strings.hintNeumorphism
+            promptHint = AppStringsProvider.current().hintNeumorphism
         ),
         StyleTemplate(
             id = "dark-mode",
-            name = Strings.styleDarkMode,
+            name = AppStringsProvider.current().styleDarkMode,
             category = TemplateCategory.DARK,
-            description = Strings.styleDarkModeDesc,
+            description = AppStringsProvider.current().styleDarkModeDesc,
             colorScheme = ColorScheme(
                 primary = "#818CF8",
                 secondary = "#34D399",
@@ -116,13 +116,13 @@ object AiCodingPrompts {
                 text = "#F1F5F9",
                 accent = "#F472B6"
             ),
-            promptHint = Strings.hintDarkMode
+            promptHint = AppStringsProvider.current().hintDarkMode
         ),
         StyleTemplate(
             id = "cyberpunk",
-            name = Strings.styleCyberpunk,
+            name = AppStringsProvider.current().styleCyberpunk,
             category = TemplateCategory.CYBERPUNK,
-            description = Strings.styleCyberpunkDesc,
+            description = AppStringsProvider.current().styleCyberpunkDesc,
             colorScheme = ColorScheme(
                 primary = "#FF00FF",
                 secondary = "#00FFFF",
@@ -131,13 +131,13 @@ object AiCodingPrompts {
                 text = "#EAEAEA",
                 accent = "#FFE600"
             ),
-            promptHint = Strings.hintCyberpunk
+            promptHint = AppStringsProvider.current().hintCyberpunk
         ),
         StyleTemplate(
             id = "gradient",
-            name = Strings.styleGradient,
+            name = AppStringsProvider.current().styleGradient,
             category = TemplateCategory.GRADIENT,
-            description = Strings.styleGradientDesc,
+            description = AppStringsProvider.current().styleGradientDesc,
             colorScheme = ColorScheme(
                 primary = "#EC4899",
                 secondary = "#8B5CF6",
@@ -146,13 +146,13 @@ object AiCodingPrompts {
                 text = "#1F2937",
                 accent = "#F59E0B"
             ),
-            promptHint = Strings.hintGradient
+            promptHint = AppStringsProvider.current().hintGradient
         ),
         StyleTemplate(
             id = "minimal",
-            name = Strings.styleMinimal,
+            name = AppStringsProvider.current().styleMinimal,
             category = TemplateCategory.MINIMAL,
-            description = Strings.styleMinimalDesc,
+            description = AppStringsProvider.current().styleMinimalDesc,
             colorScheme = ColorScheme(
                 primary = "#000000",
                 secondary = "#666666",
@@ -161,13 +161,13 @@ object AiCodingPrompts {
                 text = "#000000",
                 accent = "#000000"
             ),
-            promptHint = Strings.hintMinimal
+            promptHint = AppStringsProvider.current().hintMinimal
         ),
         StyleTemplate(
             id = "nature",
-            name = Strings.styleNature,
+            name = AppStringsProvider.current().styleNature,
             category = TemplateCategory.NATURE,
-            description = Strings.styleNatureDesc,
+            description = AppStringsProvider.current().styleNatureDesc,
             colorScheme = ColorScheme(
                 primary = "#059669",
                 secondary = "#0D9488",
@@ -176,13 +176,13 @@ object AiCodingPrompts {
                 text = "#064E3B",
                 accent = "#F59E0B"
             ),
-            promptHint = Strings.hintNature
+            promptHint = AppStringsProvider.current().hintNature
         ),
         StyleTemplate(
             id = "cute-cartoon",
-            name = Strings.styleCuteCartoon,
+            name = AppStringsProvider.current().styleCuteCartoon,
             category = TemplateCategory.CREATIVE,
-            description = Strings.styleCuteCartoonDesc,
+            description = AppStringsProvider.current().styleCuteCartoonDesc,
             colorScheme = ColorScheme(
                 primary = "#FF6B9D",
                 secondary = "#C44569",
@@ -191,13 +191,13 @@ object AiCodingPrompts {
                 text = "#4A4A4A",
                 accent = "#FFD93D"
             ),
-            promptHint = Strings.hintCuteCartoon
+            promptHint = AppStringsProvider.current().hintCuteCartoon
         ),
         StyleTemplate(
             id = "neon-glow",
-            name = Strings.styleNeonGlow,
+            name = AppStringsProvider.current().styleNeonGlow,
             category = TemplateCategory.DARK,
-            description = Strings.styleNeonGlowDesc,
+            description = AppStringsProvider.current().styleNeonGlowDesc,
             colorScheme = ColorScheme(
                 primary = "#00F5FF",
                 secondary = "#FF00E4",
@@ -206,129 +206,129 @@ object AiCodingPrompts {
                 text = "#FFFFFF",
                 accent = "#39FF14"
             ),
-            promptHint = Strings.hintNeonGlow
+            promptHint = AppStringsProvider.current().hintNeonGlow
         )
     )
 
     /**
-     * 风格参考词库
+     * Note.
      */
     val styleReferences = listOf(
         StyleReference(
             id = "harry-potter",
-            name = Strings.styleHarryPotter,
+            name = AppStringsProvider.current().styleHarryPotter,
             category = StyleReferenceCategory.MOVIE,
             keywords = listOf("magic", "classic", "mystery", "Hogwarts"),
-            description = Strings.styleHarryPotterDesc,
-            colorHints = Strings.colorsHarryPotter.split(","),
-            elementHints = Strings.elementsHarryPotter.split(",")
+            description = AppStringsProvider.current().styleHarryPotterDesc,
+            colorHints = AppStringsProvider.current().colorsHarryPotter.split(","),
+            elementHints = AppStringsProvider.current().elementsHarryPotter.split(",")
         ),
         StyleReference(
             id = "ghibli",
-            name = Strings.styleGhibli,
+            name = AppStringsProvider.current().styleGhibli,
             category = StyleReferenceCategory.ANIME,
             keywords = listOf("Miyazaki", "nature", "warm", "healing"),
-            description = Strings.styleGhibliDesc,
-            colorHints = Strings.colorsGhibli.split(","),
-            elementHints = Strings.elementsGhibli.split(",")
+            description = AppStringsProvider.current().styleGhibliDesc,
+            colorHints = AppStringsProvider.current().colorsGhibli.split(","),
+            elementHints = AppStringsProvider.current().elementsGhibli.split(",")
         ),
         StyleReference(
             id = "your-name",
-            name = Strings.styleYourName,
+            name = AppStringsProvider.current().styleYourName,
             category = StyleReferenceCategory.ANIME,
             keywords = listOf("Shinkai", "light", "youth", "aesthetic"),
-            description = Strings.styleYourNameDesc,
-            colorHints = Strings.colorsYourName.split(","),
-            elementHints = Strings.elementsYourName.split(",")
+            description = AppStringsProvider.current().styleYourNameDesc,
+            colorHints = AppStringsProvider.current().colorsYourName.split(","),
+            elementHints = AppStringsProvider.current().elementsYourName.split(",")
         ),
         StyleReference(
             id = "apple",
-            name = Strings.styleApple,
+            name = AppStringsProvider.current().styleApple,
             category = StyleReferenceCategory.BRAND,
             keywords = listOf("minimal", "elegant", "tech", "premium"),
-            description = Strings.styleAppleDesc,
-            colorHints = Strings.colorsApple.split(","),
-            elementHints = Strings.elementsApple.split(",")
+            description = AppStringsProvider.current().styleAppleDesc,
+            colorHints = AppStringsProvider.current().colorsApple.split(","),
+            elementHints = AppStringsProvider.current().elementsApple.split(",")
         ),
         StyleReference(
             id = "little-prince",
-            name = Strings.styleLittlePrince,
+            name = AppStringsProvider.current().styleLittlePrince,
             category = StyleReferenceCategory.BOOK,
             keywords = listOf("fairytale", "starry", "innocent", "poetic"),
-            description = Strings.styleLittlePrinceDesc,
-            colorHints = Strings.colorsLittlePrince.split(","),
-            elementHints = Strings.elementsLittlePrince.split(",")
+            description = AppStringsProvider.current().styleLittlePrinceDesc,
+            colorHints = AppStringsProvider.current().colorsLittlePrince.split(","),
+            elementHints = AppStringsProvider.current().elementsLittlePrince.split(",")
         ),
         StyleReference(
             id = "zelda-botw",
-            name = Strings.styleZeldaBotw,
+            name = AppStringsProvider.current().styleZeldaBotw,
             category = StyleReferenceCategory.GAME,
             keywords = listOf("adventure", "nature", "cel-shading", "exploration"),
-            description = Strings.styleZeldaBotwDesc,
-            colorHints = Strings.colorsZelda.split(","),
-            elementHints = Strings.elementsZelda.split(",")
+            description = AppStringsProvider.current().styleZeldaBotwDesc,
+            colorHints = AppStringsProvider.current().colorsZelda.split(","),
+            elementHints = AppStringsProvider.current().elementsZelda.split(",")
         ),
         StyleReference(
             id = "art-deco",
-            name = Strings.styleArtDeco,
+            name = AppStringsProvider.current().styleArtDeco,
             category = StyleReferenceCategory.ART,
             keywords = listOf("geometric", "symmetry", "luxury", "1920s"),
-            description = Strings.styleArtDecoDesc,
-            colorHints = Strings.colorsArtDeco.split(","),
-            elementHints = Strings.elementsArtDeco.split(",")
+            description = AppStringsProvider.current().styleArtDecoDesc,
+            colorHints = AppStringsProvider.current().colorsArtDeco.split(","),
+            elementHints = AppStringsProvider.current().elementsArtDeco.split(",")
         ),
         StyleReference(
             id = "japanese",
-            name = Strings.styleJapanese,
+            name = AppStringsProvider.current().styleJapanese,
             category = StyleReferenceCategory.CULTURE,
             keywords = listOf("wa", "zen", "whitespace", "traditional"),
-            description = Strings.styleJapaneseDesc,
-            colorHints = Strings.colorsJapanese.split(","),
-            elementHints = Strings.elementsJapanese.split(",")
+            description = AppStringsProvider.current().styleJapaneseDesc,
+            colorHints = AppStringsProvider.current().colorsJapanese.split(","),
+            elementHints = AppStringsProvider.current().elementsJapanese.split(",")
         )
     )
 
     /**
-     * Rules 模板
+     * Rules.
      */
     val rulesTemplates: List<RulesTemplate> get() = listOf(
         RulesTemplate(
             id = "chinese",
-            name = Strings.rulesChinese,
-            description = Strings.rulesChineseDesc,
-            rules = listOf(Strings.ruleUseChinese, Strings.ruleChineseComments)
+            name = AppStringsProvider.current().rulesChinese,
+            description = AppStringsProvider.current().rulesChineseDesc,
+            rules = listOf(AppStringsProvider.current().ruleUseChinese, AppStringsProvider.current().ruleChineseComments)
         ),
         RulesTemplate(
             id = "game",
-            name = Strings.rulesGame,
-            description = Strings.rulesGameDesc,
+            name = AppStringsProvider.current().rulesGame,
+            description = AppStringsProvider.current().rulesGameDesc,
             rules = listOf(
-                Strings.ruleUseChinese,
-                Strings.ruleGameFlow,
-                Strings.ruleScoreAndInstructions,
-                Strings.ruleTouchControl
+                AppStringsProvider.current().ruleUseChinese,
+                AppStringsProvider.current().ruleGameFlow,
+                AppStringsProvider.current().ruleScoreAndInstructions,
+                AppStringsProvider.current().ruleTouchControl
             )
         ),
         RulesTemplate(
             id = "animation",
-            name = Strings.rulesAnimation,
-            description = Strings.rulesAnimationDesc,
+            name = AppStringsProvider.current().rulesAnimation,
+            description = AppStringsProvider.current().rulesAnimationDesc,
             rules = listOf(
-                Strings.ruleUseChinese,
-                Strings.ruleCssAnimation,
-                Strings.ruleTransition,
-                Strings.rulePerformance
+                AppStringsProvider.current().ruleUseChinese,
+                AppStringsProvider.current().ruleCssAnimation,
+                AppStringsProvider.current().ruleTransition,
+                AppStringsProvider.current().rulePerformance
             )
         ),
         RulesTemplate(
             id = "form",
-            name = Strings.rulesForm,
-            description = Strings.rulesFormDesc,
+            name = AppStringsProvider.current().rulesForm,
+            description = AppStringsProvider.current().rulesFormDesc,
             rules = listOf(
-                Strings.ruleUseChinese,
-                Strings.ruleFormValidation,
-                Strings.ruleInputLabels,
-                Strings.ruleSubmitLoading
+                AppStringsProvider.current().ruleUseChinese,
+                AppStringsProvider.current().ruleFormValidation,
+                AppStringsProvider.current().ruleInputLabels,
+                AppStringsProvider.current().ruleSubmitLoading
             )
         )
     )

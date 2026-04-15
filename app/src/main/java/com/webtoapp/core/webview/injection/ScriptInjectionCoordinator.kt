@@ -1,75 +1,19 @@
 package com.webtoapp.core.webview
 
 import android.webkit.WebView
-import com.webtoapp.core.extension.ExtensionManager
-import com.webtoapp.core.extension.ExtensionPanelScript
-import com.webtoapp.core.extension.ModuleRunTime
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.ScriptRunTime
 import com.webtoapp.data.model.WebViewConfig
 
 internal class ScriptInjectionCoordinator(
     private val context: android.content.Context,
-    private val extensionFileManager: com.webtoapp.core.extension.ExtensionFileManager,
     private val getCurrentConfig: () -> WebViewConfig?,
-    private val getAppExtensionModuleIds: () -> List<String>,
-    private val getEmbeddedModules: () -> List<com.webtoapp.core.shell.EmbeddedShellModule>,
-    private val getAllowGlobalModuleFallback: () -> Boolean,
-    private val getExtensionFabIcon: () -> String,
-    private val getCurrentDeviceDisguiseConfig: () -> com.webtoapp.core.disguise.DeviceDisguiseConfig?,
-    private val getCachedBrowserDisguiseConfig: () -> com.webtoapp.core.disguise.BrowserDisguiseConfig?,
-    private val getCachedBrowserDisguiseJs: () -> String?,
-    private val getExtensionRuntimes: () -> MutableMap<String, com.webtoapp.core.extension.ChromeExtensionRuntime>,
-    private val getGmBridge: () -> com.webtoapp.core.extension.GreasemonkeyBridge?,
-    private val setGmBridge: (com.webtoapp.core.extension.GreasemonkeyBridge?) -> Unit,
-    private val getActiveModulesForCurrentApp: () -> List<com.webtoapp.core.extension.ExtensionModule>,
+    private val buildPanelInitScripts: () -> List<String>,
     private val shouldUseConservativeScriptMode: (String?) -> Boolean,
     private val shouldUseScriptlessMode: (String?) -> Boolean,
     private val injectCompatibilityScripts: (WebView, String?, Boolean) -> Unit,
     private val injectAllExtensionModules: (WebView, String, ScriptRunTime) -> Unit
 ) {
-    fun initChromeExtensionRuntimes(webView: WebView) {
-        val runtimes = getExtensionRuntimes()
-        runtimes.values.forEach { it.destroy() }
-        runtimes.clear()
-
-        try {
-            val chromeExtModules = getActiveModulesForCurrentApp().filter { module ->
-                module.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
-                    module.chromeExtId.isNotEmpty() &&
-                    module.backgroundScript.isNotEmpty()
-            }
-
-            if (chromeExtModules.isEmpty()) return
-
-            val extensionGroups = chromeExtModules.groupBy { it.chromeExtId }
-            for ((extId, modules) in extensionGroups) {
-                val primaryModule = modules.first()
-                val originUrl = com.webtoapp.core.extension.deriveOriginUrl(primaryModule.urlMatches)
-                val runtime = com.webtoapp.core.extension.ChromeExtensionRuntime(
-                    context = context,
-                    extensionId = extId,
-                    backgroundScriptPath = primaryModule.backgroundScript,
-                    originUrl = originUrl
-                )
-                runtime.initialize(webView)
-                runtimes[extId] = runtime
-                AppLogger.d("WebViewManager", "Created background runtime for extension: $extId")
-            }
-
-            if (runtimes.isNotEmpty()) {
-                val contentBridge = com.webtoapp.core.extension.ContentExtensionBridge(runtimes)
-                webView.addJavascriptInterface(
-                    contentBridge,
-                    com.webtoapp.core.extension.ChromeExtensionRuntime.JS_BRIDGE_NAME
-                )
-                AppLogger.d("WebViewManager", "Registered WtaExtBridge for ${runtimes.size} extension(s)")
-            }
-        } catch (e: Exception) {
-            AppLogger.e("WebViewManager", "Failed to init Chrome Extension runtimes", e)
-        }
-    }
-
     fun injectScripts(
         webView: WebView,
         scripts: List<com.webtoapp.data.model.UserScript>,
@@ -290,32 +234,12 @@ internal class ScriptInjectionCoordinator(
     }
 
     private fun injectExtensionPanelScript(webView: WebView) {
-        val hasEmbeddedModules = getEmbeddedModules().any { it.enabled }
-        val hasAppModules = try {
-            if (getAppExtensionModuleIds().isNotEmpty()) {
-                ExtensionManager.getInstance(context).getModulesByIds(getAppExtensionModuleIds()).isNotEmpty()
-            } else false
-        } catch (_: Exception) {
-            false
-        }
-        val hasGlobalModules = try {
-            ExtensionManager.getInstance(context).getEnabledModules().isNotEmpty()
-        } catch (_: Exception) {
-            false
-        }
-
-        if (!hasEmbeddedModules && !hasAppModules && !hasGlobalModules) {
-            AppLogger.d("WebViewManager", "No enabled modules, skip panel script injection")
-            return
-        }
-
         try {
-            val panelScript = ExtensionPanelScript.getPanelInitScript(getExtensionFabIcon())
-            webView.evaluateJavascript(panelScript, null)
-
-            val helperScript = ExtensionPanelScript.getModuleHelperScript()
-            webView.evaluateJavascript(helperScript, null)
-
+            val scripts = buildPanelInitScripts()
+            if (scripts.isEmpty()) return
+            scripts.forEach { script ->
+                webView.evaluateJavascript(script, null)
+            }
             AppLogger.d("WebViewManager", "Extension panel script injected")
         } catch (e: Exception) {
             AppLogger.e("WebViewManager", "Extension panel script injection failed", e)

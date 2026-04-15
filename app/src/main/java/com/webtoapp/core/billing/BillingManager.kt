@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * 订阅计划定义
+ * Note: brief English comment.
  */
 enum class SubscriptionPlan(
     val productId: String,
@@ -33,7 +33,7 @@ enum class SubscriptionPlan(
 }
 
 /**
- * 购买状态
+ * Note: brief English comment.
  */
 sealed class PurchaseState {
     data object Idle : PurchaseState()
@@ -43,7 +43,7 @@ sealed class PurchaseState {
 }
 
 /**
- * 订阅信息
+ * Note: brief English comment.
  */
 data class SubscriptionInfo(
     val plan: SubscriptionPlan,
@@ -54,16 +54,16 @@ data class SubscriptionInfo(
 )
 
 /**
- * Google Play Billing 管理器
+ * Note: brief English comment.
  *
- * 封装 BillingClient，管理订阅购买流程。
+ * Note: brief English comment.
  *
- * 使用方式:
- * 1. 在 Application 或 Activity 中初始化 BillingManager
- * 2. 调用 connect() 建立连接
- * 3. 调用 queryProducts() 加载可购买的商品
- * 4. 调用 launchPurchase() 发起购买
- * 5. 购买结果通过 purchaseState Flow 观察
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class BillingManager(private val context: Context) : PurchasesUpdatedListener {
 
@@ -74,7 +74,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     private var billingClient: BillingClient? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    // ─── 状态 ───
+    // Note: brief English comment.
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
@@ -88,7 +88,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     private val _currentSubscription = MutableStateFlow<SubscriptionInfo?>(null)
     val currentSubscription: StateFlow<SubscriptionInfo?> = _currentSubscription.asStateFlow()
 
-    // 服务端验证回调
+    // Note: brief English comment.
     var onPurchaseVerified: ((purchaseToken: String, productId: String) -> Unit)? = null
 
     // ═══════════════════════════════════════════
@@ -121,7 +121,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                     reconnectAttempts = 0
                     AppLogger.i(TAG, "Billing connected")
 
-                    // 自动加载商品和当前订阅
+                    // Note: brief English comment.
                     scope.launch {
                         queryProducts()
                         queryCurrentSubscription()
@@ -212,7 +212,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
 
     /**
-     * 便捷方法：按计划类型购买
+     * Note: brief English comment.
      */
     fun launchPurchase(activity: Activity, plan: SubscriptionPlan) {
         val productDetails = _products.value.find { it.productId == plan.productId }
@@ -260,7 +260,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             return
         }
 
-        // 确认购买（必须在 3 天内确认，否则 Google 会自动退款）
+        // Note: brief English comment.
         if (!purchase.isAcknowledged) {
             val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
                 .setPurchaseToken(purchase.purchaseToken)
@@ -274,7 +274,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             }
         }
 
-        // 查找对应 plan
+        // Note: brief English comment.
         val productId = purchase.products.firstOrNull() ?: return
         val plan = SubscriptionPlan.fromProductId(productId)
         if (plan != null) {
@@ -286,7 +286,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 purchaseToken = purchase.purchaseToken
             )
 
-            // 通知服务端验证
+            // Note: brief English comment.
             onPurchaseVerified?.invoke(purchase.purchaseToken, productId)
 
             AppLogger.i(TAG, "Purchase successful: ${plan.displayName}")
@@ -332,7 +332,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     // ═══════════════════════════════════════════
 
     /**
-     * 获取商品的格式化价格
+     * Note: brief English comment.
      */
     fun getFormattedPrice(plan: SubscriptionPlan): String? {
         val product = _products.value.find { it.productId == plan.productId }
@@ -342,7 +342,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
 
     /**
-     * 获取商品的价格（微单位）
+     * Note: brief English comment.
      */
     fun getPriceMicros(plan: SubscriptionPlan): Long? {
         val product = _products.value.find { it.productId == plan.productId }

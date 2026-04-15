@@ -20,12 +20,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 强制运行倒计时覆盖层
+ * force- run
  * 
- * 显示剩余时间，并提供密码退出功能
+ * display, and
  */
 @Composable
 fun ForcedRunCountdownOverlay(
@@ -38,7 +38,7 @@ fun ForcedRunCountdownOverlay(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     
-    // 格式化剩余时间
+    // Note
     val formattedTime = remember(remainingMs) {
         val totalSeconds = (remainingMs.coerceAtLeast(0) / 1000).toInt()
         val hours = totalSeconds / 3600
@@ -74,18 +74,18 @@ fun ForcedRunCountdownOverlay(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 锁图标（可点击退出时显示不同图标）
+                // icon( display icon)
                 Icon(
                     imageVector = if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) 
                         Icons.Filled.LockOpen else Icons.Filled.Lock,
-                    contentDescription = if (allowEmergencyExit) Strings.tapToEnterPasswordToExit else null,
+                    contentDescription = if (allowEmergencyExit) AppStringsProvider.current().tapToEnterPasswordToExit else null,
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.size(20.dp)
                 )
                 
                 Column {
                     Text(
-                        text = Strings.forcedRunActive,
+                        text = AppStringsProvider.current().forcedRunActive,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -96,10 +96,10 @@ fun ForcedRunCountdownOverlay(
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                     
-                    // 提示文字
+                    // hint
                     if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) {
                         Text(
-                            text = Strings.tapToEnterPasswordToExit,
+                            text = AppStringsProvider.current().tapToEnterPasswordToExit,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
                             fontSize = 10.sp
@@ -110,7 +110,7 @@ fun ForcedRunCountdownOverlay(
         }
     }
     
-    // Password输入对话框
+    // Passwordinputdialog
     if (showPasswordDialog) {
         EmergencyExitPasswordDialog(
             correctPassword = emergencyPassword ?: "",
@@ -130,7 +130,7 @@ fun ForcedRunCountdownOverlay(
 }
 
 /**
- * 紧急退出密码对话框
+ * dialog
  */
 @Composable
 private fun EmergencyExitPasswordDialog(
@@ -156,7 +156,7 @@ private fun EmergencyExitPasswordDialog(
         },
         title = {
             Text(
-                text = Strings.enterExitPassword,
+                text = AppStringsProvider.current().enterExitPassword,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -165,7 +165,7 @@ private fun EmergencyExitPasswordDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = Strings.enterAdminPasswordToExit,
+                    text = AppStringsProvider.current().enterAdminPasswordToExit,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -176,8 +176,8 @@ private fun EmergencyExitPasswordDialog(
                         inputPassword = it
                         showError = false
                     },
-                    label = { Text(Strings.passwordLabel) },
-                    placeholder = { Text(Strings.enterPasswordPlaceholder) },
+                    label = { Text(AppStringsProvider.current().passwordLabel) },
+                    placeholder = { Text(AppStringsProvider.current().enterPasswordPlaceholder) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -199,7 +199,7 @@ private fun EmergencyExitPasswordDialog(
                     supportingText = if (showError) {
                         {
                             Text(
-                                text = Strings.wrongPasswordAttemptsRemaining.format(maxAttempts - attempts),
+                                text = AppStringsProvider.current().wrongPasswordAttemptsRemaining.format(maxAttempts - attempts),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -210,7 +210,7 @@ private fun EmergencyExitPasswordDialog(
                 
                 if (attempts >= maxAttempts) {
                     Text(
-                        text = Strings.tooManyAttemptsTryLater,
+                        text = AppStringsProvider.current().tooManyAttemptsTryLater,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -231,12 +231,12 @@ private fun EmergencyExitPasswordDialog(
                 },
                 enabled = inputPassword.isNotEmpty() && attempts < maxAttempts
             ) {
-                Text(Strings.confirmExit)
+                Text(AppStringsProvider.current().confirmExit)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

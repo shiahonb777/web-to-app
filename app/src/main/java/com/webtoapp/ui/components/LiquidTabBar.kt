@@ -28,33 +28,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.*
-
-// ═══════════════════════════════════════════════════════════
-// 水滴物理过渡引擎 — Liquid Drop Physics Tab Bar
-// 灵感: iOS fluid indicator + metaball morphing
+import kotlin.math.* // ═══════════════════════════════════════════════════════════
+// Liquid Drop Physics Tab Bar
+// iOS fluid indicator + metaball morphing
 // ═══════════════════════════════════════════════════════════
 
 /**
- * 水滴物理引擎弹簧参数
+ * Note
  */
 private object LiquidPhysics {
-    // 主体位移 — 低阻尼让水滴有弹性拖尾
+    // Note
     val PositionSpring = spring<Float>(
         dampingRatio = 0.62f,
         stiffness = Spring.StiffnessMediumLow
     )
-    // 水滴拉伸 — 越快越拉长
+    // Note
     val StretchSpring = spring<Float>(
         dampingRatio = 0.5f,
         stiffness = Spring.StiffnessMedium
     )
-    // 图标弹跳 — 选中时弹起
+    // icon
     val IconBounce = spring<Float>(
         dampingRatio = 0.45f,
         stiffness = Spring.StiffnessHigh
     )
-    // 文字淡入
+    // Note
     val LabelFade = tween<Float>(220, easing = FastOutSlowInEasing)
 }
 
@@ -65,13 +63,13 @@ data class LiquidTabItem(
 )
 
 /**
- * 水滴物理过渡 Tab Bar
+ * Tab Bar
  *
- * 核心特效:
- * 1. 液态指示器 — 从一个 Tab 流动到另一个，中间做椭圆拉伸变形
- * 2. 弹簧物理 — 位移带有过冲(overshoot)回弹
- * 3. 选中图标弹跳 + scale up
- * 4. 毛玻璃背景
+ * Note
+ * 1. indicator- from Tab,
+ * 2. - ( overshoot)
+ * 3. icon + scale up
+ * 4.
  */
 @Composable
 fun LiquidTabBar(
@@ -82,9 +80,9 @@ fun LiquidTabBar(
     barHeight: Dp = 64.dp,
 ) {
 
-    // ── 主要动画值 ──
+    // animation
 
-    // 指示器中心 X 位置 (0..tabCount-1 的浮点)
+    // indicator X( 0. . tabCount- 1)
     val targetPosition = selectedIndex.toFloat()
     val animatedPosition by animateFloatAsState(
         targetValue = targetPosition,
@@ -92,11 +90,11 @@ fun LiquidTabBar(
         label = "liquidPos"
     )
 
-    // 实际拉伸 — 弹簧过冲期的位移差自然产生水滴拉伸效果
+    // Note
     val velocity = abs(animatedPosition - targetPosition)
     val effectiveStretch = (velocity * 2.2f).coerceIn(0f, 1f)
 
-    // 主题色
+    // Note
     val primaryColor = MaterialTheme.colorScheme.primary
     val indicatorColor = MaterialTheme.colorScheme.primaryContainer
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -110,7 +108,7 @@ fun LiquidTabBar(
         .height(barHeight)
     ) {
 
-        // ── 毛玻璃背景 ──
+        // Note
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Box(
                 Modifier
@@ -126,7 +124,7 @@ fun LiquidTabBar(
             )
         }
 
-        // ── 顶部微光分割线 ──
+        // top
         Box(
             Modifier
                 .fillMaxWidth()
@@ -135,19 +133,19 @@ fun LiquidTabBar(
                 .background(outlineVariant.copy(alpha = 0.2f))
         )
 
-        // ── 液态指示器 Canvas ──
+        // indicator Canvas
         Canvas(
             Modifier.matchParentSize()
         ) {
             val tabWidth = size.width / tabs.size
             val centerX = tabWidth * (animatedPosition + 0.5f)
-            val centerY = size.height * 0.38f  // 指示器偏上，给文字留空间
+            val centerY = size.height * 0.38f  // indicator,
 
-            // 圆角药丸形指示器 — 单层，不再有双圈
+            // indicator- ,
             val pillWidth = tabWidth * 0.52f * (1f + effectiveStretch * 0.4f)
             val pillHeight = tabWidth * 0.52f * (1f - effectiveStretch * 0.1f)
 
-            // 单一柔和指示器 — 渐变填充
+            // indicator- gradient
             val indicatorRect = Rect(
                 centerX - pillWidth / 2f,
                 centerY - pillHeight / 2f,
@@ -177,7 +175,7 @@ fun LiquidTabBar(
             )
         }
 
-        // ── Tab 图标 + 文字 ──
+        // Tab icon +
         Row(
             modifier = Modifier
                 .matchParentSize()
@@ -188,25 +186,25 @@ fun LiquidTabBar(
             tabs.forEachIndexed { index, tab ->
                 val isSelected = index == selectedIndex
 
-                // 图标弹跳缩放
+                // icon
                 val iconScale by animateFloatAsState(
                     targetValue = if (isSelected) 1.15f else 0.92f,
                     animationSpec = LiquidPhysics.IconBounce,
                     label = "iconScale$index"
                 )
-                // 图标垂直偏移 — 选中时上浮
+                // icon
                 val iconOffsetY by animateFloatAsState(
                     targetValue = if (isSelected) -3f else 2f,
                     animationSpec = LiquidPhysics.IconBounce,
                     label = "iconY$index"
                 )
-                // 文字透明度
+                // Note
                 val labelAlpha by animateFloatAsState(
                     targetValue = if (isSelected) 1f else 0.55f,
                     animationSpec = LiquidPhysics.LabelFade,
                     label = "labelAlpha$index"
                 )
-                // 图标颜色
+                // iconcolor
                 val iconColor by animateColorAsState(
                     targetValue = if (isSelected) primaryColor else onSurfaceVariant.copy(alpha = 0.6f),
                     animationSpec = tween(250),

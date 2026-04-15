@@ -2,7 +2,7 @@ package com.webtoapp.core.extension.agent
 
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Agent 工具定义
@@ -30,37 +30,37 @@ enum class AgentToolType(val icon: String) {
     PREVIEW_MODULE("visibility");
     
     val displayName: String get() = when (this) {
-        SYNTAX_CHECK -> Strings.toolTypeSyntaxCheck
-        LINT_CODE -> Strings.toolTypeLintCode
-        SECURITY_SCAN -> Strings.toolTypeSecurityScan
-        GENERATE_CODE -> Strings.toolTypeGenerateCode
-        REFACTOR_CODE -> Strings.toolTypeRefactorCode
-        FIX_ERROR -> Strings.toolTypeFixError
-        TEST_MODULE -> Strings.toolTypeTestModule
-        VALIDATE_CONFIG -> Strings.toolTypeValidateConfig
-        GET_TEMPLATES -> Strings.toolTypeGetTemplates
-        GET_SNIPPETS -> Strings.toolTypeGetSnippets
-        SEARCH_DOCS -> Strings.toolTypeSearchDocs
-        CREATE_MODULE -> Strings.toolTypeCreateModule
-        UPDATE_MODULE -> Strings.toolTypeUpdateModule
-        PREVIEW_MODULE -> Strings.toolTypePreviewModule
+        SYNTAX_CHECK -> AppStringsProvider.current().toolTypeSyntaxCheck
+        LINT_CODE -> AppStringsProvider.current().toolTypeLintCode
+        SECURITY_SCAN -> AppStringsProvider.current().toolTypeSecurityScan
+        GENERATE_CODE -> AppStringsProvider.current().toolTypeGenerateCode
+        REFACTOR_CODE -> AppStringsProvider.current().toolTypeRefactorCode
+        FIX_ERROR -> AppStringsProvider.current().toolTypeFixError
+        TEST_MODULE -> AppStringsProvider.current().toolTypeTestModule
+        VALIDATE_CONFIG -> AppStringsProvider.current().toolTypeValidateConfig
+        GET_TEMPLATES -> AppStringsProvider.current().toolTypeGetTemplates
+        GET_SNIPPETS -> AppStringsProvider.current().toolTypeGetSnippets
+        SEARCH_DOCS -> AppStringsProvider.current().toolTypeSearchDocs
+        CREATE_MODULE -> AppStringsProvider.current().toolTypeCreateModule
+        UPDATE_MODULE -> AppStringsProvider.current().toolTypeUpdateModule
+        PREVIEW_MODULE -> AppStringsProvider.current().toolTypePreviewModule
     }
     
     val description: String get() = when (this) {
-        SYNTAX_CHECK -> Strings.toolTypeSyntaxCheckDesc
-        LINT_CODE -> Strings.toolTypeLintCodeDesc
-        SECURITY_SCAN -> Strings.toolTypeSecurityScanDesc
-        GENERATE_CODE -> Strings.toolTypeGenerateCodeDesc
-        REFACTOR_CODE -> Strings.toolTypeRefactorCodeDesc
-        FIX_ERROR -> Strings.toolTypeFixErrorDesc
-        TEST_MODULE -> Strings.toolTypeTestModuleDesc
-        VALIDATE_CONFIG -> Strings.toolTypeValidateConfigDesc
-        GET_TEMPLATES -> Strings.toolTypeGetTemplatesDesc
-        GET_SNIPPETS -> Strings.toolTypeGetSnippetsDesc
-        SEARCH_DOCS -> Strings.toolTypeSearchDocsDesc
-        CREATE_MODULE -> Strings.toolTypeCreateModuleDesc
-        UPDATE_MODULE -> Strings.toolTypeUpdateModuleDesc
-        PREVIEW_MODULE -> Strings.toolTypePreviewModuleDesc
+        SYNTAX_CHECK -> AppStringsProvider.current().toolTypeSyntaxCheckDesc
+        LINT_CODE -> AppStringsProvider.current().toolTypeLintCodeDesc
+        SECURITY_SCAN -> AppStringsProvider.current().toolTypeSecurityScanDesc
+        GENERATE_CODE -> AppStringsProvider.current().toolTypeGenerateCodeDesc
+        REFACTOR_CODE -> AppStringsProvider.current().toolTypeRefactorCodeDesc
+        FIX_ERROR -> AppStringsProvider.current().toolTypeFixErrorDesc
+        TEST_MODULE -> AppStringsProvider.current().toolTypeTestModuleDesc
+        VALIDATE_CONFIG -> AppStringsProvider.current().toolTypeValidateConfigDesc
+        GET_TEMPLATES -> AppStringsProvider.current().toolTypeGetTemplatesDesc
+        GET_SNIPPETS -> AppStringsProvider.current().toolTypeGetSnippetsDesc
+        SEARCH_DOCS -> AppStringsProvider.current().toolTypeSearchDocsDesc
+        CREATE_MODULE -> AppStringsProvider.current().toolTypeCreateModuleDesc
+        UPDATE_MODULE -> AppStringsProvider.current().toolTypeUpdateModuleDesc
+        PREVIEW_MODULE -> AppStringsProvider.current().toolTypePreviewModuleDesc
     }
 }
 
@@ -324,131 +324,131 @@ object AgentTools {
     val syntaxCheck = AgentToolDefinition(
         name = "syntax_check",
         type = AgentToolType.SYNTAX_CHECK,
-        description = Strings.agentToolSyntaxCheck,
+        description = AppStringsProvider.current().agentToolSyntaxCheck,
         parameters = listOf(
-            ToolParameter("code", "string", Strings.paramCodeToCheck, required = true),
-            ToolParameter("language", "string", Strings.paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
+            ToolParameter("code", "string", AppStringsProvider.current().paramCodeToCheck, required = true),
+            ToolParameter("language", "string", AppStringsProvider.current().paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
         )
     )
     
     val lintCode = AgentToolDefinition(
         name = "lint_code",
         type = AgentToolType.LINT_CODE,
-        description = Strings.agentToolLintCode,
+        description = AppStringsProvider.current().agentToolLintCode,
         parameters = listOf(
-            ToolParameter("code", "string", Strings.paramCodeToCheck, required = true),
-            ToolParameter("language", "string", Strings.paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
+            ToolParameter("code", "string", AppStringsProvider.current().paramCodeToCheck, required = true),
+            ToolParameter("language", "string", AppStringsProvider.current().paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
         )
     )
     
     val securityScan = AgentToolDefinition(
         name = "security_scan",
         type = AgentToolType.SECURITY_SCAN,
-        description = Strings.agentToolSecurityScan,
+        description = AppStringsProvider.current().agentToolSecurityScan,
         parameters = listOf(
-            ToolParameter("code", "string", Strings.paramCodeToScan, required = true)
+            ToolParameter("code", "string", AppStringsProvider.current().paramCodeToScan, required = true)
         )
     )
     
     val generateCode = AgentToolDefinition(
         name = "generate_code",
         type = AgentToolType.GENERATE_CODE,
-        description = Strings.agentToolGenerateCode,
+        description = AppStringsProvider.current().agentToolGenerateCode,
         parameters = listOf(
-            ToolParameter("requirement", "string", Strings.paramRequirement, required = true),
-            ToolParameter("language", "string", Strings.paramTargetLang, required = true, enumValues = listOf("javascript", "css", "both")),
-            ToolParameter("context", "string", Strings.paramContext, required = false)
+            ToolParameter("requirement", "string", AppStringsProvider.current().paramRequirement, required = true),
+            ToolParameter("language", "string", AppStringsProvider.current().paramTargetLang, required = true, enumValues = listOf("javascript", "css", "both")),
+            ToolParameter("context", "string", AppStringsProvider.current().paramContext, required = false)
         )
     )
     
     val fixError = AgentToolDefinition(
         name = "fix_error",
         type = AgentToolType.FIX_ERROR,
-        description = Strings.agentToolFixError,
+        description = AppStringsProvider.current().agentToolFixError,
         parameters = listOf(
-            ToolParameter("code", "string", Strings.paramCodeWithErrors, required = true),
-            ToolParameter("errors", "array", Strings.paramErrorList, required = true),
-            ToolParameter("language", "string", Strings.paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
+            ToolParameter("code", "string", AppStringsProvider.current().paramCodeWithErrors, required = true),
+            ToolParameter("errors", "array", AppStringsProvider.current().paramErrorList, required = true),
+            ToolParameter("language", "string", AppStringsProvider.current().paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
         )
     )
     
     val refactorCode = AgentToolDefinition(
         name = "refactor_code",
         type = AgentToolType.REFACTOR_CODE,
-        description = Strings.agentToolRefactorCode,
+        description = AppStringsProvider.current().agentToolRefactorCode,
         parameters = listOf(
-            ToolParameter("code", "string", Strings.paramCodeToRefactor, required = true),
-            ToolParameter("goals", "array", Strings.paramRefactorGoals, required = false, enumValues = listOf("readability", "performance", "maintainability", "security"))
+            ToolParameter("code", "string", AppStringsProvider.current().paramCodeToRefactor, required = true),
+            ToolParameter("goals", "array", AppStringsProvider.current().paramRefactorGoals, required = false, enumValues = listOf("readability", "performance", "maintainability", "security"))
         )
     )
     
     val testModule = AgentToolDefinition(
         name = "test_module",
         type = AgentToolType.TEST_MODULE,
-        description = Strings.agentToolTestModule,
+        description = AppStringsProvider.current().agentToolTestModule,
         parameters = listOf(
             ToolParameter("js_code", "string", "JavaScript", required = true),
             ToolParameter("css_code", "string", "CSS", required = false),
-            ToolParameter("test_url", "string", Strings.paramTestUrl, required = false)
+            ToolParameter("test_url", "string", AppStringsProvider.current().paramTestUrl, required = false)
         )
     )
     
     val validateConfig = AgentToolDefinition(
         name = "validate_config",
         type = AgentToolType.VALIDATE_CONFIG,
-        description = Strings.agentToolValidateConfig,
+        description = AppStringsProvider.current().agentToolValidateConfig,
         parameters = listOf(
-            ToolParameter("config_items", "array", Strings.paramConfigItems, required = true),
-            ToolParameter("config_values", "object", Strings.paramConfigValues, required = false)
+            ToolParameter("config_items", "array", AppStringsProvider.current().paramConfigItems, required = true),
+            ToolParameter("config_values", "object", AppStringsProvider.current().paramConfigValues, required = false)
         )
     )
     
     val getTemplates = AgentToolDefinition(
         name = "get_templates",
         type = AgentToolType.GET_TEMPLATES,
-        description = Strings.agentToolGetTemplates,
+        description = AppStringsProvider.current().agentToolGetTemplates,
         parameters = listOf(
             ToolParameter("category", "string", "Module category", required = false),
-            ToolParameter("keywords", "array", Strings.paramKeywords, required = false)
+            ToolParameter("keywords", "array", AppStringsProvider.current().paramKeywords, required = false)
         )
     )
     
     val getSnippets = AgentToolDefinition(
         name = "get_snippets",
         type = AgentToolType.GET_SNIPPETS,
-        description = Strings.agentToolGetSnippets,
+        description = AppStringsProvider.current().agentToolGetSnippets,
         parameters = listOf(
-            ToolParameter("query", "string", Strings.paramSearchKeyword, required = true),
-            ToolParameter("category", "string", Strings.paramSnippetCategory, required = false)
+            ToolParameter("query", "string", AppStringsProvider.current().paramSearchKeyword, required = true),
+            ToolParameter("category", "string", AppStringsProvider.current().paramSnippetCategory, required = false)
         )
     )
     
     val createModule = AgentToolDefinition(
         name = "create_module",
         type = AgentToolType.CREATE_MODULE,
-        description = Strings.agentToolCreateModule,
+        description = AppStringsProvider.current().agentToolCreateModule,
         parameters = listOf(
             ToolParameter("name", "string", "Module name", required = true),
             ToolParameter("description", "string", "Module description", required = true),
-            ToolParameter("icon", "string", Strings.paramModuleIcon, required = false),
+            ToolParameter("icon", "string", AppStringsProvider.current().paramModuleIcon, required = false),
             ToolParameter("category", "string", "Module category", required = true),
             ToolParameter("js_code", "string", "JavaScript", required = true),
             ToolParameter("css_code", "string", "CSS", required = false),
             ToolParameter("config_items", "array", "Config items", required = false),
             ToolParameter("url_matches", "array", "URL match rules", required = false),
-            ToolParameter("run_at", "string", Strings.paramRunAt, required = false, enumValues = listOf("DOCUMENT_START", "DOCUMENT_END", "DOCUMENT_IDLE"))
+            ToolParameter("run_at", "string", AppStringsProvider.current().paramRunAt, required = false, enumValues = listOf("DOCUMENT_START", "DOCUMENT_END", "DOCUMENT_IDLE"))
         )
     )
     
     val previewModule = AgentToolDefinition(
         name = "preview_module",
         type = AgentToolType.PREVIEW_MODULE,
-        description = Strings.agentToolPreviewModule,
+        description = AppStringsProvider.current().agentToolPreviewModule,
         parameters = listOf(
-            ToolParameter("module_id", "string", Strings.paramModuleId, required = false),
+            ToolParameter("module_id", "string", AppStringsProvider.current().paramModuleId, required = false),
             ToolParameter("js_code", "string", "JavaScript", required = false),
             ToolParameter("css_code", "string", "CSS", required = false),
-            ToolParameter("preview_url", "string", Strings.paramPreviewUrl, required = true)
+            ToolParameter("preview_url", "string", AppStringsProvider.current().paramPreviewUrl, required = true)
         )
     )
     

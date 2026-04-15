@@ -16,7 +16,7 @@ import androidx.navigation.compose.composable
 @Composable
 internal fun AppNavigationGraph(
     navController: NavHostController,
-    dependencies: AppNavigationGraphDependencies,
+    dependencies: AppNavigationRootDeps,
 ) {
     NavHost(
         navController = navController,
@@ -51,19 +51,19 @@ internal fun AppNavigationGraph(
 
         addToolRoutes(
             navController = navController,
-            dependencies = dependencies,
+            dependencies = dependencies.toolRoutes,
         )
         addAppCreationRoutes(
             navController = navController,
-            dependencies = dependencies,
+            dependencies = dependencies.creationRoutes,
         )
         addPreviewRoutes(
             navController = navController,
-            dependencies = dependencies,
+            dependencies = dependencies.previewRoutes,
         )
         addAccountRoutes(
             navController = navController,
-            dependencies = dependencies,
+            dependencies = dependencies.accountRoutes,
         )
         addCommunityRoutes(
             navController = navController,

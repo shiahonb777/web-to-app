@@ -22,17 +22,17 @@ import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.viewmodel.EditState
 
 
 /**
- * 检查媒体文件是否存在
+ * check file
  */
 fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, savedPath: String?): Boolean {
-    // 优先检查保存的路径
+    // preferchecksave path
     if (!savedPath.isNullOrEmpty()) {
         return java.io.File(savedPath).exists()
     }
@@ -49,7 +49,7 @@ fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, sa
 }
 
 /**
- * 启动画面设置卡片
+ * animation settingscard
  */
 @Composable
 fun SplashScreenCard(
@@ -67,12 +67,12 @@ fun SplashScreenCard(
 ) {
     val context = LocalContext.current
     
-    // Check媒体文件是否存在
+    // Check file
     val mediaExists = remember(editState.splashMediaUri, editState.savedSplashPath) {
         checkMediaExists(context, editState.splashMediaUri, editState.savedSplashPath)
     }
     
-    // 如果媒体不存在但 URI 非空，自动清除
+    // if URI, clear
     LaunchedEffect(mediaExists, editState.splashMediaUri) {
         if (!mediaExists && editState.splashMediaUri != null) {
             onClearMedia()
@@ -84,10 +84,10 @@ fun SplashScreenCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 标题和开关
+            // Note
             CollapsibleCardHeader(
                 icon = Icons.Outlined.Wallpaper,
-                title = Strings.splashScreen,
+                title = AppStringsProvider.current().splashScreen,
                 checked = editState.splashEnabled,
                 onCheckedChange = onEnabledChange
             )
@@ -99,15 +99,15 @@ fun SplashScreenCard(
             ) {
               Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = Strings.splashHint,
+                    text = AppStringsProvider.current().splashHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Media预览区域
+                // Mediapreviewarea
                 if (editState.splashMediaUri != null && mediaExists) {
                     if (editState.splashConfig.type == SplashType.VIDEO) {
-                        // Video裁剪器
+                        // Video
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -115,13 +115,13 @@ fun SplashScreenCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    Strings.videoCrop,
+                                    AppStringsProvider.current().videoCrop,
                                     style = MaterialTheme.typography.labelMedium
                                 )
                                 TextButton(onClick = onClearMedia) {
                                     Icon(Icons.Default.Close, null, Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
-                                    Text(Strings.remove, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().remove, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                             
@@ -134,7 +134,7 @@ fun SplashScreenCard(
                             )
                         }
                     } else {
-                        // Image预览
+                        // Imagepreview
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -153,11 +153,11 @@ fun SplashScreenCard(
                                         .data(editState.splashMediaUri)
                                         .crossfade(true)
                                         .build(),
-                                    contentDescription = Strings.splashPreview,
+                                    contentDescription = AppStringsProvider.current().splashPreview,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
-                                // Delete按钮
+                                // Deletebutton
                                 IconButton(
                                     onClick = onClearMedia,
                                     modifier = Modifier
@@ -166,7 +166,7 @@ fun SplashScreenCard(
                                 ) {
                                     Icon(
                                         Icons.Default.Close,
-                                        Strings.remove,
+                                        AppStringsProvider.current().remove,
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -174,7 +174,7 @@ fun SplashScreenCard(
                         }
                     }
                 } else {
-                    // Empty状态 - 选择媒体
+                    // Emptystate- select
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -200,7 +200,7 @@ fun SplashScreenCard(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = Strings.clickToSelectImageOrVideo,
+                                text = AppStringsProvider.current().clickToSelectImageOrVideo,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -208,7 +208,7 @@ fun SplashScreenCard(
                     }
                 }
 
-                // Select按钮
+                // Selectbutton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -219,7 +219,7 @@ fun SplashScreenCard(
                     ) {
                         Icon(Icons.Outlined.Image, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.selectImage)
+                        Text(AppStringsProvider.current().selectImage)
                     }
                     PremiumOutlinedButton(
                         onClick = onSelectVideo,
@@ -227,17 +227,17 @@ fun SplashScreenCard(
                     ) {
                         Icon(Icons.Outlined.VideoFile, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.selectVideo)
+                        Text(AppStringsProvider.current().selectVideo)
                     }
                 }
 
-                // 以下设置仅在上传媒体后显示
+                // settingsonly upload display
                 if (editState.splashMediaUri != null && mediaExists) {
-                    // Show时长设置（仅图片显示，视频使用裁剪范围）
+                    // Show settings( only display, )
                     if (editState.splashConfig.type == SplashType.IMAGE) {
                         Column {
                             Text(
-                                text = Strings.displayDurationSeconds.replace("%d", editState.splashConfig.duration.toString()),
+                                text = AppStringsProvider.current().displayDurationSeconds.replace("%d", editState.splashConfig.duration.toString()),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Slider(
@@ -250,16 +250,16 @@ fun SplashScreenCard(
                         }
                     }
 
-                    // 点击跳过设置
+                    // settings
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(Strings.allowSkip, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().allowSkip, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                Strings.allowSkipHint,
+                                AppStringsProvider.current().allowSkipHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -270,16 +270,16 @@ fun SplashScreenCard(
                         )
                     }
                     
-                    // Show方向设置
+                    // Show settings
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(Strings.landscapeDisplay, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().landscapeDisplay, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                Strings.landscapeDisplayHint,
+                                AppStringsProvider.current().landscapeDisplayHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -295,16 +295,16 @@ fun SplashScreenCard(
                         )
                     }
                     
-                    // 铺满屏幕设置
+                    // settings
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(Strings.fillScreen, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStringsProvider.current().fillScreen, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                Strings.fillScreenHint,
+                                AppStringsProvider.current().fillScreenHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -315,7 +315,7 @@ fun SplashScreenCard(
                         )
                     }
                     
-                    // Enable音频设置（仅视频类型显示）
+                    // Enable settings( only typedisplay)
                     if (editState.splashConfig.type == SplashType.VIDEO) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -323,9 +323,9 @@ fun SplashScreenCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(Strings.enableAudio, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStringsProvider.current().enableAudio, style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    Strings.enableAudioHint,
+                                    AppStringsProvider.current().enableAudioHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

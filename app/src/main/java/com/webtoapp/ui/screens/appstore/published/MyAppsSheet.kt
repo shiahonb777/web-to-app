@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -122,14 +122,14 @@ internal fun MyAppsSheet(
     val totalLikes = remember(myApps) { myApps.sumOf { it.likeCount } }
 
     val categoryLabels = mapOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
+        "tools" to AppStringsProvider.current().catTools, "social" to AppStringsProvider.current().catSocial, "education" to "教育",
         "entertainment" to "娱乐", "productivity" to "效率",
         "lifestyle" to "生活", "business" to "商务",
         "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "health" to "健康", "other" to AppStringsProvider.current().catOther
     )
 
-    // ── 删除确认（共享组件） ──
+    // delete( )
     appToDelete?.let { app ->
         ItemDeleteConfirmDialog(
             itemName = app.name,
@@ -149,7 +149,7 @@ internal fun MyAppsSheet(
         )
     }
 
-    // ── 管理控制台 ──
+    // management
     managedApp?.let { app ->
         AppManagementSheet(
             app = app,
@@ -167,9 +167,9 @@ internal fun MyAppsSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-            // ── Header（共享组件） ──
+            // Header( )
             MyPublishedItemsHeader(
-                title = Strings.storeMyApps,
+                title = AppStringsProvider.current().storeMyApps,
                 isRefreshing = isRefreshing,
                 onRefresh = { loadMyApps(showRefresh = true) }
             ) {
@@ -208,20 +208,20 @@ internal fun MyAppsSheet(
                 }
             }
 
-            // ── 统计概览（共享组件） ──
+            // Note
             if (!isLoading && myApps.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 StatsOverviewRow(
                     totalDownloads = totalDownloads,
                     avgRating = avgRating,
                     totalLikes = totalLikes,
-                    downloadLabel = Strings.storeTotalDownloads
+                    downloadLabel = AppStringsProvider.current().storeTotalDownloads
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── 内容状态（共享组件） ──
+            // contentstate( )
             if (isLoading) {
                 PublishedItemLoadingState("Loading my apps...")
             } else if (errorMsg != null) {
@@ -229,7 +229,7 @@ internal fun MyAppsSheet(
             } else if (myApps.isEmpty()) {
                 PublishedItemEmptyState(
                     icon = Icons.Outlined.RocketLaunch,
-                    title = Strings.storeNoPublishedApps,
+                    title = AppStringsProvider.current().storeNoPublishedApps,
                     subtitle = "将你制作的 APP 发布到商店\n让更多人发现和使用你的作品",
                     onAction = onDismiss
                 )
@@ -304,13 +304,13 @@ internal fun MyAppsSheet(
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f, fill = false)
                                             )
-                                            // 分类标签（共享组件）
+                                            // label( )
                                             CategoryTag(
                                                 label = categoryLabels[app.category] ?: app.category,
                                                 color = MaterialTheme.colorScheme.tertiary
                                             )
                                         }
-                                        // 信息 pills（共享组件）
+                                        // pills( )
                                         PublishedItemStatsPills(
                                             versionName = app.versionName,
                                             downloads = app.downloads,
@@ -337,7 +337,7 @@ internal fun MyAppsSheet(
                                         }
                                     }
                                 }
-                                // 描述
+                                // Note
                                 if (!app.description.isNullOrBlank()) {
                                     Text(
                                         app.description,
@@ -360,7 +360,7 @@ internal fun MyAppsSheet(
 
 
 // ════════════════════════════════════════════════
-// 应用管理控制台 (Premium UI)
+// appmanagement( Premium UI)
 // ════════════════════════════════════════════════
 
-/** 管理控制台用渐变色组 */
+/** management gradient */

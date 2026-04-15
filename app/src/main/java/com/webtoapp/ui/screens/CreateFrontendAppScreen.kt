@@ -31,20 +31,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.frontend.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.*
 import com.webtoapp.ui.components.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import org.koin.compose.koinInject
 
 /**
- * 创建/编辑前端项目应用页面
+ * create/edit itemapp
  * 
- * 支持两种模式：
- * 1. 导入已构建的 dist 目录
- * 2. 完整构建（使用内置 Linux 环境）
+ * support mode
+ * 1. import dist directory
+ * 2. ( Linux)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,30 +65,30 @@ fun CreateFrontendAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // 编辑模式
+    // editmode
     val isEditMode = existingAppId != null
     
-    // Linux 环境
-    val linuxEnv = remember { LinuxEnvironmentManager.getInstance(context) }
+    // Linux
+    val linuxEnv: LinuxEnvironmentManager = koinInject()
     val linuxState by linuxEnv.state.collectAsStateWithLifecycle()
     
-    // Build模式
+    // Buildmode
     var buildMode by remember { mutableStateOf(BuildMode.IMPORT_DIST) }
     
-    // 项目信息
+    // item
     var projectPath by remember { mutableStateOf<String?>(null) }
     var projectName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     
-    // Load现有应用数据（编辑模式）
+    // Load app( editmode)
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
             existingApp = webAppRepository.getWebAppById(existingAppId).first()
             existingApp?.let { app ->
                 projectName = app.name
                 app.iconPath?.let { path -> appIcon = Uri.parse(path) }
-                // FRONTEND 应用的文件存储在 htmlConfig 中
+                // FRONTEND app file htmlConfig
                 app.htmlConfig?.files?.firstOrNull()?.path?.let { firstFilePath ->
                     val projectDir = File(firstFilePath).parentFile?.absolutePath
                     if (projectDir != null) {
@@ -98,11 +99,11 @@ fun CreateFrontendAppScreen(
         }
     }
     
-    // 检测结果
+    // Note
     var detectionResult by remember { mutableStateOf<ProjectDetectionResult?>(null) }
     var isDetecting by remember { mutableStateOf(false) }
     
-    // Build器
+    // Build
     val importBuilder = remember { FrontendProjectBuilder(context) }
     val nodeBuilder = remember { NodeProjectBuilder(context) }
     
@@ -112,7 +113,7 @@ fun CreateFrontendAppScreen(
     val nodeBuildState by nodeBuilder.buildState.collectAsStateWithLifecycle()
     val nodeBuildLogs by nodeBuilder.buildLogs.collectAsStateWithLifecycle()
     
-    // 当前使用的状态和日志
+    // current state
     val currentBuildState = if (buildMode == BuildMode.FULL_BUILD) {
         when (val state = nodeBuildState) {
             is NodeBuildState.Idle -> BuildState.Idle
@@ -130,20 +131,20 @@ fun CreateFrontendAppScreen(
     
     val currentLogs = if (buildMode == BuildMode.FULL_BUILD) nodeBuildLogs else importLogs
     
-    // Show日志对话框
+    // Show dialog
     var showLogsDialog by remember { mutableStateOf(false) }
     
-    // Check Linux 环境
+    // Check Linux
     LaunchedEffect(Unit) {
         linuxEnv.checkEnvironment()
     }
     
-    // Icon选择器
+    // Iconselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
     
-    // File夹选择器
+    // File select
     val folderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -153,7 +154,7 @@ fun CreateFrontendAppScreen(
                 projectPath = path
                 projectName = File(path).name
                 
-                // Auto检测项目
+                // Auto item
                 scope.launch {
                     isDetecting = true
                     detectionResult = ProjectDetector.detectProject(path)
@@ -163,7 +164,7 @@ fun CreateFrontendAppScreen(
         }
     }
     
-    // 判断是否可以操作
+    // Note
     val canImport = projectPath != null && 
                    detectionResult != null && 
                    detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true &&
@@ -178,16 +179,16 @@ fun CreateFrontendAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditMode) Strings.editFrontendApp else Strings.createFrontendApp) },
+                title = { Text(if (isEditMode) AppStringsProvider.current().editFrontendApp else AppStringsProvider.current().createFrontendApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     if (currentLogs.isNotEmpty()) {
                         IconButton(onClick = { showLogsDialog = true }) {
-                            Icon(Icons.Outlined.Terminal, Strings.logs)
+                            Icon(Icons.Outlined.Terminal, AppStringsProvider.current().logs)
                         }
                     }
                 }
@@ -205,7 +206,7 @@ fun CreateFrontendAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 构建模式选择 ==========
+            // ========== modeselect ==========
             BuildModeSelector(
                 selectedMode = buildMode,
                 onModeSelected = { buildMode = it },
@@ -214,7 +215,7 @@ fun CreateFrontendAppScreen(
             )
 
 
-            // ========== 示例项目 ==========
+            // ========== item ==========
             SampleProjectsCard(
                 onSelectSample = { sample ->
                     scope.launch {
@@ -230,7 +231,7 @@ fun CreateFrontendAppScreen(
                 }
             )
 
-            // ========== 选择项目 ==========
+            // ========== selectitem ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -250,7 +251,7 @@ fun CreateFrontendAppScreen(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            Strings.selectProject,
+                            AppStringsProvider.current().selectProject,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -265,13 +266,13 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Outlined.FolderOpen, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.selectProjectFolder)
+                            Text(AppStringsProvider.current().selectProjectFolder)
                         }
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            Strings.selectProjectHint,
+                            AppStringsProvider.current().selectProjectHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -312,7 +313,7 @@ fun CreateFrontendAppScreen(
                                     importBuilder.reset()
                                     nodeBuilder.reset()
                                 }) {
-                                    Icon(Icons.Default.Close, Strings.remove)
+                                    Icon(Icons.Default.Close, AppStringsProvider.current().remove)
                                 }
                             }
                         }
@@ -320,7 +321,7 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 项目检测结果 ==========
+            // ========== item ==========
             AnimatedVisibility(visible = isDetecting || detectionResult != null) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -341,7 +342,7 @@ fun CreateFrontendAppScreen(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                Strings.projectAnalysis,
+                                AppStringsProvider.current().projectAnalysis,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -358,10 +359,10 @@ fun CreateFrontendAppScreen(
                         if (detectionResult != null) {
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // 框架信息
+                            // Note
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Code,
-                                label = Strings.frameworkLabel,
+                                label = AppStringsProvider.current().frameworkLabel,
                                 value = getFrameworkDisplayName(detectionResult!!.framework),
                                 valueColor = getFrameworkColor(detectionResult!!.framework)
                             )
@@ -369,14 +370,14 @@ fun CreateFrontendAppScreen(
                             if (detectionResult!!.frameworkVersion != null) {
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Tag,
-                                    label = Strings.versionLabel,
+                                    label = AppStringsProvider.current().versionLabel,
                                     value = detectionResult!!.frameworkVersion!!
                                 )
                             }
                             
                             DetectionInfoRow(
                                 icon = Icons.Outlined.Inventory,
-                                label = Strings.packageManagerLabel,
+                                label = AppStringsProvider.current().packageManagerLabel,
                                 value = detectionResult!!.packageManager.name
                             )
                             
@@ -384,31 +385,31 @@ fun CreateFrontendAppScreen(
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Code,
                                     label = "TypeScript",
-                                    value = Strings.enabled,
+                                    value = AppStringsProvider.current().enabled,
                                     valueColor = Color(0xFF3178C6)
                                 )
                             }
                             
-                            // 依赖统计
+                            // Note
                             val totalDeps = detectionResult!!.dependencies.size + 
                                            detectionResult!!.devDependencies.size
                             if (totalDeps > 0) {
                                 DetectionInfoRow(
                                     icon = Icons.Outlined.Extension,
-                                    label = Strings.dependencyCountLabel,
-                                    value = Strings.dependencyCountValue.format(totalDeps)
+                                    label = AppStringsProvider.current().dependencyCountLabel,
+                                    value = AppStringsProvider.current().dependencyCountValue.format(totalDeps)
                                 )
                             }
                             
-                            // 输出目录
+                            // outputdirectory
                             DetectionInfoRow(
                                 icon = Icons.Outlined.FolderOpen,
-                                label = Strings.outputDirLabel,
+                                label = AppStringsProvider.current().outputDirLabel,
                                 value = File(detectionResult!!.outputDir).name
                             )
 
                             
-                            // 问题和建议
+                            // Note
                             if (detectionResult!!.issues.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(12.dp))
                                 detectionResult!!.issues.forEach { issue ->
@@ -436,7 +437,7 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 应用配置 ==========
+            // ========== appconfig ==========
             AnimatedVisibility(visible = detectionResult != null && 
                 detectionResult?.issues?.none { it.severity == IssueSeverity.ERROR } == true) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -458,7 +459,7 @@ fun CreateFrontendAppScreen(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                Strings.appConfig,
+                                AppStringsProvider.current().appConfig,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -466,7 +467,7 @@ fun CreateFrontendAppScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // App名称（带随机按钮）
+                        // App( button)
                         AppNameTextFieldSimple(
                             value = projectName,
                             onValueChange = { projectName = it }
@@ -474,13 +475,13 @@ fun CreateFrontendAppScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // App图标
+                        // Appicon
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                Strings.labelIcon,
+                                AppStringsProvider.current().labelIcon,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
@@ -496,24 +497,24 @@ fun CreateFrontendAppScreen(
                 }
             }
             
-            // ========== 构建状态 ==========
+            // ========== Build Status ==========
             AnimatedVisibility(visible = currentBuildState !is BuildState.Idle) {
                 BuildStatusCard(currentBuildState, currentLogs.size) {
                     showLogsDialog = true
                 }
             }
             
-            // ========== 操作按钮 ==========
+            // ========== Action Buttons ==========
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 编辑模式：显示保存按钮（仅更新名称和图标）
+            // Edit mode: show save button (name/icon only)
             if (isEditMode && currentBuildState is BuildState.Idle) {
                 PremiumButton(
                     onClick = {
-                        // 传递 null 作为 outputPath，表示不更新文件
+                        // Pass null outputPath to skip file update
                         onCreated(
                             projectName,
-                            "", // Empty字符串表示不更新文件
+                            "", // Empty string means no file update
                             appIcon,
                             existingApp?.let { FrontendFramework.UNKNOWN } ?: FrontendFramework.UNKNOWN
                         )
@@ -523,7 +524,7 @@ fun CreateFrontendAppScreen(
                 ) {
                     Icon(Icons.Default.Save, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.btnSave)
+                    Text(AppStringsProvider.current().btnSave)
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -551,7 +552,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Default.Download, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (isEditMode) Strings.reimportProject else Strings.importProject)
+                            Text(if (isEditMode) AppStringsProvider.current().reimportProject else AppStringsProvider.current().importProject)
                         }
                     } else {
                         PremiumButton(
@@ -573,7 +574,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Default.Build, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (isEditMode) Strings.rebuildProject else Strings.buildProject)
+                            Text(if (isEditMode) AppStringsProvider.current().rebuildProject else AppStringsProvider.current().buildProject)
                         }
                     }
                 }
@@ -591,7 +592,7 @@ fun CreateFrontendAppScreen(
                     ) {
                         Icon(Icons.Default.Check, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isEditMode) Strings.btnSave else Strings.btnCreate)
+                        Text(if (isEditMode) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate)
                     }
                 }
                 is BuildState.Error -> {
@@ -605,7 +606,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Default.Refresh, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.btnRetry)
+                            Text(AppStringsProvider.current().btnRetry)
                         }
                     }
                 }
@@ -617,7 +618,7 @@ fun CreateFrontendAppScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                 }
             }
@@ -626,7 +627,7 @@ fun CreateFrontendAppScreen(
         }
     }
     
-    // Log对话框
+    // Log dialog
     if (showLogsDialog) {
         BuildLogsDialog(
             logs = currentLogs,
@@ -638,7 +639,7 @@ fun CreateFrontendAppScreen(
 
 
 /**
- * 构建模式选择器
+ * modeselect
  */
 @Composable
 private fun BuildModeSelector(
@@ -667,12 +668,12 @@ private fun BuildModeSelector(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        Strings.importFrontendProject,
+                        AppStringsProvider.current().importFrontendProject,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        Strings.supportVueReactVite,
+                        AppStringsProvider.current().supportVueReactVite,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -681,7 +682,7 @@ private fun BuildModeSelector(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 使用说明
+            // Note
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -689,20 +690,20 @@ private fun BuildModeSelector(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        Strings.usageSteps,
+                        AppStringsProvider.current().usageSteps,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.usageStepsContent,
+                        AppStringsProvider.current().usageStepsContent,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             
-            // Built-in构建引擎说明
+            // Built- in
             Spacer(modifier = Modifier.height(12.dp))
             
             Surface(
@@ -722,7 +723,7 @@ private fun BuildModeSelector(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        Strings.builtInEngineReady,
+                        AppStringsProvider.current().builtInEngineReady,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -733,7 +734,7 @@ private fun BuildModeSelector(
 }
 
 /**
- * 检测信息行
+ * Note
  */
 @Composable
 private fun DetectionInfoRow(
@@ -771,7 +772,7 @@ private fun DetectionInfoRow(
 }
 
 /**
- * 问题项
+ * Note
  */
 @Composable
 private fun IssueItem(issue: ProjectIssue) {
@@ -812,7 +813,7 @@ private fun IssueItem(issue: ProjectIssue) {
 }
 
 /**
- * 构建状态卡片
+ * statecard
  */
 @Composable
 private fun BuildStatusCard(
@@ -837,7 +838,7 @@ private fun BuildStatusCard(
                     is BuildState.Scanning -> {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.scanningProject)
+                        Text(AppStringsProvider.current().scanningProject)
                     }
                     is BuildState.Importing -> {
                         CircularProgressIndicator(
@@ -846,7 +847,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.importing)
+                            Text(AppStringsProvider.current().importing)
                             Text(
                                 state.message,
                                 style = MaterialTheme.typography.bodySmall,
@@ -857,7 +858,7 @@ private fun BuildStatusCard(
                     is BuildState.CheckingEnvironment -> {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.checkingEnv)
+                        Text(AppStringsProvider.current().checkingEnv)
                     }
                     is BuildState.CopyingProject -> {
                         CircularProgressIndicator(
@@ -866,7 +867,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.copyingProjectFiles)
+                            Text(AppStringsProvider.current().copyingProjectFiles)
                             Text(
                                 "${(state.progress * 100).toInt()}%",
                                 style = MaterialTheme.typography.bodySmall,
@@ -881,7 +882,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.installingDeps)
+                            Text(AppStringsProvider.current().installingDeps)
                             if (state.currentPackage.isNotEmpty()) {
                                 Text(
                                     state.currentPackage,
@@ -900,7 +901,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.building)
+                            Text(AppStringsProvider.current().building)
                             Text(
                                 state.stage,
                                 style = MaterialTheme.typography.bodySmall,
@@ -911,7 +912,7 @@ private fun BuildStatusCard(
                     is BuildState.ProcessingOutput -> {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.processingOutput)
+                        Text(AppStringsProvider.current().processingOutput)
                     }
                     is BuildState.Success -> {
                         Icon(
@@ -922,9 +923,9 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.completed, color = AppColors.Success)
+                            Text(AppStringsProvider.current().completed, color = AppColors.Success)
                             Text(
-                                Strings.totalFiles.replace("%d", state.fileCount.toString()),
+                                AppStringsProvider.current().totalFiles.replace("%d", state.fileCount.toString()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -939,7 +940,7 @@ private fun BuildStatusCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.failed, color = AppColors.Error)
+                            Text(AppStringsProvider.current().failed, color = AppColors.Error)
                             Text(
                                 state.message,
                                 style = MaterialTheme.typography.bodySmall,
@@ -955,7 +956,7 @@ private fun BuildStatusCard(
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 
                 TextButton(onClick = onViewLogs) {
-                    Text("${Strings.logs} ($logCount)")
+                    Text("${AppStringsProvider.current().logs} ($logCount)")
                 }
             }
         }
@@ -964,7 +965,7 @@ private fun BuildStatusCard(
 
 
 /**
- * 构建日志对话框
+ * dialog
  */
 @Composable
 private fun BuildLogsDialog(
@@ -973,7 +974,7 @@ private fun BuildLogsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.importLogs) },
+        title = { Text(AppStringsProvider.current().importLogs) },
         text = {
             LazyColumn(
                 modifier = Modifier
@@ -1000,14 +1001,14 @@ private fun BuildLogsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.close)
+                Text(AppStringsProvider.current().close)
             }
         }
     )
 }
 
 /**
- * 获取框架显示名称
+ * display
  */
 private fun getFrameworkDisplayName(framework: FrontendFramework): String {
     return when (framework) {
@@ -1024,7 +1025,7 @@ private fun getFrameworkDisplayName(framework: FrontendFramework): String {
 
 
 /**
- * 获取框架颜色
+ * color
  */
 private fun getFrameworkColor(framework: FrontendFramework): Color {
     return when (framework) {
@@ -1040,7 +1041,7 @@ private fun getFrameworkColor(framework: FrontendFramework): Color {
 }
 
 /**
- * 从 Uri 获取真实路径
+ * from Uri path
  */
 private fun getPathFromUri(context: android.content.Context, uri: Uri): String? {
     return try {

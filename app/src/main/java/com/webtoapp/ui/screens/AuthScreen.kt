@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.auth.GoogleSignInHelper
 import com.webtoapp.core.auth.GoogleSignInResult
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import com.webtoapp.ui.viewmodel.FormState
 import kotlinx.coroutines.launch
@@ -48,9 +48,9 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 登录 & 注册页面
+ * & register
  *
- * 整合登录、注册表单以及忘记密码流程
+ * , register and
  */
 @Suppress("UNUSED_PARAMETER")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,22 +66,22 @@ fun AuthScreen(
     val resetCodeState by authViewModel.resetCodeState.collectAsStateWithLifecycle()
     val sendCodeState by authViewModel.sendCodeState.collectAsStateWithLifecycle()
 
-    // Tab 状态: 0 = 登录, 1 = 注册
+    // Tab state: 0 =, 1 = register
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    // 忘记密码模式
+    // mode
     var showForgotPassword by remember { mutableStateOf(false) }
     var forgotPasswordEmail by remember { mutableStateOf("") }
     var resetCode by remember { mutableStateOf("") }
     var resetNewPassword by remember { mutableStateOf("") }
     var resetCodeCountdown by remember { mutableIntStateOf(0) }
 
-    // 登录表单
+    // Note
     var loginAccount by remember { mutableStateOf("") }
     var loginPassword by remember { mutableStateOf("") }
     var loginPasswordVisible by remember { mutableStateOf(false) }
 
-    // 注册表单
+    // register
     var regEmail by remember { mutableStateOf("") }
     var regUsername by remember { mutableStateOf("") }
     var regPassword by remember { mutableStateOf("") }
@@ -90,19 +90,19 @@ fun AuthScreen(
     var regConfirmPasswordVisible by remember { mutableStateOf(false) }
     var regVerificationCode by remember { mutableStateOf("") }
 
-    // 验证码倒计时
+    // verify
     var codeCountdown by remember { mutableIntStateOf(0) }
     
-    // Google 登录加载状态
+    // Google loadstate
     var googleLoading by remember { mutableStateOf(false) }
     
-    // 注册成功公告弹窗
+    // registersuccessannouncementdialog
     var showAnnouncement by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 监听登录/注册结果
+    // /register
     LaunchedEffect(loginState) {
         when (loginState) {
             is FormState.Success -> {
@@ -120,7 +120,7 @@ fun AuthScreen(
     LaunchedEffect(registerState) {
         when (registerState) {
             is FormState.Success -> {
-                // 注册成功 → 显示云端功能公告
+                // registersuccess → display announcement
                 showAnnouncement = true
                 authViewModel.resetRegisterState()
             }
@@ -132,10 +132,10 @@ fun AuthScreen(
         }
     }
     
-    // 注册成功公告弹窗
+    // registersuccessannouncementdialog
     if (showAnnouncement) {
         AlertDialog(
-            onDismissRequest = { /* 不允许点击外部关闭 */ },
+            onDismissRequest = { /* close */ },
             icon = {
                 Icon(
                     Icons.Filled.Info,
@@ -146,7 +146,7 @@ fun AuthScreen(
             },
             title = {
                 Text(
-                    text = Strings.authRegisterSuccess,
+                    text = AppStringsProvider.current().authRegisterSuccess,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -156,7 +156,7 @@ fun AuthScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = Strings.authWelcomeMessage,
+                        text = AppStringsProvider.current().authWelcomeMessage,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -175,18 +175,18 @@ fun AuthScreen(
                     },
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(Strings.authConfirm)
+                    Text(AppStringsProvider.current().authConfirm)
                 }
             }
         )
     }
 
-    // 监听验证码发送结果
+    // verify
     LaunchedEffect(sendCodeState) {
         when (sendCodeState) {
             is FormState.Success -> {
                 snackbarHostState.showSnackbar((sendCodeState as FormState.Success).message)
-                codeCountdown = 60  // 启动 60 秒倒计时
+                codeCountdown = 60  // 60
                 authViewModel.resetSendCodeState()
             }
             is FormState.Error -> {
@@ -197,7 +197,7 @@ fun AuthScreen(
         }
     }
 
-    // 倒计时器
+    // Note
     LaunchedEffect(codeCountdown) {
         if (codeCountdown > 0) {
             kotlinx.coroutines.delay(1000)
@@ -205,7 +205,7 @@ fun AuthScreen(
         }
     }
 
-    // 监听重置验证码发送结果
+    // resetverify
     LaunchedEffect(resetCodeState) {
         when (resetCodeState) {
             is FormState.Success -> {
@@ -221,7 +221,7 @@ fun AuthScreen(
         }
     }
 
-    // 重置验证码倒计时
+    // resetverify
     LaunchedEffect(resetCodeCountdown) {
         if (resetCodeCountdown > 0) {
             kotlinx.coroutines.delay(1000)
@@ -229,12 +229,12 @@ fun AuthScreen(
         }
     }
 
-    // 监听忘记密码重置结果
+    // reset
     LaunchedEffect(forgotPasswordState) {
         when (forgotPasswordState) {
             is FormState.Success -> {
-                // 密码重置成功 → authState 已变为 LoggedIn → 自动切到 ProfileScreen
-                snackbarHostState.showSnackbar(Strings.authPasswordResetSuccess)
+                // resetsuccess → authState LoggedIn → ProfileScreen
+                snackbarHostState.showSnackbar(AppStringsProvider.current().authPasswordResetSuccess)
                 showForgotPassword = false
                 resetCode = ""
                 resetNewPassword = ""
@@ -256,7 +256,7 @@ fun AuthScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (showForgotPassword) "重置密码" else Strings.authCloudService,
+                        if (showForgotPassword) "重置密码" else AppStringsProvider.current().authCloudService,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -268,7 +268,7 @@ fun AuthScreen(
                             resetCode = ""
                             resetNewPassword = ""
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().back)
                         }
                     }
                 },
@@ -321,7 +321,7 @@ fun AuthScreen(
 
                 Text(
                     text = if (showForgotPassword) "输入邮箱，获取验证码重置密码"
-                           else Strings.authCloudDesc,
+                           else AppStringsProvider.current().authCloudDesc,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -330,7 +330,7 @@ fun AuthScreen(
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // ─── 忘记密码流程 ───
+                // Note
                 if (showForgotPassword) {
                     ForgotPasswordForm(
                         authViewModel = authViewModel,
@@ -350,8 +350,8 @@ fun AuthScreen(
                         }
                     )
                 } else {
-                    // ─── 登录 / 注册标签 ───
-                    // Tab 切换
+                    // / registerlabel
+                    // Tab switch
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -364,7 +364,7 @@ fun AuthScreen(
                                 .fillMaxWidth()
                                 .padding(4.dp)
                         ) {
-                            listOf(Strings.authLogin, Strings.authRegister).forEachIndexed { index, title ->
+                            listOf(AppStringsProvider.current().authLogin, AppStringsProvider.current().authRegister).forEachIndexed { index, title ->
                                 val isSelected = selectedTab == index
                                 Box(
                                     modifier = Modifier
@@ -393,7 +393,7 @@ fun AuthScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // 表单区域
+                    // area
                     AnimatedContent(
                         targetState = selectedTab,
                         transitionSpec = {
@@ -409,7 +409,7 @@ fun AuthScreen(
                     ) { tab ->
                         when (tab) {
                             0 -> {
-                                // ─── 登录表单 ───
+                                // Note
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -417,8 +417,8 @@ fun AuthScreen(
                                     OutlinedTextField(
                                         value = loginAccount,
                                         onValueChange = { loginAccount = it },
-                                        label = { Text(Strings.authUsernameOrEmail) },
-                                        placeholder = { Text(Strings.authInputUsernameOrEmail) },
+                                        label = { Text(AppStringsProvider.current().authUsernameOrEmail) },
+                                        placeholder = { Text(AppStringsProvider.current().authInputUsernameOrEmail) },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Person, null, modifier = Modifier.size(20.dp))
                                         },
@@ -437,7 +437,7 @@ fun AuthScreen(
                                     OutlinedTextField(
                                         value = loginPassword,
                                         onValueChange = { loginPassword = it },
-                                        label = { Text(Strings.authPassword) },
+                                        label = { Text(AppStringsProvider.current().authPassword) },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Lock, null, modifier = Modifier.size(20.dp))
                                         },
@@ -468,13 +468,13 @@ fun AuthScreen(
                                         )
                                     )
 
-                                    // 忘记密码链接
+                                    // Note
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End
                                     ) {
                                         Text(
-                                            text = Strings.authForgotPassword,
+                                            text = AppStringsProvider.current().authForgotPassword,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Medium,
@@ -508,12 +508,12 @@ fun AuthScreen(
                                         }
                                         Text(
                                             text = if (loginState is FormState.Loading)
-                                                Strings.authLoggingIn else Strings.authLogin,
+                                                AppStringsProvider.current().authLoggingIn else AppStringsProvider.current().authLogin,
                                             style = MaterialTheme.typography.labelLarge
                                         )
                                     }
 
-                                    // ─── Google 登录分隔线 ───
+                                    // Google
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -525,7 +525,7 @@ fun AuthScreen(
                                             color = MaterialTheme.colorScheme.outlineVariant
                                         )
                                         Text(
-                                            text = Strings.authOr,
+                                            text = AppStringsProvider.current().authOr,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -535,7 +535,7 @@ fun AuthScreen(
                                         )
                                     }
 
-                                    // ─── Google 登录按钮 ───
+                                    // Google button
                                     val context = LocalContext.current
                                     val coroutineScope = rememberCoroutineScope()
 
@@ -582,12 +582,12 @@ fun AuthScreen(
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = if (googleLoading)
-                                                Strings.authLoggingInWithGoogle else Strings.authGoogleLogin,
+                                                AppStringsProvider.current().authLoggingInWithGoogle else AppStringsProvider.current().authGoogleLogin,
                                             style = MaterialTheme.typography.labelLarge
                                         )
                                     }
 
-                                    // 切换到注册
+                                    // switch register
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -595,13 +595,13 @@ fun AuthScreen(
                                         horizontalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = Strings.authNoAccount,
+                                            text = AppStringsProvider.current().authNoAccount,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = Strings.authRegisterNow,
+                                            text = AppStringsProvider.current().authRegisterNow,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold,
@@ -611,7 +611,7 @@ fun AuthScreen(
                                 }
                             }
                             1 -> {
-                                // ─── 注册表单 ───
+                                // register
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -619,7 +619,7 @@ fun AuthScreen(
                                     OutlinedTextField(
                                         value = regEmail,
                                         onValueChange = { regEmail = it },
-                                        label = { Text(Strings.authEmail) },
+                                        label = { Text(AppStringsProvider.current().authEmail) },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Email, null, modifier = Modifier.size(20.dp))
                                         },
@@ -638,13 +638,13 @@ fun AuthScreen(
                                     OutlinedTextField(
                                         value = regUsername,
                                         onValueChange = { regUsername = it },
-                                        label = { Text(Strings.authUsername) },
+                                        label = { Text(AppStringsProvider.current().authUsername) },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Person, null, modifier = Modifier.size(20.dp))
                                         },
                                         supportingText = {
                                             Text(
-                                                Strings.authUsernameHint,
+                                                AppStringsProvider.current().authUsernameHint,
                                                 style = MaterialTheme.typography.bodySmall
                                             )
                                         },
@@ -660,7 +660,7 @@ fun AuthScreen(
                                     OutlinedTextField(
                                         value = regPassword,
                                         onValueChange = { regPassword = it },
-                                        label = { Text(Strings.authPassword) },
+                                        label = { Text(AppStringsProvider.current().authPassword) },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Lock, null, modifier = Modifier.size(20.dp))
                                         },
@@ -676,7 +676,7 @@ fun AuthScreen(
                                         },
                                         supportingText = {
                                             Text(
-                                                Strings.authPasswordHint,
+                                                AppStringsProvider.current().authPasswordHint,
                                                 style = MaterialTheme.typography.bodySmall
                                             )
                                         },
@@ -697,7 +697,7 @@ fun AuthScreen(
                                     OutlinedTextField(
                                         value = regConfirmPassword,
                                         onValueChange = { regConfirmPassword = it },
-                                        label = { Text(Strings.authConfirmPassword) },
+                                        label = { Text(AppStringsProvider.current().authConfirmPassword) },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Lock, null, modifier = Modifier.size(20.dp))
                                         },
@@ -726,7 +726,7 @@ fun AuthScreen(
                                         isError = regConfirmPassword.isNotEmpty() && regPassword != regConfirmPassword
                                     )
 
-                                    // ─── 邮箱验证码 ───
+                                    // verify
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -735,11 +735,11 @@ fun AuthScreen(
                                         OutlinedTextField(
                                             value = regVerificationCode,
                                             onValueChange = { if (it.length <= 6) regVerificationCode = it.filter { c -> c.isDigit() } },
-                                            label = { Text(Strings.authVerificationCode) },
+                                            label = { Text(AppStringsProvider.current().authVerificationCode) },
                                             leadingIcon = {
                                                 Icon(Icons.Outlined.MarkEmailRead, null, modifier = Modifier.size(20.dp))
                                             },
-                                            placeholder = { Text(Strings.authCodePlaceholder) },
+                                            placeholder = { Text(AppStringsProvider.current().authCodePlaceholder) },
                                             modifier = Modifier.weight(1f),
                                             singleLine = true,
                                             shape = RoundedCornerShape(12.dp),
@@ -806,12 +806,12 @@ fun AuthScreen(
                                         }
                                         Text(
                                             text = if (registerState is FormState.Loading)
-                                                Strings.authRegistering else Strings.authRegister,
+                                                AppStringsProvider.current().authRegistering else AppStringsProvider.current().authRegister,
                                             style = MaterialTheme.typography.labelLarge
                                         )
                                     }
 
-                                    // 切换到登录
+                                    // switch
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -819,13 +819,13 @@ fun AuthScreen(
                                         horizontalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = Strings.authHasAccount,
+                                            text = AppStringsProvider.current().authHasAccount,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = Strings.authLoginNow,
+                                            text = AppStringsProvider.current().authLoginNow,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold,
@@ -840,7 +840,7 @@ fun AuthScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 功能说明
+                // Note
                 if (!showForgotPassword) {
                     EnhancedElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -854,21 +854,21 @@ fun AuthScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = Strings.authWhyRegister,
+                                text = AppStringsProvider.current().authWhyRegister,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
-                            FeatureRow(Icons.Outlined.Cloud, Strings.authFeatureCloud)
-                            FeatureRow(Icons.Outlined.BarChart, Strings.authFeatureStats)
-                            FeatureRow(Icons.Outlined.Share, Strings.authFeatureShare)
-                            FeatureRow(Icons.Outlined.Backup, Strings.authFeatureBackup)
+                            FeatureRow(Icons.Outlined.Cloud, AppStringsProvider.current().authFeatureCloud)
+                            FeatureRow(Icons.Outlined.BarChart, AppStringsProvider.current().authFeatureStats)
+                            FeatureRow(Icons.Outlined.Share, AppStringsProvider.current().authFeatureShare)
+                            FeatureRow(Icons.Outlined.Backup, AppStringsProvider.current().authFeatureBackup)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = Strings.authFreeNote,
+                        text = AppStringsProvider.current().authFreeNote,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -882,7 +882,7 @@ fun AuthScreen(
         }
 }
 
-// ─── 忘记密码表单 ───
+// Note
 
 @Composable
 private fun ForgotPasswordForm(
@@ -902,11 +902,11 @@ private fun ForgotPasswordForm(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 邮箱输入
+        // input
         OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = { Text(Strings.authRegisterEmail) },
+            label = { Text(AppStringsProvider.current().authRegisterEmail) },
             leadingIcon = {
                 Icon(Icons.Outlined.Email, null, modifier = Modifier.size(20.dp))
             },
@@ -919,7 +919,7 @@ private fun ForgotPasswordForm(
             )
         )
 
-        // 验证码输入 + 发送按钮
+        // verify input + button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -928,11 +928,11 @@ private fun ForgotPasswordForm(
             OutlinedTextField(
                 value = resetCode,
                 onValueChange = onResetCodeChange,
-                label = { Text(Strings.authVerificationCode) },
+                label = { Text(AppStringsProvider.current().authVerificationCode) },
                 leadingIcon = {
                     Icon(Icons.Outlined.Pin, null, modifier = Modifier.size(20.dp))
                 },
-                placeholder = { Text(Strings.authCodePlaceholder) },
+                placeholder = { Text(AppStringsProvider.current().authCodePlaceholder) },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -968,15 +968,15 @@ private fun ForgotPasswordForm(
             }
         }
 
-        // 新密码输入
+        // input
         OutlinedTextField(
             value = resetNewPassword,
             onValueChange = onResetNewPasswordChange,
-            label = { Text(Strings.authNewPassword) },
+            label = { Text(AppStringsProvider.current().authNewPassword) },
             leadingIcon = {
                 Icon(Icons.Outlined.Lock, null, modifier = Modifier.size(20.dp))
             },
-            supportingText = { Text(Strings.authPasswordMinLength) },
+            supportingText = { Text(AppStringsProvider.current().authPasswordMinLength) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -1006,10 +1006,10 @@ private fun ForgotPasswordForm(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
-            Text(Strings.authResetPasswordBtn)
+            Text(AppStringsProvider.current().authResetPasswordBtn)
         }
 
-        // 返回登录
+        // back
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1017,13 +1017,13 @@ private fun ForgotPasswordForm(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = Strings.authRememberPassword,
+                text = AppStringsProvider.current().authRememberPassword,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = Strings.authBackToLogin,
+                text = AppStringsProvider.current().authBackToLogin,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,

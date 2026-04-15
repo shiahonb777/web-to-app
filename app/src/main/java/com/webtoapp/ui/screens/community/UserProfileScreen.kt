@@ -37,13 +37,13 @@ import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.TeamWorkItem
 import com.webtoapp.core.cloud.UserActivityInfo
 import com.webtoapp.ui.viewmodel.CommunityViewModel
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.UserTitleBadges
 import androidx.compose.ui.graphics.Color
 
 /**
- * 用户主页 — 全面对接所有 API 数据，精致 UI
+ * userhome- API, UI
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -190,9 +190,9 @@ fun UserProfileScreen(
                                                 else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f)
                                             ) {
                                                 Text(
-                                                    if (act.isOnline) Strings.communityOnline else {
-                                                        act.lastSeenAt?.let { String.format(Strings.communityLastSeen, formatTimeAgo(it)) }
-                                                            ?: Strings.communityOffline
+                                                    if (act.isOnline) AppStringsProvider.current().communityOnline else {
+                                                        act.lastSeenAt?.let { String.format(AppStringsProvider.current().communityLastSeen, formatTimeAgo(it)) }
+                                                            ?: AppStringsProvider.current().communityOffline
                                                     },
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                                     fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
@@ -229,7 +229,7 @@ fun UserProfileScreen(
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                                             Spacer(Modifier.width(4.dp))
                                             Text(
-                                                String.format(Strings.communityJoined, formatDate(it)),
+                                                String.format(AppStringsProvider.current().communityJoined, formatDate(it)),
                                                 fontSize = 13.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                             )
@@ -240,21 +240,21 @@ fun UserProfileScreen(
                                     Spacer(Modifier.height(14.dp))
                                     Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                                         StatLabel(
-                                            user.followingCount, Strings.communityFollowing,
+                                            user.followingCount, AppStringsProvider.current().communityFollowing,
                                             onClick = {
                                                 communityViewModel.loadUserFollowing(userId)
                                                 showFollowingSheet = true
                                             }
                                         )
                                         StatLabel(
-                                            user.followerCount, Strings.communityFollowers,
+                                            user.followerCount, AppStringsProvider.current().communityFollowers,
                                             onClick = {
                                                 communityViewModel.loadUserFollowers(userId)
                                                 showFollowersSheet = true
                                             }
                                         )
-                                        StatLabel(user.appCount, Strings.communityApps)
-                                        StatLabel(user.moduleCount, Strings.communityModules)
+                                        StatLabel(user.appCount, AppStringsProvider.current().communityApps)
+                                        StatLabel(user.moduleCount, AppStringsProvider.current().communityModules)
                                     }
                                 }
                             }
@@ -275,21 +275,21 @@ fun UserProfileScreen(
                                             ) {
                                                 OnlineTimeCard(
                                                     icon = Icons.Outlined.Today,
-                                                    label = Strings.communityTodayOnline,
+                                                    label = AppStringsProvider.current().communityTodayOnline,
                                                     value = formatDuration(act.todaySeconds),
                                                     accent = Color(0xFF42A5F5),
                                                     modifier = Modifier.weight(1f)
                                                 )
                                                 OnlineTimeCard(
                                                     icon = Icons.Outlined.DateRange,
-                                                    label = Strings.communityMonthOnline,
+                                                    label = AppStringsProvider.current().communityMonthOnline,
                                                     value = formatDuration(act.monthSeconds),
                                                     accent = Color(0xFF66BB6A),
                                                     modifier = Modifier.weight(1f)
                                                 )
                                                 OnlineTimeCard(
                                                     icon = Icons.Outlined.CalendarMonth,
-                                                    label = Strings.communityYearOnline,
+                                                    label = AppStringsProvider.current().communityYearOnline,
                                                     value = formatDuration(act.yearSeconds),
                                                     accent = Color(0xFFFFB74D),
                                                     modifier = Modifier.weight(1f)
@@ -309,10 +309,10 @@ fun UserProfileScreen(
                             val tabIndex = if (userActivity != null) 2 else 1
                             StaggeredItem(index = tabIndex) {
                                 val tabs = listOf(
-                                    Triple(Icons.Outlined.Extension, Strings.communityModules, modules.size),
-                                    Triple(Icons.Outlined.Groups, Strings.communityTeamWorks, teamWorks.size),
-                                    Triple(Icons.Outlined.Forum, Strings.communityPosts, userPosts.size),
-                                    Triple(Icons.Outlined.Timeline, Strings.communityActivity, -1)
+                                    Triple(Icons.Outlined.Extension, AppStringsProvider.current().communityModules, modules.size),
+                                    Triple(Icons.Outlined.Groups, AppStringsProvider.current().communityTeamWorks, teamWorks.size),
+                                    Triple(Icons.Outlined.Forum, AppStringsProvider.current().communityPosts, userPosts.size),
+                                    Triple(Icons.Outlined.Timeline, AppStringsProvider.current().communityActivity, -1)
                                 )
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -366,7 +366,7 @@ fun UserProfileScreen(
                             0 -> {
                                 // ── Modules ──
                                 if (modules.isEmpty()) {
-                                    item { EmptyState(Icons.Outlined.Extension, Strings.communityNoModulesYet, Strings.communityNoModulesHint) }
+                                    item { EmptyState(Icons.Outlined.Extension, AppStringsProvider.current().communityNoModulesYet, AppStringsProvider.current().communityNoModulesHint) }
                                 }
                                 itemsIndexed(modules, key = { _, m -> m.id }) { index, module ->
                                     StaggeredItem(index = index + 3) {
@@ -378,7 +378,7 @@ fun UserProfileScreen(
                             1 -> {
                                 // ── Team Works ──
                                 if (teamWorks.isEmpty()) {
-                                    item { EmptyState(Icons.Outlined.Groups, Strings.communityNoTeamWorksYet, Strings.communityNoTeamWorksHint) }
+                                    item { EmptyState(Icons.Outlined.Groups, AppStringsProvider.current().communityNoTeamWorksYet, AppStringsProvider.current().communityNoTeamWorksHint) }
                                 }
                                 itemsIndexed(teamWorks, key = { _, w -> "tw_${w.id}" }) { index, work ->
                                     StaggeredItem(index = index + 3) {
@@ -390,7 +390,7 @@ fun UserProfileScreen(
                             2 -> {
                                 // ── Posts ──
                                 if (userPosts.isEmpty()) {
-                                    item { EmptyState(Icons.Outlined.Forum, Strings.communityNoPosts, null) }
+                                    item { EmptyState(Icons.Outlined.Forum, AppStringsProvider.current().communityNoPosts, null) }
                                 }
                                 itemsIndexed(userPosts, key = { _, p -> "post_${p.id}" }) { index, post ->
                                     StaggeredItem(index = index + 3) {
@@ -405,7 +405,7 @@ fun UserProfileScreen(
                                     StaggeredItem(index = 3) {
                                         userActivity?.let { act ->
                                             ActivityCard(act, user.displayName ?: user.username)
-                                        } ?: EmptyState(Icons.Outlined.Timeline, Strings.communityNoActivityData, null)
+                                        } ?: EmptyState(Icons.Outlined.Timeline, AppStringsProvider.current().communityNoActivityData, null)
                                     }
                                 }
                             }
@@ -422,9 +422,9 @@ fun UserProfileScreen(
     // ─── Followers Sheet ───
     if (showFollowersSheet) {
         FollowerListSheet(
-            title = Strings.communityFollowersList,
+            title = AppStringsProvider.current().communityFollowersList,
             users = followersList,
-            emptyText = Strings.communityNoFollowers,
+            emptyText = AppStringsProvider.current().communityNoFollowers,
             onDismiss = { showFollowersSheet = false },
             onUserClick = { uid ->
                 showFollowersSheet = false
@@ -436,9 +436,9 @@ fun UserProfileScreen(
     // ─── Following Sheet ───
     if (showFollowingSheet) {
         FollowerListSheet(
-            title = Strings.communityFollowingList,
+            title = AppStringsProvider.current().communityFollowingList,
             users = followingList,
-            emptyText = Strings.communityNoFollowing,
+            emptyText = AppStringsProvider.current().communityNoFollowing,
             onDismiss = { showFollowingSheet = false },
             onUserClick = { uid ->
                 showFollowingSheet = false
@@ -542,15 +542,15 @@ private fun ActivityCard(act: UserActivityInfo, userName: String) {
                     ) {}
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (act.isOnline) "$userName ${Strings.communityOnline}"
-                        else "$userName ${Strings.communityOffline}",
+                        if (act.isOnline) "$userName ${AppStringsProvider.current().communityOnline}"
+                        else "$userName ${AppStringsProvider.current().communityOffline}",
                         fontWeight = FontWeight.Bold, fontSize = 16.sp
                     )
                 }
                 act.lastSeenAt?.let {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "${String.format(Strings.communityLastSeen, formatTimeAgo(it))}",
+                        "${String.format(AppStringsProvider.current().communityLastSeen, formatTimeAgo(it))}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -559,21 +559,21 @@ private fun ActivityCard(act: UserActivityInfo, userName: String) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OnlineTimeCard(
                         icon = Icons.Outlined.Today,
-                        label = Strings.communityTodayOnline,
+                        label = AppStringsProvider.current().communityTodayOnline,
                         value = formatDuration(act.todaySeconds),
                         accent = Color(0xFF42A5F5),
                         modifier = Modifier.weight(1f)
                     )
                     OnlineTimeCard(
                         icon = Icons.Outlined.DateRange,
-                        label = Strings.communityMonthOnline,
+                        label = AppStringsProvider.current().communityMonthOnline,
                         value = formatDuration(act.monthSeconds),
                         accent = Color(0xFF66BB6A),
                         modifier = Modifier.weight(1f)
                     )
                     OnlineTimeCard(
                         icon = Icons.Outlined.CalendarMonth,
-                        label = Strings.communityYearOnline,
+                        label = AppStringsProvider.current().communityYearOnline,
                         value = formatDuration(act.yearSeconds),
                         accent = Color(0xFFFFB74D),
                         modifier = Modifier.weight(1f)
@@ -602,7 +602,7 @@ private fun SpringFollowButton(isFollowing: Boolean, onClick: () -> Unit) {
             shape = RoundedCornerShape(20.dp),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
             modifier = Modifier.scale(scale)
-        ) { Text(Strings.communityFollowing, fontSize = 14.sp, fontWeight = FontWeight.SemiBold) }
+        ) { Text(AppStringsProvider.current().communityFollowing, fontSize = 14.sp, fontWeight = FontWeight.SemiBold) }
     } else {
         PremiumButton(
             onClick = { pressed = true; onClick() },
@@ -613,7 +613,7 @@ private fun SpringFollowButton(isFollowing: Boolean, onClick: () -> Unit) {
                 containerColor = MaterialTheme.colorScheme.onSurface,
                 contentColor = MaterialTheme.colorScheme.surface
             )
-        ) { Text(Strings.communityFollow, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+        ) { Text(AppStringsProvider.current().communityFollow, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
     }
 }
 
@@ -723,7 +723,7 @@ private fun ModuleRow(module: CommunityModuleDetail, onClick: () -> Unit) {
                         shape = RoundedCornerShape(4.dp),
                         color = Color(0xFFFFB300).copy(alpha = 0.12f)
                     ) {
-                        Text(Strings.communityFeatured, modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                        Text(AppStringsProvider.current().communityFeatured, modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                             fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFB300))
                     }
                 }
@@ -780,7 +780,7 @@ private fun TeamWorkRow(work: TeamWorkItem, onClick: () -> Unit) {
                     else MaterialTheme.colorScheme.surfaceContainerHighest
                 ) {
                     Text(
-                        if (work.contributorRole == "lead") Strings.communityLead else Strings.communityMember,
+                        if (work.contributorRole == "lead") AppStringsProvider.current().communityLead else AppStringsProvider.current().communityMember,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         fontSize = 10.sp, fontWeight = FontWeight.Bold,
                         color = if (work.contributorRole == "lead") Color(0xFFFFB300)
@@ -788,7 +788,7 @@ private fun TeamWorkRow(work: TeamWorkItem, onClick: () -> Unit) {
                     )
                 }
                 if (work.contributionPoints > 0) {
-                    Text(String.format(Strings.communityPoints, work.contributionPoints), fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                    Text(String.format(AppStringsProvider.current().communityPoints, work.contributionPoints), fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                 }
                 work.teamName?.let {

@@ -21,20 +21,20 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.AppColors
 
-// ========== 控制台相关组件 ==========
+// ========== related ==========
 
 /**
- * 控制台日志级别
+ * Note
  */
 enum class ConsoleLevel {
     LOG, INFO, WARNING, ERROR, DEBUG
 }
 
 /**
- * 控制台日志条目
+ * Note
  */
 data class ConsoleLogEntry(
     val level: ConsoleLevel,
@@ -45,7 +45,7 @@ data class ConsoleLogEntry(
 )
 
 /**
- * 控制台面板
+ * panel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +64,7 @@ fun ConsolePanel(
     val context = LocalContext.current
     val timeFormat = remember { java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()) }
     
-    // Theme颜色
+    // Themecolor
     val surfaceColor = MaterialTheme.colorScheme.surface
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
     val onSurface = MaterialTheme.colorScheme.onSurface
@@ -72,14 +72,14 @@ fun ConsolePanel(
     val primary = MaterialTheme.colorScheme.primary
     val errorColor = MaterialTheme.colorScheme.error
     
-    // Auto滚动到底部
+    // Autoscroll bottom
     LaunchedEffect(consoleMessages.size) {
         if (consoleMessages.isNotEmpty()) {
             listState.animateScrollToItem(consoleMessages.size - 1)
         }
     }
     
-    // 固定高度，确保可以滑动
+    // , ensure
     val panelHeight = if (isExpanded) 350.dp else 200.dp
     
     Surface(
@@ -91,7 +91,7 @@ fun ConsolePanel(
         shadowElevation = 8.dp
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 头部工具栏
+            // header
             Surface(
                 color = surfaceVariant,
                 modifier = Modifier.fillMaxWidth()
@@ -114,11 +114,11 @@ fun ConsolePanel(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            Strings.console,
+                            AppStringsProvider.current().console,
                             style = MaterialTheme.typography.titleSmall,
                             color = onSurface
                         )
-                        // Error/警告计数
+                        // Error/warning
                         val errorCount = consoleMessages.count { it.level == ConsoleLevel.ERROR }
                         val warnCount = consoleMessages.count { it.level == ConsoleLevel.WARNING }
                         if (errorCount > 0) {
@@ -134,40 +134,40 @@ fun ConsolePanel(
                     }
                     
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        // Copy全部
+                        // Copyall
                         IconButton(
                             onClick = {
                                 val allLogs = consoleMessages.joinToString("\n") { entry ->
                                     "[${timeFormat.format(java.util.Date(entry.timestamp))}] [${entry.level}] ${entry.message}"
                                 }
                                 clipboardManager.setText(AnnotatedString(allLogs))
-                                Toast.makeText(context, Strings.copiedAllLogs, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedAllLogs, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(36.dp)
                         ) {
-                            Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.copy, tint = onSurfaceVariant)
+                            Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().copy, tint = onSurfaceVariant)
                         }
-                        // 清空
+                        // Note
                         IconButton(onClick = onClear, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Outlined.Delete, contentDescription = Strings.clean, tint = onSurfaceVariant)
+                            Icon(Icons.Outlined.Delete, contentDescription = AppStringsProvider.current().clean, tint = onSurfaceVariant)
                         }
-                        // Expand/收起
+                        // Expand/
                         IconButton(onClick = onExpandToggle, modifier = Modifier.size(36.dp)) {
                             Icon(
                                 if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-                                if (isExpanded) Strings.close else Strings.more,
+                                if (isExpanded) AppStringsProvider.current().close else AppStringsProvider.current().more,
                                 tint = onSurfaceVariant
                             )
                         }
-                        // 关闭
+                        // close
                         IconButton(onClick = onClose, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Close, Strings.close, tint = onSurfaceVariant)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close, tint = onSurfaceVariant)
                         }
                     }
                 }
             }
             
-            // 控制台消息列表
+            // messagelist
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -187,7 +187,7 @@ fun ConsolePanel(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                                Strings.noConsoleMessages,
+                                AppStringsProvider.current().noConsoleMessages,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = onSurfaceVariant.copy(alpha = 0.5f)
                             )
@@ -206,7 +206,7 @@ fun ConsolePanel(
                                 timeFormat = timeFormat,
                                 onCopy = {
                                     clipboardManager.setText(AnnotatedString(entry.message))
-                                    Toast.makeText(context, Strings.msgCopied, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().msgCopied, Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -214,7 +214,7 @@ fun ConsolePanel(
                 }
             }
             
-            // Script输入区
+            // Scriptinput
             Surface(
                 color = surfaceVariant,
                 modifier = Modifier.fillMaxWidth()
@@ -237,7 +237,7 @@ fun ConsolePanel(
                         onValueChange = { scriptInput = it },
                         placeholder = { 
                             Text(
-                                Strings.inputJavaScript,
+                                AppStringsProvider.current().inputJavaScript,
                                 style = MaterialTheme.typography.bodySmall
                             ) 
                         },
@@ -258,7 +258,7 @@ fun ConsolePanel(
                         },
                         enabled = scriptInput.isNotBlank()
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = Strings.run)
+                        Icon(Icons.Default.PlayArrow, contentDescription = AppStringsProvider.current().run)
                     }
                 }
             }
@@ -315,7 +315,7 @@ private fun ConsoleLogItem(
                 tint = textColor
             )
             
-            // 消息内容
+            // messagecontent
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 SelectionContainer {
                     Text(
@@ -328,7 +328,7 @@ private fun ConsoleLogItem(
                     )
                 }
                 
-                // 来源信息
+                // Note
                 Text(
                     "${entry.source}:${entry.lineNumber} • ${timeFormat.format(java.util.Date(entry.timestamp))}",
                     style = MaterialTheme.typography.labelSmall,
@@ -337,7 +337,7 @@ private fun ConsoleLogItem(
                 )
             }
             
-            // Copy按钮
+            // Copybutton
             IconButton(
                 onClick = onCopy,
                 modifier = Modifier.size(28.dp)

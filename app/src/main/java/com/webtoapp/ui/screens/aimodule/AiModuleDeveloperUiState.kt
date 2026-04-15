@@ -5,118 +5,118 @@ import com.webtoapp.core.extension.agent.*
 import com.webtoapp.data.model.SavedModel
 
 /**
- * AI 模块开发器 UI 状态
+ * AI module UI state
  * 
- * 包含所有 UI 状态字段，用于驱动 AiModuleDeveloperScreen 的显示
+ * UI state, for AiModuleDeveloperScreen display
  * 
  * Requirements: 4.1
  */
 data class AiModuleDeveloperUiState(
-    // ==================== 模型选择 ====================
+    // ==================== select ====================
     /**
-     * 当前选中的模型
+     * current in
      */
     val selectedModel: SavedModel? = null,
     
     /**
-     * 可用的模型列表（已过滤支持 MODULE_DEVELOPMENT 的模型）
+     * list( support MODULE_DEVELOPMENT)
      */
     val availableModels: List<SavedModel> = emptyList(),
     
     /**
-     * 是否显示模型选择器下拉菜单
+     * display select
      */
     val showModelSelector: Boolean = false,
     
-    // ==================== 输入 ====================
+    // ==================== input ====================
     /**
-     * 用户输入的需求描述
+     * userinput
      */
     val userInput: String = "",
     
     /**
-     * 选中的模块分类
+     * inmodule
      */
     val selectedCategory: ModuleCategory? = null,
     
     /**
-     * 是否显示分类选择器
+     * display select
      */
     val showCategorySelector: Boolean = false,
     
-    // ==================== 对话 ====================
+    // Note
     /**
-     * 对话消息列表
+     * messagelist
      */
     val messages: List<ConversationMessage> = emptyList(),
     
     /**
-     * 是否正在流式输出
+     * output
      */
     val isStreaming: Boolean = false,
     
     /**
-     * 当前流式输出的内容
+     * current output content
      */
     val streamingContent: String = "",
     
     /**
-     * 当前思考内容
+     * current content
      */
     val thinkingContent: String = "",
     
-    // ==================== 工具调用 ====================
+    // ==================== call ====================
     /**
-     * 当前工具调用列表
+     * current calllist
      */
     val currentToolCalls: List<ToolCallInfo> = emptyList(),
     
-    // ==================== 生成结果 ====================
+    // Note
     /**
-     * 生成的模块数据
+     * module
      */
     val generatedModule: GeneratedModuleData? = null,
     
     /**
-     * 编辑后的 JavaScript 代码
+     * edit JavaScript code
      */
     val editedJsCode: String = "",
     
     /**
-     * 编辑后的 CSS 代码
+     * edit CSS code
      */
     val editedCssCode: String = "",
     
     /**
-     * 是否有未保存的编辑
+     * save edit
      */
     val hasEdits: Boolean = false,
     
-    // ==================== 状态 ====================
+    // ==================== state ====================
     /**
-     * Agent 当前状态
+     * Agent currentstate
      */
     val agentState: AgentState = AgentState.IDLE,
     
     /**
-     * 错误信息
+     * error
      */
     val error: ErrorInfo? = null,
     
-    // ==================== 滚动 ====================
+    // ==================== scroll ====================
     /**
-     * 是否应该自动滚动到底部
+     * scroll bottom
      */
     val shouldAutoScroll: Boolean = true,
     
-    // ==================== 对话框 ====================
+    // ==================== dialog ====================
     /**
-     * 是否显示帮助对话框
+     * displayhelpdialog
      */
     val showHelpDialog: Boolean = false
 ) {
     /**
-     * 是否正在开发中（非空闲、非完成、非错误状态）
+     * ( , , errorstate)
      */
     val isDeveloping: Boolean
         get() = agentState != AgentState.IDLE && 
@@ -124,19 +124,19 @@ data class AiModuleDeveloperUiState(
                 agentState != AgentState.ERROR
     
     /**
-     * 是否可以发送消息
+     * message
      */
     val canSend: Boolean
         get() = userInput.isNotBlank() && !isDeveloping
     
     /**
-     * 是否显示欢迎界面
+     * displaywelcome
      */
     val showWelcome: Boolean
         get() = messages.isEmpty() && generatedModule == null && error == null && !isDeveloping
     
     /**
-     * 获取用于保存的代码（优先使用编辑后的代码）
+     * save code( prefer edit code)
      */
     fun getCodeForSave(): Pair<String, String> {
         val jsCode = if (hasEdits && editedJsCode.isNotBlank()) {
@@ -156,107 +156,107 @@ data class AiModuleDeveloperUiState(
 }
 
 /**
- * 对话消息
+ * message
  * 
- * 用于在聊天界面显示的消息
+ * for display message
  */
 data class ConversationMessage(
     /**
-     * 消息 ID
+     * message ID
      */
     val id: String = java.util.UUID.randomUUID().toString(),
     
     /**
-     * 消息角色
+     * message
      */
     val role: MessageRole,
     
     /**
-     * 消息内容
+     * messagecontent
      */
     val content: String,
     
     /**
-     * 思考内容（仅 AI 消息）
+     * content( only AI message)
      */
     val thinkingContent: String? = null,
     
     /**
-     * 工具调用列表（仅 AI 消息）
+     * calllist( only AI message)
      */
     val toolCalls: List<ToolCallInfo> = emptyList(),
     
     /**
-     * 生成的模块（仅 AI 消息）
+     * module( only AI message)
      */
     val generatedModule: GeneratedModuleData? = null,
     
     /**
-     * 时间戳
+     * Note
      */
     val timestamp: Long = System.currentTimeMillis(),
     
     /**
-     * 是否正在流式输出
+     * output
      */
     val isStreaming: Boolean = false
 )
 
 /**
- * 错误信息
+ * error
  * 
- * 用于显示错误状态和恢复选项
+ * showerrorstate
  */
 data class ErrorInfo(
     /**
-     * 错误消息
+     * errormessage
      */
     val message: String,
     
     /**
-     * 错误码
+     * error
      */
     val code: String? = null,
     
     /**
-     * 是否可恢复
+     * Note
      */
     val recoverable: Boolean = true,
     
     /**
-     * 原始响应（用于调试）
+     * ( for)
      */
     val rawResponse: String? = null
 )
 
 /**
- * UI 事件
+ * UI
  * 
- * 用于 ViewModel 向 UI 发送一次性事件
+ * for ViewModel UI
  */
 sealed class AiModuleDeveloperEvent {
     /**
-     * 显示 Toast 消息
+     * display Toast message
      */
     data class ShowToast(val message: String) : AiModuleDeveloperEvent()
     
     /**
-     * 滚动到底部
+     * scroll bottom
      */
     object ScrollToBottom : AiModuleDeveloperEvent()
     
     /**
-     * 模块创建成功
+     * modulecreatesuccess
      */
     data class ModuleCreated(val moduleId: String) : AiModuleDeveloperEvent()
     
     /**
-     * 导航到 AI 设置
+     * AI settings
      */
     object NavigateToAiSettings : AiModuleDeveloperEvent()
     
     /**
-     * 复制到剪贴板
+     * Note
      */
     data class CopyToClipboard(val content: String) : AiModuleDeveloperEvent()
 }

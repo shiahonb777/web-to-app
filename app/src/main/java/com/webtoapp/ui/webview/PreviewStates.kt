@@ -1,7 +1,7 @@
 package com.webtoapp.ui.webview
 
 /**
- * WordPress 预览状态
+ * WordPress previewstate
  */
 sealed class WordPressPreviewState {
     object Idle : WordPressPreviewState()
@@ -14,7 +14,7 @@ sealed class WordPressPreviewState {
 }
 
 /**
- * PHP 应用预览状态
+ * PHP apppreviewstate
  */
 sealed class PhpAppPreviewState {
     object Idle : PhpAppPreviewState()
@@ -26,7 +26,7 @@ sealed class PhpAppPreviewState {
 }
 
 /**
- * Python 应用预览状态
+ * Python apppreviewstate
  */
 sealed class PythonAppPreviewState {
     object Idle : PythonAppPreviewState()
@@ -38,7 +38,7 @@ sealed class PythonAppPreviewState {
 }
 
 /**
- * Node.js 应用预览状态
+ * Node. js apppreviewstate
  */
 sealed class NodeJsAppPreviewState {
     object Idle : NodeJsAppPreviewState()
@@ -48,7 +48,7 @@ sealed class NodeJsAppPreviewState {
 }
 
 /**
- * Go 应用预览状态
+ * Go apppreviewstate
  */
 sealed class GoAppPreviewState {
     object Idle : GoAppPreviewState()
@@ -59,7 +59,7 @@ sealed class GoAppPreviewState {
 }
 
 /**
- * 格式化字节数为人类可读的文件大小
+ * file
  */
 fun formatWpBytes(bytes: Long): String {
     if (bytes <= 0) return "0 B"

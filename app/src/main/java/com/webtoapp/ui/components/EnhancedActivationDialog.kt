@@ -27,13 +27,12 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.activation.ActivationCodeType
 import com.webtoapp.core.activation.ActivationStatus
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.util.threadLocalCompat
 import java.text.SimpleDateFormat
 import java.util.*
-
 /**
- * 增强版激活码对话框 - 高级视觉设计，状态信息丰富
+ * enhancedactivation codedialog- advanced, state
  */
 @Composable
 fun EnhancedActivationDialog(
@@ -64,8 +63,8 @@ fun EnhancedActivationDialog(
             ) {
                 // ── Header with icon ──
                 ActivationDialogHeader(
-                    title = customTitle.ifBlank { Strings.activateApp },
-                    subtitle = customSubtitle.ifBlank { Strings.enterActivationCodeToContinue },
+                    title = customTitle.ifBlank { AppStringsProvider.current().activateApp },
+                    subtitle = customSubtitle.ifBlank { AppStringsProvider.current().enterActivationCodeToContinue },
                     isLoading = isLoading,
                     result = activationResult
                 )
@@ -91,8 +90,8 @@ fun EnhancedActivationDialog(
                             error = null
                             activationResult = null
                         },
-                        label = { Text(customInputLabel.ifBlank { Strings.inputActivationCode }) },
-                        placeholder = { Text(Strings.activationCodeExample) },
+                        label = { Text(customInputLabel.ifBlank { AppStringsProvider.current().inputActivationCode }) },
+                        placeholder = { Text(AppStringsProvider.current().activationCodeExample) },
                         leadingIcon = {
                             Icon(
                                 Icons.Outlined.Key,
@@ -123,7 +122,7 @@ fun EnhancedActivationDialog(
                 PremiumButton(
                     onClick = {
                         if (code.isBlank()) {
-                            error = Strings.pleaseEnterActivationCode
+                            error = AppStringsProvider.current().pleaseEnterActivationCode
                         } else {
                             isLoading = true
                             error = null
@@ -148,7 +147,7 @@ fun EnhancedActivationDialog(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        customButtonText.ifBlank { Strings.activate },
+                        customButtonText.ifBlank { AppStringsProvider.current().activate },
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -156,7 +155,7 @@ fun EnhancedActivationDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -257,8 +256,8 @@ private fun ActivationDialogHeader(
         // Title
         Text(
             text = when (result) {
-                is ActivationResult.Success -> Strings.activationSuccess
-                is ActivationResult.AlreadyActivated -> Strings.appAlreadyActivated
+                is ActivationResult.Success -> AppStringsProvider.current().activationSuccess
+                is ActivationResult.AlreadyActivated -> AppStringsProvider.current().appAlreadyActivated
                 else -> title
             },
             style = MaterialTheme.typography.headlineSmall,
@@ -271,8 +270,8 @@ private fun ActivationDialogHeader(
         // Subtitle
         Text(
             text = when (result) {
-                is ActivationResult.Success -> Strings.activationSuccessHint
-                is ActivationResult.AlreadyActivated -> Strings.appAlreadyActivatedHint
+                is ActivationResult.Success -> AppStringsProvider.current().activationSuccessHint
+                is ActivationResult.AlreadyActivated -> AppStringsProvider.current().appAlreadyActivatedHint
                 else -> subtitle
             },
             style = MaterialTheme.typography.bodyMedium,
@@ -292,48 +291,48 @@ private fun ActivationResultCard(result: ActivationResult) {
     val (icon, title, message, containerColor, contentColor, suggestion) = when (result) {
         is ActivationResult.Success -> ResultCardData(
             icon = Icons.Filled.CheckCircle,
-            title = Strings.activationSuccess,
-            message = Strings.activationSuccessDetail,
+            title = AppStringsProvider.current().activationSuccess,
+            message = AppStringsProvider.current().activationSuccessDetail,
             containerColor = Color(0xFF1B5E20).copy(alpha = 0.1f),
             contentColor = Color(0xFF2E7D32),
             suggestion = null
         )
         is ActivationResult.Invalid -> ResultCardData(
             icon = Icons.Filled.Cancel,
-            title = Strings.invalidActivationCode,
-            message = result.message.ifBlank { Strings.invalidActivationCode },
+            title = AppStringsProvider.current().invalidActivationCode,
+            message = result.message.ifBlank { AppStringsProvider.current().invalidActivationCode },
             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
             contentColor = MaterialTheme.colorScheme.error,
-            suggestion = Strings.invalidCodeSuggestion
+            suggestion = AppStringsProvider.current().invalidCodeSuggestion
         )
         is ActivationResult.DeviceMismatch -> ResultCardData(
             icon = Icons.Filled.PhonelinkErase,
-            title = Strings.activationCodeBoundToOtherDevice,
-            message = Strings.deviceMismatchDetail,
+            title = AppStringsProvider.current().activationCodeBoundToOtherDevice,
+            message = AppStringsProvider.current().deviceMismatchDetail,
             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
             contentColor = MaterialTheme.colorScheme.error,
-            suggestion = Strings.deviceMismatchSuggestion
+            suggestion = AppStringsProvider.current().deviceMismatchSuggestion
         )
         is ActivationResult.Expired -> ResultCardData(
             icon = Icons.Filled.TimerOff,
-            title = Strings.activationCodeExpired,
-            message = Strings.expiredDetail,
+            title = AppStringsProvider.current().activationCodeExpired,
+            message = AppStringsProvider.current().expiredDetail,
             containerColor = Color(0xFFF57F17).copy(alpha = 0.1f),
             contentColor = Color(0xFFE65100),
-            suggestion = Strings.expiredSuggestion
+            suggestion = AppStringsProvider.current().expiredSuggestion
         )
         is ActivationResult.UsageExceeded -> ResultCardData(
             icon = Icons.Filled.Block,
-            title = Strings.activationCodeUsageExceeded,
-            message = Strings.usageExceededDetail,
+            title = AppStringsProvider.current().activationCodeUsageExceeded,
+            message = AppStringsProvider.current().usageExceededDetail,
             containerColor = Color(0xFFF57F17).copy(alpha = 0.1f),
             contentColor = Color(0xFFE65100),
-            suggestion = Strings.usageExceededSuggestion
+            suggestion = AppStringsProvider.current().usageExceededSuggestion
         )
         is ActivationResult.AlreadyActivated -> ResultCardData(
             icon = Icons.Filled.Verified,
-            title = Strings.appAlreadyActivated,
-            message = Strings.alreadyActivatedDetail,
+            title = AppStringsProvider.current().appAlreadyActivated,
+            message = AppStringsProvider.current().alreadyActivatedDetail,
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
             contentColor = MaterialTheme.colorScheme.primary,
             suggestion = null
@@ -447,7 +446,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = if (isValid) Strings.activated else Strings.activationExpired,
+                        text = if (isValid) AppStringsProvider.current().activated else AppStringsProvider.current().activationExpired,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = primaryColor
@@ -475,7 +474,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
             status.activatedTime?.let { time ->
                 StatusInfoRow(
                     icon = Icons.Outlined.CalendarMonth,
-                    label = Strings.activationTime,
+                    label = AppStringsProvider.current().activationTime,
                     value = formatTime(time),
                     color = primaryColor
                 )
@@ -489,8 +488,8 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                     val hours = (remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)
                     StatusInfoRow(
                         icon = Icons.Outlined.Timer,
-                        label = Strings.remainingTime,
-                        value = "${days}${Strings.days} ${hours}${Strings.hours}",
+                        label = AppStringsProvider.current().remainingTime,
+                        value = "${days}${AppStringsProvider.current().days} ${hours}${AppStringsProvider.current().hours}",
                         color = primaryColor
                     )
                     // Time progress bar
@@ -513,7 +512,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                 } else {
                     StatusInfoRow(
                         icon = Icons.Outlined.EventBusy,
-                        label = Strings.expireTime,
+                        label = AppStringsProvider.current().expireTime,
                         value = formatTime(it),
                         color = MaterialTheme.colorScheme.error
                     )
@@ -525,7 +524,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                 val remaining = status.remainingUsage ?: 0
                 StatusInfoRow(
                     icon = Icons.Outlined.ConfirmationNumber,
-                    label = Strings.remainingUsage,
+                    label = AppStringsProvider.current().remainingUsage,
                     value = "$remaining / $limit",
                     color = primaryColor
                 )
@@ -545,7 +544,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
             status.deviceId?.let {
                 StatusInfoRow(
                     icon = Icons.Outlined.PhonelinkLock,
-                    label = Strings.deviceBound,
+                    label = AppStringsProvider.current().deviceBound,
                     value = "",
                     color = primaryColor
                 )
@@ -603,11 +602,11 @@ private data class ResultCardData(
 )
 
 private fun getStatusTypeName(type: ActivationCodeType): String = when (type) {
-    ActivationCodeType.PERMANENT -> Strings.activationTypePermanent
-    ActivationCodeType.TIME_LIMITED -> Strings.activationTypeTimeLimited
-    ActivationCodeType.USAGE_LIMITED -> Strings.activationTypeUsageLimited
-    ActivationCodeType.DEVICE_BOUND -> Strings.activationTypeDeviceBound
-    ActivationCodeType.COMBINED -> Strings.activationTypeCombined
+    ActivationCodeType.PERMANENT -> AppStringsProvider.current().activationTypePermanent
+    ActivationCodeType.TIME_LIMITED -> AppStringsProvider.current().activationTypeTimeLimited
+    ActivationCodeType.USAGE_LIMITED -> AppStringsProvider.current().activationTypeUsageLimited
+    ActivationCodeType.DEVICE_BOUND -> AppStringsProvider.current().activationTypeDeviceBound
+    ActivationCodeType.COMBINED -> AppStringsProvider.current().activationTypeCombined
 }
 
 private val ACTIVATION_DATE_FORMAT = threadLocalCompat {

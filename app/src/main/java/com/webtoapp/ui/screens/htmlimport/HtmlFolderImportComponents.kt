@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.data.model.HtmlConfig
@@ -59,8 +60,8 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 文件夹导入区域
- * 复用 ZIP 导入的 UI 模式和数据结构
+ * file importarea
+ * ZIP import UI mode
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -75,7 +76,7 @@ internal fun FolderImportSection(
     onReimport: () -> Unit
 ) {
     if (folderImporting) {
-        // 导入中
+        // import
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -86,16 +87,16 @@ internal fun FolderImportSection(
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = Strings.folderImporting,
+                    text = AppStringsProvider.current().folderImporting,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
     } else if (folderAnalysis != null) {
-        // 分析结果展示（复用 ZIP 分析结果的 UI 结构）
+        // ( ZIP UI)
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // 标题 + 重新选择按钮
+                // + selectbutton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -118,7 +119,7 @@ internal fun FolderImportSection(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = Strings.zipProjectAnalysis,
+                            text = AppStringsProvider.current().zipProjectAnalysis,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -129,13 +130,13 @@ internal fun FolderImportSection(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.zipReimport, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().zipReimport, style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 入口文件
+                // file
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -154,7 +155,7 @@ internal fun FolderImportSection(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = Strings.zipEntryFile,
+                            text = AppStringsProvider.current().zipEntryFile,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -170,7 +171,7 @@ internal fun FolderImportSection(
                     if (folderAnalysis.htmlFiles.size > 1) {
                         Icon(
                             Icons.Outlined.SwapHoriz,
-                            contentDescription = Strings.zipChangeEntry,
+                            contentDescription = AppStringsProvider.current().zipChangeEntry,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -179,15 +180,15 @@ internal fun FolderImportSection(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 资源统计
+                // Note
                 Text(
-                    text = Strings.zipResourceStats,
+                    text = AppStringsProvider.current().zipResourceStats,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 资源类型标签
+                // typelabel
                 val stats = folderAnalysis.stats
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -210,41 +211,41 @@ internal fun FolderImportSection(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 文件总数和大小
+                // file
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = Strings.zipTotalFiles.replace("%d", folderAnalysis.totalFileCount.toString()),
+                        text = AppStringsProvider.current().zipTotalFiles.replace("%d", folderAnalysis.totalFileCount.toString()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = Strings.zipTotalSize.replace("%s", folderAnalysis.formattedTotalSize),
+                        text = AppStringsProvider.current().zipTotalSize.replace("%s", folderAnalysis.formattedTotalSize),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
-                // 查看文件列表按钮
+                // filelistbutton
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onShowFileList,
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Icon(
-                        Icons.Outlined.List,
+                        Icons.AutoMirrored.Outlined.List,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.zipFileTreeTitle, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().zipFileTreeTitle, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
         
-        // 警告信息
+        // warning
         if (folderAnalysis.warnings.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -276,19 +277,19 @@ internal fun FolderImportSection(
             }
         }
     } else {
-        // 初始状态：选择文件夹
+        // state: selectfile
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = Strings.folderSelectFolder,
+                    text = AppStringsProvider.current().folderSelectFolder,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = Strings.folderSelectHint,
+                    text = AppStringsProvider.current().folderSelectHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -305,10 +306,10 @@ internal fun FolderImportSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.folderSelectFolder)
+                    Text(AppStringsProvider.current().folderSelectFolder)
                 }
                 
-                // 错误信息
+                // error
                 if (folderError != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     EnhancedElevatedCard(
@@ -340,19 +341,19 @@ internal fun FolderImportSection(
     }
 }
 
-// ==================== 文件夹导入核心逻辑 ====================
+// ==================== file import ====================
 
-/** 应当跳过的文件/目录 */
+/** when file/directory */
 internal val FOLDER_SKIP_PATTERNS = setOf(
     "__MACOSX", ".DS_Store", "Thumbs.db", ".git", ".svn", ".hg",
     "node_modules", ".idea", ".vscode"
 )
 
 /**
- * 从 SAF 文件夹导入 HTML 项目
+ * from SAF file import HTML item
  * 
- * 使用 DocumentsContract API 递归遍历 SAF 文档树，
- * 将所有文件复制到本地缓存目录，然后分析项目结构。
+ * DocumentsContract API SAF,
+ * map file local directory, item.
  */
 internal fun importFolderFromSaf(
     context: android.content.Context,
@@ -364,11 +365,11 @@ internal fun importFolderFromSaf(
     }
     
     try {
-        // 递归复制 SAF 文档树到本地目录
+        // SAF localdirectory
         val docId = DocumentsContract.getTreeDocumentId(treeUri)
         val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
         
-        // 获取文件夹名称作为建议的应用名
+        // file app
         var folderName = "HTML Project"
         context.contentResolver.query(
             docUri,
@@ -382,21 +383,21 @@ internal fun importFolderFromSaf(
         
         copyDocumentTree(context, treeUri, docId, tempDir)
         
-        // 处理嵌套根目录（和 ZIP 导入一样）
+        // handle directory( ZIP import)
         val projectRoot = unwrapSingleRootDir(tempDir)
         
-        // 分析项目
+        // item
         return analyzeFolder(projectRoot, folderName)
         
     } catch (e: Exception) {
         tempDir.deleteRecursively()
         AppLogger.e("FolderImport", "文件夹导入失败", e)
-        throw RuntimeException(Strings.folderImportFailed.replace("%s", e.message ?: "Unknown"), e)
+        throw RuntimeException(AppStringsProvider.current().folderImportFailed.replace("%s", e.message ?: "Unknown"), e)
     }
 }
 
 /**
- * 递归复制 SAF 文档树到本地目录
+ * SAF localdirectory
  */
 internal fun copyDocumentTree(
     context: android.content.Context,
@@ -425,17 +426,17 @@ internal fun copyDocumentTree(
             val childName = cursor.getString(nameIndex) ?: continue
             val mimeType = cursor.getString(mimeIndex) ?: ""
             
-            // 跳过不需要的文件/目录
+            // file/directory
             if (FOLDER_SKIP_PATTERNS.any { childName.equals(it, ignoreCase = true) }) {
                 continue
             }
             
             if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
-                // 子目录：递归处理
+                // directory: handle
                 val subDir = File(targetDir, childName).apply { mkdirs() }
                 copyDocumentTree(context, treeUri, childDocId, subDir)
             } else {
-                // 文件：复制到本地
+                // file: local
                 val targetFile = File(targetDir, childName)
                 val fileUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, childDocId)
                 try {
@@ -453,7 +454,7 @@ internal fun copyDocumentTree(
 }
 
 /**
- * 如果目录中只有一个子目录，展开它（和 ZIP 导入一致的逻辑）
+ * ifdirectory directory, expand( ZIP import)
  */
 internal fun unwrapSingleRootDir(dir: File): File {
     val children = dir.listFiles() ?: return dir
@@ -464,7 +465,7 @@ internal fun unwrapSingleRootDir(dir: File): File {
     }
 }
 
-/** 文件分类扩展名集合 */
+/** file */
 internal val HTML_EXT = setOf("html", "htm", "xhtml")
 internal val CSS_EXT = setOf("css")
 internal val JS_EXT = setOf("js", "mjs", "jsx", "ts", "tsx")
@@ -475,7 +476,7 @@ internal val VIDEO_EXT = setOf("mp4", "webm", "mkv", "avi", "mov")
 internal val DATA_EXT = setOf("json", "xml", "csv", "txt", "md", "yaml", "yml")
 
 /**
- * 分析文件夹项目，复用 ZipProjectAnalysis 数据结构
+ * file item, ZipProjectAnalysis
  */
 internal fun analyzeFolder(
     projectDir: File,
@@ -502,7 +503,7 @@ internal fun analyzeFolder(
     
     val htmlFiles = allFiles.filter { it.resourceType == ZipProjectImporter.ResourceType.HTML }
     
-    // 自动识别入口文件
+    // file
     val entryFile = htmlFiles.find { it.relativePath.equals("index.html", ignoreCase = true) }?.relativePath
         ?: htmlFiles.find { it.relativePath.equals("index.htm", ignoreCase = true) }?.relativePath
         ?: htmlFiles.find { it.fileName.equals("index.html", ignoreCase = true) }?.relativePath
@@ -510,7 +511,7 @@ internal fun analyzeFolder(
         ?: htmlFiles.firstOrNull()?.relativePath
     
     if (entryFile == null && htmlFiles.isEmpty()) {
-        warnings.add(Strings.folderNoHtmlWarning)
+        warnings.add(AppStringsProvider.current().folderNoHtmlWarning)
     }
     
     if (allFiles.any { it.size > 50 * 1024 * 1024 }) {
@@ -537,11 +538,11 @@ internal fun analyzeFolder(
         totalFileCount = allFiles.size,
         totalSize = allFiles.sumOf { it.size },
         warnings = warnings,
-        zipFileName = folderName  // 复用 zipFileName 字段作为文件夹名
+        zipFileName = folderName  // zipFileName file
     )
 }
 
-/** 根据文件扩展名分类资源类型 */
+/** file type */
 internal fun classifyFileByExt(fileName: String): ZipProjectImporter.ResourceType {
     val ext = fileName.substringAfterLast('.', "").lowercase()
     return when (ext) {

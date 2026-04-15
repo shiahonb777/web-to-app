@@ -2,7 +2,7 @@ package com.webtoapp.core.extension.agent
 
 import com.google.gson.annotations.SerializedName
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
  * Agent 上下文管理
@@ -28,15 +28,15 @@ enum class AgentState(val icon: String) {
     ERROR("error");
 
     val displayName: String get() = when (this) {
-        IDLE -> Strings.agentStateIdle
-        THINKING -> Strings.agentStateThinking
-        GENERATING -> Strings.agentStateGenerating
-        TOOL_CALLING -> Strings.agentStateToolCalling
-        SYNTAX_CHECKING -> Strings.agentStateSyntaxCheck
-        FIXING -> Strings.agentStateFixing
-        SECURITY_SCANNING -> Strings.agentStateSecurityScan
-        COMPLETED -> Strings.agentStateCompleted
-        ERROR -> Strings.agentStateError
+        IDLE -> AppStringsProvider.current().agentStateIdle
+        THINKING -> AppStringsProvider.current().agentStateThinking
+        GENERATING -> AppStringsProvider.current().agentStateGenerating
+        TOOL_CALLING -> AppStringsProvider.current().agentStateToolCalling
+        SYNTAX_CHECKING -> AppStringsProvider.current().agentStateSyntaxCheck
+        FIXING -> AppStringsProvider.current().agentStateFixing
+        SECURITY_SCANNING -> AppStringsProvider.current().agentStateSecurityScan
+        COMPLETED -> AppStringsProvider.current().agentStateCompleted
+        ERROR -> AppStringsProvider.current().agentStateError
     }
 }
 
@@ -238,15 +238,15 @@ enum class ThoughtType(val icon: String) {
     ERROR("error");
 
     val displayName: String get() = when (this) {
-        ANALYSIS -> Strings.thoughtAnalysis
-        PLANNING -> Strings.thoughtPlanning
-        TOOL_CALL -> Strings.thoughtToolCall
-        TOOL_RESULT -> Strings.thoughtToolResult
-        GENERATION -> Strings.thoughtGeneration
-        REVIEW -> Strings.thoughtReview
-        FIX -> Strings.thoughtFix
-        CONCLUSION -> Strings.thoughtConclusion
-        ERROR -> Strings.agentStateError
+        ANALYSIS -> AppStringsProvider.current().thoughtAnalysis
+        PLANNING -> AppStringsProvider.current().thoughtPlanning
+        TOOL_CALL -> AppStringsProvider.current().thoughtToolCall
+        TOOL_RESULT -> AppStringsProvider.current().thoughtToolResult
+        GENERATION -> AppStringsProvider.current().thoughtGeneration
+        REVIEW -> AppStringsProvider.current().thoughtReview
+        FIX -> AppStringsProvider.current().thoughtFix
+        CONCLUSION -> AppStringsProvider.current().thoughtConclusion
+        ERROR -> AppStringsProvider.current().agentStateError
     }
 }
 

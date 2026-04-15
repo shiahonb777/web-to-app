@@ -23,14 +23,14 @@ import kotlin.math.*
 import kotlin.random.Random
 
 /**
- * 主题动画系统
- * 提供各种动画效果和交互反馈
+ * Theme animation system.
+ * Provides animation effects and interaction feedback.
  */
 
-// ==================== 动画参数获取 ====================
+// ==================== Animation Spec Helpers ====================
 
 /**
- * 根据动画风格获取弹簧规格
+ * Get spring spec by animation style.
  */
 fun getSpringSpec(style: AnimationStyle, speedMultiplier: Float = 1f): SpringSpec<Float> {
     val (dampingRatio, stiffness) = when (style) {
@@ -45,7 +45,7 @@ fun getSpringSpec(style: AnimationStyle, speedMultiplier: Float = 1f): SpringSpe
 }
 
 /**
- * 根据动画风格获取 Dp 类型的弹簧规格
+ * Get Dp spring spec by animation style.
  */
 fun getSpringSpecDp(style: AnimationStyle, speedMultiplier: Float = 1f): SpringSpec<Dp> {
     val (dampingRatio, stiffness) = when (style) {
@@ -60,7 +60,7 @@ fun getSpringSpecDp(style: AnimationStyle, speedMultiplier: Float = 1f): SpringS
 }
 
 /**
- * 根据动画风格获取 tween 动画规格
+ * Get tween spec by animation style.
  */
 fun getTweenSpec(style: AnimationStyle, speedMultiplier: Float = 1f): TweenSpec<Float> {
     val (duration, easing) = when (style) {
@@ -75,7 +75,7 @@ fun getTweenSpec(style: AnimationStyle, speedMultiplier: Float = 1f): TweenSpec<
 }
 
 /**
- * 根据动画风格获取按压时的缩放值
+ * Get press-scale value by animation style.
  */
 fun getPressedScale(style: AnimationStyle): Float {
     return when (style) {
@@ -89,7 +89,7 @@ fun getPressedScale(style: AnimationStyle): Float {
 }
 
 /**
- * 根据动画风格获取缓动曲线
+ * Get easing curve by animation style.
  */
 fun getEasing(style: AnimationStyle): Easing {
     return when (style) {
@@ -103,7 +103,7 @@ fun getEasing(style: AnimationStyle): Easing {
 }
 
 /**
- * 自定义缓动曲线
+ * Custom easing curves.
  */
 val EaseOutBounce = Easing { fraction ->
     val n1 = 7.5625f
@@ -132,10 +132,10 @@ val EaseOutBack = Easing { fraction ->
     1f + c3 * (fraction - 1f).pow(3) + c1 * (fraction - 1f).pow(2)
 }
 
-// ==================== Modifier扩展 ====================
+// ==================== Modifier Extensions ====================
 
 /**
- * 脉冲发光效果
+ * Pulse glow effect.
  */
 fun Modifier.pulseGlow(
     color: Color,
@@ -165,7 +165,7 @@ fun Modifier.pulseGlow(
 }
 
 /**
- * 闪烁效果
+ * Shimmer effect.
  */
 fun Modifier.shimmer(
     colors: List<Color>,
@@ -197,7 +197,7 @@ fun Modifier.shimmer(
 }
 
 /**
- * 悬浮效果（垂直漂浮动画）
+ * Floating effect (vertical drift animation).
  */
 fun Modifier.floatingAnimation(
     enabled: Boolean = true,
@@ -223,7 +223,7 @@ fun Modifier.floatingAnimation(
 }
 
 /**
- * 呼吸缩放效果
+ * Breathing scale effect.
  */
 fun Modifier.breathingScale(
     enabled: Boolean = true,
@@ -247,7 +247,7 @@ fun Modifier.breathingScale(
 }
 
 /**
- * 旋转光晕效果
+ * Rotating halo effect.
  */
 fun Modifier.rotatingGlow(
     colors: List<Color>,
@@ -280,7 +280,7 @@ fun Modifier.rotatingGlow(
 }
 
 /**
- * 波纹扩散背景
+ * Ripple spread background.
  */
 @Composable
 fun RippleBackground(
@@ -329,10 +329,10 @@ fun RippleBackground(
     }
 }
 
-// ==================== 粒子系统 ====================
+// ==================== Particle System ====================
 
 /**
- * 粒子数据
+ * Particle data.
  */
 data class Particle(
     var x: Float,
@@ -346,7 +346,7 @@ data class Particle(
 )
 
 /**
- * 粒子效果背景
+ * Particle effect background.
  */
 @Composable
 fun ParticleBackground(
@@ -407,14 +407,14 @@ private fun updateParticle(particle: Particle, width: Float, height: Float): Par
         life = particle.life + 1f
     )
     
-    // 边界检查和重生
+    // Bounds check and respawn
     if (newParticle.life > newParticle.maxLife ||
         newParticle.x < 0 || newParticle.x > width ||
         newParticle.y < 0 || newParticle.y > height) {
         newParticle = createParticle(width, height)
     }
     
-    // 渐变透明度
+    // Fade alpha by progress
     val lifeRatio = newParticle.life / newParticle.maxLife
     newParticle = newParticle.copy(
         alpha = (1f - lifeRatio) * 0.5f
@@ -424,7 +424,7 @@ private fun updateParticle(particle: Particle, width: Float, height: Float): Par
 }
 
 /**
- * 星星粒子效果（星空主题专用）
+ * Star particle effect (for starry theme).
  */
 @Composable
 fun StarfieldBackground(
@@ -483,7 +483,7 @@ fun StarfieldBackground(
 }
 
 /**
- * 樱花飘落效果（樱花主题专用）
+ * Sakura falling effect (for sakura theme).
  */
 @Composable
 fun SakuraPetalsBackground(
@@ -547,7 +547,7 @@ fun SakuraPetalsBackground(
     ) {
         petals.forEach { petal ->
             rotate(petal.rotation, pivot = Offset(petal.x, petal.y)) {
-                // 绘制花瓣形状
+                // Draw petal shape
                 drawOval(
                     color = petalColor.copy(alpha = 0.7f),
                     topLeft = Offset(petal.x - petal.size / 2, petal.y - petal.size / 4),
@@ -558,10 +558,10 @@ fun SakuraPetalsBackground(
     }
 }
 
-// ==================== 页面过渡动画 ====================
+// ==================== Page Transitions ====================
 
 /**
- * 根据主题风格获取页面进入动画
+ * Get page enter transition by theme style.
  */
 fun getEnterTransition(style: AnimationStyle): EnterTransition {
     return when (style) {
@@ -583,7 +583,7 @@ fun getEnterTransition(style: AnimationStyle): EnterTransition {
 }
 
 /**
- * 根据主题风格获取页面退出动画
+ * Get page exit transition by theme style.
  */
 fun getExitTransition(style: AnimationStyle): ExitTransition {
     return when (style) {

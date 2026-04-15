@@ -46,12 +46,12 @@ import kotlinx.coroutines.withContext
 import java.net.URL
 
 /**
- * Multi-Web Shell Mode — 多站点聚合应用运行时
- * 支持四种显示模式：
- * - TABS：底部标签页，每个标签对应一个站点
- * - CARDS：卡片首页，点击卡片打开全屏 WebView
- * - FEED：聚合信息流，从所有站点提取文章标题和链接
- * - DRAWER：侧边抽屉，左侧抽屉显示站点列表，右侧显示选中站点的 WebView
+ * Multi- Web Shell Mode- apprun
+ * support displaymode
+ * TABS: bottomlabel, label
+ * CARDS: card, cardopen WebView
+ * FEED: , from
+ * DRAWER: drawer, leftdrawerdisplay list, rightdisplay WebView
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

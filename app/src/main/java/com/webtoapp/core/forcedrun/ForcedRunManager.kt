@@ -113,6 +113,14 @@ class ForcedRunManager(private val context: Context) {
             }
         }
     }
+
+    init {
+        synchronized(Companion) {
+            if (instance == null) {
+                instance = this
+            }
+        }
+    }
     
     /**
      * 权限状态

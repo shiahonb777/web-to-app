@@ -4,11 +4,9 @@ import android.content.Context
 import com.webtoapp.core.logging.AppLogger
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
-
-/**
- * APK 构建日志记录器
- * 将构建过程的日志保存到文件，方便调试
+import java.util.*/**
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class BuildLogger(private val context: Context) {
     
@@ -26,10 +24,10 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 开始新的构建日志
+     * Note: brief English comment.
      */
     fun startNewLog(appName: String): File {
-        // Cleanup旧日志
+        // Note: brief English comment.
         cleanOldLogs()
         
         val timestamp = fileNameFormat().format(Date())
@@ -46,7 +44,7 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 记录普通日志
+     * Note: brief English comment.
      */
     fun log(message: String) {
         val timestamp = dateFormat().format(Date())
@@ -56,7 +54,7 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 记录调试日志
+     * Note: brief English comment.
      */
     fun debug(message: String) {
         val timestamp = dateFormat().format(Date())
@@ -66,7 +64,7 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 记录警告日志
+     * Note: brief English comment.
      */
     fun warn(message: String) {
         val timestamp = dateFormat().format(Date())
@@ -76,7 +74,7 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 记录错误日志
+     * Note: brief English comment.
      */
     fun error(message: String, throwable: Throwable? = null) {
         val timestamp = dateFormat().format(Date())
@@ -95,7 +93,7 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 记录分隔线
+     * Note: brief English comment.
      */
     fun section(title: String) {
         log("----------------------------------------")
@@ -104,14 +102,14 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 记录键值对
+     * Note: brief English comment.
      */
     fun logKeyValue(key: String, value: Any?) {
         log("  $key = $value")
     }
     
     /**
-     * 记录列表
+     * Note: brief English comment.
      */
     fun logList(title: String, items: List<Any?>) {
         log("  $title (${items.size} 项):")
@@ -121,7 +119,7 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 结束日志
+     * Note: brief English comment.
      */
     fun endLog(success: Boolean, message: String = "") {
         log("========================================")
@@ -135,12 +133,12 @@ class BuildLogger(private val context: Context) {
     }
     
     /**
-     * 获取当前日志文件路径
+     * Note: brief English comment.
      */
     fun getCurrentLogPath(): String? = currentLogFile?.absolutePath
     
     /**
-     * 获取所有日志文件
+     * Note: brief English comment.
      */
     fun getAllLogFiles(): List<File> {
         return logDir.listFiles()

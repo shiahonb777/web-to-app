@@ -29,14 +29,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * 流式消息气泡组件
+ * message
  * 
- * 用于实时显示 AI 生成的内容，支持流式文本显示和打字光标动画
+ * for display AI content, support textdisplay animation
  * 
- * @param content 消息内容
- * @param isStreaming 是否正在流式输出
- * @param thinkingContent 思考内容（如果有）
- * @param isUser 是否为用户消息
+ * @param content messagecontent
+ * @param isStreaming output
+ * @param thinkingContent content( if)
+ * @param isUser usermessage
  * @param modifier Modifier
  * 
  * Requirements: 2.1, 3.4
@@ -61,7 +61,7 @@ fun StreamingMessageBubble(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = alignment
     ) {
-        // 消息头部（角色标识）
+        // messageheader( )
         Row(
             modifier = Modifier.padding(bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -115,7 +115,7 @@ fun StreamingMessageBubble(
             }
         }
         
-        // 思考内容块（如果有）
+        // content( if)
         if (!thinkingContent.isNullOrBlank() && !isUser) {
             ThinkingBlock(
                 content = thinkingContent,
@@ -126,7 +126,7 @@ fun StreamingMessageBubble(
             )
         }
         
-        // 消息气泡
+        // message
         Surface(
             shape = RoundedCornerShape(
                 topStart = if (isUser) 16.dp else 4.dp,
@@ -139,10 +139,10 @@ fun StreamingMessageBubble(
         ) {
             Box(modifier = Modifier.padding(12.dp)) {
                 if (content.isBlank() && isStreaming) {
-                    // 等待内容时显示打字指示器
+                    // contentdisplay indicator
                     TypingIndicator()
                 } else {
-                    // Show内容和可选的打字光标
+                    // Showcontent optional
                     Row(verticalAlignment = Alignment.Bottom) {
                         val textColor = if (isUser) {
                             MaterialTheme.colorScheme.onPrimaryContainer
@@ -151,8 +151,8 @@ fun StreamingMessageBubble(
                         }
                         
                         SelectionContainer(modifier = Modifier.weight(weight = 1f, fill = false)) {
-                            // 检测是否包含代码内容（代码块或HTML标签）
-                            // If it is代码内容，使用纯文本显示，避免Markdown渲染破坏代码
+                            // codecontent( code orHTMLlabel)
+                            // If it iscodecontent, textdisplay, Markdown code
                             val isCodeContent = content.contains("```") || 
                                 content.contains("<!DOCTYPE") || 
                                 content.contains("<html") ||
@@ -164,7 +164,7 @@ fun StreamingMessageBubble(
                                 content.contains("var ")
                             
                             if (isCodeContent) {
-                                // 代码内容使用纯文本，保留所有字符
+                                // codecontent text,
                                 Text(
                                     text = content,
                                     style = MaterialTheme.typography.bodyMedium.copy(
@@ -174,7 +174,7 @@ fun StreamingMessageBubble(
                                     lineHeight = 22.sp
                                 )
                             } else {
-                                // 普通文本使用 Markdown 渲染
+                                // text Markdown
                                 MarkdownStyledText(
                                     text = content,
                                     style = MaterialTheme.typography.bodyMedium,
@@ -184,7 +184,7 @@ fun StreamingMessageBubble(
                             }
                         }
                         
-                        // 流式输出时显示打字光标
+                        // outputdisplay
                         if (isStreaming && !isUser) {
                             TypingCursor()
                         }
@@ -196,8 +196,8 @@ fun StreamingMessageBubble(
 }
 
 /**
- * 流式输出指示器
- * 显示在消息头部，表示正在接收流式内容
+ * outputindicator
+ * display messageheader, content
  */
 @Composable
 private fun StreamingIndicator() {
@@ -226,8 +226,8 @@ private fun StreamingIndicator() {
 }
 
 /**
- * 打字光标动画
- * 在流式输出时显示闪烁的光标
+ * animation
+ * outputdisplay
  */
 @Composable
 fun TypingCursor(
@@ -257,8 +257,8 @@ fun TypingCursor(
 }
 
 /**
- * 打字指示器
- * 在等待内容时显示三个跳动的点
+ * indicator
+ * contentdisplay
  */
 @Composable
 fun TypingIndicator(
@@ -299,8 +299,8 @@ fun TypingIndicator(
 }
 
 /**
- * 用户消息气泡
- * 简化版本，用于显示用户输入的消息
+ * usermessage
+ * version, showuserinput message
  */
 @Composable
 fun UserMessageBubble(
@@ -316,8 +316,8 @@ fun UserMessageBubble(
 }
 
 /**
- * AI 消息气泡
- * 简化版本，用于显示 AI 的响应消息
+ * AI message
+ * version, show AI message
  */
 @Composable
 fun AssistantMessageBubble(
@@ -336,18 +336,18 @@ fun AssistantMessageBubble(
 }
 
 /**
- * Markdown 样式文本组件
+ * Markdown text
  * 
- * 支持基本的 Markdown 语法渲染：
- * - **粗体**
- * - *斜体* 或 _斜体_
- * - `代码`
- * - [链接](url)
+ * support Markdown
+ * Note
+ * * * or _ _
+ * `code`
+ * [ ] ( url)
  * 
- * @param text 要渲染的文本
- * @param style 文本样式
- * @param color 基础文本颜色
- * @param lineHeight 行高
+ * @param text text
+ * @param style text
+ * @param color textcolor
+ * @param lineHeight
  */
 @Composable
 fun MarkdownStyledText(
@@ -367,13 +367,13 @@ fun MarkdownStyledText(
 }
 
 /**
- * 解析 Markdown 文本为 AnnotatedString
+ * Markdown text AnnotatedString
  * 
- * 支持的语法：
- * - **粗体**
- * - *斜体* 或 _斜体_
- * - `内联代码`
- * - [链接文本](url)
+ * support
+ * Note
+ * * * or _ _
+ * ` code`
+ * [ text] ( url)
  */
 @Composable
 private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): AnnotatedString {
@@ -384,7 +384,7 @@ private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): Anno
         var i = 0
         while (i < text.length) {
             when {
-                // 粗体 **text**
+                // **text**
                 text.startsWith("**", i) -> {
                     val end = text.indexOf("**", i + 2)
                     if (end != -1) {
@@ -397,7 +397,7 @@ private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): Anno
                         i++
                     }
                 }
-                // 斜体 *text* 或 _text_ (但不是 **)
+                // *text* or _text_( **)
                 (text.startsWith("*", i) && !text.startsWith("**", i)) || text.startsWith("_", i) -> {
                     val marker = text[i]
                     val end = text.indexOf(marker, i + 1)
@@ -411,7 +411,7 @@ private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): Anno
                         i++
                     }
                 }
-                // 内联代码 `code` (但不是 ```)
+                // code `code`( ```)
                 text.startsWith("`", i) && !text.startsWith("```", i) -> {
                     val end = text.indexOf("`", i + 1)
                     if (end != -1) {
@@ -430,7 +430,7 @@ private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): Anno
                         i++
                     }
                 }
-                // 链接 [text](url)
+                // [ text] ( url)
                 text.startsWith("[", i) -> {
                     val textEnd = text.indexOf("]", i)
                     val urlStart = if (textEnd != -1) text.indexOf("(", textEnd) else -1
@@ -450,7 +450,7 @@ private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): Anno
                         i++
                     }
                 }
-                // 普通字符
+                // Note
                 else -> {
                     append(text[i])
                     i++

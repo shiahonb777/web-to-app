@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumFilterChip
 import kotlinx.coroutines.launch
@@ -106,7 +106,7 @@ internal fun ExtensionModulesTabContent(
                 PremiumFilterChip(
                     selected = selectedCategory == null,
                     onClick = { onCategoryChange(null) },
-                    label = { Text(Strings.all) },
+                    label = { Text(AppStringsProvider.current().all) },
                     leadingIcon = if (selectedCategory == null) {
                         { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                     } else null
@@ -134,17 +134,17 @@ internal fun ExtensionModulesTabContent(
             StatItem(
                 icon = Icons.Outlined.Extension,
                 value = stats.totalCount.toString(),
-                label = Strings.totalModulesLabel
+                label = AppStringsProvider.current().totalModulesLabel
             )
             StatItem(
                 icon = Icons.Outlined.Verified,
                 value = stats.builtInCount.toString(),
-                label = Strings.builtInLabel
+                label = AppStringsProvider.current().builtInLabel
             )
             StatItem(
                 icon = Icons.Outlined.Build,
                 value = stats.userCount.toString(),
-                label = Strings.customLabel
+                label = AppStringsProvider.current().customLabel
             )
         }
 
@@ -173,7 +173,7 @@ internal fun ExtensionModulesTabContent(
                     onDelete = {
                         scope.launch {
                             extensionManager.deleteModule(module.id)
-                            Toast.makeText(context, Strings.deleted, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().deleted, Toast.LENGTH_SHORT).show()
                         }
                     },
                     onPublish = if (!module.builtIn) {
@@ -225,13 +225,13 @@ internal fun ExtensionModulesTabContent(
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    if (searchQuery.isNotBlank()) Strings.noModulesFound else Strings.noModulesYet,
+                                    if (searchQuery.isNotBlank()) AppStringsProvider.current().noModulesFound else AppStringsProvider.current().noModulesYet,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    if (searchQuery.isNotBlank()) Strings.tryDifferentSearch else Strings.createModuleHint,
+                                    if (searchQuery.isNotBlank()) AppStringsProvider.current().tryDifferentSearch else AppStringsProvider.current().createModuleHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     textAlign = TextAlign.Center
@@ -253,7 +253,7 @@ internal fun ExtensionModulesTabContent(
                                     ) {
                                         Icon(Icons.Default.AutoAwesome, null, Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text(Strings.aiDevelop, style = MaterialTheme.typography.labelMedium)
+                                        Text(AppStringsProvider.current().aiDevelop, style = MaterialTheme.typography.labelMedium)
                                     }
 
                                     PremiumButton(
@@ -262,14 +262,14 @@ internal fun ExtensionModulesTabContent(
                                     ) {
                                         Icon(Icons.Default.Add, null, Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text(Strings.createFirstModule, style = MaterialTheme.typography.labelMedium)
+                                        Text(AppStringsProvider.current().createFirstModule, style = MaterialTheme.typography.labelMedium)
                                     }
                                 }
                             } else {
                                 TextButton(onClick = onClearSearch) {
                                     Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.clearSearch, style = MaterialTheme.typography.labelMedium)
+                                    Text(AppStringsProvider.current().clearSearch, style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                         }

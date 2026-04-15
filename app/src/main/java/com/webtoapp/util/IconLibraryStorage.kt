@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,18 +16,18 @@ import java.io.FileOutputStream
 import java.util.UUID
 
 /**
- * 图标库项目
+ * Icon library item
  */
 data class IconLibraryItem(
     val id: String = UUID.randomUUID().toString(),
-    val path: String,           // Icon文件路径
-    val name: String,           // Show名称
-    val isAiGenerated: Boolean = false,  // Yes否AI生成
+    val path: String,           // Icon
+    val name: String,           // Show
+    val isAiGenerated: Boolean = false,  // YesAI
     val createdAt: Long = System.currentTimeMillis()
 )
 
 /**
- * 图标库存储管理
+ * Icon library storage manager
  */
 object IconLibraryStorage {
     
@@ -37,7 +37,7 @@ object IconLibraryStorage {
     val iconsFlow: Flow<List<IconLibraryItem>> = _iconsFlow
     
     /**
-     * 初始化并加载图标库
+     * Note.
      */
     suspend fun initialize(context: Context) = withContext(Dispatchers.IO) {
         val libraryDir = getLibraryDir(context)
@@ -61,12 +61,12 @@ object IconLibraryStorage {
     }
     
     /**
-     * 从 Base64 保存 AI 生成的图标
+     * Base64 AI
      */
     suspend fun saveFromBase64(
         context: Context,
         base64Data: String,
-        name: String = Strings.aiIcon
+        name: String = AppStringsProvider.current().aiIcon
     ): IconLibraryItem? = withContext(Dispatchers.IO) {
         try {
             val bytes = Base64.decode(base64Data, Base64.DEFAULT)
@@ -95,12 +95,12 @@ object IconLibraryStorage {
     }
     
     /**
-     * 从 Uri 保存图标到图标库
+     * Uri
      */
     suspend fun saveFromUri(
         context: Context,
         uri: Uri,
-        name: String = Strings.icon
+        name: String = AppStringsProvider.current().icon
     ): IconLibraryItem? = withContext(Dispatchers.IO) {
         try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext null
@@ -130,7 +130,7 @@ object IconLibraryStorage {
     }
     
     /**
-     * 删除图标
+     * Note.
      */
     suspend fun delete(context: Context, item: IconLibraryItem) = withContext(Dispatchers.IO) {
         try {
@@ -142,7 +142,7 @@ object IconLibraryStorage {
     }
     
     /**
-     * 获取所有图标
+     * Note.
      */
     fun getIcons(): List<IconLibraryItem> = _iconsFlow.value
     

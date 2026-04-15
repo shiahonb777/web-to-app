@@ -1,6 +1,6 @@
 /**
- * AES-GCM 加密实现
- * 使用纯 C++ 实现，不依赖外部库
+ * AES-GCM encryption implementation
+ * Pure C++ implementation without external dependencies
  */
 
 #include "crypto_engine.h"
@@ -27,7 +27,7 @@ static const uint8_t SBOX[256] = {
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-// AES 逆 S-Box
+// AES inverse S-Box
 static const uint8_t INV_SBOX[256] = {
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
     0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
@@ -52,13 +52,13 @@ static const uint8_t RCON[11] = {
     0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
 };
 
-// AES 密钥扩展
+// AES key expansion
 static void aes_key_expansion(const uint8_t* key, uint8_t* round_keys, int key_size) {
-    int nk = key_size / 4;  // 密钥字数
-    int nr = nk + 6;        // 轮数
-    int nb = 4;             // 块字数
+    int nk = key_size / 4;  // Key words
+    int nr = nk + 6;        // Number of rounds
+    int nb = 4;             // Block words
     
-    // 复制原始密钥
+    // Copy base key
     memcpy(round_keys, key, key_size);
     
     uint8_t temp[4];
@@ -95,7 +95,7 @@ static void aes_key_expansion(const uint8_t* key, uint8_t* round_keys, int key_s
     }
 }
 
-// GF(2^128) 乘法
+// GF(2^128) multiplication
 static void gf_mult(const uint8_t* x, const uint8_t* y, uint8_t* result) {
     uint8_t v[16];
     memcpy(v, y, 16);
@@ -109,7 +109,7 @@ static void gf_mult(const uint8_t* x, const uint8_t* y, uint8_t* result) {
                 }
             }
             
-            // v = v * x (在 GF(2^128) 中)
+            // v = v * x (in GF(2^128))
             bool carry = v[15] & 1;
             for (int k = 15; k > 0; k--) {
                 v[k] = (v[k] >> 1) | ((v[k-1] & 1) << 7);
@@ -117,7 +117,7 @@ static void gf_mult(const uint8_t* x, const uint8_t* y, uint8_t* result) {
             v[0] >>= 1;
             
             if (carry) {
-                v[0] ^= 0xe1;  // 约简多项式
+                v[0] ^= 0xe1;  // Reduction polynomial
             }
         }
     }
@@ -140,7 +140,7 @@ static void ghash(const uint8_t* h, const uint8_t* data, size_t len, uint8_t* re
     }
 }
 
-// AES 单块加密
+// AES block encryption
 static void aes_encrypt_block(const uint8_t* input, uint8_t* output, const uint8_t* round_keys, int nr) {
     uint8_t state[16];
     memcpy(state, input, 16);
@@ -186,7 +186,7 @@ static void aes_encrypt_block(const uint8_t* input, uint8_t* output, const uint8
         }
     }
     
-    // 最后一轮
+    // Final round
     for (int i = 0; i < 16; i++) state[i] = SBOX[state[i]];
     
     uint8_t temp = state[1];
@@ -203,14 +203,14 @@ static void aes_encrypt_block(const uint8_t* input, uint8_t* output, const uint8
     memcpy(output, state, 16);
 }
 
-// 递增计数器
+// Increment counter
 static void inc_counter(uint8_t* counter) {
     for (int i = 15; i >= 12; i--) {
         if (++counter[i] != 0) break;
     }
 }
 
-// AES-GCM 加密实现
+// AES-GCM encryption routine
 CryptoResult AesGcm::encrypt(
     const uint8_t* plaintext, size_t plaintext_len,
     const uint8_t* key, size_t key_len,
@@ -227,21 +227,21 @@ CryptoResult AesGcm::encrypt(
     
     int nr = (key_len == 16) ? 10 : (key_len == 24) ? 12 : 14;
     
-    // 密钥扩展
+    // Expand key
     std::vector<uint8_t> round_keys((nr + 1) * 16);
     aes_key_expansion(key, round_keys.data(), key_len);
     
-    // 计算 H
+    // Compute GHASH subkey H
     uint8_t h[16] = {0};
     aes_encrypt_block(h, h, round_keys.data(), nr);
     
-    // 初始化计数器
+    // Initialize counter
     uint8_t j0[16] = {0};
     if (iv_len == 12) {
         memcpy(j0, iv, 12);
         j0[15] = 1;
     } else {
-        // 对于非 96 位 IV，使用 GHASH
+        // Use GHASH for non-96-bit IVs
         size_t padded_len = ((iv_len + 15) / 16) * 16 + 16;
         std::vector<uint8_t> padded(padded_len, 0);
         memcpy(padded.data(), iv, iv_len);
@@ -250,8 +250,8 @@ CryptoResult AesGcm::encrypt(
         ghash(h, padded.data(), padded_len, j0);
     }
     
-    // 加密
-    result.data.resize(plaintext_len + 16);  // 密文 + tag
+    // Encrypt data
+    result.data.resize(plaintext_len + 16);  // Ciphertext + tag
     uint8_t counter[16];
     memcpy(counter, j0, 16);
     
@@ -267,7 +267,7 @@ CryptoResult AesGcm::encrypt(
         }
     }
     
-    // 计算认证标签
+    // Compute authentication tag
     size_t aad_padded_len = ((aad_len + 15) / 16) * 16;
     size_t ct_padded_len = ((plaintext_len + 15) / 16) * 16;
     std::vector<uint8_t> auth_data(aad_padded_len + ct_padded_len + 16, 0);
@@ -275,7 +275,7 @@ CryptoResult AesGcm::encrypt(
     if (aad_len > 0) memcpy(auth_data.data(), aad, aad_len);
     memcpy(auth_data.data() + aad_padded_len, result.data.data(), plaintext_len);
     
-    // 长度块
+    // Length block data
     uint64_t aad_bits = aad_len * 8;
     uint64_t ct_bits = plaintext_len * 8;
     for (int i = 0; i < 8; i++) {
@@ -298,7 +298,7 @@ CryptoResult AesGcm::encrypt(
     return result;
 }
 
-// AES-GCM 解密实现
+// AES-GCM decryption routine
 CryptoResult AesGcm::decrypt(
     const uint8_t* ciphertext, size_t ciphertext_len,
     const uint8_t* key, size_t key_len,
@@ -316,14 +316,14 @@ CryptoResult AesGcm::decrypt(
     size_t ct_len = ciphertext_len - 16;
     const uint8_t* tag = ciphertext + ct_len;
     
-    // 先加密（GCM 加密和解密使用相同操作）
+    // Encrypt first (GCM reuse step for decryption)
     CryptoResult enc_result = encrypt(ciphertext, ct_len, key, key_len, iv, iv_len, aad, aad_len);
     if (!enc_result.success) {
         result.error = enc_result.error;
         return result;
     }
     
-    // 验证标签
+    // Verify tag
     const uint8_t* computed_tag = enc_result.data.data() + ct_len;
     bool tag_valid = true;
     for (int i = 0; i < 16; i++) {
@@ -342,7 +342,7 @@ CryptoResult AesGcm::decrypt(
     return result;
 }
 
-// PBKDF2-HMAC-SHA256 密钥派生
+// PBKDF2-HMAC-SHA256 key derivation
 std::vector<uint8_t> KeyDerivation::deriveKey(
     const std::string& password,
     const uint8_t* salt, size_t salt_len,
@@ -351,8 +351,8 @@ std::vector<uint8_t> KeyDerivation::deriveKey(
 ) {
     std::vector<uint8_t> result(key_length);
     
-    // 简化实现：使用多轮 SHA256
-    // 实际生产环境应使用完整的 PBKDF2
+    // Simplified version using repeated SHA256 rounds
+    // Production should rely on full PBKDF2
     std::vector<uint8_t> data;
     data.insert(data.end(), password.begin(), password.end());
     data.insert(data.end(), salt, salt + salt_len);
@@ -360,18 +360,18 @@ std::vector<uint8_t> KeyDerivation::deriveKey(
     std::vector<uint8_t> hash = sha256(data.data(), data.size());
     
     for (int i = 1; i < iterations; i++) {
-        // 组合上一轮哈希和密码
+        // Combine previous hash with password
         std::vector<uint8_t> input;
         input.insert(input.end(), hash.begin(), hash.end());
         input.insert(input.end(), password.begin(), password.end());
         hash = sha256(input.data(), input.size());
     }
     
-    // 截取所需长度
+    // Truncate to requested length
     size_t copy_len = std::min((size_t)key_length, hash.size());
     memcpy(result.data(), hash.data(), copy_len);
     
-    // 如果需要更长的密钥，继续派生
+    // Derive extra blocks if more key material is needed
     while (copy_len < (size_t)key_length) {
         std::vector<uint8_t> input;
         input.insert(input.end(), hash.begin(), hash.end());
@@ -386,9 +386,9 @@ std::vector<uint8_t> KeyDerivation::deriveKey(
     return result;
 }
 
-// SHA-256 实现
+// SHA-256 implementation
 std::vector<uint8_t> KeyDerivation::sha256(const uint8_t* data, size_t len) {
-    // SHA-256 常量
+    // SHA-256 constants
     static const uint32_t K[64] = {
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
         0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -400,13 +400,13 @@ std::vector<uint8_t> KeyDerivation::sha256(const uint8_t* data, size_t len) {
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
     
-    // 初始哈希值
+    // Initial hash state
     uint32_t h[8] = {
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
     };
     
-    // 填充消息
+    // Pad message
     size_t padded_len = ((len + 9 + 63) / 64) * 64;
     std::vector<uint8_t> padded(padded_len, 0);
     memcpy(padded.data(), data, len);
@@ -417,7 +417,7 @@ std::vector<uint8_t> KeyDerivation::sha256(const uint8_t* data, size_t len) {
         padded[padded_len - 1 - i] = (bit_len >> (i * 8)) & 0xff;
     }
     
-    // 处理每个块
+    // Process each block
     for (size_t block = 0; block < padded_len; block += 64) {
         uint32_t w[64];
         

@@ -4,7 +4,10 @@ import android.content.Context
 import android.net.Uri
 import android.util.Base64
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
+import com.webtoapp.core.ai.model.AiModelCatalogSupport
+import com.webtoapp.core.ai.model.AiModelInference
+import com.webtoapp.core.ai.provider.AiImageSupport
+import com.webtoapp.core.ai.provider.AiResponseParser
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -25,7 +28,11 @@ import java.io.IOException
 class AiApiClient(private val context: Context) {
     
     private val gson = com.webtoapp.util.GsonProvider.gson
-    private val registry by lazy { LiteLLMModelRegistry.getInstance(context) }
+    private val registry by lazy { LiteLLMModelRegistry(context.applicationContext) }
+    private val modelInference by lazy { AiModelInference(registry) }
+    private val modelCatalog by lazy { AiModelCatalogSupport(registry, modelInference) }
+    private val responseParser by lazy { AiResponseParser(gson) }
+    private val imageSupport by lazy { AiImageSupport(gson, client) }
     
     /**
      * 清理 API Key，移除所有换行符和空白字符
@@ -252,220 +259,21 @@ class AiApiClient(private val context: Context) {
      * 从 LiteLLM 注册表获取供应商的默认模型列表
      */
     private fun getRegistryFallbackModels(provider: AiProvider): List<AiModel> {
-        val modelIds = registry.getRecommendedModels(provider)
-        return modelIds.mapNotNull { modelId ->
-            val info = registry.findModel(modelId, provider) ?: return@mapNotNull null
-            AiModel(
-                id = modelId,
-                name = modelId,
-                provider = provider,
-                capabilities = registry.getCapabilities(modelId, provider) ?: inferCapabilities(modelId, provider),
-                contextLength = info.maxInputTokens.takeIf { it > 0 } ?: inferContextLength(modelId, provider),
-                inputPrice = info.inputCostPerMillion.takeIf { it > 0.0 } ?: inferInputPrice(modelId, provider),
-                outputPrice = info.outputCostPerMillion
-            )
-        }
+        return modelCatalog.getRegistryFallbackModels(provider)
     }
     
     /**
      * 使用 LiteLLM 注册表数据补充模型信息
      */
     private fun enrichModelWithRegistry(model: AiModel, provider: AiProvider): AiModel {
-        val info = registry.findModel(model.id, provider) ?: return model
-        return model.copy(
-            contextLength = if (model.contextLength <= 0 || model.contextLength == 8192)
-                info.maxInputTokens.takeIf { it > 0 } ?: model.contextLength
-            else model.contextLength,
-            inputPrice = if (model.inputPrice <= 0.0)
-                info.inputCostPerMillion.takeIf { it > 0.0 } ?: model.inputPrice
-            else model.inputPrice,
-            outputPrice = if (model.outputPrice <= 0.0)
-                info.outputCostPerMillion.takeIf { it > 0.0 } ?: model.outputPrice
-            else model.outputPrice,
-            capabilities = if (model.capabilities.size <= 1)
-                registry.getCapabilities(model.id, provider) ?: model.capabilities
-            else model.capabilities
-        )
+        return modelCatalog.enrichModelWithRegistry(model, provider)
     }
     
     /**
      * 解析模型列表响应（支持各供应商不同的响应格式）
      */
     private fun parseModelsResponse(provider: AiProvider, response: String): List<AiModel> {
-        return try {
-            val json = JsonParser.parseString(response).asJsonObject
-            
-            when (provider) {
-                AiProvider.GOOGLE -> {
-                    // Google 格式: {"models": [{"name": "models/gemini-1.5-pro", "displayName": "..."}]}
-                    json.getAsJsonArray("models")?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val name = obj.get("name")?.asString ?: return@mapNotNull null
-                        val modelId = name.substringAfterLast("/")
-                        // Filter掉不支持 generateContent 的模型
-                        val methods = obj.getAsJsonArray("supportedGenerationMethods")
-                        val supportsGenerate = methods?.any { 
-                            it.asString == "generateContent" 
-                        } ?: false
-                        if (!supportsGenerate) return@mapNotNull null
-                        
-                        AiModel(
-                            id = modelId,
-                            name = obj.get("displayName")?.asString ?: modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider),
-                            contextLength = obj.get("inputTokenLimit")?.asInt ?: 4096
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.ANTHROPIC -> {
-                    // Anthropic 格式: {"data": [{"id": "claude-3-5-sonnet-20241022", "display_name": "..."}]}
-                    json.getAsJsonArray("data")?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString ?: return@mapNotNull null
-                        AiModel(
-                            id = modelId,
-                            name = obj.get("display_name")?.asString ?: modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider)
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.GLM -> {
-                    // 智谱 GLM 格式: {"data": [{"id": "glm-4-plus", ...}]}
-                    json.getAsJsonArray("data")?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString ?: return@mapNotNull null
-                        AiModel(
-                            id = modelId,
-                            name = modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider)
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.VOLCANO -> {
-                    // 火山引擎格式: {"data": [{"id": "...", "model": "..."}]} 或其他
-                    val dataArray = json.getAsJsonArray("data") ?: json.getAsJsonArray("models")
-                    dataArray?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString 
-                            ?: obj.get("model")?.asString 
-                            ?: return@mapNotNull null
-                        AiModel(
-                            id = modelId,
-                            name = obj.get("name")?.asString ?: modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider)
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.MINIMAX -> {
-                    // MiniMax 格式
-                    val dataArray = json.getAsJsonArray("data") ?: json.getAsJsonArray("models")
-                    dataArray?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString 
-                            ?: obj.get("model")?.asString 
-                            ?: return@mapNotNull null
-                        AiModel(
-                            id = modelId,
-                            name = modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider)
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.OLLAMA -> {
-                    // Ollama 格式: {"models": [{"name": "llama3:latest", "size": 4661224676, ...}]}
-                    json.getAsJsonArray("models")?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelName = obj.get("name")?.asString ?: return@mapNotNull null
-                        val modelId = modelName.removeSuffix(":latest")
-                        AiModel(
-                            id = modelId,
-                            name = modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider),
-                            contextLength = inferContextLength(modelId, provider)
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.COHERE -> {
-                    // Cohere 格式: {"models": [{"name": "command-r-plus", ...}]}
-                    val modelsArray = json.getAsJsonArray("models") ?: json.getAsJsonArray("data")
-                    modelsArray?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("name")?.asString 
-                            ?: obj.get("id")?.asString
-                            ?: return@mapNotNull null
-                        val contextLength = obj.get("context_length")?.asInt
-                            ?: obj.get("max_input_tokens")?.asInt
-                            ?: inferContextLength(modelId, provider)
-                        AiModel(
-                            id = modelId,
-                            name = modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider),
-                            contextLength = contextLength
-                        )
-                    } ?: emptyList()
-                }
-                AiProvider.OPENROUTER -> {
-                    // OpenRouter 格式: {"data": [{"id": "openai/gpt-4o", "name": "..."}]}
-                    json.getAsJsonArray("data")?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString ?: return@mapNotNull null
-                        val contextLength = obj.get("context_length")?.asInt ?: 4096
-                        val pricing = obj.getAsJsonObject("pricing")
-                        val inputPrice = pricing?.get("prompt")?.asString?.toDoubleOrNull()?.times(1_000_000) ?: 0.0
-                        val outputPrice = pricing?.get("completion")?.asString?.toDoubleOrNull()?.times(1_000_000) ?: 0.0
-                        AiModel(
-                            id = modelId,
-                            name = obj.get("name")?.asString ?: modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider),
-                            contextLength = contextLength,
-                            inputPrice = inputPrice,
-                            outputPrice = outputPrice
-                        )
-                    } ?: emptyList()
-                }
-                else -> {
-                    // 标准 OpenAI 格式: {"data": [{"id": "gpt-4o", ...}]}
-                    json.getAsJsonArray("data")?.mapNotNull { modelJson ->
-                        val obj = modelJson.asJsonObject
-                        val modelId = obj.get("id")?.asString ?: return@mapNotNull null
-                        // 尝试解析上下文长度（不同API可能使用不同字段名）
-                        val contextLength = obj.get("context_length")?.asInt
-                            ?: obj.get("context_window")?.asInt
-                            ?: obj.get("max_tokens")?.asInt
-                            ?: obj.get("max_context_length")?.asInt
-                            ?: inferContextLength(modelId, provider)
-                        // 尝试解析价格（如果有pricing对象）
-                        val pricing = obj.getAsJsonObject("pricing")
-                        val inputPrice = pricing?.get("prompt")?.asString?.toDoubleOrNull()?.times(1_000_000)
-                            ?: pricing?.get("input")?.asString?.toDoubleOrNull()?.times(1_000_000)
-                            ?: inferInputPrice(modelId, provider)
-                        val outputPrice = pricing?.get("completion")?.asString?.toDoubleOrNull()?.times(1_000_000)
-                            ?: pricing?.get("output")?.asString?.toDoubleOrNull()?.times(1_000_000)
-                            ?: 0.0
-                        AiModel(
-                            id = modelId,
-                            name = obj.get("name")?.asString ?: modelId,
-                            provider = provider,
-                            capabilities = inferCapabilities(modelId, provider),
-                            contextLength = contextLength,
-                            inputPrice = inputPrice,
-                            outputPrice = outputPrice
-                        )
-                    } ?: emptyList()
-                }
-            }
-        } catch (e: Exception) {
-            AppLogger.e("AiApiClient", "解析模型列表失败: ${e.message}, response: $response")
-            emptyList()
-        }
+        return modelCatalog.parseModelsResponse(provider, response)
     }
     
     /**
@@ -473,49 +281,7 @@ class AiApiClient(private val context: Context) {
      * 优先使用 LiteLLM 注册表数据，回退到基于名称的推断
      */
     private fun inferCapabilities(modelId: String, provider: AiProvider? = null): List<ModelCapability> {
-        // 优先从 LiteLLM 注册表查询
-        registry.getCapabilities(modelId, provider)?.let { return it }
-        
-        val id = modelId.lowercase()
-        val capabilities = mutableListOf(ModelCapability.TEXT)
-        
-        // Audio能力
-        if (id.contains("audio") || id.contains("whisper") || 
-            id.contains("gemini-1.5") || id.contains("gemini-2") || id.contains("gemini-3") ||
-            id.contains("gpt-4o") || id.contains("realtime")) {
-            capabilities.add(ModelCapability.AUDIO)
-        }
-        
-        // 图像理解能力
-        if (id.contains("vision") || id.contains("gpt-4o") || id.contains("gpt-5") ||
-            id.contains("gemini") || id.contains("claude-3") || id.contains("claude-4") ||
-            id.contains("pixtral") || id.contains("mistral-large") ||
-            id.contains("llava") || id.contains("bakllava") ||
-            id.contains("qwen-vl") || id.contains("qwen2-vl") || id.contains("qwen2.5-vl") ||
-            id.contains("glm-4v") || id.contains("step-1v") || id.contains("step-2v") ||
-            id.contains("yi-vision") || id.contains("internvl") ||
-            id.contains("moonshot-v") || id.contains("kimi-v") ||
-            id.contains("hunyuan-vision") || id.contains("grok-2-vision") || id.contains("grok-3")) {
-            capabilities.add(ModelCapability.IMAGE)
-        }
-        
-        // 代码能力
-        if (id.contains("code") || id.contains("codex") || 
-            id.contains("deepseek-coder") || id.contains("codestral") ||
-            id.contains("starcoder") || id.contains("codegemma") ||
-            id.contains("codellama") || id.contains("codeqwen")) {
-            capabilities.add(ModelCapability.CODE)
-        }
-        
-        // 图像生成能力
-        if (id.contains("dall-e") || id.contains("imagen") || 
-            id.contains("image-generation") || id.contains("gpt-image") ||
-            id.contains("stable-diffusion") || id.contains("sdxl") ||
-            id.contains("flux") || id.contains("playground")) {
-            capabilities.add(ModelCapability.IMAGE_GENERATION)
-        }
-        
-        return capabilities
+        return modelInference.inferCapabilities(modelId, provider)
     }
     
     /**
@@ -523,72 +289,7 @@ class AiApiClient(private val context: Context) {
      * 优先使用 LiteLLM 注册表数据，回退到基于名称的推断
      */
     private fun inferContextLength(modelId: String, provider: AiProvider? = null): Int {
-        // 优先从 LiteLLM 注册表查询
-        registry.getContextLength(modelId, provider)?.let { return it }
-        
-        val id = modelId.lowercase()
-        return when {
-            // 显式上下文长度标记
-            id.contains("1m") || id.contains("1000k") -> 1000000
-            id.contains("256k") -> 256000
-            id.contains("200k") -> 200000
-            id.contains("128k") -> 128000
-            id.contains("100k") -> 100000
-            id.contains("64k") -> 64000
-            id.contains("32k") -> 32000
-            id.contains("16k") -> 16000
-            id.contains("8k") -> 8192
-            // OpenAI
-            id.contains("gpt-5") || id.contains("gpt-4o") || id.contains("gpt-4-turbo") -> 128000
-            id.contains("gpt-4") -> 8192
-            id.contains("gpt-3.5") -> 16000
-            id.contains("o1") || id.contains("o3") || id.contains("o4") -> 200000
-            // Anthropic
-            id.contains("claude-3") || id.contains("claude-4") -> 200000
-            // Google
-            id.contains("gemini-1.5") || id.contains("gemini-2") || id.contains("gemini-3") -> 1000000
-            id.contains("gemini") -> 32000
-            // Mistral
-            id.contains("mistral-large") || id.contains("mistral-medium") -> 128000
-            id.contains("mistral-small") || id.contains("mistral-nemo") -> 128000
-            id.contains("mixtral") -> 32000
-            id.contains("mistral") || id.contains("codestral") -> 32000
-            // Cohere
-            id.contains("command-r-plus") || id.contains("command-r") -> 128000
-            id.contains("command") -> 4096
-            // AI21
-            id.contains("jamba-1.5") -> 256000
-            id.contains("jamba") -> 256000
-            // xAI
-            id.contains("grok-3") || id.contains("grok-2") -> 131072
-            id.contains("grok") -> 8192
-            // DeepSeek
-            id.contains("deepseek") -> 64000
-            // Chinese providers
-            id.contains("qwen-long") || id.contains("qwen-turbo") -> 1000000
-            id.contains("qwen2.5") || id.contains("qwen3") -> 131072
-            id.contains("qwen") -> 32000
-            id.contains("glm-4") -> 128000
-            id.contains("glm") -> 8192
-            id.contains("doubao") -> 32000
-            id.contains("moonshot") || id.contains("kimi") -> 128000
-            id.contains("baichuan") -> 32000
-            id.contains("yi-large") -> 32000
-            id.contains("yi") -> 16000
-            id.contains("step-2") -> 256000
-            id.contains("step-1") -> 128000
-            id.contains("hunyuan") -> 32000
-            id.contains("spark") -> 8192
-            id.contains("minimax") || id.contains("abab") -> 245760
-            // Open source (Groq/Together/etc.)
-            id.contains("llama-3.3") || id.contains("llama-3.1") -> 131072
-            id.contains("llama-3") || id.contains("llama3") -> 8192
-            id.contains("llama-2") || id.contains("llama2") -> 4096
-            id.contains("llama") -> 8192
-            // Perplexity
-            id.contains("sonar") -> 127072
-            else -> 8192
-        }
+        return modelInference.inferContextLength(modelId, provider)
     }
     
     /**
@@ -596,78 +297,7 @@ class AiApiClient(private val context: Context) {
      * 优先使用 LiteLLM 注册表数据，回退到基于名称的推断
      */
     private fun inferInputPrice(modelId: String, provider: AiProvider? = null): Double {
-        // 优先从 LiteLLM 注册表查询
-        registry.getInputPrice(modelId, provider)?.let { return it }
-        
-        val id = modelId.lowercase()
-        return when {
-            // 免费模型
-            id.contains("free") || id.contains(":free") -> 0.0
-            // OpenAI
-            id.contains("gpt-4o-mini") -> 0.15
-            id.contains("gpt-4o") -> 2.5
-            id.contains("gpt-5") -> 10.0
-            id.contains("gpt-4-turbo") -> 10.0
-            id.contains("gpt-4") -> 30.0
-            id.contains("gpt-3.5") -> 0.5
-            id.contains("o1-mini") || id.contains("o3-mini") || id.contains("o4-mini") -> 1.1
-            id.contains("o1") || id.contains("o3") -> 10.0
-            // Claude
-            id.contains("claude-4-opus") || id.contains("claude-3-opus") -> 15.0
-            id.contains("claude-4-sonnet") || id.contains("claude-3.5-sonnet") || id.contains("claude-3.7-sonnet") -> 3.0
-            id.contains("claude-3-sonnet") -> 3.0
-            id.contains("claude-3-haiku") || id.contains("claude-3.5-haiku") -> 0.25
-            // Gemini
-            id.contains("gemini-3") || id.contains("gemini-2.5-pro") -> 1.25
-            id.contains("gemini-2.5-flash") || id.contains("gemini-2.0-flash") -> 0.075
-            id.contains("gemini-1.5-pro") -> 1.25
-            id.contains("gemini-1.5-flash") -> 0.075
-            id.contains("gemini") -> 0.5
-            // xAI Grok
-            id.contains("grok-3") -> 3.0
-            id.contains("grok-2") -> 2.0
-            id.contains("grok") -> 0.5
-            // Mistral
-            id.contains("mistral-large") -> 2.0
-            id.contains("mistral-medium") -> 2.7
-            id.contains("mistral-small") -> 0.2
-            id.contains("codestral") -> 0.3
-            id.contains("mixtral-8x22b") -> 0.9
-            id.contains("mixtral") -> 0.24
-            id.contains("mistral") -> 0.25
-            // Cohere
-            id.contains("command-r-plus") -> 2.5
-            id.contains("command-r") -> 0.15
-            id.contains("command") -> 1.0
-            // AI21
-            id.contains("jamba-1.5-large") -> 2.0
-            id.contains("jamba-1.5-mini") -> 0.2
-            id.contains("jamba") -> 0.5
-            // DeepSeek
-            id.contains("deepseek") -> 0.14
-            // Chinese providers
-            id.contains("qwen") -> 0.5
-            id.contains("glm") -> 0.5
-            id.contains("doubao") -> 0.3
-            id.contains("moonshot") || id.contains("kimi") -> 1.0
-            id.contains("minimax") || id.contains("abab") -> 1.0
-            id.contains("baichuan") -> 0.5
-            id.contains("yi") -> 0.3
-            id.contains("step") -> 0.5
-            id.contains("hunyuan") -> 0.5
-            id.contains("spark") -> 0.5
-            // Open source (via aggregators)
-            id.contains("llama-3.3-70b") || id.contains("llama-3.1-70b") -> 0.59
-            id.contains("llama-3.1-405b") -> 3.0
-            id.contains("llama-3.1-8b") || id.contains("llama-3-8b") -> 0.05
-            id.contains("llama") -> 0.2
-            // Perplexity
-            id.contains("sonar-pro") -> 3.0
-            id.contains("sonar") -> 1.0
-            // Local models
-            id.contains("ollama") || id.contains("lmstudio") -> 0.0
-            else -> 0.0
-        }
+        return modelInference.inferInputPrice(modelId, provider)
     }
     
     /**
@@ -705,17 +335,9 @@ class AiApiClient(private val context: Context) {
         }
     }
     
-    private fun buildIconPrompt(userPrompt: String): String = """
-生成一个精美的应用图标：
-- 尺寸：1024x1024，正方形
-- 风格：现代简洁专业
-- 背景：纯色或简单渐变
-- 图案：居中清晰，辨识度高
-
-用户需求：$userPrompt
-
-直接输出图标图片。
-    """.trimIndent()
+    private fun buildIconPrompt(userPrompt: String): String {
+        return imageSupport.buildIconPrompt(userPrompt)
+    }
     
     private fun generateIconWithGemini(
         baseUrl: String, apiKey: String, modelId: String, 
@@ -801,45 +423,11 @@ class AiApiClient(private val context: Context) {
     }
     
     private fun parseImageFromGeminiResponse(body: String): Result<String> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val parts = json.getAsJsonArray("candidates")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("content")
-                ?.getAsJsonArray("parts")
-            
-            parts?.forEach { part ->
-                val inlineData = part.asJsonObject.getAsJsonObject("inlineData")
-                if (inlineData != null) {
-                    val data = inlineData.get("data")?.asString
-                    if (data != null) return Result.success(data)
-                }
-            }
-            Result.failure(Exception("未找到图像数据"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return imageSupport.parseImageFromGeminiResponse(body)
     }
     
     private fun parseImageFromChatResponse(body: String): Result<String> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val content = json.getAsJsonArray("choices")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("message")
-                ?.get("content")?.asString ?: ""
-            
-            // 尝试从内容中提取 base64 图像
-            val base64Regex = "data:image/[^;]+;base64,([A-Za-z0-9+/=]+)".toRegex()
-            val match = base64Regex.find(content)
-            if (match != null) {
-                Result.success(match.groupValues[1])
-            } else {
-                Result.failure(Exception("未找到图像数据"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return imageSupport.parseImageFromChatResponse(body)
     }
     
     // ==================== 通用聊天接口 ====================
@@ -943,23 +531,7 @@ class AiApiClient(private val context: Context) {
     }
     
     private fun parseGeminiChatResponse(body: String): Result<String> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val text = json.getAsJsonArray("candidates")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("content")
-                ?.getAsJsonArray("parts")
-                ?.get(0)?.asJsonObject
-                ?.get("text")?.asString
-            
-            if (text != null) {
-                Result.success(text)
-            } else {
-                Result.failure(Exception("无法解析响应"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return responseParser.parseGeminiChatResponse(body)
     }
     
     /**
@@ -1009,20 +581,7 @@ class AiApiClient(private val context: Context) {
     }
     
     private fun parseAnthropicChatResponse(body: String): Result<String> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val text = json.getAsJsonArray("content")
-                ?.get(0)?.asJsonObject
-                ?.get("text")?.asString
-            
-            if (text != null) {
-                Result.success(text)
-            } else {
-                Result.failure(Exception("无法解析响应"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return responseParser.parseAnthropicChatResponse(body)
     }
     
     /**
@@ -1246,19 +805,7 @@ class AiApiClient(private val context: Context) {
     }
     
     private fun parseOpenAIChatResponse(body: String): Result<String> {
-        return try {
-val json = gson.fromJson(body, JsonObject::class.java)
-            val choiceObj = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
-            val content = extractContentFrom(choiceObj)
-            
-            if (content != null) {
-                Result.success(content)
-            } else {
-                Result.failure(Exception("无法解析响应"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return responseParser.parseOpenAIChatResponse(body)
     }
     
     /**
@@ -1792,35 +1339,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
      * 解析 OpenAI Tool Calling 响应
      */
     private fun parseOpenAIToolResponse(body: String): Result<ToolCallResponse> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val choice = json.getAsJsonArray("choices")?.get(0)?.asJsonObject
-            val message = choice?.getAsJsonObject("message")
-            
-            val textContent = message?.get("content")?.asString ?: ""
-            val toolCallsJson = message?.getAsJsonArray("tool_calls")
-            
-            val toolCalls = toolCallsJson?.mapNotNull { tc ->
-                val tcObj = tc.asJsonObject
-                val function = tcObj.getAsJsonObject("function")
-                val id = tcObj.get("id")?.asString ?: ""
-                val name = function?.get("name")?.asString ?: return@mapNotNull null
-                val argsStr = function.get("arguments")?.asString ?: "{}"
-                val args = try {
-                    gson.fromJson(argsStr, Map::class.java) as Map<String, Any?>
-                } catch (e: Exception) {
-                    emptyMap()
-                }
-                ToolCallData(id, name, args)
-            } ?: emptyList()
-            
-            Result.success(ToolCallResponse(
-                textContent = textContent,
-                toolCalls = toolCalls
-            ))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return responseParser.parseOpenAIToolResponse(body)
     }
     
     /**
@@ -1907,45 +1426,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
      * 解析 Gemini Tool Calling 响应
      */
     private fun parseGeminiToolResponse(body: String): Result<ToolCallResponse> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val parts = json.getAsJsonArray("candidates")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("content")
-                ?.getAsJsonArray("parts")
-            
-            var textContent = ""
-            val toolCalls = mutableListOf<ToolCallData>()
-            
-            parts?.forEach { part ->
-                val partObj = part.asJsonObject
-                
-                // 文本内容
-                partObj.get("text")?.asString?.let {
-                    textContent += it
-                }
-                
-                // Function调用
-                partObj.getAsJsonObject("functionCall")?.let { fc ->
-                    val name = fc.get("name")?.asString ?: return@let
-                    val args = fc.getAsJsonObject("args")?.let { argsObj ->
-                        gson.fromJson(argsObj, Map::class.java) as Map<String, Any?>
-                    } ?: emptyMap()
-                    toolCalls.add(ToolCallData(
-                        id = java.util.UUID.randomUUID().toString(),
-                        name = name,
-                        arguments = args
-                    ))
-                }
-            }
-            
-            Result.success(ToolCallResponse(
-                textContent = textContent,
-                toolCalls = toolCalls
-            ))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return responseParser.parseGeminiToolResponse(body)
     }
     
     /**
@@ -2010,39 +1491,7 @@ val json = gson.fromJson(body, JsonObject::class.java)
      * 解析 Anthropic Tool Calling 响应
      */
     private fun parseAnthropicToolResponse(body: String): Result<ToolCallResponse> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val content = json.getAsJsonArray("content")
-            
-            var textContent = ""
-            val toolCalls = mutableListOf<ToolCallData>()
-            
-            content?.forEach { block ->
-                val blockObj = block.asJsonObject
-                val type = blockObj.get("type")?.asString
-                
-                when (type) {
-                    "text" -> {
-                        textContent += blockObj.get("text")?.asString ?: ""
-                    }
-                    "tool_use" -> {
-                        val id = blockObj.get("id")?.asString ?: ""
-                        val name = blockObj.get("name")?.asString ?: ""
-                        val input = blockObj.getAsJsonObject("input")?.let { inputObj ->
-                            gson.fromJson(inputObj, Map::class.java) as Map<String, Any?>
-                        } ?: emptyMap()
-                        toolCalls.add(ToolCallData(id, name, input))
-                    }
-                }
-            }
-            
-            Result.success(ToolCallResponse(
-                textContent = textContent,
-                toolCalls = toolCalls
-            ))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return responseParser.parseAnthropicToolResponse(body)
     }
     
     // ==================== 流式 Tool Calling 接口 ====================
@@ -2555,7 +2004,6 @@ val json = gson.fromJson(body, JsonObject::class.java)
      * @return 返回 base64 编码的图像数据
      */
     suspend fun generateImage(
-        context: Context,
         prompt: String,
         apiKey: ApiKeyConfig,
         model: SavedModel,
@@ -2682,72 +2130,21 @@ val json = gson.fromJson(body, JsonObject::class.java)
      * 解析 DALL-E 响应
      */
     private fun parseImageFromDallEResponse(body: String): Result<String> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val data = json.getAsJsonArray("data")?.get(0)?.asJsonObject
-            val b64Json = data?.get("b64_json")?.asString
-            
-            if (b64Json != null) {
-                Result.success(b64Json)
-            } else {
-                // 尝试获取 URL 并下载
-                val url = data?.get("url")?.asString
-                if (url != null) {
-                    downloadImageAsBase64(url)
-                } else {
-                    Result.failure(Exception("未找到图像数据"))
-                }
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return imageSupport.parseImageFromDallEResponse(body)
     }
     
     /**
      * 解析 Gemini 图像响应
      */
     private fun parseImageFromGeminiImageResponse(body: String): Result<String> {
-        return try {
-            val json = gson.fromJson(body, JsonObject::class.java)
-            val parts = json.getAsJsonArray("candidates")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("content")
-                ?.getAsJsonArray("parts")
-            
-            parts?.forEach { part ->
-                val inlineData = part.asJsonObject.getAsJsonObject("inlineData")
-                    ?: part.asJsonObject.getAsJsonObject("inline_data")
-                if (inlineData != null) {
-                    val data = inlineData.get("data")?.asString
-                    if (data != null) return Result.success(data)
-                }
-            }
-            Result.failure(Exception("未找到图像数据"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return imageSupport.parseImageFromGeminiImageResponse(body)
     }
     
     /**
      * 下载图像并转为 base64
      */
     private fun downloadImageAsBase64(url: String): Result<String> {
-        return try {
-            val request = Request.Builder().url(url).get().build()
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                val bytes = response.body?.bytes()
-                if (bytes != null) {
-                    Result.success(Base64.encodeToString(bytes, Base64.NO_WRAP))
-                } else {
-                    Result.failure(Exception("下载图像失败"))
-                }
-            } else {
-                Result.failure(Exception("下载图像失败: ${response.code}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return imageSupport.downloadImageAsBase64(url)
     }
 }
 

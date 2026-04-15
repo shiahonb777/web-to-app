@@ -3,11 +3,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumOutlinedButton
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.documentfile.provider.DocumentFile
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -30,31 +28,31 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
-import com.webtoapp.core.php.PhpAppRuntime
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.php.PhpSampleManager
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.data.model.PhpAppConfig
 import com.webtoapp.ui.components.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 import java.io.File
-import java.util.zip.ZipInputStream
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.screens.create.common.CreateScreenState
+import com.webtoapp.ui.screens.create.runtime.PhpProjectImportAnalysis
+import com.webtoapp.ui.screens.create.runtime.PhpProjectImporter
+import com.webtoapp.ui.screens.create.runtime.PhpProjectSourceLoader
 
 /**
- * 创建/编辑 PHP 应用页面
+ * create/edit PHP app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Laravel=红, ThinkPHP=蓝, CodeIgniter=橙, Slim=绿）
- * - Composer 依赖面板（解析 composer.json）
- * - Web 根目录可视化选择器
- * - PHP 扩展开关面板
- * - 数据库配置区
- * - 框架特定提示
+ * Note
+ * Hero area( Laravel=, ThinkPHP=, CodeIgniter=, Slim=)
+ * Composer panel( composer. json)
+ * Web directory select
+ * PHP expand panel
+ * config
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -73,12 +71,14 @@ fun CreatePhpAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
+    val projectImporter = remember(context) { PhpProjectImporter(context) }
+    val sourceLoader = remember { PhpProjectSourceLoader() }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // PHP 配置
+    // PHP config
     var documentRoot by remember { mutableStateOf("") }
     var entryFile by remember { mutableStateOf("index.php") }
     var landscapeMode by remember { mutableStateOf(false) }
@@ -86,22 +86,22 @@ fun CreatePhpAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：Composer 依赖
+    // Composer
     var composerDeps by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var composerDevDeps by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var showAllDeps by remember { mutableStateOf(false) }
     var showAllDevDeps by remember { mutableStateOf(false) }
     
-    // 增强：检测到的 Web 目录
+    // Web directory
     var detectedWebDirs by remember { mutableStateOf<List<String>>(emptyList()) }
     var useCustomDocRoot by remember { mutableStateOf(false) }
     
-    // 增强：PHP 扩展
+    // PHP
     var phpExtensions by remember { mutableStateOf<Map<String, Boolean>>(mapOf(
         "pdo_sqlite" to true,
         "json" to true,
@@ -113,19 +113,47 @@ fun CreatePhpAppScreen(
         "xml" to false
     )) }
     
-    // 增强：数据库
+    // Note
     var detectedDbFiles by remember { mutableStateOf<List<String>>(emptyList()) }
     var sqlitePath by remember { mutableStateOf("") }
     
-    // 增强：框架版本
+    // version
     var frameworkVersion by remember { mutableStateOf<String?>(null) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val screenState = remember(isCreating, creationPhase, errorMessage) {
+        CreateScreenState(
+            isBusy = isCreating,
+            phase = creationPhase,
+            errorMessage = errorMessage
+        )
+    }
+
+    fun applyImportAnalysis(
+        imported: com.webtoapp.ui.screens.create.common.ImportedProject<PhpProjectImportAnalysis>,
+        appNameOverride: String? = null,
+    ) {
+        val analysis = imported.analysis
+        selectedProjectDir = analysis.projectDir.absolutePath
+        detectedFramework = analysis.framework
+        documentRoot = analysis.documentRoot
+        entryFile = analysis.entryFile ?: entryFile
+        envVars = analysis.envVars
+        composerDeps = analysis.composerDependencies
+        composerDevDeps = analysis.composerDevDependencies
+        detectedWebDirs = analysis.detectedWebDirs
+        phpExtensions = analysis.phpExtensions
+        detectedDbFiles = analysis.detectedDatabaseFiles
+        sqlitePath = analysis.sqlitePath
+        frameworkVersion = analysis.frameworkVersion
+        projectId = imported.projectId
+        appName = appNameOverride ?: analysis.suggestedAppName ?: appName
+    }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -145,107 +173,11 @@ fun CreatePhpAppScreen(
         }
     }
     
-    // 依赖下载状态
+    // downloadstate
     val downloadState by WordPressDependencyManager.downloadState.collectAsStateWithLifecycle()
     var showDownloadDialog by remember { mutableStateOf(false) }
     
-    // 公共项目处理逻辑（文件夹选择和 ZIP 解压共用）
-    val processProjectDir: suspend (File) -> Unit = processProject@{ inputDir ->
-        // 智能识别实际项目根：如果根目录没有 PHP 文件，扫描子目录
-        val projectDir = resolvePhpProjectRoot(inputDir)
-        selectedProjectDir = projectDir.absolutePath
-        
-        val runtime = PhpAppRuntime(context)
-        val framework = runtime.detectFramework(projectDir)
-        detectedFramework = framework
-        
-        val detectedDocRoot = runtime.detectDocumentRoot(projectDir, framework)
-        if (detectedDocRoot.isNotEmpty()) {
-            documentRoot = detectedDocRoot
-        }
-        
-        val detected = runtime.detectEntryFile(projectDir, detectedDocRoot)
-        entryFile = detected
-        
-        // 增强：扫描可能的 Web 目录
-        val possibleDirs = listOf("public", "www", "htdocs", "web", "webroot", "html")
-        detectedWebDirs = possibleDirs.filter { File(projectDir, it).isDirectory }
-        
-        // 增强：检测数据库文件
-        val dbExtensions = listOf(".db", ".sqlite", ".sqlite3")
-        detectedDbFiles = projectDir.walk().maxDepth(3)
-            .filter { f -> dbExtensions.any { f.name.endsWith(it) } }
-            .map { it.relativeTo(projectDir).path }
-            .toList()
-        if (detectedDbFiles.isNotEmpty()) {
-            sqlitePath = detectedDbFiles.first()
-        }
-        
-        // 读取 composer.json
-        val composerJson = File(projectDir, "composer.json")
-        if (composerJson.exists()) {
-            try {
-                val content = composerJson.readText()
-                val gson = com.google.gson.Gson()
-                val json = gson.fromJson(content, com.google.gson.JsonObject::class.java)
-                json.get("name")?.asString?.let { name ->
-                    if (appName.isBlank()) appName = name.substringAfterLast("/")
-                }
-                
-                // 增强：解析依赖
-                json.getAsJsonObject("require")?.let { req ->
-                    composerDeps = req.entrySet()
-                        .filter { it.key != "php" }
-                        .associate { it.key to it.value.asString }
-                }
-                json.getAsJsonObject("require-dev")?.let { dev ->
-                    composerDevDeps = dev.entrySet()
-                        .associate { it.key to it.value.asString }
-                }
-                
-                // 增强：提取 PHP 版本要求
-                json.getAsJsonObject("require")?.get("php")?.asString?.let {
-                    frameworkVersion = it
-                }
-                
-                // 增强：根据依赖自动启用扩展
-                val allDepKeys = (composerDeps.keys + composerDevDeps.keys).toSet()
-                if (allDepKeys.any { it.contains("gd") || it.contains("image") || it.contains("intervention") }) {
-                    phpExtensions = phpExtensions.toMutableMap().apply { put("gd", true) }
-                }
-                if (allDepKeys.any { it.contains("zip") || it.contains("archive") }) {
-                    phpExtensions = phpExtensions.toMutableMap().apply { put("zip", true) }
-                }
-                if (allDepKeys.any { it.contains("xml") || it.contains("soap") }) {
-                    phpExtensions = phpExtensions.toMutableMap().apply { put("xml", true) }
-                }
-                if (allDepKeys.any { it.contains("curl") || it.contains("guzzle") || it.contains("http") }) {
-                    phpExtensions = phpExtensions.toMutableMap().apply { put("curl", true) }
-                }
-            } catch (e: Exception) { android.util.Log.w("CreatePhpApp", "Failed to parse composer.json dependencies", e) }
-        }
-        
-        // 检查 PHP 依赖
-        if (!WordPressDependencyManager.isPhpReady(context)) {
-            showDownloadDialog = true
-            val success = WordPressDependencyManager.downloadAllDependencies(context)
-            showDownloadDialog = false
-            if (!success) {
-                errorMessage = Strings.wpDownloadFailed
-                isCreating = false
-                return@processProject
-            }
-        }
-        
-        // 复制项目文件
-        creationPhase = Strings.copyingProjectFiles
-        val newProjectId = java.util.UUID.randomUUID().toString()
-        runtime.createProject(newProjectId, projectDir)
-        projectId = newProjectId
-        creationPhase = Strings.phpProjectReady
-    }
-    
-    // 文件选择器
+    // fileselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -256,38 +188,24 @@ fun CreatePhpAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.copyingProjectFiles
+                creationPhase = AppStringsProvider.current().copyingProjectFiles
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        // 使用 SAF API 复制文件到临时目录（兼容 Android 13+ Scoped Storage）
-                        val treeDoc = DocumentFile.fromTreeUri(context, treeUri)
-                        if (treeDoc == null || !treeDoc.exists()) {
-                            errorMessage = Strings.dirNotExists
-                            isCreating = false
-                            return@withContext
+                    val tempDir = File(context.cacheDir, "php_saf_import_${System.currentTimeMillis()}").apply { mkdirs() }
+                    try {
+                        val stagedDir = sourceLoader.copyDocumentTreeToTempDir(context, treeUri, tempDir)
+                        creationPhase = AppStringsProvider.current().phpFrameworkDetected
+                        val imported = projectImporter.importProject(stagedDir) { downloading ->
+                            showDownloadDialog = downloading
                         }
-                        
-                        val tempDir = File(context.cacheDir, "php_saf_import_${System.currentTimeMillis()}")
-                        tempDir.mkdirs()
-                        copyDocumentTreeToLocal(context, treeDoc, tempDir)
-                        
-                        if (tempDir.listFiles().isNullOrEmpty()) {
-                            errorMessage = Strings.dirNotExists
-                            tempDir.deleteRecursively()
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        creationPhase = Strings.phpFrameworkDetected
-                        processProjectDir(tempDir)
-                        
-                        // 清理临时目录
+                        applyImportAnalysis(imported)
+                        creationPhase = AppStringsProvider.current().phpProjectReady
+                    } finally {
                         tempDir.deleteRecursively()
                     }
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.projectImportFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().projectImportFailed
                 } finally {
                     isCreating = false
                 }
@@ -295,70 +213,31 @@ fun CreatePhpAppScreen(
         }
     }
     
-    // ZIP 文件选择器
+    // ZIP fileselect
     val zipPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let { zipUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.phpExtractingZip
+                creationPhase = AppStringsProvider.current().phpExtractingZip
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        // 解压 ZIP 到临时目录
-                        val extractDir = File(context.cacheDir, "php_zip_extract_${System.currentTimeMillis()}")
-                        extractDir.mkdirs()
-                        
-                        context.contentResolver.openInputStream(zipUri)?.use { inputStream ->
-                            ZipInputStream(inputStream).use { zis ->
-                                var entry = zis.nextEntry
-                                while (entry != null) {
-                                    // 跳过 macOS 元数据文件
-                                    val name = entry.name
-                                    if (!entry.isDirectory && !name.startsWith("__MACOSX/") && !name.substringAfterLast("/").startsWith("._")) {
-                                        val outFile = File(extractDir, name)
-                                        outFile.parentFile?.mkdirs()
-                                        outFile.outputStream().use { out ->
-                                            zis.copyTo(out)
-                                        }
-                                    }
-                                    zis.closeEntry()
-                                    entry = zis.nextEntry
-                                }
-                            }
-                        } ?: run {
-                            errorMessage = Strings.phpZipExtractFailed
-                            isCreating = false
-                            return@withContext
+                    val extractDir = File(context.cacheDir, "php_zip_extract_${System.currentTimeMillis()}").apply { mkdirs() }
+                    try {
+                        val stagedDir = sourceLoader.extractZipToTempDir(context, zipUri, extractDir)
+                        creationPhase = AppStringsProvider.current().phpFrameworkDetected
+                        val imported = projectImporter.importProject(stagedDir) { downloading ->
+                            showDownloadDialog = downloading
                         }
-                        
-                        // 判断项目根目录：如果解压后只有一个子目录，则用该子目录作为项目根
-                        val children = extractDir.listFiles()
-                        val projectDir = if (children != null && children.size == 1 && children[0].isDirectory) {
-                            children[0]
-                        } else {
-                            extractDir
-                        }
-                        
-                        // 检查是否有 PHP 文件
-                        val hasPhpFiles = projectDir.walk().maxDepth(3).any { it.extension == "php" }
-                        if (!hasPhpFiles) {
-                            errorMessage = Strings.phpZipNoPhpFiles
-                            extractDir.deleteRecursively()
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        creationPhase = Strings.phpFrameworkDetected
-                        processProjectDir(projectDir)
-                        
-                        // 清理解压临时目录
+                        applyImportAnalysis(imported)
+                        creationPhase = AppStringsProvider.current().phpProjectReady
+                    } finally {
                         extractDir.deleteRecursively()
                     }
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.phpZipExtractFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().phpZipExtractFailed
                 } finally {
                     isCreating = false
                 }
@@ -368,14 +247,14 @@ fun CreatePhpAppScreen(
     
     val canCreate = projectId != null
     
-    // 获取框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework?.lowercase()) {
             "laravel" -> Color(0xFFFF2D20)
             "thinkphp" -> Color(0xFF6190E8)
             "codeigniter" -> Color(0xFFDD4814)
             "slim" -> Color(0xFF74B72E)
-            else -> Color(0xFF777BB4) // PHP默认紫色
+            else -> Color(0xFF777BB4) // PHPdefault
         }
     }
     
@@ -383,10 +262,10 @@ fun CreatePhpAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createPhpApp) },
+                title = { Text(AppStringsProvider.current().createPhpApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -412,7 +291,7 @@ fun CreatePhpAppScreen(
                         },
                         enabled = canCreate && !isCreating
                     ) {
-                        Text(if (isEdit) Strings.btnSave else Strings.btnCreate)
+                        Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -429,42 +308,32 @@ fun CreatePhpAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             PhpHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
                 frameworkVersion = frameworkVersion
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.samplePhpSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().samplePhpSubtitle,
                     samples = remember { PhpSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = PhpSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
-                                selectedProjectDir = path
                                 isCreating = true
-                                creationPhase = Strings.phpFrameworkDetected
+                                creationPhase = AppStringsProvider.current().phpFrameworkDetected
                                 try {
-                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                        val projectDir = java.io.File(path)
-                                        val runtime = PhpAppRuntime(context)
-                                        val framework = runtime.detectFramework(projectDir)
-                                        detectedFramework = framework
-                                        val detectedDocRoot = runtime.detectDocumentRoot(projectDir, framework)
-                                        if (detectedDocRoot.isNotEmpty()) documentRoot = detectedDocRoot
-                                        entryFile = runtime.detectEntryFile(projectDir, detectedDocRoot)
-                                        appName = sample.name
-                                        creationPhase = Strings.copyingProjectFiles
-                                        val newProjectId = java.util.UUID.randomUUID().toString()
-                                        runtime.createProject(newProjectId, projectDir)
-                                        projectId = newProjectId
-                                        creationPhase = Strings.phpProjectReady
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
+                                    val imported = projectImporter.importProject(File(path)) { downloading ->
+                                        showDownloadDialog = downloading
                                     }
+                                    applyImportAnalysis(imported, appNameOverride = sample.name)
+                                    creationPhase = AppStringsProvider.current().phpProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -476,7 +345,7 @@ fun CreatePhpAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -486,13 +355,13 @@ fun CreatePhpAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -502,19 +371,19 @@ fun CreatePhpAppScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -524,11 +393,11 @@ fun CreatePhpAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.phpSelectProject, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().phpSelectProject, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.phpSupportedFrameworks,
+                        text = AppStringsProvider.current().phpSupportedFrameworks,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -544,17 +413,17 @@ fun CreatePhpAppScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.phpProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(AppStringsProvider.current().phpProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(selectedProjectDir!!.substringAfterLast("/"), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                                 if (detectedFramework != null && detectedFramework != "raw") {
-                                    Text("${Strings.phpFrameworkDetected}: $detectedFramework", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${AppStringsProvider.current().phpFrameworkDetected}: $detectedFramework", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                Text("${Strings.phpDocumentRoot}: ${documentRoot.ifBlank { "/" }}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${Strings.phpEntryFile}: $entryFile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${AppStringsProvider.current().phpDocumentRoot}: ${documentRoot.ifBlank { "/" }}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${AppStringsProvider.current().phpEntryFile}: $entryFile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 if (frameworkVersion != null) {
-                                    Text("${Strings.phpVersion}: $frameworkVersion", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${AppStringsProvider.current().phpVersion}: $frameworkVersion", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -568,7 +437,7 @@ fun CreatePhpAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.phpSelectProject)
+                        Text(AppStringsProvider.current().phpSelectProject)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     PremiumOutlinedButton(
@@ -578,15 +447,15 @@ fun CreatePhpAppScreen(
                     ) {
                         Icon(Icons.Default.Archive, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.phpImportZip)
+                        Text(AppStringsProvider.current().phpImportZip)
                     }
                 }
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. Composer 依赖面板 ==========
+                // ========== 5. Composer Dependencies Panel ==========
                 if (composerDeps.isNotEmpty() || composerDevDeps.isNotEmpty()) {
                     PhpComposerDepsCard(
                         deps = composerDeps,
@@ -599,7 +468,7 @@ fun CreatePhpAppScreen(
                     )
                 }
                 
-                // ========== 6. Web 根目录选择器 ==========
+                // ========== 6. Web Root Selector ==========
                 PhpDocRootCard(
                     detectedWebDirs = detectedWebDirs,
                     currentDocRoot = documentRoot,
@@ -614,7 +483,7 @@ fun CreatePhpAppScreen(
                     onEntryFileChange = { entryFile = it }
                 )
                 
-                // ========== 7. PHP 扩展面板 ==========
+                // ========== 7. PHP Extensions Panel ==========
                 PhpExtensionsCard(
                     extensions = phpExtensions,
                     onToggle = { ext, enabled ->
@@ -622,7 +491,7 @@ fun CreatePhpAppScreen(
                     }
                 )
                 
-                // ========== 8. 数据库配置 ==========
+                // ========== 8. Database Settings ==========
                 if (detectedDbFiles.isNotEmpty()) {
                     PhpDatabaseCard(
                         detectedDbFiles = detectedDbFiles,
@@ -631,10 +500,10 @@ fun CreatePhpAppScreen(
                     )
                 }
                 
-                // ========== 9. 框架提示 ==========
+                // ========== 9. Framework Tips ==========
                 PhpFrameworkTipCard(framework = detectedFramework)
                 
-                // ========== 10. 环境变量 ==========
+                // ========== 10. Environment Variables ==========
                 RuntimeEnvVarsCard(
                     envVars = envVars,
                     newEnvKey = newEnvKey,
@@ -651,12 +520,12 @@ fun CreatePhpAppScreen(
                 )
             }
             
-            // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
+            // Status message
+            if (screenState.isBusy) {
+                RuntimeLoadingCard(screenState.phase)
             }
             
-            errorMessage?.let { error ->
+            screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             
@@ -664,32 +533,32 @@ fun CreatePhpAppScreen(
         }
     }
     
-    // PHP 下载对话框
+    // PHP download dialog
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text(Strings.wpDownloadDeps) },
+            title = { Text(AppStringsProvider.current().wpDownloadDeps) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     when (val state = downloadState) {
                         is WordPressDependencyManager.DownloadState.Downloading -> {
-                            Text(Strings.wpDownloading)
+                            Text(AppStringsProvider.current().wpDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
                         }
                         is WordPressDependencyManager.DownloadState.Extracting -> {
-                            Text("${Strings.wpExtracting} ${state.fileName}...")
+                            Text("${AppStringsProvider.current().wpExtracting} ${state.fileName}...")
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                         is WordPressDependencyManager.DownloadState.Complete -> {
-                            Text(Strings.wpDepsReady)
+                            Text(AppStringsProvider.current().wpDepsReady)
                         }
                         is WordPressDependencyManager.DownloadState.Error -> {
                             Text(state.message, color = MaterialTheme.colorScheme.error)
                         }
                         else -> {
-                            Text(Strings.wpDownloading)
+                            Text(AppStringsProvider.current().wpDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -702,10 +571,10 @@ fun CreatePhpAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * PHP 框架品牌化 Hero 区域
+ * PHP Hero area
  */
 @Composable
 private fun PhpHeroSection(
@@ -743,14 +612,14 @@ private fun PhpHeroSection(
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = if (detectedFramework != null && detectedFramework != "raw")
-                            "$detectedFramework ${Strings.phpHeroTitle}"
-                        else Strings.phpHeroTitle,
+                            "$detectedFramework ${AppStringsProvider.current().phpHeroTitle}"
+                        else AppStringsProvider.current().phpHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.phpHeroDesc,
+                        text = AppStringsProvider.current().phpHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -776,7 +645,7 @@ private fun PhpHeroSection(
 }
 
 /**
- * Composer 依赖面板
+ * Composer panel
  */
 @Composable
 private fun PhpComposerDepsCard(
@@ -797,7 +666,7 @@ private fun PhpComposerDepsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpComposerDeps, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpComposerDeps, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -815,7 +684,7 @@ private fun PhpComposerDepsCard(
             
             if (deps.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("${Strings.phpRequireDeps} (${deps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text("${AppStringsProvider.current().phpRequireDeps} (${deps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
                 
                 val visibleDeps = if (showAllDeps) deps.entries.toList() else deps.entries.take(5).toList()
@@ -831,7 +700,7 @@ private fun PhpComposerDepsCard(
                 }
                 if (deps.size > 5) {
                     TextButton(onClick = onToggleDeps, modifier = Modifier.fillMaxWidth()) {
-                        Text(if (showAllDeps) Strings.close else "${Strings.more} (${deps.size - 5})")
+                        Text(if (showAllDeps) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${deps.size - 5})")
                     }
                 }
             }
@@ -840,7 +709,7 @@ private fun PhpComposerDepsCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("${Strings.phpRequireDevDeps} (${devDeps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text("${AppStringsProvider.current().phpRequireDevDeps} (${devDeps.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
                 
                 val visibleDevDeps = if (showAllDevDeps) devDeps.entries.toList() else devDeps.entries.take(3).toList()
@@ -856,7 +725,7 @@ private fun PhpComposerDepsCard(
                 }
                 if (devDeps.size > 3) {
                     TextButton(onClick = onToggleDevDeps, modifier = Modifier.fillMaxWidth()) {
-                        Text(if (showAllDevDeps) Strings.close else "${Strings.more} (${devDeps.size - 3})")
+                        Text(if (showAllDevDeps) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${devDeps.size - 3})")
                     }
                 }
             }
@@ -865,7 +734,7 @@ private fun PhpComposerDepsCard(
 }
 
 /**
- * Web 根目录选择卡片
+ * Web directoryselectcard
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -888,14 +757,14 @@ private fun PhpDocRootCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.FolderOpen, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpDocRootSelect, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpDocRootSelect, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(Strings.phpDocRootHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().phpDocRootHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
             
             if (detectedWebDirs.isNotEmpty()) {
-                Text(Strings.phpDetectedDirs, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(AppStringsProvider.current().phpDetectedDirs, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -904,7 +773,7 @@ private fun PhpDocRootCard(
                     PremiumFilterChip(
                         selected = currentDocRoot.isBlank() && !useCustom,
                         onClick = { onSelectDir("") },
-                        label = { Text("/ (${Strings.phpProjectRoot})") },
+                        label = { Text("/ (${AppStringsProvider.current().phpProjectRoot})") },
                         leadingIcon = if (currentDocRoot.isBlank() && !useCustom) {
                             { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -922,7 +791,7 @@ private fun PhpDocRootCard(
                     PremiumFilterChip(
                         selected = useCustom,
                         onClick = { onToggleCustom(true) },
-                        label = { Text(Strings.phpCustomPath) },
+                        label = { Text(AppStringsProvider.current().phpCustomPath) },
                         leadingIcon = if (useCustom) {
                             { Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -936,7 +805,7 @@ private fun PhpDocRootCard(
                     PremiumTextField(
                         value = currentDocRoot,
                         onValueChange = onCustomPathChange,
-                        label = { Text(Strings.phpDocumentRoot) },
+                        label = { Text(AppStringsProvider.current().phpDocumentRoot) },
                         placeholder = { Text("public") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -948,7 +817,7 @@ private fun PhpDocRootCard(
             PremiumTextField(
                 value = entryFile,
                 onValueChange = onEntryFileChange,
-                label = { Text(Strings.phpEntryFile) },
+                label = { Text(AppStringsProvider.current().phpEntryFile) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -957,7 +826,7 @@ private fun PhpDocRootCard(
 }
 
 /**
- * PHP 扩展面板
+ * PHP panel
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -974,10 +843,10 @@ private fun PhpExtensionsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpExtensions, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpExtensions, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(Strings.phpExtensionsHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(AppStringsProvider.current().phpExtensionsHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
             
             FlowRow(
@@ -1000,7 +869,7 @@ private fun PhpExtensionsCard(
 }
 
 /**
- * 数据库配置卡片
+ * configcard
  */
 @Composable
 private fun PhpDatabaseCard(
@@ -1017,7 +886,7 @@ private fun PhpDatabaseCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Storage, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpDatabaseConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpDatabaseConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -1030,7 +899,7 @@ private fun PhpDatabaseCard(
                     Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("${Strings.phpDbDetected} (${detectedDbFiles.size})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        Text("${AppStringsProvider.current().phpDbDetected} (${detectedDbFiles.size})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                         detectedDbFiles.take(3).forEach { path ->
                             Text(path, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -1042,7 +911,7 @@ private fun PhpDatabaseCard(
             PremiumTextField(
                 value = sqlitePath,
                 onValueChange = onPathChange,
-                label = { Text(Strings.phpSqlitePath) },
+                label = { Text(AppStringsProvider.current().phpSqlitePath) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -1051,15 +920,15 @@ private fun PhpDatabaseCard(
 }
 
 /**
- * 框架特定提示卡片
+ * hintcard
  */
 @Composable
 private fun PhpFrameworkTipCard(framework: String?) {
     val tip = when (framework?.lowercase()) {
-        "laravel" -> Strings.phpLaravelTip
-        "thinkphp" -> Strings.phpThinkPhpTip
-        "codeigniter" -> Strings.phpCodeIgniterTip
-        "slim" -> Strings.phpSlimTip
+        "laravel" -> AppStringsProvider.current().phpLaravelTip
+        "thinkphp" -> AppStringsProvider.current().phpThinkPhpTip
+        "codeigniter" -> AppStringsProvider.current().phpCodeIgniterTip
+        "slim" -> AppStringsProvider.current().phpSlimTip
         else -> null
     }
     
@@ -1081,54 +950,11 @@ private fun PhpFrameworkTipCard(framework: String?) {
                 Icon(Icons.Outlined.Lightbulb, null, tint = tipColor, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text(Strings.phpFrameworkTip, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = tipColor)
+                    Text(AppStringsProvider.current().phpFrameworkTip, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = tipColor)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(tip, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
     }
-}
-
-/**
- * 通过 SAF API 递归复制 DocumentFile 目录树到本地目录
- * 解决 Android 13+ Scoped Storage 下直接 File 操作无权限读取外部存储的问题
- */
-private fun copyDocumentTreeToLocal(context: Context, docDir: DocumentFile, destDir: File) {
-    docDir.listFiles().forEach { child ->
-        val name = child.name ?: return@forEach
-        // 跳过 macOS 元数据目录
-        if (name == "__MACOSX" || name.startsWith("._")) return@forEach
-        
-        if (child.isDirectory) {
-            val subDir = File(destDir, name)
-            subDir.mkdirs()
-            copyDocumentTreeToLocal(context, child, subDir)
-        } else if (child.isFile) {
-            val destFile = File(destDir, name)
-            try {
-                context.contentResolver.openInputStream(child.uri)?.use { input ->
-                    destFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-            } catch (e: Exception) { android.util.Log.w("CreatePhpApp", "Failed to copy file: $name", e) }
-        }
-    }
-}
-
-/**
- * 智能识别 PHP 项目的实际根目录
- * 处理 ZIP 解压或文件夹导入后项目文件在子目录中的情况（如 lts.zip → lts/index.php）
- */
-private fun resolvePhpProjectRoot(dir: File): File {
-    // 根目录已有 PHP 文件，直接返回
-    if (dir.listFiles()?.any { it.isFile && it.extension == "php" } == true) return dir
-    
-    // 扫描一级子目录，找到包含 PHP 文件的子目录
-    val phpSubDir = dir.listFiles()
-        ?.filter { it.isDirectory && it.name != "__MACOSX" && !it.name.startsWith("._") }
-        ?.firstOrNull { sub -> sub.listFiles()?.any { it.isFile && it.extension == "php" } == true }
-    
-    return phpSubDir ?: dir
 }

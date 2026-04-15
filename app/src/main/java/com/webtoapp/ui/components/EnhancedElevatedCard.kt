@@ -27,13 +27,13 @@ import com.webtoapp.ui.theme.LocalAppTheme
 import com.webtoapp.ui.theme.LocalIsDarkTheme
 
 /**
- * macOS / iOS 风格自适应卡片（静态版本）
+ * macOS / iOS card( version)
  *
- * 玻璃质感通过以下方式实现（不模糊内容！）：
- * - 半透明填充（亮色 78% 白 / 暗色 12% 白）
- * - 极细白色边框 0.5dp
- * - 顶部内侧高光渐变（模拟玻璃曲面光泽）
- * - 柔和扩散阴影
+ * ( content! )
+ * ( 78% / 12%)
+ * 0. 5dp
+ * top gradient( )
+ * Note
  */
 @Composable
 fun EnhancedElevatedCard(
@@ -48,20 +48,20 @@ fun EnhancedElevatedCard(
     val isDark = LocalIsDarkTheme.current
     val cornerRadius = theme.shapes.cardRadius
 
-    // macOS 玻璃填充色 — 半透明，让底层背景隐约透过
+    // macOS- ,
     val glassFill = containerColor ?: if (isDark)
         Color.White.copy(alpha = 0.08f)
     else
         Color.White.copy(alpha = 0.85f)
 
-    // 极细边框 — macOS 玻璃面板的标志性特征
+    // macOS panel
     val borderColor = if (isDark)
         Color.White.copy(alpha = 0.08f)
     else
         Color.Black.copy(alpha = 0.05f)
 
 
-    // 柔和阴影色
+    // Note
     val shadowColor = if (isDark)
         Color.Black.copy(alpha = 0.35f)
     else
@@ -69,7 +69,7 @@ fun EnhancedElevatedCard(
 
     Surface(
         modifier = modifier
-            // 1. 柔和扩散阴影（不是 Material 硬边 elevation）
+            // 1. ( Material elevation)
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(cornerRadius),
@@ -77,12 +77,12 @@ fun EnhancedElevatedCard(
                 spotColor = shadowColor
             )
             .clip(RoundedCornerShape(cornerRadius))
-            // 2. 半透明填充 — 核心！
+            // 2. - !
             .background(glassFill, RoundedCornerShape(cornerRadius))
-            // 3. 极细边框
+            // 3.
             .border(0.5.dp, borderColor, RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
-        color = Color.Transparent,       // 关键：Surface 本身不上色
+        color = Color.Transparent,       // Surface
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
@@ -91,8 +91,8 @@ fun EnhancedElevatedCard(
 }
 
 /**
- * macOS / iOS 风格自适应卡片（可点击版本）
- * 带 spring 回弹按压动效
+ * macOS / iOS card( version)
+ * spring
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,7 +113,7 @@ fun EnhancedElevatedCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val cornerRadius = theme.shapes.cardRadius
 
-    // spring 回弹缩放
+    // spring
     val scale by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled) 0.97f else 1f,
         animationSpec = spring(
@@ -123,20 +123,20 @@ fun EnhancedElevatedCard(
         label = "cardPressScale"
     )
 
-    // 玻璃填充色
+    // Note
     val glassFill = containerColor ?: if (isDark)
         Color.White.copy(alpha = 0.08f)
     else
         Color.White.copy(alpha = 0.85f)
 
-    // 边框 — 按压时略微加亮
+    // Note
     val borderColor = if (isDark)
         Color.White.copy(alpha = if (isPressed) 0.15f else 0.08f)
     else
         Color.Black.copy(alpha = if (isPressed) 0.08f else 0.05f)
 
 
-    // 阴影
+    // Note
     val shadowColor = if (isDark)
         Color.Black.copy(alpha = 0.35f)
     else
@@ -145,12 +145,12 @@ fun EnhancedElevatedCard(
     Surface(
         onClick = onClick,
         modifier = modifier
-            // spring 回弹
+            // spring
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
-            // 柔和阴影（按压时减弱 = 贴近桌面的感觉）
+            // Note
             .shadow(
                 elevation = if (isPressed) 1.dp else 4.dp,
                 shape = RoundedCornerShape(cornerRadius),
@@ -158,9 +158,9 @@ fun EnhancedElevatedCard(
                 spotColor = shadowColor
             )
             .clip(RoundedCornerShape(cornerRadius))
-            // 半透明填充
+            // Note
             .background(glassFill, RoundedCornerShape(cornerRadius))
-            // 极细边框
+            // Note
             .border(0.5.dp, borderColor, RoundedCornerShape(cornerRadius)),
         enabled = enabled,
         shape = RoundedCornerShape(cornerRadius),
@@ -174,8 +174,8 @@ fun EnhancedElevatedCard(
 }
 
 /**
- * macOS / iOS 风格自适应卡片（Outlined 可点击版本）
- * 带 spring 回弹按压动效
+ * macOS / iOS card( Outlined version)
+ * spring
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,7 +194,7 @@ fun EnhancedOutlinedCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val cornerRadius = theme.shapes.cardRadius
 
-    // spring 回弹缩放
+    // spring
     val scale by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled) 0.97f else 1f,
         animationSpec = spring(
@@ -204,13 +204,13 @@ fun EnhancedOutlinedCard(
         label = "cardPressScale"
     )
 
-    // 背景填充色
+    // Note
     val backgroundColor = containerColor ?: if (isDark)
         Color.White.copy(alpha = 0.05f)
     else
         Color.White.copy(alpha = 0.95f)
 
-    // 边框颜色
+    // color
     val borderColor = if (isDark)
         Color.White.copy(alpha = if (isPressed) 0.2f else 0.12f)
     else
@@ -219,15 +219,15 @@ fun EnhancedOutlinedCard(
     Surface(
         onClick = onClick,
         modifier = modifier
-            // spring 回弹
+            // spring
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
             .clip(RoundedCornerShape(cornerRadius))
-            // 背景填充
+            // Note
             .background(backgroundColor, RoundedCornerShape(cornerRadius))
-            // 边框
+            // Note
             .border(1.dp, borderColor, RoundedCornerShape(cornerRadius)),
         enabled = enabled,
         shape = RoundedCornerShape(cornerRadius),

@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -34,7 +35,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.extension.ExtensionManager
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleSourceType
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +61,7 @@ internal fun UserScriptsTabContent(
                 onDelete = {
                     scope.launch {
                         extensionManager.deleteModule(module.id)
-                        Toast.makeText(context, Strings.deleted, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStringsProvider.current().deleted, Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -105,13 +106,13 @@ internal fun UserScriptsTabContent(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                if (searchQuery.isNotBlank()) Strings.noMatchingScripts else Strings.noUserScripts,
+                                if (searchQuery.isNotBlank()) AppStringsProvider.current().noMatchingScripts else AppStringsProvider.current().noUserScripts,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                if (searchQuery.isNotBlank()) Strings.tryDifferentSearch else Strings.noUserScriptsHint,
+                                if (searchQuery.isNotBlank()) AppStringsProvider.current().tryDifferentSearch else AppStringsProvider.current().noUserScriptsHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 textAlign = TextAlign.Center
@@ -127,13 +128,13 @@ internal fun UserScriptsTabContent(
                             ) {
                                 Icon(Icons.Default.Download, null, Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(Strings.importUserScript, style = MaterialTheme.typography.labelMedium)
+                                Text(AppStringsProvider.current().importUserScript, style = MaterialTheme.typography.labelMedium)
                             }
                         } else {
                             TextButton(onClick = onClearSearch) {
                                 Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.clearSearch, style = MaterialTheme.typography.labelMedium)
+                                Text(AppStringsProvider.current().clearSearch, style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -252,7 +253,7 @@ private fun UserScriptCard(
 
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
+                        Icon(Icons.Default.MoreVert, contentDescription = AppStringsProvider.current().more)
                     }
 
                     DropdownMenu(
@@ -260,7 +261,7 @@ private fun UserScriptCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(Strings.viewSourceCode) },
+                            text = { Text(AppStringsProvider.current().viewSourceCode) },
                             onClick = { showMenu = false; showSourceDialog = true },
                             leadingIcon = { Icon(Icons.Outlined.Code, null) }
                         )
@@ -272,7 +273,7 @@ private fun UserScriptCard(
                                 .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.btnDelete, color = MaterialTheme.colorScheme.error) },
+                            text = { Text(AppStringsProvider.current().btnDelete, color = MaterialTheme.colorScheme.error) },
                             onClick = { showMenu = false; onDelete() },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error) }
                         )
@@ -321,7 +322,7 @@ private fun UserScriptCard(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                Strings.onlyEffectiveOnMatchingSites.format(module.urlMatches.size),
+                                AppStringsProvider.current().onlyEffectiveOnMatchingSites.format(module.urlMatches.size),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -456,7 +457,7 @@ private fun ExtensionSourceBrowserDialog(
                                 expandedDirs = expandedDirs,
                                 onFileClick = { path, name ->
                                     val content = readExtensionFile(context, module, path)
-                                    selectedFileContent = content ?: Strings.cannotReadFile
+                                    selectedFileContent = content ?: AppStringsProvider.current().cannotReadFile
                                     selectedFileName = name
                                     selectedFilePath = path
                                 }
@@ -620,7 +621,7 @@ private fun FileContentView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "🖼️ ${Strings.imageFile}",
+                    "🖼️ ${AppStringsProvider.current().imageFile}",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -633,7 +634,7 @@ private fun FileContentView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    Strings.binaryFile,
+                    AppStringsProvider.current().binaryFile,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -691,7 +692,7 @@ private fun getFileIcon(fileName: String): androidx.compose.ui.graphics.vector.I
         fileName.endsWith(".woff") || fileName.endsWith(".woff2") || fileName.endsWith(".ttf") -> Icons.Outlined.FontDownload
         fileName == "manifest.json" -> Icons.Outlined.Settings
         fileName == "LICENSE" || fileName.startsWith("LICENSE") -> Icons.Outlined.Gavel
-        else -> Icons.Outlined.InsertDriveFile
+        else -> Icons.AutoMirrored.Outlined.InsertDriveFile
     }
 }
 

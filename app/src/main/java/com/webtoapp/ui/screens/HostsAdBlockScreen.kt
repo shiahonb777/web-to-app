@@ -23,14 +23,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.adblock.HostsSource
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
 /**
- * Hosts 广告拦截管理界面
- * 支持从文件和 URL 导入 hosts 规则
+ * Hosts interceptmanagement
+ * supportfromfile URL import hosts
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,20 +41,20 @@ fun HostsAdBlockScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // Get AdBlocker 实例（通过 Koin 注入）
+    // Get AdBlocker( Koin)
     val adBlocker = remember { org.koin.java.KoinJavaComponent.get<com.webtoapp.core.adblock.AdBlocker>(com.webtoapp.core.adblock.AdBlocker::class.java) }
     
-    // 状态
+    // state
     var hostsRulesCount by remember { mutableIntStateOf(adBlocker.getHostsFileRuleCount()) }
     var isImporting by remember { mutableStateOf(false) }
     var showUrlDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
     var importUrl by remember { mutableStateOf("") }
     
-    // 已启用的源
+    // Note
     var enabledSources by remember { mutableStateOf(adBlocker.getEnabledHostsSources()) }
     
-    // File选择器
+    // Fileselect
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -67,12 +67,12 @@ fun HostsAdBlockScreen(
                         hostsRulesCount = adBlocker.getHostsFileRuleCount()
                         adBlocker.saveHostsRules(context)
                         snackbarHostState.showSnackbar(
-                            String.format(java.util.Locale.getDefault(), Strings.importHostsSuccess, count)
+                            String.format(java.util.Locale.getDefault(), AppStringsProvider.current().importHostsSuccess, count)
                         )
                     },
                     onFailure = { error ->
                         snackbarHostState.showSnackbar(
-                            "${Strings.importHostsFailed}: ${error.message}"
+                            "${AppStringsProvider.current().importHostsFailed}: ${error.message}"
                         )
                     }
                 )
@@ -81,7 +81,7 @@ fun HostsAdBlockScreen(
         }
     }
     
-    // Load已保存的规则
+    // Load save
     LaunchedEffect(Unit) {
         adBlocker.loadHostsRules(context)
         hostsRulesCount = adBlocker.getHostsFileRuleCount()
@@ -94,9 +94,9 @@ fun HostsAdBlockScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(Strings.hostsAdBlock, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        Text(AppStringsProvider.current().hostsAdBlock, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                         Text(
-                            Strings.hostsAdBlockSubtitle,
+                            AppStringsProvider.current().hostsAdBlockSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -104,7 +104,7 @@ fun HostsAdBlockScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -125,7 +125,7 @@ fun HostsAdBlockScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 统计卡片
+            // card
             item {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -142,13 +142,13 @@ fun HostsAdBlockScreen(
                     ) {
                         Column {
                             Text(
-                                String.format(java.util.Locale.getDefault(), Strings.hostsRulesCount, hostsRulesCount),
+                                String.format(java.util.Locale.getDefault(), AppStringsProvider.current().hostsRulesCount, hostsRulesCount),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
                             if (enabledSources.isNotEmpty()) {
                                 Text(
-                                    "${enabledSources.size} ${Strings.enabledSources}",
+                                    "${enabledSources.size} ${AppStringsProvider.current().enabledSources}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                 )
@@ -167,10 +167,10 @@ fun HostsAdBlockScreen(
                 }
             }
             
-            // Import选项
+            // Import
             item {
                 Text(
-                    Strings.importFromFile,
+                    AppStringsProvider.current().importFromFile,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -181,7 +181,7 @@ fun HostsAdBlockScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 从文件导入
+                    // fromfileimport
                     EnhancedElevatedCard(
                         onClick = { filePickerLauncher.launch("*/*") },
                         modifier = Modifier.weight(weight = 1f, fill = true),
@@ -200,13 +200,13 @@ fun HostsAdBlockScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                Strings.importFromFile,
+                                AppStringsProvider.current().importFromFile,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
                     
-                    // 从 URL 导入
+                    // Import from URL
                     EnhancedElevatedCard(
                         onClick = { showUrlDialog = true },
                         modifier = Modifier.weight(weight = 1f, fill = true),
@@ -225,7 +225,7 @@ fun HostsAdBlockScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                Strings.importFromUrl,
+                                AppStringsProvider.current().importFromUrl,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -233,17 +233,17 @@ fun HostsAdBlockScreen(
                 }
             }
             
-            // 常用 hosts 源
+            // Common hosts sources
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    Strings.popularHostsSources,
+                    AppStringsProvider.current().popularHostsSources,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium
                 )
             }
             
-            items(AdBlocker.POPULAR_HOSTS_SOURCES) { source ->
+            items(AdBlocker.getPopularHostsSources()) { source ->
                 HostsSourceCard(
                     source = source,
                     isEnabled = enabledSources.contains(source.url),
@@ -258,12 +258,12 @@ fun HostsAdBlockScreen(
                                     enabledSources = adBlocker.getEnabledHostsSources()
                                     adBlocker.saveHostsRules(context)
                                     snackbarHostState.showSnackbar(
-                                        String.format(java.util.Locale.getDefault(), Strings.importHostsSuccess, count)
+                                        String.format(java.util.Locale.getDefault(), AppStringsProvider.current().importHostsSuccess, count)
                                     )
                                 },
                                 onFailure = { error ->
                                     snackbarHostState.showSnackbar(
-                                        "${Strings.importHostsFailed}: ${error.message}"
+                                        "${AppStringsProvider.current().importHostsFailed}: ${error.message}"
                                     )
                                 }
                             )
@@ -273,7 +273,7 @@ fun HostsAdBlockScreen(
                 )
             }
             
-            // 清空按钮
+            // Clear button
             if (hostsRulesCount > 0) {
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -286,12 +286,12 @@ fun HostsAdBlockScreen(
                     ) {
                         Icon(Icons.Outlined.DeleteSweep, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.clearHostsRules)
+                        Text(AppStringsProvider.current().clearHostsRules)
                     }
                 }
             }
             
-            // 说明
+            // Description
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 EnhancedElevatedCard(
@@ -311,7 +311,7 @@ fun HostsAdBlockScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            Strings.hostsBlockingDescription,
+                            AppStringsProvider.current().hostsBlockingDescription,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -320,7 +320,7 @@ fun HostsAdBlockScreen(
             }
         }
         
-        // Load指示器
+        // Loading indicator
         if (isImporting) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -333,25 +333,25 @@ fun HostsAdBlockScreen(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(Strings.importingHosts)
+                        Text(AppStringsProvider.current().importingHosts)
                     }
                 }
             }
         }
     }
     
-    // URL 导入对话框
+    // URL import dialog
     if (showUrlDialog) {
         AlertDialog(
             onDismissRequest = { if (!isImporting) showUrlDialog = false },
-            title = { Text(Strings.importFromUrl) },
+            title = { Text(AppStringsProvider.current().importFromUrl) },
             text = {
                 Column {
                     PremiumTextField(
                         value = importUrl,
                         onValueChange = { importUrl = it },
-                        label = { Text(Strings.importHostsUrl) },
-                        placeholder = { Text(Strings.importHostsUrlHint) },
+                        label = { Text(AppStringsProvider.current().importHostsUrl) },
+                        placeholder = { Text(AppStringsProvider.current().importHostsUrlHint) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isImporting
@@ -372,13 +372,13 @@ fun HostsAdBlockScreen(
                                         enabledSources = adBlocker.getEnabledHostsSources()
                                         adBlocker.saveHostsRules(context)
                                         snackbarHostState.showSnackbar(
-                                            String.format(java.util.Locale.getDefault(), Strings.importHostsSuccess, count)
+                                            String.format(java.util.Locale.getDefault(), AppStringsProvider.current().importHostsSuccess, count)
                                         )
                                         importUrl = ""
                                     },
                                     onFailure = { error ->
                                         snackbarHostState.showSnackbar(
-                                            "${Strings.importHostsFailed}: ${error.message}"
+                                            "${AppStringsProvider.current().importHostsFailed}: ${error.message}"
                                         )
                                     }
                                 )
@@ -388,7 +388,7 @@ fun HostsAdBlockScreen(
                     },
                     enabled = importUrl.isNotBlank() && !isImporting
                 ) {
-                    Text(Strings.downloadAndImport)
+                    Text(AppStringsProvider.current().downloadAndImport)
                 }
             },
             dismissButton = {
@@ -396,18 +396,18 @@ fun HostsAdBlockScreen(
                     onClick = { showUrlDialog = false; importUrl = "" },
                     enabled = !isImporting
                 ) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
     }
     
-    // 清空确认对话框
+    // Clear confirmation dialog
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text(Strings.clearHostsRules) },
-            text = { Text(Strings.clearHostsConfirm) },
+            title = { Text(AppStringsProvider.current().clearHostsRules) },
+            text = { Text(AppStringsProvider.current().clearHostsConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -417,19 +417,19 @@ fun HostsAdBlockScreen(
                             hostsRulesCount = 0
                             enabledSources = emptySet()
                             showClearDialog = false
-                            snackbarHostState.showSnackbar(Strings.hostsCleared)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().hostsCleared)
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.btnConfirm)
+                    Text(AppStringsProvider.current().btnConfirm)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -438,7 +438,7 @@ fun HostsAdBlockScreen(
 }
 
 /**
- * Hosts 源卡片
+ * Hosts card
  */
 @Composable
 private fun HostsSourceCard(
@@ -471,7 +471,7 @@ private fun HostsSourceCard(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                Strings.hostsSourceAdded,
+                                AppStringsProvider.current().hostsSourceAdded,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 color = MaterialTheme.colorScheme.primary
@@ -503,7 +503,7 @@ private fun HostsSourceCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    if (isEnabled) Strings.retry else Strings.downloadAndImport,
+                    if (isEnabled) AppStringsProvider.current().retry else AppStringsProvider.current().downloadAndImport,
                     style = MaterialTheme.typography.labelMedium
                 )
             }

@@ -7,17 +7,17 @@ import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.ai.ToolStreamEvent
 import com.webtoapp.core.ai.ToolCallInfo
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.regex.Pattern
 
 /**
- * HTML 编程 Agent
+ * HTML Agent.
  * 
- * 使用流式 Tool Calling 方式让 AI 创建/修改 HTML 代码
- * 文件直接写入项目文件夹，支持版本迭代
+ * Tool Calling AI / HTML.
+ * Note.
  */
 class AiCodingAgent(private val context: Context) {
     
@@ -26,46 +26,46 @@ class AiCodingAgent(private val context: Context) {
     private val aiClient = AiApiClient(context)
     private val projectFileManager = ProjectFileManager(context)
     
-    // 当前会话ID（用于文件操作）
+    // ID.
     private var currentSessionId: String? = null
     
-    // 控制台日志存储
+    // Note.
     private val consoleLogs = mutableListOf<ConsoleLogEntry>()
     
-    // 语法错误存储
+    // Note.
     private val syntaxErrors = mutableListOf<SyntaxError>()
     
     companion object {
         private const val TAG = "AiCodingAgent"
-        private const val STREAM_TIMEOUT_MS = 120_000L  // 2分钟超时
+        private const val STREAM_TIMEOUT_MS = 120_000L  // Note.
     }
     
-    // 当前 HTML 代码（用于编辑操作，兼容旧逻辑）
+    // HTML.
     private var currentHtmlCode: String = ""
     
     /**
-     * 设置当前会话ID
+     * ID.
      */
     fun setSessionId(sessionId: String) {
         currentSessionId = sessionId
     }
     
     /**
-     * 设置当前 HTML 代码
+     * HTML.
      */
     fun setCurrentHtml(html: String) {
         currentHtmlCode = html
     }
     
     /**
-     * 获取当前 HTML 代码
+     * HTML.
      */
     fun getCurrentHtml(): String = currentHtmlCode
     
-    // ==================== 工具定义 ====================
+    // ==================== ====================
     
     /**
-     * 获取所有可用工具
+     * Note.
      */
     fun getAllTools(): List<HtmlTool> = listOf(
         HtmlTool(
@@ -190,7 +190,7 @@ class AiCodingAgent(private val context: Context) {
 
     
     /**
-     * 根据配置获取启用的工具
+     * Note.
      */
     fun getEnabledTools(config: SessionConfig?): List<HtmlTool> {
         val enabledTypes = config?.enabledTools ?: setOf(AiCodingToolType.WRITE_HTML)
@@ -198,33 +198,33 @@ class AiCodingAgent(private val context: Context) {
         
         return getAllTools().filter { tool ->
             tool.type in enabledTypes && 
-            // 如果工具需要图像模型，检查是否已配置
+            // Note.
             (!tool.type.requiresImageModel || hasImageModel)
         }
     }
     
-    // ==================== 控制台日志管理 ====================
+    // ==================== ====================
     
     /**
-     * 添加控制台日志
+     * Note.
      */
     fun addConsoleLog(entry: ConsoleLogEntry) {
         consoleLogs.add(entry)
-        // 保留最近 100 条
+        // Note.
         if (consoleLogs.size > 100) {
             consoleLogs.removeAt(0)
         }
     }
     
     /**
-     * 清空控制台日志
+     * Note.
      */
     fun clearConsoleLogs() {
         consoleLogs.clear()
     }
     
     /**
-     * 获取控制台日志
+     * Note.
      */
     fun getConsoleLogs(filter: String = "all"): List<ConsoleLogEntry> {
         return when (filter) {
@@ -235,32 +235,32 @@ class AiCodingAgent(private val context: Context) {
         }
     }
     
-    // ==================== 语法错误管理 ====================
+    // ==================== ====================
     
     /**
-     * 添加语法错误
+     * Note.
      */
     fun addSyntaxError(error: SyntaxError) {
         syntaxErrors.add(error)
     }
     
     /**
-     * 清空语法错误
+     * Note.
      */
     fun clearSyntaxErrors() {
         syntaxErrors.clear()
     }
     
     /**
-     * 获取语法错误
+     * Note.
      */
     fun getSyntaxErrors(): List<SyntaxError> = syntaxErrors.toList()
 
     
-    // ==================== 语法检查 ====================
+    // ==================== ====================
     
     /**
-     * 检查代码语法
+     * Note.
      */
     fun checkSyntax(code: String, language: String = "html"): List<SyntaxError> {
         clearSyntaxErrors()
@@ -269,7 +269,7 @@ class AiCodingAgent(private val context: Context) {
             "css" -> checkCssSyntax(code)
             "javascript", "js" -> checkJavaScriptSyntax(code)
             else -> {
-                // 对于完整 HTML 文件，检查所有部分
+                // HTML.
                 val htmlErrors = checkHtmlSyntax(code)
                 val cssErrors = extractAndCheckCss(code)
                 val jsErrors = extractAndCheckJs(code)
@@ -281,13 +281,13 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 检查 HTML 语法
+     * HTML.
      */
     private fun checkHtmlSyntax(code: String): List<SyntaxError> {
         val errors = mutableListOf<SyntaxError>()
         val lines = code.lines()
         
-        // Check未闭合的标签
+        // Check.
         val tagStack = mutableListOf<Pair<String, Int>>()
         val selfClosingTags = setOf("br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr")
         
@@ -305,12 +305,12 @@ class AiCodingAgent(private val context: Context) {
                         if (tagStack.isNotEmpty() && tagStack.last().first == tagName) {
                             tagStack.removeAt(tagStack.lastIndex)
                         } else if (tagStack.any { it.first == tagName }) {
-                            // 找到匹配但不是最近的，可能有未闭合标签
+                            // Note.
                             val unclosed = tagStack.takeLastWhile { it.first != tagName }
                             unclosed.forEach { (tag, ln) ->
                                 errors.add(SyntaxError(
                                     type = "html",
-                                    message = Strings.tagNotProperlyClosed.replace("%s", tag),
+                                    message = AppStringsProvider.current().tagNotProperlyClosed.replace("%s", tag),
                                     line = ln + 1,
                                     column = 0,
                                     severity = ErrorSeverity.ERROR
@@ -320,7 +320,7 @@ class AiCodingAgent(private val context: Context) {
                         } else {
                             errors.add(SyntaxError(
                                 type = "html",
-                                message = Strings.unexpectedClosingTag.replace("%s", tagName),
+                                message = AppStringsProvider.current().unexpectedClosingTag.replace("%s", tagName),
                                 line = lineNum + 1,
                                 column = matcher.start(),
                                 severity = ErrorSeverity.ERROR
@@ -333,11 +333,11 @@ class AiCodingAgent(private val context: Context) {
             }
         }
         
-        // 报告未闭合的标签
+        // Note.
         tagStack.forEach { (tag, lineNum) ->
             errors.add(SyntaxError(
                 type = "html",
-                message = Strings.tagNotClosed.replace("%s", tag),
+                message = AppStringsProvider.current().tagNotClosed.replace("%s", tag),
                 line = lineNum + 1,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -349,7 +349,7 @@ class AiCodingAgent(private val context: Context) {
 
     
     /**
-     * 检查 CSS 语法
+     * CSS.
      */
     private fun checkCssSyntax(code: String): List<SyntaxError> {
         val errors = mutableListOf<SyntaxError>()
@@ -380,7 +380,7 @@ class AiCodingAgent(private val context: Context) {
                             if (braceCount < 0) {
                                 errors.add(SyntaxError(
                                     type = "css",
-                                    message = Strings.extraClosingBrace,
+                                    message = AppStringsProvider.current().extraClosingBrace,
                                     line = lineNum + 1,
                                     column = i,
                                     severity = ErrorSeverity.ERROR
@@ -397,7 +397,7 @@ class AiCodingAgent(private val context: Context) {
         if (braceCount > 0) {
             errors.add(SyntaxError(
                 type = "css",
-                message = Strings.missingClosingBraces.replace("%d", braceCount.toString()),
+                message = AppStringsProvider.current().missingClosingBraces.replace("%d", braceCount.toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -408,7 +408,7 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 检查 JavaScript 语法
+     * JavaScript.
      */
     private fun checkJavaScriptSyntax(code: String): List<SyntaxError> {
         val errors = mutableListOf<SyntaxError>()
@@ -424,19 +424,19 @@ class AiCodingAgent(private val context: Context) {
         lines.forEachIndexed { lineNum, line ->
             var i = 0
             while (i < line.length) {
-                // 跳过单行注释
+                // Note.
                 if (!inString && !inMultiLineComment && i + 1 < line.length && line[i] == '/' && line[i+1] == '/') {
                     break
                 }
                 
-                // 多行注释开始
+                // Note.
                 if (!inString && !inMultiLineComment && i + 1 < line.length && line[i] == '/' && line[i+1] == '*') {
                     inMultiLineComment = true
                     i += 2
                     continue
                 }
                 
-                // 多行注释结束
+                // Note.
                 if (inMultiLineComment && i + 1 < line.length && line[i] == '*' && line[i+1] == '/') {
                     inMultiLineComment = false
                     i += 2
@@ -475,7 +475,7 @@ class AiCodingAgent(private val context: Context) {
         if (braceCount != 0) {
             errors.add(SyntaxError(
                 type = "javascript",
-                message = if (braceCount > 0) Strings.missingClosingBraces.replace("%d", braceCount.toString()) else Strings.extraClosingBraces.replace("%d", (-braceCount).toString()),
+                message = if (braceCount > 0) AppStringsProvider.current().missingClosingBraces.replace("%d", braceCount.toString()) else AppStringsProvider.current().extraClosingBraces.replace("%d", (-braceCount).toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -485,7 +485,7 @@ class AiCodingAgent(private val context: Context) {
         if (parenCount != 0) {
             errors.add(SyntaxError(
                 type = "javascript",
-                message = if (parenCount > 0) Strings.missingClosingParens.replace("%d", parenCount.toString()) else Strings.extraClosingParens.replace("%d", (-parenCount).toString()),
+                message = if (parenCount > 0) AppStringsProvider.current().missingClosingParens.replace("%d", parenCount.toString()) else AppStringsProvider.current().extraClosingParens.replace("%d", (-parenCount).toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -495,7 +495,7 @@ class AiCodingAgent(private val context: Context) {
         if (bracketCount != 0) {
             errors.add(SyntaxError(
                 type = "javascript",
-                message = if (bracketCount > 0) Strings.missingClosingBrackets.replace("%d", bracketCount.toString()) else Strings.extraClosingBrackets.replace("%d", (-bracketCount).toString()),
+                message = if (bracketCount > 0) AppStringsProvider.current().missingClosingBrackets.replace("%d", bracketCount.toString()) else AppStringsProvider.current().extraClosingBrackets.replace("%d", (-bracketCount).toString()),
                 line = lines.size,
                 column = 0,
                 severity = ErrorSeverity.ERROR
@@ -507,7 +507,7 @@ class AiCodingAgent(private val context: Context) {
 
     
     /**
-     * 从 HTML 中提取并检查 CSS
+     * HTML CSS.
      */
     private fun extractAndCheckCss(html: String): List<SyntaxError> {
         val errors = mutableListOf<SyntaxError>()
@@ -517,7 +517,7 @@ class AiCodingAgent(private val context: Context) {
         while (matcher.find()) {
             val css = matcher.group(1) ?: continue
             val cssErrors = checkCssSyntax(css)
-            // 调整行号（找到 style 标签在原文中的位置）
+            // style.
             val styleStart = html.substring(0, matcher.start()).count { it == '\n' }
             cssErrors.forEach { error ->
                 errors.add(error.copy(line = error.line + styleStart))
@@ -528,7 +528,7 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 从 HTML 中提取并检查 JavaScript
+     * HTML JavaScript.
      */
     private fun extractAndCheckJs(html: String): List<SyntaxError> {
         val errors = mutableListOf<SyntaxError>()
@@ -539,7 +539,7 @@ class AiCodingAgent(private val context: Context) {
             val js = matcher.group(1) ?: continue
             if (js.isBlank()) continue
             val jsErrors = checkJavaScriptSyntax(js)
-            // 调整行号
+            // Note.
             val scriptStart = html.substring(0, matcher.start()).count { it == '\n' }
             jsErrors.forEach { error ->
                 errors.add(error.copy(line = error.line + scriptStart))
@@ -549,24 +549,24 @@ class AiCodingAgent(private val context: Context) {
         return errors
     }
     
-    // ==================== 工具执行 ====================
+    // ==================== ====================
     
     /**
-     * 从工具参数中提取 HTML 内容
-     * 支持多种格式：
-     * 1. JSON 对象 {"html": "..."} 或 {"content": "..."}
-     * 2. 直接的 HTML 字符串
-     * 3. JSON 字符串（带转义）
+     * HTML.
+     * Note.
+     * 1. JSON {"html": "..."} {"content": "..."}.
+     * 2. HTML.
+     * 3. JSON.
      */
     private fun extractHtmlContent(arguments: String): String {
         val trimmed = arguments.trim()
         
-        // 1. 尝试作为 JSON 对象解析
+        // 1. JSON.
         try {
             val json = JsonParser.parseString(trimmed)
             if (json.isJsonObject) {
                 val obj = json.asJsonObject
-                // 尝试不同的字段名
+                // Note.
                 val content = obj.get("html")?.asString 
                     ?: obj.get("content")?.asString
                     ?: obj.get("code")?.asString
@@ -574,21 +574,21 @@ class AiCodingAgent(private val context: Context) {
                     return content
                 }
             } else if (json.isJsonPrimitive && json.asJsonPrimitive.isString) {
-                // JSON 字符串
+                // JSON.
                 return json.asString
             }
         } catch (e: Exception) {
             AppLogger.d(TAG, "Not a valid JSON, trying as raw HTML: ${e.message}")
         }
         
-        // 2. 如果以 <!DOCTYPE 或 <html 开头，直接作为 HTML
+        // 2. <!DOCTYPE <html HTML.
         if (trimmed.startsWith("<!DOCTYPE", ignoreCase = true) || 
             trimmed.startsWith("<html", ignoreCase = true) ||
             trimmed.startsWith("<", ignoreCase = true)) {
             return trimmed
         }
         
-        // 3. 尝试去掉外层引号
+        // Note.
         if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
             val unquoted = trimmed.substring(1, trimmed.length - 1)
                 .replace("\\\"", "\"")
@@ -598,12 +598,12 @@ class AiCodingAgent(private val context: Context) {
             return unquoted
         }
         
-        // 4. 返回原始字符串
+        // Note.
         return trimmed
     }
 
     /**
-     * 执行工具调用
+     * Note.
      */
     fun executeToolCall(toolName: String, arguments: String): ToolExecutionResult {
         AppLogger.d(TAG, "executeToolCall: $toolName, args length: ${arguments.length}, args preview: ${arguments.take(200)}")
@@ -611,7 +611,7 @@ class AiCodingAgent(private val context: Context) {
         return try {
             when (toolName) {
                 "write_html" -> {
-                    // 提取 HTML 内容和文件名
+                    // HTML.
                     val content = extractHtmlContent(arguments)
                     val filename = try {
                         val json = JsonParser.parseString(arguments).asJsonObject
@@ -629,10 +629,10 @@ class AiCodingAgent(private val context: Context) {
                         )
                     }
                     
-                    // 写入文件到项目文件夹
+                    // Note.
                     val sessionId = currentSessionId
                     if (sessionId != null) {
-                        // Check是否已存在同名文件（决定是否创建新版本）
+                        // Check.
                         val existingFiles = projectFileManager.listFiles(sessionId)
                         val baseName = filename.substringBeforeLast(".")
                         val hasExisting = existingFiles.any { it.getBaseName() == baseName }
@@ -655,7 +655,7 @@ class AiCodingAgent(private val context: Context) {
                             fileInfo = fileInfo
                         )
                     } else {
-                        // 兼容旧逻辑：没有 sessionId 时只更新内存
+                        // sessionId.
                         currentHtmlCode = content
                         AppLogger.d(TAG, "write_html: no sessionId, only updating memory")
                         ToolExecutionResult(
@@ -689,11 +689,11 @@ class AiCodingAgent(private val context: Context) {
                     }
                     
                     if (!currentHtmlCode.contains(target)) {
-                        // 尝试空白字符归一化匹配（fuzzy matching）
+                        // fuzzy matching.
                         val normalizedTarget = target.replace(Regex("\\s+"), " ").trim()
                         val normalizedCode = currentHtmlCode.replace(Regex("\\s+"), " ").trim()
                         if (!normalizedCode.contains(normalizedTarget)) {
-                            // 尝试行级匹配：提取 target 的关键行，在代码中寻找最佳匹配区域
+                            // target.
                             val targetLines = target.lines().filter { it.isNotBlank() }
                             val codeLines = currentHtmlCode.lines()
                             var bestMatchStart = -1
@@ -706,7 +706,7 @@ class AiCodingAgent(private val context: Context) {
                                 
                                 for (i in codeLines.indices) {
                                     if (codeLines[i].trim() == firstTargetLine) {
-                                        // 找到首行匹配，向下搜索尾行
+                                        // Note.
                                         for (j in i until minOf(i + targetLines.size + 5, codeLines.size)) {
                                             if (codeLines[j].trim() == lastTargetLine) {
                                                 val matchedCount = targetLines.count { tl ->
@@ -725,7 +725,7 @@ class AiCodingAgent(private val context: Context) {
                             }
                             
                             if (bestMatchStart >= 0 && bestScore >= targetLines.size * 0.7) {
-                                // 使用模糊匹配找到的区域进行替换
+                                // Note.
                                 val matchedRegion = codeLines.subList(bestMatchStart, bestMatchEnd + 1).joinToString("\n")
                                 AppLogger.d(TAG, "edit_html: fuzzy match found at lines $bestMatchStart-$bestMatchEnd (score: $bestScore/${targetLines.size})")
                                 val newHtml = when (operation) {
@@ -745,7 +745,7 @@ class AiCodingAgent(private val context: Context) {
                                 )
                             }
                             
-                            // 提供带行号的当前代码帮助AI定位
+                            // AI.
                             val codeWithLines = currentHtmlCode.lines().mapIndexed { idx, line -> 
                                 "${idx + 1}: $line" 
                             }.joinToString("\n")
@@ -756,7 +756,7 @@ class AiCodingAgent(private val context: Context) {
                                 result = "错误：在当前代码中找不到目标片段。请先调用 read_current_code 查看现有代码，确保 target 精确匹配。\n\n当前代码预览：\n$preview"
                             )
                         }
-                        // 空白归一化匹配成功，使用归一化后的替换
+                        // Note.
                         AppLogger.d(TAG, "edit_html: using whitespace-normalized matching")
                     }
                     
@@ -803,7 +803,7 @@ class AiCodingAgent(private val context: Context) {
                         }
                     }
                     
-                    currentHtmlCode = newHtml  // Update当前 HTML
+                    currentHtmlCode = newHtml  // Update HTML.
                     ToolExecutionResult(
                         success = true,
                         toolName = toolName,
@@ -878,7 +878,7 @@ class AiCodingAgent(private val context: Context) {
                     }
                 }
                 "auto_fix" -> {
-                    // auto_fix 保留向后兼容，实际引导 AI 使用 check_syntax + write_html
+                    // auto_fix AI check_syntax + write_html.
                     val json = JsonParser.parseString(arguments).asJsonObject
                     val code = json.get("code")?.asString ?: currentHtmlCode
                     val errors = checkSyntax(code)
@@ -899,7 +899,7 @@ class AiCodingAgent(private val context: Context) {
                     }
                 }
                 "generate_image" -> {
-                    // 图像生成需要异步处理，这里返回一个标记
+                    // Note.
                     val json = JsonParser.parseString(arguments).asJsonObject
                     val prompt = json.get("prompt")?.asString ?: ""
                     val style = json.get("style")?.asString ?: "illustration"
@@ -931,7 +931,7 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 执行图像生成
+     * Note.
      */
     suspend fun executeImageGeneration(
         prompt: String,
@@ -970,13 +970,12 @@ class AiCodingAgent(private val context: Context) {
                 )
             }
             
-            // Build增强的提示词
+            // Build.
             val enhancedPrompt = buildImagePrompt(prompt, style)
             val dimensions = getSizeDimensions(size)
             
-            // 调用图像生成 API
+            // API.
             val result = aiClient.generateImage(
-                context = context,
                 prompt = enhancedPrompt,
                 apiKey = apiKey,
                 model = imageModel,
@@ -1013,7 +1012,7 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 构建图像生成提示词
+     * Note.
      */
     private fun buildImagePrompt(prompt: String, style: String): String {
         val styleHint = when (style) {
@@ -1029,7 +1028,7 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 获取尺寸
+     * Note.
      */
     private fun getSizeDimensions(size: String): Pair<Int, Int> {
         return when (size) {
@@ -1040,13 +1039,13 @@ class AiCodingAgent(private val context: Context) {
         }
     }
     
-    // ==================== 项目文件写入辅助 ====================
+    // ==================== ====================
     
     /**
-     * 将 HTML 代码写入项目文件夹并发出相关事件
-     * 统一的文件写入逻辑，减少代码重复
+     * HTML.
+     * Note.
      * 
-     * @return Pair<ToolExecutionResult, ProjectFileInfo?> 工具执行结果和文件信息
+     * @return Pair<ToolExecutionResult, ProjectFileInfo?>.
      */
     private suspend fun FlowCollector<HtmlAgentEvent>.writeHtmlToProject(
         html: String,
@@ -1085,29 +1084,29 @@ class AiCodingAgent(private val context: Context) {
         return Pair(result, fileInfo)
     }
     
-    // ==================== 流式开发 ====================
+    // ==================== ====================
     
     /**
-     * 流式开发 HTML
-     * 文件直接写入项目文件夹，支持版本迭代
-     * 支持两种模式：工具调用模式（ReAct 多轮）和简单模式（文本提取）
+     * HTML.
+     * Note.
+     * ReAct.
      */
     fun developWithStream(
         requirement: String,
         currentHtml: String? = null,
         sessionConfig: SessionConfig? = null,
         model: SavedModel? = null,
-        sessionId: String? = null  // SessionID，用于文件操作
+        sessionId: String? = null  // SessionID.
     ): Flow<HtmlAgentEvent> = flow {
         try {
             AppLogger.d(TAG, "developWithStream started with requirement: ${requirement.take(100)}, sessionId: $sessionId")
             
-            // Set当前会话ID
+            // Set ID.
             if (sessionId != null) {
                 currentSessionId = sessionId
             }
             
-            // Get AI 配置
+            // Get AI Config.
             val apiKeys = aiConfigManager.apiKeysFlow.first()
             val savedModels = aiConfigManager.savedModelsFlow.first()
             
@@ -1116,7 +1115,7 @@ class AiCodingAgent(private val context: Context) {
                 return@flow
             }
             
-            // Select模型
+            // Select.
             val selectedModel = selectModel(model, savedModels)
             if (selectedModel == null) {
                 emit(HtmlAgentEvent.Error("请先在 AI 设置中添加并保存模型"))
@@ -1133,7 +1132,7 @@ class AiCodingAgent(private val context: Context) {
             
             emit(HtmlAgentEvent.StateChange(HtmlAgentState.GENERATING))
             
-            // Set当前 HTML（从最新版本文件读取）
+            // Set HTML.
             if (sessionId != null && currentHtml.isNullOrBlank()) {
                 val latestFile = projectFileManager.getLatestVersion(sessionId, "index")
                 if (latestFile != null) {
@@ -1143,16 +1142,16 @@ class AiCodingAgent(private val context: Context) {
                 currentHtmlCode = currentHtml
             }
             
-            // Check模型是否支持工具调用
-            // 大多数现代 LLM 通过 OpenAI 兼容 API 支持工具调用
-            // 只有明确已知不支持的模型才跳过
+            // Check.
+            // LLM OpenAI API.
+            // Note.
             val modelId = selectedModel.model.id.lowercase()
             val providerName = apiKey.provider.name.lowercase()
             val baseUrl = (apiKey.baseUrl ?: "").lowercase()
             
-            // 已知不支持 OpenAI 工具调用格式的模型
+            // OpenAI.
             val knownNoToolCalling = setOf(
-                "deepseek-coder", "deepseek-coder-v2",        // DeepSeek Coder 系列
+                "deepseek-coder", "deepseek-coder-v2",        // DeepSeek Coder.
                 "yi-coder",                                     // Yi Coder
                 "codestral",                                    // Mistral Codestral
             )
@@ -1160,13 +1159,13 @@ class AiCodingAgent(private val context: Context) {
             
             AppLogger.d(TAG, "Model: $modelId, Provider: $providerName, BaseUrl: $baseUrl, SupportsToolCalling: $supportsToolCalling")
             
-            // 尝试使用工具调用模式，失败则回退到简单模式
-            var useSimpleMode = !supportsToolCalling  // 如果不支持工具调用，直接使用简单模式
+            // Note.
+            var useSimpleMode = !supportsToolCalling  // Note.
             var toolCallError: String? = null
             
             if (!useSimpleMode) {
                 try {
-                    // 带超时的工具调用模式
+                    // Note.
                     withTimeout(STREAM_TIMEOUT_MS) {
                         developWithToolCalling(requirement, sessionConfig, selectedModel, apiKey)
                             .collect { event -> emit(event) }
@@ -1184,7 +1183,7 @@ class AiCodingAgent(private val context: Context) {
                 AppLogger.d(TAG, "Skipping tool calling mode (not supported), using simple mode directly")
             }
             
-            // 回退到简单模式
+            // Note.
             if (useSimpleMode) {
                 AppLogger.d(TAG, "Using simple stream mode as fallback")
                 try {
@@ -1193,28 +1192,28 @@ class AiCodingAgent(private val context: Context) {
                             .collect { event -> emit(event) }
                     }
                 } catch (e: TimeoutCancellationException) {
-                    emit(HtmlAgentEvent.Error(Strings.requestTimeoutRetry))
+                    emit(HtmlAgentEvent.Error(AppStringsProvider.current().requestTimeoutRetry))
                 } catch (e: Exception) {
-                    emit(HtmlAgentEvent.Error(Strings.errorOccurredPrefix.replace("%s", e.message ?: toolCallError ?: Strings.unknownError)))
+                    emit(HtmlAgentEvent.Error(AppStringsProvider.current().errorOccurredPrefix.replace("%s", e.message ?: toolCallError ?: AppStringsProvider.current().unknownError)))
                 }
             }
             
         } catch (e: CancellationException) {
-            throw e  // 重新抛出取消异常
+            throw e  // Note.
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error in developWithStream", e)
-            emit(HtmlAgentEvent.Error(Strings.errorOccurredPrefix.replace("%s", e.message ?: Strings.unknownError)))
+            emit(HtmlAgentEvent.Error(AppStringsProvider.current().errorOccurredPrefix.replace("%s", e.message ?: AppStringsProvider.current().unknownError)))
         }
     }.flowOn(Dispatchers.IO)
     
     /**
-     * 使用工具调用模式开发 HTML（内部方法）
+     * HTML.
      * 
-     * 实现真正的 ReAct（Reasoning-Action-Observation）多轮循环：
-     * 1. AI 接收用户需求，决定使用哪些工具
-     * 2. 执行工具调用，将结果作为 observation 反馈给 AI
-     * 3. AI 根据 observation 决定下一步：继续调用工具或输出最终结果
-     * 4. 最多执行 MAX_REACT_TURNS 轮，防止无限循环
+     * ReAct Reasoning-Action-Observation.
+     * 1. AI.
+     * 2. observation AI.
+     * 3. AI observation.
+     * 4. MAX_REACT_TURNS.
      */
     private fun developWithToolCalling(
         requirement: String,
@@ -1222,26 +1221,26 @@ class AiCodingAgent(private val context: Context) {
         selectedModel: SavedModel,
         apiKey: ApiKeyConfig
     ): Flow<HtmlAgentEvent> = flow {
-        val MAX_REACT_TURNS = 5  // 最大 ReAct 迭代次数
+        val MAX_REACT_TURNS = 5  // ReAct.
         
-        // Get启用的工具
+        // Get.
         val enabledTools = getEnabledTools(sessionConfig)
         
-        // Build系统提示词
+        // Build.
         val systemPrompt = buildToolCallingSystemPrompt(sessionConfig, currentHtmlCode.takeIf { it.isNotBlank() }, enabledTools)
         
-        // 将启用的工具转换为 OpenAI 格式
+        // OpenAI.
         val tools = enabledTools.map { it.toOpenAiFormat() }
         
         AppLogger.d(TAG, "ReAct loop: ${enabledTools.size} tools: ${enabledTools.map { it.name }}")
         
-        // 对话消息列表（支持多轮）
+        // Note.
         val conversationMessages = mutableListOf<Map<String, Any>>(
             mapOf("role" to "system", "content" to systemPrompt),
             mapOf("role" to "user", "content" to requirement)
         )
         
-        // ReAct 多轮循环
+        // ReAct.
         var turnCount = 0
         var reachedFinalResponse = false
         val allToolCalls = mutableListOf<ToolCallInfo>()
@@ -1259,9 +1258,8 @@ class AiCodingAgent(private val context: Context) {
             var codeBlockStarted = false
             var streamCompleted = false
             
-            // 跟踪当前工具调用
+            // Note.
             var currentToolName = ""
-            var currentToolCallId = ""
             val currentToolArgs = StringBuilder()
             val pendingToolCalls = mutableListOf<Triple<String, String, String>>()
             
@@ -1285,14 +1283,14 @@ class AiCodingAgent(private val context: Context) {
                     is ToolStreamEvent.TextDelta -> {
                         val accumulated = event.accumulated
                         
-                        // 如果已经从工具参数获取了代码，文本流只作为普通文本处理
+                        // Note.
                         if (isCapturingCodeFromArgs) {
                             textBuilder.append(event.delta)
                             emit(HtmlAgentEvent.TextDelta(event.delta, textBuilder.toString()))
                             return@collect
                         }
                         
-                        // 检测代码块 ```html 或直接 HTML 内容（备选方案）
+                        // ```html HTML.
                         if (!codeBlockStarted) {
                             val htmlCodeBlockIndex = accumulated.indexOf("```html", ignoreCase = true)
                             val genericCodeBlockIndex = if (htmlCodeBlockIndex < 0) {
@@ -1334,7 +1332,7 @@ class AiCodingAgent(private val context: Context) {
                                 return@collect
                             }
                             
-                            // 检测直接的 HTML 内容
+                            // HTML.
                             val doctypeIndex = accumulated.indexOf("<!DOCTYPE", ignoreCase = true)
                             val htmlTagIndex = accumulated.indexOf("<html", ignoreCase = true)
                             val directHtmlIndex = when {
@@ -1388,7 +1386,6 @@ class AiCodingAgent(private val context: Context) {
                     is ToolStreamEvent.ToolCallStart -> {
                         AppLogger.d(TAG, "Tool call started: ${event.toolName}")
                         currentToolName = event.toolName
-                        currentToolCallId = event.toolCallId
                         currentToolArgs.clear()
                         toolCallStarted = true
                         emit(HtmlAgentEvent.ToolCallStart(event.toolName, event.toolCallId))
@@ -1429,7 +1426,6 @@ class AiCodingAgent(private val context: Context) {
                         }
                         
                         currentToolName = ""
-                        currentToolCallId = ""
                         currentToolArgs.clear()
                     }
                     is ToolStreamEvent.Done -> {
@@ -1442,7 +1438,7 @@ class AiCodingAgent(private val context: Context) {
             }
             
             if (!streamCompleted) {
-                throw Exception(Strings.streamResponseIncomplete)
+                throw Exception(AppStringsProvider.current().streamResponseIncomplete)
             }
             
             val finalHtmlFromStream = htmlBuilder.toString().trim()
@@ -1450,12 +1446,12 @@ class AiCodingAgent(private val context: Context) {
             
             AppLogger.d(TAG, "Turn $turnCount done: html=${finalHtmlFromStream.length}, text=${finalText.length}, toolCalls=${pendingToolCalls.size}")
             
-            // === 处理本轮结果 ===
+            // Note.
             
             if (pendingToolCalls.isNotEmpty()) {
-                // 有工具调用 → 执行工具并添加结果到对话历史（ReAct: Observation）
+                // → ReAct: Observation.
                 
-                // 构建 assistant 消息（包含工具调用）
+                // assistant.
                 val assistantToolCalls = pendingToolCalls.mapIndexed { idx, (toolName, toolCallId, arguments) ->
                     mapOf(
                         "id" to toolCallId.ifBlank { "call_$idx" },
@@ -1470,7 +1466,7 @@ class AiCodingAgent(private val context: Context) {
                 assistantMsg["tool_calls"] = assistantToolCalls
                 conversationMessages.add(assistantMsg)
                 
-                // 执行每个工具调用并添加 tool 消息
+                // tool.
                 var hasWriteOrEdit = false
                 
                 for ((toolName, toolCallId, arguments) in pendingToolCalls) {
@@ -1484,7 +1480,7 @@ class AiCodingAgent(private val context: Context) {
                                 hasWriteOrEdit = true
                             }
                             allToolCalls.add(ToolCallInfo(toolCallId, toolName, arguments))
-                            // 添加工具结果到对话
+                            // Note.
                             conversationMessages.add(mapOf(
                                 "role" to "tool",
                                 "tool_call_id" to toolCallId.ifBlank { "call_0" },
@@ -1533,7 +1529,7 @@ class AiCodingAgent(private val context: Context) {
                             }
                         }
                         else -> {
-                            // read_current_code, check_syntax, get_console_logs, auto_fix 等
+                            // read_current_code, check_syntax, get_console_logs, auto_fix.
                             val result = executeToolCall(toolName, arguments)
                             emit(HtmlAgentEvent.ToolExecuted(result))
                             allToolCalls.add(ToolCallInfo(toolCallId, toolName, arguments))
@@ -1546,23 +1542,23 @@ class AiCodingAgent(private val context: Context) {
                     }
                 }
                 
-                // 如果本轮包含 write_html 或 edit_html 且是最后一轮或下一轮不需要继续
-                // 对于 write/edit，默认完成（除非工具链中还有后续操作如 check_syntax）
+                // write_html edit_html.
+                // write/edit check_syntax.
                 val hasNonWriteTools = pendingToolCalls.any { (name, _, _) -> 
                     name != "write_html" && name != "edit_html" && name != "generate_image" 
                 }
                 
                 if (hasWriteOrEdit && !hasNonWriteTools) {
-                    // 只有写入/编辑操作，不需要继续循环
+                    // Note.
                     reachedFinalResponse = true
                 }
-                // 否则继续 ReAct 循环（AI 会看到工具结果并决定下一步）
+                // ReAct AI.
                 
             } else {
-                // 没有工具调用 → AI 返回了纯文本响应
+                // → AI.
                 reachedFinalResponse = true
                 
-                // 尝试从文本中提取 HTML（兼容不支持原生工具调用的模型）
+                // HTML.
                 var finalHtml = finalHtmlFromStream
                 if (finalHtml.isEmpty() && finalText.isNotEmpty()) {
                     val extractedHtml = extractHtmlFromText(finalText)
@@ -1575,7 +1571,7 @@ class AiCodingAgent(private val context: Context) {
                 if (finalHtml.isNotEmpty()) {
                     writeHtmlToProject(finalHtml)
                 } else if (finalText.isNotEmpty()) {
-                    // 检查是否是"承诺要做但没做"的情况
+                    // Note.
                     val textLower = finalText.lowercase()
                     val isPromiseWithoutAction = textLower.contains("我来") || 
                         textLower.contains("我将") || textLower.contains("我会") ||
@@ -1601,30 +1597,30 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 从工具参数中提取 HTML 内容（增量模式，用于流式传输）
-     * 简化版本，专注于从不完整 JSON 中提取
+     * HTML.
+     * JSON.
      */
     private fun extractHtmlFromArgsIncremental(args: String): String {
         if (args.isBlank()) return ""
         
         val trimmed = args.trim()
         
-        // Find "html": " 后的内容（流式传输时 JSON 可能不完整）
+        // Find "html": " JSON.
         val htmlKeyIndex = trimmed.indexOf("\"html\"")
         if (htmlKeyIndex < 0) return ""
         
-        // 找到冒号后的引号
+        // Note.
         val colonIndex = trimmed.indexOf(':', htmlKeyIndex + 6)
         if (colonIndex < 0) return ""
         
         val quoteIndex = trimmed.indexOf('"', colonIndex + 1)
         if (quoteIndex < 0) return ""
         
-        // 提取引号后的内容
+        // Note.
         val startIndex = quoteIndex + 1
         if (startIndex >= trimmed.length) return ""
         
-        // 找到结束引号（考虑转义）
+        // Note.
         var endIndex = startIndex
         var escaped = false
         while (endIndex < trimmed.length) {
@@ -1641,20 +1637,20 @@ class AiCodingAgent(private val context: Context) {
         
         if (endIndex <= startIndex) return ""
         
-        // 解码转义字符
+        // Note.
         val extracted = trimmed.substring(startIndex, endIndex)
         return decodeJsonString(extracted)
     }
     
     /**
-     * 从工具参数中提取 HTML 内容（最终模式，用于完整 JSON）
+     * HTML JSON.
      */
     private fun extractHtmlFromArgsFinal(args: String): String {
         if (args.isBlank()) return ""
         
         val trimmed = args.trim()
         
-        // 1. 尝试作为完整 JSON 对象解析
+        // 1. JSON.
         try {
             val json = JsonParser.parseString(trimmed)
             if (json.isJsonObject) {
@@ -1670,12 +1666,12 @@ class AiCodingAgent(private val context: Context) {
             AppLogger.d(TAG, "JSON parse failed, trying incremental extraction: ${e.message}")
         }
         
-        // 2. 回退到增量提取
+        // Note.
         return extractHtmlFromArgsIncremental(trimmed)
     }
     
     /**
-     * 解码 JSON 字符串中的转义字符
+     * JSON.
      */
     private fun decodeJsonString(str: String): String {
         return str
@@ -1688,18 +1684,18 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 从文本内容中提取 HTML 代码
-     * 用于兼容不支持原生工具调用的模型
+     * HTML.
+     * Note.
      * 
-     * 支持以下格式：
-     * 1. ```html ... ``` 代码块
-     * 2. 直接的 <!DOCTYPE html> ... </html> 内容
-     * 3. 直接的 <html> ... </html> 内容
+     * Note.
+     * 1. ```html ... ```.
+     * 2. <!DOCTYPE html> ... </html>.
+     * 3. <html> ... </html>.
      */
     private fun extractHtmlFromText(text: String): String {
         if (text.isBlank()) return ""
         
-        // 1. 尝试从 ```html 代码块中提取
+        // 1. ```html.
         val codeBlockPattern = Pattern.compile("```html\\s*\\n?([\\s\\S]*?)```", Pattern.CASE_INSENSITIVE)
         val codeBlockMatcher = codeBlockPattern.matcher(text)
         if (codeBlockMatcher.find()) {
@@ -1710,12 +1706,12 @@ class AiCodingAgent(private val context: Context) {
             }
         }
         
-        // 2. 尝试从 ``` 代码块中提取（不带语言标记）
+        // Note.
         val genericCodeBlockPattern = Pattern.compile("```\\s*\\n?([\\s\\S]*?)```")
         val genericMatcher = genericCodeBlockPattern.matcher(text)
         while (genericMatcher.find()) {
             val extracted = genericMatcher.group(1)?.trim() ?: ""
-            // Check是否是 HTML 内容
+            // Check HTML.
             if (extracted.contains("<!DOCTYPE", ignoreCase = true) || 
                 extracted.contains("<html", ignoreCase = true)) {
                 AppLogger.d(TAG, "Extracted HTML from generic code block, length: ${extracted.length}")
@@ -1723,7 +1719,7 @@ class AiCodingAgent(private val context: Context) {
             }
         }
         
-        // 3. 尝试直接提取 <!DOCTYPE html> ... </html>
+        // 3. <!DOCTYPE html> ... </html>.
         val doctypePattern = Pattern.compile("(<!DOCTYPE\\s+html[\\s\\S]*?</html>)", Pattern.CASE_INSENSITIVE)
         val doctypeMatcher = doctypePattern.matcher(text)
         if (doctypeMatcher.find()) {
@@ -1734,7 +1730,7 @@ class AiCodingAgent(private val context: Context) {
             }
         }
         
-        // 4. 尝试直接提取 <html> ... </html>
+        // 4. <html> ... </html>.
         val htmlPattern = Pattern.compile("(<html[\\s\\S]*?</html>)", Pattern.CASE_INSENSITIVE)
         val htmlMatcher = htmlPattern.matcher(text)
         if (htmlMatcher.find()) {
@@ -1745,7 +1741,7 @@ class AiCodingAgent(private val context: Context) {
             }
         }
         
-        // 5. 如果文本本身就是以 <!DOCTYPE 或 <html 开头，直接返回
+        // 5. <!DOCTYPE <html.
         val trimmedText = text.trim()
         if (trimmedText.startsWith("<!DOCTYPE", ignoreCase = true) || 
             trimmedText.startsWith("<html", ignoreCase = true)) {
@@ -1757,12 +1753,12 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 构建工具调用模式的系统提示词
+     * Note.
      * 
-     * 设计原则：
-     * - 简洁：不重复工具描述（已在 tools 参数中），只提供工作流指导
-     * - 结构化：清晰的决策树，AI 知道何时用哪个工具
-     * - ReAct 友好：引导 AI 使用多轮工具调用完成复杂任务
+     * Note.
+     * - tools.
+     * - AI.
+     * - ReAct AI.
      */
     private fun buildToolCallingSystemPrompt(config: SessionConfig?, currentHtml: String?, enabledTools: List<HtmlTool> = emptyList()): String {
         val hasEditHtml = enabledTools.any { it.name == "edit_html" }
@@ -1770,7 +1766,7 @@ class AiCodingAgent(private val context: Context) {
         val hasCheckSyntax = enabledTools.any { it.name == "check_syntax" }
         val hasGenerateImage = enabledTools.any { it.name == "generate_image" }
         val hasExistingCode = !currentHtml.isNullOrBlank()
-        val currentLang = Strings.currentLanguage.value
+        val currentLang = AppStringsProvider.currentLanguage
         val isEnglish = currentLang == com.webtoapp.core.i18n.AppLanguage.ENGLISH
         val isArabic = currentLang == com.webtoapp.core.i18n.AppLanguage.ARABIC
         
@@ -1973,8 +1969,8 @@ class AiCodingAgent(private val context: Context) {
     }
     
     /**
-     * 简单流式模式（回退方案，从文本中提取 HTML）
-     * 内部方法，不再嵌套 collect
+     * HTML.
+     * collect.
      */
     private fun developWithSimpleStreamInternal(
         requirement: String,
@@ -2017,7 +2013,7 @@ class AiCodingAgent(private val context: Context) {
                     val content = event.delta
                     val accumulated = event.accumulated
                     
-                    // 检测 HTML 开始
+                    // HTML.
                     if (!htmlStarted && (accumulated.contains("<!DOCTYPE", ignoreCase = true) || 
                         accumulated.contains("<html", ignoreCase = true))) {
                         htmlStarted = true
@@ -2099,17 +2095,17 @@ class AiCodingAgent(private val context: Context) {
         }
         
         if (!streamCompleted) {
-            throw Exception(Strings.streamResponseIncomplete)
+            throw Exception(AppStringsProvider.current().streamResponseIncomplete)
         }
     }
     
     
     /**
-     * 构建简化的系统提示词（回退模式，从文本中提取 HTML）
-     * 与 SimplePrompts 保持一致的规范，但添加当前代码上下文和用户规则
+     * HTML.
+     * SimplePrompts.
      */
     private fun buildSimpleSystemPrompt(config: SessionConfig?, currentHtml: String?): String {
-        val currentLang = Strings.currentLanguage.value
+        val currentLang = AppStringsProvider.currentLanguage
         val isEnglish = currentLang == com.webtoapp.core.i18n.AppLanguage.ENGLISH
         val isArabic = currentLang == com.webtoapp.core.i18n.AppLanguage.ARABIC
         
@@ -2196,7 +2192,7 @@ class AiCodingAgent(private val context: Context) {
 
     
     /**
-     * 选择模型
+     * Note.
      */
     private suspend fun selectModel(
         preferredModel: SavedModel?,
@@ -2215,10 +2211,10 @@ class AiCodingAgent(private val context: Context) {
 }
 
 
-// ==================== 数据类 ====================
+// ==================== ====================
 
 /**
- * HTML 工具定义
+ * HTML.
  */
 data class HtmlTool(
     val type: AiCodingToolType,
@@ -2237,14 +2233,14 @@ data class HtmlTool(
 }
 
 /**
- * 控制台日志级别
+ * Note.
  */
 enum class ConsoleLogLevel {
     LOG, WARN, ERROR, INFO, DEBUG
 }
 
 /**
- * 控制台日志条目
+ * Note.
  */
 data class ConsoleLogEntry(
     val level: ConsoleLogLevel,
@@ -2255,14 +2251,14 @@ data class ConsoleLogEntry(
 )
 
 /**
- * 错误严重程度
+ * Note.
  */
 enum class ErrorSeverity {
     ERROR, WARNING, INFO
 }
 
 /**
- * 语法错误
+ * Note.
  */
 data class SyntaxError(
     val type: String,           // html, css, javascript
@@ -2273,22 +2269,22 @@ data class SyntaxError(
 )
 
 /**
- * 工具执行结果
+ * Note.
  */
 data class ToolExecutionResult(
     val success: Boolean,
     val toolName: String,
     val result: String,
     val isHtml: Boolean = false,
-    val isEdit: Boolean = false,  // Yes否为编辑操作（区分 write_html 和 edit_html）
-    val isImageGeneration: Boolean = false,  // Yes否为图像生成操作
-    val imageData: String? = null,  // Generate的图像 base64 数据
+    val isEdit: Boolean = false,  // Yes write_html edit_html.
+    val isImageGeneration: Boolean = false,  // Yes.
+    val imageData: String? = null,  // Generate base64.
     val syntaxErrors: List<SyntaxError> = emptyList(),
-    val fileInfo: ProjectFileInfo? = null  // Create/修改的文件信息
+    val fileInfo: ProjectFileInfo? = null  // Create/.
 )
 
 /**
- * Agent 状态
+ * Agent.
  */
 enum class HtmlAgentState {
     IDLE,
@@ -2298,46 +2294,46 @@ enum class HtmlAgentState {
 }
 
 /**
- * Agent 事件 - 支持流式输出
+ * Agent -.
  */
 sealed class HtmlAgentEvent {
-    // 状态变化
+    // Note.
     data class StateChange(val state: HtmlAgentState) : HtmlAgentEvent()
     
-    // File创建事件
+    // File.
     data class FileCreated(
         val fileInfo: ProjectFileInfo,
         val isNewVersion: Boolean
     ) : HtmlAgentEvent()
     
-    // 文本内容增量
+    // Note.
     data class TextDelta(val delta: String, val accumulated: String) : HtmlAgentEvent()
     
-    // 思考内容增量
+    // Note.
     data class ThinkingDelta(val delta: String, val accumulated: String) : HtmlAgentEvent()
     
-    // 工具调用开始
+    // Note.
     data class ToolCallStart(val toolName: String, val toolCallId: String) : HtmlAgentEvent()
     
-    // 代码增量（实时显示生成的 HTML）
+    // HTML.
     data class CodeDelta(val delta: String, val accumulated: String) : HtmlAgentEvent()
     
-    // 工具执行完成
+    // Note.
     data class ToolExecuted(val result: ToolExecutionResult) : HtmlAgentEvent()
     
-    // 图像生成开始
+    // Note.
     data class ImageGenerating(val prompt: String) : HtmlAgentEvent()
     
-    // 图像生成完成
+    // Note.
     data class ImageGenerated(val imageData: String, val prompt: String) : HtmlAgentEvent()
     
-    // HTML 生成完成
+    // HTML.
     data class HtmlComplete(val html: String) : HtmlAgentEvent()
     
-    // Auto预览触发
+    // Auto.
     data class AutoPreview(val html: String) : HtmlAgentEvent()
     
-    // All完成
+    // All.
     data class Completed(val textContent: String, val toolCalls: List<ToolCallInfo>) : HtmlAgentEvent()
     
     // Error

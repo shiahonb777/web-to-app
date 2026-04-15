@@ -8,7 +8,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,14 +20,14 @@ import kotlinx.coroutines.flow.stateIn
 private val Context.themeDataStore: DataStore<Preferences> by preferencesDataStore(name = "theme_settings")
 
 /**
- * 主题管理器
- * 管理主题切换和持久化
- * 使用 StateFlow 确保状态在重组时保持一致
+ * Theme manager.
+ * Handles theme switching and persistence.
+ * Uses StateFlow to keep state stable across recomposition.
  */
 @SuppressLint("StaticFieldLeak")
 class ThemeManager(private val context: Context) {
     
-    // 使用独立的 CoroutineScope 管理 StateFlow
+    // Use a dedicated CoroutineScope for StateFlow
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     
     companion object {
@@ -37,19 +37,10 @@ class ThemeManager(private val context: Context) {
         private val KEY_ENABLE_HAPTICS = booleanPreferencesKey("enable_haptics")
         private val KEY_ENABLE_SOUND = booleanPreferencesKey("enable_sound")
         private val KEY_ANIMATION_SPEED = stringPreferencesKey("animation_speed")
-        
-        @Volatile
-        private var instance: ThemeManager? = null
-        
-        fun getInstance(context: Context): ThemeManager {
-            return instance ?: synchronized(this) {
-                instance ?: ThemeManager(context.applicationContext).also { instance = it }
-            }
-        }
     }
     
     /**
-     * 暗色模式设置
+     * Dark mode setting.
      */
     enum class DarkModeSettings {
         SYSTEM,
@@ -57,14 +48,14 @@ class ThemeManager(private val context: Context) {
         DARK;
         
         fun getDisplayName(): String = when (this) {
-            SYSTEM -> Strings.followSystem
-            LIGHT -> Strings.alwaysLight
-            DARK -> Strings.alwaysDark
+            SYSTEM -> AppStringsProvider.current().followSystem
+            LIGHT -> AppStringsProvider.current().alwaysLight
+            DARK -> AppStringsProvider.current().alwaysDark
         }
     }
     
     /**
-     * 动画速度
+     * Animation speed.
      */
     enum class AnimationSpeed(val multiplier: Float) {
         SLOW(1.5f),
@@ -73,23 +64,23 @@ class ThemeManager(private val context: Context) {
         INSTANT(0.3f);
         
         fun getDisplayName(): String = when (this) {
-            SLOW -> Strings.speedSlow
-            NORMAL -> Strings.speedNormal
-            FAST -> Strings.speedFast
-            INSTANT -> Strings.speedInstant
+            SLOW -> AppStringsProvider.current().speedSlow
+            NORMAL -> AppStringsProvider.current().speedNormal
+            FAST -> AppStringsProvider.current().speedFast
+            INSTANT -> AppStringsProvider.current().speedInstant
         }
     }
     
     // ==================== StateFlows ====================
-    // 使用 StateFlow 而非 Flow，确保在重组时保持最新状态
+    // Use StateFlow instead of Flow to keep latest state on recomposition
     
     /**
-     * 当前主题类型 StateFlow（固定为默认主题）
+     * Current theme type StateFlow (fixed to default theme).
      */
     val themeTypeFlow: StateFlow<AppThemeType> = kotlinx.coroutines.flow.MutableStateFlow(AppThemeType.KIMI_NO_NAWA)
     
     /**
-     * 暗色模式设置 StateFlow
+     * Dark mode StateFlow.
      */
     val darkModeFlow: StateFlow<DarkModeSettings> = context.themeDataStore.data.map { prefs ->
         val modeName = prefs[KEY_DARK_MODE] ?: DarkModeSettings.SYSTEM.name
@@ -105,7 +96,7 @@ class ThemeManager(private val context: Context) {
     )
     
     /**
-     * 是否启用动画 StateFlow
+     * Animation-enabled StateFlow.
      */
     val enableAnimationsFlow: StateFlow<Boolean> = context.themeDataStore.data.map { prefs ->
         prefs[KEY_ENABLE_ANIMATIONS] ?: true
@@ -116,7 +107,7 @@ class ThemeManager(private val context: Context) {
     )
     
     /**
-     * 是否启用粒子效果 StateFlow
+     * Particle-enabled StateFlow.
      */
     val enableParticlesFlow: StateFlow<Boolean> = context.themeDataStore.data.map { prefs ->
         prefs[KEY_ENABLE_PARTICLES] ?: true
@@ -127,7 +118,7 @@ class ThemeManager(private val context: Context) {
     )
     
     /**
-     * 是否启用触觉反馈 StateFlow
+     * Haptic-enabled StateFlow.
      */
     val enableHapticsFlow: StateFlow<Boolean> = context.themeDataStore.data.map { prefs ->
         prefs[KEY_ENABLE_HAPTICS] ?: true
@@ -138,7 +129,7 @@ class ThemeManager(private val context: Context) {
     )
     
     /**
-     * 是否启用音效 StateFlow
+     * Sound-enabled StateFlow.
      */
     val enableSoundFlow: StateFlow<Boolean> = context.themeDataStore.data.map { prefs ->
         prefs[KEY_ENABLE_SOUND] ?: true
@@ -149,7 +140,7 @@ class ThemeManager(private val context: Context) {
     )
     
     /**
-     * 动画速度 StateFlow
+     * Animation speed StateFlow.
      */
     val animationSpeedFlow: StateFlow<AnimationSpeed> = context.themeDataStore.data.map { prefs ->
         val speedName = prefs[KEY_ANIMATION_SPEED] ?: AnimationSpeed.NORMAL.name
@@ -164,10 +155,10 @@ class ThemeManager(private val context: Context) {
         initialValue = AnimationSpeed.NORMAL
     )
     
-    // ==================== 设置方法 ====================
+    // ==================== Setters ====================
 
     /**
-     * 设置暗色模式
+     * Set dark mode.
      */
     suspend fun setDarkMode(mode: DarkModeSettings) {
         context.themeDataStore.edit { prefs ->
@@ -176,7 +167,7 @@ class ThemeManager(private val context: Context) {
     }
     
     /**
-     * 设置是否启用动画
+     * Set animation enabled.
      */
     suspend fun setEnableAnimations(enabled: Boolean) {
         context.themeDataStore.edit { prefs ->
@@ -185,7 +176,7 @@ class ThemeManager(private val context: Context) {
     }
     
     /**
-     * 设置是否启用粒子效果
+     * Set particle effects enabled.
      */
     suspend fun setEnableParticles(enabled: Boolean) {
         context.themeDataStore.edit { prefs ->
@@ -194,7 +185,7 @@ class ThemeManager(private val context: Context) {
     }
     
     /**
-     * 设置是否启用触觉反馈
+     * Set haptic feedback enabled.
      */
     suspend fun setEnableHaptics(enabled: Boolean) {
         context.themeDataStore.edit { prefs ->
@@ -203,7 +194,7 @@ class ThemeManager(private val context: Context) {
     }
     
     /**
-     * 设置是否启用音效
+     * Set sound effects enabled.
      */
     suspend fun setEnableSound(enabled: Boolean) {
         context.themeDataStore.edit { prefs ->
@@ -212,7 +203,7 @@ class ThemeManager(private val context: Context) {
     }
     
     /**
-     * 设置动画速度
+     * Set animation speed.
      */
     suspend fun setAnimationSpeed(speed: AnimationSpeed) {
         context.themeDataStore.edit { prefs ->

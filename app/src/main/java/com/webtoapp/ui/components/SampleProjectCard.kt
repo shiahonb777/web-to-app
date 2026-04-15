@@ -27,14 +27,14 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.frontend.FrontendFramework
 import com.webtoapp.core.frontend.SampleProject
 import com.webtoapp.core.frontend.SampleProjectManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.LocalAppTheme
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.graphics.Color
 
 /**
- * Vue.js 自定义图标
+ * Vue. js icon
  */
 @Composable
 fun VueLogo(modifier: Modifier = Modifier) {
@@ -92,7 +92,7 @@ fun VueLogo(modifier: Modifier = Modifier) {
 }
 
 /**
- * React 自定义图标
+ * React icon
  */
 @Composable
 fun ReactLogo(modifier: Modifier = Modifier) {
@@ -143,7 +143,7 @@ fun ReactLogo(modifier: Modifier = Modifier) {
 }
 
 /**
- * Vite 自定义图标
+ * Vite icon
  */
 @Composable
 fun ViteLogo(modifier: Modifier = Modifier) {
@@ -206,8 +206,8 @@ fun ViteLogo(modifier: Modifier = Modifier) {
 }
 
 /**
- * Sample project card - 完全重构版
- * 在强化模式下使用纯透明背景，无边框无阴影
+ * Sample project card- refactored
+ * mode,
  */
 @Composable
 fun SampleProjectsCard(
@@ -218,7 +218,7 @@ fun SampleProjectsCard(
     
     val theme = LocalAppTheme.current
     
-    // 容器样式 - 使用主题卡片圆角
+    // card
     val containerModifier = modifier
         .fillMaxWidth()
         .clip(RoundedCornerShape(theme.shapes.cardRadius))
@@ -226,12 +226,12 @@ fun SampleProjectsCard(
     
     Box(modifier = containerModifier) {
         Column(modifier = Modifier.padding(20.dp)) {
-            // 标题区域
+            // area
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Icon容器 - 渐变背景
+                // Icon- gradient
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -258,19 +258,19 @@ fun SampleProjectsCard(
                 
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        Strings.sampleProjects,
+                        AppStringsProvider.current().sampleProjects,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        Strings.quickExperienceFrontend,
+                        AppStringsProvider.current().quickExperienceFrontend,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
-                // 标签
+                // label
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(theme.shapes.buttonRadius))
@@ -278,7 +278,7 @@ fun SampleProjectsCard(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        Strings.quickExperience,
+                        AppStringsProvider.current().quickExperience,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -288,7 +288,7 @@ fun SampleProjectsCard(
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // 示例项目列表
+            // itemlist
             samples.forEachIndexed { index, sample ->
                 SampleProjectItem(
                     sample = sample,
@@ -303,7 +303,7 @@ fun SampleProjectsCard(
 }
 
 /**
- * 单个示例项目项 - 重构版
+ * item- refactored
  */
 @Composable
 private fun SampleProjectItem(
@@ -313,7 +313,7 @@ private fun SampleProjectItem(
     val theme = LocalAppTheme.current
     val frameworkColor = getFrameworkColor(sample.framework)
     
-    // 悬停/按压动画
+    // / animation
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
@@ -338,7 +338,7 @@ private fun SampleProjectItem(
         modifier = itemModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 框架图标
+        // icon
         Box(
             modifier = Modifier
                 .size(52.dp)
@@ -383,7 +383,7 @@ private fun SampleProjectItem(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 标签
+            // label
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 sample.tags.take(2).forEach { tag ->
                     Box(
@@ -405,7 +405,7 @@ private fun SampleProjectItem(
         
         Spacer(modifier = Modifier.width(8.dp))
         
-        // Play按钮
+        // Playbutton
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -422,7 +422,7 @@ private fun SampleProjectItem(
         ) {
             Icon(
                 Icons.Default.PlayArrow,
-                contentDescription = Strings.run,
+                contentDescription = AppStringsProvider.current().run,
                 tint = frameworkColor,
                 modifier = Modifier.size(20.dp)
             )
@@ -431,7 +431,7 @@ private fun SampleProjectItem(
 }
 
 /**
- * 获取框架对应的颜色
+ * color
  */
 private fun getFrameworkColor(framework: FrontendFramework): Color {
     return when (framework) {

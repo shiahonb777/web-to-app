@@ -2,7 +2,7 @@ package com.webtoapp.core.extension.agent
 
 import android.content.Context
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -10,17 +10,17 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 /**
- * Agent 工具执行器
- * 
- * 负责执行 Agent 调用的各种工具，支持：
- * - 单个工具执行
- * - 工具链执行（按顺序执行多个工具）
- * - 工具结果传递（前一个工具的输出可作为后一个工具的输入）
- * 
+ * Agent.
+ *
+ * Agent use Supports.
+ * - single.
+ * - tool chain.
+ * -.
+ *
  * Requirements: 5.5
  */
 /**
- * 预编译的安全检查模式
+ * Check.
  */
 private data class SecurityPattern(
     val regex: Regex,
@@ -32,7 +32,7 @@ private data class SecurityPattern(
 class AgentToolExecutor(private val context: Context) {
     
     companion object {
-        // checkJsLineErrors - per-line 循环
+        // checkJsLineErrors - per-line.
         private val LOOSE_EQ_REGEX = Regex("[^=!<>]==[^=]")
         
         // executeFixError
@@ -40,18 +40,18 @@ class AgentToolExecutor(private val context: Context) {
         private val STRICT_EQ_REGEX = Regex("([^=!<>])===([^=])")
         private val LOOSE_EQ_FIX_REGEX = Regex("([^=!<>])==([^=])")
         
-        // executeSecurityScan - 预编译 10 个安全模式
+        // executeSecurityScan - 10.
         private val SECURITY_PATTERNS get() = listOf(
-            SecurityPattern(Regex("eval\\s*\\(", RegexOption.IGNORE_CASE), Strings.secEvalDesc, Strings.secEvalRec, RiskLevel.HIGH),
-            SecurityPattern(Regex("innerHTML\\s*=", RegexOption.IGNORE_CASE), Strings.secInnerHtmlDesc, Strings.secInnerHtmlRec, RiskLevel.HIGH),
-            SecurityPattern(Regex("document\\.write\\s*\\(", RegexOption.IGNORE_CASE), Strings.secDocWriteDesc, Strings.secDocWriteRec, RiskLevel.MEDIUM),
-            SecurityPattern(Regex("new\\s+Function\\s*\\(", RegexOption.IGNORE_CASE), Strings.secNewFuncDesc, Strings.secNewFuncRec, RiskLevel.MEDIUM),
-            SecurityPattern(Regex("location\\s*=|location\\.href\\s*=", RegexOption.IGNORE_CASE), Strings.secLocationDesc, Strings.secLocationRec, RiskLevel.LOW),
-            SecurityPattern(Regex("localStorage|sessionStorage", RegexOption.IGNORE_CASE), Strings.secStorageDesc, Strings.secStorageRec, RiskLevel.LOW),
-            SecurityPattern(Regex("XMLHttpRequest|fetch\\s*\\(", RegexOption.IGNORE_CASE), Strings.secFetchDesc, Strings.secFetchRec, RiskLevel.LOW),
-            SecurityPattern(Regex("postMessage\\s*\\(", RegexOption.IGNORE_CASE), Strings.secPostMsgDesc, Strings.secPostMsgRec, RiskLevel.LOW),
-            SecurityPattern(Regex("\\$\\{.*\\}", RegexOption.IGNORE_CASE), Strings.secTemplateDesc, Strings.secTemplateRec, RiskLevel.LOW),
-            SecurityPattern(Regex("atob\\s*\\(|btoa\\s*\\(", RegexOption.IGNORE_CASE), Strings.secBase64Desc, Strings.secBase64Rec, RiskLevel.LOW)
+            SecurityPattern(Regex("eval\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secEvalDesc, AppStringsProvider.current().secEvalRec, RiskLevel.HIGH),
+            SecurityPattern(Regex("innerHTML\\s*=", RegexOption.IGNORE_CASE), AppStringsProvider.current().secInnerHtmlDesc, AppStringsProvider.current().secInnerHtmlRec, RiskLevel.HIGH),
+            SecurityPattern(Regex("document\\.write\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secDocWriteDesc, AppStringsProvider.current().secDocWriteRec, RiskLevel.MEDIUM),
+            SecurityPattern(Regex("new\\s+Function\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secNewFuncDesc, AppStringsProvider.current().secNewFuncRec, RiskLevel.MEDIUM),
+            SecurityPattern(Regex("location\\s*=|location\\.href\\s*=", RegexOption.IGNORE_CASE), AppStringsProvider.current().secLocationDesc, AppStringsProvider.current().secLocationRec, RiskLevel.LOW),
+            SecurityPattern(Regex("localStorage|sessionStorage", RegexOption.IGNORE_CASE), AppStringsProvider.current().secStorageDesc, AppStringsProvider.current().secStorageRec, RiskLevel.LOW),
+            SecurityPattern(Regex("XMLHttpRequest|fetch\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secFetchDesc, AppStringsProvider.current().secFetchRec, RiskLevel.LOW),
+            SecurityPattern(Regex("postMessage\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secPostMsgDesc, AppStringsProvider.current().secPostMsgRec, RiskLevel.LOW),
+            SecurityPattern(Regex("\\$\\{.*\\}", RegexOption.IGNORE_CASE), AppStringsProvider.current().secTemplateDesc, AppStringsProvider.current().secTemplateRec, RiskLevel.LOW),
+            SecurityPattern(Regex("atob\\s*\\(|btoa\\s*\\(", RegexOption.IGNORE_CASE), AppStringsProvider.current().secBase64Desc, AppStringsProvider.current().secBase64Rec, RiskLevel.LOW)
         )
     }
     
@@ -59,7 +59,7 @@ class AgentToolExecutor(private val context: Context) {
     private val extensionManager = ExtensionManager.getInstance(context)
     
     /**
-     * 执行工具调用
+     * use.
      */
     suspend fun execute(request: ToolCallRequest): ToolCallResult {
         val startTime = System.currentTimeMillis()
@@ -74,7 +74,7 @@ class AgentToolExecutor(private val context: Context) {
                 "get_snippets" -> executeGetSnippets(request.arguments)
                 "validate_config" -> executeValidateConfig(request.arguments)
                 "create_module" -> executeCreateModule(request.arguments)
-                else -> throw IllegalArgumentException("${Strings.toolErrUnknown}: ${request.toolName}")
+                else -> throw IllegalArgumentException("${AppStringsProvider.current().toolErrUnknown}: ${request.toolName}")
             }
 
             ToolCallResult(
@@ -90,22 +90,22 @@ class AgentToolExecutor(private val context: Context) {
                 toolName = request.toolName,
                 success = false,
                 result = null,
-                error = e.message ?: Strings.toolErrExecFailed,
+                error = e.message ?: AppStringsProvider.current().toolErrExecFailed,
                 executionTimeMs = System.currentTimeMillis() - startTime
             )
         }
     }
     
     /**
-     * 执行工具链
-     * 
-     * 按顺序执行多个工具调用，支持工具间的数据传递。
-     * 前一个工具的输出可以通过 {{previous_result}} 占位符传递给后一个工具。
-     * 
-     * @param tools 要执行的工具调用列表
-     * @param stopOnFailure 是否在工具执行失败时停止链式执行，默认为 true
-     * @return Flow<ToolChainEvent> 工具链执行事件流
-     * 
+     * tool chain.
+     *
+     * by multiple use Supports .
+     * previous tool can {{previous_result}} placeholder after .
+     *
+     * @param tools use.
+     * @param stopOnFailure is in when as true.
+     * @return Flow<ToolChainEvent> tool chain.
+     *
      * Requirements: 5.5
      */
     fun executeChain(
@@ -123,7 +123,7 @@ class AgentToolExecutor(private val context: Context) {
         var previousResult: Any? = null
         
         for ((index, request) in tools.withIndex()) {
-            // Handle参数中的占位符，支持前一个工具结果的传递
+            // Handle in placeholderSupportsprevious tool.
             val processedRequest = processRequestWithPreviousResult(request, previousResult)
             
             emit(ToolChainEvent.ToolStarted(index, processedRequest))
@@ -136,13 +136,13 @@ class AgentToolExecutor(private val context: Context) {
             if (!result.success && stopOnFailure) {
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = index,
-                    error = result.error ?: Strings.toolErrChainFailed,
+                    error = result.error ?: AppStringsProvider.current().toolErrChainFailed,
                     completedResults = results
                 ))
                 return@flow
             }
             
-            // Save当前结果供下一个工具使用
+            // Save before use.
             previousResult = result.result
         }
         
@@ -150,18 +150,18 @@ class AgentToolExecutor(private val context: Context) {
     }.flowOn(Dispatchers.IO)
     
     /**
-     * 执行语法检查和自动修复链
-     * 
-     * 这是一个预定义的工具链，用于：
-     * 1. 执行语法检查
-     * 2. 如果有错误，尝试自动修复
-     * 3. 重新检查修复后的代码
-     * 
-     * @param code 要检查的代码
-     * @param language 代码语言 (javascript/css)
-     * @param maxFixAttempts 最大修复尝试次数，默认为 3
-     * @return Flow<ToolChainEvent> 工具链执行事件流
-     * 
+     * syntax check auto-fix.
+     *
+     * is tool chain use .
+     * 1. syntax check.
+     * 2. auto-fix.
+     * 3. Checkfix after.
+     *
+     * @param code Check.
+     * @param language (javascript/css)
+     * @param maxFixAttempts large fix as 3.
+     * @return Flow<ToolChainEvent> tool chain.
+     *
      * Requirements: 5.3, 5.4, 5.5
      */
     fun executeSyntaxCheckAndFixChain(
@@ -173,10 +173,10 @@ class AgentToolExecutor(private val context: Context) {
         var attemptCount = 0
         val allResults = mutableListOf<ToolCallResult>()
         
-        emit(ToolChainEvent.ChainStarted(maxFixAttempts * 2)) // 最多 check + fix 循环
+        emit(ToolChainEvent.ChainStarted(maxFixAttempts * 2)) // check fix.
         
         while (attemptCount < maxFixAttempts) {
-            // 步骤 1: 语法检查
+            // Step 1: syntax check.
             val checkRequest = ToolCallRequest(
                 toolName = "syntax_check",
                 arguments = mapOf("code" to currentCode, "language" to language)
@@ -190,7 +190,7 @@ class AgentToolExecutor(private val context: Context) {
             if (!checkResult.success) {
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = attemptCount * 2,
-                    error = checkResult.error ?: Strings.toolErrSyntaxCheckFailed,
+                    error = checkResult.error ?: AppStringsProvider.current().toolErrSyntaxCheckFailed,
                     completedResults = allResults
                 ))
                 return@flow
@@ -198,20 +198,20 @@ class AgentToolExecutor(private val context: Context) {
             
             val syntaxResult = checkResult.result as? SyntaxCheckResult
             
-            // 如果语法正确，完成链式执行
+            // .
             if (syntaxResult == null || syntaxResult.valid) {
                 emit(ToolChainEvent.ChainCompleted(allResults))
                 return@flow
             }
             
-            // 步骤 2: 尝试修复
+            // Step 2: fix.
             attemptCount++
             
             if (attemptCount >= maxFixAttempts) {
-                // 达到最大尝试次数，返回最后的检查结果
+                // to max attempts after Check.
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = attemptCount * 2 - 1,
-                    error = Strings.toolErrMaxFixAttempts.replace("%s", maxFixAttempts.toString()),
+                    error = AppStringsProvider.current().toolErrMaxFixAttempts.replace("%s", maxFixAttempts.toString()),
                     completedResults = allResults
                 ))
                 return@flow
@@ -240,13 +240,13 @@ class AgentToolExecutor(private val context: Context) {
             if (!fixResult.success) {
                 emit(ToolChainEvent.ChainFailed(
                     failedToolIndex = attemptCount * 2 - 1,
-                    error = fixResult.error ?: Strings.toolErrAutoFixFailed,
+                    error = fixResult.error ?: AppStringsProvider.current().toolErrAutoFixFailed,
                     completedResults = allResults
                 ))
                 return@flow
             }
             
-            // Update代码为修复后的版本
+            // Update as fix after.
             val fixResultMap = fixResult.result as? Map<*, *>
             currentCode = fixResultMap?.get("fixed_code") as? String ?: currentCode
         }
@@ -255,11 +255,11 @@ class AgentToolExecutor(private val context: Context) {
     }.flowOn(Dispatchers.IO)
     
     /**
-     * 处理请求参数中的占位符
-     * 
-     * 支持的占位符：
-     * - {{previous_result}}: 前一个工具的完整结果
-     * - {{previous_result.field}}: 前一个工具结果中的特定字段
+     * request in placeholder.
+     *
+     * Supports placeholder.
+     * - {{previous_result}}: previous tool.
+     * - {{previous_result.field}}: previous tool in.
      */
     private fun processRequestWithPreviousResult(
         request: ToolCallRequest,
@@ -280,7 +280,7 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 处理字符串中的占位符
+     * in placeholder.
      */
     private fun processStringPlaceholder(value: String, previousResult: Any?): Any? {
         return when {
@@ -297,7 +297,7 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 从结果中提取指定字段
+     * from in Extract.
      */
     private fun extractFieldFromResult(result: Any?, fieldPath: String): Any? {
         if (result == null) return null
@@ -333,27 +333,27 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 语法检查
+     * syntax check.
      */
     private suspend fun executeSyntaxCheck(args: Map<String, Any?>): SyntaxCheckResult {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val language = args["language"] as? String ?: "javascript"
         
         return when (language.lowercase()) {
             "javascript", "js" -> checkJavaScriptSyntax(code)
             "css" -> checkCssSyntax(code)
-            else -> throw IllegalArgumentException("${Strings.toolErrUnsupportedLang}: $language")
+            else -> throw IllegalArgumentException("${AppStringsProvider.current().toolErrUnsupportedLang}: $language")
         }
     }
     
     /**
-     * JavaScript 语法检查
+     * JavaScript syntax check.
      */
     private fun checkJavaScriptSyntax(code: String): SyntaxCheckResult {
         val errors = mutableListOf<CodeError>()
         val warnings = mutableListOf<CodeWarning>()
         
-        // 基础语法检查规则
+        // syntax checkrules.
         val lines = code.lines()
         var braceCount = 0
         var parenCount = 0
@@ -371,10 +371,10 @@ class AgentToolExecutor(private val context: Context) {
                 val char = line[i]
                 val nextChar = if (i + 1 < line.length) line[i + 1] else ' '
                 
-                // Handle注释
+                // Handle.
                 if (!inString) {
                     if (char == '/' && nextChar == '/') {
-                        break // 单行注释，跳过剩余行
+                        break // comment.
                     }
                     if (char == '/' && nextChar == '*') {
                         inMultiLineComment = true
@@ -393,7 +393,7 @@ class AgentToolExecutor(private val context: Context) {
                     continue
                 }
                 
-                // Handle字符串
+                // Handle.
                 if ((char == '"' || char == '\'' || char == '`') && (i == 0 || line[i-1] != '\\')) {
                     if (!inString) {
                         inString = true
@@ -416,36 +416,36 @@ class AgentToolExecutor(private val context: Context) {
                 i++
             }
 
-            // Check常见错误模式
+            // Check.
             checkJsLineErrors(line, lineNum, errors, warnings)
         }
         
-        // Check括号匹配
+        // Check.
         if (braceCount != 0) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = "${Strings.syntaxBraceMismatch}, ${if (braceCount > 0) Strings.syntaxBraceMissing.replace("%s", braceCount.toString()) else Strings.syntaxBraceExtra.replace("%s", (-braceCount).toString())}",
+                message = "${AppStringsProvider.current().syntaxBraceMismatch}, ${if (braceCount > 0) AppStringsProvider.current().syntaxBraceMissing.replace("%s", braceCount.toString()) else AppStringsProvider.current().syntaxBraceExtra.replace("%s", (-braceCount).toString())}",
                 severity = ErrorSeverity.ERROR,
-                suggestion = Strings.syntaxBraceCheckPair
+                suggestion = AppStringsProvider.current().syntaxBraceCheckPair
             ))
         }
         if (parenCount != 0) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = "${Strings.syntaxParenMismatch}, ${if (parenCount > 0) Strings.syntaxParenMissing.replace("%s", parenCount.toString()) else Strings.syntaxParenExtra.replace("%s", (-parenCount).toString())}",
+                message = "${AppStringsProvider.current().syntaxParenMismatch}, ${if (parenCount > 0) AppStringsProvider.current().syntaxParenMissing.replace("%s", parenCount.toString()) else AppStringsProvider.current().syntaxParenExtra.replace("%s", (-parenCount).toString())}",
                 severity = ErrorSeverity.ERROR,
-                suggestion = Strings.syntaxParenCheckPair
+                suggestion = AppStringsProvider.current().syntaxParenCheckPair
             ))
         }
         if (bracketCount != 0) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = "${Strings.syntaxBracketMismatch}, ${if (bracketCount > 0) Strings.syntaxBracketMissing.replace("%s", bracketCount.toString()) else Strings.syntaxBracketExtra.replace("%s", (-bracketCount).toString())}",
+                message = "${AppStringsProvider.current().syntaxBracketMismatch}, ${if (bracketCount > 0) AppStringsProvider.current().syntaxBracketMissing.replace("%s", bracketCount.toString()) else AppStringsProvider.current().syntaxBracketExtra.replace("%s", (-bracketCount).toString())}",
                 severity = ErrorSeverity.ERROR,
-                suggestion = Strings.syntaxBracketCheckPair
+                suggestion = AppStringsProvider.current().syntaxBracketCheckPair
             ))
         }
         
@@ -457,38 +457,38 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 检查 JS 行级错误
+     * Check JS level.
      */
     private fun checkJsLineErrors(line: String, lineNum: Int, errors: MutableList<CodeError>, warnings: MutableList<CodeWarning>) {
         val trimmed = line.trim()
         
-        // Check var 使用（建议用 let/const）
+        // Check var use.
         if (trimmed.startsWith("var ")) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("var"),
-                message = Strings.lintNoVar,
+                message = AppStringsProvider.current().lintNoVar,
                 rule = "no-var"
             ))
         }
         
-        // Check == 使用（建议用 ===）
+        // Check == use.
         val eqMatch = LOOSE_EQ_REGEX.find(line)
         if (eqMatch != null) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = eqMatch.range.first + 1,
-                message = Strings.lintEqeqeq,
+                message = AppStringsProvider.current().lintEqeqeq,
                 rule = "eqeqeq"
             ))
         }
         
-        // Check eval 使用
+        // Check eval use.
         if (trimmed.contains("eval(")) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("eval("),
-                message = Strings.lintNoEval,
+                message = AppStringsProvider.current().lintNoEval,
                 rule = "no-eval"
             ))
         }
@@ -498,24 +498,24 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("document.write("),
-                message = Strings.lintNoDocWrite,
+                message = AppStringsProvider.current().lintNoDocWrite,
                 rule = "no-document-write"
             ))
         }
         
-        // Check console.log（生产代码警告）
+        // Check console.log.
         if (trimmed.contains("console.log(")) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("console.log("),
-                message = Strings.lintNoConsole,
+                message = AppStringsProvider.current().lintNoConsole,
                 rule = "no-console"
             ))
         }
     }
 
     /**
-     * CSS 语法检查
+     * CSS syntax check.
      */
     private fun checkCssSyntax(code: String): SyntaxCheckResult {
         val errors = mutableListOf<CodeError>()
@@ -533,7 +533,7 @@ class AgentToolExecutor(private val context: Context) {
                 val char = line[i]
                 val nextChar = if (i + 1 < line.length) line[i + 1] else ' '
                 
-                // Handle注释
+                // Handle.
                 if (char == '/' && nextChar == '*') {
                     inComment = true
                     i += 2
@@ -554,7 +554,7 @@ class AgentToolExecutor(private val context: Context) {
                 i++
             }
             
-            // Check常见 CSS 问题
+            // Check CSS issue.
             checkCssLineErrors(line, lineNum, errors, warnings)
         }
         
@@ -562,7 +562,7 @@ class AgentToolExecutor(private val context: Context) {
             errors.add(CodeError(
                 line = lines.size,
                 column = 0,
-                message = Strings.syntaxBraceMismatch,
+                message = AppStringsProvider.current().syntaxBraceMismatch,
                 severity = ErrorSeverity.ERROR
             ))
         }
@@ -575,7 +575,7 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     private fun checkCssLineErrors(line: String, lineNum: Int, errors: MutableList<CodeError>, warnings: MutableList<CodeWarning>) {
-        // Check缺少分号
+        // Check.
         val trimmed = line.trim()
         if (trimmed.isNotEmpty() && 
             !trimmed.endsWith("{") && 
@@ -589,42 +589,41 @@ class AgentToolExecutor(private val context: Context) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.length,
-                message = Strings.lintCssMissingSemicolon,
+                message = AppStringsProvider.current().lintCssMissingSemicolon,
                 rule = "declaration-block-trailing-semicolon"
             ))
         }
         
-        // Check !important 滥用
+        // Check !important use.
         if (trimmed.contains("!important")) {
             warnings.add(CodeWarning(
                 line = lineNum,
                 column = line.indexOf("!important"),
-                message = Strings.lintCssNoImportant,
+                message = AppStringsProvider.current().lintCssNoImportant,
                 rule = "declaration-no-important"
             ))
         }
     }
     
     /**
-     * 代码规范检查
+     * Check.
      */
     private suspend fun executeLintCode(args: Map<String, Any?>): Map<String, Any> {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val language = args["language"] as? String ?: "javascript"
         
         val syntaxResult = executeSyntaxCheck(args)
         val suggestions = mutableListOf<String>()
         
-        // 额外的代码风格建议
         if (language == "javascript") {
             if (!code.contains("'use strict'") && !code.contains("\"use strict\"")) {
-                suggestions.add(Strings.lintUseStrict)
+                suggestions.add(AppStringsProvider.current().lintUseStrict)
             }
             if (code.contains("function ") && !code.contains("=>")) {
-                suggestions.add(Strings.lintUseArrowFn)
+                suggestions.add(AppStringsProvider.current().lintUseArrowFn)
             }
             if (code.lines().any { it.length > 120 }) {
-                suggestions.add(Strings.lintLineTooLong)
+                suggestions.add(AppStringsProvider.current().lintLineTooLong)
             }
         }
         
@@ -644,10 +643,9 @@ class AgentToolExecutor(private val context: Context) {
     }
 
     /**
-     * 安全扫描
      */
     private suspend fun executeSecurityScan(args: Map<String, Any?>): SecurityScanResult {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val issues = mutableListOf<SecurityIssue>()
         val lines = code.lines()
         
@@ -682,31 +680,31 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 修复错误
+     * fix.
      */
     private suspend fun executeFixError(args: Map<String, Any?>): Map<String, Any> {
-        val code = args["code"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingCode)
+        val code = args["code"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingCode)
         val language = args["language"] as? String ?: "javascript"
         
         var fixedCode = code
         val fixes = mutableListOf<String>()
         
         if (language == "javascript") {
-            // Auto修复 var -> let
+            // Autofix var -> let.
             if (fixedCode.contains("var ")) {
                 fixedCode = fixedCode.replace(VAR_KEYWORD_REGEX, "let ")
-                fixes.add(Strings.fixVarToLet)
+                fixes.add(AppStringsProvider.current().fixVarToLet)
             }
             
-            // Auto修复 == -> ===
+            // Autofix == -> ===.
             fixedCode = fixedCode.replace(STRICT_EQ_REGEX) { match ->
-                match.value // 保持 === 不变
+                match.value // Note.
             }
             fixedCode = fixedCode.replace(LOOSE_EQ_FIX_REGEX) { match ->
                 "${match.groupValues[1]}===${match.groupValues[2]}"
             }
             if (code != fixedCode && fixes.none { it.contains("===") }) {
-                fixes.add(Strings.fixLooseEq)
+                fixes.add(AppStringsProvider.current().fixLooseEq)
             }
         }
         
@@ -719,7 +717,7 @@ class AgentToolExecutor(private val context: Context) {
     }
 
     /**
-     * 获取模板
+     * Gettemplate.
      */
     private suspend fun executeGetTemplates(args: Map<String, Any?>): List<Map<String, Any>> {
         val category = args["category"] as? String
@@ -753,7 +751,7 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 获取代码片段
+     * Getcode snippets.
      */
     private suspend fun executeGetSnippets(args: Map<String, Any?>): List<Map<String, Any>> {
         val query = args["query"] as? String ?: ""
@@ -779,7 +777,7 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 验证配置
+     * validate config.
      */
     private suspend fun executeValidateConfig(args: Map<String, Any?>): ModuleValidationResult {
         val configItems = args["config_items"] as? List<*> ?: emptyList<Any>()
@@ -795,7 +793,7 @@ class AgentToolExecutor(private val context: Context) {
                 if (key.isNullOrBlank()) {
                     issues.add(ValidationIssue(
                         field = "config_item",
-                        message = Strings.validateConfigMissingKey,
+                        message = AppStringsProvider.current().validateConfigMissingKey,
                         severity = ErrorSeverity.ERROR
                     ))
                 }
@@ -803,7 +801,7 @@ class AgentToolExecutor(private val context: Context) {
                 if (name.isNullOrBlank()) {
                     issues.add(ValidationIssue(
                         field = "config_item.$key",
-                        message = Strings.validateConfigMissingName,
+                        message = AppStringsProvider.current().validateConfigMissingName,
                         severity = ErrorSeverity.WARNING
                     ))
                 }
@@ -811,7 +809,7 @@ class AgentToolExecutor(private val context: Context) {
                 if (required && key != null && !configValues.containsKey(key)) {
                     issues.add(ValidationIssue(
                         field = key,
-                        message = Strings.validateConfigRequiredNotSet.replace("%s", name ?: ""),
+                        message = AppStringsProvider.current().validateConfigRequiredNotSet.replace("%s", name ?: ""),
                         severity = ErrorSeverity.ERROR
                     ))
                 }
@@ -825,10 +823,10 @@ class AgentToolExecutor(private val context: Context) {
     }
     
     /**
-     * 创建模块
+     * create module.
      */
     private suspend fun executeCreateModule(args: Map<String, Any?>): Map<String, Any> = withContext(Dispatchers.IO) {
-        val name = args["name"] as? String ?: throw IllegalArgumentException(Strings.toolErrMissingModuleName)
+        val name = args["name"] as? String ?: throw IllegalArgumentException(AppStringsProvider.current().toolErrMissingModuleName)
         val description = args["description"] as? String ?: ""
         val icon = args["icon"] as? String ?: "📦"
         val categoryStr = args["category"] as? String ?: "OTHER"
@@ -867,12 +865,12 @@ class AgentToolExecutor(private val context: Context) {
             mapOf(
                 "success" to true,
                 "module_id" to module.id,
-                "message" to Strings.toolModuleCreated
+                "message" to AppStringsProvider.current().toolModuleCreated
             )
         } else {
             mapOf(
                 "success" to false,
-                "error" to (result.exceptionOrNull()?.message ?: Strings.toolModuleCreateFailed)
+                "error" to (result.exceptionOrNull()?.message ?: AppStringsProvider.current().toolModuleCreateFailed)
             )
         }
     }

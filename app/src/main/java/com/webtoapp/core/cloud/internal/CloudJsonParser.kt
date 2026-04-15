@@ -1,6 +1,21 @@
-package com.webtoapp.core.cloud
+package com.webtoapp.core.cloud.internal
 
 import com.google.gson.JsonObject
+import com.webtoapp.core.cloud.model.AppStoreItem
+import com.webtoapp.core.cloud.model.CloudProject
+import com.webtoapp.core.cloud.model.CommunityPostItem
+import com.webtoapp.core.cloud.model.CommunityUserProfile
+import com.webtoapp.core.cloud.model.ModuleTeamInfo
+import com.webtoapp.core.cloud.model.PostAppLinkItem
+import com.webtoapp.core.cloud.model.PostCommentItem
+import com.webtoapp.core.cloud.model.PostMediaItem
+import com.webtoapp.core.cloud.model.ProjectActivationCode
+import com.webtoapp.core.cloud.model.ProjectAnnouncement
+import com.webtoapp.core.cloud.model.ProjectWebhook
+import com.webtoapp.core.cloud.model.RemoteScriptInfo
+import com.webtoapp.core.cloud.model.StoreModuleInfo
+import com.webtoapp.core.cloud.model.TeamBadgeInfo
+import com.webtoapp.core.cloud.model.TeamContributorItem
 
 internal class CloudJsonParser {
     fun parseProject(obj: JsonObject): CloudProject = CloudProject(

@@ -9,15 +9,15 @@ import android.webkit.WebView
 import com.webtoapp.core.logging.AppLogger
 
 /**
- * WebView 预热池
- * 
- * WebView 首次初始化在 Android 上需要 200-500ms（加载 libwebviewchromium.so、初始化 V8 等）。
- * 通过在 Application 启动时预创建 WebView 实例，可以将用户打开应用时的等待时间降至接近 0。
- * 
- * 使用方式：
- * 1. Application.onCreate() 中调用 WebViewPool.prewarm(context)
- * 2. Activity 中调用 WebViewPool.acquire(context) 代替 WebView(context)
- * 3. Activity.onDestroy() 中调用 WebViewPool.recycle(webView) 回收（可选）
+ * WebView prewarm pool.
+ *
+ * WebView in Android 200-500ms.
+ * in Application when WebView can use use when etc when 0.
+ *
+ * use .
+ * 1. Application.onCreate() in use WebViewPool.prewarm(context)
+ * 2. Activity in use WebViewPool.acquire(context) WebView(context)
+ * 3. Activity.onDestroy() in use WebViewPool.recycle(webView) recycle.
  */
 object WebViewPool {
     
@@ -31,9 +31,9 @@ object WebViewPool {
     private var isPrewarmed = false
     
     /**
-     * 预热 WebView 引擎
-     * 必须在主线程调用或通过 Handler post 到主线程
-     * 建议在 Application.onCreate() 中调用
+     * prewarm WebView.
+     * in use or Handler post to.
+     * in Application.onCreate() in use.
      */
     fun prewarm(context: Context) {
         if (isPrewarmed) return
@@ -62,11 +62,11 @@ object WebViewPool {
     }
     
     /**
-     * 获取一个 WebView 实例
-     * 优先从池中获取预热的实例，如果池为空则新建
-     * 
-     * @param context 目标 Activity 的 Context（会替换预热时的 ApplicationContext）
-     * @return WebView 实例
+     * Get WebView.
+     * from in Getprewarm as.
+     *
+     * @param context Activity Context.
+     * @return WebView.
      */
     @SuppressLint("SetJavaScriptEnabled")
     fun acquire(context: Context): WebView {
@@ -75,12 +75,12 @@ object WebViewPool {
         }
         
         return if (webView != null) {
-            // 替换 Context 为目标 Activity 的 Context
-            // 预热时使用 MutableContextWrapper，这里替换为实际 Context
+            // Context as Activity Context.
+            // prewarm when use MutableContextWrapper as Context.
             (webView.context as? MutableContextWrapper)?.baseContext = context
             AppLogger.d(TAG, "WebView acquired from pool (remaining: ${pool.size})")
             
-            // 异步补充池
+            // Refill asynchronously.
             replenishPool(context.applicationContext)
             
             webView
@@ -91,12 +91,12 @@ object WebViewPool {
     }
     
     /**
-     * 回收 WebView 到池中（可选）
-     * 如果池已满或 WebView 状态不佳，则直接销毁
+     * recycle WebView to in.
+     * or WebView not .
      */
     fun recycle(webView: WebView) {
         try {
-            // 清理状态
+            // Reset state.
             webView.stopLoading()
             webView.loadUrl("about:blank")
             webView.clearHistory()
@@ -110,7 +110,7 @@ object WebViewPool {
                 }
             }
             
-            // 池已满，销毁
+            // Destroy when pool is full.
             webView.destroy()
             AppLogger.d(TAG, "Pool full, WebView destroyed")
         } catch (e: Exception) {
@@ -120,8 +120,8 @@ object WebViewPool {
     }
     
     /**
-     * 释放池中所有 WebView
-     * 在 Application.onTerminate() 中调用
+     * Release in WebView.
+     * in Application.onTerminate() in use.
      */
     fun release() {
         synchronized(pool) {
@@ -137,12 +137,12 @@ object WebViewPool {
     }
     
     /**
-     * 获取当前池大小（用于调试/监控）
+     * Get before large small.
      */
     fun poolSize(): Int = synchronized(pool) { pool.size }
     
     /**
-     * 异步补充池中的 WebView
+     * Refill asynchronously in WebView.
      */
     private fun replenishPool(appContext: Context) {
         mainHandler.post {
@@ -166,22 +166,22 @@ object WebViewPool {
     }
     
     /**
-     * 创建预热的 WebView 实例
-     * 使用 MutableContextWrapper 以便后续替换为 Activity Context
-     * 预配置更多设置以减少后续 configureWebView 的开销
+     * prewarm WebView.
+     * use MutableContextWrapper after as Activity Context.
+     * config multiple after configureWebView.
      */
     @SuppressLint("SetJavaScriptEnabled")
     private fun createPrewarmedWebView(appContext: Context): WebView {
         val contextWrapper = MutableContextWrapper(appContext)
         val webView = WebView(contextWrapper)
         
-        // 预配置常用设置 — 减少后续 configureWebView 的设置项数量
-        // WebViewManager.configureWebView 会覆盖详细配置
+        // config use after configureWebView.
+        // WebViewManager.configureWebView config.
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
             databaseEnabled = true
-            // 预设高频使用的设置 (减少后续主线程配置时间 ~20-50ms)
+            // use.
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             @Suppress("DEPRECATION")
@@ -191,7 +191,6 @@ object WebViewPool {
             }
         }
         
-        // 预设硬件加速层
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.isScrollbarFadingEnabled = true
         

@@ -10,15 +10,15 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
 
 /**
- * 创建 Shell 模式的 WebView 回调
+ * create Shell mode WebView
  *
- * 参数名使用 update* / handle* / notify* 前缀，避免与 WebViewCallbacks 的 override 方法名冲突
+ * update, handle, notify with WebViewCallbacks override
  */
 fun createShellWebViewCallbacks(
     context: android.content.Context,
@@ -46,7 +46,7 @@ fun createShellWebViewCallbacks(
             updateUrl(url ?: "")
             com.webtoapp.core.shell.ShellLogger.logWebView("开始加载", url ?: "")
             
-            // Inject document_start 远程脚本（尽早注入）
+            // Inject document_start remote( )
             webViewRefProvider()?.let { wv ->
                 (context as? ShellActivity)?.cloudSdkManager?.let { sdkManager ->
                     val code = sdkManager.getRemoteScriptCode("document_start", url ?: "")
@@ -74,15 +74,15 @@ fun createShellWebViewCallbacks(
             webViewRefProvider()?.let {
                 updateNavigation(it.canGoBack(), it.canGoForward())
                 
-                // Inject自动翻译脚本
+                // Inject
                 if (config.translateEnabled) {
                     injectTranslateScript(it, config.translateTargetLanguage, config.translateShowButton)
                 }
                 
-                // Inject长按增强脚本（绕过小红书等网站的长按限制）
+                // Injectlong- press( long- press)
                 longPressHandler.injectLongPressEnhancer(it)
                 
-                // Inject远程热更脚本
+                // Injectremote
                 (context as? ShellActivity)?.cloudSdkManager?.let { sdkManager ->
                     val endCode = sdkManager.getRemoteScriptCode("document_end", url ?: "")
                     if (endCode.isNotBlank()) {
@@ -90,7 +90,7 @@ fun createShellWebViewCallbacks(
                         AppLogger.d("ShellActivity", "Injected document_end scripts for: $url")
                     }
                     
-                    // document_idle: 延迟注入（模拟页面空闲时机）
+                    // document_idle: ( )
                     val idleCode = sdkManager.getRemoteScriptCode("document_idle", url ?: "")
                     if (idleCode.isNotBlank()) {
                         it.postDelayed({
@@ -134,7 +134,7 @@ fun createShellWebViewCallbacks(
                 AppLogger.w("ShellActivity", "No app to handle external link: $url", e)
                 Toast.makeText(
                     context,
-                    Strings.cannotOpenLink,
+                    AppStringsProvider.current().cannotOpenLink,
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -152,13 +152,13 @@ fun createShellWebViewCallbacks(
             origin: String?,
             callback: GeolocationPermissions.Callback?
         ) {
-            // 通过Activity请求Android位置权限
+            // Activity Android
             (context as? ShellActivity)?.handleGeolocationPermission(origin, callback)
                 ?: callback?.invoke(origin, true, false)
         }
 
         override fun onPermissionRequest(request: PermissionRequest?) {
-            // 通过Activity请求Android系统权限（摄像头、麦克风等）
+            // Activity Androidsystem( , )
             AppLogger.d("ShellActivity", "WebViewCallbacks.onPermissionRequest called, request: ${request?.resources?.joinToString()}")
             request?.let { req ->
                 val shellActivity = context as? ShellActivity
@@ -186,32 +186,32 @@ fun createShellWebViewCallbacks(
             mimeType: String,
             contentLength: Long
         ) {
-            // Check并请求存储权限后下载
+            // Checkand download
             (context as? ShellActivity)?.handleDownloadWithPermission(
                 url, userAgent, contentDisposition, mimeType, contentLength
             )
         }
         
         override fun onLongPress(webView: WebView, x: Float, y: Float): Boolean {
-            // 无论长按菜单是否启用，都先检查是否长按了链接
-            // 如果是链接，始终拦截以隐藏系统默认的链接预览弹窗
+            // long- press, check long- press
+            // if, alwaysintercept hidesystemdefault previewdialog
             val hitResult = webView.hitTestResult
             val hitType = hitResult.type
             val isLink = hitType == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
                          hitType == WebView.HitTestResult.ANCHOR_TYPE
             
-            // Check长按菜单是否启用
+            // Checklong- press
             if (!config.webViewConfig.longPressMenuEnabled) {
-                return isLink // 链接长按始终拦截以隐藏预览弹窗
+                return isLink // long- pressalwaysintercept hidepreviewdialog
             }
             
-            // If it is编辑框或未知类型，不拦截，让 WebView 处理默认的文字选择
+            // If it isedit or type, intercept, WebView handledefault select
             if (hitType == WebView.HitTestResult.EDIT_TEXT_TYPE ||
                 hitType == WebView.HitTestResult.UNKNOWN_TYPE) {
                 return false
             }
             
-            // 通过 JS 获取长按元素详情
+            // JS long- press
             longPressHandler.getLongPressDetails(webView, x, y) { result ->
                 when (result) {
                     is LongPressHandler.LongPressResult.Image,
@@ -222,18 +222,18 @@ fun createShellWebViewCallbacks(
                     }
                     is LongPressHandler.LongPressResult.Text,
                     is LongPressHandler.LongPressResult.None -> {
-                        // 文字或空白区域，不显示菜单
+                        // or area, display
                     }
                 }
             }
             
-            // 对于图片、链接等类型，拦截事件显示自定义菜单
+            // , type, intercept display
             return when (hitType) {
                 WebView.HitTestResult.IMAGE_TYPE,
                 WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
                 WebView.HitTestResult.SRC_ANCHOR_TYPE,
                 WebView.HitTestResult.ANCHOR_TYPE -> true
-                else -> false  // 其他情况不拦截，允许默认的文字选择
+                else -> false  // intercept, default select
             }
         }
         

@@ -30,13 +30,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.StoreModuleInfo
 import com.webtoapp.core.extension.ExtensionModule
 import com.webtoapp.core.extension.ModuleCategory
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 模块市场页面 — 社区扩展模块的发现、搜索与安装
+ * modulemarket- module, with
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,7 +92,7 @@ fun ModuleStoreScreen(
                     }
                 },
                 actions = {
-                    // 搜索
+                    // Note
                     var showSearch by remember { mutableStateOf(false) }
                     if (showSearch) {
                         TextField(
@@ -133,7 +133,7 @@ fun ModuleStoreScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 分类过滤
+            // Note
             item {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
@@ -169,7 +169,7 @@ fun ModuleStoreScreen(
                 }
             }
 
-            // 排序
+            // Note
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val sorts = listOf("downloads" to "最多下载", "rating" to "最高评分", "created_at" to "最新发布")
@@ -186,7 +186,7 @@ fun ModuleStoreScreen(
                 }
             }
 
-            // 加载中
+            // load
             if (loading) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -195,7 +195,7 @@ fun ModuleStoreScreen(
                 }
             }
 
-            // 模块列表
+            // modulelist
             items(modules, key = { it.id }) { module ->
                 ModuleStoreCard(
                     module = module,
@@ -211,7 +211,7 @@ fun ModuleStoreScreen(
                 )
             }
 
-            // 空状态
+            // state
             if (!loading && modules.isEmpty()) {
                 item {
                     Column(
@@ -348,7 +348,7 @@ private fun ModuleStoreCard(module: StoreModuleInfo, onInstall: () -> Unit) {
 
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
 
-                // Install button — shows "已安装" if already installed
+                // Install button- shows " " if already installed
                 if (isInstalled) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),

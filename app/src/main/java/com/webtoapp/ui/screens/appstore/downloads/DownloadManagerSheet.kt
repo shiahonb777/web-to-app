@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -73,10 +73,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.core.extension.ExtensionManager
+import org.koin.compose.koinInject
 
 // ════════════════════════════════════════════════
 // ════════════════════════════════════════════════
-// 下载管理 Bottom Sheet (统一：活跃下载 + 已下载应用)
+// downloadmanagement Bottom Sheet( unified: download + downloadapp)
 // ════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════
@@ -92,8 +94,7 @@ internal fun DownloadManagerSheet(
     val downloadedApps by downloadManager.downloadedApps.collectAsState()
 
     // Module installation tracking
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val extensionManager = remember { com.webtoapp.core.extension.ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val allUserModules by extensionManager.modules.collectAsState()
     val scope = rememberCoroutineScope()
 
@@ -146,7 +147,7 @@ internal fun DownloadManagerSheet(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
-                            Strings.storeDownloadManager,
+                            AppStringsProvider.current().storeDownloadManager,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.3).sp
@@ -162,8 +163,8 @@ internal fun DownloadManagerSheet(
                                 horizontalArrangement = Arrangement.spacedBy(3.dp)
                             ) {
                                 listOf(
-                                    Strings.marketTabApps to (activeTasks.size + downloadedApps.size),
-                                    Strings.marketTabModules to allUserModules.size
+                                    AppStringsProvider.current().marketTabApps to (activeTasks.size + downloadedApps.size),
+                                    AppStringsProvider.current().marketTabModules to allUserModules.size
                                 ).forEachIndexed { index, (label, count) ->
                                     val isSelected = selectedTab == index
                                     Surface(
@@ -260,13 +261,13 @@ internal fun DownloadManagerSheet(
                                     }
                                 }
                                 Text(
-                                    Strings.storeNoDownloadHistory,
+                                    AppStringsProvider.current().storeNoDownloadHistory,
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Text(
-                                    Strings.storeNoDownloadHistoryDesc,
+                                    AppStringsProvider.current().storeNoDownloadHistoryDesc,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
                                 )
@@ -284,7 +285,7 @@ internal fun DownloadManagerSheet(
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Text(
-                                        "\${activeTasks.size} " + Strings.inProgress,
+                                        "\${activeTasks.size} " + AppStringsProvider.current().inProgress,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
@@ -298,7 +299,7 @@ internal fun DownloadManagerSheet(
                                     color = MaterialTheme.colorScheme.surfaceContainerHighest
                                 ) {
                                     Text(
-                                        "\${downloadedApps.size} " + Strings.storeModulesInstalled,
+                                        "\${downloadedApps.size} " + AppStringsProvider.current().storeModulesInstalled,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
@@ -329,7 +330,7 @@ internal fun DownloadManagerSheet(
                                     }
                                 ) {
                                     Text(
-                                        Strings.storeClearHistory,
+                                        AppStringsProvider.current().storeClearHistory,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
@@ -358,7 +359,7 @@ internal fun DownloadManagerSheet(
                                                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                                         )
                                         Text(
-                                            Strings.storeDownloadingLabel,
+                                            AppStringsProvider.current().storeDownloadingLabel,
                                             style = MaterialTheme.typography.titleSmall,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold
@@ -398,7 +399,7 @@ internal fun DownloadManagerSheet(
                                                 .background(MaterialTheme.colorScheme.error, CircleShape)
                                         )
                                         Text(
-                                            Strings.storeDownloadFailed,
+                                            AppStringsProvider.current().storeDownloadFailed,
                                             style = MaterialTheme.typography.titleSmall,
                                             color = MaterialTheme.colorScheme.error,
                                             fontWeight = FontWeight.Bold
@@ -505,13 +506,13 @@ internal fun DownloadManagerSheet(
                                     }
                                 }
                                 Text(
-                                    Strings.storeNoModuleHistory,
+                                    AppStringsProvider.current().storeNoModuleHistory,
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Text(
-                                    Strings.storeNoModuleHistoryDesc,
+                                    AppStringsProvider.current().storeNoModuleHistoryDesc,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
                                 )
@@ -529,7 +530,7 @@ internal fun DownloadManagerSheet(
                                 color = Color(0xFF10B981).copy(alpha = 0.1f)
                             ) {
                                 Text(
-                                    "\$enabledCount " + Strings.storeModulesEnabled,
+                                    "\$enabledCount " + AppStringsProvider.current().storeModulesEnabled,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -541,7 +542,7 @@ internal fun DownloadManagerSheet(
                                 color = MaterialTheme.colorScheme.surfaceContainerHighest
                             ) {
                                 Text(
-                                    "\${allUserModules.size} " + Strings.storeModulesInstalled,
+                                    "\${allUserModules.size} " + AppStringsProvider.current().storeModulesInstalled,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
@@ -643,7 +644,7 @@ internal fun DownloadManagerSheet(
                                                     else MaterialTheme.colorScheme.surfaceContainerHighest
                                                 ) {
                                                     Text(
-                                                        if (module.enabled) Strings.storeModuleEnable else Strings.storeModuleDisable,
+                                                        if (module.enabled) AppStringsProvider.current().storeModuleEnable else AppStringsProvider.current().storeModuleDisable,
                                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                         fontSize = 10.sp,
                                                         fontWeight = FontWeight.SemiBold,

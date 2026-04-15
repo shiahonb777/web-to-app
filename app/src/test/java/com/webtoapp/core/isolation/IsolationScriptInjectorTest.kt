@@ -24,11 +24,11 @@ class IsolationScriptInjectorTest {
             fingerprint = fingerprint
         )
 
-        assertThat(script).contains("Navigator 伪造")
-        assertThat(script).contains("Canvas 指纹防护")
-        assertThat(script).contains("WebGL 指纹防护")
-        assertThat(script).contains("AudioContext 指纹防护")
-        assertThat(script).contains("WebRTC 防泄漏")
+        assertThat(script).contains("Navigator property spoofing")
+        assertThat(script).contains("Canvas fingerprint")
+        assertThat(script).contains("WebGL fingerprint spoofing")
+        assertThat(script).contains("AudioContext fingerprint")
+        assertThat(script).contains("WebRTC IP leak protection")
     }
 
     @Test
@@ -49,10 +49,10 @@ class IsolationScriptInjectorTest {
 
         val script = IsolationScriptInjector.generateIsolationScript(config, fingerprint)
 
-        assertThat(script).contains("字体指纹防护")
-        assertThat(script).contains("屏幕分辨率伪装")
-        assertThat(script).contains("return 1111")
-        assertThat(script).contains("return 777")
+        assertThat(script).contains("Font fingerprint protection")
+        assertThat(script).contains("Screen/window dimension spoofing")
+        assertThat(script).contains("width: 1111")
+        assertThat(script).contains("height: 777")
         assertThat(script).contains("Europe/Paris")
     }
 
@@ -72,10 +72,10 @@ class IsolationScriptInjectorTest {
 
         val script = IsolationScriptInjector.generateIsolationScript(config, fingerprint)
 
-        assertThat(script).doesNotContain("Navigator 伪造")
-        assertThat(script).doesNotContain("Canvas 指纹防护")
-        assertThat(script).doesNotContain("WebGL 指纹防护")
-        assertThat(script).doesNotContain("AudioContext 指纹防护")
-        assertThat(script).doesNotContain("WebRTC 防泄漏")
+        assertThat(script).doesNotContain("Navigator property spoofing")
+        assertThat(script).doesNotContain("Canvas fingerprint")
+        assertThat(script).doesNotContain("WebGL fingerprint spoofing")
+        assertThat(script).doesNotContain("AudioContext fingerprint")
+        assertThat(script).doesNotContain("WebRTC IP leak protection")
     }
 }

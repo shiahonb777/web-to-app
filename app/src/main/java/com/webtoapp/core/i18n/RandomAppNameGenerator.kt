@@ -3,14 +3,14 @@ package com.webtoapp.core.i18n
 import kotlin.random.Random
 
 /**
- * 随机应用名称生成器
+ * Note.
  * 
- * 使用前缀+后缀随机拼凑的方式生成应用名称
- * 根据当前语言生成对应语言的随机名称
+ * Note.
+ * Note.
  */
 object RandomAppNameGenerator {
     
-    // ==================== 中文 ====================
+    // ==================== ====================
     private val chinesePrefixes = listOf(
         "小", "大", "快", "智", "云", "新", "超", "酷", "妙", "神",
         "精", "万", "美", "乐", "易", "轻", "精", "巧", "火", "飞",
@@ -27,7 +27,7 @@ object RandomAppNameGenerator {
         "路径", "桥梁", "通道", "入口", "窗口", "门户", "平台", "中心", "基地", "站"
     )
     
-    // ==================== 英文 ====================
+    // ==================== ====================
     private val englishPrefixes = listOf(
         "Quick", "Smart", "Easy", "Super", "Magic", "Ultra", "Pro", "Neo", "Max", "Prime",
         "Flash", "Turbo", "Swift", "Rapid", "Instant", "Fast", "Speed", "Zoom", "Rush", "Blitz",
@@ -47,7 +47,7 @@ object RandomAppNameGenerator {
         "Flow", "Sync", "Track", "Pulse", "Beat", "Wave", "Loop", "Ring", "Spin", "Dash"
     )
     
-    // ==================== 阿拉伯语 ====================
+    // ==================== ====================
     private val arabicPrefixes = listOf(
         "السريع", "الذكي", "السهل", "الخارق", "السحري", "الفائق", "المتقدم", "الجديد", "الأقصى", "الأول",
         "البرق", "الصاروخ", "الخفيف", "المباشر", "الفوري", "السريع", "العاجل", "المنطلق", "المندفع", "الخاطف",
@@ -65,10 +65,10 @@ object RandomAppNameGenerator {
     )
     
     /**
-     * 根据当前语言生成随机应用名称
+     * Note.
      */
     fun generate(): String {
-        return when (Strings.currentLanguage.value) {
+        return when (AppStringsProvider.currentLanguage) {
             AppLanguage.CHINESE -> generateChinese()
             AppLanguage.ENGLISH -> generateEnglish()
             AppLanguage.ARABIC -> generateArabic()
@@ -76,7 +76,7 @@ object RandomAppNameGenerator {
     }
     
     /**
-     * 根据指定语言生成随机应用名称
+     * Note.
      */
     fun generate(language: AppLanguage): String {
         return when (language) {

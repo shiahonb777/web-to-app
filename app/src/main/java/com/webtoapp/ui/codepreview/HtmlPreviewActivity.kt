@@ -40,15 +40,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.theme.WebToAppTheme
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-
 /**
- * HTML预览Activity
- * 用于预览AI生成的HTML代码
+ * HTMLActivity
+ * AIHTML
  */
 class HtmlPreviewActivity : ComponentActivity() {
 
@@ -97,7 +96,7 @@ private fun HtmlPreviewScreen(
     var showSourceDialog by remember { mutableStateOf(false) }
     var sourceCode by remember { mutableStateOf("") }
     
-    // 读取源代码
+    // Comment
     LaunchedEffect(filePath, htmlContent) {
         sourceCode = when {
             filePath != null -> try { File(filePath).readText() } catch (e: Exception) { "无法读取文件" }
@@ -128,7 +127,7 @@ private fun HtmlPreviewScreen(
                     }
                 },
                 actions = {
-                    // 查看源代码
+                    // Comment
                     IconButton(onClick = { showSourceDialog = true }) {
                         Icon(Icons.Outlined.Description, "查看源代码")
                     }
@@ -136,7 +135,7 @@ private fun HtmlPreviewScreen(
                     IconButton(onClick = { webView?.reload() }) {
                         Icon(Icons.Default.Refresh, "Refresh")
                     }
-                    // 开发者工具
+                    // Comment
                     IconButton(onClick = { showDevTools = !showDevTools }) {
                         BadgedBox(
                             badge = {
@@ -151,7 +150,7 @@ private fun HtmlPreviewScreen(
                             )
                         }
                     }
-                    // 在浏览器中打开
+                    // Comment
                     IconButton(onClick = {
                         filePath?.let { path ->
                             try {
@@ -172,10 +171,10 @@ private fun HtmlPreviewScreen(
                                 }
                                 context.startActivity(Intent.createChooser(intent, "选择浏览器"))
                             } catch (e: Exception) {
-                                Toast.makeText(context, "${Strings.cannotOpenInBrowser}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "${AppStringsProvider.current().cannotOpenInBrowser}: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
                         } ?: run {
-                            Toast.makeText(context, Strings.noFilePathAvailable, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppStringsProvider.current().noFilePathAvailable, Toast.LENGTH_SHORT).show()
                         }
                     }) {
                         Icon(Icons.Outlined.OpenInBrowser, "在浏览器中打开")
@@ -189,7 +188,7 @@ private fun HtmlPreviewScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Load进度条
+            // Load
             if (isLoading) {
                 LinearProgressIndicator(
                     progress = { loadProgress / 100f },
@@ -206,10 +205,10 @@ private fun HtmlPreviewScreen(
                     factory = { ctx ->
                         WebView(ctx).apply {
                             webView = this
-                            // SetWebView背景为白色，避免继承主题颜色
+                            // SetWebView
                             setBackgroundColor(android.graphics.Color.WHITE)
                             
-                            // 添加下载桥接（支持 Blob/Data URL 下载）
+                            // Blob/Data URL
                             lifecycleScope?.let { scope ->
                                 val downloadBridge = com.webtoapp.core.webview.DownloadBridge(ctx, scope)
                                 addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
@@ -232,17 +231,17 @@ private fun HtmlPreviewScreen(
                                 }
                             )
                             
-                            // Load内容
-                            // 使用 HTTPS baseURL 来允许加载 CDN 资源
-                            // 这是解决 file:// 协议无法加载外部脚本的关键
+                            // Load
+                            // HTTPS baseURL CDN
+                            // file://
                             when {
                                 filePath != null -> {
                                     val file = File(filePath)
                                     val htmlContent = file.readText()
                                     val baseDir = file.parentFile?.absolutePath ?: ""
                                     
-                                    // 使用虚拟 HTTPS baseURL，让 WebView 认为页面来自网络
-                                    // Local资源通过 shouldInterceptRequest 拦截处理
+                                    // HTTPS baseURL WebView
+                                    // Local shouldInterceptRequest
                                     loadDataWithBaseURL(
                                         "https://localhost/__local__/$baseDir/",
                                         htmlContent,
@@ -265,11 +264,11 @@ private fun HtmlPreviewScreen(
                     },
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.White)  // 确保容器背景也是白色
+                        .background(Color.White)  // Comment
                 )
             }
             
-            // 开发者工具面板
+            // Comment
             AnimatedVisibility(
                 visible = showDevTools,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -297,7 +296,7 @@ private fun HtmlPreviewScreen(
         }
     }
     
-    // 源代码查看对话框
+    // Comment
     if (showSourceDialog) {
         SourceCodeDialog(
             sourceCode = sourceCode,
@@ -324,14 +323,14 @@ private fun WebView.setupWebView(
         displayZoomControls = false
         setSupportZoom(true)
         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        // Allow本地文件访问（HTML中的相对路径资源，如 JS/CSS 文件）
+        // Allow HTML JS/CSS
         @Suppress("DEPRECATION")
         allowFileAccessFromFileURLs = true
         @Suppress("DEPRECATION")
         allowUniversalAccessFromFileURLs = true
-        // 确保 JavaScript 可以正常执行
+        // JavaScript
         javaScriptCanOpenWindowsAutomatically = true
-        // Support数据库
+        // Support
         databaseEnabled = true
     }
     
@@ -345,10 +344,10 @@ private fun WebView.setupWebView(
             super.onPageFinished(view, url)
             onPageFinished()
             
-            // Inject下载桥接脚本（支持 Blob/Data URL 下载）
+            // Inject Blob/Data URL
             view?.evaluateJavascript(com.webtoapp.core.webview.DownloadBridge.getInjectionScript(), null)
             
-            // Debug：检查 JavaScript 是否可用
+            // Debug JavaScript
             view?.evaluateJavascript("""
                 (function() {
                     console.log('[DEBUG] JavaScript is working!');
@@ -371,13 +370,13 @@ private fun WebView.setupWebView(
         }
         
         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-            return false  // 在WebView内处理所有链接
+            return false  // WebView
         }
         
         /**
-         * 拦截资源请求
-         * - 本地资源（通过虚拟 baseURL 请求）：从文件系统加载
-         * - 外部资源（CDN 等）：正常网络请求
+         * Comment
+         * - baseURL
+         * - CDN
          */
         override fun shouldInterceptRequest(
             view: WebView?,
@@ -387,7 +386,7 @@ private fun WebView.setupWebView(
             
             AppLogger.d("HtmlPreviewActivity", "shouldInterceptRequest: $url")
             
-            // Check是否是本地资源请求（通过虚拟 baseURL）
+            // Check baseURL
             if (url.startsWith("https://localhost/__local__/")) {
                 val localPath = url.removePrefix("https://localhost/__local__/")
                 AppLogger.d("HtmlPreviewActivity", "Loading local resource: $localPath")
@@ -408,7 +407,7 @@ private fun WebView.setupWebView(
                 }
             }
             
-            // External资源（CDN 等）：返回 null 让系统正常处理网络请求
+            // External CDN null
             return null
         }
         
@@ -457,7 +456,7 @@ private fun WebView.setupWebView(
             return true
         }
         
-        // Support全屏视频等
+        // Support
         override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
             super.onShowCustomView(view, callback)
         }
@@ -468,12 +467,12 @@ private fun WebView.setupWebView(
     }
 }
 
-// 控制台日志级别
+// Comment
 enum class ConsoleLevel {
     LOG, INFO, WARNING, ERROR, DEBUG
 }
 
-// 控制台日志条目
+// Comment
 data class ConsoleLogEntry(
     val level: ConsoleLevel,
     val message: String,
@@ -499,7 +498,7 @@ private fun DevToolsPanel(
     val context = LocalContext.current
     val timeFormat = remember { SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()) }
     
-    // Auto滚动到底部
+    // Auto
     LaunchedEffect(consoleMessages.size) {
         if (consoleMessages.isNotEmpty()) {
             listState.animateScrollToItem(consoleMessages.size - 1)
@@ -512,7 +511,7 @@ private fun DevToolsPanel(
         tonalElevation = 8.dp
     ) {
         Column {
-            // 头部工具栏
+            // Comment
             Surface(
                 color = Color(0xFF2D2D2D),
                 modifier = Modifier.fillMaxWidth()
@@ -529,12 +528,12 @@ private fun DevToolsPanel(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            Strings.console,
+                            AppStringsProvider.current().console,
                             style = MaterialTheme.typography.labelMedium,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
-                        // Error/警告计数
+                        // Error/
                         val errorCount = consoleMessages.count { it.level == ConsoleLevel.ERROR }
                         val warnCount = consoleMessages.count { it.level == ConsoleLevel.WARNING }
                         if (errorCount > 0) {
@@ -568,44 +567,44 @@ private fun DevToolsPanel(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        // Copy全部
+                        // Copy
                         IconButton(
                             onClick = {
                                 val allLogs = consoleMessages.joinToString("\n") { entry ->
                                     "[${timeFormat.format(Date(entry.timestamp))}] [${entry.level}] ${entry.message} (${entry.source}:${entry.lineNumber})"
                                 }
                                 clipboardManager.setText(AnnotatedString(allLogs))
-                                Toast.makeText(context, Strings.copiedAllLogs, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedAllLogs, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
                                 Icons.Outlined.ContentCopy,
-                                contentDescription = Strings.copyAll,
+                                contentDescription = AppStringsProvider.current().copyAll,
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
-                        // 清空
+                        // Comment
                         IconButton(
                             onClick = onClear,
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
                                 Icons.Outlined.Delete,
-                                contentDescription = Strings.clear,
+                                contentDescription = AppStringsProvider.current().clear,
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
-                        // Expand/收起
+                        // Expand/
                         IconButton(
                             onClick = onExpandToggle,
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
                                 if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-                                contentDescription = if (isExpanded) Strings.collapse else Strings.expand,
+                                contentDescription = if (isExpanded) AppStringsProvider.current().collapse else AppStringsProvider.current().expand,
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(18.dp)
                             )
@@ -614,7 +613,7 @@ private fun DevToolsPanel(
                 }
             }
             
-            // 控制台消息列表
+            // Comment
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -626,7 +625,7 @@ private fun DevToolsPanel(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            Strings.noConsoleMessages,
+                            AppStringsProvider.current().noConsoleMessages,
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.5f)
                         )
@@ -644,7 +643,7 @@ private fun DevToolsPanel(
                                 onClick = { selectedMessage = if (selectedMessage == entry) null else entry },
                                 onCopy = {
                                     clipboardManager.setText(AnnotatedString(entry.message))
-                                    Toast.makeText(context, Strings.copied, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().copied, Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -652,7 +651,7 @@ private fun DevToolsPanel(
                 }
             }
             
-            // Script输入区
+            // Script
             Surface(
                 color = Color(0xFF2D2D2D),
                 modifier = Modifier.fillMaxWidth()
@@ -675,7 +674,7 @@ private fun DevToolsPanel(
                         onValueChange = { scriptInput = it },
                         placeholder = { 
                             Text(
-                                Strings.inputJavaScriptExpression,
+                                AppStringsProvider.current().inputJavaScriptExpression,
                                 color = Color.White.copy(alpha = 0.3f),
                                 style = MaterialTheme.typography.bodySmall
                             ) 
@@ -706,14 +705,14 @@ private fun DevToolsPanel(
                             contentColor = Color.Black
                         )
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = Strings.run)
+                        Icon(Icons.Default.PlayArrow, contentDescription = AppStringsProvider.current().run)
                     }
                 }
             }
         }
     }
     
-    // 消息详情对话框
+    // Comment
     selectedMessage?.let { entry ->
         MessageDetailDialog(
             entry = entry,
@@ -772,7 +771,7 @@ private fun ConsoleLogItem(
                 tint = textColor
             )
             
-            // 消息内容
+            // Comment
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 SelectionContainer {
                     Text(
@@ -785,7 +784,7 @@ private fun ConsoleLogItem(
                     )
                 }
                 
-                // 来源信息
+                // Comment
                 Text(
                     "${entry.source}:${entry.lineNumber} • ${timeFormat.format(Date(entry.timestamp))}",
                     style = MaterialTheme.typography.labelSmall,
@@ -794,14 +793,14 @@ private fun ConsoleLogItem(
                 )
             }
             
-            // Copy按钮
+            // Copy
             IconButton(
                 onClick = onCopy,
                 modifier = Modifier.size(24.dp)
             ) {
                 Icon(
                     Icons.Outlined.ContentCopy,
-                    contentDescription = Strings.copy,
+                    contentDescription = AppStringsProvider.current().copy,
                     tint = Color.White.copy(alpha = 0.5f),
                     modifier = Modifier.size(14.dp)
                 )
@@ -831,7 +830,7 @@ private fun MessageDetailDialog(
             color = Color(0xFF1E1E1E)
         ) {
             Column {
-                // 头部
+                // Comment
                 Surface(
                     color = Color(0xFF2D2D2D),
                     modifier = Modifier.fillMaxWidth()
@@ -844,7 +843,7 @@ private fun MessageDetailDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.logDetails,
+                            AppStringsProvider.current().logDetails,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White
                         )
@@ -859,40 +858,40 @@ Message:
 ${entry.message}
                                 """.trimIndent()
                                 clipboardManager.setText(AnnotatedString(fullLog))
-                                Toast.makeText(context, Strings.copiedFullLog, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedFullLog, Toast.LENGTH_SHORT).show()
                             }) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.copy, tint = Color.White)
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().copy, tint = Color.White)
                             }
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = Strings.close, tint = Color.White)
+                                Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().close, tint = Color.White)
                             }
                         }
                     }
                 }
                 
-                // 内容
+                // Comment
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
-                    // 元信息
-                    InfoRow(Strings.level, entry.level.name)
-                    InfoRow(Strings.time, timeFormat.format(Date(entry.timestamp)))
-                    InfoRow(Strings.source, "${entry.source}:${entry.lineNumber}")
+                    // Comment
+                    InfoRow(AppStringsProvider.current().level, entry.level.name)
+                    InfoRow(AppStringsProvider.current().time, timeFormat.format(Date(entry.timestamp)))
+                    InfoRow(AppStringsProvider.current().source, "${entry.source}:${entry.lineNumber}")
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        Strings.messageContent,
+                        AppStringsProvider.current().messageContent,
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White.copy(alpha = 0.7f)
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // 消息内容（可选择复制）
+                    // Comment
                     Surface(
                         color = Color(0xFF2D2D2D),
                         shape = RoundedCornerShape(8.dp),
@@ -957,7 +956,7 @@ private fun SourceCodeDialog(
             color = Color(0xFF1E1E1E)
         ) {
             Column {
-                // 头部
+                // Comment
                 Surface(
                     color = Color(0xFF2D2D2D),
                     modifier = Modifier.fillMaxWidth()
@@ -970,25 +969,25 @@ private fun SourceCodeDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.sourceCode,
+                            AppStringsProvider.current().sourceCode,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White
                         )
                         Row {
                             IconButton(onClick = {
                                 clipboardManager.setText(AnnotatedString(sourceCode))
-                                Toast.makeText(context, Strings.copiedSourceCode, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStringsProvider.current().copiedSourceCode, Toast.LENGTH_SHORT).show()
                             }) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = Strings.copy, tint = Color.White)
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = AppStringsProvider.current().copy, tint = Color.White)
                             }
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = Strings.close, tint = Color.White)
+                                Icon(Icons.Default.Close, contentDescription = AppStringsProvider.current().close, tint = Color.White)
                             }
                         }
                     }
                 }
                 
-                // 源代码内容
+                // Comment
                 val lines = sourceCode.lines()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
@@ -1000,7 +999,7 @@ private fun SourceCodeDialog(
                                 .background(if (index % 2 == 0) Color.Transparent else Color(0xFF252525))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            // 行号
+                            // Comment
                             Text(
                                 "${index + 1}",
                                 style = MaterialTheme.typography.bodySmall.copy(
@@ -1009,7 +1008,7 @@ private fun SourceCodeDialog(
                                 color = Color.White.copy(alpha = 0.3f),
                                 modifier = Modifier.width(40.dp)
                             )
-                            // 代码
+                            // Comment
                             SelectionContainer {
                                 Text(
                                     lines[index],

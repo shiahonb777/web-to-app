@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -251,9 +251,9 @@ internal fun AppDetailSheet(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    StatPill(Icons.Filled.Star, String.format("%.1f", detail.rating), "${detail.ratingCount} ${Strings.storeReviews}", modifier = Modifier.weight(1f))
-                    StatPill(Icons.Outlined.Download, formatDownloads(detail.downloads), Strings.storeDownloads, modifier = Modifier.weight(1f))
-                    StatPill(Icons.Outlined.ThumbUp, "$currentLikeCount", Strings.storeLikes, modifier = Modifier.weight(1f))
+                    StatPill(Icons.Filled.Star, String.format("%.1f", detail.rating), "${detail.ratingCount} ${AppStringsProvider.current().storeReviews}", modifier = Modifier.weight(1f))
+                    StatPill(Icons.Outlined.Download, formatDownloads(detail.downloads), AppStringsProvider.current().storeDownloads, modifier = Modifier.weight(1f))
+                    StatPill(Icons.Outlined.ThumbUp, "$currentLikeCount", AppStringsProvider.current().storeLikes, modifier = Modifier.weight(1f))
                 }
             }
 
@@ -325,7 +325,7 @@ internal fun AppDetailSheet(
                                             }
                                         }
                                         Text(
-                                            if (isPending) Strings.storePreparingDownload else Strings.storeDownloadingLabel,
+                                            if (isPending) AppStringsProvider.current().storePreparingDownload else AppStringsProvider.current().storeDownloadingLabel,
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -402,7 +402,7 @@ internal fun AppDetailSheet(
                                 ) {
                                     Icon(Icons.Filled.Close, null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text(Strings.storeCancelDownload, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                    Text(AppStringsProvider.current().storeCancelDownload, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
@@ -428,7 +428,7 @@ internal fun AppDetailSheet(
                         ) {
                             Icon(Icons.Filled.InstallMobile, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.storeInstallApp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                            Text(AppStringsProvider.current().storeInstallApp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                         }
                     }
 
@@ -453,7 +453,7 @@ internal fun AppDetailSheet(
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                     Text(
-                                        currentTask?.error ?: Strings.storeDownloadFailed,
+                                        currentTask?.error ?: AppStringsProvider.current().storeDownloadFailed,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.error,
                                         maxLines = 2,
@@ -489,7 +489,7 @@ internal fun AppDetailSheet(
                                 ) {
                                     Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text(Strings.storeRedownload, fontWeight = FontWeight.SemiBold)
+                                    Text(AppStringsProvider.current().storeRedownload, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -511,7 +511,7 @@ internal fun AppDetailSheet(
                                                 uriHandler.openUri(url)
                                             } else {
                                                 scope.launch {
-                                                    snackbarHostState.showSnackbar(Strings.storeNoDownloadLink)
+                                                    snackbarHostState.showSnackbar(AppStringsProvider.current().storeNoDownloadLink)
                                                 }
                                             }
                                         }
@@ -552,11 +552,11 @@ internal fun AppDetailSheet(
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(Strings.storeGetDownloadLink, fontWeight = FontWeight.SemiBold)
+                                Text(AppStringsProvider.current().storeGetDownloadLink, fontWeight = FontWeight.SemiBold)
                             } else {
                                 Icon(Icons.Filled.Download, null, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(Strings.storeDownloadBtn, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
+                                Text(AppStringsProvider.current().storeDownloadBtn, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
                             }
                         }
                     }
@@ -576,7 +576,7 @@ internal fun AppDetailSheet(
                                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                         )
                         Text(
-                            Strings.storeScreenshots,
+                            AppStringsProvider.current().storeScreenshots,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.2).sp
@@ -610,7 +610,7 @@ internal fun AppDetailSheet(
                             ) {
                                 AsyncImage(
                                     model = url,
-                                    contentDescription = Strings.storeScreenshot,
+                                    contentDescription = AppStringsProvider.current().storeScreenshot,
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .clip(RoundedCornerShape(12.dp)),
@@ -635,7 +635,7 @@ internal fun AppDetailSheet(
                                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                         )
                         Text(
-                            Strings.storeDescription,
+                            AppStringsProvider.current().storeDescription,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.2).sp
@@ -664,7 +664,7 @@ internal fun AppDetailSheet(
                             .background(MaterialTheme.colorScheme.primary, CircleShape)
                     )
                     Text(
-                        Strings.storeDeveloperInfo,
+                        AppStringsProvider.current().storeDeveloperInfo,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.2).sp
@@ -676,19 +676,19 @@ internal fun AppDetailSheet(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     detail.contactEmail?.let {
-                        DevInfoRow(Icons.Outlined.Email, Strings.storeEmail, it)
+                        DevInfoRow(Icons.Outlined.Email, AppStringsProvider.current().storeEmail, it)
                     }
                     detail.websiteUrl?.let {
-                        DevInfoRow(Icons.Outlined.Language, Strings.storeWebsite, it)
+                        DevInfoRow(Icons.Outlined.Language, AppStringsProvider.current().storeWebsite, it)
                     }
                     detail.groupChatUrl?.let {
-                        DevInfoRow(Icons.Outlined.Groups, Strings.storeGroupChat, it)
+                        DevInfoRow(Icons.Outlined.Groups, AppStringsProvider.current().storeGroupChat, it)
                     }
                     detail.privacyPolicyUrl?.let {
-                        DevInfoRow(Icons.Outlined.Security, Strings.storePrivacyPolicy, it)
+                        DevInfoRow(Icons.Outlined.Security, AppStringsProvider.current().storePrivacyPolicy, it)
                     }
                     detail.contactPhone?.let {
-                        DevInfoRow(Icons.Outlined.Phone, Strings.storePhone, it)
+                        DevInfoRow(Icons.Outlined.Phone, AppStringsProvider.current().storePhone, it)
                     }
                 }
             }
@@ -764,9 +764,9 @@ internal fun AppDetailSheet(
                 item {
                     Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(Strings.storeNoReviewsYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                            Text(AppStringsProvider.current().storeNoReviewsYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(2.dp))
-                            Text(Strings.storeBeFirstToReview, fontSize = 14.sp,
+                            Text(AppStringsProvider.current().storeBeFirstToReview, fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
                         }
                     }
@@ -839,7 +839,7 @@ internal fun AppDetailSheet(
                     val result = apiClient.reportStoreApp(detail.id, reason, description)
                     when (result) {
                         is com.webtoapp.core.auth.AuthResult.Success -> {
-                            snackbarHostState.showSnackbar(Strings.storeReportSuccess)
+                            snackbarHostState.showSnackbar(AppStringsProvider.current().storeReportSuccess)
                         }
                         is com.webtoapp.core.auth.AuthResult.Error -> {
                             snackbarHostState.showSnackbar(
@@ -890,12 +890,12 @@ internal fun AppDetailSheet(
                     }
                 }
             },
-            title = { Text("\"" + Strings.storeReviewSubmitTitle + " \"" + detail.name + "\"", fontWeight = FontWeight.Bold) },
+            title = { Text("\"" + AppStringsProvider.current().storeReviewSubmitTitle + " \"" + detail.name + "\"", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     // Star rating
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Text(Strings.storeReviewRatingLabel, style = MaterialTheme.typography.labelMedium,
+                        Text(AppStringsProvider.current().storeReviewRatingLabel, style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -920,8 +920,8 @@ internal fun AppDetailSheet(
                     OutlinedTextField(
                         value = reviewComment,
                         onValueChange = { reviewComment = it },
-                        label = { Text(Strings.storeReviewCommentLabel) },
-                        placeholder = { Text(Strings.storeReviewPlaceholder) },
+                        label = { Text(AppStringsProvider.current().storeReviewCommentLabel) },
+                        placeholder = { Text(AppStringsProvider.current().storeReviewPlaceholder) },
                         minLines = 2,
                         maxLines = 4,
                         modifier = Modifier.fillMaxWidth(),
@@ -957,11 +957,11 @@ internal fun AppDetailSheet(
                                     detailResult.onSuccess { detail = it }
 
                                     // Show toast LAST (this suspends until dismissed)
-                                    snackbarHostState.showSnackbar(Strings.storeReviewSuccess)
+                                    snackbarHostState.showSnackbar(AppStringsProvider.current().storeReviewSuccess)
                                 }
                                 is com.webtoapp.core.auth.AuthResult.Error -> {
                                     isSubmittingReview = false
-                                    snackbarHostState.showSnackbar(Strings.storeReviewFailed + ": \${result.message}")
+                                    snackbarHostState.showSnackbar(AppStringsProvider.current().storeReviewFailed + ": \${result.message}")
                                 }
                             }
                         }
@@ -974,21 +974,21 @@ internal fun AppDetailSheet(
                             color = MaterialTheme.colorScheme.onPrimary)
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text(Strings.storeReviewSubmit)
+                    Text(AppStringsProvider.current().storeReviewSubmit)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showReviewDialog = false },
                     enabled = !isSubmittingReview
-                ) { Text(Strings.storeReviewCancel) }
+                ) { Text(AppStringsProvider.current().storeReviewCancel) }
             }
         )
     }
 }
 
 /**
- * 举报对话框
+ * dialog
  */
 @Composable
 internal fun ReportDialog(
@@ -997,11 +997,11 @@ internal fun ReportDialog(
     onSubmit: (reason: String, description: String?) -> Unit
 ) {
     val reasons = listOf(
-        "spam" to Strings.storeReportReasonSpam,
-        "malicious" to Strings.storeReportReasonMalicious,
-        "inappropriate" to Strings.storeReportReasonInappropriate,
-        "copyright" to Strings.storeReportReasonCopyright,
-        "other" to Strings.storeReportReasonOther
+        "spam" to AppStringsProvider.current().storeReportReasonSpam,
+        "malicious" to AppStringsProvider.current().storeReportReasonMalicious,
+        "inappropriate" to AppStringsProvider.current().storeReportReasonInappropriate,
+        "copyright" to AppStringsProvider.current().storeReportReasonCopyright,
+        "other" to AppStringsProvider.current().storeReportReasonOther
     )
     var selectedReason by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -1038,7 +1038,7 @@ internal fun ReportDialog(
         title = { Text("举报「$appName」", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(Strings.storeReportSelectReason,
+                Text(AppStringsProvider.current().storeReportSelectReason,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1080,7 +1080,7 @@ internal fun ReportDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { if (it.length <= 500) description = it },
-                    label = { Text(Strings.storeReportDescOptional) },
+                    label = { Text(AppStringsProvider.current().storeReportDescOptional) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 4,
@@ -1107,19 +1107,19 @@ internal fun ReportDialog(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                 }
-                Text(Strings.storeReportSubmit)
+                Text(AppStringsProvider.current().storeReportSubmit)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isSubmitting) {
-                Text(Strings.storeReviewCancel)
+                Text(AppStringsProvider.current().storeReviewCancel)
             }
         }
     )
 }
 
 /**
- * Twitter/X 物理弹簧操作按钮 — 应用商店版
+ * Twitter/X spring button- appstore
  */
 @Composable
 internal fun AppPhysicsActionButton(
@@ -1290,5 +1290,5 @@ internal fun formatDownloads(n: Int): String = when {
 
 // ════════════════════════════════════════════════
 // ════════════════════════════════════════════════
-// 下载管理 Bottom Sheet (统一：活跃下载 + 已下载应用)
+// downloadmanagement Bottom Sheet( unified: download + downloadapp)
 // ════════════════════════════════════════════════

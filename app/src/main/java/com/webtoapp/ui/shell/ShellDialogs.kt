@@ -6,18 +6,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.activation.ActivationResult
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
+import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.core.forcedrun.ForcedRunManager
-import com.webtoapp.core.forcedrun.ForcedRunPermissionDialog
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.ui.components.forcedrun.ForcedRunPermissionDialog
 import com.webtoapp.ui.splash.ActivationDialog
 import kotlinx.coroutines.launch
 
 /**
- * Shell 模式激活码对话框
+ * Shell modeactivation codedialog
  */
 @Composable
 fun ShellActivationDialog(
@@ -26,8 +26,7 @@ fun ShellActivationDialog(
     onActivated: () -> Unit
 ) {
     val context = LocalContext.current
-    val activation = WebToAppApplication.activation
-    val announcement = WebToAppApplication.announcement
+    val activation = ShellRuntimeServices.activation
 
     ActivationDialog(
         onDismiss = onDismiss,
@@ -55,7 +54,7 @@ fun ShellActivationDialog(
 }
 
 /**
- * Shell 模式公告对话框
+ * Shell modeannouncementdialog
  */
 @Composable
 fun ShellAnnouncementDialog(
@@ -63,9 +62,9 @@ fun ShellAnnouncementDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val announcement = WebToAppApplication.announcement
+    val announcement = ShellRuntimeServices.announcement
 
-    // Build Announcement 对象
+    // Build Announcement
     val shellAnnouncement = Announcement(
         title = config.announcementTitle,
         content = config.announcementContent,
@@ -114,7 +113,7 @@ fun ShellAnnouncementDialog(
 }
 
 /**
- * Shell 模式强制运行权限引导对话框
+ * Shell modeforce- run dialog
  */
 @Composable
 fun ShellForcedRunPermissionDialog(
@@ -123,26 +122,25 @@ fun ShellForcedRunPermissionDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val forcedRunConfig = config.forcedRunConfig ?: return
     val forcedRunManager = ForcedRunManager.getInstance(context)
 
     ForcedRunPermissionDialog(
-        protectionLevel = config.forcedRunConfig!!.protectionLevel,
+        protectionLevel = forcedRunConfig.protectionLevel,
         onDismiss = onDismiss,
         onContinueAnyway = {
-            // User选择跳过，降级防护继续使用
+            // Userselect,
             onDismiss()
             AppLogger.w("ShellActivity", "User skipped permission, forced run protection degraded")
         },
         onAllPermissionsGranted = {
-            // 所有权限已授权
+            // Note
             onDismiss()
             AppLogger.d("ShellActivity", "Forced run permissions all granted")
-            // 重新启动强制运行以应用新权限
+            // force- run app
             if (forcedRunActive) {
                 forcedRunManager.stopForcedRunMode()
-                config.forcedRunConfig?.let { cfg ->
-                    forcedRunManager.startForcedRunMode(cfg, -1L)
-                }
+                forcedRunManager.startForcedRunMode(forcedRunConfig, -1L)
             }
         }
     )

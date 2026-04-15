@@ -6,13 +6,20 @@ import android.content.res.Configuration
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
- * 支持的语言枚举
+ * Note.
  */
 enum class AppLanguage(
     val code: String,
@@ -23,7 +30,7 @@ enum class AppLanguage(
 ) {
     CHINESE("zh", "Chinese", "中文", Locale.CHINESE),
     ENGLISH("en", "English", "English", Locale.ENGLISH),
-    ARABIC("ar", "Arabic", "العربية", Locale("ar"), isRtl = true);
+    ARABIC("ar", "Arabic", "العربية", Locale.forLanguageTag("ar"), isRtl = true);
     
     companion object {
         fun fromCode(code: String): AppLanguage {
@@ -35,36 +42,39 @@ enum class AppLanguage(
 private val Context.languageDataStore by preferencesDataStore(name = "language_settings")
 
 /**
- * 语言管理器
- * 管理应用的多语言设置
+ * Note.
+ * Note.
  */
 @SuppressLint("StaticFieldLeak")
 class LanguageManager(private val context: Context) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _currentLanguageState = MutableStateFlow(AppLanguage.fromCode(getSystemLanguageCode()))
+    private val storedLanguageFlow: Flow<AppLanguage> = context.languageDataStore.data.map { prefs ->
+        val code = prefs[LANGUAGE_KEY] ?: getSystemLanguageCode()
+        AppLanguage.fromCode(code)
+    }
     
     companion object {
         private val LANGUAGE_KEY = stringPreferencesKey("app_language")
         private val LANGUAGE_SELECTED_KEY = stringPreferencesKey("language_selected")
-        
-        @Volatile
-        private var instance: LanguageManager? = null
-        
-        fun getInstance(context: Context): LanguageManager {
-            return instance ?: synchronized(this) {
-                instance ?: LanguageManager(context.applicationContext).also { instance = it }
+    }
+
+    init {
+        scope.launch {
+            storedLanguageFlow.collect { language ->
+                _currentLanguageState.value = language
             }
         }
     }
     
     /**
-     * 当前语言 Flow
+     * Flow.
      */
-    val currentLanguageFlow: Flow<AppLanguage> = context.languageDataStore.data.map { prefs ->
-        val code = prefs[LANGUAGE_KEY] ?: getSystemLanguageCode()
-        AppLanguage.fromCode(code)
-    }
+    val currentLanguageFlow: StateFlow<AppLanguage> = _currentLanguageState
+    val currentLanguage: AppLanguage get() = _currentLanguageState.value
     
     /**
-     * 获取系统语言代码
+     * Note.
      */
     private fun getSystemLanguageCode(): String {
         val systemLocale = Locale.getDefault()
@@ -76,38 +86,39 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 是否已选择过语言（首次启动检测）
+     * Note.
      */
     val hasSelectedLanguageFlow: Flow<Boolean> = context.languageDataStore.data.map { prefs ->
         prefs[LANGUAGE_SELECTED_KEY] == "true"
     }
     
     /**
-     * 检查是否已选择过语言
+     * Note.
      */
     suspend fun hasSelectedLanguage(): Boolean {
         return hasSelectedLanguageFlow.first()
     }
     
     /**
-     * 设置语言
+     * Note.
      */
     suspend fun setLanguage(language: AppLanguage) {
         context.languageDataStore.edit { prefs ->
             prefs[LANGUAGE_KEY] = language.code
             prefs[LANGUAGE_SELECTED_KEY] = "true"
         }
+        _currentLanguageState.value = language
     }
     
     /**
-     * 获取当前语言（同步）
+     * Note.
      */
     suspend fun getCurrentLanguage(): AppLanguage {
-        return currentLanguageFlow.first()
+        return storedLanguageFlow.first()
     }
     
     /**
-     * 应用语言配置到 Context
+     * Context.
      */
     fun applyLanguage(context: Context, language: AppLanguage): Context {
         val locale = language.locale
@@ -121,7 +132,7 @@ class LanguageManager(private val context: Context) {
     }
     
     /**
-     * 获取 AI 提示词管理器
+     * AI.
      */
     fun getPromptManager(): AiPromptManager {
         return AiPromptManager

@@ -11,11 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 
 /**
- * WordPress 加载覆盖层
+ * WordPress load
  */
 @Composable
 fun WordPressLoadingOverlay(
@@ -37,7 +37,7 @@ fun WordPressLoadingOverlay(
             when (state) {
                 is WordPressPreviewState.CheckingDeps -> {
                     CircularProgressIndicator()
-                    Text(Strings.wpCheckingDeps)
+                    Text(AppStringsProvider.current().wpCheckingDeps)
                 }
                 is WordPressPreviewState.Downloading -> {
                     when (val dlState = downloadState) {
@@ -46,7 +46,7 @@ fun WordPressLoadingOverlay(
                                 progress = { dlState.progress },
                                 modifier = Modifier.fillMaxWidth(0.8f)
                             )
-                            Text("${Strings.wpDownloading}: ${dlState.currentFile}")
+                            Text("${AppStringsProvider.current().wpDownloading}: ${dlState.currentFile}")
                             Text(
                                 "${formatWpBytes(dlState.bytesDownloaded)} / ${formatWpBytes(dlState.totalBytes)}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -55,7 +55,7 @@ fun WordPressLoadingOverlay(
                         }
                         is WordPressDependencyManager.DownloadState.Extracting -> {
                             CircularProgressIndicator()
-                            Text("${Strings.wpExtracting}: ${dlState.fileName}")
+                            Text("${AppStringsProvider.current().wpExtracting}: ${dlState.fileName}")
                         }
                         is WordPressDependencyManager.DownloadState.Verifying -> {
                             CircularProgressIndicator()
@@ -63,19 +63,19 @@ fun WordPressLoadingOverlay(
                         }
                         else -> {
                             CircularProgressIndicator()
-                            Text(Strings.wpDownloading)
+                            Text(AppStringsProvider.current().wpDownloading)
                         }
                     }
-                    // 镜像源信息
+                    // Note
                     MirrorSourceInfo()
                 }
                 is WordPressPreviewState.CreatingProject -> {
                     CircularProgressIndicator()
-                    Text(Strings.wpCreatingProject)
+                    Text(AppStringsProvider.current().wpCreatingProject)
                 }
                 is WordPressPreviewState.StartingServer -> {
                     CircularProgressIndicator()
-                    Text(Strings.wpStartingServer)
+                    Text(AppStringsProvider.current().wpStartingServer)
                 }
                 is WordPressPreviewState.Error -> {
                     ErrorWithRetry(state.message, onRetry)
@@ -87,7 +87,7 @@ fun WordPressLoadingOverlay(
 }
 
 /**
- * PHP 应用加载覆盖层
+ * PHP appload
  */
 @Composable
 fun PhpAppLoadingOverlay(
@@ -109,7 +109,7 @@ fun PhpAppLoadingOverlay(
             when (state) {
                 is PhpAppPreviewState.CheckingDeps -> {
                     CircularProgressIndicator()
-                    Text(Strings.phpAppCheckingDeps)
+                    Text(AppStringsProvider.current().phpAppCheckingDeps)
                 }
                 is PhpAppPreviewState.Downloading -> {
                     when (val dlState = downloadState) {
@@ -118,7 +118,7 @@ fun PhpAppLoadingOverlay(
                                 progress = { dlState.progress },
                                 modifier = Modifier.fillMaxWidth(0.8f)
                             )
-                            Text("${Strings.phpAppDownloading}: ${dlState.currentFile}")
+                            Text("${AppStringsProvider.current().phpAppDownloading}: ${dlState.currentFile}")
                             Text(
                                 "${formatWpBytes(dlState.bytesDownloaded)} / ${formatWpBytes(dlState.totalBytes)}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -127,19 +127,19 @@ fun PhpAppLoadingOverlay(
                         }
                         is WordPressDependencyManager.DownloadState.Extracting -> {
                             CircularProgressIndicator()
-                            Text("${Strings.wpExtracting}: ${dlState.fileName}")
+                            Text("${AppStringsProvider.current().wpExtracting}: ${dlState.fileName}")
                         }
                         else -> {
                             CircularProgressIndicator()
-                            Text(Strings.phpAppDownloading)
+                            Text(AppStringsProvider.current().phpAppDownloading)
                         }
                     }
-                    // 镜像源信息
+                    // Note
                     MirrorSourceInfo()
                 }
                 is PhpAppPreviewState.StartingServer -> {
                     CircularProgressIndicator()
-                    Text(Strings.phpAppStartingServer)
+                    Text(AppStringsProvider.current().phpAppStartingServer)
                 }
                 is PhpAppPreviewState.Error -> {
                     ErrorWithRetry(state.message, onRetry)
@@ -151,7 +151,7 @@ fun PhpAppLoadingOverlay(
 }
 
 /**
- * Python 应用加载覆盖层
+ * Python appload
  */
 @Composable
 fun PythonAppLoadingOverlay(
@@ -172,7 +172,7 @@ fun PythonAppLoadingOverlay(
             when (state) {
                 is PythonAppPreviewState.Starting -> {
                     CircularProgressIndicator()
-                    Text(Strings.pyStartingPreview)
+                    Text(AppStringsProvider.current().pyStartingPreview)
                 }
                 is PythonAppPreviewState.Error -> {
                     ErrorWithRetry(state.message, onRetry)
@@ -184,7 +184,7 @@ fun PythonAppLoadingOverlay(
 }
 
 /**
- * Node.js 应用加载覆盖层（与 Go 共用简单模板）
+ * Node. js appload( with Go)
  */
 @Composable
 fun SimpleAppLoadingOverlay(
@@ -214,7 +214,7 @@ fun SimpleAppLoadingOverlay(
     }
 }
 
-// ===== 共享内部组件 =====
+// Note
 
 @Composable
 private fun ErrorWithRetry(message: String, onRetry: () -> Unit) {
@@ -230,16 +230,16 @@ private fun ErrorWithRetry(message: String, onRetry: () -> Unit) {
         textAlign = TextAlign.Center
     )
     PremiumButton(onClick = onRetry) {
-        Text(Strings.btnRetry)
+        Text(AppStringsProvider.current().btnRetry)
     }
 }
 
 @Composable
 private fun MirrorSourceInfo() {
     Text(
-        "${Strings.wpMirrorSource}: ${
+        "${AppStringsProvider.current().wpMirrorSource}: ${
             if (WordPressDependencyManager.getMirrorRegion() == WordPressDependencyManager.MirrorRegion.CN)
-                Strings.wpMirrorCN else Strings.wpMirrorGlobal
+                AppStringsProvider.current().wpMirrorCN else AppStringsProvider.current().wpMirrorGlobal
         }",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant

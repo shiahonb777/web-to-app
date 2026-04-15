@@ -25,10 +25,10 @@ import com.webtoapp.core.cloud.CommunityModuleDetail
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 收藏/书签 — Jobs-style: 优雅空状态 + 弹簧物理入场 + 毛玻璃分隔
+ * Favorites screen with state-driven UI.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +52,7 @@ fun FavoritesScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(Strings.communityBookmarks, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(AppStringsProvider.current().communityBookmarks, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                         if (favorites.isNotEmpty()) {
                             Text("@me", fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
@@ -73,16 +73,16 @@ fun FavoritesScreen(
         if (loading) {
             BookmarkShimmer(Modifier)
         } else if (favorites.isEmpty()) {
-            // Jobs-style 优雅空状态
+            // Jobs- style state
             Box(Modifier, contentAlignment = Alignment.Center) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 40.dp)
                 ) {
-                    Text(Strings.communitySaveForLater, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 34.sp)
+                    Text(AppStringsProvider.current().communitySaveForLater, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 34.sp)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        Strings.communitySaveForLaterHint,
+                        AppStringsProvider.current().communitySaveForLaterHint,
                         fontSize = 14.sp, lineHeight = 20.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
                     )
@@ -111,7 +111,7 @@ private fun BookmarkRow(module: CommunityModuleDetail, onClick: () -> Unit) {
         Avatar(name = module.authorName, size = 40)
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(weight = 1f, fill = true)) {
-            // 作者 + 认证
+            // Note
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(module.authorName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 if (module.isFeatured) {
@@ -122,14 +122,14 @@ private fun BookmarkRow(module: CommunityModuleDetail, onClick: () -> Unit) {
                     Text("  ·  $it", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                 }
             }
-            // 模块名
+            // module
             Text(module.name, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            // 描述
+            // Note
             if (!module.description.isNullOrBlank()) {
                 Text(module.description, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     lineHeight = 19.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
             }
-            // 底部指标
+            // bottom
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

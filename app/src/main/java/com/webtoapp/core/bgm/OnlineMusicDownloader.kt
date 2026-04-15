@@ -12,8 +12,8 @@ import java.io.File
 import java.io.FileOutputStream
 
 /**
- * 在线音乐下载器
- * 负责下载音乐文件和封面图片到本地
+ * Note
+ * Note
  */
 object OnlineMusicDownloader {
     
@@ -25,11 +25,11 @@ object OnlineMusicDownloader {
     private val client get() = NetworkModule.downloadClient
     
     /**
-     * 下载在线音乐到本地
+ * Note
      * @param context Context
-     * @param track 在线音乐曲目
-     * @param onProgress 下载进度回调 (0.0 - 1.0)
-     * @return 下载后的 BgmItem，失败返回 null
+ * Note
+ * Note
+ * Note
      */
     suspend fun downloadMusic(
         context: Context,
@@ -41,25 +41,21 @@ object OnlineMusicDownloader {
                 val bgmDir = BgmStorage.getBgmDir(context)
                 val safeName = generateSafeFileName(track.name, track.id)
                 
-                // 确保有播放链接
                 val playUrl = track.playUrl
                 if (playUrl.isNullOrBlank()) {
                     AppLogger.e(TAG, "无播放链接")
                     return@withContext null
                 }
                 
-                // 根据 URL 自动检测文件扩展名
                 val ext = detectExtension(playUrl)
                 val musicFile = File(bgmDir, "$safeName.$ext")
                 
-                // 如果文件已存在，直接返回
                 if (musicFile.exists() && musicFile.length() > 0) {
                     AppLogger.i(TAG, "音乐文件已存在: ${musicFile.absolutePath}")
                     return@withContext createBgmItem(track, musicFile, bgmDir, safeName)
                 }
 
                 
-                // Download音乐文件
                 AppLogger.i(TAG, "开始下载音乐: $playUrl")
                 val downloadSuccess = downloadFile(playUrl, musicFile) { progress ->
                     onProgress?.invoke(progress * 0.8f)
@@ -70,7 +66,6 @@ object OnlineMusicDownloader {
                     return@withContext null
                 }
                 
-                // Download封面图片（如果有）
                 var coverFile: File? = null
                 if (!track.coverUrl.isNullOrBlank()) {
                     onProgress?.invoke(0.85f)
@@ -84,7 +79,6 @@ object OnlineMusicDownloader {
                     }
                 }
                 
-                // 保存歌词文件（如果有）
                 if (!track.lrcText.isNullOrBlank()) {
                     try {
                         val lrcFile = File(bgmDir, "$safeName.lrc")
@@ -105,7 +99,7 @@ object OnlineMusicDownloader {
     }
     
     /**
-     * 下载文件
+ * Note
      */
     private fun downloadFile(
         url: String,
@@ -153,7 +147,7 @@ object OnlineMusicDownloader {
     }
     
     /**
-     * 生成安全的文件名
+ * Note
      */
     private fun generateSafeFileName(name: String, id: String): String {
         val safeName = name.replace(SAFE_NAME_REGEX, "_").take(50)
@@ -162,7 +156,7 @@ object OnlineMusicDownloader {
     }
     
     /**
-     * 创建 BgmItem
+ * Note
      */
     private fun createBgmItem(
         track: OnlineMusicTrack,
@@ -187,7 +181,7 @@ object OnlineMusicDownloader {
     }
     
     /**
-     * 根据 URL 检测文件扩展名
+ * Note
      */
     private fun detectExtension(url: String): String {
         val path = try {
@@ -208,7 +202,7 @@ object OnlineMusicDownloader {
     private val MUSIC_EXTENSIONS = listOf("mp3", "m4a", "aac", "ogg", "flac", "wav")
     
     /**
-     * 检查音乐是否已下载（检查多种扩展名）
+ * Note
      */
     fun isMusicDownloaded(context: Context, track: OnlineMusicTrack): Boolean {
         val bgmDir = BgmStorage.getBgmDir(context)
@@ -220,7 +214,7 @@ object OnlineMusicDownloader {
     }
     
     /**
-     * 获取已下载的音乐文件路径
+ * Note
      */
     fun getDownloadedMusicPath(context: Context, track: OnlineMusicTrack): String? {
         val bgmDir = BgmStorage.getBgmDir(context)

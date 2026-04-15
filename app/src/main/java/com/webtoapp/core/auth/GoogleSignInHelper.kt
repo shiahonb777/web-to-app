@@ -25,53 +25,45 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 
 /**
- * Google Sign-In 辅助工具
+ * Google Sign-In
  * 
- * 完整的 Google 登录流程：
- * 1. 首先尝试 Credential Manager API（设备上已有 Google 账号时，体验最佳）
- * 2. 如果 Credential Manager 不可用（NoCredentialException），自动 fallback 到
- *    OAuth 2.0 Web 授权流程（通过 Chrome Custom Tab 打开 Google 登录页面）
- * 
- * 这样即使设备没有登录 Google 账号，用户也能通过浏览器正常登录/注册。
+ * Login flow:
+ * 1. Try Credential Manager first.
+ * 2. Fall back to OAuth 2.0 Web flow when needed.
  */
 object GoogleSignInHelper {
 
     private const val TAG = "GoogleSignInHelper"
 
     /**
-     * 服务器端 Web Client ID — 用于请求 id_token
+     * Web Client ID — id_token
      * 
-     * 注意：这里用的是 **Web** Client ID，不是 Android Client ID。
-     * Android Client ID 用于 Google Cloud Console 识别应用（通过包名+SHA1），
-     * 而 Web Client ID 用于服务器端验证 id_token。
+     * Use the Web Client ID here, not the Android Client ID.
+     * The Web Client ID is required for server-side id_token validation.
      */
     const val WEB_CLIENT_ID = "112374364944-34pvgaljamv9imq321bthgccqggf54a6.apps.googleusercontent.com"
 
     /**
-     * OAuth 2.0 授权 URL
+     * OAuth 2.0 URL
      */
     private const val GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 
     /**
-     * OAuth 2.0 Token 交换 URL — 客户端直接调用
+     * OAuth 2.0 Token URL —
      * 
-     * 手机能连 Google，所以 code exchange 在客户端做，
-     * 服务器在中国大陆不一定能连 Google。
+     * Token exchange is performed on the client in this flow.
      */
     private const val GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
     /**
-     * OAuth 回调 redirect URI — 指向服务器中转端点
+     * OAuth redirect URI —
      * 
-     * Google Cloud Console 只接受 https:// 的 redirect URI，
-     * 所以先重定向到服务器，服务器再 302 跳转到 App 的自定义 scheme。
-     * 
-     * 流程：Google → 服务器 /auth/google/callback → 302 → com.webtoapp:/oauth2callback → App
+     * Redirects through server callback, then back to app scheme.
      */
     private val REDIRECT_URI = "${AuthApiClient.BASE_URL}/api/v1/auth/google/callback"
 
     /**
-     * Web OAuth 流程状态
+     * Web OAuth
      */
     private var pendingOAuthCallback: ((GoogleSignInResult) -> Unit)? = null
     private var pendingOAuthState: String? = null
@@ -83,15 +75,14 @@ object GoogleSignInHelper {
         .build()
 
     /**
-     * 唤起 Google 登录 — 自动选择最佳方式
+     * Google login —
      * 
-     * 优先使用 Credential Manager（体验更好），
-     * 失败时自动 fallback 到 OAuth Web 流程。
+     * Use Credential Manager first, then fall back to Web OAuth.
      * 
-     * @return id_token 字符串，或错误信息
+     * @return result
      */
     suspend fun getGoogleIdToken(context: Context): GoogleSignInResult {
-        // Step 1: 尝试 Credential Manager
+        // Step 1: Credential Manager
         val credentialResult = tryCredentialManager(context)
         
         if (credentialResult is GoogleSignInResult.Success) {
@@ -102,13 +93,13 @@ object GoogleSignInHelper {
             return credentialResult
         }
         
-        // Step 2: Credential Manager 失败（没有可用账号等），fallback 到 Web OAuth
+        // Step 2: Credential Manager （），fallback Web OAuth
         AppLogger.i(TAG, "Credential Manager unavailable, falling back to Web OAuth flow")
         return startWebOAuthFlow(context)
     }
 
     /**
-     * 尝试使用 Credential Manager 获取 Google ID Token
+     * Credential Manager Google ID Token
      */
     private suspend fun tryCredentialManager(context: Context): GoogleSignInResult {
         return try {
@@ -116,8 +107,8 @@ object GoogleSignInHelper {
 
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setServerClientId(WEB_CLIENT_ID)
-                .setFilterByAuthorizedAccounts(false) // 显示所有 Google 账号
-                .setAutoSelectEnabled(true) // 如果只有一个账号，自动选择
+                .setFilterByAuthorizedAccounts(false) // Google
+                .setAutoSelectEnabled(true) // ，
                 .build()
 
             val request = GetCredentialRequest.Builder()
@@ -129,7 +120,7 @@ object GoogleSignInHelper {
                 request = request
             )
 
-            // 提取 Google ID Token
+            // Google ID Token
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
             val idToken = googleIdTokenCredential.idToken
 
@@ -155,15 +146,14 @@ object GoogleSignInHelper {
     }
 
     /**
-     * 启动 Web OAuth 2.0 流程
+     * Web OAuth 2.0
      * 
-     * 使用 Chrome Custom Tab 打开 Google 登录页面，
-     * 用户登录后通过 redirect URI 回调。
+     * Open Google sign-in in Chrome Custom Tabs and handle redirect callback.
      */
     private suspend fun startWebOAuthFlow(context: Context): GoogleSignInResult {
         return suspendCancellableCoroutine { continuation ->
             try {
-                // 生成 PKCE code_verifier 和 code_challenge
+                // PKCE code_verifier code_challenge
                 val codeVerifier = generateCodeVerifier()
                 val codeChallenge = generateCodeChallenge(codeVerifier)
                 val state = generateRandomState()
@@ -171,7 +161,7 @@ object GoogleSignInHelper {
                 pendingOAuthState = state
                 pendingOAuthCodeVerifier = codeVerifier
 
-                // 构建 Google OAuth 授权 URL
+                // Google OAuth URL
                 val authUri = Uri.parse(GOOGLE_AUTH_URL).buildUpon()
                     .appendQueryParameter("client_id", WEB_CLIENT_ID)
                     .appendQueryParameter("redirect_uri", REDIRECT_URI)
@@ -181,24 +171,24 @@ object GoogleSignInHelper {
                     .appendQueryParameter("code_challenge", codeChallenge)
                     .appendQueryParameter("code_challenge_method", "S256")
                     .appendQueryParameter("access_type", "offline")
-                    .appendQueryParameter("prompt", "select_account") // 总是让用户选择账号
+                    .appendQueryParameter("prompt", "select_account") // Note.
                     .build()
 
-                // 设置回调
+                // Note.
                 pendingOAuthCallback = { result ->
                     if (continuation.isActive) {
                         continuation.resume(result)
                     }
                 }
 
-                // 使用 Chrome Custom Tab 打开，体验最好
+                // Chrome Custom Tab ，
                 try {
                     val customTabsIntent = CustomTabsIntent.Builder()
                         .setShowTitle(true)
                         .build()
                     customTabsIntent.launchUrl(context, authUri)
                 } catch (e: Exception) {
-                    // 如果 Custom Tab 不可用，用普通浏览器
+                    // Custom Tab ，
                     AppLogger.w(TAG, "Custom Tab unavailable, using default browser")
                     val browserIntent = Intent(Intent.ACTION_VIEW, authUri)
                     browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -225,25 +215,24 @@ object GoogleSignInHelper {
     }
 
     /**
-     * 处理 OAuth 回调 URI
+     * OAuth URI
      * 
-     * 在 Activity 的 onNewIntent / onCreate 中调用此方法，
-     * 当用户从 Google 登录页面返回时会带上 authorization code。
+     * Call from Activity onCreate/onNewIntent to process OAuth callback URI.
      * 
-     * @return true 如果成功处理了 OAuth 回调
+     * @return result
      */
     suspend fun handleOAuthCallback(uri: Uri): Boolean {
         val scheme = uri.scheme ?: return false
         val host = uri.host ?: return false
 
-        // 检查是否是我们的 OAuth 回调
+        // OAuth
         if (scheme != "com.webtoapp" || host != "oauth2callback") {
             return false
         }
 
         AppLogger.i(TAG, "Received OAuth callback")
 
-        // 检查错误
+        // Note.
         val error = uri.getQueryParameter("error")
         if (error != null) {
             AppLogger.w(TAG, "OAuth error: $error")
@@ -257,7 +246,7 @@ object GoogleSignInHelper {
             return true
         }
 
-        // 验证 state 参数（防 CSRF 攻击）
+        // state （ CSRF ）
         val state = uri.getQueryParameter("state")
         if (state != pendingOAuthState) {
             AppLogger.e(TAG, "OAuth state mismatch!")
@@ -266,7 +255,7 @@ object GoogleSignInHelper {
             return true
         }
 
-        // 获取 authorization code
+        // authorization code
         val code = uri.getQueryParameter("code")
         if (code == null) {
             pendingOAuthCallback?.invoke(GoogleSignInResult.Error("Google 登录失败: 未收到授权码"))
@@ -274,7 +263,7 @@ object GoogleSignInHelper {
             return true
         }
 
-        // 用 authorization code 换 id_token
+        // authorization code id_token
         val codeVerifier = pendingOAuthCodeVerifier
         val callback = pendingOAuthCallback
         cleanup()
@@ -289,12 +278,9 @@ object GoogleSignInHelper {
     }
 
     /**
-     * 用授权码直接向 Google 交换 id_token
+     * Google id_token
      * 
-     * 手机能连 Google，所以 code exchange 在客户端做。
-     * 服务器在中国大陆连不上 Google，所以不经过服务器。
-     * 
-     * 用 PKCE 流程，不需要 client_secret。
+     * Exchange authorization code for id_token using PKCE.
      */
     private suspend fun exchangeCodeForToken(
         code: String,
@@ -340,7 +326,7 @@ object GoogleSignInHelper {
     }
 
     /**
-     * 检查给定的 Intent 是否包含 OAuth 回调
+     * Intent OAuth
      */
     fun isOAuthCallback(intent: Intent?): Boolean {
         val uri = intent?.data ?: return false
@@ -350,7 +336,7 @@ object GoogleSignInHelper {
     // ─── PKCE Helpers ───
 
     /**
-     * 生成随机 code_verifier (43-128 字符)
+     * code_verifier (43-128 )
      */
     private fun generateCodeVerifier(): String {
         val bytes = ByteArray(32)
@@ -360,7 +346,7 @@ object GoogleSignInHelper {
     }
 
     /**
-     * 生成 code_challenge = BASE64URL(SHA-256(code_verifier))
+     * code_challenge = BASE64URL(SHA-256(code_verifier))
      */
     private fun generateCodeChallenge(codeVerifier: String): String {
         val bytes = java.security.MessageDigest.getInstance("SHA-256")
@@ -370,7 +356,7 @@ object GoogleSignInHelper {
     }
 
     /**
-     * 生成随机 state 参数（防 CSRF）
+     * state （ CSRF）
      */
     private fun generateRandomState(): String {
         val bytes = ByteArray(16)
@@ -387,10 +373,10 @@ object GoogleSignInHelper {
 }
 
 /**
- * Google 登录结果
+ * Google login
  */
 sealed class GoogleSignInResult {
-    /** 成功获取到 Google id_token（无论来自 Credential Manager 还是 Web OAuth） */
+    /** Google id_token（ Credential Manager Web OAuth） */
     data class Success(val idToken: String) : GoogleSignInResult()
     data object Cancelled : GoogleSignInResult()
     data class Error(val message: String) : GoogleSignInResult()

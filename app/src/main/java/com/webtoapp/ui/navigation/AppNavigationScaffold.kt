@@ -25,63 +25,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.webtoapp.core.activation.ActivationManager
-import com.webtoapp.core.billing.BillingManager
-import com.webtoapp.core.cloud.CloudApiClient
-import com.webtoapp.core.cloud.InstalledItemsTracker
-import com.webtoapp.core.stats.AppHealthMonitor
-import com.webtoapp.core.stats.AppStatsRepository
-import com.webtoapp.core.stats.BatchImportService
-import com.webtoapp.core.stats.WebsiteScreenshotService
-import com.webtoapp.data.repository.WebAppRepository
 import com.webtoapp.ui.components.LiquidTabBar
 import com.webtoapp.ui.components.LiquidTabItem
 import com.webtoapp.ui.components.themedBackground
-import com.webtoapp.ui.viewmodel.AuthViewModel
-import com.webtoapp.ui.viewmodel.CloudViewModel
-import com.webtoapp.ui.viewmodel.MainViewModel
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 internal fun AppNavigationScaffold(
-    viewModel: MainViewModel,
-    authViewModel: AuthViewModel,
+    dependencies: AppNavigationRootDeps,
 ) {
     val navController = rememberNavController()
-    val webAppRepository: WebAppRepository = koinInject()
-    val statsRepository: AppStatsRepository = koinInject()
-    val healthMonitor: AppHealthMonitor = koinInject()
-    val screenshotService: WebsiteScreenshotService = koinInject()
-    val batchImportService: BatchImportService = koinInject()
-    val activationManager: ActivationManager = koinInject()
-    val billingManager: BillingManager = koinInject()
-    val apiClient: CloudApiClient = koinInject()
-    val installedItemsTracker: InstalledItemsTracker = koinInject()
-    val cloudViewModel: CloudViewModel = koinViewModel()
-
-    val graphDependencies = remember(
-        viewModel,
-        authViewModel,
-        webAppRepository,
-        statsRepository,
-        healthMonitor,
-        activationManager,
-        billingManager,
-    ) {
-        AppNavigationGraphDependencies(
-            viewModel = viewModel,
-            authViewModel = authViewModel,
-            webAppRepository = webAppRepository,
-            statsRepository = statsRepository,
-            healthMonitor = healthMonitor,
-            activationManager = activationManager,
-            billingManager = billingManager,
-        )
-    }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isOnDetailScreen = isDetailRoute(currentRoute)
@@ -91,7 +45,7 @@ internal fun AppNavigationScaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (shouldShowBottomBar(currentRoute)) {
-                val liquidTabs = remember(com.webtoapp.core.i18n.Strings.currentLanguage.value) {
+                val liquidTabs = remember(com.webtoapp.core.i18n.AppStringsProvider.currentLanguage) {
                     BottomTab.entries.map { tab ->
                         LiquidTabItem(
                             selectedIcon = tab.selectedIcon,
@@ -104,9 +58,6 @@ internal fun AppNavigationScaffold(
                     tabs = liquidTabs,
                     selectedIndex = selectedTab,
                     onTabSelected = { index ->
-                        if (isOnDetailScreen) {
-                            navController.popBackStack(TAB_HOST_ROUTE, inclusive = false)
-                        }
                         selectedTab = index
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -137,11 +88,7 @@ internal fun AppNavigationScaffold(
             ) {
                 HomeTabContent(
                     navController = navController,
-                    viewModel = viewModel,
-                    webAppRepository = webAppRepository,
-                    healthMonitor = healthMonitor,
-                    screenshotService = screenshotService,
-                    batchImportService = batchImportService,
+                    dependencies = dependencies.homeTab,
                 )
             }
 
@@ -150,13 +97,7 @@ internal fun AppNavigationScaffold(
                 selectedTab = selectedTab,
                 isOnDetailScreen = isOnDetailScreen,
             ) {
-                AppStoreTabContent(
-                    navController = navController,
-                    webAppRepository = webAppRepository,
-                    apiClient = apiClient,
-                    installedItemsTracker = installedItemsTracker,
-                    cloudViewModel = cloudViewModel,
-                )
+                AppStoreTabContent(dependencies = dependencies.storeTab)
             }
 
             NavigationTabContainer(
@@ -166,8 +107,7 @@ internal fun AppNavigationScaffold(
             ) {
                 CommunityTabContent(
                     navController = navController,
-                    selectedTab = selectedTab,
-                    isOnDetailScreen = isOnDetailScreen,
+                    isTabVisible = selectedTab == 2 && !isOnDetailScreen,
                 )
             }
 
@@ -178,7 +118,7 @@ internal fun AppNavigationScaffold(
             ) {
                 AccountTabContent(
                     navController = navController,
-                    authViewModel = authViewModel,
+                    dependencies = dependencies.accountRoutes,
                     onBackToHome = { selectedTab = 0 },
                 )
             }
@@ -188,14 +128,12 @@ internal fun AppNavigationScaffold(
                 selectedTab = selectedTab,
                 isOnDetailScreen = isOnDetailScreen,
             ) {
-                MoreTabContent(
-                    navController = navController,
-                )
+                MoreTabContent(navController = navController)
             }
 
             AppNavigationGraph(
                 navController = navController,
-                dependencies = graphDependencies,
+                dependencies = dependencies,
             )
         }
     }
@@ -214,17 +152,17 @@ private fun NavigationTabContainer(
         targetValue = if (isActive) 1f else 0f,
         animationSpec = spring(
             dampingRatio = 0.85f,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessMedium,
         ),
-        label = "tab${tabIndex}Alpha"
+        label = "tab${tabIndex}Alpha",
     )
     val offsetX by animateFloatAsState(
         targetValue = if (isActive) 0f else if (tabIndex < selectedTab) -slideOffsetPx else slideOffsetPx,
         animationSpec = spring(
             dampingRatio = 0.9f,
-            stiffness = Spring.StiffnessMediumLow
+            stiffness = Spring.StiffnessMediumLow,
         ),
-        label = "tab${tabIndex}Offset"
+        label = "tab${tabIndex}Offset",
     )
 
     Box(

@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -75,7 +75,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
-// 我的模块 Bottom Sheet
+// module Bottom Sheet
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,10 +123,10 @@ internal fun MyModulesSheet(
     val totalLikes = remember(myModules) { myModules.sumOf { it.likeCount } }
 
     val moduleCategoryLabels = mapOf(
-        "UI_ENHANCE" to Strings.catUiEnhance, "MEDIA" to Strings.catMedia,
-        "PRIVACY" to Strings.catPrivacySecurity, "TOOLS" to Strings.catTools,
-        "AD_BLOCK" to Strings.catAdBlock, "SOCIAL" to Strings.catSocial,
-        "DEVELOPER" to Strings.catDeveloper, "OTHER" to Strings.catOther
+        "UI_ENHANCE" to AppStringsProvider.current().catUiEnhance, "MEDIA" to AppStringsProvider.current().catMedia,
+        "PRIVACY" to AppStringsProvider.current().catPrivacySecurity, "TOOLS" to AppStringsProvider.current().catTools,
+        "AD_BLOCK" to AppStringsProvider.current().catAdBlock, "SOCIAL" to AppStringsProvider.current().catSocial,
+        "DEVELOPER" to AppStringsProvider.current().catDeveloper, "OTHER" to AppStringsProvider.current().catOther
     )
 
     val moduleCategoryColors = mapOf(
@@ -140,7 +140,7 @@ internal fun MyModulesSheet(
         "OTHER" to Color(0xFF6B7280)
     )
 
-    // ── 删除确认（共享组件） ──
+    // delete( )
     moduleToDelete?.let { module ->
         ItemDeleteConfirmDialog(
             itemName = module.name,
@@ -169,9 +169,9 @@ internal fun MyModulesSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-            // ── Header（共享组件） ──
+            // Header( )
             MyPublishedItemsHeader(
-                title = Strings.storeMyModules,
+                title = AppStringsProvider.current().storeMyModules,
                 isRefreshing = isRefreshing,
                 onRefresh = { loadMyModules(showRefresh = true) }
             ) {
@@ -189,7 +189,7 @@ internal fun MyModulesSheet(
                 }
             }
 
-            // ── 统计概览（共享组件） ──
+            // Note
             if (!isLoading && myModules.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 StatsOverviewRow(
@@ -202,7 +202,7 @@ internal fun MyModulesSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── 内容状态（共享组件） ──
+            // contentstate( )
             if (isLoading) {
                 PublishedItemLoadingState("加载我的模块...")
             } else if (errorMsg != null) {
@@ -210,7 +210,7 @@ internal fun MyModulesSheet(
             } else if (myModules.isEmpty()) {
                 PublishedItemEmptyState(
                     icon = Icons.Outlined.Extension,
-                    title = Strings.storeNoPublishedModules,
+                    title = AppStringsProvider.current().storeNoPublishedModules,
                     subtitle = "将你开发的扩展模块发布到市场\n让更多用户体验你的创意",
                     onAction = onDismiss
                 )
@@ -277,7 +277,7 @@ internal fun MyModulesSheet(
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f, fill = false)
                                             )
-                                            // 分类标签（共享组件）
+                                            // label( )
                                             module.category?.let { cat ->
                                                 CategoryTag(
                                                     label = moduleCategoryLabels[cat] ?: cat,
@@ -285,7 +285,7 @@ internal fun MyModulesSheet(
                                                 )
                                             }
                                         }
-                                        // 信息 pills（共享组件）
+                                        // pills( )
                                         PublishedItemStatsPills(
                                             versionName = module.versionName,
                                             downloads = module.downloads,
@@ -312,7 +312,7 @@ internal fun MyModulesSheet(
                                         }
                                     }
                                 }
-                                // 描述
+                                // Note
                                 if (!module.description.isNullOrBlank()) {
                                     Text(
                                         module.description,
@@ -334,5 +334,5 @@ internal fun MyModulesSheet(
 
 
 // ════════════════════════════════════════════════
-// 发布模块 Bottom Sheet
+// module Bottom Sheet
 // ════════════════════════════════════════════════

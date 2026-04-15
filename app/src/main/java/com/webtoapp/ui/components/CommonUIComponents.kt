@@ -21,17 +21,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * 通用 UI 组件库
- * 用于复用常见的 UI 组件，减少代码重复
+ * UI
+ * for UI, code
  */
 
 /**
- * 设置开关项
- * @param title 标题
- * @param subtitle 副标题/说明
- * @param checked 是否选中
- * @param onCheckedChange 选中状态改变回调
- * @param modifier 修饰符
+ * settings
+ * @param title
+ * @param subtitle /
+ * @param checked
+ * @param onCheckedChange state
+ * @param modifier
  */
 @Composable
 fun SettingsSwitch(
@@ -67,10 +67,10 @@ fun SettingsSwitch(
 }
 
 /**
- * 设置区域分组
- * @param title 分组标题
- * @param modifier 修饰符
- * @param content 内容
+ * settingsarea
+ * @param title
+ * @param modifier
+ * @param content content
  */
 @Composable
 fun SettingsSection(
@@ -100,13 +100,13 @@ fun SettingsSection(
 }
 
 /**
- * 带图标的开关卡片
- * @param title 标题
- * @param icon 图标
- * @param checked 是否选中
- * @param onCheckedChange 选中状态改变回调
- * @param subtitle 副标题/说明（可选）
- * @param modifier 修饰符
+ * icon card
+ * @param title
+ * @param icon icon
+ * @param checked
+ * @param onCheckedChange state
+ * @param subtitle /( optional)
+ * @param modifier
  */
 @Composable
 fun IconSwitchCard(
@@ -172,7 +172,7 @@ fun IconSwitchCard(
 }
 
 /**
- * 带图标的开关卡片（Painter 版本 - 用于 PNG 自定义图标）
+ * icon card( Painter version- for PNG icon)
  */
 @Composable
 fun IconSwitchCard(
@@ -238,10 +238,10 @@ fun IconSwitchCard(
 }
 
 /**
- * 信息标签芯片
- * @param label 标签文本
- * @param icon 图标
- * @param modifier 修饰符
+ * label
+ * @param label labeltext
+ * @param icon icon
+ * @param modifier
  */
 @Composable
 fun InfoChip(
@@ -275,10 +275,10 @@ fun InfoChip(
 }
 
 /**
- * 统计数据项
- * @param value 数值
- * @param label 标签
- * @param modifier 修饰符
+ * Note
+ * @param value
+ * @param label label
+ * @param modifier
  */
 @Composable
 fun StatItem(
@@ -312,12 +312,12 @@ fun StatItem(
 }
 
 /**
- * 空状态占位
- * @param icon 图标
- * @param title 标题
- * @param subtitle 副标题
- * @param action 操作按钮（可选）
- * @param modifier 修饰符
+ * state
+ * @param icon icon
+ * @param title
+ * @param subtitle
+ * @param action button( optional)
+ * @param modifier
  */
 @Composable
 fun EmptyStatePlaceholder(
@@ -380,9 +380,9 @@ fun EmptyStatePlaceholder(
 }
 
 /**
- * 加载状态占位
- * @param message 加载消息
- * @param modifier 修饰符
+ * loadstate
+ * @param message loadmessage
+ * @param modifier
  */
 @Composable
 fun LoadingPlaceholder(
@@ -419,11 +419,11 @@ fun LoadingPlaceholder(
 }
 
 /**
- * 错误状态占位
- * @param message 错误消息
- * @param onRetry 重试回调
- * @param retryText 重试按钮文本
- * @param modifier 修饰符
+ * errorstate
+ * @param message errormessage
+ * @param onRetry
+ * @param retryText buttontext
+ * @param modifier
  */
 @Composable
 fun ErrorPlaceholder(
@@ -487,11 +487,11 @@ fun ErrorPlaceholder(
 }
 
 /**
- * 简化的设置开关行（无副标题）
- * @param title 标题
- * @param checked 是否选中
- * @param onCheckedChange 选中状态改变回调
- * @param modifier 修饰符
+ * settings( )
+ * @param title
+ * @param checked
+ * @param onCheckedChange state
+ * @param modifier
  */
 @Composable
 fun SettingsSwitchRow(
@@ -513,9 +513,9 @@ fun SettingsSwitchRow(
 }
 
 /**
- * 卡片内容包装器（自动添加padding）
- * @param modifier 修饰符
- * @param content 内容
+ * cardcontent( padding)
+ * @param modifier
+ * @param content content
  */
 @Composable
 fun CardContent(
@@ -529,10 +529,10 @@ fun CardContent(
 }
 
 /**
- * 卡片内容包装器（带间距）
- * @param modifier 修饰符
- * @param spacing 间距
- * @param content 内容
+ * cardcontent( )
+ * @param modifier
+ * @param spacing
+ * @param content content
  */
 @Composable
 fun CardContentWithSpacing(
@@ -548,10 +548,10 @@ fun CardContentWithSpacing(
 }
 
 /**
- * 带图标的标题行
- * @param icon 图标
- * @param title 标题
- * @param modifier 修饰符
+ * icon
+ * @param icon icon
+ * @param title
+ * @param modifier
  */
 @Composable
 fun IconTitleRow(
@@ -593,7 +593,7 @@ fun IconTitleRow(
 }
 
 /**
- * 带图标的标题行（Painter 版本 - 用于 PNG 自定义图标）
+ * icon( Painter version- for PNG icon)
  */
 @Composable
 fun IconTitleRow(
@@ -635,12 +635,12 @@ fun IconTitleRow(
 }
 
 /**
- * 可折叠卡片头部（带开关）
- * @param icon 图标
- * @param title 标题
- * @param checked 开关状态
- * @param onCheckedChange 开关状态改变回调
- * @param modifier 修饰符
+ * collapsecardheader( )
+ * @param icon icon
+ * @param title
+ * @param checked state
+ * @param onCheckedChange state
+ * @param modifier
  */
 @Composable
 fun CollapsibleCardHeader(
@@ -661,7 +661,7 @@ fun CollapsibleCardHeader(
 }
 
 /**
- * 可折叠卡片头部（Painter 版本 - 用于 PNG 自定义图标）
+ * collapsecardheader( Painter version- for PNG icon)
  */
 @Composable
 fun CollapsibleCardHeader(
@@ -682,9 +682,9 @@ fun CollapsibleCardHeader(
 }
 
 /**
- * 警告提示卡片
- * @param message 警告消息
- * @param modifier 修饰符
+ * warninghintcard
+ * @param message warningmessage
+ * @param modifier
  */
 @Composable
 fun WarningCard(
@@ -716,7 +716,7 @@ fun WarningCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // 圆形图标背景
+            // icon
             Box(
                 modifier = Modifier
                     .size(36.dp)

@@ -20,7 +20,7 @@ import com.webtoapp.ui.screens.LinuxEnvironmentScreen
 
 internal fun NavGraphBuilder.addAppCreationRoutes(
     navController: NavHostController,
-    dependencies: AppNavigationGraphDependencies,
+    dependencies: CreationRoutesDeps,
 ) {
     val viewModel = dependencies.viewModel
     val webAppRepository = dependencies.webAppRepository
@@ -223,25 +223,13 @@ internal fun NavGraphBuilder.addAppCreationRoutes(
 
     composable(Routes.LINUX_ENVIRONMENT) {
         LinuxEnvironmentScreen(
+            envManager = dependencies.linuxEnvironmentManager,
             onBack = { navController.popBackStack() }
         )
     }
 
     composable(
         route = Routes.EDIT_APP,
-        arguments = listOf(navArgument("appId") { type = NavType.LongType })
-    ) {
-        CreateAppScreen(
-            viewModel = viewModel,
-            activationManager = activationManager,
-            isEdit = true,
-            onBack = { navController.popBackStack() },
-            onSaved = { navController.popBackStack() }
-        )
-    }
-
-    composable(
-        route = Routes.EDIT_WEB_APP,
         arguments = listOf(navArgument("appId") { type = NavType.LongType })
     ) {
         CreateAppScreen(

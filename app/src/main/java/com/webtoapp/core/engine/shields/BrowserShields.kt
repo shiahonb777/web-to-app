@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * 所有子模块的生命周期和状态由此类管理
  */
 @SuppressLint("StaticFieldLeak")
-class BrowserShields private constructor(private val context: Context) {
+class BrowserShields(private val context: Context) {
 
     companion object {
         private const val TAG = "BrowserShields"
@@ -28,6 +28,14 @@ class BrowserShields private constructor(private val context: Context) {
         fun getInstance(context: Context): BrowserShields {
             return instance ?: synchronized(this) {
                 instance ?: BrowserShields(context.applicationContext).also { instance = it }
+            }
+        }
+    }
+
+    init {
+        synchronized(Companion) {
+            if (instance == null) {
+                instance = this
             }
         }
     }

@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
@@ -35,7 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import com.webtoapp.util.MediaStorage
@@ -46,14 +48,14 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * 创建/编辑媒体画廊应用页面
- * 支持多图片/视频选择、分类管理、播放设置等
+ * create/edit app
+ * support / select, management, settings
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGalleryAppScreen(
     webAppRepository: com.webtoapp.data.repository.WebAppRepository,
-    existingAppId: Long? = null,  // 编辑模式时传入已有应用ID
+    existingAppId: Long? = null,  // editmode appID
     onBack: () -> Unit,
     onCreated: (
         name: String,
@@ -65,7 +67,7 @@ fun CreateGalleryAppScreen(
     val context = LocalContext.current
     val isEditMode = existingAppId != null
     
-    // 编辑模式时加载已有应用数据
+    // editmodeload app
     var existingApp by remember { mutableStateOf<WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -75,22 +77,22 @@ fun CreateGalleryAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
-    // App信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
     var themeType by remember { mutableStateOf("AURORA") }
     
-    // Media列表
+    // Medialist
     var galleryItems by remember { mutableStateOf<List<GalleryItem>>(emptyList()) }
     var isLoadingMedia by remember { mutableStateOf(false) }
     
-    // 分类
+    // Note
     var categories by remember { mutableStateOf<List<GalleryCategory>>(emptyList()) }
     var showCategoryDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<GalleryCategory?>(null) }
     
-    // Play设置
+    // Playsettings
     var playMode by remember { mutableStateOf(GalleryPlayMode.SEQUENTIAL) }
     var imageInterval by remember { mutableIntStateOf(3) }
     var loop by remember { mutableStateOf(true) }
@@ -99,7 +101,7 @@ fun CreateGalleryAppScreen(
     var videoAutoNext by remember { mutableStateOf(true) }
     var enableAudio by remember { mutableStateOf(true) }
     
-    // Show设置
+    // Showsettings
     var defaultView by remember { mutableStateOf(GalleryViewMode.GRID) }
     var gridColumns by remember { mutableIntStateOf(3) }
     var sortOrder by remember { mutableStateOf(GallerySortOrder.CUSTOM) }
@@ -109,26 +111,26 @@ fun CreateGalleryAppScreen(
     var backgroundColor by remember { mutableStateOf("#000000") }
     var rememberPosition by remember { mutableStateOf(false) }
     
-    // UI 状态
+    // UI state
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedItems by remember { mutableStateOf<Set<String>>(emptySet()) }
     var isSelectionMode by remember { mutableStateOf(false) }
     var showItemDetailDialog by remember { mutableStateOf<GalleryItem?>(null) }
     
-    // 编辑模式：加载现有应用数据到UI状态
+    // editmode: load app UIstate
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
-            // 加载基本信息
+            // load
             appName = app.name
             appIconPath = app.iconPath
             themeType = app.themeType
             
-            // 加载画廊配置
+            // load config
             app.galleryConfig?.let { config ->
                 galleryItems = config.items
                 categories = config.categories
                 
-                // 播放设置
+                // settings
                 playMode = config.playMode
                 imageInterval = config.imageInterval
                 loop = config.loop
@@ -137,7 +139,7 @@ fun CreateGalleryAppScreen(
                 videoAutoNext = config.videoAutoNext
                 enableAudio = config.enableAudio
                 
-                // 显示设置
+                // displaysettings
                 defaultView = config.defaultView
                 gridColumns = config.gridColumns
                 sortOrder = config.sortOrder
@@ -150,7 +152,7 @@ fun CreateGalleryAppScreen(
         }
     }
     
-    // File选择器 - 多选图片和视频
+    // Fileselect
     val mediaPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -176,28 +178,28 @@ fun CreateGalleryAppScreen(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
     
-    // 判断是否可以创建
+    // create
     val canCreate = galleryItems.isNotEmpty()
     
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.galleryCreateTitle) },
+                title = { Text(AppStringsProvider.current().galleryCreateTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
-                    // Select模式下显示操作按钮
+                    // Selectmode display button
                     if (isSelectionMode && selectedItems.isNotEmpty()) {
                         IconButton(onClick = {
                             galleryItems = galleryItems.filterNot { it.id in selectedItems }
                             selectedItems = emptySet()
                             isSelectionMode = false
                         }) {
-                            Icon(Icons.Default.Delete, Strings.delete)
+                            Icon(Icons.Default.Delete, AppStringsProvider.current().delete)
                         }
                     }
                     
@@ -224,7 +226,7 @@ fun CreateGalleryAppScreen(
                                 rememberPosition = rememberPosition
                             )
                             onCreated(
-                                appName.ifBlank { Strings.galleryApp },
+                                appName.ifBlank { AppStringsProvider.current().galleryApp },
                                 config,
                                 finalIconUri,
                                 themeType
@@ -232,7 +234,7 @@ fun CreateGalleryAppScreen(
                         },
                         enabled = canCreate
                     ) {
-                        Text(Strings.btnCreate)
+                        Text(AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -246,7 +248,7 @@ fun CreateGalleryAppScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 顶部标签栏
+            // toplabel
             TabRow(
                 selectedTabIndex = selectedTabIndex,
                 modifier = Modifier.fillMaxWidth()
@@ -254,24 +256,24 @@ fun CreateGalleryAppScreen(
                 Tab(
                     selected = selectedTabIndex == 0,
                     onClick = { selectedTabIndex = 0 },
-                    text = { Text(Strings.galleryTabMedia) },
+                    text = { Text(AppStringsProvider.current().galleryTabMedia) },
                     icon = { Icon(Icons.Outlined.PhotoLibrary, null) }
                 )
                 Tab(
                     selected = selectedTabIndex == 1,
                     onClick = { selectedTabIndex = 1 },
-                    text = { Text(Strings.galleryTabPlayback) },
+                    text = { Text(AppStringsProvider.current().galleryTabPlayback) },
                     icon = { Icon(Icons.Outlined.PlayArrow, null) }
                 )
                 Tab(
                     selected = selectedTabIndex == 2,
                     onClick = { selectedTabIndex = 2 },
-                    text = { Text(Strings.galleryTabDisplay) },
+                    text = { Text(AppStringsProvider.current().galleryTabDisplay) },
                     icon = { Icon(Icons.Outlined.Tune, null) }
                 )
             }
             
-            // 内容区域
+            // contentarea
             when (selectedTabIndex) {
                 0 -> MediaManagementTab(
                     items = galleryItems,
@@ -319,7 +321,7 @@ fun CreateGalleryAppScreen(
                     },
                     onDeleteCategory = { cat ->
                         categories = categories.filter { it.id != cat.id }
-                        // 移除引用
+                        // Remove reference
                         galleryItems = galleryItems.map { item ->
                             if (item.categoryId == cat.id) item.copy(categoryId = null) else item
                         }
@@ -374,7 +376,7 @@ fun CreateGalleryAppScreen(
         }
     }
     
-    // 分类编辑对话框
+    // Category edit dialog
     if (showCategoryDialog) {
         CategoryEditDialog(
             category = editingCategory,
@@ -392,7 +394,7 @@ fun CreateGalleryAppScreen(
         )
     }
     
-    // Media详情对话框
+    // Media details dialog
     showItemDetailDialog?.let { item ->
         MediaItemDetailDialog(
             item = item,
@@ -413,7 +415,7 @@ fun CreateGalleryAppScreen(
 }
 
 /**
- * 媒体管理标签页
+ * managementlabel
  */
 @Composable
 private fun MediaManagementTab(
@@ -447,11 +449,11 @@ private fun MediaManagementTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App信息卡片
+        // App card
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.labelAppInfo,
+                    text = AppStringsProvider.current().labelAppInfo,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -459,7 +461,7 @@ private fun MediaManagementTab(
                 AppNameTextFieldSimple(
                     value = appName,
                     onValueChange = onAppNameChange,
-                    placeholder = Strings.galleryApp
+                    placeholder = AppStringsProvider.current().galleryApp
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -473,7 +475,7 @@ private fun MediaManagementTab(
             }
         }
         
-        // 分类管理
+        // management
         if (categories.isNotEmpty() || items.isNotEmpty()) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -483,13 +485,13 @@ private fun MediaManagementTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = Strings.galleryCategories,
+                            text = AppStringsProvider.current().galleryCategories,
                             style = MaterialTheme.typography.titleMedium
                         )
                         TextButton(onClick = onAddCategory) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.add)
+                            Text(AppStringsProvider.current().add)
                         }
                     }
                     
@@ -512,7 +514,7 @@ private fun MediaManagementTab(
             }
         }
         
-        // Media列表卡片
+        // Medialistcard
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -522,11 +524,11 @@ private fun MediaManagementTab(
                 ) {
                     Column {
                         Text(
-                            text = Strings.galleryMediaList,
+                            text = AppStringsProvider.current().galleryMediaList,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "${items.size} ${Strings.galleryItemCount}",
+                            text = "${items.size} ${AppStringsProvider.current().galleryItemCount}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -534,7 +536,7 @@ private fun MediaManagementTab(
                     FilledTonalButton(onClick = onAddMedia) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.galleryAddMedia)
+                        Text(AppStringsProvider.current().galleryAddMedia)
                     }
                 }
                 
@@ -550,7 +552,7 @@ private fun MediaManagementTab(
                         CircularProgressIndicator()
                     }
                 } else if (items.isEmpty()) {
-                    // Empty状态
+                    // Emptystate
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -569,19 +571,19 @@ private fun MediaManagementTab(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = Strings.galleryClickToAdd,
+                                text = AppStringsProvider.current().galleryClickToAdd,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = Strings.gallerySupportTypes,
+                                text = AppStringsProvider.current().gallerySupportTypes,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }
                     }
                 } else {
-                    // Media网格
+                    // Media
                     MediaGrid(
                         items = items,
                         selectedItems = selectedItems,
@@ -593,7 +595,7 @@ private fun MediaManagementTab(
             }
         }
         
-        // 统计信息
+        // Note
         if (items.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -610,17 +612,17 @@ private fun MediaManagementTab(
                     StatItem(
                         icon = Icons.Outlined.Image,
                         value = items.count { it.type == GalleryItemType.IMAGE }.toString(),
-                        label = Strings.galleryImages
+                        label = AppStringsProvider.current().galleryImages
                     )
                     StatItem(
                         icon = Icons.Outlined.Videocam,
                         value = items.count { it.type == GalleryItemType.VIDEO }.toString(),
-                        label = Strings.galleryVideos
+                        label = AppStringsProvider.current().galleryVideos
                     )
                     StatItem(
                         icon = Icons.Outlined.Storage,
                         value = formatFileSize(items.sumOf { it.fileSize }),
-                        label = Strings.galleryTotalSize
+                        label = AppStringsProvider.current().galleryTotalSize
                     )
                 }
             }
@@ -629,7 +631,7 @@ private fun MediaManagementTab(
 }
 
 /**
- * 媒体网格
+ * Note
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -642,7 +644,7 @@ private fun MediaGrid(
 ) {
     val context = LocalContext.current
     
-    // 使用固定高度的网格，避免嵌套滚动问题
+    // , scroll
     val gridHeight = ((items.size + 2) / 3) * 120
     
     LazyVerticalGrid(
@@ -672,7 +674,7 @@ private fun MediaGrid(
                         onLongClick = { onItemLongClick(item) }
                     )
             ) {
-                // 缩略图
+                // Note
                 val imagePath = item.thumbnailPath ?: item.path
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -684,7 +686,7 @@ private fun MediaGrid(
                     contentScale = ContentScale.Crop
                 )
                 
-                // Video标记
+                // Video
                 if (item.type == GalleryItemType.VIDEO) {
                     Box(
                         modifier = Modifier
@@ -714,7 +716,7 @@ private fun MediaGrid(
                     }
                 }
                 
-                // 选中标记
+                // Note
                 if (isSelectionMode) {
                     Box(
                         modifier = Modifier
@@ -744,7 +746,7 @@ private fun MediaGrid(
 }
 
 /**
- * 播放设置标签页
+ * settingslabel
  */
 @Composable
 private fun PlaybackSettingsTab(
@@ -772,11 +774,11 @@ private fun PlaybackSettingsTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Play模式
+        // Playmode
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryPlayMode,
+                    text = AppStringsProvider.current().galleryPlayMode,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -786,22 +788,22 @@ private fun PlaybackSettingsTab(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     PlayModeOption(
-                        icon = Icons.Outlined.ArrowForward,
-                        label = Strings.galleryModeSequential,
+                        icon = Icons.AutoMirrored.Outlined.ArrowForward,
+                        label = AppStringsProvider.current().galleryModeSequential,
                         selected = playMode == GalleryPlayMode.SEQUENTIAL,
                         onClick = { onPlayModeChange(GalleryPlayMode.SEQUENTIAL) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     PlayModeOption(
                         icon = Icons.Outlined.Shuffle,
-                        label = Strings.galleryModeShuffle,
+                        label = AppStringsProvider.current().galleryModeShuffle,
                         selected = playMode == GalleryPlayMode.SHUFFLE,
                         onClick = { onPlayModeChange(GalleryPlayMode.SHUFFLE) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     PlayModeOption(
                         icon = Icons.Outlined.Repeat,
-                        label = Strings.galleryModeSingleLoop,
+                        label = AppStringsProvider.current().galleryModeSingleLoop,
                         selected = playMode == GalleryPlayMode.SINGLE_LOOP,
                         onClick = { onPlayModeChange(GalleryPlayMode.SINGLE_LOOP) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
@@ -810,18 +812,18 @@ private fun PlaybackSettingsTab(
             }
         }
         
-        // Image播放设置
+        // Image settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryImageSettings,
+                    text = AppStringsProvider.current().galleryImageSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // Image播放间隔
+                // Image
                 Text(
-                    text = "${Strings.galleryImageInterval}: ${imageInterval}s",
+                    text = "${AppStringsProvider.current().galleryImageInterval}: ${imageInterval}s",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Slider(
@@ -834,18 +836,18 @@ private fun PlaybackSettingsTab(
             }
         }
         
-        // Video播放设置
+        // Video settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryVideoSettings,
+                    text = AppStringsProvider.current().galleryVideoSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 SettingsRow(
-                    title = Strings.enableAudio,
-                    subtitle = Strings.galleryEnableAudioHint
+                    title = AppStringsProvider.current().enableAudio,
+                    subtitle = AppStringsProvider.current().galleryEnableAudioHint
                 ) {
                     PremiumSwitch(
                         checked = enableAudio,
@@ -854,8 +856,8 @@ private fun PlaybackSettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.galleryVideoAutoNext,
-                    subtitle = Strings.galleryVideoAutoNextHint
+                    title = AppStringsProvider.current().galleryVideoAutoNext,
+                    subtitle = AppStringsProvider.current().galleryVideoAutoNextHint
                 ) {
                     PremiumSwitch(
                         checked = videoAutoNext,
@@ -865,18 +867,18 @@ private fun PlaybackSettingsTab(
             }
         }
         
-        // 通用设置
+        // settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryGeneralSettings,
+                    text = AppStringsProvider.current().galleryGeneralSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 SettingsRow(
-                    title = Strings.galleryAutoPlay,
-                    subtitle = Strings.galleryAutoPlayHint
+                    title = AppStringsProvider.current().galleryAutoPlay,
+                    subtitle = AppStringsProvider.current().galleryAutoPlayHint
                 ) {
                     PremiumSwitch(
                         checked = autoPlay,
@@ -885,8 +887,8 @@ private fun PlaybackSettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.loopPlay,
-                    subtitle = Strings.galleryLoopHint
+                    title = AppStringsProvider.current().loopPlay,
+                    subtitle = AppStringsProvider.current().galleryLoopHint
                 ) {
                     PremiumSwitch(
                         checked = loop,
@@ -896,8 +898,8 @@ private fun PlaybackSettingsTab(
                 
                 AnimatedVisibility(visible = loop) {
                     SettingsRow(
-                        title = Strings.galleryShuffleOnLoop,
-                        subtitle = Strings.galleryShuffleOnLoopHint
+                        title = AppStringsProvider.current().galleryShuffleOnLoop,
+                        subtitle = AppStringsProvider.current().galleryShuffleOnLoopHint
                     ) {
                         PremiumSwitch(
                             checked = shuffleOnLoop,
@@ -907,8 +909,8 @@ private fun PlaybackSettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.galleryRememberPosition,
-                    subtitle = Strings.galleryRememberPositionHint
+                    title = AppStringsProvider.current().galleryRememberPosition,
+                    subtitle = AppStringsProvider.current().galleryRememberPositionHint
                 ) {
                     PremiumSwitch(
                         checked = rememberPosition,
@@ -921,7 +923,7 @@ private fun PlaybackSettingsTab(
 }
 
 /**
- * 显示设置标签页
+ * displaysettingslabel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -948,11 +950,11 @@ private fun DisplaySettingsTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 视图模式
+        // mode
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryViewMode,
+                    text = AppStringsProvider.current().galleryViewMode,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -963,33 +965,33 @@ private fun DisplaySettingsTab(
                 ) {
                     ViewModeOption(
                         icon = Icons.Outlined.GridView,
-                        label = Strings.galleryViewGrid,
+                        label = AppStringsProvider.current().galleryViewGrid,
                         selected = defaultView == GalleryViewMode.GRID,
                         onClick = { onDefaultViewChange(GalleryViewMode.GRID) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     ViewModeOption(
-                        icon = Icons.Outlined.ViewList,
-                        label = Strings.galleryViewList,
+                        icon = Icons.AutoMirrored.Outlined.ViewList,
+                        label = AppStringsProvider.current().galleryViewList,
                         selected = defaultView == GalleryViewMode.LIST,
                         onClick = { onDefaultViewChange(GalleryViewMode.LIST) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                     ViewModeOption(
                         icon = Icons.Outlined.Timeline,
-                        label = Strings.galleryViewTimeline,
+                        label = AppStringsProvider.current().galleryViewTimeline,
                         selected = defaultView == GalleryViewMode.TIMELINE,
                         onClick = { onDefaultViewChange(GalleryViewMode.TIMELINE) },
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                 }
                 
-                // 网格列数
+                // Note
                 AnimatedVisibility(visible = defaultView == GalleryViewMode.GRID) {
                     Column {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "${Strings.galleryGridColumns}: $gridColumns",
+                            text = "${AppStringsProvider.current().galleryGridColumns}: $gridColumns",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Slider(
@@ -1004,11 +1006,11 @@ private fun DisplaySettingsTab(
             }
         }
         
-        // Sort方式
+        // Sort
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.gallerySortOrder,
+                    text = AppStringsProvider.current().gallerySortOrder,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1026,7 +1028,7 @@ private fun DisplaySettingsTab(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -1046,18 +1048,18 @@ private fun DisplaySettingsTab(
             }
         }
         
-        // Play器设置
+        // Play settings
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryPlayerSettings,
+                    text = AppStringsProvider.current().galleryPlayerSettings,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 SettingsRow(
-                    title = Strings.galleryShowThumbnailBar,
-                    subtitle = Strings.galleryShowThumbnailBarHint
+                    title = AppStringsProvider.current().galleryShowThumbnailBar,
+                    subtitle = AppStringsProvider.current().galleryShowThumbnailBarHint
                 ) {
                     PremiumSwitch(
                         checked = showThumbnailBar,
@@ -1066,8 +1068,8 @@ private fun DisplaySettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.galleryShowMediaInfo,
-                    subtitle = Strings.galleryShowMediaInfoHint
+                    title = AppStringsProvider.current().galleryShowMediaInfo,
+                    subtitle = AppStringsProvider.current().galleryShowMediaInfoHint
                 ) {
                     PremiumSwitch(
                         checked = showMediaInfo,
@@ -1076,8 +1078,8 @@ private fun DisplaySettingsTab(
                 }
                 
                 SettingsRow(
-                    title = Strings.landscapeMode,
-                    subtitle = Strings.landscapeModeHint
+                    title = AppStringsProvider.current().landscapeMode,
+                    subtitle = AppStringsProvider.current().landscapeModeHint
                 ) {
                     PremiumSwitch(
                         checked = orientation == SplashOrientation.LANDSCAPE,
@@ -1091,11 +1093,11 @@ private fun DisplaySettingsTab(
             }
         }
         
-        // 背景颜色
+        // color
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = Strings.galleryBackgroundColor,
+                    text = AppStringsProvider.current().galleryBackgroundColor,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -1127,7 +1129,7 @@ private fun DisplaySettingsTab(
     }
 }
 
-// ==================== 辅助组件 ====================
+// Note
 
 @Composable
 private fun PlayModeOption(
@@ -1219,7 +1221,7 @@ private fun CategoryChip(
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 Icons.Default.Close,
-                contentDescription = Strings.delete,
+                contentDescription = AppStringsProvider.current().delete,
                 modifier = Modifier
                     .size(16.dp)
                     .clickable(onClick = onDelete),
@@ -1258,7 +1260,7 @@ private fun StatItem(
 }
 
 /**
- * 分类编辑对话框
+ * editdialog
  */
 @Composable
 private fun CategoryEditDialog(
@@ -1275,19 +1277,19 @@ private fun CategoryEditDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (category != null) Strings.galleryEditCategory else Strings.galleryAddCategory) },
+        title = { Text(if (category != null) AppStringsProvider.current().galleryEditCategory else AppStringsProvider.current().galleryAddCategory) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 PremiumTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.galleryCategoryName) },
+                    label = { Text(AppStringsProvider.current().galleryCategoryName) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text(Strings.galleryCategoryIcon, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().galleryCategoryIcon, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(availableIcons) { iconId ->
@@ -1310,7 +1312,7 @@ private fun CategoryEditDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text(Strings.galleryCategoryColor, style = MaterialTheme.typography.labelMedium)
+                Text(AppStringsProvider.current().galleryCategoryColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(availableColors) { colorStr ->
@@ -1339,19 +1341,19 @@ private fun CategoryEditDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.save)
+                Text(AppStringsProvider.current().save)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
 }
 
 /**
- * 媒体详情对话框
+ * dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1368,10 +1370,10 @@ private fun MediaItemDetailDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.galleryMediaDetail) },
+        title = { Text(AppStringsProvider.current().galleryMediaDetail) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                // 预览
+                // preview
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1407,15 +1409,15 @@ private fun MediaItemDetailDialog(
                 PremiumTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.name) },
+                    label = { Text(AppStringsProvider.current().name) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 分类选择
+                // select
                 if (categories.isNotEmpty()) {
-                    Text(Strings.galleryCategory, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().galleryCategory, style = MaterialTheme.typography.labelMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     var expanded by remember { mutableStateOf(false) }
@@ -1424,20 +1426,20 @@ private fun MediaItemDetailDialog(
                         onExpandedChange = { expanded = it }
                     ) {
                         PremiumTextField(
-                            value = categories.find { it.id == categoryId }?.name ?: Strings.galleryNoCategory,
+                            value = categories.find { it.id == categoryId }?.name ?: AppStringsProvider.current().galleryNoCategory,
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text(Strings.galleryNoCategory) },
+                                text = { Text(AppStringsProvider.current().galleryNoCategory) },
                                 onClick = {
                                     categoryId = null
                                     expanded = false
@@ -1466,22 +1468,22 @@ private fun MediaItemDetailDialog(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "${Strings.galleryType}: ${if (item.type == GalleryItemType.IMAGE) Strings.image else Strings.video}",
+                            text = "${AppStringsProvider.current().galleryType}: ${if (item.type == GalleryItemType.IMAGE) AppStringsProvider.current().image else AppStringsProvider.current().video}",
                             style = MaterialTheme.typography.bodySmall
                         )
                         if (item.duration > 0) {
                             Text(
-                                text = "${Strings.galleryDuration}: ${item.formattedDuration}",
+                                text = "${AppStringsProvider.current().galleryDuration}: ${item.formattedDuration}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                         Text(
-                            text = "${Strings.gallerySize}: ${item.formattedFileSize}",
+                            text = "${AppStringsProvider.current().gallerySize}: ${item.formattedFileSize}",
                             style = MaterialTheme.typography.bodySmall
                         )
                         if (item.width > 0 && item.height > 0) {
                             Text(
-                                text = "${Strings.galleryDimensions}: ${item.width} × ${item.height}",
+                                text = "${AppStringsProvider.current().galleryDimensions}: ${item.width} × ${item.height}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -1495,7 +1497,7 @@ private fun MediaItemDetailDialog(
                     onUpdate(item.copy(name = name, categoryId = categoryId))
                 }
             ) {
-                Text(Strings.save)
+                Text(AppStringsProvider.current().save)
             }
         },
         dismissButton = {
@@ -1506,26 +1508,26 @@ private fun MediaItemDetailDialog(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.delete)
+                    Text(AppStringsProvider.current().delete)
                 }
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.cancel)
+                    Text(AppStringsProvider.current().cancel)
                 }
             }
         }
     )
 }
 
-// ==================== 工具函数 ====================
+// Note
 
 private fun GallerySortOrder.toDisplayString(): String {
     return when (this) {
-        GallerySortOrder.CUSTOM -> Strings.gallerySortCustom
-        GallerySortOrder.NAME_ASC -> Strings.gallerySortNameAsc
-        GallerySortOrder.NAME_DESC -> Strings.gallerySortNameDesc
-        GallerySortOrder.DATE_ASC -> Strings.gallerySortDateAsc
-        GallerySortOrder.DATE_DESC -> Strings.gallerySortDateDesc
-        GallerySortOrder.TYPE -> Strings.gallerySortType
+        GallerySortOrder.CUSTOM -> AppStringsProvider.current().gallerySortCustom
+        GallerySortOrder.NAME_ASC -> AppStringsProvider.current().gallerySortNameAsc
+        GallerySortOrder.NAME_DESC -> AppStringsProvider.current().gallerySortNameDesc
+        GallerySortOrder.DATE_ASC -> AppStringsProvider.current().gallerySortDateAsc
+        GallerySortOrder.DATE_DESC -> AppStringsProvider.current().gallerySortDateDesc
+        GallerySortOrder.TYPE -> AppStringsProvider.current().gallerySortType
     }
 }
 
@@ -1538,7 +1540,7 @@ private fun formatFileSize(bytes: Long): String {
     }
 }
 
-// ==================== 全新V2版本：优雅强大设计 ====================
+// ==================== V2version: ====================
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun CreateGalleryAppScreenV2(
@@ -1556,7 +1558,7 @@ fun CreateGalleryAppScreenV2(
     val scope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
 
-    // 从数据库加载已有应用（编辑模式）
+    // from load app( editmode)
     var existingApp by remember { mutableStateOf<WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -1564,7 +1566,7 @@ fun CreateGalleryAppScreenV2(
         }
     }
 
-    // 状态
+    // state
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
@@ -1575,7 +1577,7 @@ fun CreateGalleryAppScreenV2(
     var selectedItems by remember { mutableStateOf<Set<String>>(emptySet()) }
     val isSelectionMode = selectedItems.isNotEmpty()
 
-    // 核心播放设置
+    // settings
     var loop by remember { mutableStateOf(true) }
     var autoPlay by remember { mutableStateOf(false) }
     var imageInterval by remember { mutableIntStateOf(3) }
@@ -1587,7 +1589,7 @@ fun CreateGalleryAppScreenV2(
     var showSettingsSheet by remember { mutableStateOf(false) }
     var previewItem by remember { mutableStateOf<GalleryItem?>(null) }
 
-    // 从已有应用注入数据
+    // from app
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
             appName = app.name
@@ -1603,7 +1605,7 @@ fun CreateGalleryAppScreenV2(
         }
     }
 
-    // Select器
+    // Select
     val mediaPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -1630,7 +1632,7 @@ fun CreateGalleryAppScreenV2(
 
     val canCreate = galleryItems.isNotEmpty()
 
-    // 顶部栏（选择模式/普通模式）
+    // top( selectmode/ mode)
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -1641,10 +1643,10 @@ fun CreateGalleryAppScreenV2(
             ) { selecting ->
                 if (selecting) {
                     TopAppBar(
-                        title = { Text("${selectedItems.size} ${Strings.galleryItemCount}") },
+                        title = { Text("${selectedItems.size} ${AppStringsProvider.current().galleryItemCount}") },
                         navigationIcon = {
                             IconButton(onClick = { selectedItems = emptySet() }) {
-                                Icon(Icons.Default.Close, Strings.btnCancel)
+                                Icon(Icons.Default.Close, AppStringsProvider.current().btnCancel)
                             }
                         },
                         actions = {
@@ -1663,8 +1665,8 @@ fun CreateGalleryAppScreenV2(
                     )
                 } else {
                     TopAppBar(
-                        title = { Text(if (existingAppId != null) Strings.editApp else Strings.galleryCreateTitle) },
-                        navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back) } },
+                        title = { Text(if (existingAppId != null) AppStringsProvider.current().editApp else AppStringsProvider.current().galleryCreateTitle) },
+                        navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back) } },
                         actions = {
                             IconButton(onClick = { showSettingsSheet = true }) { Icon(Icons.Outlined.Settings, null) }
                             TextButton(
@@ -1689,10 +1691,10 @@ fun CreateGalleryAppScreenV2(
                                         videoAutoNext = videoAutoNext,
                                         rememberPosition = false
                                     )
-                                    onCreated(appName.ifBlank { Strings.galleryApp }, config, finalIconUri, "AURORA")
+                                    onCreated(appName.ifBlank { AppStringsProvider.current().galleryApp }, config, finalIconUri, "AURORA")
                                 },
                                 enabled = canCreate
-                            ) { Text(if (existingAppId != null) Strings.btnSave else Strings.btnCreate) }
+                            ) { Text(if (existingAppId != null) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate) }
                         }
                     )
                 }
@@ -1703,13 +1705,13 @@ fun CreateGalleryAppScreenV2(
                 ExtendedFloatingActionButton(
                     onClick = { mediaPickerLauncher.launch(arrayOf("image/*", "video/*")) },
                     icon = { Icon(Icons.Default.Add, null) },
-                    text = { Text(Strings.galleryAddMedia) }
+                    text = { Text(AppStringsProvider.current().galleryAddMedia) }
                 )
             }
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // 可折叠应用信息
+            // Collapsible app info
             AnimatedVisibility(visible = showAppInfoSection, enter = expandVertically(), exit = shrinkVertically()) {
                 Surface(color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)) {
                     Row(
@@ -1736,7 +1738,7 @@ fun CreateGalleryAppScreenV2(
                         PremiumTextField(
                             value = appName,
                             onValueChange = { appName = it },
-                            placeholder = { Text(Strings.galleryApp) },
+                            placeholder = { Text(AppStringsProvider.current().galleryApp) },
                             modifier = Modifier.weight(weight = 1f, fill = true),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
@@ -1748,7 +1750,7 @@ fun CreateGalleryAppScreenV2(
                 Icon(if (showAppInfoSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, modifier = Modifier.fillMaxWidth().padding(4.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            // 统计条
+            // Stats bar
             if (galleryItems.isNotEmpty()) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1763,7 +1765,7 @@ fun CreateGalleryAppScreenV2(
                 }
             }
 
-            // Media网格
+            // Media grid
             Box(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 if (isLoadingMedia) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -1791,7 +1793,7 @@ fun CreateGalleryAppScreenV2(
                                     }
                                 },
                                 onLongClick = { selectedItems = setOf(item.id) },
-                                modifier = Modifier.animateItemPlacement()
+                                modifier = Modifier.animateItem()
                             )
                         }
                         item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -1818,7 +1820,7 @@ fun CreateGalleryAppScreenV2(
         }
     }
 
-    // 预览对话框
+    // Preview dialog
     previewItem?.let { item ->
         MediaPreviewDialog(
             item = item,
@@ -1832,7 +1834,7 @@ fun CreateGalleryAppScreenV2(
     }
 }
 
-// ============ V2 辅助组件 ============
+// ============ V2 helper components ============
 @Composable
 private fun StatChip(icon: ImageVector, value: Int) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1850,9 +1852,9 @@ private fun EmptyGalleryState(onAddMedia: () -> Unit) {
     ) {
         Icon(Icons.Outlined.AddPhotoAlternate, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = Strings.galleryClickToAdd, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = AppStringsProvider.current().galleryClickToAdd, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = Strings.gallerySupportTypes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), textAlign = TextAlign.Center)
+        Text(text = AppStringsProvider.current().gallerySupportTypes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), textAlign = TextAlign.Center)
     }
 }
 
@@ -1917,25 +1919,25 @@ private fun GallerySettingsSheet(
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SettingsSection(title = Strings.galleryGeneralSettings) {
-            SettingsSwitch(title = Strings.loopPlay, subtitle = Strings.galleryLoopHint, checked = loop, onCheckedChange = onLoopChange)
-            SettingsSwitch(title = Strings.galleryAutoPlay, subtitle = Strings.galleryAutoPlayHint, checked = autoPlay, onCheckedChange = onAutoPlayChange)
+        SettingsSection(title = AppStringsProvider.current().galleryGeneralSettings) {
+            SettingsSwitch(title = AppStringsProvider.current().loopPlay, subtitle = AppStringsProvider.current().galleryLoopHint, checked = loop, onCheckedChange = onLoopChange)
+            SettingsSwitch(title = AppStringsProvider.current().galleryAutoPlay, subtitle = AppStringsProvider.current().galleryAutoPlayHint, checked = autoPlay, onCheckedChange = onAutoPlayChange)
         }
-        SettingsSection(title = Strings.galleryImageSettings) {
+        SettingsSection(title = AppStringsProvider.current().galleryImageSettings) {
             Column {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(Strings.galleryImageInterval, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStringsProvider.current().galleryImageInterval, style = MaterialTheme.typography.bodyMedium)
                     Text("${imageInterval}s", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
                 Slider(value = imageInterval.toFloat(), onValueChange = { onImageIntervalChange(it.toInt()) }, valueRange = 1f..15f, steps = 13, modifier = Modifier.fillMaxWidth())
             }
         }
-        SettingsSection(title = Strings.galleryVideoSettings) {
-            SettingsSwitch(title = Strings.enableAudio, subtitle = Strings.galleryEnableAudioHint, checked = enableAudio, onCheckedChange = onEnableAudioChange)
-            SettingsSwitch(title = Strings.galleryVideoAutoNext, subtitle = Strings.galleryVideoAutoNextHint, checked = videoAutoNext, onCheckedChange = onVideoAutoNextChange)
+        SettingsSection(title = AppStringsProvider.current().galleryVideoSettings) {
+            SettingsSwitch(title = AppStringsProvider.current().enableAudio, subtitle = AppStringsProvider.current().galleryEnableAudioHint, checked = enableAudio, onCheckedChange = onEnableAudioChange)
+            SettingsSwitch(title = AppStringsProvider.current().galleryVideoAutoNext, subtitle = AppStringsProvider.current().galleryVideoAutoNextHint, checked = videoAutoNext, onCheckedChange = onVideoAutoNextChange)
         }
         Spacer(modifier = Modifier.height(16.dp))
-        PremiumButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(Strings.btnConfirm) }
+        PremiumButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(AppStringsProvider.current().btnConfirm) }
     }
 }
 
@@ -1964,14 +1966,13 @@ private fun MediaPreviewDialog(item: GalleryItem, onDismiss: () -> Unit, onDelet
                 Text(text = item.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    InfoChip(label = if (item.type == GalleryItemType.IMAGE) Strings.image else Strings.video, icon = if (item.type == GalleryItemType.IMAGE) Icons.Outlined.Image else Icons.Outlined.Videocam)
+                    InfoChip(label = if (item.type == GalleryItemType.IMAGE) AppStringsProvider.current().image else AppStringsProvider.current().video, icon = if (item.type == GalleryItemType.IMAGE) Icons.Outlined.Image else Icons.Outlined.Videocam)
                     if (item.duration > 0) { InfoChip(label = item.formattedDuration, icon = Icons.Outlined.Timer) }
                     InfoChip(label = item.formattedFileSize, icon = Icons.Outlined.Storage)
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.btnOk) } },
-        dismissButton = { TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(Strings.delete) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(AppStringsProvider.current().btnOk) } },
+        dismissButton = { TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(AppStringsProvider.current().delete) } }
     )
 }
-

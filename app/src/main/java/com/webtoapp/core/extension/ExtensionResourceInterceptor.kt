@@ -6,12 +6,12 @@ import com.webtoapp.core.logging.AppLogger
 import java.io.ByteArrayInputStream
 
 /**
- * Chrome Extension 资源拦截器
- * 
- * 拦截 chrome-extension://{extId}/{path} URL 请求，
- * 从 Android assets/extensions/{extId}/ 目录读取并返回真实文件。
- * 
- * 支持的资源类型：图片、CSS、JS、JSON、SVG、字体等。
+ * Chrome Extension intercept.
+ *
+ * intercept chrome-extension://{extId}/{path} URL request.
+ * from Android assets/extensions/{extId}/ and .
+ *
+ * Supports resource type CSSJSJSONSVG etc .
  */
 object ExtensionResourceInterceptor {
 
@@ -19,7 +19,7 @@ object ExtensionResourceInterceptor {
     private const val SCHEME = "chrome-extension"
     private const val ASSETS_BASE = "extensions"
 
-    // MIME type 映射表
+    // MIME type.
     private val MIME_TYPES = mapOf(
         "html" to "text/html",
         "htm" to "text/html",
@@ -47,7 +47,7 @@ object ExtensionResourceInterceptor {
         "webm" to "video/webm"
     )
 
-    // 文本类型 MIME（用于设定 encoding）
+    // MIME.
     private val TEXT_MIME_TYPES = setOf(
         "text/html", "text/css", "text/plain",
         "application/javascript", "application/json",
@@ -55,24 +55,24 @@ object ExtensionResourceInterceptor {
     )
 
     /**
-     * 判断 URL 是否为 chrome-extension:// 协议
+     * URL is as chrome-extension://.
      */
     fun isChromeExtensionUrl(url: String): Boolean {
         return url.startsWith("$SCHEME://")
     }
 
     /**
-     * 处理 chrome-extension:// URL 请求
-     * 
+     * chrome-extension:// URL request.
+     *
      * @param context Android Context
-     * @param url 完整的 chrome-extension:// URL
-     * @return WebResourceResponse 或 null（如果资源不存在）
+     * @param url chrome-extension:// URL.
+     * @return WebResourceResponse or null.
      */
     fun intercept(context: Context, url: String): WebResourceResponse? {
         if (!isChromeExtensionUrl(url)) return null
 
         try {
-            // 解析 URL: chrome-extension://{extId}/{path}
+            // URL: chrome-extension://{extId}/{path}.
             val withoutScheme = url.removePrefix("$SCHEME://")
             val slashIndex = withoutScheme.indexOf('/')
             if (slashIndex == -1) {
@@ -83,9 +83,9 @@ object ExtensionResourceInterceptor {
             val extId = withoutScheme.substring(0, slashIndex)
             var resourcePath = withoutScheme.substring(slashIndex + 1)
 
-            // 移除 query string 和 fragment
+            // query string fragment.
             resourcePath = resourcePath.split("?")[0].split("#")[0]
-            // 移除前导斜杠
+            // before.
             resourcePath = resourcePath.trimStart('/')
 
             if (extId.isBlank() || resourcePath.isBlank()) {
@@ -93,20 +93,20 @@ object ExtensionResourceInterceptor {
                 return createEmptyResponse()
             }
 
-            // 安全检查：防止路径遍历
+            // Check.
             if (resourcePath.contains("..")) {
                 AppLogger.w(TAG, "Path traversal attempt blocked: $url")
                 return createEmptyResponse()
             }
 
-            // 构建 asset 路径: extensions/{extId}/{resourcePath}
+            // asset: extensions/{extId}/{resourcePath}.
             val assetPath = "$ASSETS_BASE/$extId/$resourcePath"
 
-            // 优先从 assets/ 加载（内置扩展）
+            // from assets/.
             val assetResponse = loadAssetResource(context, assetPath, url)
             if (assetResponse != null) return assetResponse
             
-            // Fallback: 从 filesDir/extensions/ 加载（用户导入的扩展）
+            // Fallback: from filesDir/extensions/.
             return loadFileResource(context, extId, resourcePath, url)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error intercepting chrome-extension URL: $url", e)
@@ -115,7 +115,7 @@ object ExtensionResourceInterceptor {
     }
 
     /**
-     * 从 assets 加载资源并创建 WebResourceResponse
+     * from assets and WebResourceResponse.
      */
     private fun loadAssetResource(context: Context, assetPath: String, originalUrl: String): WebResourceResponse? {
         return try {
@@ -123,10 +123,9 @@ object ExtensionResourceInterceptor {
             val mimeType = getMimeType(assetPath)
             val encoding = if (mimeType in TEXT_MIME_TYPES) "UTF-8" else null
 
-            // 构建响应头
             val headers = mutableMapOf<String, String>()
             headers["Access-Control-Allow-Origin"] = "*"
-            headers["Cache-Control"] = "max-age=86400" // 缓存 1 天
+            headers["Cache-Control"] = "max-age=86400" // Note.
 
             AppLogger.d(TAG, "Serving extension resource (assets): $assetPath (MIME: $mimeType)")
 
@@ -148,22 +147,22 @@ object ExtensionResourceInterceptor {
     }
     
     /**
-     * 从 filesDir/extensions/ 加载资源（用户导入的 Chrome 扩展）
-     * 
-     * 用户导入的扩展解压到 filesDir/extensions/{extId}/
-     * 如果扩展 ZIP 有嵌套目录，manifest.json 可能在子目录中，
-     * 因此需要同时检查直接路径和一级子目录路径。
+     * from filesDir/extensions/.
+     *
+     * use extension to filesDir/extensions/{extId}/.
+     * extension ZIP manifest.json can in in .
+     * when Check level .
      */
     private fun loadFileResource(context: Context, extId: String, resourcePath: String, originalUrl: String): WebResourceResponse? {
         val extensionsDir = java.io.File(context.filesDir, ASSETS_BASE)
         
-        // 1. 直接路径: filesDir/extensions/{extId}/{resourcePath}
+        // 1.: filesDir/extensions/{extId}/{resourcePath}.
         val directFile = java.io.File(extensionsDir, "$extId/$resourcePath")
         if (directFile.exists() && directFile.isFile) {
             return createFileResponse(directFile, originalUrl)
         }
         
-        // 2. 检查 extId 目录下的一级子目录（处理嵌套 ZIP 结构）
+        // 2. Check extId level.
         val extDir = java.io.File(extensionsDir, extId)
         if (extDir.exists() && extDir.isDirectory) {
             extDir.listFiles()?.filter { it.isDirectory }?.forEach { subDir ->
@@ -174,8 +173,8 @@ object ExtensionResourceInterceptor {
             }
         }
         
-        // 3. 扫描所有扩展目录，查找包含此 extId 的子目录
-        // 适用于 chromeExtId 为子目录名称的情况
+        // 3. extension extId.
+        // use chromeExtId as.
         if (extensionsDir.exists()) {
             extensionsDir.listFiles()?.filter { it.isDirectory }?.forEach { parentDir ->
                 val subDir = java.io.File(parentDir, extId)
@@ -185,7 +184,7 @@ object ExtensionResourceInterceptor {
                         return createFileResponse(file, originalUrl)
                     }
                 }
-                // 也检查 parentDir 直接就是 extId 匹配的情况（已在步骤1处理）
+                // Check parentDir is extId.
             }
         }
         
@@ -194,7 +193,7 @@ object ExtensionResourceInterceptor {
     }
     
     /**
-     * 从本地文件创建 WebResourceResponse
+     * from WebResourceResponse.
      */
     private fun createFileResponse(file: java.io.File, originalUrl: String): WebResourceResponse {
         val mimeType = getMimeType(file.name)
@@ -216,7 +215,7 @@ object ExtensionResourceInterceptor {
     }
 
     /**
-     * 根据文件扩展名获取 MIME type
+     * extension Get MIME type.
      */
     private fun getMimeType(path: String): String {
         val extension = path.substringAfterLast('.', "").lowercase()
@@ -224,7 +223,7 @@ object ExtensionResourceInterceptor {
     }
 
     /**
-     * 创建空的 WebResourceResponse（用于 404 等情况）
+     * WebResourceResponse.
      */
     private fun createEmptyResponse(): WebResourceResponse {
         return WebResourceResponse(

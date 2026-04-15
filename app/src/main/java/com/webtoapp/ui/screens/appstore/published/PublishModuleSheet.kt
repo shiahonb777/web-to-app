@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -73,9 +73,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.core.extension.ExtensionManager
+import org.koin.compose.koinInject
 
 // ════════════════════════════════════════════════
-// 我的模块 Bottom Sheet
+// module Bottom Sheet
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,9 +91,8 @@ internal fun PublishModuleSheet(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = androidx.compose.ui.platform.LocalContext.current
-
     // Load local modules from ExtensionManager
-    val extensionManager = remember { com.webtoapp.core.extension.ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val localModules by extensionManager.modules.collectAsState()
 
     // Selected module
@@ -155,10 +156,10 @@ internal fun PublishModuleSheet(
     ) { uris -> screenshotUris = screenshotUris + uris }
 
     val moduleCategories = listOf(
-        "tools" to Strings.catTools, "ui" to "界面", "media" to Strings.catMedia,
-        "social" to Strings.catSocial, "productivity" to "效率",
+        "tools" to AppStringsProvider.current().catTools, "ui" to "界面", "media" to AppStringsProvider.current().catMedia,
+        "social" to AppStringsProvider.current().catSocial, "productivity" to "效率",
         "education" to "教育", "entertainment" to "娱乐",
-        "developer" to "开发", "other" to Strings.catOther
+        "developer" to "开发", "other" to AppStringsProvider.current().catOther
     )
 
     // Map ExtensionModule category to store category string
@@ -330,7 +331,7 @@ internal fun PublishModuleSheet(
             },
             confirmButton = {
                 TextButton(onClick = { showModulePicker = false }) {
-                    Text(Strings.storeReviewCancel)
+                    Text(AppStringsProvider.current().storeReviewCancel)
                 }
             }
         )
@@ -379,7 +380,7 @@ internal fun PublishModuleSheet(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    Strings.storePublishModule,
+                                    AppStringsProvider.current().storePublishModule,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = (-0.3).sp
@@ -394,7 +395,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 选择模块 ──
+                // selectmodule
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -513,7 +514,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 基本信息 ──
+                // Note
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -526,7 +527,7 @@ internal fun PublishModuleSheet(
                     )
                 }
 
-                // 模块名称
+                // module
                 item {
                     OutlinedTextField(
                         value = name,
@@ -540,7 +541,7 @@ internal fun PublishModuleSheet(
                     )
                 }
 
-                // 图标
+                // icon
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
@@ -603,7 +604,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 分类和标签 ──
+                // ── Category and tags ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -626,7 +627,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // 版本
+                // Version
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
@@ -648,7 +649,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 描述和标签 ──
+                // ── Description and tags ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -686,7 +687,7 @@ internal fun PublishModuleSheet(
                     )
                 }
 
-                // ── 截图 ──
+                // ── Screenshots ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -775,7 +776,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 手动分享码输入 (高级) ──
+                // ── Manual share code input (advanced) ──
                 if (selectedModule == null) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -854,13 +855,13 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 关联团队 (可选) ──
+                // ── Linked team (optional) ──
                 if (myTeams.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-                            Text(Strings.teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(AppStringsProvider.current().teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
@@ -880,9 +881,9 @@ internal fun PublishModuleSheet(
                         ExposedDropdownMenuBox(expanded = teamDropdownExpanded, onExpandedChange = { teamDropdownExpanded = it }) {
                             OutlinedTextField(
                                 value = selectedTeam?.name ?: "", onValueChange = {}, readOnly = true,
-                                label = { Text(Strings.teamSelectTeam) }, placeholder = { Text("点击选择团队") },
+                                label = { Text(AppStringsProvider.current().teamSelectTeam) }, placeholder = { Text("点击选择团队") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(), shape = RoundedCornerShape(12.dp),
                                 leadingIcon = { Icon(Icons.Outlined.Groups, null, modifier = Modifier.size(20.dp)) }
                             )
                             ExposedDropdownMenu(expanded = teamDropdownExpanded, onDismissRequest = { teamDropdownExpanded = false }) {
@@ -931,17 +932,17 @@ internal fun PublishModuleSheet(
                                             }
                                             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                                 FilterChip(selected = entry.role == "lead", onClick = { contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(role = "lead") } },
-                                                    label = { Text(Strings.teamLead, fontSize = 11.sp) }, modifier = Modifier.height(28.dp))
+                                                    label = { Text(AppStringsProvider.current().teamLead, fontSize = 11.sp) }, modifier = Modifier.height(28.dp))
                                                 FilterChip(selected = entry.role == "member", onClick = { contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(role = "member") } },
-                                                    label = { Text(Strings.teamMemberRole, fontSize = 11.sp) }, modifier = Modifier.height(28.dp))
+                                                    label = { Text(AppStringsProvider.current().teamMemberRole, fontSize = 11.sp) }, modifier = Modifier.height(28.dp))
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             OutlinedTextField(value = entry.points.toString(), onValueChange = { v -> val p = v.toIntOrNull() ?: 0; contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(points = p) } },
-                                                label = { Text(Strings.teamContributionPoints, fontSize = 11.sp) }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(8.dp), singleLine = true, textStyle = MaterialTheme.typography.bodySmall)
+                                                label = { Text(AppStringsProvider.current().teamContributionPoints, fontSize = 11.sp) }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(8.dp), singleLine = true, textStyle = MaterialTheme.typography.bodySmall)
                                             OutlinedTextField(value = entry.desc, onValueChange = { v -> contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(desc = v) } },
-                                                label = { Text(Strings.teamContributionDesc, fontSize = 11.sp) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), singleLine = true,
+                                                label = { Text(AppStringsProvider.current().teamContributionDesc, fontSize = 11.sp) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), singleLine = true,
                                                 placeholder = { Text("如：功能开发、测试", fontSize = 12.sp) }, textStyle = MaterialTheme.typography.bodySmall)
                                         }
                                     }
@@ -951,7 +952,7 @@ internal fun PublishModuleSheet(
                     }
                 }
 
-                // ── 发布按钮 ──
+                // ── Publish button ──
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(
@@ -1029,15 +1030,15 @@ internal fun PublishModuleSheet(
                                                     val teamResult = apiClient.associateModuleTeam(moduleId = publishedModuleId, teamId = selectedTeamId!!, contributors = contribs)
                                                     when (teamResult) {
                                                         is com.webtoapp.core.auth.AuthResult.Success ->
-                                                            snackbarHostState.showSnackbar("${Strings.storeModulePublishSuccess} · 团队已关联")
+                                                            snackbarHostState.showSnackbar("${AppStringsProvider.current().storeModulePublishSuccess} · 团队已关联")
                                                         is com.webtoapp.core.auth.AuthResult.Error ->
-                                                            snackbarHostState.showSnackbar("${Strings.storeModulePublishSuccess} · 团队关联失败: ${teamResult.message}")
+                                                            snackbarHostState.showSnackbar("${AppStringsProvider.current().storeModulePublishSuccess} · 团队关联失败: ${teamResult.message}")
                                                     }
                                                 } else {
-                                                    snackbarHostState.showSnackbar("${Strings.storeModulePublishSuccess} · 团队关联需至少一位主负责人")
+                                                    snackbarHostState.showSnackbar("${AppStringsProvider.current().storeModulePublishSuccess} · 团队关联需至少一位主负责人")
                                                 }
                                             } else {
-                                                snackbarHostState.showSnackbar(Strings.storeModulePublishSuccess)
+                                                snackbarHostState.showSnackbar(AppStringsProvider.current().storeModulePublishSuccess)
                                             }
                                             onPublished()
                                         }
@@ -1071,7 +1072,7 @@ internal fun PublishModuleSheet(
                         } else {
                             Icon(Icons.Outlined.Publish, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.storePublishModule, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
+                            Text(AppStringsProvider.current().storePublishModule, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
                         }
                     }
                 }

@@ -12,12 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.BackgroundRunExportConfig
 
 /**
- * 后台运行配置卡片
- * 用于配置应用退出后继续在后台运行
+ * runconfigcard
+ * forconfigapp run
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +36,7 @@ fun BackgroundRunConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -63,12 +63,12 @@ fun BackgroundRunConfigCard(
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.backgroundRunTitle,
+                            AppStringsProvider.current().backgroundRunTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!enabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -81,20 +81,20 @@ fun BackgroundRunConfigCard(
                 )
             }
             
-            // Expand的详细配置
+            // Expand config
             AnimatedVisibility(visible = enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Show通知开关
+                    // Show
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.backgroundRunShowNotification,
+                            AppStringsProvider.current().backgroundRunShowNotification,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         PremiumSwitch(
@@ -103,14 +103,14 @@ fun BackgroundRunConfigCard(
                         )
                     }
 
-                    // 保持CPU唤醒开关
+                    // CPU
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            Strings.backgroundRunKeepCpuAwake,
+                            AppStringsProvider.current().backgroundRunKeepCpuAwake,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         PremiumSwitch(
@@ -119,33 +119,33 @@ fun BackgroundRunConfigCard(
                         )
                     }
                     
-                    // Expand更多设置
+                    // Expand settings
                     TextButton(
                         onClick = { expanded = !expanded },
                         modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text(if (expanded) Strings.hideAdvanced else Strings.showAdvanced)
+                        Text(if (expanded) AppStringsProvider.current().hideAdvanced else AppStringsProvider.current().showAdvanced)
                     }
                     
-                    // 高级设置
+                    // advancedsettings
                     AnimatedVisibility(visible = expanded) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Custom通知标题
+                            // Custom
                             PremiumTextField(
                                 value = config.notificationTitle,
                                 onValueChange = { onConfigChange(config.copy(notificationTitle = it)) },
-                                label = { Text(Strings.backgroundRunNotificationTitle) },
-                                placeholder = { Text(Strings.backgroundRunNotificationTitlePlaceholder) },
+                                label = { Text(AppStringsProvider.current().backgroundRunNotificationTitle) },
+                                placeholder = { Text(AppStringsProvider.current().backgroundRunNotificationTitlePlaceholder) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
                             
-                            // Custom通知内容
+                            // Custom content
                             PremiumTextField(
                                 value = config.notificationContent,
                                 onValueChange = { onConfigChange(config.copy(notificationContent = it)) },
-                                label = { Text(Strings.backgroundRunNotificationContent) },
-                                placeholder = { Text(Strings.backgroundRunNotificationContentPlaceholder) },
+                                label = { Text(AppStringsProvider.current().backgroundRunNotificationContent) },
+                                placeholder = { Text(AppStringsProvider.current().backgroundRunNotificationContentPlaceholder) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )

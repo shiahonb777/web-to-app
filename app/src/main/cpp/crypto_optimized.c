@@ -1,35 +1,4 @@
-/**
- * crypto_optimized.c — C 级优化加密引擎
- *
- * 核心优化点：
- *
- * 1. **恒定时间 AES S-Box** — 防止缓存时序攻击
- *    原始实现使用直接数组索引 `SBOX[idx]`，攻击者可通过缓存命中时间
- *    推断明文。优化后遍历所有256个条目做条件移动。
- *
- * 2. **标准 PBKDF2-HMAC-SHA256** — 修复错误的密钥派生
- *    原始实现使用简单的迭代 SHA-256，不符合 RFC 2898。
- *    重新实现了标准的 PBKDF2 with HMAC-SHA256。
- *
- * 3. **HMAC-SHA256** — 完整实现
- *    原始实现没有 HMAC，PBKDF2 的 PRF 是错误的。
- *    完整实现了 RFC 2104 HMAC。
- *
- * 4. **HKDF (RFC 5869)** — 现代密钥派生
- *    补充了 HKDF-Extract + HKDF-Expand，与 Kotlin 层的 EnhancedCrypto
- *    保持一致。
- *
- * 5. **GHASH 优化** — 4-bit Shoup 查表法
- *    原始 gf_mult 是 O(128) 的逐位乘法。
- *    使用预计算 16×16 乘法表，减少到 O(32) 次查表。
- *
- * 6. **4 块并行 CTR** — 提升 AES-GCM 吞吐
- *    每次加密 4 个计数器块，利用 CPU 超标量流水线。
- *
- * 7. **JNI 批量接口** — 减少 JNI 跨越开销
- *    新增 nativeBatchEncrypt/nativeBatchDecrypt，一次 JNI 调用
- *    处理多个文件。
- */
+/* Note. */
 
 #include <jni.h>
 #include <string.h>
@@ -45,9 +14,7 @@
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
-/* ====================================================================
- * AES S-Box (与原始相同，但查找方式改为恒定时间)
- * ==================================================================== */
+/* Note. */
 
 static const uint8_t SBOX[256] = {
     0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
@@ -72,9 +39,7 @@ static const uint8_t RCON[11] = {
     0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36
 };
 
-/* ====================================================================
- * ARMv8 硬件 AES 检测
- * ==================================================================== */
+/* Note. */
 
 #if defined(__aarch64__)
 #include <sys/auxv.h>
@@ -98,9 +63,7 @@ int crypto_has_hw_aes(void) {
 }
 #endif
 
-/* ====================================================================
- * SHA-256 实现 (优化: 合并 padding 到 final)
- * ==================================================================== */
+/* Note. */
 
 static const uint32_t SHA256_K[64] = {
     0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
@@ -223,7 +186,7 @@ void hmac_sha256_init(hmac_sha256_ctx_t *ctx, const uint8_t *key, size_t key_len
         memset(k_pad + key_len, 0, SHA256_BLOCK_SIZE - key_len);
     }
     
-    /* 保存 opad key 用于 final */
+    /* Note. */
     for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
         ctx->opad_key[i] = k_pad[i] ^ 0x5c;
     
@@ -266,9 +229,7 @@ void hmac_sha256(const uint8_t *key, size_t key_len,
     hmac_sha256_final(&ctx, mac);
 }
 
-/* ====================================================================
- * PBKDF2-HMAC-SHA256 (RFC 2898 — 标准实现)
- * ==================================================================== */
+/* Note. */
 
 void pbkdf2_hmac_sha256(
     const uint8_t *password, size_t pass_len,
@@ -359,9 +320,7 @@ void hkdf_expand(const uint8_t prk[SHA256_DIGEST_SIZE],
     secure_zero(t, sizeof(t));
 }
 
-/* ====================================================================
- * AES-256 核心 (恒定时间 S-Box)
- * ==================================================================== */
+/* Note. */
 
 static void aes256_key_expansion(const uint8_t *key, uint8_t *rk) {
     memcpy(rk, key, AES256_KEY_SIZE);
@@ -398,7 +357,7 @@ void aes256_init(aes256_ctx_t *ctx, const uint8_t key[AES256_KEY_SIZE]) {
     }
 }
 
-/* 恒定时间 GF(2^8) 乘2 (xtime) */
+/* Note. */
 static inline uint8_t xtime(uint8_t x) {
     return (uint8_t)((x << 1) ^ (((x >> 7) & 1) * 0x1b));
 }
@@ -415,7 +374,7 @@ void aes256_encrypt_block(const aes256_ctx_t *ctx,
         rk += 16;
         uint8_t t[16];
         
-        /* SubBytes (恒定时间) */
+        /* Note. */
         for (int i = 0; i < 16; i++)
             t[i] = ct_sbox_lookup(SBOX, s[i]);
         
@@ -439,7 +398,7 @@ void aes256_encrypt_block(const aes256_ctx_t *ctx,
         for (int i = 0; i < 16; i++) s[i] ^= rk[i];
     }
     
-    /* 最后一轮 (无 MixColumns) */
+    /* Note. */
     rk += 16;
     uint8_t t[16];
     for (int i = 0; i < 16; i++) t[i] = ct_sbox_lookup(SBOX, s[i]);
@@ -453,16 +412,14 @@ void aes256_encrypt_block(const aes256_ctx_t *ctx,
 void aes256_encrypt_4blocks(const aes256_ctx_t *ctx,
                             const uint8_t in[4][AES256_BLOCK_SIZE],
                             uint8_t out[4][AES256_BLOCK_SIZE]) {
-    /* 简单串行版本 — 编译器会自动向量化 */
+    /* Note. */
     for (int b = 0; b < 4; b++)
         aes256_encrypt_block(ctx, in[b], out[b]);
 }
 
-/* ====================================================================
- * GCM — GHASH (4-bit Shoup 查表优化)
- * ==================================================================== */
+/* Note. */
 
-/* GF(2^128) 乘法 (x * H)，结果写入 x */
+/* Note. */
 static void gf_mult(const uint8_t *x, const uint8_t *y, uint8_t *result) {
     uint8_t v[16];
     memcpy(v, y, 16);
@@ -505,21 +462,19 @@ static void ghash(const uint8_t H[16],
     }
 }
 
-/* CTR 递增 */
+/* Note. */
 static void inc32(uint8_t counter[16]) {
     for (int i = 15; i >= 12; i--) {
         if (++counter[i] != 0) break;
     }
 }
 
-/* ====================================================================
- * GCM 高级接口
- * ==================================================================== */
+/* Note. */
 
 void gcm_init(gcm_ctx_t *ctx, const uint8_t key[AES256_KEY_SIZE]) {
     aes256_init(&ctx->aes, key);
     
-    /* 计算 H = AES(K, 0^128) */
+    /* Note. */
     memset(ctx->H, 0, 16);
     aes256_encrypt_block(&ctx->aes, ctx->H, ctx->H);
 }
@@ -537,11 +492,11 @@ int gcm_encrypt(
     memcpy(j0, iv, 12);
     j0[12] = 0; j0[13] = 0; j0[14] = 0; j0[15] = 1;
     
-    /* CTR 加密 */
+    /* Note. */
     uint8_t counter[16];
     memcpy(counter, j0, 16);
     
-    /* 4 块并行 CTR */
+    /* Note. */
     size_t i = 0;
     for (; i + 64 <= pt_len; i += 64) {
         uint8_t ks[4][16];
@@ -557,7 +512,7 @@ int gcm_encrypt(
         }
     }
     
-    /* 剩余块 */
+    /* Note. */
     for (; i < pt_len; i += 16) {
         inc32(counter);
         uint8_t ks[16];
@@ -606,15 +561,14 @@ int gcm_decrypt(
     const uint8_t tag[GCM_TAG_SIZE],
     uint8_t *plaintext
 ) {
-    /* 先计算 tag 验证 */
+    /* Note. */
     uint8_t computed_tag[16];
     
-    /* 先用 encrypt 来加密密文 → 得到明文 (CTR 模式加解密相同) */
+    /* Note. */
     int ret = gcm_encrypt(ctx, ciphertext, ct_len, iv, aad, aad_len, plaintext, computed_tag);
     if (ret != 0) return -2;
     
-    /* 但 gcm_encrypt 计算的 tag 是基于 plaintext 的 GHASH
-     * 而解密时的 tag 应该基于 ciphertext。需要重新计算: */
+    /* Note. */
     
     /* J0 */
     uint8_t j0[16];
@@ -630,7 +584,7 @@ int gcm_decrypt(
     if (!auth) return -2;
     
     if (aad_len > 0) memcpy(auth, aad, aad_len);
-    memcpy(auth + aad_pad, ciphertext, ct_len);  /* 使用原始密文 */
+    memcpy(auth + aad_pad, ciphertext, ct_len);  /* Note. */
     
     uint64_t aad_bits = (uint64_t)aad_len * 8;
     uint64_t ct_bits = (uint64_t)ct_len * 8;
@@ -649,10 +603,10 @@ int gcm_decrypt(
     for (int k = 0; k < 16; k++)
         computed_tag[k] = ghash_out[k] ^ ej0[k];
     
-    /* 恒定时间比较 */
+    /* Note. */
     if (ct_memcmp(computed_tag, tag, 16) != 0) {
         secure_zero(plaintext, ct_len);
-        return -1; /* 认证失败 */
+        return -1; /* Note. */
     }
     
     return 0;
@@ -662,15 +616,11 @@ void gcm_free(gcm_ctx_t *ctx) {
     secure_zero(ctx, sizeof(*ctx));
 }
 
-/* ====================================================================
- * JNI 接口 — 优化版加密引擎
- * ==================================================================== */
+/* Note. */
 
 #define JNI_FUNC(name) Java_com_webtoapp_core_crypto_NativeCryptoOptimized_##name
 
-/**
- * 初始化优化引擎，报告硬件加速状态
- */
+/* Note. */
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeInit)(JNIEnv *env, jobject thiz) {
     (void)thiz;
@@ -679,24 +629,14 @@ JNI_FUNC(nativeInit)(JNIEnv *env, jobject thiz) {
     return JNI_TRUE;
 }
 
-/**
- * 检查硬件加速是否可用
- */
+/* Note. */
 JNIEXPORT jboolean JNICALL
 JNI_FUNC(nativeHasHwAes)(JNIEnv *env, jobject thiz) {
     (void)env; (void)thiz;
     return crypto_has_hw_aes() ? JNI_TRUE : JNI_FALSE;
 }
 
-/**
- * 加密数据 (AES-256-GCM)
- *
- * @param plaintext 明文
- * @param key 密钥 (32 bytes)
- * @param iv IV (12 bytes)
- * @param aad 关联数据 (可选)
- * @return 密文 + tag (16 bytes) 拼接
- */
+/* Note. */
 JNIEXPORT jbyteArray JNICALL
 JNI_FUNC(nativeEncrypt)(JNIEnv *env, jobject thiz,
                         jbyteArray plaintext, jbyteArray key,
@@ -723,7 +663,7 @@ JNI_FUNC(nativeEncrypt)(JNIEnv *env, jobject thiz,
         aad_buf = (uint8_t *)(*env)->GetByteArrayElements(env, aad, NULL);
     }
     
-    /* 分配输出 (密文 + tag) */
+    /* Note. */
     uint8_t *ct_buf = (uint8_t *)malloc(pt_len + GCM_TAG_SIZE);
     if (!ct_buf) {
         (*env)->ReleaseByteArrayElements(env, plaintext, (jbyte *)pt_buf, JNI_ABORT);
@@ -762,15 +702,7 @@ JNI_FUNC(nativeEncrypt)(JNIEnv *env, jobject thiz,
     return result;
 }
 
-/**
- * 解密数据 (AES-256-GCM)
- *
- * @param ciphertext 密文 + tag
- * @param key 密钥 (32 bytes)
- * @param iv IV (12 bytes)
- * @param aad 关联数据 (可选)
- * @return 明文，认证失败返回 null
- */
+/* Note. */
 JNIEXPORT jbyteArray JNICALL
 JNI_FUNC(nativeDecrypt)(JNIEnv *env, jobject thiz,
                         jbyteArray ciphertext, jbyteArray key,
@@ -845,9 +777,7 @@ JNI_FUNC(nativeDecrypt)(JNIEnv *env, jobject thiz,
     return result;
 }
 
-/**
- * PBKDF2 密钥派生 (标准 RFC 2898)
- */
+/* Note. */
 JNIEXPORT jbyteArray JNICALL
 JNI_FUNC(nativePbkdf2)(JNIEnv *env, jobject thiz,
                        jbyteArray password, jbyteArray salt,
@@ -883,9 +813,7 @@ JNI_FUNC(nativePbkdf2)(JNIEnv *env, jobject thiz,
     return result;
 }
 
-/**
- * HKDF 密钥派生 (RFC 5869)
- */
+/* Note. */
 JNIEXPORT jbyteArray JNICALL
 JNI_FUNC(nativeHkdf)(JNIEnv *env, jobject thiz,
                      jbyteArray ikm, jbyteArray salt,
@@ -939,9 +867,7 @@ JNI_FUNC(nativeHkdf)(JNIEnv *env, jobject thiz,
     return result;
 }
 
-/**
- * SHA-256 哈希
- */
+/* Note. */
 JNIEXPORT jbyteArray JNICALL
 JNI_FUNC(nativeSha256)(JNIEnv *env, jobject thiz, jbyteArray data) {
     (void)thiz;
@@ -986,3 +912,4 @@ JNI_FUNC(nativeHmacSha256)(JNIEnv *env, jobject thiz,
     }
     return result;
 }
+

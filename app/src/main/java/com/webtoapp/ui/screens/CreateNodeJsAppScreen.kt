@@ -26,35 +26,36 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.core.nodejs.NodeDependencyManager
-import com.webtoapp.core.nodejs.NodeRuntime
 import com.webtoapp.core.nodejs.NodeSampleManager
 import com.webtoapp.data.model.NodeJsBuildMode
 import com.webtoapp.data.model.NodeJsConfig
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.components.TypedSampleProjectsCard
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.screens.create.common.CreateScreenState
+import com.webtoapp.ui.screens.create.common.resolveDocumentTreeDirectory
+import com.webtoapp.ui.screens.create.runtime.NodeJsProjectImportAnalysis
+import com.webtoapp.ui.screens.create.runtime.NodeJsProjectImporter
+import java.io.File
 
 /**
- * 创建 Node.js 应用页面
+ * create Node. js app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Express=绿, Fastify=黑, Koa=灰, NestJS=红, Next.js=黑, Nuxt=绿）
- * - package.json 脚本面板（可选启动脚本）
- * - 依赖可视化（生产依赖 / 开发依赖分组）
- * - TypeScript 检测指示器
- * - 包管理器检测（npm/yarn/pnpm）
- * - 端口检测与自定义端口
- * - 项目信息摘要面板
- * - 框架特定提示
+ * Note
+ * Hero area( Express=, Fastify=, Koa=, NestJS=, Next. js=, Nuxt=)
+ * package. json panel( optional)
+ * Note
+ * TypeScript indicator
+ * manager( npm/yarn/pnpm)
+ * with
+ * item panel
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -73,12 +74,13 @@ fun CreateNodeJsAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
+    val projectImporter = remember(context) { NodeJsProjectImporter(context) }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // Node.js 配置
+    // Node. js config
     var buildMode by remember { mutableStateOf(NodeJsBuildMode.API_BACKEND) }
     var entryFile by remember { mutableStateOf("index.js") }
     var landscapeMode by remember { mutableStateOf(false) }
@@ -86,13 +88,13 @@ fun CreateNodeJsAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var detectedEntryFile by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：package.json 信息
+    // package. json
     var packageName by remember { mutableStateOf<String?>(null) }
     var packageVersion by remember { mutableStateOf<String?>(null) }
     var packageDescription by remember { mutableStateOf<String?>(null) }
@@ -103,29 +105,63 @@ fun CreateNodeJsAppScreen(
     var showAllDeps by remember { mutableStateOf(false) }
     var showAllDevDeps by remember { mutableStateOf(false) }
     
-    // 增强：TypeScript 检测
+    // TypeScript
     var hasTypeScript by remember { mutableStateOf(false) }
     
-    // TypeScript 预编译（Linux 环境）
+    // TypeScript( Linux)
     var enableTsPreCompile by remember { mutableStateOf(false) }
     val esbuildAvailable = remember { NativeNodeEngine.isAvailable(context) }
     
-    // 增强：包管理器检测
+    // manager
     var packageManager by remember { mutableStateOf("npm") }
     
-    // 增强：端口检测
+    // Note
     var detectedPort by remember { mutableStateOf<Int?>(null) }
     var customPort by remember { mutableStateOf("") }
     
-    // 增强：Node 版本
+    // Node version
     var nodeEngineVersion by remember { mutableStateOf<String?>(null) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val screenState = remember(isCreating, creationPhase, errorMessage) {
+        CreateScreenState(
+            isBusy = isCreating,
+            phase = creationPhase,
+            errorMessage = errorMessage
+        )
+    }
+
+    fun applyImportAnalysis(
+        imported: com.webtoapp.ui.screens.create.common.ImportedProject<NodeJsProjectImportAnalysis>,
+        appNameOverride: String? = null,
+    ) {
+        val analysis = imported.analysis
+        selectedProjectDir = analysis.projectDir.absolutePath
+        detectedFramework = analysis.framework
+        detectedEntryFile = analysis.entryFile
+        entryFile = analysis.entryFile ?: entryFile
+        buildMode = analysis.buildMode
+        packageManager = analysis.packageManager
+        packageName = analysis.packageName
+        packageVersion = analysis.packageVersion
+        packageDescription = analysis.packageDescription
+        npmScripts = analysis.scripts
+        selectedStartScript = analysis.selectedStartScript
+        dependencies = analysis.dependencies
+        devDependencies = analysis.devDependencies
+        hasTypeScript = analysis.hasTypeScript
+        detectedPort = analysis.detectedPort
+        customPort = analysis.detectedPort?.toString().orEmpty()
+        envVars = analysis.envVars
+        nodeEngineVersion = analysis.nodeVersion
+        projectId = imported.projectId
+        appName = appNameOverride ?: analysis.suggestedAppName ?: appName
+    }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -153,25 +189,25 @@ fun CreateNodeJsAppScreen(
         }
     }
     
-    // 依赖下载状态
+    // downloadstate
     val downloadState by NodeDependencyManager.downloadState.collectAsStateWithLifecycle()
     var showDownloadDialog by remember { mutableStateOf(false) }
     
-    // 框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework) {
-            "Express" -> Color(0xFF259D3D) // Express 绿
-            "Fastify" -> Color(0xFF000000) // Fastify 黑
-            "Koa" -> Color(0xFF33333D) // Koa 灰黑
-            "NestJS" -> Color(0xFFE0234E) // NestJS 红
-            "Hapi" -> Color(0xFFFF7B00) // Hapi 橙
-            "Next.js" -> Color(0xFF000000) // Next.js 黑
-            "Nuxt.js" -> Color(0xFF00DC82) // Nuxt 绿
-            else -> Color(0xFF339933) // Node.js 默认绿
+            "Express" -> Color(0xFF259D3D) // Express
+            "Fastify" -> Color(0xFF000000) // Fastify
+            "Koa" -> Color(0xFF33333D) // Koa
+            "NestJS" -> Color(0xFFE0234E) // NestJS
+            "Hapi" -> Color(0xFFFF7B00) // Hapi
+            "Next.js" -> Color(0xFF000000) // Next. js
+            "Nuxt.js" -> Color(0xFF00DC82) // Nuxt
+            else -> Color(0xFF339933) // Node. js default
         }
     }
     
-    // 文件选择器
+    // fileselect
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
@@ -182,194 +218,22 @@ fun CreateNodeJsAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.njsProjectDetected
+                creationPhase = AppStringsProvider.current().njsProjectDetected
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        // 解析 SAF URI 到文件路径
-                        val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
-                        val path = docId.substringAfter(":")
-                        val storageRoot = if (docId.startsWith("primary:")) {
-                            android.os.Environment.getExternalStorageDirectory().absolutePath
-                        } else {
-                            "/storage/${docId.substringBefore(":")}"
-                        }
-                        val projectPath = "$storageRoot/$path"
-                        val projectDir = File(projectPath)
-                        
-                        if (!projectDir.exists() || !File(projectDir, "package.json").exists()) {
-                            errorMessage = context.getString(com.webtoapp.R.string.njs_package_json_not_found)
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        selectedProjectDir = projectPath
-                        
-                        // 检测项目信息
-                        val runtime = NodeRuntime(context)
-                        val detected = runtime.detectEntryFile(projectDir)
-                        if (detected != null) {
-                            detectedEntryFile = detected
-                            entryFile = detected
-                        }
-                        
-                        // 增强：检测包管理器
-                        packageManager = when {
-                            File(projectDir, "pnpm-lock.yaml").exists() -> "pnpm"
-                            File(projectDir, "yarn.lock").exists() -> "yarn"
-                            File(projectDir, "bun.lockb").exists() -> "bun"
-                            else -> "npm"
-                        }
-                        
-                        // 增强：检测 TypeScript
-                        hasTypeScript = File(projectDir, "tsconfig.json").exists()
-                        
-                        // 读取 package.json 获取项目名称和框架
-                        val packageJson = File(projectDir, "package.json")
-                        if (packageJson.exists()) {
-                            try {
-                                val content = packageJson.readText()
-                                val gson = com.google.gson.Gson()
-                                val json = gson.fromJson(content, com.google.gson.JsonObject::class.java)
-                                
-                                // 项目名称
-                                json.get("name")?.asString?.let { name ->
-                                    packageName = name
-                                    if (appName.isBlank()) appName = name
-                                }
-                                
-                                // 项目版本
-                                json.get("version")?.asString?.let { packageVersion = it }
-                                
-                                // 项目描述
-                                json.get("description")?.asString?.let { packageDescription = it }
-                                
-                                // 增强：NPM 脚本
-                                json.getAsJsonObject("scripts")?.let { scripts ->
-                                    val scriptMap = mutableMapOf<String, String>()
-                                    scripts.keySet().forEach { key ->
-                                        scriptMap[key] = scripts.get(key).asString
-                                    }
-                                    npmScripts = scriptMap
-                                    // 自动选择启动脚本
-                                    selectedStartScript = when {
-                                        "start" in scriptMap -> "start"
-                                        "dev" in scriptMap -> "dev"
-                                        "serve" in scriptMap -> "serve"
-                                        else -> scriptMap.keys.firstOrNull()
-                                    }
-                                }
-                                
-                                // 增强：Node 引擎版本
-                                json.getAsJsonObject("engines")?.get("node")?.asString?.let {
-                                    nodeEngineVersion = it
-                                }
-                                
-                                // 依赖
-                                val deps = json.getAsJsonObject("dependencies")
-                                val devDeps = json.getAsJsonObject("devDependencies")
-                                val allDeps = mutableSetOf<String>()
-                                
-                                // 增强：保存完整依赖映射
-                                deps?.let { d ->
-                                    val depMap = mutableMapOf<String, String>()
-                                    d.keySet().forEach { key -> depMap[key] = d.get(key).asString }
-                                    dependencies = depMap
-                                    allDeps.addAll(d.keySet())
-                                }
-                                devDeps?.let { dd ->
-                                    val devDepMap = mutableMapOf<String, String>()
-                                    dd.keySet().forEach { key -> devDepMap[key] = dd.get(key).asString }
-                                    devDependencies = devDepMap
-                                    allDeps.addAll(dd.keySet())
-                                }
-                                
-                                // 增强：TypeScript 从依赖检测
-                                if (!hasTypeScript && ("typescript" in allDeps || "ts-node" in allDeps)) {
-                                    hasTypeScript = true
-                                }
-                                
-                                detectedFramework = when {
-                                    "express" in allDeps -> "Express"
-                                    "fastify" in allDeps -> "Fastify"
-                                    "koa" in allDeps -> "Koa"
-                                    "@nestjs/core" in allDeps -> "NestJS"
-                                    "@hapi/hapi" in allDeps -> "Hapi"
-                                    "next" in allDeps -> "Next.js"
-                                    "nuxt" in allDeps -> "Nuxt.js"
-                                    else -> null
-                                }
-                                
-                                // 自动推断构建模式
-                                buildMode = when {
-                                    "next" in allDeps || "nuxt" in allDeps -> NodeJsBuildMode.FULLSTACK
-                                    "express" in allDeps || "fastify" in allDeps || "koa" in allDeps ||
-                                    "@nestjs/core" in allDeps || "@hapi/hapi" in allDeps -> NodeJsBuildMode.API_BACKEND
-                                    else -> NodeJsBuildMode.STATIC
-                                }
-                                
-                                // 增强：端口检测 - 从脚本或环境变量推断
-                                npmScripts["start"]?.let { startScript ->
-                                    val portMatch = Regex("(?:PORT=|--port[= ])(\\d{4,5})").find(startScript)
-                                    portMatch?.groupValues?.get(1)?.toIntOrNull()?.let { detectedPort = it }
-                                }
-                                if (detectedPort == null) {
-                                    // 尝试从 .env 读取
-                                    val envFile = File(projectDir, ".env")
-                                    if (envFile.exists()) {
-                                        envFile.readLines().firstOrNull { it.trimStart().startsWith("PORT=") }
-                                            ?.substringAfter("=")?.trim()?.toIntOrNull()?.let { detectedPort = it }
-                                    }
-                                }
-                                if (detectedPort == null) {
-                                    // 从入口文件尝试检测 listen 端口
-                                    val entryF = File(projectDir, entryFile)
-                                    if (entryF.exists()) {
-                                        val entryContent = entryF.readText()
-                                        val listenMatch = Regex("\\.listen\\((\\d{4,5})").find(entryContent)
-                                        listenMatch?.groupValues?.get(1)?.toIntOrNull()?.let { detectedPort = it }
-                                    }
-                                }
-                                
-                                // 检测 .env.example 获取环境变量
-                                val envExample = File(projectDir, ".env.example")
-                                if (envExample.exists()) {
-                                    envExample.readLines().forEach { line ->
-                                        val trimmed = line.trim()
-                                        if (trimmed.isNotEmpty() && !trimmed.startsWith("#") && trimmed.contains("=")) {
-                                            val key = trimmed.substringBefore("=").trim()
-                                            val value = trimmed.substringAfter("=").trim()
-                                            if (key.isNotEmpty()) {
-                                                envVars = envVars.toMutableMap().apply { put(key, value) }
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                // 解析失败不影响主流程
-                            }
-                        }
-                        
-                        // 检查 Node.js 依赖并下载
-                        if (buildMode != NodeJsBuildMode.STATIC && !NodeDependencyManager.isNodeReady(context)) {
-                            showDownloadDialog = true
-                            val success = NodeDependencyManager.downloadNodeRuntime(context)
-                            showDownloadDialog = false
-                            if (!success) {
-                                errorMessage = Strings.njsDownloadFailed
-                                isCreating = false
-                                return@withContext
-                            }
-                        }
-                        
-                        // 复制项目文件到内部存储
-                        creationPhase = "正在复制项目文件..."
-                        val newProjectId = java.util.UUID.randomUUID().toString()
-                        runtime.createProject(newProjectId, projectDir)
-                        projectId = newProjectId
-                        creationPhase = Strings.njsProjectReady
+                    val projectDir = resolveDocumentTreeDirectory(treeUri)
+                    if (!projectDir.exists() || !File(projectDir, "package.json").exists()) {
+                        errorMessage = context.getString(com.webtoapp.R.string.njs_package_json_not_found)
+                        return@launch
                     }
+
+                    creationPhase = AppStringsProvider.current().copyingProjectFiles
+                    val imported = projectImporter.importProject(projectDir) { downloading ->
+                        showDownloadDialog = downloading
+                    }
+                    applyImportAnalysis(imported)
+                    creationPhase = AppStringsProvider.current().njsProjectReady
                 } catch (e: Exception) {
                     errorMessage = e.message ?: "项目导入失败"
                 } finally {
@@ -379,17 +243,17 @@ fun CreateNodeJsAppScreen(
         }
     }
     
-    // 判断是否可以创建
+    // create
     val canCreate = projectId != null
     
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.njsCreateTitle) },
+                title = { Text(AppStringsProvider.current().njsCreateTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -399,9 +263,9 @@ fun CreateNodeJsAppScreen(
                                 val finalPort = customPort.toIntOrNull() ?: detectedPort
                                 
                                 if (enableTsPreCompile && hasTypeScript && esbuildAvailable) {
-                                    // 先预编译 TypeScript 再创建
+                                    // TypeScript create
                                     isCreating = true
-                                    creationPhase = Strings.tsPreCompile
+                                    creationPhase = AppStringsProvider.current().tsPreCompile
                                     scope.launch {
                                         val projectDir = File(context.filesDir, "nodejs_projects/$pid")
                                         if (projectDir.exists()) {
@@ -452,7 +316,7 @@ fun CreateNodeJsAppScreen(
                         },
                         enabled = canCreate && !isCreating
                     ) {
-                        Text(if (isEdit) Strings.btnSave else Strings.btnCreate)
+                        Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate)
                     }
                 }
             )
@@ -469,7 +333,7 @@ fun CreateNodeJsAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             NodeJsHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
@@ -478,7 +342,7 @@ fun CreateNodeJsAppScreen(
                 nodeEngineVersion = nodeEngineVersion
             )
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -488,39 +352,39 @@ fun CreateNodeJsAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 应用名称
+                    // app
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 横屏模式
+                    // mode
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -530,11 +394,11 @@ fun CreateNodeJsAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsSelectProjectFolder, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsSelectProjectFolder, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.njsSelectProjectDesc,
+                        text = AppStringsProvider.current().njsSelectProjectDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -554,7 +418,7 @@ fun CreateNodeJsAppScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = Strings.njsProjectDetected,
+                                        text = AppStringsProvider.current().njsProjectDetected,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = frameworkColor
                                     )
@@ -567,14 +431,14 @@ fun CreateNodeJsAppScreen(
                                 )
                                 if (detectedFramework != null) {
                                     Text(
-                                        text = "${Strings.njsFramework}: $detectedFramework",
+                                        text = "${AppStringsProvider.current().njsFramework}: $detectedFramework",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 if (detectedEntryFile != null) {
                                     Text(
-                                        text = "${Strings.njsEntryFile}: $detectedEntryFile",
+                                        text = "${AppStringsProvider.current().njsEntryFile}: $detectedEntryFile",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -591,114 +455,30 @@ fun CreateNodeJsAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.njsSelectProjectFolder)
+                        Text(AppStringsProvider.current().njsSelectProjectFolder)
                     }
                 }
             }
             
-            // ========== 示例项目 ==========
+            // ========== Sample Projects ==========
             if (selectedProjectDir == null && !isCreating) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.sampleNodeSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().sampleNodeSubtitle,
                     samples = remember { NodeSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = NodeSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
-                                selectedProjectDir = path
                                 isCreating = true
-                                creationPhase = Strings.njsProjectDetected
+                                creationPhase = AppStringsProvider.current().njsProjectDetected
                                 try {
-                                    withContext(Dispatchers.IO) {
-                                        val projectDir = File(path)
-                                        val runtime = NodeRuntime(context)
-                                        
-                                        // 检测入口文件
-                                        val detected = runtime.detectEntryFile(projectDir)
-                                        if (detected != null) {
-                                            detectedEntryFile = detected
-                                            entryFile = detected
-                                        }
-                                        
-                                        // 检测包管理器
-                                        packageManager = when {
-                                            File(projectDir, "pnpm-lock.yaml").exists() -> "pnpm"
-                                            File(projectDir, "yarn.lock").exists() -> "yarn"
-                                            else -> "npm"
-                                        }
-                                        
-                                        // 读取 package.json
-                                        val packageJson = File(projectDir, "package.json")
-                                        if (packageJson.exists()) {
-                                            try {
-                                                val content = packageJson.readText()
-                                                val gson = com.google.gson.Gson()
-                                                val json = gson.fromJson(content, com.google.gson.JsonObject::class.java)
-                                                
-                                                json.get("name")?.asString?.let { name ->
-                                                    packageName = name
-                                                }
-                                                json.get("version")?.asString?.let { packageVersion = it }
-                                                json.get("description")?.asString?.let { packageDescription = it }
-                                                
-                                                // NPM 脚本
-                                                json.getAsJsonObject("scripts")?.let { scripts ->
-                                                    val scriptMap = mutableMapOf<String, String>()
-                                                    scripts.keySet().forEach { key ->
-                                                        scriptMap[key] = scripts.get(key).asString
-                                                    }
-                                                    npmScripts = scriptMap
-                                                    selectedStartScript = when {
-                                                        "start" in scriptMap -> "start"
-                                                        "dev" in scriptMap -> "dev"
-                                                        else -> scriptMap.keys.firstOrNull()
-                                                    }
-                                                }
-                                                
-                                                // 依赖
-                                                val deps = json.getAsJsonObject("dependencies")
-                                                val allDeps = mutableSetOf<String>()
-                                                deps?.let { d ->
-                                                    val depMap = mutableMapOf<String, String>()
-                                                    d.keySet().forEach { key -> depMap[key] = d.get(key).asString }
-                                                    dependencies = depMap
-                                                    allDeps.addAll(d.keySet())
-                                                }
-                                                
-                                                // 检测框架
-                                                detectedFramework = when {
-                                                    "express" in allDeps -> "Express"
-                                                    "fastify" in allDeps -> "Fastify"
-                                                    "koa" in allDeps -> "Koa"
-                                                    else -> null
-                                                }
-                                                
-                                                buildMode = NodeJsBuildMode.API_BACKEND
-                                            } catch (e: Exception) { android.util.Log.w("CreateNodeJsApp", "Failed to parse package.json", e) }
-                                        }
-                                        
-                                        appName = sample.name
-                                        
-                                        // 检查 Node.js 依赖
-                                        if (!NodeDependencyManager.isNodeReady(context)) {
-                                            showDownloadDialog = true
-                                            val success = NodeDependencyManager.downloadNodeRuntime(context)
-                                            showDownloadDialog = false
-                                            if (!success) {
-                                                errorMessage = Strings.njsDownloadFailed
-                                                isCreating = false
-                                                return@withContext
-                                            }
-                                        }
-                                        
-                                        // 复制项目文件
-                                        creationPhase = Strings.copyingProjectFiles
-                                        val newProjectId = java.util.UUID.randomUUID().toString()
-                                        runtime.createProject(newProjectId, projectDir)
-                                        projectId = newProjectId
-                                        creationPhase = Strings.njsProjectReady
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
+                                    val imported = projectImporter.importProject(File(path)) { downloading ->
+                                        showDownloadDialog = downloading
                                     }
+                                    applyImportAnalysis(imported, appNameOverride = sample.name)
+                                    creationPhase = AppStringsProvider.current().njsProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -710,10 +490,10 @@ fun CreateNodeJsAppScreen(
                 )
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. 项目信息摘要 ==========
+                // ========== 5. Project Summary ==========
                 if (packageName != null) {
                     NodeJsProjectInfoCard(
                         packageName = packageName!!,
@@ -728,7 +508,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 6. NPM 脚本面板 ==========
+                // ========== 6. NPM Scripts Panel ==========
                 if (npmScripts.isNotEmpty()) {
                     NodeJsScriptsCard(
                         scripts = npmScripts,
@@ -739,7 +519,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 7. 构建模式 ==========
+                // ========== 7. Build Mode ==========
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -749,14 +529,14 @@ fun CreateNodeJsAppScreen(
                                 contentAlignment = Alignment.Center
                             ) { Icon(Icons.Outlined.Build, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(Strings.njsBuildMode, style = MaterialTheme.typography.titleMedium)
+                            Text(AppStringsProvider.current().njsBuildMode, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         listOf(
-                            Triple(NodeJsBuildMode.STATIC, Strings.njsModeStatic, Strings.njsModeStaticDesc),
-                            Triple(NodeJsBuildMode.API_BACKEND, Strings.njsModeBackend, Strings.njsModeBackendDesc),
-                            Triple(NodeJsBuildMode.FULLSTACK, Strings.njsModeFullstack, Strings.njsModeFullstackDesc)
+                            Triple(NodeJsBuildMode.STATIC, AppStringsProvider.current().njsModeStatic, AppStringsProvider.current().njsModeStaticDesc),
+                            Triple(NodeJsBuildMode.API_BACKEND, AppStringsProvider.current().njsModeBackend, AppStringsProvider.current().njsModeBackendDesc),
+                            Triple(NodeJsBuildMode.FULLSTACK, AppStringsProvider.current().njsModeFullstack, AppStringsProvider.current().njsModeFullstackDesc)
                         ).forEach { (mode, label, desc) ->
                             Surface(
                                 modifier = Modifier
@@ -792,14 +572,14 @@ fun CreateNodeJsAppScreen(
                             }
                         }
                         
-                        // 入口文件（非静态模式）
+                        // Entry file (non-static mode)
                         if (buildMode != NodeJsBuildMode.STATIC) {
                             Spacer(modifier = Modifier.height(12.dp))
                             PremiumTextField(
                                 value = entryFile,
                                 onValueChange = { entryFile = it },
-                                label = { Text(Strings.njsEntryFile) },
-                                placeholder = { Text(Strings.njsEntryFileHint) },
+                                label = { Text(AppStringsProvider.current().njsEntryFile) },
+                                placeholder = { Text(AppStringsProvider.current().njsEntryFileHint) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 trailingIcon = {
@@ -823,7 +603,7 @@ fun CreateNodeJsAppScreen(
                     }
                 }
                 
-                // ========== 7.5 TypeScript 预编译（Linux 环境） ==========
+                // ========== 7.5 TypeScript Precompile (Linux) ==========
                 if (hasTypeScript && esbuildAvailable) {
                     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -834,7 +614,7 @@ fun CreateNodeJsAppScreen(
                                     contentAlignment = Alignment.Center
                                 ) { Icon(Icons.Outlined.Speed, null, tint = Color(0xFF3178C6), modifier = Modifier.size(22.dp)) }
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text(Strings.tsPreCompile, style = MaterialTheme.typography.titleMedium)
+                                Text(AppStringsProvider.current().tsPreCompile, style = MaterialTheme.typography.titleMedium)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
@@ -858,7 +638,7 @@ fun CreateNodeJsAppScreen(
                             ) {
                                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                     Text(
-                                        text = Strings.tsPreCompileHint,
+                                        text = AppStringsProvider.current().tsPreCompileHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -872,7 +652,7 @@ fun CreateNodeJsAppScreen(
                     }
                 }
                 
-                // ========== 8. 端口配置 ==========
+                // ========== 8. Port Settings ==========
                 if (buildMode != NodeJsBuildMode.STATIC) {
                     NodeJsPortCard(
                         detectedPort = detectedPort,
@@ -882,7 +662,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 9. 依赖可视化 ==========
+                // ========== 9. Dependency View ==========
                 if (dependencies.isNotEmpty() || devDependencies.isNotEmpty()) {
                     NodeJsDependenciesCard(
                         dependencies = dependencies,
@@ -895,7 +675,7 @@ fun CreateNodeJsAppScreen(
                     )
                 }
                 
-                // ========== 10. 环境变量 ==========
+                // ========== 10. Environment Variables ==========
                 if (buildMode != NodeJsBuildMode.STATIC) {
                     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -906,7 +686,7 @@ fun CreateNodeJsAppScreen(
                                     contentAlignment = Alignment.Center
                                 ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text(Strings.njsEnvVars, style = MaterialTheme.typography.titleMedium)
+                                Text(AppStringsProvider.current().njsEnvVars, style = MaterialTheme.typography.titleMedium)
                                 if (envVars.isNotEmpty()) {
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
@@ -925,7 +705,7 @@ fun CreateNodeJsAppScreen(
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // 已有环境变量列表
+                            // Existing environment variables
                             envVars.forEach { (key, value) ->
                                 Surface(
                                     modifier = Modifier
@@ -969,7 +749,7 @@ fun CreateNodeJsAppScreen(
                                 }
                             }
                             
-                            // 添加新环境变量
+                            // Add new environment variable
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1002,14 +782,14 @@ fun CreateNodeJsAppScreen(
                                         }
                                     }
                                 ) {
-                                    Icon(Icons.Default.Add, Strings.njsAddEnvVar)
+                                    Icon(Icons.Default.Add, AppStringsProvider.current().njsAddEnvVar)
                                 }
                             }
                         }
                     }
                 }
                 
-                // ========== 11. 框架特定提示 ==========
+                // ========== 11. Framework-specific Tips ==========
                 if (detectedFramework != null) {
                     NodeJsFrameworkTipsCard(
                         framework = detectedFramework!!,
@@ -1018,13 +798,13 @@ fun CreateNodeJsAppScreen(
                 }
             }
             
-            // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
+            // Status message
+            if (screenState.isBusy) {
+                RuntimeLoadingCard(screenState.phase)
             }
             
-            // 错误提示
-            errorMessage?.let { error ->
+            // Error message
+            screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             
@@ -1032,16 +812,16 @@ fun CreateNodeJsAppScreen(
         }
     }
     
-    // Node.js 下载对话框
+    // Node.js download dialog
     if (showDownloadDialog) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text(Strings.njsDownloadDeps) },
+            title = { Text(AppStringsProvider.current().njsDownloadDeps) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     when (val state = downloadState) {
                         is NodeDependencyManager.DownloadState.Downloading -> {
-                            Text(Strings.njsDownloading)
+                            Text(AppStringsProvider.current().njsDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(
                                 progress = { state.progress },
@@ -1064,13 +844,13 @@ fun CreateNodeJsAppScreen(
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                         is NodeDependencyManager.DownloadState.Complete -> {
-                            Text(Strings.njsDownloadComplete)
+                            Text(AppStringsProvider.current().njsDownloadComplete)
                         }
                         is NodeDependencyManager.DownloadState.Error -> {
                             Text(text = state.message, color = MaterialTheme.colorScheme.error)
                         }
                         else -> {
-                            Text(Strings.njsDownloading)
+                            Text(AppStringsProvider.current().njsDownloading)
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -1083,10 +863,10 @@ fun CreateNodeJsAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * Node.js 框架品牌化 Hero 区域
+ * Node. js Hero area
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1126,20 +906,20 @@ private fun NodeJsHeroSection(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
-                        text = if (detectedFramework != null) "$detectedFramework ${Strings.njsHeroTitle}"
-                        else Strings.njsHeroTitle,
+                        text = if (detectedFramework != null) "$detectedFramework ${AppStringsProvider.current().njsHeroTitle}"
+                        else AppStringsProvider.current().njsHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.njsHeroDesc,
+                        text = AppStringsProvider.current().njsHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // Node 版本标签
+                        // Node versionlabel
                         nodeEngineVersion?.let { ver ->
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -1154,7 +934,7 @@ private fun NodeJsHeroSection(
                                 )
                             }
                         }
-                        // TypeScript 标签
+                        // TypeScript label
                         if (hasTypeScript) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -1169,7 +949,7 @@ private fun NodeJsHeroSection(
                                 )
                             }
                         }
-                        // 包管理器标签
+                        // managerlabel
                         val pmColor = when (packageManager) {
                             "yarn" -> Color(0xFF2C8EBB)
                             "pnpm" -> Color(0xFFF69220)
@@ -1196,7 +976,7 @@ private fun NodeJsHeroSection(
 }
 
 /**
- * 项目信息摘要卡片
+ * item card
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1220,7 +1000,7 @@ private fun NodeJsProjectInfoCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Info, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsProjectInfo, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsProjectInfo, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1230,7 +1010,7 @@ private fun NodeJsProjectInfoCard(
                 color = frameworkColor.copy(alpha = 0.06f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    // 项目名 @ 版本
+                    // item @ version
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1258,7 +1038,7 @@ private fun NodeJsProjectInfoCard(
                         }
                     }
                     
-                    // 描述
+                    // Note
                     packageDescription?.let { desc ->
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
@@ -1274,22 +1054,22 @@ private fun NodeJsProjectInfoCard(
                     HorizontalDivider(color = frameworkColor.copy(alpha = 0.1f))
                     Spacer(modifier = Modifier.height(10.dp))
                     
-                    // 统计标签行
+                    // label
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // 依赖数
+                        // Note
                         NjsInfoChip(
                             icon = Icons.Outlined.Inventory2,
-                            label = "${Strings.njsDependencies}: $depCount",
+                            label = "${AppStringsProvider.current().njsDependencies}: $depCount",
                             color = frameworkColor
                         )
-                        // 开发依赖数
+                        // Note
                         if (devDepCount > 0) {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Build,
-                                label = "${Strings.njsDevDependencies}: $devDepCount",
+                                label = "${AppStringsProvider.current().njsDevDependencies}: $devDepCount",
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                         }
@@ -1301,17 +1081,17 @@ private fun NodeJsProjectInfoCard(
                                 color = Color(0xFF3178C6)
                             )
                         }
-                        // 包管理器
+                        // manager
                         NjsInfoChip(
                             icon = Icons.Outlined.Archive,
-                            label = "${Strings.njsPackageManager}: $packageManager",
+                            label = "${AppStringsProvider.current().njsPackageManager}: $packageManager",
                             color = MaterialTheme.colorScheme.secondary
                         )
-                        // 检测到端口
+                        // Note
                         detectedPort?.let {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Lan,
-                                label = "${Strings.njsDetectedPort}: $it",
+                                label = "${AppStringsProvider.current().njsDetectedPort}: $it",
                                 color = Color(0xFFFF6B35)
                             )
                         }
@@ -1323,7 +1103,7 @@ private fun NodeJsProjectInfoCard(
 }
 
 /**
- * 信息标签组件
+ * label
  */
 @Composable
 private fun NjsInfoChip(
@@ -1352,7 +1132,7 @@ private fun NjsInfoChip(
 }
 
 /**
- * NPM 脚本面板
+ * NPM panel
  */
 @Composable
 private fun NodeJsScriptsCard(
@@ -1371,7 +1151,7 @@ private fun NodeJsScriptsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Terminal, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsScripts, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsScripts, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                     shape = RoundedCornerShape(10.dp),
@@ -1388,7 +1168,7 @@ private fun NodeJsScriptsCard(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = Strings.njsStartupScript,
+                text = AppStringsProvider.current().njsStartupScript,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1424,7 +1204,7 @@ private fun NodeJsScriptsCard(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) frameworkColor else MaterialTheme.colorScheme.onSurface
                                 )
-                                // 为常用脚本加上推荐标签
+                                // label
                                 if (name == "start" || name == "dev") {
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Surface(
@@ -1457,7 +1237,7 @@ private fun NodeJsScriptsCard(
 }
 
 /**
- * 端口配置卡片
+ * configcard
  */
 @Composable
 private fun NodeJsPortCard(
@@ -1475,11 +1255,11 @@ private fun NodeJsPortCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Lan, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsDetectedPort, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsDetectedPort, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 检测到的端口
+            // Note
             if (detectedPort != null) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -1496,7 +1276,7 @@ private fun NodeJsPortCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${Strings.njsDetectedPort}: ",
+                            text = "${AppStringsProvider.current().njsDetectedPort}: ",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1512,7 +1292,7 @@ private fun NodeJsPortCard(
                 Spacer(modifier = Modifier.height(10.dp))
             }
             
-            // 自定义端口
+            // Note
             PremiumTextField(
                 value = customPort,
                 onValueChange = { newValue ->
@@ -1520,14 +1300,14 @@ private fun NodeJsPortCard(
                         onCustomPortChange(newValue)
                     }
                 },
-                label = { Text(Strings.njsPortOverride) },
+                label = { Text(AppStringsProvider.current().njsPortOverride) },
                 placeholder = { Text(detectedPort?.toString() ?: "3000") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 supportingText = {
                     if (customPort.isBlank() && detectedPort != null) {
                         Text(
-                            "${Strings.njsDetectedPort}: $detectedPort",
+                            "${AppStringsProvider.current().njsDetectedPort}: $detectedPort",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -1538,7 +1318,7 @@ private fun NodeJsPortCard(
 }
 
 /**
- * 依赖可视化卡片
+ * card
  */
 @Composable
 private fun NodeJsDependenciesCard(
@@ -1559,11 +1339,11 @@ private fun NodeJsDependenciesCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Inventory2, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.njsDependencies, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().njsDependencies, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 生产依赖
+            // Note
             if (dependencies.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -1620,7 +1400,7 @@ private fun NodeJsDependenciesCard(
                 if (dependencies.size > 5) {
                     TextButton(onClick = onToggleDeps, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            if (showAllDeps) Strings.collapse else "${Strings.expandAll} (${dependencies.size})",
+                            if (showAllDeps) AppStringsProvider.current().collapse else "${AppStringsProvider.current().expandAll} (${dependencies.size})",
                             style = MaterialTheme.typography.labelSmall,
                             color = frameworkColor
                         )
@@ -1628,7 +1408,7 @@ private fun NodeJsDependenciesCard(
                 }
             }
             
-            // 开发依赖
+            // Note
             if (devDependencies.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -1690,7 +1470,7 @@ private fun NodeJsDependenciesCard(
                 if (devDependencies.size > 3) {
                     TextButton(onClick = onToggleDevDeps, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            if (showAllDevDeps) Strings.collapse else "${Strings.expandAll} (${devDependencies.size})",
+                            if (showAllDevDeps) AppStringsProvider.current().collapse else "${AppStringsProvider.current().expandAll} (${devDependencies.size})",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -1702,7 +1482,7 @@ private fun NodeJsDependenciesCard(
 }
 
 /**
- * 框架特定提示卡片
+ * hintcard
  */
 @Composable
 private fun NodeJsFrameworkTipsCard(

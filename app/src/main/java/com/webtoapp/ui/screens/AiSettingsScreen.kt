@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
@@ -32,7 +33,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.window.Dialog
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import kotlinx.coroutines.launch
@@ -40,7 +41,7 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
 /**
- * AI 设置界面
+ * AI settings
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +53,7 @@ fun AiSettingsScreen(
     val configManager = remember { AiConfigManager(context) }
     val apiClient = remember { AiApiClient(context) }
     
-    // 状态
+    // state
     val apiKeys by configManager.apiKeysFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val savedModels by configManager.savedModelsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     
@@ -68,10 +69,10 @@ fun AiSettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.aiSettings) },
+                title = { Text(AppStringsProvider.current().aiSettings) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -91,7 +92,7 @@ fun AiSettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // API Keys 区域
+            // API Keys area
             item {
                 ApiKeysSection(
                     apiKeys = apiKeys,
@@ -119,14 +120,14 @@ fun AiSettingsScreen(
                 )
             }
             
-            // Saved的模型区域
+            // Saved area
             item {
                 SavedModelsSection(
                     models = savedModels,
                     apiKeys = apiKeys,
                     onAddClick = { 
                         if (apiKeys.isNotEmpty()) {
-                            selectedApiKey = null  // 让用户在对话框中选择
+                            selectedApiKey = null  // user dialog select
                             showAddModelDialog = true
                         }
                     },
@@ -144,7 +145,7 @@ fun AiSettingsScreen(
         }
     }
     
-    // 添加 API Key 对话框
+    // API Key dialog
     if (showAddApiKeyDialog) {
         AddApiKeyDialog(
             onDismiss = { showAddApiKeyDialog = false },
@@ -154,7 +155,7 @@ fun AiSettingsScreen(
                         showAddApiKeyDialog = false
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -166,7 +167,7 @@ fun AiSettingsScreen(
         )
     }
     
-    // 编辑 API Key 对话框
+    // edit API Key dialog
     editingApiKey?.let { key ->
         AddApiKeyDialog(
             initialConfig = key,
@@ -177,7 +178,7 @@ fun AiSettingsScreen(
                         editingApiKey = null
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -189,7 +190,7 @@ fun AiSettingsScreen(
         )
     }
     
-    // 添加模型对话框
+    // dialog
     if (showAddModelDialog && apiKeys.isNotEmpty()) {
         AddModelDialog(
             apiKeys = apiKeys,
@@ -208,7 +209,7 @@ fun AiSettingsScreen(
                         showAddModelDialog = false
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -217,7 +218,7 @@ fun AiSettingsScreen(
         )
     }
     
-    // 编辑模型对话框
+    // edit dialog
     editingModel?.let { model ->
         EditModelDialog(
             model = model,
@@ -228,7 +229,7 @@ fun AiSettingsScreen(
                         editingModel = null
                     } else {
                         snackbarHostState.showSnackbar(
-                            message = Strings.saveFailed,
+                            message = AppStringsProvider.current().saveFailed,
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -240,7 +241,7 @@ fun AiSettingsScreen(
 }
 
 /**
- * API Keys 区域
+ * API Keys area
  */
 @Composable
 private fun ApiKeysSection(
@@ -257,15 +258,15 @@ private fun ApiKeysSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(Strings.apiKeys, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().apiKeys, style = MaterialTheme.typography.titleMedium)
                 IconButton(onClick = onAddClick) {
-                    Icon(Icons.Default.Add, Strings.add)
+                    Icon(Icons.Default.Add, AppStringsProvider.current().add)
                 }
             }
             
             if (apiKeys.isEmpty()) {
                 Text(
-                    Strings.noApiKeysHint,
+                    AppStringsProvider.current().noApiKeysHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -284,7 +285,7 @@ private fun ApiKeysSection(
 }
 
 /**
- * API Key 项
+ * API Key
  */
 @Composable
 private fun ApiKeyItem(
@@ -332,32 +333,32 @@ private fun ApiKeyItem(
                 }
             }
             
-            // 测试按钮
+            // button
             TextButton(onClick = {
                 scope.launch {
-                    testResult = Strings.testing
+                    testResult = AppStringsProvider.current().testing
                     val result = apiClient.testConnection(config)
-                    testResult = if (result.isSuccess) Strings.connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
+                    testResult = if (result.isSuccess) AppStringsProvider.current().connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
                 }
             }) {
-                Text(Strings.test)
+                Text(AppStringsProvider.current().test)
             }
             
             Box {
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Default.MoreVert, Strings.more)
+                    Icon(Icons.Default.MoreVert, AppStringsProvider.current().more)
                 }
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(Strings.edit) },
+                        text = { Text(AppStringsProvider.current().edit) },
                         onClick = { showMenu = false; onEdit() },
                         leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                     )
                     DropdownMenuItem(
-                        text = { Text(Strings.btnDelete) },
+                        text = { Text(AppStringsProvider.current().btnDelete) },
                         onClick = { showMenu = false; onDelete() },
                         leadingIcon = { Icon(Icons.Outlined.Delete, null) }
                     )
@@ -368,7 +369,7 @@ private fun ApiKeyItem(
 }
 
 /**
- * 已保存的模型区域
+ * save area
  */
 @Composable
 private fun SavedModelsSection(
@@ -386,17 +387,17 @@ private fun SavedModelsSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(Strings.savedModels, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().savedModels, style = MaterialTheme.typography.titleMedium)
                 IconButton(
                     onClick = onAddClick,
                     enabled = apiKeys.isNotEmpty()
                 ) {
-                    Icon(Icons.Default.Add, Strings.add)
+                    Icon(Icons.Default.Add, AppStringsProvider.current().add)
                 }
             }
             
             Text(
-                Strings.configModelCapabilities,
+                AppStringsProvider.current().configModelCapabilities,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -406,19 +407,19 @@ private fun SavedModelsSection(
             if (models.isEmpty()) {
                 if (apiKeys.isEmpty()) {
                     Text(
-                        Strings.pleaseAddApiKeyFirst,
+                        AppStringsProvider.current().pleaseAddApiKeyFirst,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Text(
-                        Strings.noSavedModelsHint,
+                        AppStringsProvider.current().noSavedModelsHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
-                // 创建 API Key ID 到名称的映射
+                // create API Key ID
                 val apiKeyMap = apiKeys.associateBy { it.id }
                 
                 models.forEach { model ->
@@ -437,7 +438,7 @@ private fun SavedModelsSection(
 }
 
 /**
- * 已保存的模型项
+ * save
  */
 @Composable
 private fun SavedModelItem(
@@ -478,7 +479,7 @@ private fun SavedModelItem(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    Strings.defaultLabel,
+                                    AppStringsProvider.current().defaultLabel,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -486,7 +487,7 @@ private fun SavedModelItem(
                             }
                         }
                     }
-                    // 显示 API Key 名称和模型信息
+                    // display API Key
                     Text(
                         if (apiKeyName != null) 
                             "$apiKeyName · ${model.model.id}" 
@@ -499,26 +500,26 @@ private fun SavedModelItem(
                 
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, Strings.more)
+                        Icon(Icons.Default.MoreVert, AppStringsProvider.current().more)
                     }
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(Strings.edit) },
+                            text = { Text(AppStringsProvider.current().edit) },
                             onClick = { showMenu = false; onEdit() },
                             leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                         )
                         if (!model.isDefault) {
                             DropdownMenuItem(
-                                text = { Text(Strings.setAsDefault) },
+                                text = { Text(AppStringsProvider.current().setAsDefault) },
                                 onClick = { showMenu = false; onSetDefault() },
                                 leadingIcon = { Icon(Icons.Outlined.Star, null) }
                             )
                         }
                         DropdownMenuItem(
-                            text = { Text(Strings.btnDelete) },
+                            text = { Text(AppStringsProvider.current().btnDelete) },
                             onClick = { showMenu = false; onDelete() },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null) }
                         )
@@ -526,7 +527,7 @@ private fun SavedModelItem(
                 }
             }
             
-            // 能力标签
+            // label
             if (model.capabilities.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -546,12 +547,12 @@ private fun SavedModelItem(
                 }
             }
             
-            // Show支持的功能场景
+            // Showsupport
             val supportedFeatures = model.getSupportedFeatures()
             if (supportedFeatures.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "${Strings.availableFor}: ${supportedFeatures.joinToString("、") { it.displayName }}",
+                    "${AppStringsProvider.current().availableFor}: ${supportedFeatures.joinToString("、") { it.displayName }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -563,7 +564,7 @@ private fun SavedModelItem(
 }
 
 /**
- * 添加 API Key 对话框
+ * API Key dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -591,13 +592,13 @@ private fun AddApiKeyDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialConfig != null) Strings.editApiKey else Strings.addApiKey) },
+        title = { Text(if (initialConfig != null) AppStringsProvider.current().editApiKey else AppStringsProvider.current().addApiKey) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 供应商选择
+                // select
                 var expanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -607,11 +608,11 @@ private fun AddApiKeyDialog(
                         value = selectedProvider.displayName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(Strings.provider) },
+                        label = { Text(AppStringsProvider.current().provider) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -628,7 +629,7 @@ private fun AddApiKeyDialog(
                         )
                         categoryOrder.forEach { category ->
                             val providers = groupedProviders[category] ?: return@forEach
-                            // 分类标题
+                            // Note
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -658,7 +659,7 @@ private fun AddApiKeyDialog(
                     }
                 }
                 
-                // 供应商详情卡片
+                // card
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.small,
@@ -675,7 +676,7 @@ private fun AddApiKeyDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         
-                        // 价格信息
+                        // Note
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Outlined.Payments,
@@ -691,7 +692,7 @@ private fun AddApiKeyDialog(
                             )
                         }
                         
-                        // Get API Key 链接
+                        // Get API Key
                         if (selectedProvider.apiKeyUrl.isNotBlank()) {
                             TextButton(
                                 onClick = { uriHandler.openUri(selectedProvider.apiKeyUrl) },
@@ -699,22 +700,22 @@ private fun AddApiKeyDialog(
                                 contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
                             ) {
                                 Icon(
-                                    Icons.Outlined.OpenInNew,
+                                    Icons.AutoMirrored.Outlined.OpenInNew,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(Strings.getApiKey, style = MaterialTheme.typography.labelMedium)
+                                Text(AppStringsProvider.current().getApiKey, style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
                 }
                 
-                // API Key 输入（本地模型可选）
+                // API Key input( local optional)
                 OutlinedTextField(
                     value = apiKey,
                     onValueChange = { apiKey = it },
-                    label = { Text(if (selectedProvider.requiresApiKey) "API Key" else "API Key (${Strings.optionalLabel})") },
+                    label = { Text(if (selectedProvider.requiresApiKey) "API Key" else "API Key (${AppStringsProvider.current().optionalLabel})") },
                     singleLine = true,
                     visualTransformation = if (showApiKey) VisualTransformation.None 
                                           else PasswordVisualTransformation(),
@@ -730,17 +731,17 @@ private fun AddApiKeyDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // 别名输入（用于识别多个相同供应商的 API Key）
+                // input( for API Key)
                 OutlinedTextField(
                     value = alias,
                     onValueChange = { alias = it },
-                    label = { Text(Strings.aliasOptional) },
-                    placeholder = { Text(Strings.apiKeyAliasPlaceholder) },
+                    label = { Text(AppStringsProvider.current().aliasOptional) },
+                    placeholder = { Text(AppStringsProvider.current().apiKeyAliasPlaceholder) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // Custom Base URL（CUSTOM 和自托管供应商显示）
+                // Custom Base URL( CUSTOM display)
                 if (selectedProvider.allowCustomBaseUrl) {
                     OutlinedTextField(
                         value = customBaseUrl,
@@ -748,11 +749,11 @@ private fun AddApiKeyDialog(
                         label = { Text("Base URL") },
                         placeholder = { Text("https://api.example.com") },
                         singleLine = true,
-                        supportingText = { Text(Strings.openAiCompatibleHint) },
+                        supportingText = { Text(AppStringsProvider.current().openAiCompatibleHint) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // API 格式选择
+                    // API select
                     var formatExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = formatExpanded,
@@ -762,11 +763,11 @@ private fun AddApiKeyDialog(
                             value = selectedApiFormat.displayName,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text(Strings.apiFormat) },
+                            label = { Text(AppStringsProvider.current().apiFormat) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(formatExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         )
                         ExposedDropdownMenu(
                             expanded = formatExpanded,
@@ -784,7 +785,7 @@ private fun AddApiKeyDialog(
                         }
                     }
                     
-                    // 高级选项展开/收起
+                    // advanced expand/
                     TextButton(
                         onClick = { showAdvancedOptions = !showAdvancedOptions },
                         modifier = Modifier.fillMaxWidth()
@@ -795,36 +796,36 @@ private fun AddApiKeyDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.advancedOptions)
+                        Text(AppStringsProvider.current().advancedOptions)
                     }
                     
-                    // 高级选项：自定义端点
+                    // advanced
                     AnimatedVisibility(visible = showAdvancedOptions) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedTextField(
                                 value = customModelsEndpoint,
                                 onValueChange = { customModelsEndpoint = it },
-                                label = { Text(Strings.modelsEndpoint) },
+                                label = { Text(AppStringsProvider.current().modelsEndpoint) },
                                 placeholder = { Text("/v1/models") },
                                 singleLine = true,
-                                supportingText = { Text(Strings.modelsEndpointHint) },
+                                supportingText = { Text(AppStringsProvider.current().modelsEndpointHint) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
                             OutlinedTextField(
                                 value = customChatEndpoint,
                                 onValueChange = { customChatEndpoint = it },
-                                label = { Text(Strings.chatEndpoint) },
+                                label = { Text(AppStringsProvider.current().chatEndpoint) },
                                 placeholder = { Text("/v1/chat/completions") },
                                 singleLine = true,
-                                supportingText = { Text(Strings.chatEndpointHint) },
+                                supportingText = { Text(AppStringsProvider.current().chatEndpointHint) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                 }
                 
-                // 测试结果
+                // Note
                 testResult?.let {
                     Text(
                         it,
@@ -837,7 +838,7 @@ private fun AddApiKeyDialog(
         },
         confirmButton = {
             Row {
-                // 测试按钮
+                // button
                 TextButton(
                     onClick = {
                         val config = ApiKeyConfig(
@@ -852,9 +853,9 @@ private fun AddApiKeyDialog(
                         )
                         scope.launch {
                             isTesting = true
-                            testResult = Strings.testing
+                            testResult = AppStringsProvider.current().testing
                             val result = apiClient.testConnection(config)
-                            testResult = if (result.isSuccess) Strings.connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
+                            testResult = if (result.isSuccess) AppStringsProvider.current().connectionSuccess else "[FAIL] ${result.exceptionOrNull()?.message}"
                             isTesting = false
                         }
                     },
@@ -863,7 +864,7 @@ private fun AddApiKeyDialog(
                     if (isTesting) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
-                        Text(Strings.test)
+                        Text(AppStringsProvider.current().test)
                     }
                 }
                 
@@ -885,31 +886,31 @@ private fun AddApiKeyDialog(
                     },
                     enabled = apiKey.isNotBlank() || !selectedProvider.requiresApiKey
                 ) {
-                    Text(Strings.btnSave)
+                    Text(AppStringsProvider.current().btnSave)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
 }
 
 /**
- * 模型排序方式
+ * Note
  */
 private enum class ModelSortType(val displayName: String) {
-    NAME(Strings.sortByName),
-    CONTEXT(Strings.sortByContext),
-    PRICE_LOW(Strings.sortByPriceLow),
-    PRICE_HIGH(Strings.sortByPriceHigh)
+    NAME(AppStringsProvider.current().sortByName),
+    CONTEXT(AppStringsProvider.current().sortByContext),
+    PRICE_LOW(AppStringsProvider.current().sortByPriceLow),
+    PRICE_HIGH(AppStringsProvider.current().sortByPriceHigh)
 }
 
 /**
- * 添加模型对话框
- * 支持选择 API Key 和批量添加模型
+ * dialog
+ * supportselect API Key
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -924,16 +925,16 @@ private fun AddModelDialog(
     var selectedApiKey by remember { mutableStateOf(initialApiKey) }
     var models by remember { mutableStateOf<List<AiModel>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-    var selectedModels by remember { mutableStateOf<Set<AiModel>>(emptySet()) }  // 支持多选
+    var selectedModels by remember { mutableStateOf<Set<AiModel>>(emptySet()) }  // support
     var customModelId by remember { mutableStateOf("") }
     var alias by remember { mutableStateOf("") }
     var selectedCapabilities by remember { mutableStateOf<Set<ModelCapability>>(setOf(ModelCapability.TEXT)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var sortType by remember { mutableStateOf(ModelSortType.NAME) }
-    var isBatchMode by remember { mutableStateOf(false) }  // 批量模式
-    var searchQuery by remember { mutableStateOf("") }  // 搜索关键词
+    var isBatchMode by remember { mutableStateOf(false) }  // mode
+    var searchQuery by remember { mutableStateOf("") }  // Note
     
-    // 过滤和排序后的模型列表
+    // list
     val filteredAndSortedModels = remember(models, sortType, searchQuery) {
         val filtered = if (searchQuery.isBlank()) {
             models
@@ -952,10 +953,10 @@ private fun AddModelDialog(
         }
     }
     
-    // Load模型列表
+    // Load list
     LaunchedEffect(selectedApiKey) {
         isLoading = true
-        selectedModels = emptySet()  // 切换 API Key 时清空选择
+        selectedModels = emptySet()  // switch API Key select
         val result = apiClient.fetchModels(selectedApiKey)
         if (result.isSuccess) {
             models = result.getOrNull() ?: emptyList()
@@ -978,11 +979,11 @@ private fun AddModelDialog(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                Text(Strings.addModel, style = MaterialTheme.typography.headlineSmall)
+                Text(AppStringsProvider.current().addModel, style = MaterialTheme.typography.headlineSmall)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // API Key 选择器
+                // API Key select
                 var apiKeyExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = apiKeyExpanded,
@@ -992,11 +993,11 @@ private fun AddModelDialog(
                         value = selectedApiKey.displayName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(Strings.selectApiKey) },
+                        label = { Text(AppStringsProvider.current().selectApiKey) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(apiKeyExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = apiKeyExpanded,
@@ -1055,18 +1056,18 @@ private fun AddModelDialog(
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // 模型选择
+                        // select
                         if (models.isNotEmpty()) {
-                            // 搜索框
+                            // Note
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                placeholder = { Text(Strings.searchModels) },
+                                placeholder = { Text(AppStringsProvider.current().searchModels) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                                 trailingIcon = {
                                     if (searchQuery.isNotEmpty()) {
                                         IconButton(onClick = { searchQuery = "" }) {
-                                            Icon(Icons.Default.Clear, contentDescription = Strings.clear)
+                                            Icon(Icons.Default.Clear, contentDescription = AppStringsProvider.current().clear)
                                         }
                                     }
                                 },
@@ -1078,34 +1079,34 @@ private fun AddModelDialog(
                                 )
                             )
                             
-                            // Sort选项和批量模式切换
+                            // Sort modeswitch
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "${Strings.selectModel} (${filteredAndSortedModels.size}/${models.size})", 
+                                    "${AppStringsProvider.current().selectModel} (${filteredAndSortedModels.size}/${models.size})", 
                                     style = MaterialTheme.typography.labelMedium
                                 )
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // 批量模式切换
+                                    // modeswitch
                                     PremiumFilterChip(
                                         selected = isBatchMode,
                                         onClick = { 
                                             isBatchMode = !isBatchMode
                                             if (!isBatchMode) selectedModels = emptySet()
                                         },
-                                        label = { Text(Strings.batchSelectModels, style = MaterialTheme.typography.labelSmall) },
+                                        label = { Text(AppStringsProvider.current().batchSelectModels, style = MaterialTheme.typography.labelSmall) },
                                         modifier = Modifier.height(28.dp)
                                     )
                                 }
                             }
                             
-                            // 排序选项
+                            // Note
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 items(ModelSortType.entries.size) { index ->
                                     val type = ModelSortType.entries[index]
@@ -1118,19 +1119,19 @@ private fun AddModelDialog(
                                 }
                             }
                             
-                            // 已选模型计数（批量模式）
+                            // ( mode)
                             if (isBatchMode && selectedModels.isNotEmpty()) {
                                 Text(
-                                    Strings.selectedModelsCount.format(selectedModels.size),
+                                    AppStringsProvider.current().selectedModelsCount.format(selectedModels.size),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
                             
-                            // 无搜索结果提示
+                            // hint
                             if (filteredAndSortedModels.isEmpty() && searchQuery.isNotEmpty()) {
                                 Text(
-                                    Strings.noSearchResults,
+                                    AppStringsProvider.current().noSearchResults,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(vertical = 16.dp)
@@ -1151,7 +1152,7 @@ private fun AddModelDialog(
                                                 }
                                             } else {
                                                 selectedModels = setOf(model)
-                                                customModelId = ""  // 清空手动输入
+                                                customModelId = ""  // input
                                             }
                                         },
                                     shape = MaterialTheme.shapes.small,
@@ -1163,7 +1164,7 @@ private fun AddModelDialog(
                                         modifier = Modifier.padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // 批量模式显示复选框
+                                        // modedisplay
                                         if (isBatchMode) {
                                             Checkbox(
                                                 checked = model in selectedModels,
@@ -1202,7 +1203,7 @@ private fun AddModelDialog(
                                                         )
                                                     } else if (model.inputPrice == 0.0 && model.contextLength > 0) {
                                                         Text(
-                                                            Strings.free,
+                                                            AppStringsProvider.current().free,
                                                             style = MaterialTheme.typography.labelSmall,
                                                             color = MaterialTheme.colorScheme.primary
                                                         )
@@ -1243,35 +1244,35 @@ private fun AddModelDialog(
                             }
                         }
                         
-                        // 手动输入模型 ID（仅非批量模式）
+                        // input ID( only mode)
                         if (!isBatchMode) {
                             HorizontalDivider()
-                            Text(Strings.orManualInputModelId, style = MaterialTheme.typography.labelMedium)
+                            Text(AppStringsProvider.current().orManualInputModelId, style = MaterialTheme.typography.labelMedium)
                             OutlinedTextField(
                                 value = customModelId,
                                 onValueChange = { 
                                     customModelId = it
                                     if (it.isNotBlank()) selectedModels = emptySet()
                                 },
-                                label = { Text(Strings.modelId) },
-                                placeholder = { Text(Strings.modelIdPlaceholder) },
+                                label = { Text(AppStringsProvider.current().modelId) },
+                                placeholder = { Text(AppStringsProvider.current().modelIdPlaceholder) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
-                            // 别名
+                            // Note
                             OutlinedTextField(
                                 value = alias,
                                 onValueChange = { alias = it },
-                                label = { Text(Strings.aliasOptional) },
+                                label = { Text(AppStringsProvider.current().aliasOptional) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
-                            // 能力标签选择
-                            Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
+                            // labelselect
+                            Text(AppStringsProvider.current().capabilityTags, style = MaterialTheme.typography.labelMedium)
                             Text(
-                                Strings.selectCapabilitiesHint,
+                                AppStringsProvider.current().selectCapabilitiesHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1306,13 +1307,13 @@ private fun AddModelDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     PremiumButton(
                         onClick = {
                             val modelsToSave = if (isBatchMode && selectedModels.isNotEmpty()) {
-                                // 批量模式：为每个选中的模型创建 SavedModel
+                                // mode: in create SavedModel
                                 selectedModels.map { model ->
                                     val capabilities = model.capabilities.toSet().ifEmpty { setOf(ModelCapability.TEXT) }
                                     val defaultMappings = capabilities.associateWith { capability ->
@@ -1329,7 +1330,7 @@ private fun AddModelDialog(
                                     )
                                 }
                             } else {
-                                // 单个模式
+                                // mode
                                 val model = selectedModels.firstOrNull() ?: AiModel(
                                     id = customModelId,
                                     name = customModelId,
@@ -1358,9 +1359,9 @@ private fun AddModelDialog(
                                   (!isBatchMode && (selectedModels.isNotEmpty() || customModelId.isNotBlank()))
                     ) {
                         Text(if (isBatchMode && selectedModels.size > 1) 
-                            Strings.addSelectedModels 
+                            AppStringsProvider.current().addSelectedModels 
                         else 
-                            Strings.btnSave)
+                            AppStringsProvider.current().btnSave)
                     }
                 }
             }
@@ -1369,7 +1370,7 @@ private fun AddModelDialog(
 }
 
 /**
- * 编辑模型对话框
+ * edit dialog
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1396,7 +1397,7 @@ private fun EditModelDialog(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                Text(Strings.editModel, style = MaterialTheme.typography.headlineSmall)
+                Text(AppStringsProvider.current().editModel, style = MaterialTheme.typography.headlineSmall)
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
@@ -1418,13 +1419,13 @@ private fun EditModelDialog(
                     OutlinedTextField(
                         value = alias,
                         onValueChange = { alias = it },
-                        label = { Text(Strings.alias) },
+                        label = { Text(AppStringsProvider.current().alias) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // 能力标签选择
-                    Text(Strings.capabilityTags, style = MaterialTheme.typography.labelMedium)
+                    // labelselect
+                    Text(AppStringsProvider.current().capabilityTags, style = MaterialTheme.typography.labelMedium)
                     
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
@@ -1446,16 +1447,16 @@ private fun EditModelDialog(
                         }
                     }
                     
-                    // 功能场景映射配置
+                    // config
                     if (selectedCapabilities.isNotEmpty()) {
                         HorizontalDivider()
                         
                         Text(
-                            Strings.featureSceneConfig,
+                            AppStringsProvider.current().featureSceneConfig,
                             style = MaterialTheme.typography.labelMedium
                         )
                         Text(
-                            Strings.selectFeaturesForCapability,
+                            AppStringsProvider.current().selectFeaturesForCapability,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1486,7 +1487,7 @@ private fun EditModelDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(Strings.btnCancel)
+                        Text(AppStringsProvider.current().btnCancel)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     PremiumButton(
@@ -1498,7 +1499,7 @@ private fun EditModelDialog(
                             ))
                         }
                     ) {
-                        Text(Strings.btnSave)
+                        Text(AppStringsProvider.current().btnSave)
                     }
                 }
             }
@@ -1507,7 +1508,7 @@ private fun EditModelDialog(
 }
 
 /**
- * 能力标签对应功能场景的配置卡片
+ * label configcard
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -1537,21 +1538,21 @@ private fun CapabilityFeatureCard(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        Strings.selectedCount.format(selectedFeatures.size),
+                        AppStringsProvider.current().selectedCount.format(selectedFeatures.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Icon(
                     if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) Strings.collapse else Strings.expand
+                    contentDescription = if (isExpanded) AppStringsProvider.current().collapse else AppStringsProvider.current().expand
                 )
             }
             
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     Text(
-                        Strings.selectCapabilitiesForFeatures,
+                        AppStringsProvider.current().selectCapabilitiesForFeatures,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1588,7 +1589,7 @@ private fun CapabilityFeatureCard(
                         }
                     }
                     
-                    // 快捷操作
+                    // Note
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1597,7 +1598,7 @@ private fun CapabilityFeatureCard(
                     ) {
                         TextButton(
                             onClick = {
-                                // 恢复默认
+                                // default
                                 val defaults = AiFeature.entries.filter { 
                                     it.defaultCapabilities.contains(capability) 
                                 }.toSet()
@@ -1606,21 +1607,21 @@ private fun CapabilityFeatureCard(
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(Strings.restoreDefault, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().restoreDefault, style = MaterialTheme.typography.labelSmall)
                         }
                         TextButton(
                             onClick = { onFeaturesChanged(AiFeature.entries.toSet()) },
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(Strings.selectAll, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().selectAll, style = MaterialTheme.typography.labelSmall)
                         }
                         TextButton(
                             onClick = { onFeaturesChanged(emptySet()) },
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(Strings.clearAll, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().clearAll, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -1630,7 +1631,7 @@ private fun CapabilityFeatureCard(
 }
 
 /**
- * FlowRow 组件（用于标签布局）
+ * FlowRow( forlabel)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

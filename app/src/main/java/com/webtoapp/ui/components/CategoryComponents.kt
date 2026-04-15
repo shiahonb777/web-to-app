@@ -17,12 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 
 /**
- * 分类标签栏
+ * label
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -44,12 +44,12 @@ fun CategoryTabRow(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // "全部" 标签
+        // "all" label
         item {
             PremiumFilterChip(
                 selected = selectedCategoryId == null,
                 onClick = { onCategorySelected(null) },
-                label = { Text(Strings.allApps) },
+                label = { Text(AppStringsProvider.current().allApps) },
                 leadingIcon = {
                     if (selectedCategoryId == null) {
                         Icon(
@@ -62,12 +62,12 @@ fun CategoryTabRow(
             )
         }
         
-        // "未分类" 标签
+        // " " label
         item {
             PremiumFilterChip(
                 selected = selectedCategoryId == -1L,
                 onClick = { onCategorySelected(-1L) },
-                label = { Text(Strings.uncategorized) },
+                label = { Text(AppStringsProvider.current().uncategorized) },
                 leadingIcon = {
                     if (selectedCategoryId == -1L) {
                         Icon(
@@ -80,7 +80,7 @@ fun CategoryTabRow(
             )
         }
         
-        // User分类（支持长按弹出重命名/删除菜单）
+        // User( supportlong- press /delete)
         items(categories, key = { it.id }) { category ->
             Box {
                 PremiumFilterChip(
@@ -103,7 +103,7 @@ fun CategoryTabRow(
                         }
                     }
                 )
-                // 透明覆盖层 - 处理点击和长按（FilterChip 内部会拦截事件，导致 combinedClickable 长按失效）
+                // handle long- press( FilterChip intercept, combinedClickable long- press)
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -114,13 +114,13 @@ fun CategoryTabRow(
                         )
                 )
                 
-                // 长按菜单：重命名 / 删除
+                // long- press: / delete
                 DropdownMenu(
                     expanded = showCategoryMenu == category,
                     onDismissRequest = { showCategoryMenu = null }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(Strings.editCategory) },
+                        text = { Text(AppStringsProvider.current().editCategory) },
                         onClick = {
                             showCategoryMenu = null
                             onEditCategory(category)
@@ -128,7 +128,7 @@ fun CategoryTabRow(
                         leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                     )
                     DropdownMenuItem(
-                        text = { Text(Strings.deleteCategory) },
+                        text = { Text(AppStringsProvider.current().deleteCategory) },
                         onClick = {
                             showCategoryMenu = null
                             showDeleteConfirm = category
@@ -145,11 +145,11 @@ fun CategoryTabRow(
             }
         }
         
-        // 添加分类按钮
+        // button
         item {
             AssistChip(
                 onClick = onAddCategory,
-                label = { Text(Strings.addCategory) },
+                label = { Text(AppStringsProvider.current().addCategory) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Add,
@@ -161,12 +161,12 @@ fun CategoryTabRow(
         }
     }
     
-    // Delete确认对话框
+    // Delete dialog
     showDeleteConfirm?.let { category ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
-            title = { Text(Strings.deleteCategory) },
-            text = { Text(Strings.deleteCategoryConfirm) },
+            title = { Text(AppStringsProvider.current().deleteCategory) },
+            text = { Text(AppStringsProvider.current().deleteCategoryConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -177,12 +177,12 @@ fun CategoryTabRow(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.btnDelete)
+                    Text(AppStringsProvider.current().btnDelete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = null }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -190,7 +190,7 @@ fun CategoryTabRow(
 }
 
 /**
- * 分类编辑对话框
+ * editdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -203,12 +203,12 @@ fun CategoryEditorDialog(
     var icon by remember(category) { mutableStateOf(category?.icon ?: "folder") }
     var selectedColor by remember(category) { 
         val hexColor = category?.color ?: "#6200EE"
-        // 将解析的颜色转换为无符号 Long，确保与预设颜色一致
+        // map color Long, ensurewith color
         val parsedColor = android.graphics.Color.parseColor(hexColor)
         mutableLongStateOf((parsedColor.toLong() and 0xFFFFFFFFL) or 0xFF000000L)
     }
     
-    // 预设颜色
+    // color
     val presetColors = listOf(
         0xFF6200EE, 0xFF3700B3, 0xFF03DAC6, 0xFF018786,
         0xFFBB86FC, 0xFF6200EA, 0xFFFF6D00, 0xFFFFAB00,
@@ -216,7 +216,7 @@ fun CategoryEditorDialog(
         0xFF2979FF, 0xFF304FFE, 0xFFFF4081, 0xFFC51162
     )
     
-    // 预设图标
+    // icon
     val presetIcons = listOf(
         "folder", "folder_open", "phone_android", "computer", "gaming", "music_note", "movie", "menu_book",
         "newspaper", "work", "shopping_bag", "heart", "star", "fire", "lightbulb", "auto_awesome",
@@ -227,7 +227,7 @@ fun CategoryEditorDialog(
         onDismissRequest = onDismiss,
         title = { 
             Text(
-                if (category == null) Strings.addCategory else Strings.editCategory
+                if (category == null) AppStringsProvider.current().addCategory else AppStringsProvider.current().editCategory
             ) 
         },
         text = {
@@ -235,18 +235,18 @@ fun CategoryEditorDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Name输入
+                // Nameinput
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(Strings.categoryName) },
-                    placeholder = { Text(Strings.categoryNamePlaceholder) },
+                    label = { Text(AppStringsProvider.current().categoryName) },
+                    placeholder = { Text(AppStringsProvider.current().categoryNamePlaceholder) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // Icon选择
-                Text(Strings.categoryIcon, style = MaterialTheme.typography.labelMedium)
+                // Iconselect
+                Text(AppStringsProvider.current().categoryIcon, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetIcons.chunked(8).forEach { rowIcons ->
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -279,8 +279,8 @@ fun CategoryEditorDialog(
                     }
                 }
                 
-                // Color选择
-                Text(Strings.categoryColor, style = MaterialTheme.typography.labelMedium)
+                // Colorselect
+                Text(AppStringsProvider.current().categoryColor, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetColors.chunked(8).forEach { rowColors ->
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -320,19 +320,19 @@ fun CategoryEditorDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
 }
 
 /**
- * Move to category对话框
+ * Move to categorydialog
  */
 @Composable
 fun MoveToCategoryDialog(
@@ -343,7 +343,7 @@ fun MoveToCategoryDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.moveToCategory) },
+        title = { Text(AppStringsProvider.current().moveToCategory) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -357,7 +357,7 @@ fun MoveToCategoryDialog(
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
-                // "未分类" 选项
+                // Note
                 Surface(
                     shape = MaterialTheme.shapes.small,
                     color = if (app.categoryId == null) 
@@ -379,7 +379,7 @@ fun MoveToCategoryDialog(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.width(12.dp))
-                        Text(Strings.uncategorized)
+                        Text(AppStringsProvider.current().uncategorized)
                         Spacer(Modifier.weight(weight = 1f, fill = true))
                         if (app.categoryId == null) {
                             Icon(
@@ -392,7 +392,7 @@ fun MoveToCategoryDialog(
                     }
                 }
                 
-                // User分类列表
+                // User list
                 categories.forEach { category ->
                     Surface(
                         shape = MaterialTheme.shapes.small,
@@ -428,7 +428,7 @@ fun MoveToCategoryDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

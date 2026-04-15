@@ -1,6 +1,5 @@
 package com.webtoapp.core.webview
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.ConsoleMessage
@@ -8,17 +7,14 @@ import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.data.model.NewWindowBehavior
 import com.webtoapp.data.model.WebViewConfig
 
 internal class ManagedWebChromeClient(
-    private val context: Context,
     private val config: WebViewConfig,
     private val callbacks: WebViewCallbacks,
-    private val normalizeHttpUrlForSecurity: (String) -> String
+    private val specialUrlHandler: SpecialUrlHandler
 ) : WebChromeClient() {
     override fun onProgressChanged(view: WebView?, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
@@ -90,64 +86,13 @@ internal class ManagedWebChromeClient(
         resultMsg: android.os.Message?
     ): Boolean {
         if (view == null) return false
-
-        val href = view.hitTestResult.extra
-        AppLogger.d("WebViewManager", "onCreateWindow: href=$href, behavior=${config.newWindowBehavior}")
-
-        val originalWebView = view
-        return when (config.newWindowBehavior) {
-            NewWindowBehavior.SAME_WINDOW -> {
-                val transport = resultMsg?.obj as? WebView.WebViewTransport
-                if (transport != null) {
-                    val tempWebView = WebView(context)
-                    tempWebView.webViewClient = object : android.webkit.WebViewClient() {
-                        override fun shouldOverrideUrlLoading(tempView: WebView?, request: WebResourceRequest?): Boolean {
-                            val url = request?.url?.toString()
-                            if (url != null) {
-                                val safeUrl = normalizeHttpUrlForSecurity(url)
-                                originalWebView.loadUrl(safeUrl)
-                                tempView?.destroy()
-                            }
-                            return true
-                        }
-                    }
-                    transport.webView = tempWebView
-                    resultMsg.sendToTarget()
-                }
-                true
-            }
-            NewWindowBehavior.EXTERNAL_BROWSER -> {
-                val transport = resultMsg?.obj as? WebView.WebViewTransport
-                if (transport != null) {
-                    val tempWebView = WebView(context)
-                    tempWebView.webViewClient = object : android.webkit.WebViewClient() {
-                        override fun shouldOverrideUrlLoading(tempView: WebView?, request: WebResourceRequest?): Boolean {
-                            val url = request?.url?.toString()
-                            if (url != null) {
-                                try {
-                                    val safeUrl = normalizeHttpUrlForSecurity(url)
-                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse(safeUrl))
-                                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    AppLogger.e("WebViewManager", "Cannot open external browser: $url", e)
-                                }
-                                tempView?.destroy()
-                            }
-                            return true
-                        }
-                    }
-                    transport.webView = tempWebView
-                    resultMsg.sendToTarget()
-                }
-                true
-            }
-            NewWindowBehavior.POPUP_WINDOW -> {
-                callbacks.onNewWindow(resultMsg)
-                true
-            }
-            NewWindowBehavior.BLOCK -> false
-        }
+        return specialUrlHandler.handleNewWindowRequest(
+            view = view,
+            resultMsg = resultMsg,
+            behavior = config.newWindowBehavior,
+            href = view.hitTestResult.extra,
+            onPopupWindow = callbacks::onNewWindow
+        )
     }
 
     override fun onCloseWindow(window: WebView?) {

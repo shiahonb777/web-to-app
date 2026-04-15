@@ -17,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -32,12 +34,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import androidx.compose.foundation.text.ClickableText
 import com.webtoapp.core.cloud.CommunityUserProfile
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -48,7 +52,7 @@ import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.CloudApiClient
 import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.PostCommentItem
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -56,8 +60,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 
 /**
- * 帖子详情页 — Premium Twitter/X Style
- * 完整功能：帖子内容、媒体展示、应用链接、交互栏（物理弹簧）、评论列表、回复评论
+ * Premium Twitter/X Style
+ * content, , app, ( spring) , list,
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -149,7 +153,7 @@ fun PostDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(AppStringsProvider.current().communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp))
@@ -226,7 +230,7 @@ fun PostDetailScreen(
                                         tint = MaterialTheme.colorScheme.primary)
                                     Spacer(Modifier.width(6.dp))
                                     Text(
-                                        Strings.communityMentionSelectUser,
+                                        AppStringsProvider.current().communityMentionSelectUser,
                                         fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -248,7 +252,7 @@ fun PostDetailScreen(
                                     }
                                 } else if (mentionResults.isEmpty() && mentionFilter.isNotBlank()) {
                                     Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                                        Text(Strings.communityNoUsersFound, fontSize = 12.sp,
+                                        Text(AppStringsProvider.current().communityNoUsersFound, fontSize = 12.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                                     }
                                 } else {
@@ -343,7 +347,7 @@ fun PostDetailScreen(
                             },
                             placeholder = {
                                 Text(
-                                    if (replyingTo != null) "${Strings.communityComment}..." else Strings.communityPostYourReply,
+                                    if (replyingTo != null) "${AppStringsProvider.current().communityComment}..." else AppStringsProvider.current().communityPostYourReply,
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                                 )
@@ -470,7 +474,7 @@ fun PostDetailScreen(
                                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
                                             ) {
                                                 Text(
-                                                    if (isFollowing) Strings.communityFollowing else Strings.communityFollow,
+                                                    if (isFollowing) AppStringsProvider.current().communityFollowing else AppStringsProvider.current().communityFollow,
                                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
                                                     fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                                     color = if (isFollowing) MaterialTheme.colorScheme.onSurface
@@ -491,12 +495,12 @@ fun PostDetailScreen(
                                                     Color(0xFF6C5CE7)
                                                 )
                                                 "tutorial" -> Triple(
-                                                    Icons.Outlined.MenuBook,
+                                                    Icons.AutoMirrored.Outlined.MenuBook,
                                                     stringResource(com.webtoapp.R.string.community_post_type_tutorial),
                                                     Color(0xFF4CAF50)
                                                 )
                                                 "question" -> Triple(
-                                                    Icons.Outlined.HelpOutline,
+                                                    Icons.AutoMirrored.Outlined.HelpOutline,
                                                     stringResource(com.webtoapp.R.string.community_post_type_question),
                                                     Color(0xFFFF9800)
                                                 )
@@ -526,7 +530,7 @@ fun PostDetailScreen(
                                                     "beginner" -> stringResource(com.webtoapp.R.string.community_difficulty_beginner) to Color(0xFF4CAF50)
                                                     "intermediate" -> stringResource(com.webtoapp.R.string.community_difficulty_intermediate) to Color(0xFFFF9800)
                                                     "advanced" -> stringResource(com.webtoapp.R.string.community_difficulty_advanced) to Color(0xFFE91E63)
-                                                    else -> p.difficulty!! to Color(0xFF9E9E9E)
+                                                    else -> p.difficulty to Color(0xFF9E9E9E)
                                                 }
                                                 Surface(shape = RoundedCornerShape(6.dp), color = diffColor.copy(alpha = 0.1f)) {
                                                     Text(diffLabel,
@@ -560,7 +564,7 @@ fun PostDetailScreen(
                                     if (p.title != null && p.postType in listOf("tutorial", "question")) {
                                         Spacer(Modifier.height(10.dp))
                                         Text(
-                                            p.title!!, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                            p.title, fontSize = 20.sp, fontWeight = FontWeight.Bold,
                                             lineHeight = 28.sp,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
@@ -612,7 +616,7 @@ fun PostDetailScreen(
                                                                 "media" -> stringResource(com.webtoapp.R.string.community_source_media)
                                                                 "frontend" -> stringResource(com.webtoapp.R.string.community_source_frontend)
                                                                 "server" -> stringResource(com.webtoapp.R.string.community_source_server)
-                                                                else -> p.sourceType!!
+                                                                else -> p.sourceType
                                                             }
                                                             Text(
                                                                 stringResource(com.webtoapp.R.string.community_source_format, sourceLabel),
@@ -820,7 +824,7 @@ fun PostDetailScreen(
                                                     Spacer(Modifier.width(10.dp))
                                                     Column(Modifier.weight(1f)) {
                                                         Text(
-                                                            appLink.appName ?: Strings.communityApplication,
+                                                            appLink.appName ?: AppStringsProvider.current().communityApplication,
                                                             fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
                                                             maxLines = 1, overflow = TextOverflow.Ellipsis
                                                         )
@@ -868,10 +872,10 @@ fun PostDetailScreen(
                                         .padding(horizontal = 16.dp, vertical = 10.dp),
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    StatPill("${p.likeCount}", Strings.communityLike)
-                                    StatPill("${p.commentCount}", Strings.communityComment)
-                                    StatPill("${p.shareCount}", Strings.communityShare)
-                                    StatPill("${p.viewCount}", Strings.communityViews)
+                                    StatPill("${p.likeCount}", AppStringsProvider.current().communityLike)
+                                    StatPill("${p.commentCount}", AppStringsProvider.current().communityComment)
+                                    StatPill("${p.shareCount}", AppStringsProvider.current().communityShare)
+                                    StatPill("${p.viewCount}", AppStringsProvider.current().communityViews)
                                     if (p.postType == "showcase" && p.hasRecipe) {
                                         StatPill(
                                             "${p.recipeImportCount}",
@@ -893,7 +897,7 @@ fun PostDetailScreen(
                                     DetailActionButton(
                                         icon = Icons.Outlined.FavoriteBorder,
                                         activeIcon = Icons.Filled.Favorite,
-                                        label = Strings.communityLike,
+                                        label = AppStringsProvider.current().communityLike,
                                         isActive = p.isLiked,
                                         activeColor = Color(0xFFE91E63),
                                         onClick = {
@@ -913,7 +917,7 @@ fun PostDetailScreen(
                                     DetailActionButton(
                                         icon = Icons.Outlined.ChatBubbleOutline,
                                         activeIcon = Icons.Outlined.ChatBubbleOutline,
-                                        label = Strings.communityComment,
+                                        label = AppStringsProvider.current().communityComment,
                                         isActive = false,
                                         activeColor = MaterialTheme.colorScheme.primary,
                                         onClick = {
@@ -926,7 +930,7 @@ fun PostDetailScreen(
                                     DetailActionButton(
                                         icon = Icons.Outlined.Repeat,
                                         activeIcon = Icons.Filled.Repeat,
-                                        label = Strings.communityShare,
+                                        label = AppStringsProvider.current().communityShare,
                                         isActive = false,
                                         activeColor = Color(0xFF4CAF50),
                                         onClick = {
@@ -960,7 +964,7 @@ fun PostDetailScreen(
                         item {
                             StaggeredItem(index = 3) {
                                 Text(
-                                    "${Strings.communityComment} ($commentTotal)",
+                                    "${AppStringsProvider.current().communityComment} ($commentTotal)",
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                                     fontWeight = FontWeight.Bold, fontSize = 15.sp
                                 )
@@ -980,10 +984,10 @@ fun PostDetailScreen(
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
                                         )
                                         Spacer(Modifier.height(8.dp))
-                                        Text(Strings.communityNoRepliesYet,
+                                        Text(AppStringsProvider.current().communityNoRepliesYet,
                                             fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                         Spacer(Modifier.height(2.dp))
-                                        Text(Strings.communityBeFirstReply, fontSize = 14.sp,
+                                        Text(AppStringsProvider.current().communityBeFirstReply, fontSize = 14.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
                                     }
                                 }
@@ -996,9 +1000,6 @@ fun PostDetailScreen(
                                     comment = comment,
                                     onUserClick = { onNavigateToUser(comment.authorId) },
                                     onReply = { replyingTo = comment },
-                                    onLike = {
-                                        // Comment like — future feature
-                                    },
                                     onMentionClick = { username ->
                                         communityViewModel.resolveUserByUsername(username) { userId ->
                                             onNavigateToUser(userId)
@@ -1021,7 +1022,7 @@ fun PostDetailScreen(
                                     } else {
                                         TextButton(onClick = { loadMoreComments() }) {
                                             Text(
-                                                Strings.communityShowMoreReplies,
+                                                AppStringsProvider.current().communityShowMoreReplies,
                                                 fontSize = 13.sp,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
@@ -1038,7 +1039,7 @@ fun PostDetailScreen(
                         Icon(Icons.Outlined.SearchOff, null, Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                         Spacer(Modifier.height(8.dp))
-                        Text(Strings.communityPostNotFound, fontSize = 15.sp,
+                        Text(AppStringsProvider.current().communityPostNotFound, fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     }
                 }
@@ -1070,7 +1071,7 @@ fun PostDetailScreen(
                                 Icon(Icons.Outlined.Edit, null, Modifier.size(22.dp),
                                     tint = MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.width(14.dp))
-                                Text(Strings.communityEditPost, fontSize = 15.sp,
+                                Text(AppStringsProvider.current().communityEditPost, fontSize = 15.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.primary)
                             }
@@ -1093,7 +1094,7 @@ fun PostDetailScreen(
                                 Icon(Icons.Outlined.Delete, null, Modifier.size(22.dp),
                                     tint = Color(0xFFE57373))
                                 Spacer(Modifier.width(14.dp))
-                                Text(Strings.communityDeletePost, fontSize = 15.sp,
+                                Text(AppStringsProvider.current().communityDeletePost, fontSize = 15.sp,
                                     fontWeight = FontWeight.Medium, color = Color(0xFFE57373))
                             }
                         }
@@ -1117,7 +1118,7 @@ fun PostDetailScreen(
                         Icon(Icons.Outlined.Flag, null, Modifier.size(22.dp),
                             tint = Color(0xFFE57373))
                         Spacer(Modifier.width(14.dp))
-                        Text(Strings.communityReportTitle, fontSize = 15.sp,
+                        Text(AppStringsProvider.current().communityReportTitle, fontSize = 15.sp,
                             fontWeight = FontWeight.Medium, color = Color(0xFFE57373))
                     }
                 }
@@ -1128,7 +1129,7 @@ fun PostDetailScreen(
                         .clickable {
                             showMoreSheet = false
                             scope.launch {
-                                snackbarHostState.showSnackbar(Strings.communityShare)
+                                snackbarHostState.showSnackbar(AppStringsProvider.current().communityShare)
                             }
                         },
                     shape = RoundedCornerShape(12.dp),
@@ -1141,7 +1142,7 @@ fun PostDetailScreen(
                         Icon(Icons.Outlined.Share, null, Modifier.size(22.dp),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                         Spacer(Modifier.width(14.dp))
-                        Text(Strings.communityShare, fontSize = 15.sp,
+                        Text(AppStringsProvider.current().communityShare, fontSize = 15.sp,
                             fontWeight = FontWeight.Medium)
                     }
                 }
@@ -1160,16 +1161,16 @@ fun PostDetailScreen(
                     showDeleteConfirm = false
                     communityViewModel.deletePost(postId, onSuccess = { onBack() })
                 }) {
-                    Text(Strings.communityConfirmDelete, color = Color(0xFFE57373))
+                    Text(AppStringsProvider.current().communityConfirmDelete, color = Color(0xFFE57373))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(Strings.communityCancel)
+                    Text(AppStringsProvider.current().communityCancel)
                 }
             },
-            title = { Text(Strings.communityDeletePost, fontWeight = FontWeight.Bold) },
-            text = { Text(Strings.communityDeletePostConfirmMsg) }
+            title = { Text(AppStringsProvider.current().communityDeletePost, fontWeight = FontWeight.Bold) },
+            text = { Text(AppStringsProvider.current().communityDeletePostConfirmMsg) }
         )
     }
 
@@ -1177,7 +1178,7 @@ fun PostDetailScreen(
     if (showEditSheet) {
         ModalBottomSheet(onDismissRequest = { showEditSheet = false }) {
             Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-                Text(Strings.communityEditPost, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(AppStringsProvider.current().communityEditPost, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = editContent,
@@ -1192,7 +1193,7 @@ fun PostDetailScreen(
                     horizontalArrangement = Arrangement.End
                 ){
                     TextButton(onClick = { showEditSheet = false }) {
-                        Text(Strings.communityCancel)
+                        Text(AppStringsProvider.current().communityCancel)
                     }
                     Spacer(Modifier.width(8.dp))
                     Button(
@@ -1204,7 +1205,7 @@ fun PostDetailScreen(
                         },
                         enabled = editContent.isNotBlank()
                     ) {
-                        Text(Strings.communitySave)
+                        Text(AppStringsProvider.current().communitySave)
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -1319,7 +1320,6 @@ private fun PostCommentRow(
     comment: PostCommentItem,
     onUserClick: () -> Unit,
     onReply: () -> Unit,
-    onLike: () -> Unit,
     onMentionClick: (String) -> Unit = {}
 ) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -1395,7 +1395,7 @@ private fun PostCommentRow(
                         Icon(Icons.Filled.SubdirectoryArrowRight, null, Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                         Spacer(Modifier.width(3.dp))
-                        Text(Strings.communityComment, fontSize = 12.sp,
+                        Text(AppStringsProvider.current().communityComment, fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                     }
                     // Like count
@@ -1456,7 +1456,7 @@ private fun PostCommentRow(
                         if (comment.replies.size > 3) {
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                Strings.communityShowMoreReplies,
+                                AppStringsProvider.current().communityShowMoreReplies,
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium,
@@ -1481,15 +1481,15 @@ private fun ReportReasonSheet(
         Column(
             Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
-            Text(Strings.communityReportWhy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(AppStringsProvider.current().communityReportWhy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(Modifier.height(16.dp))
 
             val reasons = listOf(
-                "spam" to Strings.communityReportSpam,
-                "inappropriate" to Strings.communityReportInappropriate,
-                "malicious" to Strings.communityReportMalicious,
-                "copyright" to Strings.communityReportCopyright,
-                "other" to Strings.communityReportOther,
+                "spam" to AppStringsProvider.current().communityReportSpam,
+                "inappropriate" to AppStringsProvider.current().communityReportInappropriate,
+                "malicious" to AppStringsProvider.current().communityReportMalicious,
+                "copyright" to AppStringsProvider.current().communityReportCopyright,
+                "other" to AppStringsProvider.current().communityReportOther,
             )
             reasons.forEach { (key, label) ->
                 Surface(
@@ -1604,31 +1604,32 @@ fun MentionableText(
         val regex = Regex("@(\\w{2,20})")
         var lastEnd = 0
         regex.findAll(text).forEach { match ->
-            // Append text before the match
             append(text.substring(lastEnd, match.range.first))
-            // Push annotation for clickable @mention
-            pushStringAnnotation("mention", match.groupValues[1])
-            withStyle(SpanStyle(color = mentionColor, fontWeight = FontWeight.SemiBold)) {
+            val username = match.groupValues[1]
+            withLink(
+                LinkAnnotation.Url(
+                    url = "mention://$username",
+                    styles = TextLinkStyles(
+                        style = SpanStyle(color = mentionColor, fontWeight = FontWeight.SemiBold)
+                    )
+                ) {
+                    val mentionUrl = (it as LinkAnnotation.Url).url
+                    onMentionClick(mentionUrl.removePrefix("mention://"))
+                }
+            ) {
                 append(match.value)
             }
-            pop()
             lastEnd = match.range.last + 1
         }
         if (lastEnd < text.length) append(text.substring(lastEnd))
     }
 
-    ClickableText(
+    Text(
         text = annotated,
         style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = fontSize,
             lineHeight = lineHeight,
             color = color
-        ),
-        onClick = { offset ->
-            annotated.getStringAnnotations("mention", offset, offset)
-                .firstOrNull()?.let { annotation ->
-                    onMentionClick(annotation.item)
-                }
-        }
+        )
     )
 }

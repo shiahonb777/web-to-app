@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -75,7 +75,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
-// 应用管理控制台 (Premium UI)
+// appmanagement( Premium UI)
 // ════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,7 +114,7 @@ internal fun PublishAppSheet(
     var uploadProgress by remember { mutableFloatStateOf(0f) }
     var uploadStatus by remember { mutableStateOf("") }
 
-    // ── 激活码配置 ──
+    // activation codeconfig
     var enableActivation by remember { mutableStateOf(false) }
     var enableDeviceBinding by remember { mutableStateOf(false) }
     var activationCodes by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -184,11 +184,11 @@ internal fun PublishAppSheet(
     }
 
     val categories = listOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
+        "tools" to AppStringsProvider.current().catTools, "social" to AppStringsProvider.current().catSocial, "education" to "教育",
         "entertainment" to "娱乐", "productivity" to "效率",
         "lifestyle" to "生活", "business" to "商务",
         "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "health" to "健康", "other" to AppStringsProvider.current().catOther
     )
 
     ModalBottomSheet(
@@ -231,7 +231,7 @@ internal fun PublishAppSheet(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    Strings.storePublishApp,
+                                    AppStringsProvider.current().storePublishApp,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = (-0.3).sp
@@ -246,7 +246,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 选择应用 ──
+                // selectapp
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -532,7 +532,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 基本信息 ──
+                // Note
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -545,7 +545,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // 应用名称
+                // app
                 item {
                     OutlinedTextField(
                         value = name,
@@ -559,7 +559,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // 图标
+                // icon
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Icon preview
@@ -623,7 +623,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 分类
+                // Category
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -646,7 +646,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 版本
+                // Version
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
@@ -668,7 +668,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 包名
+                // Package name
                 item {
                     OutlinedTextField(
                         value = packageName,
@@ -681,7 +681,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // ── 描述和标签 ──
+                // ── Description and tags ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -719,7 +719,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // ── 截图 (多张) ──
+                // ── Screenshots (multiple) ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -732,7 +732,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // 已添加的截图预览
+                // Added screenshot previews
                 if (screenshotUris.isNotEmpty() || screenshotUrls.isNotEmpty()) {
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -808,7 +808,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // 添加截图（从相册选择）
+                // Add screenshot (from gallery)
                 item {
                     Surface(
                         onClick = { screenshotPickerLauncher.launch("image/*") },
@@ -856,7 +856,7 @@ internal fun PublishAppSheet(
 
 
 
-                // ── 联系信息 ──
+                // ── Contact information ──
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
@@ -904,7 +904,7 @@ internal fun PublishAppSheet(
                     )
                 }
 
-                // ── 激活码配置区 ──
+                // ── Activation code settings ──
                 item {
                     EnhancedElevatedCard(
                         shape = RoundedCornerShape(16.dp),
@@ -933,7 +933,7 @@ internal fun PublishAppSheet(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
 
-                                // 设备绑定
+                                // Device binding
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -948,7 +948,7 @@ internal fun PublishAppSheet(
 
                                 HorizontalDivider()
 
-                                // 模板快速生成
+                                // Quick template generation
                                 Text("快速生成", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     listOf(
@@ -983,7 +983,7 @@ internal fun PublishAppSheet(
                                     }
                                 }
 
-                                // 自定义输入
+                                // Custom input
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1013,7 +1013,7 @@ internal fun PublishAppSheet(
                                     }
                                 }
 
-                                // 已添加的激活码列表
+                                // Added activation code list
                                 if (activationCodes.isNotEmpty()) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -1061,7 +1061,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 上传进度 ──
+                // ── Upload progress ──
                 if (isPublishing && uploadProgress > 0f) {
                     item {
                         Surface(
@@ -1126,13 +1126,13 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 关联团队 (可选) ──
+                // ── Linked team (optional) ──
                 if (myTeams.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-                            Text(Strings.teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(AppStringsProvider.current().teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
@@ -1166,10 +1166,10 @@ internal fun PublishAppSheet(
                                 value = selectedTeam?.name ?: "",
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(Strings.teamSelectTeam) },
+                                label = { Text(AppStringsProvider.current().teamSelectTeam) },
                                 placeholder = { Text("点击选择团队") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 leadingIcon = { Icon(Icons.Outlined.Groups, null, modifier = Modifier.size(20.dp)) }
                             )
@@ -1275,7 +1275,7 @@ internal fun PublishAppSheet(
                                                             it[index] = entry.copy(role = "lead")
                                                         }
                                                     },
-                                                    label = { Text(Strings.teamLead, fontSize = 11.sp) },
+                                                    label = { Text(AppStringsProvider.current().teamLead, fontSize = 11.sp) },
                                                     modifier = Modifier.height(28.dp)
                                                 )
                                                 FilterChip(
@@ -1285,7 +1285,7 @@ internal fun PublishAppSheet(
                                                             it[index] = entry.copy(role = "member")
                                                         }
                                                     },
-                                                    label = { Text(Strings.teamMemberRole, fontSize = 11.sp) },
+                                                    label = { Text(AppStringsProvider.current().teamMemberRole, fontSize = 11.sp) },
                                                     modifier = Modifier.height(28.dp)
                                                 )
                                             }
@@ -1303,7 +1303,7 @@ internal fun PublishAppSheet(
                                                         it[index] = entry.copy(points = p)
                                                     }
                                                 },
-                                                label = { Text(Strings.teamContributionPoints, fontSize = 11.sp) },
+                                                label = { Text(AppStringsProvider.current().teamContributionPoints, fontSize = 11.sp) },
                                                 modifier = Modifier.width(100.dp),
                                                 shape = RoundedCornerShape(8.dp),
                                                 singleLine = true,
@@ -1316,7 +1316,7 @@ internal fun PublishAppSheet(
                                                         it[index] = entry.copy(desc = value)
                                                     }
                                                 },
-                                                label = { Text(Strings.teamContributionDesc, fontSize = 11.sp) },
+                                                label = { Text(AppStringsProvider.current().teamContributionDesc, fontSize = 11.sp) },
                                                 modifier = Modifier.weight(1f),
                                                 shape = RoundedCornerShape(8.dp),
                                                 singleLine = true,
@@ -1331,7 +1331,7 @@ internal fun PublishAppSheet(
                     }
                 }
 
-                // ── 发布按钮 ──
+                // ── Publish button ──
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(
@@ -1342,11 +1342,11 @@ internal fun PublishAppSheet(
                                 return@Button
                             }
                             if (name.isBlank() || description.isBlank()) {
-                                scope.launch { snackbarHostState.showSnackbar(Strings.storeFillRequired) }
+                                scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().storeFillRequired) }
                                 return@Button
                             }
                             if (screenshotUrls.isEmpty() && screenshotUris.isEmpty()) {
-                                scope.launch { snackbarHostState.showSnackbar(Strings.storeAddScreenshot) }
+                                scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().storeAddScreenshot) }
                                 return@Button
                             }
                             scope.launch {
@@ -1466,20 +1466,20 @@ internal fun PublishAppSheet(
                                                 )
                                                 when (teamResult) {
                                                     is com.webtoapp.core.auth.AuthResult.Success ->
-                                                        snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队已关联")
+                                                        snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishSuccess} · 团队已关联")
                                                     is com.webtoapp.core.auth.AuthResult.Error ->
-                                                        snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队关联失败: ${teamResult.message}")
+                                                        snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishSuccess} · 团队关联失败: ${teamResult.message}")
                                                 }
                                             } else {
-                                                snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队关联需至少一位主负责人")
+                                                snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishSuccess} · 团队关联需至少一位主负责人")
                                             }
                                         } else {
-                                            snackbarHostState.showSnackbar(Strings.storePublishSuccess)
+                                            snackbarHostState.showSnackbar(AppStringsProvider.current().storePublishSuccess)
                                         }
                                         onPublished()
                                     }
                                     is com.webtoapp.core.auth.AuthResult.Error -> {
-                                        snackbarHostState.showSnackbar("${Strings.storePublishFailed}: ${result.message}")
+                                        snackbarHostState.showSnackbar("${AppStringsProvider.current().storePublishFailed}: ${result.message}")
                                     }
                                 }
                             }
@@ -1500,7 +1500,7 @@ internal fun PublishAppSheet(
                         } else {
                             Icon(Icons.Outlined.Publish, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(Strings.storePublishApp, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
+                            Text(AppStringsProvider.current().storePublishApp, fontWeight = FontWeight.Bold, letterSpacing = 0.3.sp)
                         }
                     }
                 }
@@ -1662,7 +1662,7 @@ internal fun PublishAppSheet(
             },
             confirmButton = {
                 TextButton(onClick = { showProjectPicker = false }) {
-                    Text(Strings.storeReviewCancel)
+                    Text(AppStringsProvider.current().storeReviewCancel)
                 }
             }
         )

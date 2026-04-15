@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.auth.ProStatus
 import com.webtoapp.core.auth.UserProfile
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.AuthState
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import com.webtoapp.ui.viewmodel.FormState
@@ -44,9 +44,9 @@ import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.R
 
 /**
- * 用户资料页面
+ * user
  * 
- * 展示已登录用户的资料、会员状态、使用统计、密码管理、账号注销
+ * user, state, , management,
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,14 +71,14 @@ fun ProfileScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 监听密码修改状态
+    // state
     LaunchedEffect(passwordState) {
         when (passwordState) {
             is FormState.Success -> {
                 snackbarHostState.showSnackbar((passwordState as FormState.Success).message)
                 authViewModel.resetPasswordState()
                 showChangePasswordDialog = false
-                onLogout() // 需要重新登录
+                onLogout() // Note
             }
             is FormState.Error -> {
                 snackbarHostState.showSnackbar((passwordState as FormState.Error).message)
@@ -88,7 +88,7 @@ fun ProfileScreen(
         }
     }
 
-    // 监听账号注销状态
+    // state
     LaunchedEffect(deleteAccountState) {
         when (deleteAccountState) {
             is FormState.Success -> {
@@ -105,7 +105,7 @@ fun ProfileScreen(
         }
     }
 
-    // 如果未登录，返回
+    // if, back
     val user = (authState as? AuthState.LoggedIn)?.user ?: run {
         LaunchedEffect(Unit) { onBack() }
         return
@@ -117,7 +117,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        Strings.authProfile,
+                        AppStringsProvider.current().authProfile,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -144,7 +144,7 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 头像 & 用户名
+            // & user
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -182,7 +182,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 会员标签
+            // label
             val planLabel = when (user.proPlan) {
                 "pro_monthly", "pro_quarterly", "pro_yearly" -> "Pro"
                 "pro_lifetime", "lifetime" -> "Pro ∞"
@@ -222,7 +222,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 激活码兑换入口
+            // activation code
             EnhancedElevatedCard(
                 onClick = onNavigateActivationCode,
                 modifier = Modifier.fillMaxWidth(),
@@ -245,7 +245,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = Strings.cloudActivationCode,
+                        text = AppStringsProvider.current().cloudActivationCode,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(weight = 1f, fill = true)
@@ -261,7 +261,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 使用统计
+            // Note
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -277,27 +277,27 @@ fun ProfileScreen(
                 ) {
                     StatItem(
                         value = user.appsCreated.toString(),
-                        label = Strings.authStatsAppsCreated
+                        label = AppStringsProvider.current().authStatsAppsCreated
                     )
                     StatItem(
                         value = user.apksBuilt.toString(),
-                        label = Strings.authStatsApksBuilt
+                        label = AppStringsProvider.current().authStatsApksBuilt
                     )
                     StatItem(
                         value = user.maxDevices.toString(),
-                        label = Strings.authStatsMaxDevices
+                        label = AppStringsProvider.current().authStatsMaxDevices
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 会员状态卡片
+            // statecard
             if (proStatus != null || user.isPro) {
                 ProStatusCard(proStatus, user, onNavigateSubscription)
                 Spacer(modifier = Modifier.height(16.dp))
             } else {
-                // Free 用户 — 显示升级引导
+                // Free user- display
                 EnhancedElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -322,12 +322,12 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = Strings.authProInactive,
+                                text = AppStringsProvider.current().authProInactive,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = Strings.authUpgradeDesc,
+                                text = AppStringsProvider.current().authUpgradeDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -343,7 +343,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // 功能菜单
+            // Note
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -354,15 +354,15 @@ fun ProfileScreen(
                 Column {
                     MenuItemRow(
                         icon = Icons.Outlined.Devices,
-                        title = Strings.authMenuDevices,
-                        subtitle = "${Strings.authMenuDevicesMax}: ${user.maxDevices}",
+                        title = AppStringsProvider.current().authMenuDevices,
+                        subtitle = "${AppStringsProvider.current().authMenuDevicesMax}: ${user.maxDevices}",
                         onClick = onNavigateDevices
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     MenuItemRow(
                         icon = Icons.Outlined.Groups,
-                        title = Strings.teamTitle,
-                        subtitle = if (user.isPro) "${Strings.teamMembers} · RBAC" else Strings.authMenuCloudUpgrade,
+                        title = AppStringsProvider.current().teamTitle,
+                        subtitle = if (user.isPro) "${AppStringsProvider.current().teamMembers} · RBAC" else AppStringsProvider.current().authMenuCloudUpgrade,
                         onClick = onNavigateTeams
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -375,15 +375,15 @@ fun ProfileScreen(
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     MenuItemRow(
                         icon = Icons.Outlined.Security,
-                        title = Strings.authMenuSecurity,
-                        subtitle = Strings.authMenuSecurityDesc
+                        title = AppStringsProvider.current().authMenuSecurity,
+                        subtitle = AppStringsProvider.current().authMenuSecurityDesc
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 退出登录
+            // Note
             PremiumOutlinedButton(
                 onClick = { showLogoutDialog = true },
                 modifier = Modifier
@@ -400,12 +400,12 @@ fun ProfileScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.authLogout)
+                Text(AppStringsProvider.current().authLogout)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 在所有设备上登出
+            // Note
             TextButton(
                 onClick = { showLogoutAllDialog = true },
                 modifier = Modifier.fillMaxWidth()
@@ -419,7 +419,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 注销账号（危险操作）
+            // Note
             TextButton(
                 onClick = { showDeleteAccountDialog = true },
                 colors = ButtonDefaults.textButtonColors(
@@ -441,12 +441,12 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(40.dp))
         }
 
-        // ─── 退出登录确认对话框 ───
+        // dialog
         if (showLogoutDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
-                title = { Text(Strings.authLogout) },
-                text = { Text(Strings.authLogoutConfirm) },
+                title = { Text(AppStringsProvider.current().authLogout) },
+                text = { Text(AppStringsProvider.current().authLogoutConfirm) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -458,18 +458,18 @@ fun ProfileScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text(Strings.authLogout)
+                        Text(AppStringsProvider.current().authLogout)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showLogoutDialog = false }) {
-                        Text(Strings.cancel)
+                        Text(AppStringsProvider.current().cancel)
                     }
                 }
             )
         }
 
-        // ─── 所有设备登出确认对话框 ───
+        // dialog
         if (showLogoutAllDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutAllDialog = false },
@@ -493,13 +493,13 @@ fun ProfileScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showLogoutAllDialog = false }) {
-                        Text(Strings.cancel)
+                        Text(AppStringsProvider.current().cancel)
                     }
                 }
             )
         }
 
-        // ─── 修改密码对话框 ───
+        // dialog
         if (showChangePasswordDialog) {
             ChangePasswordDialog(
                 authViewModel = authViewModel,
@@ -507,7 +507,7 @@ fun ProfileScreen(
             )
         }
 
-        // ─── 注销账号对话框 ───
+        // dialog
         if (showDeleteAccountDialog) {
             DeleteAccountDialog(
                 authViewModel = authViewModel,
@@ -517,7 +517,7 @@ fun ProfileScreen(
     }
 }
 
-// ─── 修改密码对话框 ───
+// dialog
 
 @Composable
 private fun ChangePasswordDialog(
@@ -594,13 +594,13 @@ private fun ChangePasswordDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
 }
 
-// ─── 注销账号对话框 ───
+// dialog
 
 @Composable
 private fun DeleteAccountDialog(
@@ -695,7 +695,7 @@ private fun DeleteAccountDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
+                Text(AppStringsProvider.current().cancel)
             }
         }
     )
@@ -725,7 +725,7 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
     val isUltraLifetime = user.proPlan == "ultra_lifetime"
     val isLifetime = isProLifetime || isUltraLifetime
 
-    // 根据会员层级选择不同的颜色主题
+    // select color
     val cardColor = when {
         isUltraLifetime -> Color(0xFFFFD700).copy(alpha = 0.15f)
         isUltra -> Color(0xFFFFD700).copy(alpha = 0.15f)
@@ -741,11 +741,11 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
         else -> MaterialTheme.colorScheme.outline
     }
     val statusText = when {
-        isUltraLifetime -> Strings.authUltraLifetimeActive
-        isUltra -> Strings.authUltraActive
-        isProLifetime -> Strings.authLifetimeActive
-        user.isPro -> Strings.authProActive
-        else -> Strings.authProInactive
+        isUltraLifetime -> AppStringsProvider.current().authUltraLifetimeActive
+        isUltra -> AppStringsProvider.current().authUltraActive
+        isProLifetime -> AppStringsProvider.current().authLifetimeActive
+        user.isPro -> AppStringsProvider.current().authProActive
+        else -> AppStringsProvider.current().authProInactive
     }
 
     EnhancedElevatedCard(
@@ -779,21 +779,21 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                     )
                     if (proStatus?.daysRemaining != null && !isLifetime) {
                         Text(
-                            text = "${Strings.authProRemaining}: ${proStatus.daysRemaining} ${Strings.authProDays}",
+                            text = "${AppStringsProvider.current().authProRemaining}: ${proStatus.daysRemaining} ${AppStringsProvider.current().authProDays}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (isLifetime && !isUltraLifetime) {
                         Text(
-                            text = "∞ ${Strings.authProDays}",
+                            text = "∞ ${AppStringsProvider.current().authProDays}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (isUltraLifetime) {
                         Text(
-                            text = "∞ ${Strings.authProDays}",
+                            text = "∞ ${AppStringsProvider.current().authProDays}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFFFD700).copy(alpha = 0.7f)
                         )
@@ -801,7 +801,7 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                 }
             }
 
-            // Pro 永久 → Ultra 永久 升级按钮
+            // Pro → Ultra button
             if (isProLifetime) {
                 val proLifetimePrice = 99.0
                 val ultraLifetimePrice = 199.0
@@ -814,19 +814,19 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { /* TODO: 触发升级流程 */ }
+                        .clickable { /* TODO */ }
                         .padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = Strings.authUpgradeToUltra,
+                            text = AppStringsProvider.current().authUpgradeToUltra,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFFFFD700)
                         )
                         Text(
-                            text = "${Strings.authUpgradeDesc} \$${"%,.0f".format(upgradeCost)}",
+                            text = "${AppStringsProvider.current().authUpgradeDesc} \$${"%,.0f".format(upgradeCost)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -115,7 +115,7 @@ class WebAppModelTest {
             enableIntegrityCheck = false,
             enableAntiDebug = true,
             enableAntiTamper = false,
-            encryptionLevel = ApkEncryptionConfig.EncryptionLevel.HIGH
+            encryptionLevel = com.webtoapp.data.model.webapp.config.ApkEncryptionConfig.EncryptionLevel.HIGH
         )
 
         val mapped = config.toEncryptionConfig()

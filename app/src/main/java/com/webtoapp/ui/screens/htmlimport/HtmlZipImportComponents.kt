@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.HtmlProjectOptimizer
 import com.webtoapp.core.linux.NativeNodeEngine
 import com.webtoapp.data.model.HtmlConfig
@@ -59,7 +60,7 @@ import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * ZIP 导入区域
+ * ZIP importarea
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -74,7 +75,7 @@ internal fun ZipImportSection(
     onReimport: () -> Unit
 ) {
     if (zipImporting) {
-        // 解压中
+        // Note
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -85,16 +86,16 @@ internal fun ZipImportSection(
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = Strings.zipImporting,
+                    text = AppStringsProvider.current().zipImporting,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
     } else if (zipAnalysis != null) {
-        // 分析结果展示
+        // Note
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // 标题 + 重新导入按钮
+                // + importbutton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,7 +118,7 @@ internal fun ZipImportSection(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = Strings.zipProjectAnalysis,
+                            text = AppStringsProvider.current().zipProjectAnalysis,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -128,13 +129,13 @@ internal fun ZipImportSection(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.zipReimport, style = MaterialTheme.typography.labelMedium)
+                        Text(AppStringsProvider.current().zipReimport, style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 入口文件
+                // file
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -153,7 +154,7 @@ internal fun ZipImportSection(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = Strings.zipEntryFile,
+                            text = AppStringsProvider.current().zipEntryFile,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -169,7 +170,7 @@ internal fun ZipImportSection(
                     if (zipAnalysis.htmlFiles.size > 1) {
                         Icon(
                             Icons.Outlined.SwapHoriz,
-                            contentDescription = Strings.zipChangeEntry,
+                            contentDescription = AppStringsProvider.current().zipChangeEntry,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -178,15 +179,15 @@ internal fun ZipImportSection(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 资源统计
+                // Note
                 Text(
-                    text = Strings.zipResourceStats,
+                    text = AppStringsProvider.current().zipResourceStats,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 资源类型标签
+                // typelabel
                 val stats = zipAnalysis.stats
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -209,41 +210,41 @@ internal fun ZipImportSection(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 文件总数和大小
+                // file
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = Strings.zipTotalFiles.replace("%d", zipAnalysis.totalFileCount.toString()),
+                        text = AppStringsProvider.current().zipTotalFiles.replace("%d", zipAnalysis.totalFileCount.toString()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = Strings.zipTotalSize.replace("%s", zipAnalysis.formattedTotalSize),
+                        text = AppStringsProvider.current().zipTotalSize.replace("%s", zipAnalysis.formattedTotalSize),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
-                // 查看文件列表按钮
+                // filelistbutton
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onShowFileList,
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Icon(
-                        Icons.Outlined.List,
+                        Icons.AutoMirrored.Outlined.List,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(Strings.zipFileTreeTitle, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().zipFileTreeTitle, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
         
-        // 警告信息
+        // warning
         if (zipAnalysis.warnings.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -275,19 +276,19 @@ internal fun ZipImportSection(
             }
         }
     } else {
-        // 初始状态：选择 ZIP
+        // state: select ZIP
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = Strings.selectZipFile,
+                    text = AppStringsProvider.current().selectZipFile,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = Strings.selectZipHint,
+                    text = AppStringsProvider.current().selectZipHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -304,10 +305,10 @@ internal fun ZipImportSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.selectZipFile)
+                    Text(AppStringsProvider.current().selectZipFile)
                 }
                 
-                // 错误信息
+                // error
                 if (zipError != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     EnhancedElevatedCard(
@@ -340,7 +341,7 @@ internal fun ZipImportSection(
 }
 
 /**
- * ZIP 入口文件选择对话框
+ * ZIP fileselectdialog
  */
 @Composable
 internal fun ZipEntryFileDialog(
@@ -368,7 +369,7 @@ internal fun ZipEntryFileDialog(
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.zipSelectEntryTitle)
+                Text(AppStringsProvider.current().zipSelectEntryTitle)
             }
         },
         text = {
@@ -417,14 +418,14 @@ internal fun ZipEntryFileDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.gotIt)
+                Text(AppStringsProvider.current().gotIt)
             }
         }
     )
 }
 
 /**
- * ZIP 文件列表对话框
+ * ZIP filelistdialog
  */
 @Composable
 internal fun ZipFileListDialog(
@@ -451,7 +452,7 @@ internal fun ZipFileListDialog(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    Strings.zipFileTreeTitle + " (${analysis.totalFileCount})"
+                    AppStringsProvider.current().zipFileTreeTitle + " (${analysis.totalFileCount})"
                 )
             }
         },
@@ -459,7 +460,7 @@ internal fun ZipFileListDialog(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // 按资源类型分组展示
+                // type
                 analysis.stats.forEach { stat ->
                     item {
                         Text(
@@ -503,7 +504,7 @@ internal fun ZipFileListDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.gotIt)
+                Text(AppStringsProvider.current().gotIt)
             }
         }
     )

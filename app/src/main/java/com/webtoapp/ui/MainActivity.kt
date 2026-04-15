@@ -33,10 +33,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.view.WindowCompat
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.i18n.LanguageManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.core.shell.ShellModeManager
 import com.webtoapp.ui.components.FirstLaunchLanguageScreen
 import com.webtoapp.ui.navigation.AppNavigation
 import com.webtoapp.ui.shell.ShellActivity
@@ -44,36 +44,39 @@ import com.webtoapp.ui.theme.CircularRevealOverlay
 import com.webtoapp.ui.theme.LocalThemeRevealState
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.ui.theme.rememberThemeRevealState
+import org.koin.android.ext.android.inject
+import org.koin.compose.koinInject
 
 /**
- * 主Activity - 应用入口
+ * Activity -
  */
 class MainActivity : ComponentActivity() {
 
-    // 首次启动语言选择状态
+    private val shellModeManager: ShellModeManager by inject()
+
+    // Comment
     private var showLanguageSelection by mutableStateOf(true)
     
-    // 快捷方式权限对话框状态
+    // Comment
     private var showShortcutPermissionDialog by mutableStateOf(false)
     private var shortcutPermissionMessage by mutableStateOf("")
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
-        // Permission结果目前无需特殊处理，失败时相关功能会在使用时再报错
+        // Permission，
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppLogger.lifecycle("MainActivity", "onCreate", "savedInstanceState=${savedInstanceState != null}")
         
-        // 处理 Google OAuth 回调（冷启动时）
+        // Google OAuth （）
         handleGoogleOAuthIfNeeded(intent)
         
-        // Check是否为 Shell 模式（添加异常保护）
+        // Check Shell （）
         val isShell = try {
-            val shellManager = WebToAppApplication.shellMode
-            val result = shellManager.isShellMode()
+            val result = shellModeManager.isShellMode()
             AppLogger.d("MainActivity", "Shell mode check: isShellMode=$result")
             result
         } catch (e: Exception) {
@@ -85,7 +88,7 @@ class MainActivity : ComponentActivity() {
         }
         
         if (isShell) {
-            // Shell 模式：直接跳转到 ShellActivity
+            // Shell ： ShellActivity
             AppLogger.i("MainActivity", "Entering shell mode, redirecting to ShellActivity")
             try {
                 startActivity(Intent(this, ShellActivity::class.java))
@@ -93,12 +96,12 @@ class MainActivity : ComponentActivity() {
                 return
             } catch (e: Exception) {
                 AppLogger.e("MainActivity", "Failed to start ShellActivity", e)
-                // Resume显示主界面
+                // Resume
             }
         }
         AppLogger.i("MainActivity", "Normal mode, showing main UI")
 
-        // Enable边到边显示（Android 15+ 兼容）
+        // Enable（Android 15+ ）
         try {
             enableEdgeToEdge()
         } catch (e: Exception) {
@@ -107,10 +110,10 @@ class MainActivity : ComponentActivity() {
 
         requestNecessaryPermissions()
         
-        // Check快捷方式权限
+        // Check
         checkShortcutPermission()
 
-        // Set窗口装饰以支持边到边显示
+        // Set
         try {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         } catch (e: Exception) {
@@ -118,34 +121,33 @@ class MainActivity : ComponentActivity() {
         }
         
         setContent {
-            // 圆形揭示动画状态（在主题之外创建，以便截图包含当前主题）
+            // （，）
             val themeRevealState = rememberThemeRevealState()
             
             WebToAppTheme { isDarkTheme ->
-                // 根据主题设置状态栏颜色（跟随主题色）
+                // （）
                 val themeColors = MaterialTheme.colorScheme
                 LaunchedEffect(isDarkTheme, themeColors.background) {
                     val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
                     
-                    // 状态栏透明 — 沉浸式
+                    // —
                     window.statusBarColor = android.graphics.Color.TRANSPARENT
                     windowInsetsController.isAppearanceLightStatusBars = !isDarkTheme
                     
-                    // 导航栏保持透明
+                    // Comment
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
                     windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
                 }
                 
-                val context = LocalContext.current
-                val languageManager = remember { LanguageManager.getInstance(context) }
+                val languageManager: LanguageManager = koinInject()
                 val hasSelectedLanguage by languageManager.hasSelectedLanguageFlow.collectAsState(initial = true)
                 
-                // 提供 ThemeRevealState 给子组件（HomeScreen 的切换按钮）
+                // ThemeRevealState （HomeScreen ）
                 CompositionLocalProvider(
                     LocalThemeRevealState provides themeRevealState
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // 主内容
+                        // Comment
                         Surface(
                             modifier = Modifier.fillMaxSize(),
                             color = MaterialTheme.colorScheme.background
@@ -161,16 +163,16 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         
-                        // 圆形揭示动画叠层（在所有内容之上）
+                        // （）
                         CircularRevealOverlay(revealState = themeRevealState)
                     }
                 }
                 
-                // 快捷方式权限提示对话框
+                // Comment
                 if (showShortcutPermissionDialog) {
                     AlertDialog(
                         onDismissRequest = { showShortcutPermissionDialog = false },
-                        title = { Text(Strings.shortcutPermissionTitle) },
+                        title = { Text(AppStringsProvider.current().shortcutPermissionTitle) },
                         text = { Text(shortcutPermissionMessage) },
                         confirmButton = {
                             TextButton(
@@ -179,14 +181,14 @@ class MainActivity : ComponentActivity() {
                                     openAppSettings()
                                 }
                             ) {
-                                Text(Strings.shortcutPermissionGoToSettings)
+                                Text(AppStringsProvider.current().shortcutPermissionGoToSettings)
                             }
                         },
                         dismissButton = {
                             TextButton(
                                 onClick = { showShortcutPermissionDialog = false }
                             ) {
-                                Text(Strings.shortcutPermissionLater)
+                                Text(AppStringsProvider.current().shortcutPermissionLater)
                             }
                         }
                     )
@@ -196,14 +198,14 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 检查快捷方式权限
+     * Comment
      */
     private fun checkShortcutPermission() {
-        // 只在 Android 8.0+ 检查
+        // Android 8.0+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Check是否支持固定快捷方式
+            // Check
             if (!ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
-                // Get厂商特定的提示信息
+                // Get
                 shortcutPermissionMessage = buildShortcutPermissionMessage()
                 showShortcutPermissionDialog = true
             }
@@ -211,38 +213,38 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 构建厂商特定的快捷方式权限提示
+     * Comment
      */
     private fun buildShortcutPermissionMessage(): String {
         val manufacturer = Build.MANUFACTURER.lowercase()
         
         return when {
             manufacturer.contains("xiaomi") || manufacturer.contains("redmi") -> {
-                Strings.shortcutPermissionXiaomi
+                AppStringsProvider.current().shortcutPermissionXiaomi
             }
             manufacturer.contains("huawei") || manufacturer.contains("honor") -> {
-                Strings.shortcutPermissionHuawei
+                AppStringsProvider.current().shortcutPermissionHuawei
             }
             manufacturer.contains("oppo") -> {
-                Strings.shortcutPermissionOppo
+                AppStringsProvider.current().shortcutPermissionOppo
             }
             manufacturer.contains("vivo") -> {
-                Strings.shortcutPermissionVivo
+                AppStringsProvider.current().shortcutPermissionVivo
             }
             manufacturer.contains("meizu") -> {
-                Strings.shortcutPermissionMeizu
+                AppStringsProvider.current().shortcutPermissionMeizu
             }
             manufacturer.contains("samsung") -> {
-                Strings.shortcutPermissionSamsung
+                AppStringsProvider.current().shortcutPermissionSamsung
             }
             else -> {
-                Strings.shortcutPermissionGeneric
+                AppStringsProvider.current().shortcutPermissionGeneric
             }
         }
     }
 
     /**
-     * 打开应用设置页面
+     * Comment
      */
     private fun openAppSettings() {
         try {
@@ -252,11 +254,11 @@ class MainActivity : ComponentActivity() {
             }
             startActivity(intent)
         } catch (e: Exception) {
-            // 如果无法打开应用设置，尝试打开通用设置
+            // ，
             try {
                 startActivity(Intent(Settings.ACTION_SETTINGS))
             } catch (e2: Exception) {
-                // 忽略
+                // Comment
             }
         }
     }
@@ -307,12 +309,12 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         AppLogger.lifecycle("MainActivity", "onNewIntent")
-        // 处理 Google OAuth 回调（从浏览器返回时）
+        // Google OAuth （）
         handleGoogleOAuthIfNeeded(intent)
     }
     
     /**
-     * 检查并处理 Google OAuth 回调
+     * Google OAuth
      */
     private fun handleGoogleOAuthIfNeeded(intent: Intent?) {
         if (GoogleSignInHelper.isOAuthCallback(intent)) {

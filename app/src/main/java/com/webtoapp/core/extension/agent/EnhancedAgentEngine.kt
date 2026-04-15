@@ -7,7 +7,7 @@ import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
 import com.webtoapp.core.ai.StreamEvent
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.i18n.AiPromptManager
 import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.LanguageManager
@@ -45,6 +45,7 @@ class EnhancedAgentEngine(private val context: Context) {
     private val aiConfigManager = AiConfigManager(context)
     private val aiClient = AiApiClient(context)
     private val toolExecutor = AgentToolExecutor(context)
+    private val languageManager by lazy { LanguageManager(context.applicationContext) }
     
     // 工作记忆
     val workingMemory = AgentWorkingMemory()
@@ -79,20 +80,20 @@ class EnhancedAgentEngine(private val context: Context) {
             val savedModels = aiConfigManager.savedModelsFlow.first()
             
             if (apiKeys.isEmpty()) {
-                emit(AgentStreamEvent.Error(Strings.aiErrorNoApiKey, code = "NO_API_KEY"))
+                emit(AgentStreamEvent.Error(AppStringsProvider.current().aiErrorNoApiKey, code = "NO_API_KEY"))
                 return@flow
             }
             
             // Select模型
             val selectedModel = selectModel(model, savedModels)
             if (selectedModel == null) {
-                emit(AgentStreamEvent.Error(Strings.aiErrorNoModel, code = "NO_MODEL"))
+                emit(AgentStreamEvent.Error(AppStringsProvider.current().aiErrorNoModel, code = "NO_MODEL"))
                 return@flow
             }
             
             val apiKey = apiKeys.find { it.id == selectedModel.apiKeyId }
             if (apiKey == null) {
-                emit(AgentStreamEvent.Error(Strings.aiErrorNoApiKeyForModel, code = "NO_API_KEY_FOR_MODEL"))
+                emit(AgentStreamEvent.Error(AppStringsProvider.current().aiErrorNoApiKeyForModel, code = "NO_API_KEY_FOR_MODEL"))
                 return@flow
             }
             
@@ -142,7 +143,7 @@ class EnhancedAgentEngine(private val context: Context) {
             } catch (e: TimeoutCancellationException) {
                 AppLogger.e(TAG, "Stream timeout after ${STREAM_TIMEOUT_MS}ms")
                 emit(AgentStreamEvent.Error(
-                    message = Strings.agentRequestTimeout,
+                    message = AppStringsProvider.current().agentRequestTimeout,
                     code = "TIMEOUT",
                     recoverable = true,
                     rawResponse = contentBuilder.toString().takeIf { it.isNotEmpty() }
@@ -161,7 +162,7 @@ class EnhancedAgentEngine(private val context: Context) {
             
             // 流完成，处理生成的内容
             val responseText = contentBuilder.toString()
-            processGeneratedContentIterative(responseText, apiKey, selectedModel, category)
+            processGeneratedContentIterative(responseText, apiKey, selectedModel)
                 .collect { agentEvent -> emit(agentEvent) }
             
         } catch (e: CancellationException) {
@@ -172,7 +173,7 @@ class EnhancedAgentEngine(private val context: Context) {
             _currentState.value = AgentState.ERROR
             workingMemory.lastError = e.message
             emit(AgentStreamEvent.Error(
-                message = e.message ?: Strings.aiErrorUnknown,
+                message = e.message ?: AppStringsProvider.current().aiErrorUnknown,
                 recoverable = true
             ))
         }
@@ -186,14 +187,13 @@ class EnhancedAgentEngine(private val context: Context) {
     private fun processGeneratedContentIterative(
         responseText: String,
         apiKey: ApiKeyConfig,
-        savedModel: SavedModel,
-        category: ModuleCategory?
+        savedModel: SavedModel
     ): Flow<AgentStreamEvent> = flow {
         // Parse生成的模块
         val parsedModule = parseGeneratedModule(responseText)
         if (parsedModule == null) {
             emit(AgentStreamEvent.Error(
-                message = Strings.agentParseFailed,
+                message = AppStringsProvider.current().agentParseFailed,
                 rawResponse = responseText
             ))
             return@flow
@@ -262,7 +262,7 @@ class EnhancedAgentEngine(private val context: Context) {
                 } else {
                     // 修复失败
                     emit(AgentStreamEvent.Error(
-                        message = Strings.agentAutoFixFailed,
+                        message = AppStringsProvider.current().agentAutoFixFailed,
                         code = "AUTO_FIX_FAILED",
                         recoverable = true
                     ))
@@ -302,7 +302,7 @@ class EnhancedAgentEngine(private val context: Context) {
         
         // Save到对话历史
         workingMemory.addAssistantMessage(
-            content = Strings.agentModuleGenerated.replace("%s", finalModule.name),
+            content = AppStringsProvider.current().agentModuleGenerated.replace("%s", finalModule.name),
             generatedModule = finalModule
         )
         
@@ -322,7 +322,6 @@ class EnhancedAgentEngine(private val context: Context) {
         attemptNumber: Int
     ): GeneratedModuleData? {
         // Get当前语言
-        val languageManager = LanguageManager.getInstance(context)
         val currentLanguage = languageManager.getCurrentLanguage()
         
         val errorMessages = syntaxResult.errors.joinToString("\n") { error ->
@@ -474,7 +473,6 @@ $errorSummary$moreErrors
      */
     private suspend fun buildSystemPrompt(category: ModuleCategory?, existingCode: String?): String {
         // Get当前语言
-        val languageManager = LanguageManager.getInstance(context)
         val currentLanguage = languageManager.getCurrentLanguage()
         
         val categoryHint = category?.let {
@@ -546,7 +544,6 @@ $it
         val messages = mutableListOf<Map<String, String>>()
         
         // Get当前语言
-        val languageManager = LanguageManager.getInstance(context)
         val currentLanguage = languageManager.getCurrentLanguage()
         
         // System消息
@@ -640,8 +637,8 @@ $it
         }
         
         return GeneratedModuleData(
-            name = Strings.aiGeneratedModule,
-            description = Strings.aiGeneratedModuleDesc,
+            name = AppStringsProvider.current().aiGeneratedModule,
+            description = AppStringsProvider.current().aiGeneratedModuleDesc,
             icon = "smart_toy",
             category = "OTHER",
             jsCode = jsCode,
@@ -670,7 +667,7 @@ $it
             // 如果工具执行失败，停止链式执行
             if (!result.success) {
                 emit(AgentStreamEvent.Error(
-                    message = String.format(Strings.agentToolFailed, request.toolName, result.error),
+                    message = String.format(AppStringsProvider.current().agentToolFailed, request.toolName, result.error),
                     recoverable = true
                 ))
                 break

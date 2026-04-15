@@ -22,10 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.linux.*
 import com.webtoapp.ui.theme.LocalAppTheme
 import kotlinx.coroutines.launch
@@ -33,16 +32,16 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LinuxEnvironmentScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
+fun LinuxEnvironmentScreen(
+    envManager: LinuxEnvironmentManager,
+    onBack: () -> Unit
+) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val theme = LocalAppTheme.current
     
-    // Get主题主色调
+    // Get
     val themeAccentColor = MaterialTheme.colorScheme.primary
     
-    val envManager = remember { LinuxEnvironmentManager.getInstance(context) }
     val envState by envManager.state.collectAsStateWithLifecycle()
     val installProgress by envManager.installProgress.collectAsStateWithLifecycle()
     
@@ -62,16 +61,16 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.buildEnvironment) },
+                title = { Text(AppStringsProvider.current().buildEnvironment) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
                     if (envInfo != null) {
                         IconButton(onClick = { showResetDialog = true }) {
-                            Icon(Icons.Outlined.RestartAlt, Strings.btnReset)
+                            Icon(Icons.Outlined.RestartAlt, AppStringsProvider.current().btnReset)
                         }
                     }
                 }
@@ -115,8 +114,8 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
             icon = { Icon(Icons.Outlined.Warning, null, tint = Color(0xFFFFA726)) },
-            title = { Text(Strings.resetEnvironment) },
-            text = { Text(Strings.resetEnvConfirm) },
+            title = { Text(AppStringsProvider.current().resetEnvironment) },
+            text = { Text(AppStringsProvider.current().resetEnvConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -127,9 +126,9 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = AppColors.Error)
-                ) { Text(Strings.btnReset) }
+                ) { Text(AppStringsProvider.current().btnReset) }
             },
-            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text(Strings.btnCancel) } }
+            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text(AppStringsProvider.current().btnCancel) } }
         )
     }
     
@@ -137,8 +136,8 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
         AlertDialog(
             onDismissRequest = { showClearCacheDialog = false },
             icon = { Icon(Icons.Outlined.CleaningServices, null) },
-            title = { Text(Strings.clearCacheTitle) },
-            text = { Text(Strings.clearCacheConfirm) },
+            title = { Text(AppStringsProvider.current().clearCacheTitle) },
+            text = { Text(AppStringsProvider.current().clearCacheConfirm) },
             confirmButton = {
                 TextButton(onClick = {
                     showClearCacheDialog = false
@@ -146,16 +145,16 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
                         envManager.clearCache()
                         envInfo = envManager.getEnvironmentInfo()
                     }
-                }) { Text(Strings.clean) }
+                }) { Text(AppStringsProvider.current().clean) }
             },
-            dismissButton = { TextButton(onClick = { showClearCacheDialog = false }) { Text(Strings.btnCancel) } }
+            dismissButton = { TextButton(onClick = { showClearCacheDialog = false }) { Text(AppStringsProvider.current().btnCancel) } }
         )
     }
         }
 }
 
 /**
- * 通用卡片容器 - 完全不使用 Card 组件
+ * card- Card
  */
 @Composable
 private fun CardContainer(
@@ -187,7 +186,7 @@ private fun StatusCard(
     val isReady = state is EnvironmentState.Ready
     val isInstalling = state is EnvironmentState.Downloading || state is EnvironmentState.Installing
     
-    // 使用主题色作为就绪状态的颜色
+    // state color
     val readyColor = themeColor
     
     val cardColor = when {
@@ -199,7 +198,7 @@ private fun StatusCard(
     CardContainer(backgroundColor = cardColor) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 状态图标 - 使用主题色
+                // stateicon
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -225,22 +224,22 @@ private fun StatusCard(
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = when (state) {
-                            is EnvironmentState.Ready -> Strings.envReady
-                            is EnvironmentState.NotInstalled -> Strings.envNotInstalled
-                            is EnvironmentState.Downloading -> "${Strings.envDownloading}: ${state.component}"
-                            is EnvironmentState.Installing -> "${Strings.envInstalling}: ${state.step}"
-                            else -> Strings.ready
+                            is EnvironmentState.Ready -> AppStringsProvider.current().envReady
+                            is EnvironmentState.NotInstalled -> AppStringsProvider.current().envNotInstalled
+                            is EnvironmentState.Downloading -> "${AppStringsProvider.current().envDownloading}: ${state.component}"
+                            is EnvironmentState.Installing -> "${AppStringsProvider.current().envInstalling}: ${state.step}"
+                            else -> AppStringsProvider.current().ready
                         },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = when (state) {
-                            is EnvironmentState.Ready -> Strings.canBuildFrontend
-                            is EnvironmentState.NotInstalled -> Strings.builtInPackagerReady
+                            is EnvironmentState.Ready -> AppStringsProvider.current().canBuildFrontend
+                            is EnvironmentState.NotInstalled -> AppStringsProvider.current().builtInPackagerReady
                             is EnvironmentState.Downloading -> "${(state.progress * 100).toInt()}%"
                             is EnvironmentState.Installing -> "${(state.progress * 100).toInt()}%"
-                            else -> Strings.canBuildFrontend
+                            else -> AppStringsProvider.current().canBuildFrontend
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -278,11 +277,11 @@ private fun StatusCard(
                     PremiumButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.Download, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.installAdvancedBuildTool)
+                        Text(AppStringsProvider.current().installAdvancedBuildTool)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        Strings.optionalEsbuildHint,
+                        AppStringsProvider.current().optionalEsbuildHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -312,18 +311,17 @@ private fun BuildToolsCard(info: EnvironmentInfo, themeColor: Color) {
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.buildTools, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStringsProvider.current().buildTools, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
             ToolRow(
                 icon = Icons.Outlined.Code, 
-                name = Strings.builtInPackager, 
-                status = Strings.ready, 
-                description = Strings.pureKotlinImpl, 
-                color = themeColor, 
-                isAvailable = true,
+                name = AppStringsProvider.current().builtInPackager, 
+                status = AppStringsProvider.current().ready, 
+                description = AppStringsProvider.current().pureKotlinImpl, 
+                color = themeColor,
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -331,10 +329,9 @@ private fun BuildToolsCard(info: EnvironmentInfo, themeColor: Color) {
             ToolRow(
                 icon = Icons.Outlined.Speed,
                 name = "esbuild",
-                status = if (info.esbuildAvailable) Strings.installed else Strings.notInstalled,
-                description = Strings.highPerfBuildTool,
-                color = if (info.esbuildAvailable) themeColor else Color(0xFF9E9E9E),
-                isAvailable = info.esbuildAvailable
+                status = if (info.esbuildAvailable) AppStringsProvider.current().installed else AppStringsProvider.current().notInstalled,
+                description = AppStringsProvider.current().highPerfBuildTool,
+                color = if (info.esbuildAvailable) themeColor else Color(0xFF9E9E9E)
             )
         }
     }
@@ -346,8 +343,7 @@ private fun ToolRow(
     name: String,
     status: String,
     description: String,
-    color: Color,
-    isAvailable: Boolean
+    color: Color
 ) {
     val theme = LocalAppTheme.current
     Row(
@@ -418,22 +414,22 @@ private fun StorageCard(info: EnvironmentInfo, themeColor: Color, onClearCache: 
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.storageUsage, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStringsProvider.current().storageUsage, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Storage项
-            StorageRow(Strings.buildTools, formatSize(info.storageUsed))
+            // Storage
+            StorageRow(AppStringsProvider.current().buildTools, formatSize(info.storageUsed))
             Spacer(modifier = Modifier.height(8.dp))
-            StorageRow(Strings.cache, formatSize(info.cacheSize))
+            StorageRow(AppStringsProvider.current().cache, formatSize(info.cacheSize))
             
             if (info.cacheSize > 0) {
                 Spacer(modifier = Modifier.height(16.dp))
                 PremiumOutlinedButton(onClick = onClearCache, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Outlined.CleaningServices, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.btnClearCache)
+                    Text(AppStringsProvider.current().btnClearCache)
                 }
             }
         }
@@ -477,21 +473,21 @@ private fun FeaturesCard(themeColor: Color) {
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.supportedFeatures, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStringsProvider.current().supportedFeatures, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
             val features = listOf(
-                Strings.featureImportBuiltProjects,
-                Strings.featureAutoDetectFramework,
-                Strings.featureSupportViteWebpack,
-                Strings.featureTypeScriptSupport,
-                Strings.featureStaticAssets,
-                Strings.featureEsbuildOptional,
-                Strings.featureHtmlOptimize,
-                Strings.featureNodeTsPreCompile,
-                Strings.featurePerfOptimize
+                AppStringsProvider.current().featureImportBuiltProjects,
+                AppStringsProvider.current().featureAutoDetectFramework,
+                AppStringsProvider.current().featureSupportViteWebpack,
+                AppStringsProvider.current().featureTypeScriptSupport,
+                AppStringsProvider.current().featureStaticAssets,
+                AppStringsProvider.current().featureEsbuildOptional,
+                AppStringsProvider.current().featureHtmlOptimize,
+                AppStringsProvider.current().featureNodeTsPreCompile,
+                AppStringsProvider.current().featurePerfOptimize
             )
             
             features.forEach { text ->
@@ -555,13 +551,13 @@ private fun TechCard(themeColor: Color) {
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.techDescription, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStringsProvider.current().techDescription, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                Strings.techDescriptionContent,
+                AppStringsProvider.current().techDescriptionContent,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

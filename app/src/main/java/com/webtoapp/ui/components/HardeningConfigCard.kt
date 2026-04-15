@@ -13,13 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AppHardeningConfig
 import androidx.compose.ui.graphics.Color
 
 /**
- * 软件加固配置卡片
- * 独立于加密功能，提供企业级应用加固保护配置
+ * configcard
+ * , app config
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +44,7 @@ fun HardeningConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -76,12 +76,12 @@ fun HardeningConfigCard(
                     }
                     Column {
                         Text(
-                            text = Strings.appHardening,
+                            text = AppStringsProvider.current().appHardening,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = if (config.enabled) Strings.hardeningEnabled else Strings.hardeningDisabled,
+                            text = if (config.enabled) AppStringsProvider.current().hardeningEnabled else AppStringsProvider.current().hardeningDisabled,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -96,47 +96,47 @@ fun HardeningConfigCard(
                 )
             }
             
-            // 展开详细配置
+            // expand config
             AnimatedVisibility(visible = config.enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 加固等级快捷预设
+                    // Note
                     Text(
-                        text = Strings.hardeningLevel,
+                        text = AppStringsProvider.current().hardeningLevel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
-                    // 等级选择芯片
+                    // select
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         HardeningLevelChip(
-                            label = Strings.hardeningLevelBasic,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.BASIC,
+                            label = AppStringsProvider.current().hardeningLevelBasic,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.BASIC,
                             onClick = { onConfigChange(AppHardeningConfig.BASIC) }
                         )
                         HardeningLevelChip(
-                            label = Strings.hardeningLevelStandard,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.STANDARD,
+                            label = AppStringsProvider.current().hardeningLevelStandard,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.STANDARD,
                             onClick = { onConfigChange(AppHardeningConfig.STANDARD) }
                         )
                         HardeningLevelChip(
-                            label = Strings.hardeningLevelAdvanced,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.ADVANCED,
+                            label = AppStringsProvider.current().hardeningLevelAdvanced,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.ADVANCED,
                             onClick = { onConfigChange(AppHardeningConfig.ADVANCED) }
                         )
                         HardeningLevelChip(
-                            label = Strings.hardeningLevelFortress,
-                            selected = config.hardeningLevel == AppHardeningConfig.HardeningLevel.FORTRESS,
+                            label = AppStringsProvider.current().hardeningLevelFortress,
+                            selected = config.hardeningLevel == com.webtoapp.data.model.webapp.config.AppHardeningConfig.HardeningLevel.FORTRESS,
                             onClick = { onConfigChange(AppHardeningConfig.FORTRESS) }
                         )
                     }
                     
-                    // 等级描述
+                    // Note
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -161,7 +161,7 @@ fun HardeningConfigCard(
                         }
                     }
                     
-                    // 保护层数统计
+                    // Note
                     val layerCount = countProtectionLayers(config)
                     Row(
                         modifier = Modifier
@@ -171,7 +171,7 @@ fun HardeningConfigCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${Strings.hardeningProtectionLayers}: $layerCount",
+                            text = "${AppStringsProvider.current().hardeningProtectionLayers}: $layerCount",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.tertiary,
                             fontWeight = FontWeight.Bold
@@ -181,7 +181,7 @@ fun HardeningConfigCard(
                             onClick = { showAdvanced = !showAdvanced }
                         ) {
                             Text(
-                                if (showAdvanced) Strings.collapse else Strings.advancedSettings,
+                                if (showAdvanced) AppStringsProvider.current().collapse else AppStringsProvider.current().advancedSettings,
                                 style = MaterialTheme.typography.labelSmall
                             )
                             Icon(
@@ -192,14 +192,14 @@ fun HardeningConfigCard(
                         }
                     }
                     
-                    // ==================== 高级设置展开 ====================
+                    // ==================== advancedsettingsexpand ====================
                     AnimatedVisibility(visible = showAdvanced) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // ===== DEX 保护 =====
+                            // ===== DEX =====
                             HardeningSectionHeader(
-                                title = Strings.dexProtection,
+                                title = AppStringsProvider.current().dexProtection,
                                 icon = Icons.Default.Code,
                                 expanded = showDexOptions,
                                 onToggle = { showDexOptions = !showDexOptions }
@@ -207,26 +207,26 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showDexOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.dexEncryption,
-                                        description = Strings.dexEncryptionHint,
+                                        title = AppStringsProvider.current().dexEncryption,
+                                        description = AppStringsProvider.current().dexEncryptionHint,
                                         checked = config.dexEncryption,
                                         onCheckedChange = { onConfigChange(config.copy(dexEncryption = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.dexSplitting,
-                                        description = Strings.dexSplittingHint,
+                                        title = AppStringsProvider.current().dexSplitting,
+                                        description = AppStringsProvider.current().dexSplittingHint,
                                         checked = config.dexSplitting,
                                         onCheckedChange = { onConfigChange(config.copy(dexSplitting = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.dexVmp,
-                                        description = Strings.dexVmpHint,
+                                        title = AppStringsProvider.current().dexVmp,
+                                        description = AppStringsProvider.current().dexVmpHint,
                                         checked = config.dexVmp,
                                         onCheckedChange = { onConfigChange(config.copy(dexVmp = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.dexControlFlow,
-                                        description = Strings.dexControlFlowHint,
+                                        title = AppStringsProvider.current().dexControlFlow,
+                                        description = AppStringsProvider.current().dexControlFlowHint,
                                         checked = config.dexControlFlowFlattening,
                                         onCheckedChange = { onConfigChange(config.copy(dexControlFlowFlattening = it)) }
                                     )
@@ -235,9 +235,9 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== Native SO 保护 =====
+                            // ===== Native SO =====
                             HardeningSectionHeader(
-                                title = Strings.soProtection,
+                                title = AppStringsProvider.current().soProtection,
                                 icon = Icons.Default.Memory,
                                 expanded = showSoOptions,
                                 onToggle = { showSoOptions = !showSoOptions }
@@ -245,26 +245,26 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showSoOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.soEncryption,
-                                        description = Strings.soEncryptionHint,
+                                        title = AppStringsProvider.current().soEncryption,
+                                        description = AppStringsProvider.current().soEncryptionHint,
                                         checked = config.soEncryption,
                                         onCheckedChange = { onConfigChange(config.copy(soEncryption = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.soElfObfuscation,
-                                        description = Strings.soElfObfuscationHint,
+                                        title = AppStringsProvider.current().soElfObfuscation,
+                                        description = AppStringsProvider.current().soElfObfuscationHint,
                                         checked = config.soElfObfuscation,
                                         onCheckedChange = { onConfigChange(config.copy(soElfObfuscation = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.soSymbolStrip,
-                                        description = Strings.soSymbolStripHint,
+                                        title = AppStringsProvider.current().soSymbolStrip,
+                                        description = AppStringsProvider.current().soSymbolStripHint,
                                         checked = config.soSymbolStrip,
                                         onCheckedChange = { onConfigChange(config.copy(soSymbolStrip = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.soAntiDump,
-                                        description = Strings.soAntiDumpHint,
+                                        title = AppStringsProvider.current().soAntiDump,
+                                        description = AppStringsProvider.current().soAntiDumpHint,
                                         checked = config.soAntiDump,
                                         onCheckedChange = { onConfigChange(config.copy(soAntiDump = it)) }
                                     )
@@ -273,9 +273,9 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 反逆向工程 =====
+                            // Note
                             HardeningSectionHeader(
-                                title = Strings.antiReverse,
+                                title = AppStringsProvider.current().antiReverse,
                                 icon = Icons.Default.Security,
                                 expanded = showAntiReverseOptions,
                                 onToggle = { showAntiReverseOptions = !showAntiReverseOptions }
@@ -283,38 +283,38 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showAntiReverseOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.antiDebugMultiLayer,
-                                        description = Strings.antiDebugMultiLayerHint,
+                                        title = AppStringsProvider.current().antiDebugMultiLayer,
+                                        description = AppStringsProvider.current().antiDebugMultiLayerHint,
                                         checked = config.antiDebugMultiLayer,
                                         onCheckedChange = { onConfigChange(config.copy(antiDebugMultiLayer = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.antiFridaAdvanced,
-                                        description = Strings.antiFridaAdvancedHint,
+                                        title = AppStringsProvider.current().antiFridaAdvanced,
+                                        description = AppStringsProvider.current().antiFridaAdvancedHint,
                                         checked = config.antiFridaAdvanced,
                                         onCheckedChange = { onConfigChange(config.copy(antiFridaAdvanced = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.antiXposedDeep,
-                                        description = Strings.antiXposedDeepHint,
+                                        title = AppStringsProvider.current().antiXposedDeep,
+                                        description = AppStringsProvider.current().antiXposedDeepHint,
                                         checked = config.antiXposedDeep,
                                         onCheckedChange = { onConfigChange(config.copy(antiXposedDeep = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.antiMagiskDetect,
-                                        description = Strings.antiMagiskDetectHint,
+                                        title = AppStringsProvider.current().antiMagiskDetect,
+                                        description = AppStringsProvider.current().antiMagiskDetectHint,
                                         checked = config.antiMagiskDetect,
                                         onCheckedChange = { onConfigChange(config.copy(antiMagiskDetect = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.antiMemoryDump,
-                                        description = Strings.antiMemoryDumpHint,
+                                        title = AppStringsProvider.current().antiMemoryDump,
+                                        description = AppStringsProvider.current().antiMemoryDumpHint,
                                         checked = config.antiMemoryDump,
                                         onCheckedChange = { onConfigChange(config.copy(antiMemoryDump = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.antiScreenCapture,
-                                        description = Strings.antiScreenCaptureHint,
+                                        title = AppStringsProvider.current().antiScreenCapture,
+                                        description = AppStringsProvider.current().antiScreenCaptureHint,
                                         checked = config.antiScreenCapture,
                                         onCheckedChange = { onConfigChange(config.copy(antiScreenCapture = it)) }
                                     )
@@ -323,9 +323,9 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 环境检测 =====
+                            // Note
                             HardeningSectionHeader(
-                                title = Strings.environmentDetection,
+                                title = AppStringsProvider.current().environmentDetection,
                                 icon = Icons.Default.PhoneAndroid,
                                 expanded = showEnvOptions,
                                 onToggle = { showEnvOptions = !showEnvOptions }
@@ -333,32 +333,32 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showEnvOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.detectEmulatorAdvanced,
-                                        description = Strings.detectEmulatorAdvancedHint,
+                                        title = AppStringsProvider.current().detectEmulatorAdvanced,
+                                        description = AppStringsProvider.current().detectEmulatorAdvancedHint,
                                         checked = config.detectEmulatorAdvanced,
                                         onCheckedChange = { onConfigChange(config.copy(detectEmulatorAdvanced = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.detectVirtualApp,
-                                        description = Strings.detectVirtualAppHint,
+                                        title = AppStringsProvider.current().detectVirtualApp,
+                                        description = AppStringsProvider.current().detectVirtualAppHint,
                                         checked = config.detectVirtualApp,
                                         onCheckedChange = { onConfigChange(config.copy(detectVirtualApp = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.detectUSBDebugging,
-                                        description = Strings.detectUSBDebuggingHint,
+                                        title = AppStringsProvider.current().detectUSBDebugging,
+                                        description = AppStringsProvider.current().detectUSBDebuggingHint,
                                         checked = config.detectUSBDebugging,
                                         onCheckedChange = { onConfigChange(config.copy(detectUSBDebugging = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.detectVPN,
-                                        description = Strings.detectVPNHint,
+                                        title = AppStringsProvider.current().detectVPN,
+                                        description = AppStringsProvider.current().detectVPNHint,
                                         checked = config.detectVPN,
                                         onCheckedChange = { onConfigChange(config.copy(detectVPN = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.detectDeveloperOptions,
-                                        description = Strings.detectDeveloperOptionsHint,
+                                        title = AppStringsProvider.current().detectDeveloperOptions,
+                                        description = AppStringsProvider.current().detectDeveloperOptionsHint,
                                         checked = config.detectDeveloperOptions,
                                         onCheckedChange = { onConfigChange(config.copy(detectDeveloperOptions = it)) }
                                     )
@@ -367,9 +367,9 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 代码混淆 =====
+                            // ===== code =====
                             HardeningSectionHeader(
-                                title = Strings.codeObfuscation,
+                                title = AppStringsProvider.current().codeObfuscation,
                                 icon = Icons.Default.VisibilityOff,
                                 expanded = showCodeObfOptions,
                                 onToggle = { showCodeObfOptions = !showCodeObfOptions }
@@ -377,26 +377,26 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showCodeObfOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.stringEncryption,
-                                        description = Strings.stringEncryptionHint,
+                                        title = AppStringsProvider.current().stringEncryption,
+                                        description = AppStringsProvider.current().stringEncryptionHint,
                                         checked = config.stringEncryption,
                                         onCheckedChange = { onConfigChange(config.copy(stringEncryption = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.classNameObfuscation,
-                                        description = Strings.classNameObfuscationHint,
+                                        title = AppStringsProvider.current().classNameObfuscation,
+                                        description = AppStringsProvider.current().classNameObfuscationHint,
                                         checked = config.classNameObfuscation,
                                         onCheckedChange = { onConfigChange(config.copy(classNameObfuscation = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.callIndirection,
-                                        description = Strings.callIndirectionHint,
+                                        title = AppStringsProvider.current().callIndirection,
+                                        description = AppStringsProvider.current().callIndirectionHint,
                                         checked = config.callIndirection,
                                         onCheckedChange = { onConfigChange(config.copy(callIndirection = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.opaquePredicates,
-                                        description = Strings.opaquePredicatesHint,
+                                        title = AppStringsProvider.current().opaquePredicates,
+                                        description = AppStringsProvider.current().opaquePredicatesHint,
                                         checked = config.opaquePredicates,
                                         onCheckedChange = { onConfigChange(config.copy(opaquePredicates = it)) }
                                     )
@@ -405,9 +405,9 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 运行时自保护 (RASP) =====
+                            // ===== run( RASP) =====
                             HardeningSectionHeader(
-                                title = Strings.raspProtection,
+                                title = AppStringsProvider.current().raspProtection,
                                 icon = Icons.Default.VerifiedUser,
                                 expanded = showRaspOptions,
                                 onToggle = { showRaspOptions = !showRaspOptions }
@@ -415,32 +415,32 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showRaspOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.dexCrcVerify,
-                                        description = Strings.dexCrcVerifyHint,
+                                        title = AppStringsProvider.current().dexCrcVerify,
+                                        description = AppStringsProvider.current().dexCrcVerifyHint,
                                         checked = config.dexCrcVerify,
                                         onCheckedChange = { onConfigChange(config.copy(dexCrcVerify = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.memoryIntegrity,
-                                        description = Strings.memoryIntegrityHint,
+                                        title = AppStringsProvider.current().memoryIntegrity,
+                                        description = AppStringsProvider.current().memoryIntegrityHint,
                                         checked = config.memoryIntegrity,
                                         onCheckedChange = { onConfigChange(config.copy(memoryIntegrity = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.jniCallValidation,
-                                        description = Strings.jniCallValidationHint,
+                                        title = AppStringsProvider.current().jniCallValidation,
+                                        description = AppStringsProvider.current().jniCallValidationHint,
                                         checked = config.jniCallValidation,
                                         onCheckedChange = { onConfigChange(config.copy(jniCallValidation = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.timingCheck,
-                                        description = Strings.timingCheckHint,
+                                        title = AppStringsProvider.current().timingCheck,
+                                        description = AppStringsProvider.current().timingCheckHint,
                                         checked = config.timingCheck,
                                         onCheckedChange = { onConfigChange(config.copy(timingCheck = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.stackTraceFilter,
-                                        description = Strings.stackTraceFilterHint,
+                                        title = AppStringsProvider.current().stackTraceFilter,
+                                        description = AppStringsProvider.current().stackTraceFilterHint,
                                         checked = config.stackTraceFilter,
                                         onCheckedChange = { onConfigChange(config.copy(stackTraceFilter = it)) }
                                     )
@@ -449,9 +449,9 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 防篡改 =====
+                            // Note
                             HardeningSectionHeader(
-                                title = Strings.antiTamper,
+                                title = AppStringsProvider.current().antiTamper,
                                 icon = Icons.Default.Fingerprint,
                                 expanded = showAntiTamperOptions,
                                 onToggle = { showAntiTamperOptions = !showAntiTamperOptions }
@@ -459,26 +459,26 @@ fun HardeningConfigCard(
                             AnimatedVisibility(visible = showAntiTamperOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     HardeningOption(
-                                        title = Strings.multiPointSignature,
-                                        description = Strings.multiPointSignatureHint,
+                                        title = AppStringsProvider.current().multiPointSignature,
+                                        description = AppStringsProvider.current().multiPointSignatureHint,
                                         checked = config.multiPointSignatureVerify,
                                         onCheckedChange = { onConfigChange(config.copy(multiPointSignatureVerify = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.apkChecksum,
-                                        description = Strings.apkChecksumHint,
+                                        title = AppStringsProvider.current().apkChecksum,
+                                        description = AppStringsProvider.current().apkChecksumHint,
                                         checked = config.apkChecksumValidation,
                                         onCheckedChange = { onConfigChange(config.copy(apkChecksumValidation = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.resourceIntegrity,
-                                        description = Strings.resourceIntegrityHint,
+                                        title = AppStringsProvider.current().resourceIntegrity,
+                                        description = AppStringsProvider.current().resourceIntegrityHint,
                                         checked = config.resourceIntegrity,
                                         onCheckedChange = { onConfigChange(config.copy(resourceIntegrity = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.certificatePinning,
-                                        description = Strings.certificatePinningHint,
+                                        title = AppStringsProvider.current().certificatePinning,
+                                        description = AppStringsProvider.current().certificatePinningHint,
                                         checked = config.certificatePinning,
                                         onCheckedChange = { onConfigChange(config.copy(certificatePinning = it)) }
                                     )
@@ -487,18 +487,18 @@ fun HardeningConfigCard(
                             
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             
-                            // ===== 威胁响应策略 =====
+                            // Note
                             HardeningSectionHeader(
-                                title = Strings.threatResponse,
+                                title = AppStringsProvider.current().threatResponse,
                                 icon = Icons.Default.Warning,
                                 expanded = showThreatOptions,
                                 onToggle = { showThreatOptions = !showThreatOptions }
                             )
                             AnimatedVisibility(visible = showThreatOptions) {
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    // 响应策略选择
+                                    // select
                                     Text(
-                                        text = Strings.threatResponse,
+                                        text = AppStringsProvider.current().threatResponse,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.tertiary,
                                         modifier = Modifier.padding(vertical = 4.dp)
@@ -511,7 +511,7 @@ fun HardeningConfigCard(
                                     
                                     Spacer(modifier = Modifier.height(4.dp))
                                     
-                                    // 响应延迟
+                                    // Note
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -519,11 +519,11 @@ fun HardeningConfigCard(
                                     ) {
                                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                             Text(
-                                                text = Strings.responseDelay,
+                                                text = AppStringsProvider.current().responseDelay,
                                                 style = MaterialTheme.typography.bodyMedium
                                             )
                                             Text(
-                                                text = Strings.responseDelayHint,
+                                                text = AppStringsProvider.current().responseDelayHint,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -545,14 +545,14 @@ fun HardeningConfigCard(
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                                     
                                     HardeningOption(
-                                        title = Strings.enableHoneypot,
-                                        description = Strings.enableHoneypotHint,
+                                        title = AppStringsProvider.current().enableHoneypot,
+                                        description = AppStringsProvider.current().enableHoneypotHint,
                                         checked = config.enableHoneypot,
                                         onCheckedChange = { onConfigChange(config.copy(enableHoneypot = it)) }
                                     )
                                     HardeningOption(
-                                        title = Strings.enableSelfDestruct,
-                                        description = Strings.enableSelfDestructHint,
+                                        title = AppStringsProvider.current().enableSelfDestruct,
+                                        description = AppStringsProvider.current().enableSelfDestructHint,
                                         checked = config.enableSelfDestruct,
                                         onCheckedChange = { onConfigChange(config.copy(enableSelfDestruct = it)) },
                                         isDangerous = true
@@ -562,7 +562,7 @@ fun HardeningConfigCard(
                         }
                     }
                     
-                    // 加固说明
+                    // Note
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
@@ -580,7 +580,7 @@ fun HardeningConfigCard(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = Strings.appHardeningDesc,
+                                text = AppStringsProvider.current().appHardeningDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -593,7 +593,7 @@ fun HardeningConfigCard(
 }
 
 /**
- * 加固等级选择芯片
+ * select
  */
 @Composable
 private fun HardeningLevelChip(
@@ -612,7 +612,7 @@ private fun HardeningLevelChip(
 }
 
 /**
- * 加固分区标题
+ * Note
  */
 @Composable
 private fun HardeningSectionHeader(
@@ -665,7 +665,7 @@ private fun HardeningSectionHeader(
 }
 
 /**
- * 加固选项行
+ * Note
  */
 @Composable
 private fun HardeningOption(
@@ -707,17 +707,17 @@ private fun HardeningOption(
 }
 
 /**
- * 威胁响应策略选择器
+ * select
  */
 @Composable
 private fun ThreatResponseSelector(
-    selectedResponse: AppHardeningConfig.ThreatResponse,
-    onResponseChange: (AppHardeningConfig.ThreatResponse) -> Unit
+    selectedResponse: com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse,
+    onResponseChange: (com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        AppHardeningConfig.ThreatResponse.entries.forEach { response ->
+        com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse.entries.forEach { response ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -730,8 +730,8 @@ private fun ThreatResponseSelector(
                     text = response.displayName,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 4.dp),
-                    color = if (response == AppHardeningConfig.ThreatResponse.DATA_WIPE ||
-                        response == AppHardeningConfig.ThreatResponse.CRASH_RANDOM)
+                    color = if (response == com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse.DATA_WIPE ||
+                        response == com.webtoapp.data.model.webapp.config.AppHardeningConfig.ThreatResponse.CRASH_RANDOM)
                         MaterialTheme.colorScheme.error
                     else
                         MaterialTheme.colorScheme.onSurface
@@ -742,7 +742,7 @@ private fun ThreatResponseSelector(
 }
 
 /**
- * 计算当前保护层数
+ * current
  */
 private fun countProtectionLayers(config: AppHardeningConfig): Int {
     var count = 0

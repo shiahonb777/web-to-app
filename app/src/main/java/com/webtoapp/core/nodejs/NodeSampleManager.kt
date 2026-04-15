@@ -1,12 +1,12 @@
 package com.webtoapp.core.nodejs
 
 import android.content.Context
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
 /**
- * Node.js 示例项目管理器
+ * project.
  */
 object NodeSampleManager {
     
@@ -15,8 +15,8 @@ object NodeSampleManager {
         return listOf(
             TypedSampleProject(
                 id = "nodejs-express$suffix",
-                name = Strings.sampleNodeExpressName,
-                description = Strings.sampleNodeExpressDesc,
+                name = AppStringsProvider.current().sampleNodeExpressName,
+                description = AppStringsProvider.current().sampleNodeExpressDesc,
                 frameworkName = "Express",
                 icon = "check_circle",
                 tags = listOf("Express 4", "Todo App", "CRUD"),
@@ -24,8 +24,8 @@ object NodeSampleManager {
             ),
             TypedSampleProject(
                 id = "nodejs-fastify$suffix",
-                name = Strings.sampleNodeFastifyName,
-                description = Strings.sampleNodeFastifyDesc,
+                name = AppStringsProvider.current().sampleNodeFastifyName,
+                description = AppStringsProvider.current().sampleNodeFastifyDesc,
                 frameworkName = "Fastify",
                 icon = "analytics",
                 tags = listOf("Fastify 4", "Dashboard", "Real-time"),
@@ -33,8 +33,8 @@ object NodeSampleManager {
             ),
             TypedSampleProject(
                 id = "nodejs-koa$suffix",
-                name = Strings.sampleNodeKoaName,
-                description = Strings.sampleNodeKoaDesc,
+                name = AppStringsProvider.current().sampleNodeKoaName,
+                description = AppStringsProvider.current().sampleNodeKoaDesc,
                 frameworkName = "Koa",
                 icon = "edit_note",
                 tags = listOf("Koa 2", "Markdown", "Notes"),

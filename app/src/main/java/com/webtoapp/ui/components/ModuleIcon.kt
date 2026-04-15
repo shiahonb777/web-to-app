@@ -15,12 +15,12 @@ import androidx.compose.ui.res.painterResource
 import com.webtoapp.util.SvgIconMapper
 
 /**
- * 统一的模块图标组件
+ * unified moduleicon
  * 
- * 支持三种图标来源：
- * 1. `drawable:xxx` — Android drawable 资源引用 (如 drawable:ic_ext_bewlycat)
- * 2. `asset:xxx`    — assets 目录下的图片文件 (如 asset:extensions/bewlycat/assets/icon-512.png)
- * 3. 其他           — 通过 SvgIconMapper 映射到 Material Icon (如 "extension", "shield", "🐱")
+ * support icon
+ * 1. `drawable: xxx`- Android drawable( drawable: ic_ext_bewlycat)
+ * 2. `asset: xxx`- assets directory file( asset: extensions/bewlycat/assets/icon- 512.
+ * 3. - SvgIconMapper Material Icon( "extension", "shield", "🐱")
  */
 @Composable
 fun ModuleIcon(
@@ -30,7 +30,7 @@ fun ModuleIcon(
     tint: Color = MaterialTheme.colorScheme.primary
 ) {
     when {
-        // 1. drawable 资源引用: "drawable:ic_ext_bewlycat"
+        // 1. drawable: "drawable: ic_ext_bewlycat"
         iconId.startsWith("drawable:") -> {
             val resName = iconId.removePrefix("drawable:")
             val context = LocalContext.current
@@ -42,10 +42,10 @@ fun ModuleIcon(
                     painter = painterResource(id = resId),
                     contentDescription = contentDescription,
                     modifier = modifier,
-                    tint = Color.Unspecified  // 保持原色，不施加 tint
+                    tint = Color.Unspecified  // , tint
                 )
             } else {
-                // Fallback: drawable 未找到，使用默认图标
+                // Fallback: drawable, defaulticon
                 Icon(
                     SvgIconMapper.getIcon("extension"),
                     contentDescription = contentDescription,
@@ -55,7 +55,7 @@ fun ModuleIcon(
             }
         }
         
-        // 2. assets 图片引用: "asset:extensions/bewlycat/assets/icon-512.png"
+        // 2. assets: "asset: extensions/bewlycat/assets/icon- 512. png"
         iconId.startsWith("asset:") -> {
             val assetPath = iconId.removePrefix("asset:")
             val context = LocalContext.current
@@ -85,7 +85,7 @@ fun ModuleIcon(
             }
         }
         
-        // 3. SvgIconMapper 映射 (Material Icon ID 或旧版 emoji)
+        // 3. SvgIconMapper( Material Icon ID or emoji)
         else -> {
             Icon(
                 SvgIconMapper.getIcon(iconId),

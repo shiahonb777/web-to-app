@@ -18,23 +18,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import android.os.Environment
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.File
 import java.io.InputStream
 
 /**
- * 扩展模块管理器
- * 
- * 负责模块的增删改查、导入导出、存储管理
+ * Extension module manager.
+ *
+ * Handles CRUD, import/export, and storage for modules.
  */
 @SuppressLint("StaticFieldLeak")
-class ExtensionManager private constructor(private val context: Context) {
+class ExtensionManager(private val context: Context) {
     
     companion object {
         private const val TAG = "ExtensionManager"
         private const val MODULES_DIR = "extension_modules"
         private const val MODULES_FILE = "modules.json"
-        private const val BUILTIN_STATES_FILE = "builtin_states.json"  // Built-in模块启用状态
+        private const val BUILTIN_STATES_FILE = "builtin_states.json"  // Built-in module enabled states
         private const val MODULE_FILE_EXTENSION = ".wtamod"  // WebToApp Module
         private const val PACKAGE_FILE_EXTENSION = ".wtapkg" // WebToApp Package
         
@@ -51,8 +51,8 @@ class ExtensionManager private constructor(private val context: Context) {
         }
         
         /**
-         * 释放单例实例
-         * 通常在 Application.onTerminate 或测试时调用
+         * Releases the singleton instance.
+         * Typically invoked from Application.onTerminate or tests.
          */
         fun release() {
             synchronized(this) {
@@ -61,7 +61,7 @@ class ExtensionManager private constructor(private val context: Context) {
         }
     }
     
-    // 使用容错性更强的 Gson 配置
+    // Use a forgiving Gson configuration
     // Custom deserializer for enums that falls back to default value on error
     private inline fun <reified T : Enum<T>> enumDeserializer(defaultValue: T): JsonDeserializer<T> {
         return JsonDeserializer { json, _, _ ->
@@ -75,8 +75,8 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     private val gson: Gson = GsonBuilder()
-        .setLenient()  // 容许非标准 JSON
-        .serializeNulls()  // 序列化 null 值
+        .setLenient()  // Allow non-standard JSON
+        .serializeNulls()  // Serialize null values
         // Register enum type adapters with fallback values
         .registerTypeAdapter(ModuleCategory::class.java, enumDeserializer(ModuleCategory.OTHER))
         .registerTypeAdapter(ModuleRunTime::class.java, enumDeserializer(ModuleRunTime.DOCUMENT_END))
@@ -94,11 +94,11 @@ class ExtensionManager private constructor(private val context: Context) {
         File(context.filesDir, MODULES_DIR).apply { mkdirs() }
     }
     
-    // Module列表状态
+    // Module list state
     private val _modules = MutableStateFlow<List<ExtensionModule>>(emptyList())
     val modules: StateFlow<List<ExtensionModule>> = _modules.asStateFlow()
     
-    // Built-in模块
+    // Built-in modules
     private val _builtInModules = MutableStateFlow<List<ExtensionModule>>(emptyList())
     val builtInModules: StateFlow<List<ExtensionModule>> = _builtInModules.asStateFlow()
     
@@ -107,7 +107,12 @@ class ExtensionManager private constructor(private val context: Context) {
     private var _allModulesCache: List<ExtensionModule> = emptyList()
     
     init {
-        // Initialize时加载模块
+        synchronized(Companion) {
+            if (INSTANCE == null) {
+                INSTANCE = this
+            }
+        }
+        // Load modules during initialization
         loadModules()
         loadBuiltInModules()
         rebuildAllModulesCache()
@@ -125,7 +130,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 加载所有用户模块
+     * Load all user modules.
      */
     private fun loadModules() {
         try {
@@ -142,7 +147,7 @@ class ExtensionManager private constructor(private val context: Context) {
                     gson.fromJson(json, type)
                 } catch (e: Exception) {
                     AppLogger.e(TAG, "JSON parsing failed, attempting recovery", e)
-                    // 尝试恢复：备份损坏文件并重置
+                    // Attempt recovery: back up the corrupted file and reset
                     val backupFile = File(modulesDir, "modules_backup_${System.currentTimeMillis()}.json")
                     file.copyTo(backupFile, overwrite = true)
                     AppLogger.i(TAG, "Corrupted modules backed up to: ${backupFile.name}")
@@ -158,15 +163,15 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 加载内置模块
+     * Load built-in modules.
      */
     private fun loadBuiltInModules() {
         val builtInStates = loadBuiltInStates()
         
-        // 加载标准内置模块
+        // Load standard built-in modules
         val standardModules = BuiltInModules.getAll()
         
-        // 加载内置 Chrome 扩展模块
+        // Load built-in Chrome extension modules
         val chromeExtModules = try {
             BuiltInChromeExtensions.getAll(context)
         } catch (e: Exception) {
@@ -175,7 +180,7 @@ class ExtensionManager private constructor(private val context: Context) {
         }
         
         _builtInModules.value = (standardModules + chromeExtModules).map { module ->
-            // App保存的启用状态
+            // App-saved enable states
             val savedEnabled = builtInStates[module.id]
             if (savedEnabled != null) {
                 module.copy(enabled = savedEnabled)
@@ -186,7 +191,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 重新加载内置模块（语言切换时调用）
+     * Reload built-in modules after language changes.
      */
     fun reloadBuiltInModules() {
         loadBuiltInModules()
@@ -195,7 +200,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 加载内置模块的启用状态
+     * Load built-in module enable states.
      */
     private fun loadBuiltInStates(): Map<String, Boolean> {
         return try {
@@ -214,7 +219,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 保存内置模块的启用状态
+     * Persist built-in module enable states.
      */
     private suspend fun saveBuiltInStates() = withContext(Dispatchers.IO) {
         saveMutex.withLock {
@@ -230,7 +235,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 保存模块列表
+     * Persist the module list.
      */
     private suspend fun saveModules() = withContext(Dispatchers.IO) {
         saveMutex.withLock {
@@ -246,35 +251,35 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 获取所有模块（内置 + 用户）
+     * Return all modules (built-in + user).
      */
     fun getAllModules(): List<ExtensionModule> {
         return _allModulesCache
     }
     
     /**
-     * 获取启用的模块
+     * Return enabled modules.
      */
     fun getEnabledModules(): List<ExtensionModule> {
         return getAllModules().filter { it.enabled }
     }
     
     /**
-     * 根据 URL 获取匹配的模块
+     * Find modules matching a URL.
      */
     fun getModulesForUrl(url: String): List<ExtensionModule> {
         return getEnabledModules().filter { it.matchesUrl(url) }
     }
     
     /**
-     * 根据分类获取模块
+     * Get modules by category.
      */
     fun getModulesByCategory(category: ModuleCategory): List<ExtensionModule> {
         return getAllModules().filter { it.category == category }
     }
     
     /**
-     * Search模块
+     * Search modules.
      */
     fun searchModules(query: String): List<ExtensionModule> {
         val lowerQuery = query.lowercase()
@@ -286,20 +291,19 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 添加模块
      */
     suspend fun addModule(module: ExtensionModule): Result<ExtensionModule> {
         return try {
-            // Verify模块
+            // Verify.
             val errors = module.validate()
             if (errors.isNotEmpty()) {
                 return Result.failure(IllegalArgumentException(errors.joinToString("\n")))
             }
             
-            // Check是否已存在同名模块
+            // Check is in.
             val existing = _modules.value.find { it.id == module.id }
             val newModule = if (existing != null) {
-                // Update现有模块
+                // Update.
                 module.copy(updatedAt = System.currentTimeMillis())
             } else {
                 module
@@ -318,14 +322,12 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 更新模块
      */
     suspend fun updateModule(module: ExtensionModule): Result<ExtensionModule> {
         return addModule(module.copy(updatedAt = System.currentTimeMillis()))
     }
     
     /**
-     * 删除模块
      */
     suspend fun deleteModule(moduleId: String): Result<Unit> {
         return try {
@@ -340,7 +342,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 切换模块启用状态
+     * use.
      */
     suspend fun toggleModule(moduleId: String): Result<Boolean> {
         return try {
@@ -354,7 +356,7 @@ class ExtensionManager private constructor(private val context: Context) {
                 return Result.success(updatedModule.enabled)
             }
             
-            // 检查是否是内置模块
+            // Check is is.
             val builtInModule = _builtInModules.value.find { it.id == moduleId }
             if (builtInModule != null) {
                 val updatedModule = builtInModule.copy(enabled = !builtInModule.enabled)
@@ -366,7 +368,7 @@ class ExtensionManager private constructor(private val context: Context) {
                 return Result.success(updatedModule.enabled)
             }
             
-            Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+            Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to toggle module", e)
             Result.failure(e)
@@ -374,12 +376,12 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 更新模块配置
+     * config.
      */
     suspend fun updateModuleConfig(moduleId: String, configValues: Map<String, String>): Result<Unit> {
         return try {
             val module = _modules.value.find { it.id == moduleId }
-                ?: return Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             val updatedModule = module.copy(
                 configValues = configValues,
@@ -397,15 +399,14 @@ class ExtensionManager private constructor(private val context: Context) {
     }
 
     
-    // ==================== 导入导出功能 ====================
     
     /**
-     * 导出单个模块为文件
+     * single as.
      */
     suspend fun exportModule(moduleId: String): Result<File> = withContext(Dispatchers.IO) {
         try {
             val module = getAllModules().find { it.id == moduleId }
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             val fileName = "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
             val file = File(context.cacheDir, fileName)
@@ -419,7 +420,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 导出多个模块为包
+     * multiple as.
      */
     suspend fun exportModulePackage(
         moduleIds: List<String>,
@@ -430,7 +431,7 @@ class ExtensionManager private constructor(private val context: Context) {
         try {
             val modulesToExport = getAllModules().filter { it.id in moduleIds }
             if (modulesToExport.isEmpty()) {
-                return@withContext Result.failure(IllegalArgumentException(Strings.errNoModulesToExport))
+                return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errNoModulesToExport))
             }
             
             val pkg = ModulePackage(
@@ -452,15 +453,15 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 从文件导入模块
+     * from.
      */
     suspend fun importModule(inputStream: InputStream): Result<ExtensionModule> = withContext(Dispatchers.IO) {
         try {
             val json = inputStream.bufferedReader().readText()
             val module = ExtensionModule.fromJson(json)
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errInvalidModuleFile))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errInvalidModuleFile))
             
-            // Generate新 ID 避免冲突
+            // Generate ID.
             val importedModule = module.copy(
                 id = java.util.UUID.randomUUID().toString(),
                 builtIn = false,
@@ -476,12 +477,12 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 从分享码导入模块
+     * from.
      */
     suspend fun importFromShareCode(shareCode: String): Result<ExtensionModule> {
         return try {
             val module = ExtensionModule.fromShareCode(shareCode)
-                ?: return Result.failure(IllegalArgumentException(Strings.errInvalidShareCode))
+                ?: return Result.failure(IllegalArgumentException(AppStringsProvider.current().errInvalidShareCode))
             
             val importedModule = module.copy(
                 id = java.util.UUID.randomUUID().toString(),
@@ -498,13 +499,13 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 从文件导入模块包
+     * from.
      */
     suspend fun importModulePackage(inputStream: InputStream): Result<List<ExtensionModule>> = withContext(Dispatchers.IO) {
         try {
             val json = inputStream.bufferedReader().readText()
             val pkg = ModulePackage.fromJson(json)
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errInvalidModulePackage))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errInvalidModulePackage))
             
             val importedModules = mutableListOf<ExtensionModule>()
             for (module in pkg.modules) {
@@ -527,34 +528,32 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 分享模块（生成分享 Intent）
      */
     fun shareModule(moduleId: String): Intent? {
         val module = getAllModules().find { it.id == moduleId } ?: return null
         
         val shareText = """
-            ${Strings.shareModuleTitle}
+            ${AppStringsProvider.current().shareModuleTitle}
             
-            ${Strings.shareModuleName}：${module.name}
-            ${if (module.description.isNotBlank()) "${Strings.shareModuleDesc}：${module.description}" else ""}
-            ${Strings.shareModuleCategory}：${module.category.getDisplayName()}
-            ${Strings.shareModuleVersion}：${module.version.name}
+            ${AppStringsProvider.current().shareModuleName}：${module.name}
+            ${if (module.description.isNotBlank()) "${AppStringsProvider.current().shareModuleDesc}：${module.description}" else ""}
+            ${AppStringsProvider.current().shareModuleCategory}：${module.category.getDisplayName()}
+            ${AppStringsProvider.current().shareModuleVersion}：${module.version.name}
             
-            ${Strings.shareModuleCode}：
+            ${AppStringsProvider.current().shareModuleCode}：
             ${module.toShareCode()}
             
-            ${Strings.shareModuleHowTo}
+            ${AppStringsProvider.current().shareModuleHowTo}
         """.trimIndent()
         
         return Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "${Strings.shareModuleSubject} - ${module.name}")
+            putExtra(Intent.EXTRA_SUBJECT, "${AppStringsProvider.current().shareModuleSubject} - ${module.name}")
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
     }
     
     /**
-     * 分享模块文件
      */
     suspend fun shareModuleFile(moduleId: String): Intent? = withContext(Dispatchers.IO) {
         val result = exportModule(moduleId)
@@ -573,13 +572,13 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 导出模块到默认的 Downloads 文件夹
-     * @return 返回导出的文件路径
+     * to Downloads.
+     * @return.
      */
     suspend fun exportModuleToDownloads(moduleId: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             val module = getAllModules().find { it.id == moduleId }
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             val fileName = "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -599,18 +598,18 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 导出模块到指定 URI（用于 SAF 文件选择器）
-     * @param moduleId 模块 ID
-     * @param uri 用户选择的保存位置 URI
+     * to URI.
+     * @param moduleId ID.
+     * @param uri use Save URI.
      */
     suspend fun exportModuleToUri(moduleId: String, uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val module = getAllModules().find { it.id == moduleId }
-                ?: return@withContext Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+                ?: return@withContext Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
             
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.write(module.toJson().toByteArray())
-            } ?: return@withContext Result.failure(IllegalStateException(Strings.errCannotOpenOutputStream))
+            } ?: return@withContext Result.failure(IllegalStateException(AppStringsProvider.current().errCannotOpenOutputStream))
             
             Result.success(Unit)
         } catch (e: Exception) {
@@ -620,21 +619,20 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 获取模块导出文件名
+     * Get.
      */
     fun getModuleExportFileName(moduleId: String): String? {
         val module = getAllModules().find { it.id == moduleId } ?: return null
         return "${module.name.replace(SAFE_FILENAME_REGEX, "_")}$MODULE_FILE_EXTENSION"
     }
     
-    // ==================== 模块执行 ====================
     
     /**
-     * 生成指定 URL 的所有模块注入代码
-     * 每个模块独立包装，错误隔离
+     * URL.
+     * .
      */
     fun generateInjectionCode(url: String, runAt: ModuleRunTime): String {
-        // Skip CHROME_EXTENSION and USERSCRIPT modules — they are handled by their own
+        // Skip CHROME_EXTENSION and USERSCRIPT modules they are handled by their own
         // polyfill injection functions (injectChromeExtensionPolyfills / injectGreasemonkeyPolyfills)
         val matchingModules = getModulesForUrl(url).filter {
             it.runAt == runAt &&
@@ -658,19 +656,19 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 生成指定模块ID列表的注入代码
-     * 每个模块独立包装，错误隔离
-     * @param url 当前页面URL
-     * @param runAt 运行时机
-     * @param moduleIds 要注入的模块ID列表
+     * ID.
+     * .
+     * @param url before URL.
+     * @param runAt when.
+     * @param moduleIds ID.
      */
     fun generateInjectionCodeForModules(url: String, runAt: ModuleRunTime, moduleIds: List<String>): String {
         if (moduleIds.isEmpty()) return ""
         
         val allModules = getAllModules()
-        // 注意：这里不检查 module.enabled，因为模块的启用状态由每个应用的配置控制
-        // 如果应用配置中包含此模块ID，则无条件注入（只要匹配URL和运行时机）
-        // Skip CHROME_EXTENSION and USERSCRIPT modules — they are handled by their own
+        // not Check module.enabled as use use config.
+        // use config in ID.
+        // Skip CHROME_EXTENSION and USERSCRIPT modules they are handled by their own
         // polyfill injection functions (injectChromeExtensionPolyfills / injectGreasemonkeyPolyfills)
         val targetModules = allModules.filter { module ->
             module.id in moduleIds && 
@@ -697,14 +695,14 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 根据ID获取模块
+     * IDGet.
      */
     fun getModuleById(moduleId: String): ExtensionModule? {
         return getAllModules().find { it.id == moduleId }
     }
     
     /**
-     * 根据ID列表获取模块
+     * ID Get.
      */
     fun getModulesByIds(moduleIds: List<String>): List<ExtensionModule> {
         val allModules = getAllModules()
@@ -712,15 +710,14 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 复制模块
      */
     suspend fun duplicateModule(moduleId: String): Result<ExtensionModule> {
         val module = _modules.value.find { it.id == moduleId }
-            ?: return Result.failure(IllegalArgumentException(Strings.errModuleNotFound))
+            ?: return Result.failure(IllegalArgumentException(AppStringsProvider.current().errModuleNotFound))
         
         val duplicated = module.copy(
             id = java.util.UUID.randomUUID().toString(),
-            name = "${module.name} (${Strings.moduleCopySuffix})",
+            name = "${module.name} (${AppStringsProvider.current().moduleCopySuffix})",
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
@@ -729,7 +726,7 @@ class ExtensionManager private constructor(private val context: Context) {
     }
     
     /**
-     * 获取模块统计信息
+     * Get.
      */
     fun getStatistics(): ModuleStatistics {
         val all = getAllModules()
@@ -749,7 +746,6 @@ class ExtensionManager private constructor(private val context: Context) {
 }
 
 /**
- * 模块统计信息
  */
 data class ModuleStatistics(
     val totalCount: Int,

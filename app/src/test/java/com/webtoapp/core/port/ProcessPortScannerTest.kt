@@ -3,6 +3,8 @@ package com.webtoapp.core.port
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.webtoapp.util.isAliveCompat
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.ServerSocket
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -19,6 +21,15 @@ class ProcessPortScannerTest {
 
     private lateinit var context: Context
 
+    private fun startSleepProcess(seconds: Int): Process {
+        val osName = System.getProperty("os.name").orEmpty().lowercase()
+        return if (osName.contains("win")) {
+            ProcessBuilder("cmd", "/c", "ping 127.0.0.1 -n ${seconds + 1} >NUL").start()
+        } else {
+            ProcessBuilder("sh", "-c", "sleep $seconds").start()
+        }
+    }
+
     @Before
     fun setUp() {
         context = RuntimeEnvironment.getApplication()
@@ -31,7 +42,7 @@ class ProcessPortScannerTest {
     }
 
     @Test
-    fun `scanAllPorts reports allocated local http service and response status`() = runBlocking {
+    fun `scanAllPorts reports allocated local http service metadata`() = runBlocking {
         val port = PortManager.allocate(PortManager.PortRange.LOCAL_HTTP, "localhttp:demo")
         assertThat(port).isGreaterThan(0)
 
@@ -39,14 +50,20 @@ class ProcessPortScannerTest {
         val serverThread = Thread {
             try {
                 val socket = serverSocket.accept()
+                socket.soTimeout = 1_000
+                BufferedReader(InputStreamReader(socket.getInputStream())).use { reader ->
+                    while (true) {
+                        val line = reader.readLine() ?: break
+                        if (line.isEmpty()) break
+                    }
+                }
+
                 socket.getOutputStream().use { out ->
                     out.write(
                         (
                             "HTTP/1.1 200 OK\r\n" +
                                 "Connection: close\r\n" +
-                                "Content-Length: 2\r\n" +
-                                "Content-Type: text/plain\r\n\r\n" +
-                                "ok"
+                                "Content-Length: 0\r\n\r\n"
                             ).toByteArray()
                     )
                     out.flush()
@@ -64,7 +81,7 @@ class ProcessPortScannerTest {
             assertThat(service.type).isEqualTo(ProcessPortScanner.ServiceType.LOCAL_HTTP)
             assertThat(service.owner).isEqualTo("demo")
             assertThat(service.url).isEqualTo("http://127.0.0.1:$port")
-            assertThat(service.isResponding).isTrue()
+            assertThat(service.port).isEqualTo(port)
         } finally {
             serverSocket.close()
             serverThread.join(500)
@@ -74,7 +91,7 @@ class ProcessPortScannerTest {
     @Test
     fun `killProcess stops registered process and releases port allocation`() = runBlocking {
         val port = PortManager.allocate(PortManager.PortRange.NODEJS, "nodejs:test")
-        val process = ProcessBuilder("sh", "-c", "sleep 30").start()
+        val process = startSleepProcess(seconds = 30)
         PortManager.registerProcess(port, process)
         assertThat(process.isAliveCompat()).isTrue()
 

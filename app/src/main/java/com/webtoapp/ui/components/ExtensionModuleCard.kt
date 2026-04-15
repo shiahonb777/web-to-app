@@ -40,16 +40,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.extension.*
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import java.io.ByteArrayOutputStream
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import org.koin.compose.koinInject
 
-// 预设图标数据（id 与 ExtensionPanelScript.ICON_SVG_MAP 的 key 对应）
+// icon( id with ExtensionPanelScript. ICON_SVG_MAP key)
 private data class FabPresetIcon(val id: String, val icon: ImageVector)
 
-// 方案图标选择器的预设 emoji
+// iconselect emoji
 private val PRESET_ICONS = listOf(
     "package", "book", "shield", "movie", "wrench", "dark_mode", "bolt", "target",
     "fire", "diamond", "rocket", "palette", "globe", "lock", "lightbulb", "music_note",
@@ -80,10 +81,10 @@ private val PRESET_FAB_ICONS = listOf(
 )
 
 /**
- * 扩展模块设置卡片
+ * modulesettingscard
  * 
- * 类似于激活码、公告、广告拦截等功能卡片的设计风格
- * 支持开关控制和模块选择
+ * activation code, announcement, intercept card
+ * support moduleselect
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,22 +98,22 @@ fun ExtensionModuleCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val extensionManager = remember { ExtensionManager.getInstance(context) }
+    val extensionManager: ExtensionManager = koinInject()
     val userModules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     
-    // 所有可用模块（不再过滤全局启用状态，因为模块的启用现在由每个应用配置控制）
+    // module( state, module appconfig)
     val allModules = builtInModules + userModules
-    val availableModules = allModules // 所有模块都可以被选择
+    val availableModules = allModules // module select
     
-    // 已选择的模块
+    // select module
     val selectedModules = allModules.filter { it.id in selectedModuleIds }
     
     var showModuleSelector by remember { mutableStateOf(false) }
     var showTestDialog by remember { mutableStateOf(false) }
     
-    // 方案管理器
-    val presetManager = remember { ModulePresetManager.getInstance(context) }
+    // manager
+    val presetManager: ModulePresetManager = koinInject()
     var showPresetSelector by remember { mutableStateOf(false) }
     var showSavePresetDialog by remember { mutableStateOf(false) }
     
@@ -121,7 +122,7 @@ fun ExtensionModuleCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -149,12 +150,12 @@ fun ExtensionModuleCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.extensionModule,
+                            text = AppStringsProvider.current().extensionModule,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (enabled && selectedModuleIds.isNotEmpty()) {
                             Text(
-                                text = Strings.selectedCountFormat.format(selectedModuleIds.size),
+                                text = AppStringsProvider.current().selectedCountFormat.format(selectedModuleIds.size),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -167,7 +168,7 @@ fun ExtensionModuleCard(
                 )
             }
             
-            // Expand内容
+            // Expandcontent
             AnimatedVisibility(
                 visible = enabled,
                 enter = expandVertically() + fadeIn(),
@@ -175,28 +176,28 @@ fun ExtensionModuleCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = Strings.addCustomFeatures,
+                        text = AppStringsProvider.current().addCustomFeatures,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
-                    // 快捷方案选择
+                    // select
                     PresetQuickSelect(
                         presetManager = presetManager,
                         selectedModuleIds = selectedModuleIds,
                         onApplyPreset = { preset ->
                             onModuleIdsChange(preset.moduleIds.toSet())
-                            Toast.makeText(context, "${Strings.appliedPreset}: ${preset.name}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${AppStringsProvider.current().appliedPreset}: ${preset.name}", Toast.LENGTH_SHORT).show()
                         },
                         onShowAllPresets = { showPresetSelector = true }
                     )
                     
                     HorizontalDivider()
                     
-                    // 快速选择常用模块
+                    // select module
                     if (availableModules.isNotEmpty()) {
                         Text(
-                            text = Strings.quickSelect,
+                            text = AppStringsProvider.current().quickSelect,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -215,7 +216,7 @@ fun ExtensionModuleCard(
                         )
                     }
                     
-                    // 已选模块列表
+                    // modulelist
                     if (selectedModules.isNotEmpty()) {
                         HorizontalDivider()
                         
@@ -225,26 +226,26 @@ fun ExtensionModuleCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = Strings.selectedModulesCount.format(selectedModules.size),
+                                text = AppStringsProvider.current().selectedModulesCount.format(selectedModules.size),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Row {
-                                // Save为方案
+                                // Save
                                 TextButton(
                                     onClick = { showSavePresetDialog = true },
                                     contentPadding = PaddingValues(horizontal = 8.dp)
                                 ) {
                                     Icon(Icons.Outlined.Save, null, Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.saveAsScheme, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().saveAsScheme, style = MaterialTheme.typography.labelSmall)
                                 }
-                                // 清空按钮
+                                // button
                                 TextButton(
                                     onClick = { onModuleIdsChange(emptySet()) },
                                     contentPadding = PaddingValues(horizontal = 8.dp)
                                 ) {
-                                    Text(Strings.clearAll, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().clearAll, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -259,19 +260,19 @@ fun ExtensionModuleCard(
                         }
                     }
                     
-                    // 自定义悬浮按钮图标
+                    // buttonicon
                     HorizontalDivider()
                     FabIconSelector(
                         selectedIcon = extensionFabIcon,
                         onIconChange = onFabIconChange
                     )
                     
-                    // 操作按钮行
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 浏览全部模块按钮
+                        // allmodulebutton
                         PremiumOutlinedButton(
                             onClick = { showModuleSelector = true },
                             modifier = Modifier.weight(weight = 1f, fill = true)
@@ -282,10 +283,10 @@ fun ExtensionModuleCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.selectModules)
+                            Text(AppStringsProvider.current().selectModules)
                         }
                         
-                        // 方案管理按钮
+                        // managementbutton
                         PremiumOutlinedButton(
                             onClick = { showPresetSelector = true }
                         ) {
@@ -296,7 +297,7 @@ fun ExtensionModuleCard(
                             )
                         }
                         
-                        // 测试按钮
+                        // button
                         if (selectedModuleIds.isNotEmpty()) {
                             PremiumOutlinedButton(
                                 onClick = { showTestDialog = true }
@@ -314,7 +315,7 @@ fun ExtensionModuleCard(
         }
     }
     
-    // 方案选择对话框
+    // selectdialog
     if (showPresetSelector) {
         PresetSelectorDialog(
             presetManager = presetManager,
@@ -328,20 +329,20 @@ fun ExtensionModuleCard(
         )
     }
     
-    // Save方案对话框
+    // Save dialog
     if (showSavePresetDialog) {
         SavePresetDialog(
             moduleIds = selectedModuleIds,
             presetManager = presetManager,
             onSaved = { 
                 showSavePresetDialog = false
-                Toast.makeText(context, Strings.presetSaved, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStringsProvider.current().presetSaved, Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showSavePresetDialog = false }
         )
     }
     
-    // Module选择对话框
+    // Moduleselectdialog
     if (showModuleSelector) {
         ExtensionModuleSelectorDialog(
             allModules = allModules,
@@ -351,7 +352,7 @@ fun ExtensionModuleCard(
         )
     }
     
-    // 测试对话框
+    // dialog
     if (showTestDialog) {
         ModuleTestDialog(
             selectedModules = selectedModules,
@@ -361,7 +362,7 @@ fun ExtensionModuleCard(
 }
 
 /**
- * 快速选择模块芯片
+ * selectmodule
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -396,11 +397,11 @@ private fun QuickModuleChips(
 }
 
 /**
- * 已选模块项
+ * module
  * 
- * 紧凑两行布局：
- *   行1: [图标] 模块名称（溢出省略）  [删除按钮]
- *   行2: 标签行（内置 · UI类型 · 运行模式 · 分类）— 使用 FlowRow 自动换行
+ * Note
+ * 1: [ icon] module( ) [ deletebutton]
+ * 2: label( UItype runmode) - FlowRow
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -418,7 +419,7 @@ private fun SelectedModuleItem(
                 .padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 图标
+            // icon
             ModuleIcon(
                 iconId = module.icon,
                 contentDescription = null,
@@ -427,9 +428,9 @@ private fun SelectedModuleItem(
             )
             Spacer(modifier = Modifier.width(10.dp))
             
-            // 内容列 — 名称 + 标签
+            // content- + label
             Column(modifier = Modifier.weight(1f)) {
-                // 行1: 名称
+                // 1
                 Text(
                     module.name,
                     style = MaterialTheme.typography.bodyMedium,
@@ -440,20 +441,20 @@ private fun SelectedModuleItem(
                 
                 Spacer(modifier = Modifier.height(3.dp))
                 
-                // 行2: 标签 — FlowRow 自动换行，避免横向溢出
+                // 2: label- FlowRow,
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    // 内置标签
+                    // label
                     if (module.builtIn) {
                         CompactBadge(
-                            text = Strings.builtIn,
+                            text = AppStringsProvider.current().builtIn,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
-                    // UI 类型（仅非默认时显示）
+                    // UI type( only defaultdisplay)
                     if (module.uiConfig.type != ModuleUiType.FLOATING_BUTTON) {
                         CompactBadge(
                             text = module.uiConfig.type.getDisplayName(),
@@ -461,7 +462,7 @@ private fun SelectedModuleItem(
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
-                    // 运行模式
+                    // runmode
                     CompactBadge(
                         text = module.runMode.getDisplayName(),
                         containerColor = if (module.runMode == ModuleRunMode.AUTO)
@@ -473,7 +474,7 @@ private fun SelectedModuleItem(
                         else
                             MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    // 分类
+                    // Note
                     CompactBadge(
                         text = module.category.getDisplayName(),
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -482,14 +483,14 @@ private fun SelectedModuleItem(
                 }
             }
             
-            // 删除按钮
+            // deletebutton
             IconButton(
                 onClick = onRemove,
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     Icons.Outlined.Close,
-                    contentDescription = Strings.removeModule,
+                    contentDescription = AppStringsProvider.current().removeModule,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.error
                 )
@@ -499,7 +500,7 @@ private fun SelectedModuleItem(
 }
 
 /**
- * 紧凑标签 — 极小圆角胶囊
+ * label
  */
 @Composable
 private fun CompactBadge(
@@ -522,8 +523,8 @@ private fun CompactBadge(
 }
 
 /**
- * 悬浮按钮图标选择器
- * 支持预设 SVG 图标 + 相册自定义图片（带裁剪预览）
+ * buttoniconselect
+ * support SVG icon +( preview)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -533,11 +534,11 @@ private fun FabIconSelector(
 ) {
     val context = LocalContext.current
     
-    // 图片预览确认对话框状态
+    // preview dialogstate
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var pendingBase64 by remember { mutableStateOf<String?>(null) }
     
-    // 相册图片选择器
+    // select
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -546,7 +547,7 @@ private fun FabIconSelector(
             val inputStream = context.contentResolver.openInputStream(uri) ?: return@rememberLauncherForActivityResult
             val original = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
-            // 缩放到 96x96 — 高清分辨率，确保 2x/3x 屏幕也清晰
+            // 96x96- , ensure 2x/3x
             val size = minOf(original.width, original.height)
             val xOffset = (original.width - size) / 2
             val yOffset = (original.height - size) / 2
@@ -557,7 +558,7 @@ private fun FabIconSelector(
             val baos = ByteArrayOutputStream()
             scaled.compress(Bitmap.CompressFormat.PNG, 100, baos)
             val base64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
-            // 显示预览确认对话框
+            // displaypreview dialog
             pendingBitmap = scaled
             pendingBase64 = base64
         } catch (e: Exception) {
@@ -565,7 +566,7 @@ private fun FabIconSelector(
         }
     }
     
-    // 解码已保存的自定义图片（用于选择器预览）
+    // save( forselect preview)
     val customBitmap = remember(selectedIcon) {
         if (selectedIcon.startsWith("custom:")) {
             try {
@@ -577,7 +578,7 @@ private fun FabIconSelector(
     
     val isCustomSelected = selectedIcon.startsWith("custom:")
     
-    // ======== 预览确认对话框 ========
+    // ======== preview dialog ========
     if (pendingBitmap != null && pendingBase64 != null) {
         AlertDialog(
             onDismissRequest = {
@@ -586,7 +587,7 @@ private fun FabIconSelector(
                 pendingBase64 = null
             },
             icon = {
-                // 圆形预览 — 模拟实际 FAB 效果
+                // preview- FAB
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.primary,
@@ -608,13 +609,13 @@ private fun FabIconSelector(
             },
             title = {
                 Text(
-                    Strings.fabIconPreviewTitle,
+                    AppStringsProvider.current().fabIconPreviewTitle,
                     style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
                 Text(
-                    Strings.fabIconPreviewDesc,
+                    AppStringsProvider.current().fabIconPreviewDesc,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -625,25 +626,25 @@ private fun FabIconSelector(
                     pendingBitmap = null
                     pendingBase64 = null
                 }) {
-                    Text(Strings.confirm)
+                    Text(AppStringsProvider.current().confirm)
                 }
             },
             dismissButton = {
                 TextButton(onClick = {
-                    // 重新选择
+                    // select
                     pendingBitmap?.recycle()
                     pendingBitmap = null
                     pendingBase64 = null
                     galleryLauncher.launch("image/*")
                 }) {
-                    Text(Strings.reselect)
+                    Text(AppStringsProvider.current().reselect)
                 }
             }
         )
     }
     
     Text(
-        text = Strings.extensionFabIconLabel,
+        text = AppStringsProvider.current().extensionFabIconLabel,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -654,7 +655,7 @@ private fun FabIconSelector(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ---- 自定义图片按钮 ----
+        // ---- ----
         item {
             Surface(
                 onClick = { galleryLauncher.launch("image/*") },
@@ -681,7 +682,7 @@ private fun FabIconSelector(
                         if (customBitmap != null) {
                             Image(
                                 bitmap = customBitmap.asImageBitmap(),
-                                contentDescription = Strings.fabIconFromGallery,
+                                contentDescription = AppStringsProvider.current().fabIconFromGallery,
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
@@ -689,14 +690,14 @@ private fun FabIconSelector(
                         } else {
                             Icon(
                                 Icons.Outlined.AddPhotoAlternate,
-                                contentDescription = Strings.fabIconFromGallery,
+                                contentDescription = AppStringsProvider.current().fabIconFromGallery,
                                 modifier = Modifier.size(22.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     Text(
-                        text = if (isCustomSelected) Strings.fabIconChangeImage else Strings.fabIconCustom,
+                        text = if (isCustomSelected) AppStringsProvider.current().fabIconChangeImage else AppStringsProvider.current().fabIconCustom,
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isCustomSelected) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -707,7 +708,7 @@ private fun FabIconSelector(
             }
         }
         
-        // ---- 分隔线 ----
+        // ---- ----
         item {
             Box(
                 modifier = Modifier
@@ -717,7 +718,7 @@ private fun FabIconSelector(
             )
         }
         
-        // ---- 预设图标列表 ----
+        // ---- ----
         items(PRESET_FAB_ICONS) { preset ->
             val isSelected = selectedIcon == preset.id
             Surface(
@@ -751,7 +752,7 @@ private fun FabIconSelector(
         }
     }
     
-    // 已选状态提示
+    // Comment
     if (selectedIcon.isNotBlank()) {
         Spacer(modifier = Modifier.height(6.dp))
         Row(
@@ -765,12 +766,12 @@ private fun FabIconSelector(
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = if (isCustomSelected) Strings.fabIconSelected
+                text = if (isCustomSelected) AppStringsProvider.current().fabIconSelected
                        else PRESET_FAB_ICONS.find { it.id == selectedIcon }?.id ?: selectedIcon,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )
-            // 清除按钮
+            // Comment
             Surface(
                 onClick = { onIconChange("") },
                 shape = CircleShape,
@@ -788,7 +789,7 @@ private fun FabIconSelector(
 }
 
 /**
- * 扩展模块选择对话框
+ * moduleselectdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -801,7 +802,7 @@ fun ExtensionModuleSelectorDialog(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     
-    // 直接计算过滤后的模块列表，确保列表更新时 UI 正确响应
+    // modulelist, ensurelistupdate UI
     val filteredModules = allModules.filter { module ->
         val matchesSearch = searchQuery.isBlank() ||
             module.name.contains(searchQuery, ignoreCase = true) ||
@@ -811,7 +812,7 @@ fun ExtensionModuleSelectorDialog(
         matchesSearch && matchesCategory
     }
     
-    // 按分类分组
+    // Note
     val groupedModules = filteredModules.groupBy { it.category }
     
     Dialog(
@@ -826,17 +827,17 @@ fun ExtensionModuleSelectorDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
-                    title = { Text(Strings.selectExtensionModules) },
+                    title = { Text(AppStringsProvider.current().selectExtensionModules) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.btnCancel)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().btnCancel)
                         }
                     },
                     actions = {
                         TextButton(onClick = onDismiss) {
-                            Text(Strings.doneWithCount.format(selectedIds.size))
+                            Text(AppStringsProvider.current().doneWithCount.format(selectedIds.size))
                         }
                     }
                 )
@@ -846,17 +847,17 @@ fun ExtensionModuleSelectorDialog(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    // Search框
+                    // Search
                     PremiumTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(Strings.searchModulesHint) },
+                        placeholder = { Text(AppStringsProvider.current().searchModulesHint) },
                         leadingIcon = { Icon(Icons.Default.Search, null) },
                         trailingIcon = {
                             if (searchQuery.isNotBlank()) {
                                 IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Default.Clear, Strings.clear)
+                                    Icon(Icons.Default.Clear, AppStringsProvider.current().clear)
                                 }
                             }
                         },
@@ -866,7 +867,7 @@ fun ExtensionModuleSelectorDialog(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 分类筛选
+                    // filter
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -874,7 +875,7 @@ fun ExtensionModuleSelectorDialog(
                             PremiumFilterChip(
                                 selected = selectedCategory == null,
                                 onClick = { selectedCategory = null },
-                                label = { Text(Strings.all) },
+                                label = { Text(AppStringsProvider.current().all) },
                                 leadingIcon = if (selectedCategory == null) {
                                     { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                                 } else null
@@ -896,13 +897,13 @@ fun ExtensionModuleSelectorDialog(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Module列表
+                    // Modulelist
                     LazyColumn(
                         modifier = Modifier.weight(weight = 1f, fill = true),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (selectedCategory == null && searchQuery.isBlank()) {
-                            // 按分类显示
+                            // display
                             groupedModules.forEach { (category, modules) ->
                                 item {
                                     Text(
@@ -929,7 +930,7 @@ fun ExtensionModuleSelectorDialog(
                                 }
                             }
                         } else {
-                            // 平铺显示搜索/筛选结果
+                            // display /filter
                             items(filteredModules, key = { it.id }) { module ->
                                 ModuleSelectItem(
                                     module = module,
@@ -964,7 +965,7 @@ fun ExtensionModuleSelectorDialog(
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            Strings.noMatchingModules,
+                                            AppStringsProvider.current().noMatchingModules,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -982,7 +983,7 @@ fun ExtensionModuleSelectorDialog(
 }
 
 /**
- * 模块选择项
+ * moduleselect
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1034,7 +1035,7 @@ private fun ModuleSelectItem(
             
             // Info
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                // 名称（溢出省略）
+                // Note
                 Text(
                     module.name,
                     style = MaterialTheme.typography.bodyLarge,
@@ -1045,7 +1046,7 @@ private fun ModuleSelectItem(
                 
                 Spacer(modifier = Modifier.height(3.dp))
                 
-                // 标签行 — FlowRow 自动换行
+                // label- FlowRow
                 @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -1053,7 +1054,7 @@ private fun ModuleSelectItem(
                 ) {
                     if (module.builtIn) {
                         CompactBadge(
-                            text = Strings.builtIn,
+                            text = AppStringsProvider.current().builtIn,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -1082,7 +1083,7 @@ private fun ModuleSelectItem(
                     )
                 }
                 
-                // 标签
+                // label
                 if (module.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1103,7 +1104,7 @@ private fun ModuleSelectItem(
                 }
             }
             
-            // 选中状态
+            // state
             Checkbox(
                 checked = isSelected,
                 onCheckedChange = { onToggle() }
@@ -1113,8 +1114,8 @@ private fun ModuleSelectItem(
 }
 
 /**
- * 模块测试对话框
- * 提供测试页面让用户预览模块效果
+ * module dialog
+ * userpreviewmodule
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1138,12 +1139,12 @@ fun ModuleTestDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
-                    title = { Text(Strings.testModule) },
+                    title = { Text(AppStringsProvider.current().testModule) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     }
                 )
@@ -1154,7 +1155,7 @@ fun ModuleTestDialog(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // 已选模块信息
+                    // module
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
@@ -1173,7 +1174,7 @@ fun ModuleTestDialog(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                                 Text(
-                                    Strings.willTestModulesFormat.format(selectedModules.size),
+                                    AppStringsProvider.current().willTestModulesFormat.format(selectedModules.size),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1188,9 +1189,9 @@ fun ModuleTestDialog(
                         }
                     }
                     
-                    // 测试页面选择
+                    // select
                     Text(
-                        Strings.selectTestPageTitle,
+                        AppStringsProvider.current().selectTestPageTitle,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -1210,7 +1211,7 @@ fun ModuleTestDialog(
                         }
                     }
                     
-                    // 测试页面描述
+                    // Note
                     selectedTestPage?.let { page ->
                         Text(
                             page.description,
@@ -1221,11 +1222,11 @@ fun ModuleTestDialog(
                     
                     Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                     
-                    // Start测试按钮
+                    // Start button
                     PremiumButton(
                         onClick = {
                             selectedTestPage?.let { page ->
-                                // Start测试 WebView
+                                // Start WebView
                                 val intent = Intent(context, com.webtoapp.ui.webview.WebViewActivity::class.java).apply {
                                     putExtra("test_url", page.toDataUrl())
                                     putStringArrayListExtra("test_module_ids", ArrayList(selectedModules.map { it.id }))
@@ -1239,12 +1240,12 @@ fun ModuleTestDialog(
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.startTestBtn)
+                        Text(AppStringsProvider.current().startTestBtn)
                     }
                     
-                    // 提示
+                    // hint
                     Text(
-                        Strings.testPageHintText,
+                        AppStringsProvider.current().testPageHintText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1255,7 +1256,7 @@ fun ModuleTestDialog(
 }
 
 /**
- * 模块详情预览对话框
+ * module previewdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1276,7 +1277,7 @@ fun ModuleDetailDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
                     title = { 
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1287,7 +1288,7 @@ fun ModuleDetailDialog(
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     }
                 )
@@ -1298,7 +1299,7 @@ fun ModuleDetailDialog(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 基本信息
+                    // Note
                     if (module.description.isNotBlank()) {
                         Text(
                             module.description,
@@ -1306,18 +1307,18 @@ fun ModuleDetailDialog(
                         )
                     }
                     
-                    // 元信息
+                    // Note
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         InfoChip(module.category.getDisplayName())
                         InfoChip("v${module.version.name}")
                         if (module.builtIn) {
-                            InfoChip(Strings.builtInModule)
+                            InfoChip(AppStringsProvider.current().builtInModule)
                         }
                     }
                     
-                    // 标签
+                    // label
                     if (module.tags.isNotEmpty()) {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             items(module.tags) { tag ->
@@ -1337,10 +1338,10 @@ fun ModuleDetailDialog(
                     
                     HorizontalDivider()
                     
-                    // Configure项
+                    // Configure
                     if (module.configItems.isNotEmpty()) {
                         Text(
-                            Strings.configurableItems.format(module.configItems.size),
+                            AppStringsProvider.current().configurableItems.format(module.configItems.size),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -1362,7 +1363,7 @@ fun ModuleDetailDialog(
                     // Permission
                     if (module.permissions.isNotEmpty()) {
                         Text(
-                            Strings.requiredPermissions,
+                            AppStringsProvider.current().requiredPermissions,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -1391,7 +1392,7 @@ fun ModuleDetailDialog(
                     
                     Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                     
-                    // Select按钮
+                    // Selectbutton
                     PremiumButton(
                         onClick = {
                             onSelect()
@@ -1401,7 +1402,7 @@ fun ModuleDetailDialog(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.addThisModule)
+                        Text(AppStringsProvider.current().addThisModule)
                     }
                 }
             }
@@ -1425,7 +1426,7 @@ private fun InfoChip(text: String) {
 }
 
 /**
- * 快捷方案选择
+ * select
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1444,7 +1445,7 @@ private fun PresetQuickSelect(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = Strings.quickSchemes,
+                text = AppStringsProvider.current().quickSchemes,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1452,7 +1453,7 @@ private fun PresetQuickSelect(
                 onClick = onShowAllPresets,
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
-                Text(Strings.allSchemesBtn, style = MaterialTheme.typography.labelSmall)
+                Text(AppStringsProvider.current().allSchemesBtn, style = MaterialTheme.typography.labelSmall)
                 Icon(Icons.Default.ChevronRight, null, Modifier.size(16.dp))
             }
         }
@@ -1476,7 +1477,7 @@ private fun PresetQuickSelect(
 }
 
 /**
- * 方案选择对话框
+ * selectdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1505,10 +1506,10 @@ fun PresetSelectorDialog(
         ) {
             Column {
                 TopAppBar(
-                    title = { Text(Strings.moduleSchemes) },
+                    title = { Text(AppStringsProvider.current().moduleSchemes) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, Strings.close)
+                            Icon(Icons.Default.Close, AppStringsProvider.current().close)
                         }
                     }
                 )
@@ -1519,10 +1520,10 @@ fun PresetSelectorDialog(
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Built-in方案
+                    // Built- in
                     item {
                         Text(
-                            Strings.builtInSchemes,
+                            AppStringsProvider.current().builtInSchemes,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -1539,12 +1540,12 @@ fun PresetSelectorDialog(
                         )
                     }
                     
-                    // User方案
+                    // User
                     if (userPresets.isNotEmpty()) {
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                Strings.mySchemes,
+                                AppStringsProvider.current().mySchemes,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -1559,7 +1560,7 @@ fun PresetSelectorDialog(
                                 onApply = { onApplyPreset(preset) },
                                 onDelete = {
                                     presetManager.deletePreset(preset.id)
-                                    Toast.makeText(context, Strings.deleted, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppStringsProvider.current().deleted, Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -1568,7 +1569,7 @@ fun PresetSelectorDialog(
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            Strings.schemeTip,
+                            AppStringsProvider.current().schemeTip,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1581,7 +1582,7 @@ fun PresetSelectorDialog(
 }
 
 /**
- * 方案项
+ * Note
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1643,7 +1644,7 @@ private fun PresetItem(
                             color = MaterialTheme.colorScheme.secondaryContainer
                         ) {
                             Text(
-                                Strings.builtIn,
+                                AppStringsProvider.current().builtIn,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -1662,26 +1663,26 @@ private fun PresetItem(
                     )
                 }
                 
-                // 包含的模块
+                // module
                 Text(
-                    "${Strings.containsModules.format(modules.size)}: ${modules.joinToString { it.name }}",
+                    "${AppStringsProvider.current().containsModules.format(modules.size)}: ${modules.joinToString { it.name }}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             
-            // 操作
+            // Note
             if (isApplied) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = Strings.applied,
+                    contentDescription = AppStringsProvider.current().applied,
                     tint = MaterialTheme.colorScheme.primary
                 )
             } else if (onDelete != null) {
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = Strings.btnDelete,
+                        contentDescription = AppStringsProvider.current().btnDelete,
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -1691,7 +1692,7 @@ private fun PresetItem(
 }
 
 /**
- * 保存方案对话框
+ * save dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1708,10 +1709,10 @@ fun SavePresetDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.saveAsSchemeTitle) },
+        title = { Text(AppStringsProvider.current().saveAsSchemeTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Icon选择
+                // Iconselect
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         onClick = { showIconPicker = true },
@@ -1728,8 +1729,8 @@ fun SavePresetDialog(
                     PremiumTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text(Strings.schemeNameLabel) },
-                        placeholder = { Text(Strings.enterSchemeNameHint) },
+                        label = { Text(AppStringsProvider.current().schemeNameLabel) },
+                        placeholder = { Text(AppStringsProvider.current().enterSchemeNameHint) },
                         singleLine = true,
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
@@ -1738,22 +1739,22 @@ fun SavePresetDialog(
                 PremiumTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(Strings.descriptionOptionalLabel) },
-                    placeholder = { Text(Strings.briefDescribeSchemeHint) },
+                    label = { Text(AppStringsProvider.current().descriptionOptionalLabel) },
+                    placeholder = { Text(AppStringsProvider.current().briefDescribeSchemeHint) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Text(
-                    Strings.willSaveModules.format(moduleIds.size),
+                    AppStringsProvider.current().willSaveModules.format(moduleIds.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                // Icon选择器
+                // Iconselect
                 if (showIconPicker) {
                     HorizontalDivider()
-                    Text(Strings.selectIconTitle, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().selectIconTitle, style = MaterialTheme.typography.labelMedium)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(PRESET_ICONS) { icon ->
                             Surface(
@@ -1798,12 +1799,12 @@ fun SavePresetDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -27,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.cloud.CommunityPostItem
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.UserTitleBadges
 
 @Composable
@@ -101,7 +103,7 @@ internal fun PostCard(
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(
-                        text = { Text(Strings.communityReport) },
+                        text = { Text(AppStringsProvider.current().communityReport) },
                         onClick = { showMenu = false; onReport() },
                         leadingIcon = { Icon(Icons.Outlined.Flag, null, Modifier.size(18.dp)) }
                     )
@@ -113,10 +115,10 @@ internal fun PostCard(
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 val (badgeIcon, badgeLabel, badgeColor) = when (post.postType) {
-                    "showcase" -> Triple(Icons.Filled.Palette, post.appName ?: Strings.communityTypeShowcase, Color(0xFF6C5CE7))
-                    "tutorial" -> Triple(Icons.Filled.MenuBook, post.title ?: Strings.communityTypeTutorial, Color(0xFF4CAF50))
-                    "question" -> Triple(Icons.Filled.HelpOutline, post.title ?: Strings.communityTypeQuestion, Color(0xFFFF9800))
-                    else -> Triple(Icons.Filled.ChatBubble, Strings.communityTypeDiscussion, Color(0xFF9E9E9E))
+                    "showcase" -> Triple(Icons.Filled.Palette, post.appName ?: AppStringsProvider.current().communityTypeShowcase, Color(0xFF6C5CE7))
+                    "tutorial" -> Triple(Icons.AutoMirrored.Filled.MenuBook, post.title ?: AppStringsProvider.current().communityTypeTutorial, Color(0xFF4CAF50))
+                    "question" -> Triple(Icons.AutoMirrored.Filled.HelpOutline, post.title ?: AppStringsProvider.current().communityTypeQuestion, Color(0xFFFF9800))
+                    else -> Triple(Icons.Filled.ChatBubble, AppStringsProvider.current().communityTypeDiscussion, Color(0xFF9E9E9E))
                 }
                 Surface(
                     shape = RoundedCornerShape(6.dp),
@@ -147,9 +149,9 @@ internal fun PostCard(
                         else -> Color(0xFF9E9E9E)
                     }
                     val diffLabel = when (post.difficulty) {
-                        "beginner" -> Strings.communityDifficultyBeginner
-                        "intermediate" -> Strings.communityDifficultyIntermediate
-                        "advanced" -> Strings.communityDifficultyAdvanced
+                        "beginner" -> AppStringsProvider.current().communityDifficultyBeginner
+                        "intermediate" -> AppStringsProvider.current().communityDifficultyIntermediate
+                        "advanced" -> AppStringsProvider.current().communityDifficultyAdvanced
                         else -> post.difficulty
                     }
                     Surface(shape = RoundedCornerShape(6.dp), color = diffColor.copy(alpha = 0.1f)) {
@@ -170,7 +172,7 @@ internal fun PostCard(
                         ) {
                             Icon(Icons.Filled.CheckCircle, null, Modifier.size(11.dp), tint = Color(0xFF4CAF50))
                             Spacer(Modifier.width(2.dp))
-                            Text(Strings.communityResolvedLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                            Text(AppStringsProvider.current().communityResolvedLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
                         }
                     }
                 }
@@ -308,7 +310,7 @@ internal fun PostCard(
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(
-                                appLink.appName ?: Strings.communityApplication,
+                                appLink.appName ?: AppStringsProvider.current().communityApplication,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 maxLines = 1,
@@ -360,8 +362,8 @@ internal fun PostCard(
                     Icon(Icons.Filled.Download, null, Modifier.size(20.dp), tint = Color(0xFF6C5CE7))
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(Strings.communityUseRecipe, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF6C5CE7))
-                        Text(Strings.communityRecipeDesc, fontSize = 11.sp, color = Color(0xFF6C5CE7).copy(alpha = 0.6f))
+                        Text(AppStringsProvider.current().communityUseRecipe, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF6C5CE7))
+                        Text(AppStringsProvider.current().communityRecipeDesc, fontSize = 11.sp, color = Color(0xFF6C5CE7).copy(alpha = 0.6f))
                     }
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -493,17 +495,17 @@ internal fun formatTimeAgo(isoString: String?): String {
 
         val now = System.currentTimeMillis()
         val diff = now - epochMs
-        if (diff < 0) return Strings.timeJustNow
+        if (diff < 0) return AppStringsProvider.current().timeJustNow
         val minutes = diff / 60000
         val hours = minutes / 60
         val days = hours / 24
         when {
-            minutes < 1 -> Strings.timeJustNow
-            minutes < 60 -> String.format(Strings.timeMinutesAgo, minutes)
-            hours < 24 -> String.format(Strings.timeHoursAgo, hours)
-            days < 7 -> String.format(Strings.timeDaysAgo, days)
-            days < 30 -> String.format(Strings.timeWeeksAgo, days / 7)
-            else -> String.format(Strings.timeMonthsAgo, days / 30)
+            minutes < 1 -> AppStringsProvider.current().timeJustNow
+            minutes < 60 -> String.format(AppStringsProvider.current().timeMinutesAgo, minutes)
+            hours < 24 -> String.format(AppStringsProvider.current().timeHoursAgo, hours)
+            days < 7 -> String.format(AppStringsProvider.current().timeDaysAgo, days)
+            days < 30 -> String.format(AppStringsProvider.current().timeWeeksAgo, days / 7)
+            else -> String.format(AppStringsProvider.current().timeMonthsAgo, days / 30)
         }
     } catch (_: Exception) {
         isoString
@@ -514,8 +516,8 @@ internal fun formatDuration(seconds: Int): String {
     val hours = seconds / 3600
     val minutes = (seconds % 3600) / 60
     return when {
-        hours > 0 -> String.format(Strings.durationHourMinute, hours, minutes)
-        minutes > 0 -> String.format(Strings.durationMinute, minutes)
-        else -> Strings.durationLessThanMinute
+        hours > 0 -> String.format(AppStringsProvider.current().durationHourMinute, hours, minutes)
+        minutes > 0 -> String.format(AppStringsProvider.current().durationMinute, minutes)
+        else -> AppStringsProvider.current().durationLessThanMinute
     }
 }

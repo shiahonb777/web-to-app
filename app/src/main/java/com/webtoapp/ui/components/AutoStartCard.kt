@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -18,26 +19,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.webtoapp.core.autostart.AutoStartManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AutoStartConfig
 
 /**
- * 自启动配置卡片（v2 — 大幅优化）
+ * configcard( v2- )
  *
- * 优化点：
- * 1. 显示"下次启动时间"让用户确认自启动是否生效
- * 2. 检查并引导精确闹钟权限（Android 12+）
- * 3. 检查并引导电池优化白名单设置（国产 ROM 核心问题）
- * 4. OEM ROM 品牌检测 — 引导用户到品牌特定的自启动管理界面
- * 5. 权限状态在 onResume 时自动刷新（用户从设置页返回后即时更新）
- * 6. 支持自定义开机延迟
- * 7. 支持多时段定时启动
- * 8. 显示上次触发时间和累计触发次数（诊断信息）
+ * Note
+ * 1. display" " user
+ * 2. checkand( Android 12+)
+ * 3. checkand settings( ROM)
+ * 4. OEM ROM- user management
+ * 5. state onResume refresh( userfromsettings back update)
+ * 6. support
+ * 7. support
+ * 8. display( )
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,10 +55,10 @@ fun AutoStartCard(
     var scheduledDays by remember(config) { mutableStateOf(config?.scheduledDays ?: listOf(1,2,3,4,5,6,7)) }
     var bootDelay by remember(config) { mutableStateOf(config?.bootDelay ?: AutoStartManager.DEFAULT_BOOT_DELAY_MS) }
 
-    // Time选择对话框
+    // Timeselectdialog
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // 下次启动时间预览
+    // preview
     val nextTriggerDisplay by remember(scheduledStartEnabled, scheduledTime, scheduledDays) {
         mutableStateOf(
             if (scheduledStartEnabled && scheduledDays.isNotEmpty()) {
@@ -69,12 +70,12 @@ fun AutoStartCard(
                         val daysDiff = ((it.timeInMillis - now.timeInMillis) / (24 * 60 * 60 * 1000)).toInt()
                         val timeStr = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(it.time)
                         when (daysDiff) {
-                            0 -> "${Strings.today} $timeStr"
-                            1 -> "${Strings.tomorrow} $timeStr"
+                            0 -> "${AppStringsProvider.current().today} $timeStr"
+                            1 -> "${AppStringsProvider.current().tomorrow} $timeStr"
                             else -> {
                                 val dayNames = listOf(
-                                    Strings.dayMon, Strings.dayTue, Strings.dayWed,
-                                    Strings.dayThu, Strings.dayFri, Strings.daySat, Strings.daySun
+                                    AppStringsProvider.current().dayMon, AppStringsProvider.current().dayTue, AppStringsProvider.current().dayWed,
+                                    AppStringsProvider.current().dayThu, AppStringsProvider.current().dayFri, AppStringsProvider.current().daySat, AppStringsProvider.current().daySun
                                 )
                                 val calendarDow = it.get(java.util.Calendar.DAY_OF_WEEK)
                                 val ourDow = if (calendarDow == java.util.Calendar.SUNDAY) 7 else calendarDow - 1
@@ -87,7 +88,7 @@ fun AutoStartCard(
         )
     }
 
-    // ★ 权限状态：使用 Lifecycle 观察 onResume 刷新（用户从设置页返回后自动更新）
+    // ★ state: Lifecycle onResume refresh( userfromsettings back update)
     var canScheduleExact by remember { mutableStateOf(true) }
     var ignoringBatteryOpt by remember { mutableStateOf(true) }
 
@@ -106,7 +107,7 @@ fun AutoStartCard(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // OEM ROM 品牌信息
+    // OEM ROM
     val oemBrandName = remember { AutoStartManager(context).getOemBrandName() }
     val oemAutoStartIntent = remember { AutoStartManager(context).getOemAutoStartIntent() }
 
@@ -129,7 +130,7 @@ fun AutoStartCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+            // Note
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,19 +160,19 @@ fun AutoStartCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            Strings.autoStartSettings,
+                            AppStringsProvider.current().autoStartSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (!bootStartEnabled && !scheduledStartEnabled) {
                             Text(
-                                Strings.notEnabled,
+                                AppStringsProvider.current().notEnabled,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
-                            // 显示简要状态
+                            // display state
                             val statusParts = mutableListOf<String>()
-                            if (bootStartEnabled) statusParts.add(Strings.bootAutoStart)
+                            if (bootStartEnabled) statusParts.add(AppStringsProvider.current().bootAutoStart)
                             if (scheduledStartEnabled) statusParts.add(scheduledTime)
                             Text(
                                 statusParts.joinToString(" · "),
@@ -190,7 +191,7 @@ fun AutoStartCard(
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     // ═══════════════════════════════
-                    // 开机自启动
+                    // Note
                     // ═══════════════════════════════
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -199,11 +200,11 @@ fun AutoStartCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.bootAutoStart,
+                                AppStringsProvider.current().bootAutoStart,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.bootAutoStartHint,
+                                AppStringsProvider.current().bootAutoStartHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -217,7 +218,7 @@ fun AutoStartCard(
                         )
                     }
 
-                    // ★ 开机延迟滑块（启用开机自启动时显示）
+                    // ★( display)
                     AnimatedVisibility(visible = bootStartEnabled) {
                         Column(modifier = Modifier.padding(top = 8.dp)) {
                             Row(
@@ -226,7 +227,7 @@ fun AutoStartCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    Strings.bootDelay,
+                                    AppStringsProvider.current().bootDelay,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -252,7 +253,7 @@ fun AutoStartCard(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // ═══════════════════════════════
-                    // 定时自启动
+                    // Note
                     // ═══════════════════════════════
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -261,11 +262,11 @@ fun AutoStartCard(
                     ) {
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(
-                                Strings.scheduledAutoStart,
+                                AppStringsProvider.current().scheduledAutoStart,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                Strings.scheduledAutoStartHint,
+                                AppStringsProvider.current().scheduledAutoStartHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -279,10 +280,10 @@ fun AutoStartCard(
                         )
                     }
 
-                    // 定时启动详细配置
+                    // config
                     AnimatedVisibility(visible = scheduledStartEnabled) {
                         Column(modifier = Modifier.padding(top = 12.dp)) {
-                            // Time选择
+                            // Timeselect
                             OutlinedCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -302,7 +303,7 @@ fun AutoStartCard(
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
-                                        Text(Strings.launchTime)
+                                        Text(AppStringsProvider.current().launchTime)
                                     }
                                     Text(
                                         scheduledTime,
@@ -314,9 +315,9 @@ fun AutoStartCard(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // 星期选择
+                            // select
                             Text(
-                                Strings.launchDate,
+                                AppStringsProvider.current().launchDate,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -326,8 +327,8 @@ fun AutoStartCard(
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
                                 val dayNames = listOf(
-                                    Strings.dayMon, Strings.dayTue, Strings.dayWed,
-                                    Strings.dayThu, Strings.dayFri, Strings.daySat, Strings.daySun
+                                    AppStringsProvider.current().dayMon, AppStringsProvider.current().dayTue, AppStringsProvider.current().dayWed,
+                                    AppStringsProvider.current().dayThu, AppStringsProvider.current().dayFri, AppStringsProvider.current().daySat, AppStringsProvider.current().daySun
                                 )
                                 dayNames.forEachIndexed { index, name ->
                                     val day = index + 1
@@ -348,7 +349,7 @@ fun AutoStartCard(
                                 }
                             }
 
-                            // ★ 下次启动时间预览
+                            // ★ preview
                             nextTriggerDisplay?.let { display ->
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Surface(
@@ -367,7 +368,7 @@ fun AutoStartCard(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "${Strings.nextLaunchTime}: $display",
+                                            "${AppStringsProvider.current().nextLaunchTime}: $display",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -378,12 +379,12 @@ fun AutoStartCard(
                     }
 
                     // ═══════════════════════════════
-                    // 权限警告区域
+                    // warningarea
                     // ═══════════════════════════════
                     if (bootStartEnabled || scheduledStartEnabled) {
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // ★ OEM ROM 自启动白名单提示（国产 ROM 核心问题）
+                        // ★ OEM ROM hint( ROM)
                         if (oemBrandName != null && oemAutoStartIntent != null) {
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -394,7 +395,7 @@ fun AutoStartCard(
                                         try {
                                             context.startActivity(oemAutoStartIntent)
                                         } catch (e: Exception) {
-                                            // OEM 设置页不存在，降级到通用应用详情页
+                                            // OEM settings, app
                                             try {
                                                 val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                                     data = Uri.parse("package:${context.packageName}")
@@ -417,13 +418,13 @@ fun AutoStartCard(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            Strings.oemAutoStartHint.replace("%s", oemBrandName),
+                                            AppStringsProvider.current().oemAutoStartHint.replace("%s", oemBrandName),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
                                     }
                                     Icon(
-                                        Icons.Outlined.NavigateNext,
+                                        Icons.AutoMirrored.Outlined.NavigateNext,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
@@ -433,7 +434,7 @@ fun AutoStartCard(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        // Android 12+ 精确闹钟权限提示
+                        // Android 12+ hint
                         if (!canScheduleExact && scheduledStartEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                             Surface(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
@@ -446,7 +447,7 @@ fun AutoStartCard(
                                                 data = Uri.parse("package:${context.packageName}")
                                             }
                                             context.startActivity(intent)
-                                        } catch (e: Exception) { /* 某些系统可能不支持 */ }
+                                        } catch (e: Exception) { /* system support */ }
                                     }
                             ) {
                                 Row(
@@ -461,13 +462,13 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.exactAlarmPermissionHint,
+                                        AppStringsProvider.current().exactAlarmPermissionHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     Icon(
-                                        Icons.Outlined.NavigateNext,
+                                        Icons.AutoMirrored.Outlined.NavigateNext,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.6f)
@@ -477,7 +478,7 @@ fun AutoStartCard(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        // 电池优化提示
+                        // hint
                         if (!ignoringBatteryOpt) {
                             Surface(
                                 color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
@@ -491,7 +492,7 @@ fun AutoStartCard(
                                             }
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
-                                            // 降级到通用电池设置
+                                            // settings
                                             try {
                                                 context.startActivity(Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS))
                                             } catch (_: Exception) { }
@@ -510,13 +511,13 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.batteryOptimizationHint,
+                                        AppStringsProvider.current().batteryOptimizationHint,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     Icon(
-                                        Icons.Outlined.NavigateNext,
+                                        Icons.AutoMirrored.Outlined.NavigateNext,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
@@ -526,7 +527,7 @@ fun AutoStartCard(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        // ★ 权限全部就绪的成功提示
+                        // ★ all successhint
                         if (canScheduleExact && ignoringBatteryOpt) {
                             Surface(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
@@ -544,7 +545,7 @@ fun AutoStartCard(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        Strings.autoStartPermissionReady,
+                                        AppStringsProvider.current().autoStartPermissionReady,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
@@ -554,7 +555,7 @@ fun AutoStartCard(
                         }
                     }
 
-                    // 提示信息
+                    // hint
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -572,7 +573,7 @@ fun AutoStartCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                Strings.autoStartNote,
+                                AppStringsProvider.current().autoStartNote,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -583,7 +584,7 @@ fun AutoStartCard(
         }
     }
 
-    // Time选择对话框
+    // Timeselectdialog
     if (showTimePicker) {
         TimePickerDialog(
             initialTime = scheduledTime,
@@ -598,7 +599,7 @@ fun AutoStartCard(
 }
 
 /**
- * 时间选择对话框
+ * selectdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -619,7 +620,7 @@ fun TimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectLaunchTime) },
+        title = { Text(AppStringsProvider.current().selectLaunchTime) },
         text = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -636,12 +637,12 @@ fun TimePickerDialog(
                     onConfirm("$hour:$minute")
                 }
             ) {
-                Text(Strings.btnOk)
+                Text(AppStringsProvider.current().btnOk)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

@@ -20,10 +20,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 /**
- * 预设的 Base 颜色
+ * Base color
  */
 data class PresetColor(
     val hex: String,
@@ -31,30 +31,30 @@ data class PresetColor(
 )
 
 val baseColors = listOf(
-    PresetColor("#F44336", Strings.colorRed),
-    PresetColor("#E91E63", Strings.colorPink),
-    PresetColor("#9C27B0", Strings.colorPurple),
-    PresetColor("#673AB7", Strings.colorDeepPurple),
-    PresetColor("#3F51B5", Strings.colorIndigo),
-    PresetColor("#2196F3", Strings.colorBlue),
-    PresetColor("#03A9F4", Strings.colorLightBlue),
-    PresetColor("#00BCD4", Strings.colorCyan),
-    PresetColor("#009688", Strings.colorTeal),
-    PresetColor("#4CAF50", Strings.colorGreen),
-    PresetColor("#8BC34A", Strings.colorLightGreen),
-    PresetColor("#CDDC39", Strings.colorLime),
-    PresetColor("#FFEB3B", Strings.colorYellow),
-    PresetColor("#FFC107", Strings.colorAmber),
-    PresetColor("#FF9800", Strings.colorOrange),
-    PresetColor("#FF5722", Strings.colorDeepOrange),
-    PresetColor("#795548", Strings.colorBrown),
-    PresetColor("#9E9E9E", Strings.colorGrey),
-    PresetColor("#607D8B", Strings.colorBlueGrey),
-    PresetColor("#000000", Strings.colorBlack),
-    PresetColor("#FFFFFF", Strings.colorWhite),
-    PresetColor("#1C1B1F", Strings.colorDarkTheme),
-    PresetColor("#FFFBFE", Strings.colorLightTheme),
-    PresetColor("#00000000", Strings.colorTransparent)
+    PresetColor("#F44336", AppStringsProvider.current().colorRed),
+    PresetColor("#E91E63", AppStringsProvider.current().colorPink),
+    PresetColor("#9C27B0", AppStringsProvider.current().colorPurple),
+    PresetColor("#673AB7", AppStringsProvider.current().colorDeepPurple),
+    PresetColor("#3F51B5", AppStringsProvider.current().colorIndigo),
+    PresetColor("#2196F3", AppStringsProvider.current().colorBlue),
+    PresetColor("#03A9F4", AppStringsProvider.current().colorLightBlue),
+    PresetColor("#00BCD4", AppStringsProvider.current().colorCyan),
+    PresetColor("#009688", AppStringsProvider.current().colorTeal),
+    PresetColor("#4CAF50", AppStringsProvider.current().colorGreen),
+    PresetColor("#8BC34A", AppStringsProvider.current().colorLightGreen),
+    PresetColor("#CDDC39", AppStringsProvider.current().colorLime),
+    PresetColor("#FFEB3B", AppStringsProvider.current().colorYellow),
+    PresetColor("#FFC107", AppStringsProvider.current().colorAmber),
+    PresetColor("#FF9800", AppStringsProvider.current().colorOrange),
+    PresetColor("#FF5722", AppStringsProvider.current().colorDeepOrange),
+    PresetColor("#795548", AppStringsProvider.current().colorBrown),
+    PresetColor("#9E9E9E", AppStringsProvider.current().colorGrey),
+    PresetColor("#607D8B", AppStringsProvider.current().colorBlueGrey),
+    PresetColor("#000000", AppStringsProvider.current().colorBlack),
+    PresetColor("#FFFFFF", AppStringsProvider.current().colorWhite),
+    PresetColor("#1C1B1F", AppStringsProvider.current().colorDarkTheme),
+    PresetColor("#FFFBFE", AppStringsProvider.current().colorLightTheme),
+    PresetColor("#00000000", AppStringsProvider.current().colorTransparent)
 )
 
 /**
@@ -72,12 +72,12 @@ fun ColorPickerDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.selectColor) },
+        title = { Text(AppStringsProvider.current().selectColor) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 当前选中颜色预览
+                // current colorpreview
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -92,7 +92,7 @@ fun ColorPickerDialog(
                     )
                     Column {
                         Text(
-                            text = Strings.currentSelection,
+                            text = AppStringsProvider.current().currentSelection,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -105,9 +105,9 @@ fun ColorPickerDialog(
                 
                 HorizontalDivider()
                 
-                // 预设颜色网格
+                // color
                 Text(
-                    text = Strings.presetColors,
+                    text = AppStringsProvider.current().presetColors,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -132,9 +132,9 @@ fun ColorPickerDialog(
                 
                 HorizontalDivider()
                 
-                // Custom颜色输入
+                // Customcolorinput
                 Text(
-                    text = Strings.customColor,
+                    text = AppStringsProvider.current().customColor,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -142,16 +142,16 @@ fun ColorPickerDialog(
                 OutlinedTextField(
                     value = customColorInput,
                     onValueChange = { input ->
-                        // 只允许输入有效的十六进制字符
+                        // input
                         val filtered = input.filter { it in "0123456789ABCDEFabcdef" }.take(8)
                         customColorInput = filtered
-                        // If it is有效的颜色值，更新选中颜色
+                        // If it is color, update color
                         if (filtered.length == 6 || filtered.length == 8) {
                             selectedColor = "#$filtered"
                         }
                     },
-                    label = { Text(Strings.hexColor) },
-                    placeholder = { Text(Strings.hexColorHint) },
+                    label = { Text(AppStringsProvider.current().hexColor) },
+                    placeholder = { Text(AppStringsProvider.current().hexColorHint) },
                     prefix = { Text("#") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -159,7 +159,7 @@ fun ColorPickerDialog(
                         capitalization = KeyboardCapitalization.Characters
                     ),
                     supportingText = {
-                        Text(Strings.hexColorFormat)
+                        Text(AppStringsProvider.current().hexColorFormat)
                     }
                 )
             }
@@ -171,19 +171,19 @@ fun ColorPickerDialog(
                     onDismiss()
                 }
             ) {
-                Text(Strings.btnOk)
+                Text(AppStringsProvider.current().btnOk)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
 }
 
 /**
- * 单个颜色项
+ * color
  */
 @Composable
 private fun ColorItem(
@@ -220,7 +220,7 @@ private fun ColorItem(
         if (isSelected) {
             Icon(
                 Icons.Default.Check,
-                contentDescription = Strings.colorSelected,
+                contentDescription = AppStringsProvider.current().colorSelected,
                 modifier = Modifier.size(20.dp),
                 tint = if (isColorLight(parsedColor)) Color.Black else Color.White
             )
@@ -229,7 +229,7 @@ private fun ColorItem(
 }
 
 /**
- * 解析颜色字符串为 Color
+ * color Color
  */
 fun parseColor(colorString: String): Color {
     return try {
@@ -245,7 +245,7 @@ fun parseColor(colorString: String): Color {
 }
 
 /**
- * 判断颜色是否为浅色
+ * color
  */
 fun isColorLight(color: Color): Boolean {
     val luminance = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue

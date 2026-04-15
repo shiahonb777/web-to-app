@@ -23,13 +23,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import androidx.compose.ui.graphics.Color
 
 /**
- * 用户脚本配置区域
+ * user configarea
  */
 @Composable
 fun UserScriptsSection(
@@ -41,7 +41,7 @@ fun UserScriptsSection(
     var editingIndex by remember { mutableIntStateOf(-1) }
     
     Column {
-        // 标题行
+        // Note
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -65,11 +65,11 @@ fun UserScriptsSection(
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
-                        text = Strings.userScripts,
+                        text = AppStringsProvider.current().userScripts,
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = Strings.userScriptsDesc,
+                        text = AppStringsProvider.current().userScriptsDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -84,7 +84,7 @@ fun UserScriptsSection(
             ) {
                 Icon(
                     Icons.Default.Add,
-                    Strings.addScript,
+                    AppStringsProvider.current().addScript,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -92,10 +92,10 @@ fun UserScriptsSection(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        // Script列表
+        // Scriptlist
         if (scripts.isEmpty()) {
             Text(
-                text = Strings.noScripts,
+                text = AppStringsProvider.current().noScripts,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp)
@@ -128,19 +128,19 @@ fun UserScriptsSection(
         }
     }
     
-    // Script编辑对话框
+    // Scripteditdialog
     if (showEditorDialog) {
         UserScriptEditorDialog(
             script = editingScript,
             onDismiss = { showEditorDialog = false },
             onSave = { script ->
                 if (editingIndex >= 0) {
-                    // 编辑现有脚本
+                    // edit
                     onScriptsChange(scripts.mapIndexed { i, s ->
                         if (i == editingIndex) script else s
                     })
                 } else {
-                    // 添加新脚本
+                    // Note
                     onScriptsChange(scripts + script)
                 }
                 showEditorDialog = false
@@ -150,7 +150,7 @@ fun UserScriptsSection(
 }
 
 /**
- * 单个脚本项
+ * Note
  */
 @Composable
 fun UserScriptItem(
@@ -169,14 +169,14 @@ fun UserScriptItem(
     ) {
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
-                text = script.name.ifBlank { Strings.userScripts },
+                text = script.name.ifBlank { AppStringsProvider.current().userScripts },
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
                 text = when (script.runAt) {
-                    ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
-                    ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
-                    ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+                    ScriptRunTime.DOCUMENT_START -> AppStringsProvider.current().runTimeDocStart
+                    ScriptRunTime.DOCUMENT_END -> AppStringsProvider.current().runTimeDocEnd
+                    ScriptRunTime.DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdle
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -192,14 +192,14 @@ fun UserScriptItem(
             IconButton(onClick = onEdit) {
                 Icon(
                     Icons.Outlined.Edit,
-                    Strings.btnEdit,
+                    AppStringsProvider.current().btnEdit,
                     modifier = Modifier.size(20.dp)
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Outlined.Delete,
-                    Strings.btnDelete,
+                    AppStringsProvider.current().btnDelete,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
                 )
@@ -209,7 +209,7 @@ fun UserScriptItem(
 }
 
 /**
- * 脚本编辑对话框
+ * editdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -231,11 +231,11 @@ fun UserScriptEditorDialog(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     
-    // 大代码阈值：超过此长度显示只读摘要而不是可编辑输入框
+    // code: display editinput
     val largeCodeThreshold = 5000
     val isLargeCode = code.length > largeCodeThreshold
     
-    // JS 文件导入
+    // JS fileimport
     val jsFilePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -245,7 +245,7 @@ fun UserScriptEditorDialog(
                 if (content.isNotEmpty()) {
                     code = content
                     codeError = false
-                    // 自动填充文件名作为脚本名称（仅当名称为空时）
+                    // file( onlywhen)
                     if (name.isBlank()) {
                         val fileName = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
                         if (fileName.isNotBlank()) name = fileName
@@ -257,7 +257,7 @@ fun UserScriptEditorDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isEdit) Strings.editScript else Strings.addScript) },
+        title = { Text(if (isEdit) AppStringsProvider.current().editScript else AppStringsProvider.current().addScript) },
         text = {
             Column(
                 modifier = Modifier
@@ -265,41 +265,41 @@ fun UserScriptEditorDialog(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Script名称
+                // Script
                 PremiumTextField(
                     value = name,
                     onValueChange = { 
                         name = it
                         nameError = false
                     },
-                    label = { Text(Strings.scriptName) },
-                    placeholder = { Text(Strings.scriptNamePlaceholder) },
+                    label = { Text(AppStringsProvider.current().scriptName) },
+                    placeholder = { Text(AppStringsProvider.current().scriptNamePlaceholder) },
                     singleLine = true,
                     isError = nameError,
                     supportingText = if (nameError) {
-                        { Text(Strings.scriptNameRequired, color = MaterialTheme.colorScheme.error) }
+                        { Text(AppStringsProvider.current().scriptNameRequired, color = MaterialTheme.colorScheme.error) }
                     } else null,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // 运行时机选择
+                // run select
                 ExposedDropdownMenuBox(
                     expanded = runAtExpanded,
                     onExpandedChange = { runAtExpanded = it }
                 ) {
                     PremiumTextField(
                         value = when (runAt) {
-                            ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
-                            ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
-                            ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+                            ScriptRunTime.DOCUMENT_START -> AppStringsProvider.current().runTimeDocStart
+                            ScriptRunTime.DOCUMENT_END -> AppStringsProvider.current().runTimeDocEnd
+                            ScriptRunTime.DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdle
                         },
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(Strings.scriptRunAt) },
+                        label = { Text(AppStringsProvider.current().scriptRunAt) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = runAtExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     
                     ExposedDropdownMenu(
@@ -311,15 +311,15 @@ fun UserScriptEditorDialog(
                                 text = {
                                     Column {
                                         Text(when (time) {
-                                            ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
-                                            ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
-                                            ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+                                            ScriptRunTime.DOCUMENT_START -> AppStringsProvider.current().runTimeDocStart
+                                            ScriptRunTime.DOCUMENT_END -> AppStringsProvider.current().runTimeDocEnd
+                                            ScriptRunTime.DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdle
                                         })
                                         Text(
                                             text = when (time) {
-                                                ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStartDesc
-                                                ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEndDesc
-                                                ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdleDesc
+                                                ScriptRunTime.DOCUMENT_START -> AppStringsProvider.current().runTimeDocStartDesc
+                                                ScriptRunTime.DOCUMENT_END -> AppStringsProvider.current().runTimeDocEndDesc
+                                                ScriptRunTime.DOCUMENT_IDLE -> AppStringsProvider.current().runTimeDocIdleDesc
                                             },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -344,20 +344,20 @@ fun UserScriptEditorDialog(
                     }
                 }
                 
-                // Enable开关
+                // Enable
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(Strings.scriptEnabled, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStringsProvider.current().scriptEnabled, style = MaterialTheme.typography.bodyMedium)
                     PremiumSwitch(
                         checked = enabled,
                         onCheckedChange = { enabled = it }
                     )
                 }
                 
-                // 导入 JS 文件按钮
+                // import JS filebutton
                 PremiumOutlinedButton(
                     onClick = {
                         jsFilePickerLauncher.launch(arrayOf(
@@ -376,12 +376,12 @@ fun UserScriptEditorDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.scriptImportFile)
+                    Text(AppStringsProvider.current().scriptImportFile)
                 }
                 
-                // Script代码 —— 根据代码大小切换显示模式
+                // Script code - switch display mode by code size
                 if (isLargeCode) {
-                    // 大代码：只读摘要卡片（避免 TextField 卡死）
+                    // Large code: read-only summary card
                     val lineCount = code.count { it == '\n' } + 1
                     val sizeText = if (code.length > 1024) "%.1f KB".format(code.length / 1024f) else "${code.length} B"
                     val preview = code.lineSequence().take(6).joinToString("\n")
@@ -396,7 +396,7 @@ fun UserScriptEditorDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = Strings.scriptFileLoaded.format(lineCount, sizeText),
+                                    text = AppStringsProvider.current().scriptFileLoaded.format(lineCount, sizeText),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -410,7 +410,7 @@ fun UserScriptEditorDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(Strings.scriptClearCode, style = MaterialTheme.typography.labelSmall)
+                                    Text(AppStringsProvider.current().scriptClearCode, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -434,20 +434,20 @@ fun UserScriptEditorDialog(
                         }
                     }
                 } else {
-                    // 小代码：正常可编辑输入框
+                    // Small code: editable input field
                     PremiumTextField(
                         value = code,
                         onValueChange = { 
                             code = it
                             codeError = false
                         },
-                        label = { Text(Strings.scriptCode) },
-                        placeholder = { Text(Strings.scriptCodePlaceholder) },
+                        label = { Text(AppStringsProvider.current().scriptCode) },
+                        placeholder = { Text(AppStringsProvider.current().scriptCodePlaceholder) },
                         minLines = 6,
                         maxLines = 12,
                         isError = codeError,
                         supportingText = if (codeError) {
-                            { Text(Strings.scriptCodeRequired, color = MaterialTheme.colorScheme.error) }
+                            { Text(AppStringsProvider.current().scriptCodeRequired, color = MaterialTheme.colorScheme.error) }
                         } else null,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -470,12 +470,12 @@ fun UserScriptEditorDialog(
                     }
                 }
             ) {
-                Text(Strings.btnSave)
+                Text(AppStringsProvider.current().btnSave)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

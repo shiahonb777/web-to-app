@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.cloud.ActivationRecord
 import com.webtoapp.core.cloud.RedeemPreview
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.viewmodel.FormState
 import com.webtoapp.ui.components.ThemedBackgroundBox
@@ -97,10 +97,10 @@ fun ActivationCodeScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.cloudActivationCode) },
+                title = { Text(AppStringsProvider.current().cloudActivationCode) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -155,12 +155,12 @@ fun ActivationCodeScreen(
                             Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Text(
-                                    text = Strings.cloudRedeemTitle,
+                                    text = AppStringsProvider.current().cloudRedeemTitle,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = Strings.cloudRedeemDesc,
+                                    text = AppStringsProvider.current().cloudRedeemDesc,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     lineHeight = 18.sp
@@ -213,7 +213,7 @@ fun ActivationCodeScreen(
                         // Character count hint
                         AnimatedVisibility(visible = code.isNotEmpty()) {
                             Text(
-                                text = "${code.length} ${Strings.characterCount}",
+                                text = "${code.length} ${AppStringsProvider.current().characterCount}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (code.length >= 4) MaterialTheme.colorScheme.primary
                                        else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -262,7 +262,7 @@ fun ActivationCodeScreen(
                                 }
                                 Text(
                                     text = if (redeemState is FormState.Loading)
-                                        Strings.cloudRedeeming else Strings.cloudRedeemBtn,
+                                        AppStringsProvider.current().cloudRedeeming else AppStringsProvider.current().cloudRedeemBtn,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -291,7 +291,7 @@ fun ActivationCodeScreen(
                                 modifier = Modifier.size(28.dp)
                             )
                             Text(
-                                text = Strings.activationSuccess,
+                                text = AppStringsProvider.current().activationSuccess,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF2E7D32)
@@ -317,17 +317,17 @@ fun ActivationCodeScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Pro ${Strings.cloudProBenefits}",
+                                text = "Pro ${AppStringsProvider.current().cloudProBenefits}",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
 
                         val benefits = listOf(
-                            Pair(Icons.Outlined.Cloud, Strings.cloudBenefitCloud),
-                            Pair(Icons.Outlined.Speed, Strings.cloudBenefitPriority),
-                            Pair(Icons.Outlined.Devices, Strings.cloudBenefitDevices),
-                            Pair(Icons.Outlined.Analytics, Strings.cloudBenefitAnalytics)
+                            Pair(Icons.Outlined.Cloud, AppStringsProvider.current().cloudBenefitCloud),
+                            Pair(Icons.Outlined.Speed, AppStringsProvider.current().cloudBenefitPriority),
+                            Pair(Icons.Outlined.Devices, AppStringsProvider.current().cloudBenefitDevices),
+                            Pair(Icons.Outlined.Analytics, AppStringsProvider.current().cloudBenefitAnalytics)
                         )
                         benefits.forEach { (icon, benefit) ->
                             Row(
@@ -369,7 +369,7 @@ fun ActivationCodeScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
-                            text = Strings.cloudRedeemHistory,
+                            text = AppStringsProvider.current().cloudRedeemHistory,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -483,7 +483,7 @@ private fun EnhancedHistoryRow(record: ActivationRecord) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = Strings.cloudValidUntil,
+                            text = AppStringsProvider.current().cloudValidUntil,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -537,7 +537,7 @@ private fun EnhancedRedeemPreviewDialog(
         },
         title = {
             Text(
-                if (preview.isUpgrade) "🚀 ${Strings.cloudTierUpgrade}" else Strings.cloudRedeemPreview,
+                if (preview.isUpgrade) "🚀 ${AppStringsProvider.current().cloudTierUpgrade}" else AppStringsProvider.current().cloudRedeemPreview,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -551,14 +551,14 @@ private fun EnhancedRedeemPreviewDialog(
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
-                            Strings.cloudActivationCode,
+                            AppStringsProvider.current().cloudActivationCode,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "${preview.codeTier.uppercase()} · ${preview.codePlanType}" +
-                                if (preview.durationDays > 0) " · ${preview.durationDays}${Strings.days}" else " · ${Strings.cloudLifetime}",
+                                if (preview.durationDays > 0) " · ${preview.durationDays}${AppStringsProvider.current().days}" else " · ${AppStringsProvider.current().cloudLifetime}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -584,7 +584,7 @@ private fun EnhancedRedeemPreviewDialog(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                Strings.cloudCurrentPlan,
+                                AppStringsProvider.current().cloudCurrentPlan,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -596,7 +596,7 @@ private fun EnhancedRedeemPreviewDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (preview.currentIsLifetime) {
-                                Text(Strings.cloudLifetime, style = MaterialTheme.typography.bodySmall, color = Color(0xFFFFD700))
+                                Text(AppStringsProvider.current().cloudLifetime, style = MaterialTheme.typography.bodySmall, color = Color(0xFFFFD700))
                             } else {
                                 preview.currentExpiresAt?.let {
                                     Text(
@@ -627,7 +627,7 @@ private fun EnhancedRedeemPreviewDialog(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                Strings.cloudAfterRedeem,
+                                AppStringsProvider.current().cloudAfterRedeem,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (preview.isUpgrade) upgradeColor else normalColor
                             )
@@ -639,7 +639,7 @@ private fun EnhancedRedeemPreviewDialog(
                                 color = if (preview.isUpgrade) upgradeColor else normalColor
                             )
                             if (preview.newIsLifetime) {
-                                Text(Strings.cloudLifetime, style = MaterialTheme.typography.bodySmall, color = Color(0xFFFFD700))
+                                Text(AppStringsProvider.current().cloudLifetime, style = MaterialTheme.typography.bodySmall, color = Color(0xFFFFD700))
                             } else {
                                 preview.newExpiresAt?.let {
                                     Text(
@@ -673,7 +673,7 @@ private fun EnhancedRedeemPreviewDialog(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                Strings.cloudUpgradeNotice,
+                                AppStringsProvider.current().cloudUpgradeNotice,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = upgradeColor,
                                 fontWeight = FontWeight.Medium
@@ -687,12 +687,12 @@ private fun EnhancedRedeemPreviewDialog(
             PremiumButton(onClick = onConfirm) {
                 Icon(Icons.Filled.Redeem, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.cloudConfirmRedeem, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().cloudConfirmRedeem, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )

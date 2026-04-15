@@ -13,6 +13,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -35,7 +39,7 @@ import coil.request.ImageRequest
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.*
 import com.webtoapp.core.auth.TokenManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.UserTitleBadges
 import kotlinx.coroutines.launch
@@ -63,7 +67,6 @@ fun CommunityScreen(
     val posts by communityViewModel.posts.collectAsState()
     val isLoading by communityViewModel.feedLoading.collectAsState()
     val isLoadingMore by communityViewModel.feedLoadingMore.collectAsState()
-    val isRefreshing by communityViewModel.feedRefreshing.collectAsState()
     val selectedTag by communityViewModel.selectedTag.collectAsState()
     val unreadCount by communityViewModel.unreadCount.collectAsState()
     val selectedTab by communityViewModel.selectedTab.collectAsState()
@@ -87,9 +90,9 @@ fun CommunityScreen(
 
     // Phase 1 v2: 3 tab definitions
     val tabs = remember { listOf(
-        "discover" to Strings.communityTabDiscover,
-        "following" to Strings.communityTabFollowing,
-        "feed" to Strings.communityTabFeed,
+        "discover" to AppStringsProvider.current().communityTabDiscover,
+        "following" to AppStringsProvider.current().communityTabFollowing,
+        "feed" to AppStringsProvider.current().communityTabFeed,
     ) }
 
     // ViewModel message → snackbar
@@ -135,14 +138,14 @@ fun CommunityScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            Strings.tabCommunity,
+                            AppStringsProvider.current().tabCommunity,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     },
                     actions = {
                         IconButton(onClick = { showSearchSheet = true }) {
-                            Icon(Icons.Outlined.Search, Strings.communitySearch, Modifier.size(21.dp))
+                            Icon(Icons.Outlined.Search, AppStringsProvider.current().communitySearch, Modifier.size(21.dp))
                         }
                         IconButton(onClick = { onNavigateToNotifications() }) {
                             BadgedBox(
@@ -154,11 +157,11 @@ fun CommunityScreen(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Outlined.Notifications, Strings.communityNotifications, Modifier.size(21.dp))
+                                Icon(Icons.Outlined.Notifications, AppStringsProvider.current().communityNotifications, Modifier.size(21.dp))
                             }
                         }
                         IconButton(onClick = { onNavigateToFavorites() }) {
-                            Icon(Icons.Outlined.BookmarkBorder, Strings.communityBookmarks, Modifier.size(21.dp))
+                            Icon(Icons.Outlined.BookmarkBorder, AppStringsProvider.current().communityBookmarks, Modifier.size(21.dp))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -206,7 +209,7 @@ fun CommunityScreen(
                     if (tokenManager.isLoggedIn()) {
                         showCreatePost = true
                     } else {
-                        scope.launch { snackbarHostState.showSnackbar(Strings.communityLoginToPost) }
+                        scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityLoginToPost) }
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -214,7 +217,7 @@ fun CommunityScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.padding(bottom = 8.dp)
             ) {
-                Icon(Icons.Outlined.Edit, Strings.communityCreatePost)
+                Icon(Icons.Outlined.Edit, AppStringsProvider.current().communityCreatePost)
             }
         }
     ) { padding ->
@@ -263,7 +266,7 @@ fun CommunityScreen(
                                     item {
                                         SectionHeader(
                                             icon = Icons.Filled.AutoAwesome,
-                                            title = Strings.communitySectionFeatured,
+                                            title = AppStringsProvider.current().communitySectionFeatured,
                                             color = Color(0xFFFFB300)
                                         )
                                     }
@@ -291,8 +294,8 @@ fun CommunityScreen(
                                 if (trending.isNotEmpty()) {
                                     item {
                                         SectionHeader(
-                                            icon = Icons.Filled.TrendingUp,
-                                            title = Strings.communitySectionHot,
+                                            icon = Icons.AutoMirrored.Filled.TrendingUp,
+                                            title = AppStringsProvider.current().communitySectionHot,
                                             color = Color(0xFFE91E63)
                                         )
                                     }
@@ -332,8 +335,8 @@ fun CommunityScreen(
                                 if (tutorials.isNotEmpty()) {
                                     item {
                                         SectionHeader(
-                                            icon = Icons.Filled.MenuBook,
-                                            title = Strings.communitySectionTutorials,
+                                            icon = Icons.AutoMirrored.Filled.MenuBook,
+                                            title = AppStringsProvider.current().communitySectionTutorials,
                                             color = Color(0xFF4CAF50)
                                         )
                                     }
@@ -350,8 +353,8 @@ fun CommunityScreen(
                                 if (questions.isNotEmpty()) {
                                     item {
                                         SectionHeader(
-                                            icon = Icons.Filled.HelpOutline,
-                                            title = Strings.communitySectionQuestions,
+                                            icon = Icons.AutoMirrored.Filled.HelpOutline,
+                                            title = AppStringsProvider.current().communitySectionQuestions,
                                             color = Color(0xFFFF9800)
                                         )
                                     }
@@ -371,7 +374,7 @@ fun CommunityScreen(
                                                 Icon(Icons.Outlined.Explore, null, Modifier.size(56.dp),
                                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f))
                                                 Spacer(Modifier.height(12.dp))
-                                                Text(Strings.communityEmptyDiscover, fontSize = 14.sp,
+                                                Text(AppStringsProvider.current().communityEmptyDiscover, fontSize = 14.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                                             }
                                         }
@@ -392,7 +395,7 @@ fun CommunityScreen(
                                 Icon(Icons.Outlined.PersonAdd, null, Modifier.size(56.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                                 Spacer(Modifier.height(12.dp))
-                                Text(Strings.communityEmptyFollowing, fontSize = 15.sp,
+                                Text(AppStringsProvider.current().communityEmptyFollowing, fontSize = 15.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                             }
                         }
@@ -406,13 +409,13 @@ fun CommunityScreen(
                                 Icon(Icons.Outlined.Explore, null, Modifier.size(56.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                                 Spacer(Modifier.height(12.dp))
-                                Text(Strings.communityEmptyFollowingNotFollowing, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                Text(AppStringsProvider.current().communityEmptyFollowingNotFollowing, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                 Spacer(Modifier.height(4.dp))
-                                Text(Strings.communityEmptyFollowingSuggestion, fontSize = 13.sp,
+                                Text(AppStringsProvider.current().communityEmptyFollowingSuggestion, fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                                 Spacer(Modifier.height(16.dp))
                                 FilledTonalButton(onClick = { communityViewModel.setSelectedTab("discover") }) {
-                                    Text(Strings.communityGoDiscover)
+                                    Text(AppStringsProvider.current().communityGoDiscover)
                                 }
                             }
                         }
@@ -456,7 +459,7 @@ fun CommunityScreen(
                 }
 
                 else -> {
-                    // ─── Feed Tab (广场) ───
+                    // Feed Tab( )
                     // Tag Filter Bar
                     LazyRow(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -467,7 +470,7 @@ fun CommunityScreen(
                             FilterChip(
                                 selected = selectedTag == null,
                                 onClick = { communityViewModel.setSelectedTag(null) },
-                                label = { Text(Strings.communityAllTags, fontSize = 12.sp) },
+                                label = { Text(AppStringsProvider.current().communityAllTags, fontSize = 12.sp) },
                                 modifier = Modifier.height(30.dp),
                                 shape = RoundedCornerShape(8.dp)
                             )
@@ -497,7 +500,7 @@ fun CommunityScreen(
                                 Icon(Icons.Outlined.Forum, null, Modifier.size(56.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                                 Spacer(Modifier.height(12.dp))
-                                Text(Strings.communityNoPosts, fontSize = 15.sp,
+                                Text(AppStringsProvider.current().communityNoPosts, fontSize = 15.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                             }
                         }
@@ -566,7 +569,7 @@ fun CommunityScreen(
             onPosted = {
                 showCreatePost = false
                 communityViewModel.refreshPosts()
-                scope.launch { snackbarHostState.showSnackbar(Strings.communityPostSuccess) }
+                scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityPostSuccess) }
             }
         )
     }
@@ -681,17 +684,17 @@ private fun CreatePostSheet(
 
     // Post type definitions
     val postTypes = remember { listOf(
-        Triple("discussion", Strings.communityPostTypeDiscussion, Color(0xFF9E9E9E)),
-        Triple("showcase", Strings.communityPostTypeShowcase, Color(0xFF6C5CE7)),
-        Triple("tutorial", Strings.communityPostTypeTutorial, Color(0xFF4CAF50)),
-        Triple("question", Strings.communityPostTypeQuestion, Color(0xFFFF9800)),
+        Triple("discussion", AppStringsProvider.current().communityPostTypeDiscussion, Color(0xFF9E9E9E)),
+        Triple("showcase", AppStringsProvider.current().communityPostTypeShowcase, Color(0xFF6C5CE7)),
+        Triple("tutorial", AppStringsProvider.current().communityPostTypeTutorial, Color(0xFF4CAF50)),
+        Triple("question", AppStringsProvider.current().communityPostTypeQuestion, Color(0xFFFF9800)),
     ) }
     val sourceTypes = remember { listOf(
-        "website" to Strings.communitySourceTypeWebsite, "html" to "HTML", "media" to Strings.communitySourceTypeMedia,
-        "frontend" to Strings.communitySourceTypeFrontend, "server" to Strings.communitySourceTypeServer,
+        "website" to AppStringsProvider.current().communitySourceTypeWebsite, "html" to "HTML", "media" to AppStringsProvider.current().communitySourceTypeMedia,
+        "frontend" to AppStringsProvider.current().communitySourceTypeFrontend, "server" to AppStringsProvider.current().communitySourceTypeServer,
     ) }
     val difficulties = remember { listOf(
-        "beginner" to "🟢 " + Strings.communityDifficultyBeginner, "intermediate" to "🟡 " + Strings.communityDifficultyIntermediate, "advanced" to "🔴 " + Strings.communityDifficultyAdvanced,
+        "beginner" to "🟢 " + AppStringsProvider.current().communityDifficultyBeginner, "intermediate" to "🟡 " + AppStringsProvider.current().communityDifficultyIntermediate, "advanced" to "🔴 " + AppStringsProvider.current().communityDifficultyAdvanced,
     ) }
 
     ModalBottomSheet(
@@ -706,25 +709,25 @@ private fun CreatePostSheet(
         ) {
             // Title + Publish
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(Strings.communityCreatePost, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStringsProvider.current().communityCreatePost, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
                 Button(
                     onClick = {
                         if (content.isBlank()) return@Button
                         if (selectedTags.isEmpty()) {
-                            scope.launch { snackbarHostState.showSnackbar(Strings.communityTagRequired) }
+                            scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityTagRequired) }
                             return@Button
                         }
                         if (selectedPostType == "showcase" && appName.isBlank()) {
-                            scope.launch { snackbarHostState.showSnackbar(Strings.communityEnterAppName) }
+                            scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityEnterAppName) }
                             return@Button
                         }
                         if (selectedPostType == "tutorial" && tutorialTitle.isBlank()) {
-                            scope.launch { snackbarHostState.showSnackbar(Strings.communityEnterTutorialTitle) }
+                            scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityEnterTutorialTitle) }
                             return@Button
                         }
                         if (selectedPostType == "question" && questionTitle.isBlank()) {
-                            scope.launch { snackbarHostState.showSnackbar(Strings.communityEnterQuestionTitle) }
+                            scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityEnterQuestionTitle) }
                             return@Button
                         }
                         val mediaInputs = pendingMedia
@@ -748,7 +751,7 @@ private fun CreatePostSheet(
                             )
                             when (result) {
                                 is AuthResult.Success -> onPosted()
-                                is AuthResult.Error -> snackbarHostState.showSnackbar(Strings.communityPublishFailed)
+                                is AuthResult.Error -> snackbarHostState.showSnackbar(AppStringsProvider.current().communityPublishFailed)
                             }
                             isPublishing = false
                         }
@@ -757,14 +760,14 @@ private fun CreatePostSheet(
                     shape = RoundedCornerShape(12.dp), modifier = Modifier.height(36.dp)
                 ) {
                     if (isPublishing) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                    else Text(Strings.communityPublish, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    else Text(AppStringsProvider.current().communityPublish, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
             // ─── Phase 1 v2: Post Type Selector ───
-            Text(Strings.communityPostTypeLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+            Text(AppStringsProvider.current().communityPostTypeLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 postTypes.forEach { (key, label, color) ->
@@ -795,13 +798,13 @@ private fun CreatePostSheet(
                 "showcase" -> {
                     OutlinedTextField(
                         value = appName, onValueChange = { appName = it },
-                        placeholder = { Text(Strings.communityAppNamePlaceholder, fontSize = 13.sp) },
+                        placeholder = { Text(AppStringsProvider.current().communityAppNamePlaceholder, fontSize = 13.sp) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp), singleLine = true,
                         leadingIcon = { Icon(Icons.Outlined.Apps, null, Modifier.size(18.dp)) }
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text(Strings.communitySourceTypeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(AppStringsProvider.current().communitySourceTypeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         sourceTypes.forEach { (key, label) ->
@@ -817,7 +820,7 @@ private fun CreatePostSheet(
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = projectRecipe, onValueChange = { projectRecipe = it },
-                        placeholder = { Text(Strings.communityRecipeJsonPlaceholder, fontSize = 12.sp) },
+                        placeholder = { Text(AppStringsProvider.current().communityRecipeJsonPlaceholder, fontSize = 12.sp) },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
                         shape = RoundedCornerShape(10.dp), maxLines = 4,
                         supportingText = {
@@ -873,7 +876,7 @@ private fun CreatePostSheet(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp), singleLine = true,
-                        leadingIcon = { Icon(Icons.Outlined.HelpOutline, null, Modifier.size(18.dp)) }
+                        leadingIcon = { Icon(Icons.AutoMirrored.Outlined.HelpOutline, null, Modifier.size(18.dp)) }
                     )
                     Spacer(Modifier.height(8.dp))
                 }
@@ -887,7 +890,7 @@ private fun CreatePostSheet(
                         "showcase" -> stringResource(com.webtoapp.R.string.community_showcase_content_placeholder)
                         "tutorial" -> stringResource(com.webtoapp.R.string.community_tutorial_content_placeholder)
                         "question" -> stringResource(com.webtoapp.R.string.community_question_content_placeholder)
-                        else -> Strings.communityWhatsNew
+                        else -> AppStringsProvider.current().communityWhatsNew
                     }, fontSize = 14.sp
                 ) },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
@@ -938,7 +941,7 @@ private fun CreatePostSheet(
             // Tags — continuous scrollable row
             val maxTags = 3
             Text(
-                "${Strings.communitySelectTags} (${selectedTags.size}/$maxTags)",
+                "${AppStringsProvider.current().communitySelectTags} (${selectedTags.size}/$maxTags)",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (selectedTags.size >= maxTags) MaterialTheme.colorScheme.tertiary
@@ -954,7 +957,7 @@ private fun CreatePostSheet(
                         onClick = {
                             if (isSelected) selectedTags = selectedTags - tag
                             else if (selectedTags.size < maxTags) selectedTags = selectedTags + tag
-                            else scope.launch { snackbarHostState.showSnackbar(Strings.communityTagMaxLimit) }
+                            else scope.launch { snackbarHostState.showSnackbar(AppStringsProvider.current().communityTagMaxLimit) }
                         },
                         label = { Text(tag, fontSize = 11.sp,
                             color = if (isDisabled) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -984,7 +987,7 @@ private fun CreatePostSheet(
                 ) {
                     Icon(Icons.Outlined.Image, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(Strings.communityAddMedia, fontSize = 12.sp)
+                    Text(AppStringsProvider.current().communityAddMedia, fontSize = 12.sp)
                     if (pendingMedia.isNotEmpty()) {
                         Spacer(Modifier.width(4.dp))
                         Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp)) {
@@ -997,7 +1000,7 @@ private fun CreatePostSheet(
                 OutlinedButton(onClick = { showAppPicker = true }, shape = RoundedCornerShape(10.dp), modifier = Modifier.height(36.dp)) {
                     Icon(Icons.Outlined.Link, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(Strings.communityLinkApp, fontSize = 12.sp)
+                    Text(AppStringsProvider.current().communityLinkApp, fontSize = 12.sp)
                     if (selectedAppLinks.isNotEmpty()) {
                         Spacer(Modifier.width(4.dp))
                         Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp)) {
@@ -1036,7 +1039,7 @@ private fun CreatePostSheet(
     if (showAppPicker) {
         AlertDialog(
             onDismissRequest = { showAppPicker = false },
-            title = { Text(Strings.communityLinkApp, fontWeight = FontWeight.Bold) },
+            title = { Text(AppStringsProvider.current().communityLinkApp, fontWeight = FontWeight.Bold) },
             text = {
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     items(storeApps) { app ->
@@ -1056,12 +1059,12 @@ private fun CreatePostSheet(
                     }
                     if (storeApps.isEmpty()) {
                         item { Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text(Strings.communityNoAppsToLink, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                            Text(AppStringsProvider.current().communityNoAppsToLink, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                         } }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showAppPicker = false }) { Text(Strings.communityConfirm) } }
+            confirmButton = { TextButton(onClick = { showAppPicker = false }) { Text(AppStringsProvider.current().communityConfirm) } }
         )
     }
 }

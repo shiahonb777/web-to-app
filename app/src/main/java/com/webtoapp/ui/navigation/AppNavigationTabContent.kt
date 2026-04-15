@@ -2,20 +2,11 @@ package com.webtoapp.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.webtoapp.core.cloud.AppDownloadManager
-import com.webtoapp.core.cloud.CloudApiClient
-import com.webtoapp.core.cloud.InstalledItemsTracker
-import com.webtoapp.core.extension.ExtensionManager
-import com.webtoapp.core.stats.AppHealthMonitor
-import com.webtoapp.core.stats.BatchImportService
-import com.webtoapp.core.stats.WebsiteScreenshotService
 import com.webtoapp.data.model.AppType
-import com.webtoapp.data.repository.WebAppRepository
+import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.screens.AppStoreScreen
 import com.webtoapp.ui.screens.AuthScreen
 import com.webtoapp.ui.screens.HomeScreen
@@ -23,69 +14,51 @@ import com.webtoapp.ui.screens.MoreScreen
 import com.webtoapp.ui.screens.ProfileScreen
 import com.webtoapp.ui.screens.community.CommunityScreen
 import com.webtoapp.ui.viewmodel.AuthState
-import com.webtoapp.ui.viewmodel.AuthViewModel
-import com.webtoapp.ui.viewmodel.CloudViewModel
-import com.webtoapp.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun HomeTabContent(
     navController: NavHostController,
-    viewModel: MainViewModel,
-    webAppRepository: WebAppRepository,
-    healthMonitor: AppHealthMonitor,
-    screenshotService: WebsiteScreenshotService,
-    batchImportService: BatchImportService,
+    dependencies: HomeTabDeps,
 ) {
+    val viewModel = dependencies.viewModel
+
+    fun navigateToCreate(appType: AppType, prepare: (() -> Unit)? = null) {
+        prepare?.invoke()
+        navController.navigate(AppFlowSpec.from(appType).createRoute)
+    }
+
+    fun navigateToEdit(webApp: WebApp) {
+        val flow = AppFlowSpec.from(webApp.appType)
+        flow.prepareEdit(viewModel, webApp)
+        navController.navigate(flow.editRoute(webApp.id))
+    }
+
     HomeScreen(
         viewModel = viewModel,
-        healthMonitor = healthMonitor,
-        screenshotService = screenshotService,
-        batchImportService = batchImportService,
-        onCreateApp = {
-            viewModel.createNewApp()
-            navController.navigate(Routes.CREATE_APP)
-        },
-        onCreateMediaApp = { navController.navigate(Routes.CREATE_MEDIA_APP) },
-        onCreateGalleryApp = { navController.navigate(Routes.CREATE_GALLERY_APP) },
-        onCreateHtmlApp = { navController.navigate(Routes.CREATE_HTML_APP) },
-        onCreateFrontendApp = { navController.navigate(Routes.CREATE_FRONTEND_APP) },
-        onCreateNodeJsApp = { navController.navigate(Routes.CREATE_NODEJS_APP) },
-        onCreateWordPressApp = { navController.navigate(Routes.CREATE_WORDPRESS_APP) },
-        onCreatePhpApp = { navController.navigate(Routes.CREATE_PHP_APP) },
-        onCreatePythonApp = { navController.navigate(Routes.CREATE_PYTHON_APP) },
-        onCreateGoApp = { navController.navigate(Routes.CREATE_GO_APP) },
-        onCreateMultiWebApp = { navController.navigate(Routes.CREATE_MULTI_WEB_APP) },
+        healthMonitor = dependencies.healthMonitor,
+        screenshotService = dependencies.screenshotService,
+        batchImportService = dependencies.batchImportService,
+        onCreateApp = { navigateToCreate(AppType.WEB, viewModel::createNewApp) },
+        onCreateMediaApp = { navigateToCreate(AppType.IMAGE) },
+        onCreateGalleryApp = { navigateToCreate(AppType.GALLERY) },
+        onCreateHtmlApp = { navigateToCreate(AppType.HTML) },
+        onCreateFrontendApp = { navigateToCreate(AppType.FRONTEND) },
+        onCreateNodeJsApp = { navigateToCreate(AppType.NODEJS_APP) },
+        onCreateWordPressApp = { navigateToCreate(AppType.WORDPRESS) },
+        onCreatePhpApp = { navigateToCreate(AppType.PHP_APP) },
+        onCreatePythonApp = { navigateToCreate(AppType.PYTHON_APP) },
+        onCreateGoApp = { navigateToCreate(AppType.GO_APP) },
+        onCreateMultiWebApp = { navigateToCreate(AppType.MULTI_WEB) },
         onEditApp = { webApp ->
             viewModel.editApp(webApp)
             navController.navigate(Routes.editApp(webApp.id))
         },
-        onEditAppCore = { webApp ->
-            when (webApp.appType) {
-                AppType.WEB -> {
-                    viewModel.editApp(webApp)
-                    navController.navigate(Routes.editWebApp(webApp.id))
-                }
-
-                AppType.IMAGE,
-                AppType.VIDEO -> navController.navigate(Routes.editMediaApp(webApp.id))
-
-                AppType.GALLERY -> navController.navigate(Routes.editGalleryApp(webApp.id))
-                AppType.HTML -> navController.navigate(Routes.editHtmlApp(webApp.id))
-                AppType.FRONTEND -> navController.navigate(Routes.editFrontendApp(webApp.id))
-                AppType.NODEJS_APP -> navController.navigate(Routes.editNodeJsApp(webApp.id))
-                AppType.WORDPRESS -> {
-                    viewModel.editApp(webApp)
-                    navController.navigate(Routes.editApp(webApp.id))
-                }
-
-                AppType.PHP_APP -> navController.navigate(Routes.editPhpApp(webApp.id))
-                AppType.PYTHON_APP -> navController.navigate(Routes.editPythonApp(webApp.id))
-                AppType.GO_APP -> navController.navigate(Routes.editGoApp(webApp.id))
-                AppType.MULTI_WEB -> navController.navigate(Routes.editMultiWebApp(webApp.id))
-            }
+        onEditAppCore = ::navigateToEdit,
+        onPreviewApp = { webApp ->
+            val flow = AppFlowSpec.from(webApp.appType)
+            navController.navigate(flow.previewRoute(webApp.id))
         },
-        onPreviewApp = { webApp -> navController.navigate(Routes.preview(webApp.id)) },
         onOpenAppModifier = { navController.navigate(Routes.APP_MODIFIER) },
         onOpenAiSettings = { navController.navigate(Routes.AI_SETTINGS) },
         onOpenAiCoding = { navController.navigate(Routes.AI_CODING) },
@@ -97,35 +70,28 @@ internal fun HomeTabContent(
 
 @Composable
 internal fun AppStoreTabContent(
-    navController: NavHostController,
-    webAppRepository: WebAppRepository,
-    apiClient: CloudApiClient,
-    installedItemsTracker: InstalledItemsTracker,
-    cloudViewModel: CloudViewModel,
+    dependencies: StoreTabDeps,
 ) {
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val downloadManager = remember { AppDownloadManager.getInstance(context) }
 
     AppStoreScreen(
-        cloudViewModel = cloudViewModel,
-        apiClient = apiClient,
-        webAppRepository = webAppRepository,
-        installedTracker = installedItemsTracker,
+        cloudViewModel = dependencies.cloudViewModel,
+        apiClient = dependencies.apiClient,
+        webAppRepository = dependencies.webAppRepository,
+        installedTracker = dependencies.installedItemsTracker,
         onInstallModule = { shareCode ->
             coroutineScope.launch {
-                ExtensionManager.getInstance(context).importFromShareCode(shareCode)
+                dependencies.extensionManager.importFromShareCode(shareCode)
             }
         },
-        downloadManager = downloadManager
+        downloadManager = dependencies.downloadManager
     )
 }
 
 @Composable
 internal fun CommunityTabContent(
     navController: NavHostController,
-    selectedTab: Int,
-    isOnDetailScreen: Boolean,
+    isTabVisible: Boolean = true,
 ) {
     CommunityScreen(
         onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) },
@@ -133,16 +99,17 @@ internal fun CommunityTabContent(
         onNavigateToPost = { postId -> navController.navigate(Routes.communityPost(postId)) },
         onNavigateToNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
         onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) },
-        isTabVisible = selectedTab == 2 && !isOnDetailScreen
+        isTabVisible = isTabVisible,
     )
 }
 
 @Composable
 internal fun AccountTabContent(
     navController: NavHostController,
-    authViewModel: AuthViewModel,
+    dependencies: AccountRoutesDeps,
     onBackToHome: () -> Unit,
 ) {
+    val authViewModel = dependencies.authViewModel
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
     when (authState) {

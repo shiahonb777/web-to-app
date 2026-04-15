@@ -20,16 +20,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.shell.ShellConfig
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.shell.ShellRuntimeServices
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ForcedRunCountdownOverlay
 import com.webtoapp.ui.components.VirtualNavigationBar
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import kotlinx.coroutines.delay
 
 /**
- * BGM 歌词显示覆盖层
+ * BGM display
  */
 @Composable
 fun BoxScope.ShellLyricsOverlay(
@@ -73,7 +73,7 @@ fun BoxScope.ShellLyricsOverlay(
 }
 
 /**
- * 强制运行倒计时覆盖层
+ * force- run
  */
 @Composable
 fun BoxScope.ShellForcedRunOverlay(
@@ -99,7 +99,7 @@ fun BoxScope.ShellForcedRunOverlay(
 }
 
 /**
- * 全屏模式下的悬浮返回按钮（自动淡出）
+ * mode backbutton( )
  */
 @Composable
 fun BoxScope.ShellFloatingBackButton(
@@ -113,7 +113,7 @@ fun BoxScope.ShellFloatingBackButton(
 ) {
     val context = LocalContext.current
 
-    // 仅在全屏模式下toolbar未显示时才显示悬浮返回按钮（且用户未禁用）
+    // only mode toolbar display display backbutton( user)
     if (showFloatingBackButton && hideToolbar && !showToolbar && canGoBack && !forcedRunActive) {
         var fabAlpha by remember { mutableFloatStateOf(0.9f) }
         var fadeKey by remember { mutableIntStateOf(0) }
@@ -155,13 +155,13 @@ fun BoxScope.ShellFloatingBackButton(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
             contentColor = MaterialTheme.colorScheme.onSurface
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.cdBack)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStringsProvider.current().cdBack)
         }
     }
 }
 
 /**
- * 错误提示卡片
+ * errorhintcard
  */
 @Composable
 fun BoxScope.ShellErrorCard(
@@ -191,7 +191,7 @@ fun BoxScope.ShellErrorCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(error, modifier = Modifier.weight(weight = 1f, fill = true))
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.cdClose)
+                    Text(AppStringsProvider.current().cdClose)
                 }
             }
         }
@@ -199,7 +199,7 @@ fun BoxScope.ShellErrorCard(
 }
 
 /**
- * 虚拟导航栏（强制运行模式下显示）
+ * ( force- runmode display)
  */
 @Composable
 fun BoxScope.ShellVirtualNavBar(
@@ -230,7 +230,7 @@ fun BoxScope.ShellVirtualNavBar(
         onForward = { webViewRef?.goForward() },
         onRefresh = { webViewRef?.reload() },
         onHome = {
-            // 返回主页
+            // backhome
             val homeUrl = when {
                 appType == "HTML" || appType == "FRONTEND" -> "file:///android_asset/html/${config.htmlConfig.getValidEntryFile()}"
                 else -> config.targetUrl
@@ -242,7 +242,7 @@ fun BoxScope.ShellVirtualNavBar(
 }
 
 /**
- * 广告拦截切换按钮
+ * interceptswitchbutton
  */
 @Composable
 fun BoxScope.ShellAdBlockToggle(
@@ -251,7 +251,7 @@ fun BoxScope.ShellAdBlockToggle(
     webViewRef: WebView?
 ) {
     val context = LocalContext.current
-    val adBlocker = WebToAppApplication.adBlock
+    val adBlocker = ShellRuntimeServices.adBlock
 
     if (config.adBlockEnabled && config.webViewConfig.adBlockToggleEnabled) {
         var adBlockCurrentlyEnabled by remember { mutableStateOf(config.adBlockEnabled) }
@@ -262,9 +262,9 @@ fun BoxScope.ShellAdBlockToggle(
                 adBlocker.setEnabled(adBlockCurrentlyEnabled)
                 webViewRef?.reload()
                 val message = if (adBlockCurrentlyEnabled)
-                    Strings.adBlockEnabled
+                    AppStringsProvider.current().adBlockEnabled
                 else
-                    Strings.adBlockDisabled
+                    AppStringsProvider.current().adBlockDisabled
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier
@@ -287,9 +287,9 @@ fun BoxScope.ShellAdBlockToggle(
                 else
                     Icons.Outlined.Shield,
                 contentDescription = if (adBlockCurrentlyEnabled)
-                    Strings.adBlockEnabled
+                    AppStringsProvider.current().adBlockEnabled
                 else
-                    Strings.adBlockDisabled,
+                    AppStringsProvider.current().adBlockDisabled,
                 tint = if (adBlockCurrentlyEnabled)
                     MaterialTheme.colorScheme.primary
                 else

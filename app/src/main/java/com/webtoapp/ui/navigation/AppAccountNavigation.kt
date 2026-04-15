@@ -9,12 +9,10 @@ import com.webtoapp.ui.screens.DeviceManagementScreen
 import com.webtoapp.ui.screens.ProfileScreen
 import com.webtoapp.ui.screens.SubscriptionScreen
 import com.webtoapp.ui.screens.TeamScreen
-import com.webtoapp.ui.viewmodel.CloudViewModel
-import org.koin.androidx.compose.koinViewModel
 
 internal fun NavGraphBuilder.addAccountRoutes(
     navController: NavHostController,
-    dependencies: AppNavigationGraphDependencies,
+    dependencies: AccountRoutesDeps,
 ) {
     val authViewModel = dependencies.authViewModel
     val billingManager = dependencies.billingManager
@@ -47,17 +45,17 @@ internal fun NavGraphBuilder.addAccountRoutes(
     }
 
     composable(Routes.ACTIVATION_CODE) {
-        val cloudViewModel: CloudViewModel = koinViewModel()
+        val cloudScreenDeps = rememberAccountCloudScreenDeps()
         ActivationCodeScreen(
-            cloudViewModel = cloudViewModel,
+            cloudViewModel = cloudScreenDeps.cloudViewModel,
             onBack = { navController.popBackStack() }
         )
     }
 
     composable(Routes.DEVICE_MANAGEMENT) {
-        val cloudViewModel: CloudViewModel = koinViewModel()
+        val cloudScreenDeps = rememberAccountCloudScreenDeps()
         DeviceManagementScreen(
-            cloudViewModel = cloudViewModel,
+            cloudViewModel = cloudScreenDeps.cloudViewModel,
             onBack = { navController.popBackStack() }
         )
     }

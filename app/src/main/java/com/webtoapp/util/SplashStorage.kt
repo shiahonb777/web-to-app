@@ -10,28 +10,28 @@ import java.io.FileOutputStream
 import java.util.UUID
 
 /**
- * 启动画面媒体存储工具类 - 将图片/视频复制到应用私有目录实现持久化
+ * - /
  */
 object SplashStorage {
 
     private const val TAG = "SplashStorage"
     private const val SPLASH_DIR = "splash_media"
-    private const val MAX_IMAGE_SIZE = 1920 // Max图片尺寸
+    private const val MAX_IMAGE_SIZE = 1920 // Max
     private const val BUFFER_SIZE = 8192
     
-    // Support的视频格式
+    // Support
     private val VIDEO_EXTENSIONS = setOf("mp4", "webm", "3gp", "mkv", "avi", "mov")
-    // Support的图片格式
+    // Support
     private val IMAGE_EXTENSIONS = setOf("png", "jpg", "jpeg", "gif", "webp", "bmp")
 
     /**
-     * 将 content:// URI 的媒体复制到私有目录
-     * @param isVideo 是否为视频文件
-     * @return 本地文件路径，失败返回 null
+     * content:// URI
+     * @param isVideo parameter
+     * @return result
      */
     fun saveMediaFromUri(context: Context, uri: Uri, isVideo: Boolean): String? {
         return try {
-            // Create媒体目录
+            // Create
             val splashDir = getSplashDir(context)
 
             if (isVideo) {
@@ -46,10 +46,10 @@ object SplashStorage {
     }
 
     /**
-     * 保存视频文件
+     * Note.
      */
     private fun saveVideoFromUri(context: Context, uri: Uri, splashDir: File): String? {
-        // Copy视频文件
+        // Copy
         val fileName = "splash_${UUID.randomUUID()}.mp4"
         val videoFile = File(splashDir, fileName)
 
@@ -62,47 +62,47 @@ object SplashStorage {
             videoFile.absolutePath
         } catch (e: Exception) {
             AppLogger.e(TAG, "Operation failed", e)
-            // Cleanup失败的文件
+            // Cleanup
             videoFile.delete()
             null
         }
     }
 
     /**
-     * 保存图片文件
+     * Note.
      */
     private fun saveImageFromUri(context: Context, uri: Uri, splashDir: File): String? {
-        // 使用 BitmapFactory.Options 优化内存
+        // BitmapFactory.Options
         val options = BitmapFactory.Options().apply {
             inJustDecodeBounds = true
         }
         
-        // 先获取图片尺寸
+        // Note.
         context.contentResolver.openInputStream(uri)?.use { input ->
             BitmapFactory.decodeStream(input, null, options)
         }
         
-        // 计算采样率
+        // Calculate sample size
         options.inSampleSize = calculateInSampleSize(options, MAX_IMAGE_SIZE, MAX_IMAGE_SIZE)
         options.inJustDecodeBounds = false
         
-        // 读取图片
+        // Note.
         val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
             BitmapFactory.decodeStream(input, null, options)
         } ?: return null
 
-        // Generate唯一文件名
+        // Generate
         val fileName = "splash_${UUID.randomUUID()}.png"
         val imageFile = File(splashDir, fileName)
 
         return try {
-            // Compression并保存图片（限制尺寸）
+            // Compression（）
             val scaledBitmap = scaleBitmap(bitmap, MAX_IMAGE_SIZE)
             FileOutputStream(imageFile).use { out ->
                 scaledBitmap.compress(Bitmap.CompressFormat.PNG, 90, out)
             }
 
-            // 回收 bitmap
+            // bitmap
             if (scaledBitmap !== bitmap) {
                 bitmap.recycle()
             }
@@ -118,7 +118,7 @@ object SplashStorage {
     }
     
     /**
-     * 计算采样率
+     * Calculate sample size
      */
     private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
         val (height, width) = options.outHeight to options.outWidth
@@ -154,7 +154,7 @@ object SplashStorage {
     }
     
     /**
-     * 批量删除媒体
+     * Note.
      */
     fun deleteMediaFiles(mediaPaths: List<String?>): Int {
         var deletedCount = 0
@@ -165,7 +165,7 @@ object SplashStorage {
     }
 
     /**
-     * 检查媒体文件是否存在
+     * Note.
      */
     fun mediaExists(mediaPath: String?): Boolean {
         if (mediaPath.isNullOrBlank()) return false
@@ -177,7 +177,7 @@ object SplashStorage {
     }
 
     /**
-     * 判断是否为视频文件
+     * Note.
      */
     fun isVideoFile(path: String): Boolean {
         val extension = path.substringAfterLast('.', "").lowercase()
@@ -185,7 +185,7 @@ object SplashStorage {
     }
     
     /**
-     * 判断是否为图片文件
+     * Note.
      */
     fun isImageFile(path: String): Boolean {
         val extension = path.substringAfterLast('.', "").lowercase()
@@ -193,7 +193,7 @@ object SplashStorage {
     }
     
     /**
-     * 获取启动画面目录
+     * Note.
      */
     private fun getSplashDir(context: Context): File {
         val splashDir = File(context.filesDir, SPLASH_DIR)
@@ -204,7 +204,7 @@ object SplashStorage {
     }
     
     /**
-     * 获取存储统计信息
+     * Note.
      */
     fun getStorageStats(context: Context): StorageStats {
         val splashDir = File(context.filesDir, SPLASH_DIR)
@@ -226,7 +226,7 @@ object SplashStorage {
     }
     
     /**
-     * 清理未使用的媒体文件
+     * Note.
      */
     fun cleanupUnusedMedia(context: Context, usedMediaPaths: Set<String>): Int {
         val splashDir = File(context.filesDir, SPLASH_DIR)
@@ -242,7 +242,7 @@ object SplashStorage {
     }
 
     /**
-     * 等比缩放 Bitmap
+     * Bitmap
      */
     private fun scaleBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
         val width = bitmap.width
@@ -260,7 +260,7 @@ object SplashStorage {
     }
 
     /**
-     * 清理所有启动画面媒体
+     * Note.
      */
     fun clearAll(context: Context): Boolean {
         return try {
@@ -272,7 +272,7 @@ object SplashStorage {
     }
     
     /**
-     * 存储统计信息
+     * Note.
      */
     data class StorageStats(
         val imageCount: Int,

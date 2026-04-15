@@ -25,8 +25,8 @@ import java.util.zip.ZipOutputStream
 import kotlin.coroutines.coroutineContext
 
 /**
- * 数据备份管理器
- * 支持一键导出和导入所有应用数据
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class DataBackupManager(private val context: Context) {
     
@@ -47,15 +47,15 @@ class DataBackupManager(private val context: Context) {
         private const val EXTENSION_MODULES_FILE = "${EXTENSION_DIR}modules.json"
         private const val EXTENSION_BUILTIN_STATES_FILE = "${EXTENSION_DIR}builtin_states.json"
         
-        // 缓冲区大小
+        // Note: brief English comment.
         private const val BUFFER_SIZE = 8192
         
-        // 日期格式化
+        // Note: brief English comment.
         private val backupDateFormat = threadLocalCompat {
             SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         }
         
-        // 单例 Gson
+        // Note: brief English comment.
         private val gson: Gson by lazy {
             GsonBuilder()
                 .setPrettyPrinting()
@@ -64,7 +64,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 备份数据结构
+     * Note: brief English comment.
      */
     data class BackupData(
         val version: Int = BACKUP_VERSION,
@@ -74,11 +74,11 @@ class DataBackupManager(private val context: Context) {
     )
     
     /**
-     * 导出所有数据到 ZIP 文件
-     * @param repository 数据仓库
-     * @param outputUri 输出文件 URI
-     * @param onProgress 进度回调 (current, total, message)
-     * @return 导出结果
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun exportAllData(
         repository: WebAppRepository,
@@ -89,7 +89,7 @@ class DataBackupManager(private val context: Context) {
             onProgress(0, 100, "正在读取应用数据...")
             coroutineContext.ensureActive() // Support取消
             
-            // Get所有应用
+            // Note: brief English comment.
             val apps = repository.allWebApps.first()
             if (apps.isEmpty()) {
                 return@withContext Result.failure(Exception("没有可导出的应用数据"))
@@ -97,7 +97,7 @@ class DataBackupManager(private val context: Context) {
             
             AppLogger.i(TAG, "准备导出 ${apps.size} 个应用")
             
-            // 收集所有资源文件
+            // Note: brief English comment.
             val resourceFiles = mutableMapOf<String, String>() // zipPath -> localPath
             
             apps.forEachIndexed { index, app ->
@@ -108,7 +108,7 @@ class DataBackupManager(private val context: Context) {
             
             AppLogger.i(TAG, "收集到 ${resourceFiles.size} 个资源文件")
             
-            // Create备份数据（更新资源路径为相对路径）
+            // Note: brief English comment.
             val appsWithRelativePaths = apps.map { app ->
                 updateAppPathsToRelative(app, resourceFiles)
             }
@@ -124,16 +124,16 @@ class DataBackupManager(private val context: Context) {
             onProgress(50, 100, "正在创建备份文件...")
             coroutineContext.ensureActive()
             
-            // 写入 ZIP 文件
+            // Note: brief English comment.
             context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
                 ZipOutputStream(BufferedOutputStream(outputStream, BUFFER_SIZE)).use { zipOut ->
-                    // 写入 apps.json
+                    // Note: brief English comment.
                     val jsonBytes = gson.toJson(backupData).toByteArray(Charsets.UTF_8)
                     zipOut.putNextEntry(ZipEntry(APPS_JSON))
                     zipOut.write(jsonBytes)
                     zipOut.closeEntry()
                     
-                    // 写入资源文件
+                    // Note: brief English comment.
                     var processedFiles = 0
                     resourceFiles.forEach { (zipPath, localPath) ->
                         coroutineContext.ensureActive()
@@ -158,7 +158,7 @@ class DataBackupManager(private val context: Context) {
                         }
                     }
                     
-                    // 写入扩展模块配置（可选）
+                    // Note: brief English comment.
                     extensionFiles.forEach { (zipPath, file) ->
                         coroutineContext.ensureActive()
                         try {
@@ -190,11 +190,11 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 从 ZIP 文件导入所有数据
-     * @param repository 数据仓库
-     * @param inputUri 输入文件 URI
-     * @param onProgress 进度回调
-     * @return 导入结果
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun importAllData(
         repository: WebAppRepository,
@@ -212,7 +212,7 @@ class DataBackupManager(private val context: Context) {
             var modulesJsonBytes: ByteArray? = null
             var builtInStatesJsonBytes: ByteArray? = null
             
-            // 读取 ZIP 文件
+            // Note: brief English comment.
             context.contentResolver.openInputStream(inputUri)?.use { inputStream ->
                 ZipInputStream(BufferedInputStream(inputStream, BUFFER_SIZE)).use { zipIn ->
                     var entry = zipIn.nextEntry
@@ -225,7 +225,7 @@ class DataBackupManager(private val context: Context) {
                         
                         when {
                             entry.name == APPS_JSON -> {
-                                // 读取应用数据
+                                // Note: brief English comment.
                                 val jsonBytes = zipIn.readBytes()
                                 val jsonStr = String(jsonBytes, Charsets.UTF_8)
                                 backupData = parseBackupData(jsonStr)
@@ -238,7 +238,7 @@ class DataBackupManager(private val context: Context) {
                                 builtInStatesJsonBytes = zipIn.readBytes()
                             }
                             entry.name.startsWith(RESOURCES_DIR) && !entry.isDirectory -> {
-                                // Decompression资源文件
+                                // Note: brief English comment.
                                 val extractedPath = extractResourceFile(entry.name, zipIn)
                                 if (extractedPath != null) {
                                     extractedResources[entry.name] = extractedPath
@@ -262,7 +262,7 @@ class DataBackupManager(private val context: Context) {
             onProgress(60, 100, "正在导入应用数据...")
             coroutineContext.ensureActive()
             
-            // Import应用
+            // Note: brief English comment.
             var importedCount = 0
             var skippedCount = 0
             
@@ -275,10 +275,10 @@ class DataBackupManager(private val context: Context) {
                 )
                 
                 try {
-                    // Update资源路径为本地路径
+                    // Note: brief English comment.
                     val appWithLocalPaths = updateAppPathsToLocal(app, extractedResources)
                     
-                    // Create新应用（重置 ID 以避免冲突）
+                    // Note: brief English comment.
                     val newApp = appWithLocalPaths.copy(
                         id = 0,
                         createdAt = System.currentTimeMillis(),
@@ -293,7 +293,7 @@ class DataBackupManager(private val context: Context) {
                 }
             }
             
-            // 恢复扩展模块配置（可选）
+            // Note: brief English comment.
             restoreExtensionFiles(modulesJsonBytes, builtInStatesJsonBytes)
             
             onProgress(100, 100, "导入完成")
@@ -312,7 +312,7 @@ class DataBackupManager(private val context: Context) {
     }
 
     /**
-     * 解析备份 JSON，并为旧版本补齐 WebViewConfig 缺失字段默认值
+     * Note: brief English comment.
      */
     private fun parseBackupData(jsonStr: String): BackupData {
         val root = JsonParser.parseString(jsonStr).asJsonObject
@@ -392,7 +392,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 清理已解压的文件（导入失败时调用）
+     * Note: brief English comment.
      */
     private fun cleanupExtractedFiles(files: List<File>) {
         files.forEach { file ->
@@ -407,7 +407,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 清理所有备份临时文件
+     * Note: brief English comment.
      */
     fun cleanupBackupTempFiles() {
         val backupDirs = listOf(
@@ -429,7 +429,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 获取备份临时文件大小
+     * Note: brief English comment.
      */
     fun getBackupTempSize(): Long {
         val backupDirs = listOf(
@@ -447,7 +447,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 收集应用的所有资源文件
+     * Note: brief English comment.
      */
     private fun collectAppResources(app: WebApp, resources: MutableMap<String, String>) {
         val appId = app.id.toString()
@@ -460,7 +460,7 @@ class DataBackupManager(private val context: Context) {
             }
         }
         
-        // Start画面
+        // Note: brief English comment.
         app.splashConfig?.mediaPath?.let { path ->
             if (File(path).exists()) {
                 val ext = path.substringAfterLast('.', "png")
@@ -468,20 +468,20 @@ class DataBackupManager(private val context: Context) {
             }
         }
         
-        // BGM 文件
+        // Note: brief English comment.
         app.bgmConfig?.playlist?.forEachIndexed { index, bgmItem ->
-            // BGM 音频文件
+            // Note: brief English comment.
             if (!bgmItem.isAsset && File(bgmItem.path).exists()) {
                 val ext = bgmItem.path.substringAfterLast('.', "mp3")
                 resources["${BGM_DIR}${appId}_bgm_$index.$ext"] = bgmItem.path
             }
-            // BGM 歌词文件
+            // Note: brief English comment.
             bgmItem.lrcPath?.let { lrcPath ->
                 if (File(lrcPath).exists()) {
                     resources["${BGM_LRC_DIR}${appId}_bgm_$index.lrc"] = lrcPath
                 }
             }
-            // BGM 封面图片
+            // Note: brief English comment.
             bgmItem.coverPath?.let { coverPath ->
                 if (File(coverPath).exists()) {
                     val ext = coverPath.substringAfterLast('.', "jpg")
@@ -490,7 +490,7 @@ class DataBackupManager(private val context: Context) {
             }
         }
         
-        // 状态栌背景图片
+        // Note: brief English comment.
         app.webViewConfig.statusBarBackgroundImage?.let { path ->
             if (File(path).exists()) {
                 val ext = path.substringAfterLast('.', "png")
@@ -498,14 +498,14 @@ class DataBackupManager(private val context: Context) {
             }
         }
         
-        // HTML 文件
+        // Note: brief English comment.
         app.htmlConfig?.files?.forEach { htmlFile ->
             if (File(htmlFile.path).exists()) {
                 resources["${HTML_DIR}${appId}/${htmlFile.name}"] = htmlFile.path
             }
         }
         
-        // Media应用内容
+        // Note: brief English comment.
         if (app.appType == com.webtoapp.data.model.AppType.IMAGE || 
             app.appType == com.webtoapp.data.model.AppType.VIDEO) {
             val mediaPath = app.url
@@ -517,7 +517,7 @@ class DataBackupManager(private val context: Context) {
     }
 
     /**
-     * 收集扩展模块配置文件（如果存在）
+     * Note: brief English comment.
      */
     private fun collectExtensionBackupFiles(): Map<String, File> {
         val extensionDir = File(context.filesDir, "extension_modules")
@@ -537,7 +537,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * Update app路径为相对路径（用于导出）
+     * Note: brief English comment.
      */
     private fun updateAppPathsToRelative(
         app: WebApp,
@@ -545,7 +545,7 @@ class DataBackupManager(private val context: Context) {
     ): WebApp {
         val appId = app.id.toString()
         
-        // Find对应的 ZIP 路径
+        // Note: brief English comment.
         fun findZipPath(localPath: String?): String? {
             if (localPath == null) return null
             return resources.entries.find { it.value == localPath }?.key
@@ -583,7 +583,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * Update app路径为本地路径（用于导入）
+     * Note: brief English comment.
      */
     private fun updateAppPathsToLocal(
         app: WebApp,
@@ -623,7 +623,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 解压资源文件到本地
+     * Note: brief English comment.
      */
     private fun extractResourceFile(zipPath: String, zipIn: ZipInputStream): String? {
         return try {
@@ -656,7 +656,7 @@ class DataBackupManager(private val context: Context) {
     }
     
     /**
-     * 生成备份文件名
+     * Note: brief English comment.
      */
     fun generateBackupFileName(): String {
         return "WebToApp_Backup_${backupDateFormat.get()!!.format(Date())}.zip"
@@ -664,7 +664,7 @@ class DataBackupManager(private val context: Context) {
 }
 
 /**
- * 导出结果
+ * Note: brief English comment.
  */
 data class ExportResult(
     val appCount: Int,
@@ -672,7 +672,7 @@ data class ExportResult(
 )
 
 /**
- * 导入结果
+ * Note: brief English comment.
  */
 data class ImportResult(
     val totalCount: Int,

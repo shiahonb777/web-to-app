@@ -56,7 +56,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -75,10 +75,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ════════════════════════════════════════════════
-// 应用管理控制台 (Premium UI)
+// appmanagement( Premium UI)
 // ════════════════════════════════════════════════
 
-/** 管理控制台用渐变色组 */
+/** management gradient */
 internal val mgmtGradientBlue = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
 internal val mgmtGradientGreen = listOf(Color(0xFF11998E), Color(0xFF38EF7D))
 internal val mgmtGradientOrange = listOf(Color(0xFFF7971E), Color(0xFFFFD200))
@@ -208,7 +208,7 @@ internal fun AppManagementSheet(
     }
 }
 
-/** 渐变统计迷你卡 */
+/** gradient card */
 @Composable
 internal fun GradientMiniStat(gradient: List<Color>, icon: ImageVector, value: String, label: String, modifier: Modifier = Modifier) {
     Box(
@@ -222,7 +222,7 @@ internal fun GradientMiniStat(gradient: List<Color>, icon: ImageVector, value: S
     }
 }
 
-/** 信息行（带左色条） */
+/** Note */
 @Composable
 internal fun OverviewInfoRow(label: String, value: String) {
     Row(
@@ -234,4 +234,4 @@ internal fun OverviewInfoRow(label: String, value: String) {
     }
 }
 
-// ── 概览 Tab ──
+// Tab

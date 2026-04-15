@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
 import com.webtoapp.data.model.WebViewConfig
@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * WordPress Shell 模式 — 从 APK assets 提取 PHP + WordPress 文件并启动本地服务器
+ * WordPress Shell mode- from APK assets PHP + WordPress fileand local
  */
 @Composable
 fun WordPressShellMode(
@@ -41,7 +41,7 @@ fun WordPressShellMode(
 ) {
     val context = LocalContext.current
 
-    // 状态
+    // state
     var phase by remember { mutableStateOf("extracting") } // extracting | starting | ready | error
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var serverUrl by remember { mutableStateOf<String?>(null) }
@@ -49,13 +49,13 @@ fun WordPressShellMode(
 
     val phpRuntime = remember { com.webtoapp.core.wordpress.WordPressPhpRuntime(context) }
 
-    // ---- 提取 + 启动 PHP 服务器 ----
+    // + PHP
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. 解析 PHP 二进制路径
-                // 优先 nativeLibraryDir/libphp.so（Android 15+ 唯一可执行路径）
-                // 回退到从 assets 提取（旧版 APK 兼容）
+                // 1. PHP path
+                // prefer nativeLibraryDir/libphp. so( Android 15+ executepath)
+                // fallback from assets( APK)
                 val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
                 if (!nativePhp.exists()) {
                     val abi = com.webtoapp.core.wordpress.WordPressDependencyManager.getDeviceAbi()
@@ -70,7 +70,7 @@ fun WordPressShellMode(
                     }
                 }
 
-                // 2. 提取 WordPress 文件到私有目录（仅首次）
+                // 2. WordPress file directory( only)
                 val wpDir = File(context.filesDir, "wordpress_site")
                 val marker = File(wpDir, ".wp_extracted")
                 val extractionToken = buildExtractionToken(
@@ -87,7 +87,7 @@ fun WordPressShellMode(
                     writeExtractionMarker(marker, extractionToken)
                 }
 
-                // 3. 启动 PHP 内置服务器
+                // 3. PHP
                 phase = "starting"
                 val requestPort = config.wordpressConfig.phpPort
                 val port = phpRuntime.startServer(wpDir.absolutePath, requestPort)
@@ -98,17 +98,17 @@ fun WordPressShellMode(
                     AppLogger.i("WordPressShell", "WordPress 就绪: $serverUrl")
                 } else {
                     phase = "error"
-                    errorMsg = Strings.phpStartFailed
+                    errorMsg = AppStringsProvider.current().phpStartFailed
                 }
             } catch (e: Exception) {
                 AppLogger.e("WordPressShell", "WordPress Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
 
-    // ---- 清理 PHP 服务器 ----
+    // PHP
     DisposableEffect(phpRuntime) {
         onDispose { phpRuntime.stopServer() }
     }
@@ -150,11 +150,11 @@ fun WordPressShellMode(
                                     config.extensionModuleIds,
                                     config.embeddedExtensionModules,
                                     config.extensionFabIcon, allowGlobalModuleFallback = false)
-                                // WordPress 通过 localhost 加载，允许混合内容
+                                // WordPress localhost load, content
                                 settings.mixedContentMode =
                                     android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-                                // 长按监听
+                                // long- press
                                 var lastTouchX = 0f
                                 var lastTouchY = 0f
                                 setOnTouchListener { view, event ->
@@ -202,8 +202,8 @@ fun WordPressShellMode(
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (phase == "extracting") Strings.wpCheckingDeps
-                                   else Strings.wpStartingServer,
+                            text = if (phase == "extracting") AppStringsProvider.current().wpCheckingDeps
+                                   else AppStringsProvider.current().wpStartingServer,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -224,7 +224,7 @@ fun WordPressShellMode(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = errorMsg ?: Strings.wpStartFailed,
+                            text = errorMsg ?: AppStringsProvider.current().wpStartFailed,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -236,8 +236,8 @@ fun WordPressShellMode(
 }
 
 /**
- * Node.js 应用 Shell 模式
- * 通过 JNI 加载 libnode.so 共享库，在进程内启动 Node.js 服务器，WebView 加载 localhost
+ * Node. js app Shell mode
+ * JNI load libnode. so, Node. js, WebView load localhost
  */
 @Composable
 fun NodeJsShellMode(
@@ -259,11 +259,11 @@ fun NodeJsShellMode(
 
     val nodeRuntime = remember { com.webtoapp.core.nodejs.NodeRuntime(context) }
 
-    // 提取 + 启动 Node.js 服务器
+    // + Node. js
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. 检查 libnode.so 是否存在
+                // 1. check libnode. so
                 val nodePath = com.webtoapp.core.nodejs.NodeDependencyManager.getNodeLibraryPath(context)
                 AppLogger.i("NodeJsShell", "nativeLibraryDir: ${context.applicationInfo.nativeLibraryDir}")
                 com.webtoapp.core.shell.ShellLogger.i("NodeJsShell", "nativeLibraryDir: ${context.applicationInfo.nativeLibraryDir}")
@@ -272,14 +272,14 @@ fun NodeJsShellMode(
                     AppLogger.e("NodeJsShell", "libnode.so 未找到")
                     com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "libnode.so 未找到")
                     phase = "error"
-                    errorMsg = Strings.nodeRuntimeNotFound
+                    errorMsg = AppStringsProvider.current().nodeRuntimeNotFound
                     return@withContext
                 }
                 
                 AppLogger.i("NodeJsShell", "libnode.so 路径: $nodePath (size=${java.io.File(nodePath).length()})")
                 com.webtoapp.core.shell.ShellLogger.i("NodeJsShell", "libnode.so 路径: $nodePath (size=${java.io.File(nodePath).length()})")
 
-                // 2. 提取项目文件到私有目录（仅首次）
+                // 2. itemfile directory( only)
                 val projectDir = File(context.filesDir, "nodejs_site")
                 val marker = File(projectDir, ".nodejs_extracted")
                 val extractionToken = buildExtractionToken(
@@ -297,14 +297,14 @@ fun NodeJsShellMode(
                     writeExtractionMarker(marker, extractionToken)
                 }
 
-                // 3. 设置环境变量
+                // 3. settings
                 val envVars = config.nodejsConfig.envVars.toMutableMap()
                 val requestPort = config.nodejsConfig.port.takeIf { it > 0 }
                 if (requestPort != null && !envVars.containsKey("PORT")) {
                     envVars["PORT"] = requestPort.toString()
                 }
 
-                // 4. 启动 Node.js 服务器（通过 JNI）
+                // 4. Node. js( JNI)
                 phase = "starting"
                 val entryFile = config.nodejsConfig.entryFile.ifEmpty { "index.js" }
                 val port = nodeRuntime.startServer(
@@ -323,19 +323,19 @@ fun NodeJsShellMode(
                     phase = "error"
                     errorMsg = (nodeRuntime.serverState.value as? com.webtoapp.core.nodejs.NodeRuntime.ServerState.Error)
                         ?.message
-                        ?: Strings.nodeServerStartFailed
+                        ?: AppStringsProvider.current().nodeServerStartFailed
                     com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "Node.js 服务器启动失败")
                 }
             } catch (e: Exception) {
                 AppLogger.e("NodeJsShell", "Node.js Shell 启动失败", e)
                 com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "Node.js Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
 
-    // 清理 Node.js 服务器
+    // Node. js
     DisposableEffect(nodeRuntime) {
         onDispose { nodeRuntime.stopServer() }
     }
@@ -422,8 +422,8 @@ fun NodeJsShellMode(
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (phase == "extracting") Strings.preparingNodeEnv
-                                   else Strings.startingNodeServer,
+                            text = if (phase == "extracting") AppStringsProvider.current().preparingNodeEnv
+                                   else AppStringsProvider.current().startingNodeServer,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -444,7 +444,7 @@ fun NodeJsShellMode(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = errorMsg ?: Strings.nodeStartFailed,
+                            text = errorMsg ?: AppStringsProvider.current().nodeStartFailed,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -456,7 +456,7 @@ fun NodeJsShellMode(
 }
 
 /**
- * PHP 应用 Shell 模式 — 从 APK assets 提取 PHP 文件并启动本地 PHP 服务器
+ * PHP app Shell mode- from APK assets PHP fileand local PHP
  */
 @Composable
 fun PhpAppShellMode(
@@ -479,12 +479,12 @@ fun PhpAppShellMode(
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. 解析 PHP 二进制路径
-                // 优先 nativeLibraryDir/libphp.so（Android 15+ 唯一可执行路径）
-                // 回退到从 assets 提取（旧版 APK 兼容）
+                // 1. PHP path
+                // prefer nativeLibraryDir/libphp. so( Android 15+ executepath)
+                // fallback from assets( APK)
                 val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
                 if (!nativePhp.exists()) {
-                    // 旧版 APK: 从 assets 提取到 DependencyManager 期望的路径
+                    // APK: from assets DependencyManager path
                     val abi = com.webtoapp.core.wordpress.WordPressDependencyManager.getDeviceAbi()
                     val phpDir = com.webtoapp.core.wordpress.WordPressDependencyManager.getPhpDir(context)
                     val phpBinary = File(phpDir, "php")
@@ -496,7 +496,7 @@ fun PhpAppShellMode(
                     }
                 }
 
-                // 2. 提取 PHP 项目文件
+                // 2. PHP itemfile
                 val phpProjectDir = File(context.filesDir, "php_app_site")
                 val marker = File(phpProjectDir, ".php_extracted")
                 val extractionToken = buildExtractionToken(
@@ -511,7 +511,7 @@ fun PhpAppShellMode(
                     writeExtractionMarker(marker, extractionToken)
                 }
 
-                // 3. 启动 PHP 服务器
+                // 3. PHP
                 phase = "starting"
                 val docRoot = config.phpAppConfig.documentRoot
                 val entryFile = config.phpAppConfig.entryFile.ifBlank { "index.php" }
@@ -528,11 +528,11 @@ fun PhpAppShellMode(
                     phase = "ready"
                 } else {
                     phase = "error"
-                    errorMsg = Strings.phpStartFailed
+                    errorMsg = AppStringsProvider.current().phpStartFailed
                 }
             } catch (e: Exception) {
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -599,7 +599,7 @@ fun PhpAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(if (phase == "extracting") Strings.wpCheckingDeps else Strings.wpStartingServer)
+                        Text(if (phase == "extracting") AppStringsProvider.current().wpCheckingDeps else AppStringsProvider.current().wpStartingServer)
                     }
                 }
             }
@@ -608,7 +608,7 @@ fun PhpAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(errorMsg ?: Strings.phpStartFailed, color = MaterialTheme.colorScheme.error)
+                        Text(errorMsg ?: AppStringsProvider.current().phpStartFailed, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -617,7 +617,7 @@ fun PhpAppShellMode(
 }
 
 /**
- * Python 应用 Shell 模式 — 从 APK assets 提取 Python 文件并通过 PythonRuntime 启动真实 Python 服务器
+ * Python app Shell mode- from APK assets Python fileand PythonRuntime Python
  */
 @Composable
 fun PythonAppShellMode(
@@ -642,8 +642,8 @@ fun PythonAppShellMode(
             try {
                 val pyConfig = config.pythonAppConfig
                 
-                // 1. 提取 Python 标准库（从 assets/python_runtime/ 到 python_deps/python/）
-                //    Python 二进制已通过 lib/$abi/libpython3.so 自动安装到 nativeLibraryDir
+                // 1. Python( from assets/python_runtime/ python_deps/python/)
+                // Python lib/$abi/libpython3. so nativeLibraryDir
                 val pythonHome = com.webtoapp.core.python.PythonDependencyManager.getPythonDir(context)
                 val runtimeMarker = File(pythonHome, ".runtime_extracted")
                 if (!runtimeMarker.exists()) {
@@ -656,7 +656,7 @@ fun PythonAppShellMode(
                             AppLogger.i("PythonShell", "Python 标准库提取完成")
                         } else {
                             AppLogger.w("PythonShell", "assets/python_runtime 不存在或为空，尝试 legacy assets/python/ 路径")
-                            // Legacy fallback: 从 assets/python/$abi/python3 提取二进制
+                            // Legacy fallback: from assets/python/$abi/python3
                             val abi = com.webtoapp.core.python.PythonDependencyManager.getDeviceAbi()
                             try {
                                 val binDir = File(pythonHome, "bin")
@@ -680,10 +680,10 @@ fun PythonAppShellMode(
                     AppLogger.i("PythonShell", "Python 标准库已提取，跳过")
                 }
                 
-                // 2. 检查 Python 运行时是否可用
+                // 2. check Python run
                 if (!pythonRuntime.isPythonAvailable()) {
                     AppLogger.w("PythonShell", "Python 运行时不可用，回退到预览模式")
-                    // 回退：尝试加载 _preview_.html
+                    // fallback: load _preview_. html
                     val projectDir = File(context.filesDir, "python_app_site")
                     projectDir.mkdirs()
                     extractAssetsRecursive(context, "python_app", projectDir)
@@ -694,13 +694,13 @@ fun PythonAppShellMode(
                         AppLogger.i("PythonShell", "回退到预览模式: $serverUrl")
                     } else {
                         phase = "error"
-                        errorMsg = Strings.pythonRuntimeNotFound
+                        errorMsg = AppStringsProvider.current().pythonRuntimeNotFound
                     }
                     return@withContext
                 }
                 AppLogger.i("PythonShell", "Python 运行时已就绪")
 
-                // 3. 提取项目文件到私有目录（仅首次）
+                // 3. itemfile directory( only)
                 val projectDir = File(context.filesDir, "python_app_site")
                 val marker = File(projectDir, ".python_extracted")
                 val extractionToken = buildExtractionToken(
@@ -719,7 +719,7 @@ fun PythonAppShellMode(
                     AppLogger.i("PythonShell", "已存在提取标记, 跳过提取")
                 }
 
-                // 4. 启动 Python 服务器（通过 PythonRuntime）
+                // 4. Python( PythonRuntime)
                 phase = "starting"
                 val entryFile = pyConfig.entryFile.ifEmpty { "app.py" }
                 val framework = pyConfig.framework.ifEmpty { "flask" }
@@ -740,13 +740,13 @@ fun PythonAppShellMode(
                     phase = "error"
                     errorMsg = (pythonRuntime.serverState.value as? com.webtoapp.core.python.PythonRuntime.ServerState.Error)
                         ?.message
-                        ?: Strings.pythonServerStartFailed
+                        ?: AppStringsProvider.current().pythonServerStartFailed
                     AppLogger.e("PythonShell", "Python 服务器启动失败: $errorMsg")
                 }
             } catch (e: Exception) {
                 AppLogger.e("PythonShell", "Python Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -830,8 +830,8 @@ fun PythonAppShellMode(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = when (phase) {
-                                "extracting" -> Strings.preparingPythonEnv
-                                else -> Strings.startingPythonServer
+                                "extracting" -> AppStringsProvider.current().preparingPythonEnv
+                                else -> AppStringsProvider.current().startingPythonServer
                             },
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -849,13 +849,13 @@ fun PythonAppShellMode(
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            Strings.pythonServerTimeout,
+                            AppStringsProvider.current().pythonServerTimeout,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            errorMsg ?: Strings.pythonStartFailed,
+                            errorMsg ?: AppStringsProvider.current().pythonStartFailed,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
@@ -870,7 +870,7 @@ fun PythonAppShellMode(
 }
 
 /**
- * Go 应用 Shell 模式 — 从 APK assets 提取 Go 项目文件并通过 GoRuntime 启动预编译二进制服务器
+ * Go app Shell mode- from APK assets Go itemfileand GoRuntime
  */
 @Composable
 fun GoAppShellMode(
@@ -895,7 +895,7 @@ fun GoAppShellMode(
             try {
                 val goConfig = config.goAppConfig
 
-                // 1. 提取项目文件到私有目录（仅首次）
+                // 1. itemfile directory( only)
                 val projectDir = File(context.filesDir, "go_app_site")
                 val marker = File(projectDir, ".go_extracted")
                 val extractionToken = buildExtractionToken(
@@ -914,7 +914,7 @@ fun GoAppShellMode(
                     AppLogger.i("GoShell", "已存在提取标记, 跳过提取")
                 }
 
-                // 2. 检测 Go 二进制
+                // 2. Go
                 val binaryName = goConfig.binaryName.ifEmpty {
                     goRuntime.detectBinary(projectDir) ?: ""
                 }
@@ -927,13 +927,13 @@ fun GoAppShellMode(
                         AppLogger.i("GoShell", "回退到预览模式: $serverUrl")
                     } else {
                         phase = "error"
-                        errorMsg = Strings.goBinaryNotFound
+                        errorMsg = AppStringsProvider.current().goBinaryNotFound
                     }
                     return@withContext
                 }
                 AppLogger.i("GoShell", "检测到 Go 二进制: $binaryName")
 
-                // 3. 启动 Go 服务器（通过 GoRuntime）
+                // 3. Go( GoRuntime)
                 phase = "starting"
                 val port = goRuntime.startServer(
                     projectDir = projectDir.absolutePath,
@@ -950,13 +950,13 @@ fun GoAppShellMode(
                     phase = "error"
                     errorMsg = (goRuntime.serverState.value as? com.webtoapp.core.golang.GoRuntime.ServerState.Error)
                         ?.message
-                        ?: Strings.goServerStartFailed
+                        ?: AppStringsProvider.current().goServerStartFailed
                     AppLogger.e("GoShell", "Go 服务器启动失败: $errorMsg")
                 }
             } catch (e: Exception) {
                 AppLogger.e("GoShell", "Go Shell 启动失败", e)
                 phase = "error"
-                errorMsg = e.message ?: Strings.unknownError
+                errorMsg = e.message ?: AppStringsProvider.current().unknownError
             }
         }
     }
@@ -1040,8 +1040,8 @@ fun GoAppShellMode(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = when (phase) {
-                                "extracting" -> Strings.preparingGoEnv
-                                else -> Strings.startingGoServer
+                                "extracting" -> AppStringsProvider.current().preparingGoEnv
+                                else -> AppStringsProvider.current().startingGoServer
                             },
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -1053,7 +1053,7 @@ fun GoAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(errorMsg ?: Strings.goStartFailed, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                        Text(errorMsg ?: AppStringsProvider.current().goStartFailed, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -1062,8 +1062,8 @@ fun GoAppShellMode(
 }
 
 /**
- * 旧版静态前端产物 Shell 模式（保留用于向后兼容）
- * 从 assets 提取项目文件并通过 LocalHttpServer + WebView 加载
+ * Shell mode( for)
+ * from assets itemfileand LocalHttpServer + WebView load
  */
 @Composable
 fun ServerAppShellMode(
@@ -1115,7 +1115,7 @@ fun ServerAppShellMode(
                     AppLogger.i("ServerAppShellMode", "Go配置: framework=${goConfig.framework}, binaryName=${goConfig.binaryName}, port=${goConfig.port}, staticDir=${goConfig.staticDir}")
                 }
                 
-                // 列出 assets 中的顶层内容
+                // assets in content
                 try {
                     val assetChildren = context.assets.list(assetDir)
                     AppLogger.i("ServerAppShellMode", "assets/$assetDir 内容 (${assetChildren?.size ?: 0} 项): ${assetChildren?.joinToString()}")
@@ -1136,7 +1136,7 @@ fun ServerAppShellMode(
                     AppLogger.i("ServerAppShellMode", "已存在提取标记, 跳过提取")
                 }
                 
-                // 列出提取后的目录结构 (最多30项)
+                // directory( 30)
                 val fileList = StringBuilder()
                 siteDir.walkTopDown().take(30).forEach { f ->
                     val rel = f.relativeTo(siteDir).path
@@ -1148,7 +1148,7 @@ fun ServerAppShellMode(
                 
                 phase = "starting"
 
-                // 通过 LocalHttpServer 加载项目静态前端产物
+                // LocalHttpServer loaditem
                 val candidates = listOf("dist", "build", "public", "static", "www", "")
                 var docRoot: File? = null
                 for (dir in candidates) {
@@ -1169,14 +1169,14 @@ fun ServerAppShellMode(
                     AppLogger.i("ServerAppShellMode", "LocalHttpServer 已启动, URL=$serverUrl")
                 } else {
                     AppLogger.w("ServerAppShellMode", "所有候选目录均未找到 index.html")
-                    // 没有找到 index.html，尝试直接通过 file:// 加载
+                    // index. html, file: // load
                     serverUrl = "file://${siteDir.absolutePath}/index.html"
                     if (File(siteDir, "index.html").exists()) {
                         phase = "ready"
                         AppLogger.i("ServerAppShellMode", "回退到 file:// 模式: $serverUrl")
                     } else {
                         phase = "error"
-                        errorMsg = Strings.serverStartFailed
+                        errorMsg = AppStringsProvider.current().serverStartFailed
                         AppLogger.e("ServerAppShellMode", "最终失败: siteDir 中也没有 index.html")
                         AppLogger.e("ServerAppShellMode", "Python/Go 后端应用需要对应运行时才能提供页面，当前实现仅支持静态前端产物")
                     }
@@ -1185,7 +1185,7 @@ fun ServerAppShellMode(
                 AppLogger.i("ServerAppShellMode", "========== 最终状态: phase=$phase, serverUrl=$serverUrl, error=$errorMsg ==========")
             } catch (e: Exception) {
                 phase = "error"
-                errorMsg = e.message ?: Strings.serverStartFailed
+                errorMsg = e.message ?: AppStringsProvider.current().serverStartFailed
                 AppLogger.e("ServerAppShellMode", "启动异常", e)
             }
         }
@@ -1274,7 +1274,7 @@ fun ServerAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(if (phase == "extracting") Strings.preparingEnv else Strings.startingServer)
+                        Text(if (phase == "extracting") AppStringsProvider.current().preparingEnv else AppStringsProvider.current().startingServer)
                     }
                 }
             }
@@ -1283,7 +1283,7 @@ fun ServerAppShellMode(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Warning, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(errorMsg ?: Strings.serverStartFailed, color = MaterialTheme.colorScheme.error)
+                        Text(errorMsg ?: AppStringsProvider.current().serverStartFailed, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }

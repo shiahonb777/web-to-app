@@ -11,7 +11,7 @@
 <p>
   <a href="https://github.com/shiahonb777/web-to-app/stargazers"><img src="https://img.shields.io/github/stars/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=f4c542" alt="Stars"></a>
   <a href="https://github.com/shiahonb777/web-to-app/network/members"><img src="https://img.shields.io/github/forks/shiahonb777/web-to-app?style=for-the-badge&logo=github&color=6cc644" alt="Forks"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-The%20Unlicense-blue?style=for-the-badge" alt="License"></a>
 </p>
 
 <p>
@@ -407,6 +407,13 @@ Shows app info, changelog, and dual download buttons (GitHub international + Git
 
 </div>
 
+## 🌍 i18n Structure
+
+- `app/src/main/java/com/webtoapp/core/i18n/Strings.kt`
+  Keeps compatibility getters and language/context wiring only.
+- `app/src/main/java/com/webtoapp/core/i18n/strings`
+  Feature strings are split here by responsibility, including common UI, create/project flows, cloud/community, AI/AI coding/AI config, module/extension, shell/webview, snippet/store/billing, music/build/UI, and legacy compatibility buckets.
+
 ## 📖 Usage Guide
 
 ### Create Website App
@@ -589,7 +596,7 @@ Extension modules can call Android native functions via `window.NativeBridge`:
 
 ## 📜 License
 
-MIT License
+The Unlicense
 
 ## 📬 Contact
 

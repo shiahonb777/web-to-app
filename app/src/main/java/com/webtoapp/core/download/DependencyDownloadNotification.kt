@@ -13,7 +13,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,7 +37,7 @@ class DependencyDownloadNotification private constructor(private val context: Co
     companion object {
         private const val TAG = "DependencyDownloadNotification"
         private const val CHANNEL_ID = "dep_download_channel"
-        private val CHANNEL_NAME get() = Strings.runtimeDownloadChannel
+        private val CHANNEL_NAME get() = AppStringsProvider.current().runtimeDownloadChannel
         private const val NOTIFICATION_ID = 8001
         
         const val ACTION_PAUSE = "com.webtoapp.DEP_DOWNLOAD_PAUSE"
@@ -72,7 +72,7 @@ class DependencyDownloadNotification private constructor(private val context: Co
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = Strings.runtimeDownloadChannelDesc
+                description = AppStringsProvider.current().runtimeDownloadChannelDesc
                 setShowBadge(false)
             }
             notificationManager.createNotificationChannel(channel)
@@ -138,8 +138,8 @@ class DependencyDownloadNotification private constructor(private val context: Co
         
         // BigText 详情
         val details = buildString {
-            append("$sizeText · $speedText · ${Strings.depDownloadRemaining} $etaText\n")
-            append("${Strings.depDownloadStarted}: $startText\n")
+            append("$sizeText · $speedText · ${AppStringsProvider.current().depDownloadRemaining} $etaText\n")
+            append("${AppStringsProvider.current().depDownloadStarted}: $startText\n")
             append(dl.url)
         }
         
@@ -152,10 +152,10 @@ class DependencyDownloadNotification private constructor(private val context: Co
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle("${dl.displayName}  $percent%")
-            .setContentText("$sizeText · $speedText · ${Strings.depDownloadRemaining} $etaText")
+            .setContentText("$sizeText · $speedText · ${AppStringsProvider.current().depDownloadRemaining} $etaText")
             .setStyle(NotificationCompat.BigTextStyle().bigText(details))
             .setProgress(100, percent, dl.totalBytes <= 0)
-            .addAction(android.R.drawable.ic_media_pause, Strings.depDownloadPause, pauseIntent)
+            .addAction(android.R.drawable.ic_media_pause, AppStringsProvider.current().depDownloadPause, pauseIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -177,18 +177,18 @@ class DependencyDownloadNotification private constructor(private val context: Co
         )
         
         val details = buildString {
-            append("${Strings.depDownloadPaused} · $sizeText\n")
-            append("${Strings.depDownloadStarted}: ${DependencyDownloadEngine.formatTime(paused.startTimeMillis)}\n")
+            append("${AppStringsProvider.current().depDownloadPaused} · $sizeText\n")
+            append("${AppStringsProvider.current().depDownloadStarted}: ${DependencyDownloadEngine.formatTime(paused.startTimeMillis)}\n")
             append(paused.url)
         }
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_pause)
-            .setContentTitle("${paused.displayName}  ${Strings.depDownloadPaused} $percent%")
-            .setContentText("${Strings.depDownloadPaused} · $sizeText")
+            .setContentTitle("${paused.displayName}  ${AppStringsProvider.current().depDownloadPaused} $percent%")
+            .setContentText("${AppStringsProvider.current().depDownloadPaused} · $sizeText")
             .setStyle(NotificationCompat.BigTextStyle().bigText(details))
             .setProgress(100, percent, false)
-            .addAction(android.R.drawable.ic_media_play, Strings.depDownloadResume, resumeIntent)
+            .addAction(android.R.drawable.ic_media_play, AppStringsProvider.current().depDownloadResume, resumeIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -202,7 +202,7 @@ class DependencyDownloadNotification private constructor(private val context: Co
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("${Strings.depDownloadExtracting} $displayName")
+            .setContentTitle("${AppStringsProvider.current().depDownloadExtracting} $displayName")
             .setProgress(0, 0, true)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -217,8 +217,8 @@ class DependencyDownloadNotification private constructor(private val context: Co
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(Strings.depDownloadComplete)
-            .setContentText(Strings.depDownloadAllReady)
+            .setContentTitle(AppStringsProvider.current().depDownloadComplete)
+            .setContentText(AppStringsProvider.current().depDownloadAllReady)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
@@ -231,7 +231,7 @@ class DependencyDownloadNotification private constructor(private val context: Co
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle(Strings.downloadFailed)
+            .setContentTitle(AppStringsProvider.current().downloadFailed)
             .setContentText(message)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

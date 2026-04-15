@@ -32,8 +32,8 @@ import com.webtoapp.core.apkbuilder.ZipUtils
 import com.webtoapp.util.AppConstants
 
 /**
- * 应用克隆器
- * 支持创建自定义图标和名称的应用快捷方式或克隆安装
+ * Note: brief English comment.
+ * Note: brief English comment.
  */
 class AppCloner(private val context: Context) {
 
@@ -46,11 +46,11 @@ class AppCloner(private val context: Context) {
     private val arscEditor = ArscEditor()
     private val signer = JarSigner(context)
     
-    // 输出目录
+    // Note: brief English comment.
     private val outputDir = File(context.getExternalFilesDir(null), "cloned_apks").apply { mkdirs() }
     private val tempDir = File(context.cacheDir, "clone_temp").apply { mkdirs() }
     
-    // Icon路径
+    // Note: brief English comment.
     private val ICON_PATHS = listOf(
         "res/mipmap-mdpi-v4/ic_launcher.png" to 48,
         "res/mipmap-hdpi-v4/ic_launcher.png" to 72,
@@ -68,14 +68,14 @@ class AppCloner(private val context: Context) {
     )
 
     /**
-     * 创建修改后的快捷方式
-     * 使用新图标和名称，但启动原应用
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun createModifiedShortcut(
         config: AppModifyConfig,
         onProgress: (Int, String) -> Unit = { _, _ -> }
     ): AppModifyResult = withContext(Dispatchers.IO) {
-        // 包装进度回调，确保在主线程调用
+        // Note: brief English comment.
         val safeProgress: suspend (Int, String) -> Unit = { p, t ->
             withContext(Dispatchers.Main) {
                 try {
@@ -89,34 +89,34 @@ class AppCloner(private val context: Context) {
         try {
             safeProgress(10, "准备图标...")
             
-            // 准备图标
+            // Note: brief English comment.
             val iconBitmap = prepareIcon(config)
             val icon = IconCompat.createWithBitmap(iconBitmap)
             
             safeProgress(50, "创建快捷方式...")
             
-            // 判断是否需要使用 SplashLauncherActivity（有启动画面/激活码/公告任一功能真正生效时）
-            // Start画面：必须启用且有有效的媒体路径
+            // Note: brief English comment.
+            // Note: brief English comment.
             val hasSplash = config.splashEnabled && 
                            !config.splashPath.isNullOrBlank() && 
                            java.io.File(config.splashPath).exists()
-            // Activation码：必须启用且有至少一个激活码
+            // Note: brief English comment.
             val hasActivation = config.activationEnabled && config.activationCodes.isNotEmpty()
-            // Announcement：必须启用且有标题
+            // Note: brief English comment.
             val hasAnnouncement = config.announcementEnabled && config.announcementTitle.isNotBlank()
             
             val needsSplashLauncher = hasSplash || hasActivation || hasAnnouncement
             
             AppLogger.d("AppCloner", "快捷方式配置: hasSplash=$hasSplash, hasActivation=$hasActivation, hasAnnouncement=$hasAnnouncement, needsSplashLauncher=$needsSplashLauncher")
             
-            // Create启动 Intent
+            // Note: brief English comment.
             val launchIntent = if (needsSplashLauncher) {
-                // 使用 SplashLauncherActivity 处理启动画面/激活码/公告
+                // Note: brief English comment.
                 Intent(context, SplashLauncherActivity::class.java).apply {
-                    // 必须设置 action，否则 ShortcutManager 会报错
+                    // Note: brief English comment.
                     action = Intent.ACTION_VIEW
                     putExtra(SplashLauncherActivity.EXTRA_TARGET_PACKAGE, config.originalApp.packageName)
-                    // Start画面配置
+                    // Note: brief English comment.
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_TYPE, config.splashType)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_PATH, config.splashPath)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_DURATION, config.splashDuration)
@@ -126,11 +126,11 @@ class AppCloner(private val context: Context) {
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_LANDSCAPE, config.splashLandscape)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_FILL_SCREEN, config.splashFillScreen)
                     putExtra(SplashLauncherActivity.EXTRA_SPLASH_ENABLE_AUDIO, config.splashEnableAudio)
-                    // Activation码配置（使用逗号分隔的字符串，因为 PersistableBundle 不支持 ArrayList）
+                    // Note: brief English comment.
                     putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_ENABLED, config.activationEnabled)
                     putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_CODES, config.activationCodes.joinToString(","))
                     putExtra(SplashLauncherActivity.EXTRA_ACTIVATION_REQUIRE_EVERY_TIME, config.activationRequireEveryTime)
-                    // Announcement配置
+                    // Note: brief English comment.
                     putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_ENABLED, config.announcementEnabled)
                     putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_TITLE, config.announcementTitle)
                     putExtra(SplashLauncherActivity.EXTRA_ANNOUNCEMENT_CONTENT, config.announcementContent)
@@ -142,19 +142,19 @@ class AppCloner(private val context: Context) {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }
             } else {
-                // 直接启动原应用
+                // Note: brief English comment.
                 context.packageManager.getLaunchIntentForPackage(config.originalApp.packageName)?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 } ?: return@withContext AppModifyResult.Error("无法获取应用启动 Intent")
             }
 
-            // Check是否支持固定快捷方式
+            // Note: brief English comment.
             if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
                 return@withContext AppModifyResult.Error("当前启动器不支持创建快捷方式")
             }
 
-            // Create快捷方式
+            // Note: brief English comment.
             val shortcutId = "modified_${config.originalApp.packageName}_${System.currentTimeMillis()}"
             val shortcutInfo = ShortcutInfoCompat.Builder(context, shortcutId)
                 .setShortLabel(config.newAppName.take(10))
@@ -186,25 +186,25 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 准备图标 Bitmap
+     * Note: brief English comment.
      */
     private fun prepareIcon(config: AppModifyConfig): Bitmap {
-        // 如果有新图标路径，使用新图标
+        // Note: brief English comment.
         config.newIconPath?.let { path ->
             loadBitmapFromPath(path)?.let { return it }
         }
         
-        // No则使用原应用图标
+        // Note: brief English comment.
         config.originalApp.icon?.let { drawable ->
             return drawableToBitmap(drawable)
         }
         
-        // 兜底：创建默认图标
+        // Note: brief English comment.
         return createDefaultIcon()
     }
 
     /**
-     * 从路径加载 Bitmap
+     * Note: brief English comment.
      */
     private fun loadBitmapFromPath(path: String): Bitmap? {
         return try {
@@ -223,9 +223,9 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * Drawable 转 Bitmap
-     * 注意：总是创建新的 Bitmap 副本，避免直接返回系统管理的 Bitmap 引用
-     * 这样后续 recycle() 不会影响系统缓存
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
         val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 192
@@ -240,7 +240,7 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 创建默认图标
+     * Note: brief English comment.
      */
     private fun createDefaultIcon(): Bitmap {
         val size = 192
@@ -251,14 +251,14 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 克隆并安装应用
-     * 修改包名、应用名、图标，然后安装为新应用
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     suspend fun cloneAndInstall(
         config: AppModifyConfig,
         onProgress: (Int, String) -> Unit = { _, _ -> }
     ): AppModifyResult = withContext(Dispatchers.IO) {
-        // 包装进度回调，确保在主线程调用
+        // Note: brief English comment.
         val safeProgress: suspend (Int, String) -> Unit = { p, t ->
             withContext(Dispatchers.Main) {
                 try {
@@ -281,13 +281,13 @@ class AppCloner(private val context: Context) {
             
             AppLogger.d("AppCloner", "源 APK 大小: ${sourceApk.length()} bytes")
             
-            // Generate新包名（在原包名基础上添加后缀）
+            // Note: brief English comment.
             val newPackageName = generateClonePackageName(config.originalApp.packageName)
             AppLogger.d("AppCloner", "新包名: $newPackageName")
             
             safeProgress(10, "复制 APK...")
             
-            // 准备临时文件
+            // Note: brief English comment.
             val unsignedApk = File(tempDir, "clone_unsigned.apk")
             val signedApk = File(outputDir, "${sanitizeFileName(config.newAppName)}_clone.APK")
             
@@ -296,14 +296,14 @@ class AppCloner(private val context: Context) {
             
             safeProgress(20, "修改包名和应用名...")
             
-            // 修改 APK
+            // Note: brief English comment.
             var iconBitmap: Bitmap? = null
             try {
                 iconBitmap = config.newIconPath?.let { loadBitmapFromPath(it) }
                     ?: config.originalApp.icon?.let { drawableToBitmap(it) }
             } catch (e: Exception) {
                 AppLogger.e("AppCloner", "加载图标失败: ${e.message}")
-                // Resume处理，不使用自定义图标
+                // Note: brief English comment.
             }
             
             AppLogger.d("AppCloner", "开始修改 APK...")
@@ -316,7 +316,7 @@ class AppCloner(private val context: Context) {
                 newAppName = config.newAppName,
                 iconBitmap = iconBitmap
             ) { progress ->
-                // 同步回调，不需要 suspend
+                // Note: brief English comment.
             }
             
             AppLogger.d("AppCloner", "APK 修改完成，大小: ${unsignedApk.length()} bytes")
@@ -336,7 +336,7 @@ class AppCloner(private val context: Context) {
             
             AppLogger.d("AppCloner", "签名完成，最终大小: ${signedApk.length()} bytes")
 
-            // 在安装前用 PackageManager 预解析一次，方便发现结构性问题
+            // Note: brief English comment.
             debugApkStructure(signedApk)
 
             safeProgress(90, "准备安装...")
@@ -344,7 +344,7 @@ class AppCloner(private val context: Context) {
             // Cleanup temp files
             unsignedApk.delete()
             
-            // 安装 APK
+            // Note: brief English comment.
             withContext(Dispatchers.Main) {
                 installApk(signedApk)
             }
@@ -360,21 +360,21 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 生成克隆包名
-     * 原包名长度限制了新包名的长度，需要巧妙处理
-     * 每次生成唯一的包名，支持同一应用多次克隆
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun generateClonePackageName(originalPackageName: String): String {
-        // 使用 "c.<unique>" 形式生成唯一包名
-        // 保证新包名长度 <= 原包名长度，便于在二进制 XML 中安全替换
+        // Note: brief English comment.
+        // Note: brief English comment.
         val maxLen = originalPackageName.length.coerceAtMost(128)
         
-        // 结合时间戳和随机数生成唯一标识
+        // Note: brief English comment.
         val timestamp = System.currentTimeMillis()
         val random = (0..9999).random()
         val uniqueId = ((timestamp xor random.toLong()) and 0x7FFFFFFF).toString(36)
 
-        // 预留 "c." 两个字符给前缀
+        // Note: brief English comment.
         val suffixLen = (maxLen - 2).coerceAtLeast(1)
         val rawSuffix = if (uniqueId.length >= suffixLen) {
             uniqueId.take(suffixLen)
@@ -388,8 +388,8 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * Java 包名的每段必须以字母或下划线开头，且只能包含字母、数字、下划线。
-     * 这里简单地将第一位强制替换为字母，其余保持原样（若为大写则转小写）。
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun normalizePackageSegment(segment: String): String {
         if (segment.isEmpty()) return "a"
@@ -403,7 +403,7 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 修改 APK 内容
+     * Note: brief English comment.
      */
     private fun modifyApk(
         sourceApk: File,
@@ -427,24 +427,24 @@ class AppCloner(private val context: Context) {
                     onProgress((processedCount * 100) / entries.size)
 
                     when {
-                        // 跳过签名文件
+                        // Note: brief English comment.
                         entry.name.startsWith("META-INF/") &&
                         (entry.name.endsWith(".SF") || entry.name.endsWith(".RSA") ||
                          entry.name.endsWith(".DSA") || entry.name == "META-INF/MANIFEST.MF") -> {
                         }
 
-                        // 修改 AndroidManifest.xml
+                        // Note: brief English comment.
                         entry.name == "AndroidManifest.xml" -> {
                             try {
                                 val originalData = zipIn.getInputStream(entry).readBytes()
                                 AppLogger.d("AppCloner", "AndroidManifest.xml 原始大小: ${originalData.size} bytes")
 
-                                // 克隆自身（com.webtoapp）时，复用 ApkBuilder 中已经验证过的 AxmlEditor 逻辑
-                                // 克隆第三方应用时，使用 AxmlRebuilder 展开相对路径类名，避免 ClassNotFoundException
+                                // Note: brief English comment.
+                                // Note: brief English comment.
                                 val modifiedData = if (originalPackageName == "com.webtoapp") {
                                     axmlEditor.modifyPackageName(originalData, newPackageName)
                                 } else {
-                                    // 使用 AXML 重构器：展开相对路径类名并修改包名
+                                    // Note: brief English comment.
                                     axmlRebuilder.expandAndModify(
                                         originalData,
                                         originalPackageName,
@@ -456,12 +456,12 @@ class AppCloner(private val context: Context) {
                                 writeEntryDeflated(zipOut, entry.name, modifiedData)
                             } catch (e: Exception) {
                                 AppLogger.e("AppCloner", "修改 AndroidManifest.xml 失败: ${e.message}", e)
-                                // 如果修改失败，直接复制原始文件（但包名不变可能导致冲突）
+                                // Note: brief English comment.
                                 copyEntry(zipIn, zipOut, entry)
                             }
                         }
 
-                        // 修改 resources.arsc
+                        // Note: brief English comment.
                         entry.name == "resources.arsc" -> {
                             try {
                                 val originalData = zipIn.getInputStream(entry).readBytes()
@@ -476,17 +476,17 @@ class AppCloner(private val context: Context) {
                                 writeEntryStored(zipOut, entry.name, modifiedData)
                             } catch (e: Exception) {
                                 AppLogger.e("AppCloner", "修改 resources.arsc 失败: ${e.message}", e)
-                                // 如果修改失败，直接复制原始文件
+                                // Note: brief English comment.
                                 copyEntry(zipIn, zipOut, entry)
                             }
                         }
 
-                        // Replace图标
+                        // Note: brief English comment.
                         iconBitmap != null && isIconEntry(entry.name) -> {
                             replaceIconEntry(zipOut, entry.name, iconBitmap)
                         }
 
-                        // Copy其他文件
+                        // Note: brief English comment.
                         else -> {
                             copyEntry(zipIn, zipOut, entry)
                         }
@@ -503,8 +503,8 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 修改 Manifest 中的包名
-     * 直接在二进制数据中查找并替换
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun modifyManifestPackageName(
         data: ByteArray,
@@ -513,29 +513,29 @@ class AppCloner(private val context: Context) {
     ): ByteArray {
         val result = data.copyOf()
         
-        // UTF-8 格式替换
+        // Note: brief English comment.
         replacePackageBytes(result, oldPackage, newPackage, Charsets.UTF_8)
         
-        // UTF-16LE 格式替换
+        // Note: brief English comment.
         replacePackageBytes(result, oldPackage, newPackage, Charsets.UTF_16LE)
         
         return result
     }
 
     /**
-     * 替换包名字节
+     * Note: brief English comment.
      */
     private fun replacePackageBytes(data: ByteArray, oldPkg: String, newPkg: String, charset: java.nio.charset.Charset) {
         val oldBytes = oldPkg.toByteArray(charset)
         val newBytes = newPkg.toByteArray(charset)
         
-        // 新包名可能比原包名长，需要特殊处理
-        // 这里采用的策略是：如果新包名更长，保持原长度（会导致包名被截断）
+        // Note: brief English comment.
+        // Note: brief English comment.
         val replacement = if (newBytes.size <= oldBytes.size) {
             newBytes + ByteArray(oldBytes.size - newBytes.size)
         } else {
-            // 新包名更长时的处理：由于克隆时新包名是基于原包名生成的，理论上不会出现这种情况
-            // 但为了安全，这里截断新包名
+            // Note: brief English comment.
+            // Note: brief English comment.
             newBytes.copyOf(oldBytes.size)
         }
         
@@ -558,17 +558,17 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 检查是否是图标条目
-     * 匹配多种可能的图标路径格式
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun isIconEntry(entryName: String): Boolean {
-        // 精确匹配预定义路径
+        // Note: brief English comment.
         if (ICON_PATHS.any { it.first == entryName } ||
             ROUND_ICON_PATHS.any { it.first == entryName }) {
             return true
         }
         
-        // 模糊匹配：检测所有可能的图标 PNG 文件
+        // Note: brief English comment.
         val iconPatterns = listOf(
             "ic_launcher.png",
             "ic_launcher_round.png",
@@ -582,15 +582,15 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 替换图标条目
-     * 根据路径中的 dpi 信息推断图标尺寸
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun replaceIconEntry(zipOut: ZipOutputStream, entryName: String, bitmap: Bitmap) {
-        // 优先使用预定义尺寸
+        // Note: brief English comment.
         var size = ICON_PATHS.find { it.first == entryName }?.second
             ?: ROUND_ICON_PATHS.find { it.first == entryName }?.second
         
-        // 如果预定义没有匹配，根据路径推断尺寸
+        // Note: brief English comment.
         if (size == null) {
             size = when {
                 entryName.contains("xxxhdpi") -> 192
@@ -604,15 +604,15 @@ class AppCloner(private val context: Context) {
         }
         
         val iconBytes = when {
-            // 圆形图标
+            // Note: brief English comment.
             entryName.contains("round") -> {
                 createRoundIcon(bitmap, size)
             }
-            // adaptive icon 前景图需要预留 safe zone 边距
+            // Note: brief English comment.
             entryName.contains("foreground") -> {
                 createAdaptiveForegroundIcon(bitmap, size)
             }
-            // 普通图标
+            // Note: brief English comment.
             else -> {
                 scaleBitmapToPng(bitmap, size)
             }
@@ -622,26 +622,26 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 创建 Adaptive Icon 前景图
-     * 遵循 Android Adaptive Icon 规范：
-     * - 前景层总尺寸 108dp
-     * - 安全区域（完整显示）为中间 72dp（66.67%）
-     * - 外围 18dp 作为 safe zone 边距
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
+     * Note: brief English comment.
      */
     private fun createAdaptiveForegroundIcon(bitmap: Bitmap, size: Int): ByteArray {
         val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(output)
         
-        // 计算安全区域尺寸（72/108 ≈ 66.67%）
+        // Note: brief English comment.
         val safeZoneSize = (size * 72f / 108f).toInt()
         val padding = (size - safeZoneSize) / 2f
         
-        // 计算缩放比例，保持纵横比
+        // Note: brief English comment.
         val scale = Math.min(safeZoneSize.toFloat() / bitmap.width, safeZoneSize.toFloat() / bitmap.height)
         val scaledWidth = (bitmap.width * scale).toInt()
         val scaledHeight = (bitmap.height * scale).toInt()
         
-        // 计算居中位置（在安全区域内居中）
+        // Note: brief English comment.
         val left = padding + (safeZoneSize - scaledWidth) / 2f
         val top = padding + (safeZoneSize - scaledHeight) / 2f
         
@@ -660,18 +660,18 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 缩放并转换为 PNG (保持纵横比，居中)
+     * Note: brief English comment.
      */
     private fun scaleBitmapToPng(bitmap: Bitmap, size: Int): ByteArray {
         val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(output)
         
-        // 计算缩放比例，保持纵横比
+        // Note: brief English comment.
         val scale = Math.min(size.toFloat() / bitmap.width, size.toFloat() / bitmap.height)
         val scaledWidth = (bitmap.width * scale).toInt()
         val scaledHeight = (bitmap.height * scale).toInt()
         
-        // 计算居中位置
+        // Note: brief English comment.
         val left = (size - scaledWidth) / 2f
         val top = (size - scaledHeight) / 2f
         
@@ -690,7 +690,7 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 创建圆形图标 (保持纵横比，居中)
+     * Note: brief English comment.
      */
     private fun createRoundIcon(bitmap: Bitmap, size: Int): ByteArray {
         val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -700,18 +700,18 @@ class AppCloner(private val context: Context) {
             isFilterBitmap = true
         }
         
-        // 绘制圆形蒙版
+        // Note: brief English comment.
         val rect = android.graphics.RectF(0f, 0f, size.toFloat(), size.toFloat())
         canvas.drawOval(rect, paint)
         
         paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
         
-        // 计算缩放比例，保持纵横比
+        // Note: brief English comment.
         val scale = Math.min(size.toFloat() / bitmap.width, size.toFloat() / bitmap.height)
         val scaledWidth = (bitmap.width * scale).toInt()
         val scaledHeight = (bitmap.height * scale).toInt()
         
-        // 计算居中位置
+        // Note: brief English comment.
         val left = (size - scaledWidth) / 2f
         val top = (size - scaledHeight) / 2f
         
@@ -749,14 +749,14 @@ class AppCloner(private val context: Context) {
     }
 
     /**
-     * 清理文件名
+     * Note: brief English comment.
      */
     private fun sanitizeFileName(name: String): String {
         return name.replace(SANITIZE_FILENAME_REGEX, "_").take(50)
     }
 
     /**
-     * 调试辅助：使用 PackageManager 预解析已克隆 APK，检查系统是否能正常读取包信息
+     * Note: brief English comment.
      */
     private fun debugApkStructure(apkFile: File) {
         try {

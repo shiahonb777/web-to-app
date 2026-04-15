@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * 离线模式管理器
- * 监控网络状态，自动切换 WebView 缓存策略
+ * Note.
+ * ， WebView
  */
 @SuppressLint("StaticFieldLeak")
 class OfflineManager(private val context: Context) {
@@ -38,7 +38,7 @@ class OfflineManager(private val context: Context) {
         }
         
         /**
-         * 释放单例实例（通常在 Application.onTerminate 或测试时调用）
+         * （ Application.onTerminate ）
          */
         fun release() {
             synchronized(this) {
@@ -49,16 +49,16 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 网络状态
+     * Note.
      */
     enum class NetworkState {
-        ONLINE,      // 在线
-        OFFLINE,     // 离线
-        UNKNOWN      // 未知
+        ONLINE,      // Note.
+        OFFLINE,     // Note.
+        UNKNOWN      // Note.
     }
     
     /**
-     * 网络类型
+     * Note.
      */
     enum class NetworkType {
         WIFI,
@@ -69,14 +69,14 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 网络质量
+     * Note.
      */
     enum class NetworkQuality {
-        EXCELLENT,  // 优秀
-        GOOD,       // 良好
-        MODERATE,   // 一般
-        POOR,       // 较差
-        UNKNOWN     // 未知
+        EXCELLENT,  // Note.
+        GOOD,       // Note.
+        MODERATE,   // Note.
+        POOR,       // Note.
+        UNKNOWN     // Note.
     }
     
     private val _networkState = MutableStateFlow(NetworkState.UNKNOWN)
@@ -91,28 +91,28 @@ class OfflineManager(private val context: Context) {
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     
     init {
-        // Initialize时检查网络状态
+        // Initialize
         updateNetworkState()
-        // 注册网络监听
+        // Note.
         registerNetworkCallback()
     }
     
     /**
-     * 检查网络是否可用
+     * Note.
      */
     fun isNetworkAvailable(): Boolean {
         return _networkState.value == NetworkState.ONLINE
     }
     
     /**
-     * 获取当前网络类型
+     * Note.
      */
     fun getCurrentNetworkType(): NetworkType {
         return _networkType.value
     }
     
     /**
-     * 更新网络状态
+     * Note.
      */
     private fun updateNetworkState() {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -135,7 +135,7 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 注册网络状态监听
+     * Note.
      */
     private fun registerNetworkCallback() {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -171,7 +171,7 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 取消网络监听
+     * Note.
      */
     fun unregister() {
         networkCallback?.let { callback ->
@@ -186,7 +186,7 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 更新网络质量评估
+     * Note.
      */
     private fun updateNetworkQuality(capabilities: NetworkCapabilities) {
         val downstreamBandwidth = capabilities.linkDownstreamBandwidthKbps
@@ -204,7 +204,7 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 检查网络质量是否适合大文件下载
+     * Note.
      */
     fun isSuitableForLargeDownload(): Boolean {
         return _networkQuality.value in LARGE_DOWNLOAD_QUALITIES &&
@@ -212,25 +212,25 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 配置 WebView 的离线模式
-     * 根据网络状态自动调整缓存策略
+     * WebView
+     * Note.
      */
     fun configureWebViewForOffline(webView: WebView, forceOffline: Boolean = false) {
         val settings = webView.settings
         
         if (forceOffline || !isNetworkAvailable()) {
-            // 离线模式：优先使用缓存
+            // ：
             settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
             AppLogger.d(TAG, "WebView 已切换到离线模式")
         } else {
-            // 在线模式：正常加载
+            // ：
             settings.cacheMode = WebSettings.LOAD_DEFAULT
             AppLogger.d(TAG, "WebView 已切换到在线模式")
         }
     }
     
     /**
-     * 设置 WebView 缓存策略
+     * WebView
      */
     fun setWebViewCacheMode(webView: WebView, cacheMode: CacheMode) {
         webView.settings.cacheMode = when (cacheMode) {
@@ -242,12 +242,12 @@ class OfflineManager(private val context: Context) {
     }
     
     /**
-     * 缓存模式
+     * Note.
      */
     enum class CacheMode {
-        DEFAULT,            // Default：根据 HTTP 头决定
-        CACHE_ELSE_NETWORK, // 优先缓存，无缓存时使用网络
-        NO_CACHE,           // 不使用缓存
-        CACHE_ONLY          // 仅使用缓存
+        DEFAULT,            // Default： HTTP
+        CACHE_ELSE_NETWORK, // ，
+        NO_CACHE,           // Note.
+        CACHE_ONLY          // Note.
     }
 }

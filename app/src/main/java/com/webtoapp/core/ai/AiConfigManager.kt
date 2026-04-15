@@ -27,10 +27,13 @@ import javax.crypto.spec.GCMParameterSpec
 private val Context.aiConfigDataStore: DataStore<Preferences> by preferencesDataStore(name = "ai_config")
 
 /**
- * AI 配置管理器
- * 管理 API Keys、模型配置等
+ * AI configuration manager
+ * Handles API keys, saved models, and related settings
  */
-class AiConfigManager(private val context: Context) {
+class AiConfigManager(
+    private val context: Context,
+    private val dataStore: DataStore<Preferences> = context.applicationContext.aiConfigDataStore
+) {
     
     companion object {
         private const val TAG = "AiConfigManager"
@@ -38,10 +41,10 @@ class AiConfigManager(private val context: Context) {
         private val KEY_SAVED_MODELS = stringPreferencesKey("saved_models")
         private val KEY_DEFAULT_MODEL = stringPreferencesKey("default_model")
         
-        // Gson 单例
+        // Gson singleton
         private val gson get() = GsonProvider.gson
         
-        // TypeToken 缓存
+        // Cached TypeToken
         private val apiKeyListType: Type by lazy {
             object : TypeToken<List<ApiKeyConfig>>() {}.type
         }
@@ -56,44 +59,44 @@ class AiConfigManager(private val context: Context) {
         private const val AES_MODE = "AES/GCM/NoPadding"
         private const val GCM_TAG_BITS = 128
         private const val GCM_IV_BYTES = 12
+        @Volatile
+        private var cachedSecretKey: SecretKey? = null
     }
     
     // API Keys Flow
-    val apiKeysFlow: Flow<List<ApiKeyConfig>> = context.aiConfigDataStore.data.map { prefs ->
+    val apiKeysFlow: Flow<List<ApiKeyConfig>> = dataStore.data.map { prefs ->
         val stored = prefs[KEY_API_KEYS] ?: "[]"
         val json = decodeSensitiveJson(stored) ?: "[]"
         try {
-            val result: List<ApiKeyConfig> = gson.fromJson(json, apiKeyListType)
-            result ?: emptyList()
+            gson.fromJson<List<ApiKeyConfig>>(json, apiKeyListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse API keys JSON", e)
             emptyList()
         }
     }
     
-    // Saved的模型 Flow
-    val savedModelsFlow: Flow<List<SavedModel>> = context.aiConfigDataStore.data.map { prefs ->
+    // Flow of saved models
+    val savedModelsFlow: Flow<List<SavedModel>> = dataStore.data.map { prefs ->
         val json = prefs[KEY_SAVED_MODELS] ?: "[]"
         try {
-            val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
-            result ?: emptyList()
+            gson.fromJson<List<SavedModel>>(json, savedModelListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse saved models JSON", e)
             emptyList()
         }
     }
     
-    // Default模型 ID Flow
-    val defaultModelIdFlow: Flow<String?> = context.aiConfigDataStore.data.map { prefs ->
+    // Flow for the default model ID
+    val defaultModelIdFlow: Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_DEFAULT_MODEL]
     }
     
     /**
-     * 添加 API Key
+     * Add an API key
      */
     suspend fun addApiKey(config: ApiKeyConfig): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
                 val updated = current + config
                 val jsonStr = gson.toJson(updated)
@@ -108,11 +111,11 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 更新 API Key
+     * Update an API key
      */
     suspend fun updateApiKey(config: ApiKeyConfig): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
                 val updated = current.map { if (it.id == config.id) config else it }
                 prefs[KEY_API_KEYS] = encodeSensitiveJson(gson.toJson(updated))
@@ -126,11 +129,11 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 删除 API Key
+     * Delete an API key
      */
     suspend fun deleteApiKey(id: String): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getApiKeys(prefs)
                 val updated = current.filter { it.id != id }
                 prefs[KEY_API_KEYS] = encodeSensitiveJson(gson.toJson(updated))
@@ -144,11 +147,11 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 添加已保存的模型
+     * Save a model configuration
      */
     suspend fun saveModel(model: SavedModel): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getSavedModels(prefs)
                 val updated = current + model
                 prefs[KEY_SAVED_MODELS] = gson.toJson(updated)
@@ -162,11 +165,11 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 更新已保存的模型
+     * Update a saved model
      */
     suspend fun updateSavedModel(model: SavedModel): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getSavedModels(prefs)
                 val updated = current.map { if (it.id == model.id) model else it }
                 prefs[KEY_SAVED_MODELS] = gson.toJson(updated)
@@ -180,11 +183,11 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 删除已保存的模型
+     * Delete a saved model entry
      */
     suspend fun deleteSavedModel(id: String): Boolean {
         return try {
-            context.aiConfigDataStore.edit { prefs ->
+            dataStore.edit { prefs ->
                 val current = getSavedModels(prefs)
                 val updated = current.filter { it.id != id }
                 prefs[KEY_SAVED_MODELS] = gson.toJson(updated)
@@ -198,10 +201,10 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 设置默认模型
+     * Set the default model
      */
     suspend fun setDefaultModel(modelId: String?) {
-        context.aiConfigDataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             if (modelId != null) {
                 prefs[KEY_DEFAULT_MODEL] = modelId
             } else {
@@ -209,9 +212,22 @@ class AiConfigManager(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Clear all stored AI configuration.
+     */
+    suspend fun clearAll(): Boolean {
+        return try {
+            dataStore.edit { prefs -> prefs.clear() }
+            true
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to clear AI config", e)
+            false
+        }
+    }
     
     /**
-     * 根据能力筛选模型
+     * Filter models by capability
      */
     suspend fun getModelsByCapability(capability: ModelCapability): Flow<List<SavedModel>> {
         return savedModelsFlow.map { models ->
@@ -220,7 +236,7 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 根据功能场景筛选模型
+     * Filter models by usage scenario
      */
     fun getModelsByFeature(feature: AiFeature): Flow<List<SavedModel>> {
         return savedModelsFlow.map { models ->
@@ -229,34 +245,34 @@ class AiConfigManager(private val context: Context) {
     }
     
     /**
-     * 获取指定功能的默认模型
+     * Get the default model for a capability
      */
     fun getDefaultModelForFeature(feature: AiFeature): Flow<SavedModel?> {
         return savedModelsFlow.map { models ->
-            // 优先返回标记为默认且支持该功能的模型
+            // Prefer models marked as default that support this capability
             models.find { it.isDefault && it.supportsFeature(feature) }
                 ?: models.find { it.supportsFeature(feature) }
         }
     }
     
     /**
-     * 获取指定 API Key
+     * Retrieve an API key by ID
      */
     suspend fun getApiKeyById(id: String): ApiKeyConfig? {
         // Use data.first() for reads instead of edit{} which acquires a write lock unnecessarily
-        val prefs = context.aiConfigDataStore.data.first()
+        val prefs = dataStore.data.first()
         return getApiKeys(prefs).find { it.id == id }
     }
     
     /**
-     * 获取指定已保存的模型
+     * Retrieve a saved model by ID
      */
     suspend fun getSavedModelById(id: String): SavedModel? {
-        val prefs = context.aiConfigDataStore.data.first()
+        val prefs = dataStore.data.first()
         return getSavedModels(prefs).find { it.id == id }
     }
     
-    // 辅助方法
+    // Helper methods
     private fun getApiKeys(prefs: Preferences): List<ApiKeyConfig> {
         val stored = prefs[KEY_API_KEYS] ?: return emptyList()
         val json = decodeSensitiveJson(stored)
@@ -265,8 +281,7 @@ class AiConfigManager(private val context: Context) {
             return emptyList()
         }
         return try {
-            val result: List<ApiKeyConfig> = gson.fromJson(json, apiKeyListType)
-            result ?: emptyList()
+            gson.fromJson<List<ApiKeyConfig>>(json, apiKeyListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to deserialize API keys", e)
             emptyList()
@@ -276,8 +291,7 @@ class AiConfigManager(private val context: Context) {
     private fun getSavedModels(prefs: Preferences): List<SavedModel> {
         val json = prefs[KEY_SAVED_MODELS] ?: return emptyList()
         return try {
-            val result: List<SavedModel> = gson.fromJson(json, savedModelListType)
-            result ?: emptyList()
+            gson.fromJson<List<SavedModel>>(json, savedModelListType)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to deserialize saved models", e)
             emptyList()
@@ -301,10 +315,10 @@ class AiConfigManager(private val context: Context) {
             decrypt(payload)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Decryption failed, attempting plain JSON fallback", e)
-            // 如果解密失败，尝试当作纯 JSON 解析（防止加密密钥失效导致数据丢失）
+            // If decryption fails, try parsing as plain JSON to avoid losing data when keys expire
             try {
                 gson.fromJson<List<*>>(payload, List::class.java)
-                // 如果能解析为 JSON，说明是未加密的
+                // If parsing works, the stored data was not encrypted
                 payload
             } catch (_: Exception) {
                 null
@@ -313,22 +327,31 @@ class AiConfigManager(private val context: Context) {
     }
 
     private fun getOrCreateSecretKey(): SecretKey {
-        val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
-        val existing = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
-        if (existing != null) return existing
+        cachedSecretKey?.let { return it }
 
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
-        val spec = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .setUserAuthenticationRequired(false)
-            .build()
-        keyGenerator.init(spec)
-        return keyGenerator.generateKey()
+        return synchronized(AiConfigManager::class.java) {
+            cachedSecretKey?.let { return@synchronized it }
+
+            val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+            val existing = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+            if (existing != null) {
+                cachedSecretKey = existing
+                return@synchronized existing
+            }
+
+            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
+            val spec = KeyGenParameterSpec.Builder(
+                KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .setUserAuthenticationRequired(false)
+                .build()
+            keyGenerator.init(spec)
+            keyGenerator.generateKey().also { cachedSecretKey = it }
+        }
     }
 
     private fun encrypt(plainText: String): String {
@@ -356,4 +379,3 @@ class AiConfigManager(private val context: Context) {
         return String(plainBytes, Charsets.UTF_8)
     }
 }
-

@@ -21,6 +21,7 @@ release/
 build/
 
 # Local configuration file
+.vscode/
 .claude/
 local.properties
 gradle/config.properties

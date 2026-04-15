@@ -13,21 +13,21 @@ import java.io.FileOutputStream
 import java.net.URI
 
 /**
- * 网站图标获取器
+ * Note.
  * 
- * 支持多种方式获取网站图标：
- * 1. 直接获取 /favicon.ico
- * 2. 解析 HTML 中的 link 标签
- * 3. 使用 Google Favicon 服务作为后备
+ * ：
+ * 1. /favicon.ico
+ * 2. HTML link
+ * 3. Google Favicon
  */
 object FaviconFetcher {
     
     private const val TAG = "FaviconFetcher"
     
-    // Min图标尺寸（过滤掉太小的图标）
+    // Min（）
     private const val MIN_ICON_SIZE = 32
     
-    // 首选图标尺寸
+    // Note.
     private const val PREFERRED_ICON_SIZE = 192
     
     // Pre-compiled regex for parsing icon sizes like "192x192"
@@ -42,11 +42,11 @@ object FaviconFetcher {
     private val client get() = NetworkModule.defaultClient
     
     /**
-     * 获取网站图标
+     * Note.
      * 
-     * @param context 上下文
-     * @param url 网站地址
-     * @return 图标本地路径，失败返回 null
+     * @param context parameter
+     * @param url parameter
+     * @return result
      */
     suspend fun fetchFavicon(context: Context, url: String): String? = withContext(Dispatchers.IO) {
         try {
@@ -55,10 +55,10 @@ object FaviconFetcher {
             
             AppLogger.d(TAG, "开始获取网站图标: $baseUrl")
             
-            // 策略 1: 尝试从 HTML 中解析高清图标
+            // 1: HTML
             val htmlIcons = tryParseHtmlForIcons(normalizedUrl)
             if (htmlIcons.isNotEmpty()) {
-                // 按尺寸排序，优先选择大图标
+                // ，
                 val sortedIcons = htmlIcons.sortedByDescending { it.size }
                 for (iconInfo in sortedIcons) {
                     val iconUrl = resolveIconUrl(baseUrl, iconInfo.href)
@@ -70,7 +70,7 @@ object FaviconFetcher {
                 }
             }
             
-            // 策略 2: 尝试直接获取 favicon.ico
+            // 2: favicon.ico
             val faviconUrl = "$baseUrl/favicon.ico"
             val faviconPath = downloadAndSaveIcon(context, faviconUrl)
             if (faviconPath != null) {
@@ -78,7 +78,7 @@ object FaviconFetcher {
                 return@withContext faviconPath
             }
             
-            // 策略 3: 使用 Google Favicon 服务（作为后备）
+            // 3: Google Favicon （）
             val googleFaviconUrl = "https://www.google.com/s2/favicons?sz=128&domain_url=$baseUrl"
             val googlePath = downloadAndSaveIcon(context, googleFaviconUrl)
             if (googlePath != null) {
@@ -96,7 +96,7 @@ object FaviconFetcher {
     }
     
     /**
-     * 图标信息
+     * Note.
      */
     private data class IconInfo(
         val href: String,
@@ -105,7 +105,7 @@ object FaviconFetcher {
     )
     
     /**
-     * 解析 HTML 获取图标链接
+     * HTML
      */
     private fun tryParseHtmlForIcons(url: String): List<IconInfo> {
         return try {
@@ -120,7 +120,7 @@ object FaviconFetcher {
             val html = response.body?.string() ?: return emptyList()
             val icons = mutableListOf<IconInfo>()
             
-            // 匹配 link 标签中的图标
+            // link
             LINK_ICON_REGEX.findAll(html).forEach { linkMatch ->
                 val linkTag = linkMatch.value
                 
@@ -136,14 +136,14 @@ object FaviconFetcher {
                         }
                     }
                     
-                    // Filter太小的图标
+                    // Filter
                     if (size == 0 || size >= MIN_ICON_SIZE) {
                         icons.add(IconInfo(href, size))
                     }
                 }
             }
             
-            // 也尝试匹配 meta 标签中的 og:image（作为备选）
+            // meta og:image（）
             OG_IMAGE_REGEX.find(html)?.let { ogMatch ->
                 val ogImage = ogMatch.groupValues[1]
                 if (ogImage.isNotBlank()) {
@@ -160,7 +160,7 @@ object FaviconFetcher {
     }
     
     /**
-     * 下载并保存图标
+     * Note.
      */
     private fun downloadAndSaveIcon(context: Context, iconUrl: String): String? {
         return try {
@@ -175,7 +175,7 @@ object FaviconFetcher {
             val bytes = response.body?.bytes() ?: return null
             if (bytes.isEmpty()) return null
             
-            // Verify是否为有效图片
+            // Verify
             val options = BitmapFactory.Options().apply {
                 inJustDecodeBounds = true
             }
@@ -186,20 +186,20 @@ object FaviconFetcher {
                 return null
             }
             
-            // Check图标尺寸
+            // Check
             if (options.outWidth < MIN_ICON_SIZE && options.outHeight < MIN_ICON_SIZE) {
                 AppLogger.w(TAG, "图标太小: ${options.outWidth}x${options.outHeight}")
                 return null
             }
             
-            // Save到本地
+            // Save
             val iconsDir = File(context.filesDir, "website_icons")
             iconsDir.mkdirs()
             
             val fileName = "favicon_${System.currentTimeMillis()}.png"
             val outputFile = File(iconsDir, fileName)
             
-            // 解码并重新编码为 PNG（确保格式统一）
+            // PNG（）
             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bitmap == null) {
                 AppLogger.w(TAG, "无法解码图片: $iconUrl")
@@ -221,7 +221,7 @@ object FaviconFetcher {
     }
     
     /**
-     * 标准化 URL
+     * URL
      */
     private fun normalizeUrl(url: String): String {
         var normalized = url.trim()
@@ -232,7 +232,7 @@ object FaviconFetcher {
     }
     
     /**
-     * 获取基础 URL（协议 + 域名 + 端口）
+     * URL（ + + ）
      */
     private fun getBaseUrl(url: String): String {
         return try {
@@ -253,7 +253,7 @@ object FaviconFetcher {
     }
     
     /**
-     * 解析图标 URL（处理相对路径）
+     * URL（）
      */
     private fun resolveIconUrl(baseUrl: String, href: String): String {
         val resolved = when {
@@ -266,14 +266,14 @@ object FaviconFetcher {
     }
 
     /**
-     * 将远程 HTTP URL 升级为 HTTPS（本地地址保持 HTTP）
+     * HTTP URL HTTPS（ HTTP）
      */
     private fun upgradeRemoteHttpToHttps(url: String): String {
         if (!url.startsWith("http://")) return url
         return try {
             val uri = URI(url)
             val host = uri.host ?: return url
-            // 本地地址不升级
+            // Note.
             if (host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0"
                 || host.startsWith("192.168.") || host.startsWith("10.")
                 || host.endsWith(".local")) {

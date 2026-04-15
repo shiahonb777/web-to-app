@@ -26,31 +26,32 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
-import com.webtoapp.core.python.PythonRuntime
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.python.PythonSampleManager
 import com.webtoapp.data.model.PythonAppConfig
 import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.ui.components.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 import java.io.File
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.screens.create.common.CreateScreenState
+import com.webtoapp.ui.screens.create.common.resolveDocumentTreeDirectory
+import com.webtoapp.ui.screens.create.runtime.PythonProjectImportAnalysis
+import com.webtoapp.ui.screens.create.runtime.PythonProjectImporter
 
 /**
- * 创建/编辑 Python 应用页面
+ * create/edit Python app
  * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Flask=灰黑, Django=绿, FastAPI=青, Tornado=蓝）
- * - requirements.txt / pyproject.toml 依赖面板
- * - 服务器类型可视化选择器（Builtin / Gunicorn WSGI / Uvicorn ASGI）
- * - WSGI/ASGI 模块配置
- * - 虚拟环境检测指示器
- * - Django 专属配置面板（settings 模块、静态目录、ALLOWED_HOSTS）
- * - FastAPI 专属配置面板（API 文档端点、ASGI 推荐）
- * - 框架特定提示
+ * Note
+ * Hero area( Flask=, Django=, FastAPI=, Tornado=)
+ * requirements. txt / pyproject. toml panel
+ * type select( Builtin / Gunicorn WSGI / Uvicorn ASGI)
+ * WSGI/ASGI moduleconfig
+ * indicator
+ * Django configpanel( settings module, directory, ALLOWED_HOSTS)
+ * FastAPI configpanel( API, ASGI)
+ * hint
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -69,12 +70,13 @@ fun CreatePythonAppScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
+    val projectImporter = remember(context) { PythonProjectImporter(context) }
     
-    // App 信息
+    // App
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     
-    // Python 配置
+    // Python config
     var entryFile by remember { mutableStateOf("app.py") }
     var entryModule by remember { mutableStateOf("") }
     var serverType by remember { mutableStateOf("builtin") }
@@ -83,36 +85,66 @@ fun CreatePythonAppScreen(
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
     
-    // 项目检测
+    // item
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
     
-    // 增强：依赖列表
+    // list
     var requirements by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var requirementsSource by remember { mutableStateOf("") }
     var showAllDeps by remember { mutableStateOf(false) }
     
-    // 增强：虚拟环境
+    // Note
     var venvDetected by remember { mutableStateOf(false) }
     var venvPath by remember { mutableStateOf<String?>(null) }
     
-    // 增强：Python 版本
+    // Python version
     var pythonVersion by remember { mutableStateOf<String?>(null) }
     
-    // 增强：Django 专属
+    // Django
     var djangoSettingsModule by remember { mutableStateOf("") }
     var djangoStaticDir by remember { mutableStateOf("static") }
     
-    // 增强：FastAPI 专属
+    // FastAPI
     var fastapiDocsEnabled by remember { mutableStateOf(true) }
     
-    // 状态
+    // state
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val screenState = remember(isCreating, creationPhase, errorMessage) {
+        CreateScreenState(
+            isBusy = isCreating,
+            phase = creationPhase,
+            errorMessage = errorMessage
+        )
+    }
+
+    fun applyImportAnalysis(
+        imported: com.webtoapp.ui.screens.create.common.ImportedProject<PythonProjectImportAnalysis>,
+        appNameOverride: String? = null,
+    ) {
+        val analysis = imported.analysis
+        selectedProjectDir = analysis.projectDir.absolutePath
+        detectedFramework = analysis.framework
+        entryFile = analysis.entryFile ?: entryFile
+        entryModule = analysis.entryModule
+        serverType = analysis.serverType
+        envVars = analysis.envVars
+        requirements = analysis.requirements
+        requirementsSource = analysis.requirementsSource
+        venvDetected = analysis.venvDetected
+        venvPath = analysis.venvPath
+        pythonVersion = analysis.pythonVersion
+        djangoSettingsModule = analysis.djangoSettingsModule
+        djangoStaticDir = analysis.djangoStaticDir
+        fastapiDocsEnabled = analysis.fastapiDocsEnabled
+        projectId = imported.projectId
+        appName = appNameOverride ?: analysis.suggestedAppName ?: appName
+    }
     
-    // 编辑模式：加载已有数据
+    // editmode: load
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = webAppRepository.getWebAppById(existingAppId).first()
@@ -143,200 +175,21 @@ fun CreatePythonAppScreen(
         uri?.let { treeUri ->
             scope.launch {
                 isCreating = true
-                creationPhase = Strings.frameworkDetected
+                creationPhase = AppStringsProvider.current().frameworkDetected
                 errorMessage = null
                 
                 try {
-                    withContext(Dispatchers.IO) {
-                        val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
-                        val path = docId.substringAfter(":")
-                        val storageRoot = if (docId.startsWith("primary:")) {
-                            android.os.Environment.getExternalStorageDirectory().absolutePath
-                        } else {
-                            "/storage/${docId.substringBefore(":")}"
-                        }
-                        val projectPath = "$storageRoot/$path"
-                        val projectDir = File(projectPath)
-                        
-                        if (!projectDir.exists()) {
-                            errorMessage = Strings.dirNotExists
-                            isCreating = false
-                            return@withContext
-                        }
-                        
-                        selectedProjectDir = projectPath
-                        
-                        val runtime = PythonRuntime(context)
-                        val framework = runtime.detectFramework(projectDir)
-                        detectedFramework = framework
-                        
-                        val detected = runtime.detectEntryFile(projectDir, framework)
-                        entryFile = detected
-                        
-                        // 推断 server type
-                        serverType = when (framework) {
-                            "fastapi" -> "uvicorn"
-                            "django" -> "gunicorn"
-                            else -> "builtin"
-                        }
-                        
-                        // 增强：检测虚拟环境
-                        val venvDirs = listOf("venv", ".venv", "env", ".env")
-                        for (vDir in venvDirs) {
-                            val venvDir = File(projectDir, vDir)
-                            if (venvDir.isDirectory && File(venvDir, "bin/python").exists()) {
-                                venvDetected = true
-                                venvPath = vDir
-                                break
-                            }
-                            // Windows style
-                            if (venvDir.isDirectory && File(venvDir, "Scripts/python.exe").exists()) {
-                                venvDetected = true
-                                venvPath = vDir
-                                break
-                            }
-                        }
-                        
-                        // 增强：解析 requirements.txt
-                        val reqFile = File(projectDir, "requirements.txt")
-                        val pipfileFile = File(projectDir, "Pipfile")
-                        val pyprojectFile = File(projectDir, "pyproject.toml")
-                        
-                        if (reqFile.exists()) {
-                            requirementsSource = "requirements.txt"
-                            try {
-                                requirements = reqFile.readLines()
-                                    .map { it.trim() }
-                                    .filter { it.isNotEmpty() && !it.startsWith("#") && !it.startsWith("-") }
-                                    .map { line ->
-                                        val parts = line.split(Regex("[>=<~!]+"), 2)
-                                        val name = parts[0].trim()
-                                        val version = if (parts.size > 1) {
-                                            line.substring(name.length).trim()
-                                        } else ""
-                                        name to version
-                                    }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse requirements.txt", e) }
-                        } else if (pipfileFile.exists()) {
-                            requirementsSource = "Pipfile"
-                            try {
-                                val content = pipfileFile.readText()
-                                val packagesSection = content.substringAfter("[packages]", "")
-                                    .substringBefore("[", "")
-                                requirements = packagesSection.lines()
-                                    .map { it.trim() }
-                                    .filter { it.isNotEmpty() && it.contains("=") }
-                                    .map { line ->
-                                        val key = line.substringBefore("=").trim()
-                                        val value = line.substringAfter("=").trim().removeSurrounding("\"")
-                                        key to value
-                                    }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse Pipfile", e) }
-                        }
-                        
-                        // 增强：从 pyproject.toml 提取 Python 版本和项目名
-                        if (pyprojectFile.exists()) {
-                            try {
-                                val content = pyprojectFile.readText()
-                                val nameMatch = Regex("""name\s*=\s*"([^"]+)"""").find(content)
-                                nameMatch?.groupValues?.get(1)?.let { if (appName.isBlank()) appName = it }
-                                
-                                val pyVerMatch = Regex("""requires-python\s*=\s*"([^"]+)"""").find(content)
-                                pyVerMatch?.groupValues?.get(1)?.let { pythonVersion = it }
-                                
-                                // 如果没有 requirements.txt，尝试从 pyproject.toml 解析依赖
-                                if (requirements.isEmpty()) {
-                                    requirementsSource = "pyproject.toml"
-                                    val depsBlock = content.substringAfter("dependencies", "")
-                                        .substringAfter("[", "").substringBefore("]", "")
-                                    if (depsBlock.isNotBlank()) {
-                                        requirements = depsBlock.lines()
-                                            .map { it.trim().removeSurrounding("\"").removeSurrounding(",").trim() }
-                                            .filter { it.isNotEmpty() && !it.startsWith("#") }
-                                            .map { line ->
-                                                val parts = line.split(Regex("[>=<~!]+"), 2)
-                                                val name = parts[0].trim()
-                                                val version = if (parts.size > 1) line.substring(name.length).trim() else ""
-                                                name to version
-                                            }
-                                    }
-                                }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse pyproject.toml", e) }
-                        }
-                        
-                        // 读取项目名称 (setup.py fallback)
-                        val setupPy = File(projectDir, "setup.py")
-                        if (setupPy.exists() && appName.isBlank()) {
-                            try {
-                                val content = setupPy.readText()
-                                val nameMatch = Regex("""name\s*=\s*['"]([^'"]+)['"]""").find(content)
-                                nameMatch?.groupValues?.get(1)?.let { appName = it }
-                            } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse setup.py", e) }
-                        }
-                        
-                        // 增强：Django 专属检测
-                        if (framework == "django") {
-                            // 检测 settings module
-                            val managePy = File(projectDir, "manage.py")
-                            if (managePy.exists()) {
-                                try {
-                                    val content = managePy.readText()
-                                    val settingsMatch = Regex("""DJANGO_SETTINGS_MODULE.*?['"]([^'"]+)['"]""").find(content)
-                                    settingsMatch?.groupValues?.get(1)?.let {
-                                        djangoSettingsModule = it
-                                        entryModule = "$it.wsgi:application"
-                                    }
-                                } catch (e: Exception) { android.util.Log.w("CreatePythonApp", "Failed to parse manage.py", e) }
-                            }
-                            // 检测 wsgi.py
-                            projectDir.walk().maxDepth(2).filter { it.name == "wsgi.py" }.firstOrNull()?.let {
-                                val modulePath = it.relativeTo(projectDir).path
-                                    .removeSuffix(".py").replace(File.separator, ".")
-                                if (entryModule.isBlank()) entryModule = "$modulePath:application"
-                            }
-                        }
-                        
-                        // 增强：FastAPI 专属检测
-                        if (framework == "fastapi") {
-                            // 推断 ASGI module
-                            val mainPy = File(projectDir, entryFile)
-                            if (mainPy.exists()) {
-                                try {
-                                    val content = mainPy.readText()
-                                    val appVarMatch = Regex("""(\w+)\s*=\s*FastAPI\(""").find(content)
-                                    val appVar = appVarMatch?.groupValues?.get(1) ?: "app"
-                                    val moduleName = entryFile.removeSuffix(".py")
-                                    if (entryModule.isBlank()) entryModule = "$moduleName:$appVar"
-                                } catch (_: Exception) {
-                                    if (entryModule.isBlank()) entryModule = "main:app"
-                                }
-                            }
-                        }
-                        
-                        // 读取 .env 文件
-                        val envFile = File(projectDir, ".env")
-                        if (envFile.exists()) {
-                            envFile.readLines().forEach { line ->
-                                val trimmed = line.trim()
-                                if (trimmed.isNotEmpty() && !trimmed.startsWith("#") && trimmed.contains("=")) {
-                                    val key = trimmed.substringBefore("=").trim()
-                                    val value = trimmed.substringAfter("=").trim()
-                                    if (key.isNotEmpty()) {
-                                        envVars = envVars.toMutableMap().apply { put(key, value) }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // 复制项目文件
-                        creationPhase = Strings.copyingProjectFiles
-                        val newProjectId = java.util.UUID.randomUUID().toString()
-                        runtime.createProject(newProjectId, projectDir)
-                        projectId = newProjectId
-                        creationPhase = Strings.pyProjectReady
+                    val projectDir = resolveDocumentTreeDirectory(treeUri)
+                    if (!projectDir.exists()) {
+                        errorMessage = AppStringsProvider.current().dirNotExists
+                        return@launch
                     }
+                    creationPhase = AppStringsProvider.current().copyingProjectFiles
+                    val imported = projectImporter.importProject(projectDir)
+                    applyImportAnalysis(imported)
+                    creationPhase = AppStringsProvider.current().pyProjectReady
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: Strings.projectImportFailed
+                    errorMessage = e.message ?: AppStringsProvider.current().projectImportFailed
                 } finally {
                     isCreating = false
                 }
@@ -346,14 +199,14 @@ fun CreatePythonAppScreen(
     
     val canCreate = projectId != null
     
-    // 获取框架品牌色
+    // Note
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework?.lowercase()) {
             "flask" -> Color(0xFF333333)
             "django" -> Color(0xFF0C4B33)
             "fastapi" -> Color(0xFF009688)
             "tornado" -> Color(0xFF4285F4)
-            else -> Color(0xFF3776AB) // Python 默认蓝
+            else -> Color(0xFF3776AB) // Python default
         }
     }
     
@@ -361,10 +214,10 @@ fun CreatePythonAppScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(Strings.createPythonApp) },
+                title = { Text(AppStringsProvider.current().createPythonApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, AppStringsProvider.current().back)
                     }
                 },
                 actions = {
@@ -390,7 +243,7 @@ fun CreatePythonAppScreen(
                             }
                         },
                         enabled = canCreate && !isCreating
-                    ) { Text(if (isEdit) Strings.btnSave else Strings.btnCreate) }
+                    ) { Text(if (isEdit) AppStringsProvider.current().btnSave else AppStringsProvider.current().btnCreate) }
                 }
             )
         }
@@ -406,45 +259,30 @@ fun CreatePythonAppScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            // ========== 1. Hero area ==========
             PythonHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
                 pythonVersion = pythonVersion
             )
             
-            // ========== 示例项目 ==========
+            // ========== item ==========
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
-                    title = Strings.sampleProjects,
-                    subtitle = Strings.samplePythonSubtitle,
+                    title = AppStringsProvider.current().sampleProjects,
+                    subtitle = AppStringsProvider.current().samplePythonSubtitle,
                     samples = remember { PythonSampleManager.getSampleProjects() },
                     onSelectSample = { sample ->
                         scope.launch {
                             val result = PythonSampleManager.extractSampleProject(context, sample.id)
                             result.onSuccess { path ->
-                                selectedProjectDir = path
                                 isCreating = true
-                                creationPhase = Strings.frameworkDetected
+                                creationPhase = AppStringsProvider.current().frameworkDetected
                                 try {
-                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                        val projectDir = java.io.File(path)
-                                        val runtime = PythonRuntime(context)
-                                        val framework = runtime.detectFramework(projectDir)
-                                        detectedFramework = framework
-                                        entryFile = runtime.detectEntryFile(projectDir, framework)
-                                        serverType = when (framework) {
-                                            "fastapi" -> "uvicorn"
-                                            "django" -> "gunicorn"
-                                            else -> "builtin"
-                                        }
-                                        appName = sample.name
-                                        creationPhase = Strings.copyingProjectFiles
-                                        val newProjectId = java.util.UUID.randomUUID().toString()
-                                        runtime.createProject(newProjectId, projectDir)
-                                        projectId = newProjectId
-                                        creationPhase = Strings.pyProjectReady
-                                    }
+                                    creationPhase = AppStringsProvider.current().copyingProjectFiles
+                                    val imported = projectImporter.importProject(File(path))
+                                    applyImportAnalysis(imported, appNameOverride = sample.name)
+                                    creationPhase = AppStringsProvider.current().pyProjectReady
                                 } catch (e: Exception) {
                                     errorMessage = e.message
                                 } finally {
@@ -456,7 +294,7 @@ fun CreatePythonAppScreen(
                 )
             }
             
-            // ========== 2. 基本配置 ==========
+            // ========== 2. config ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -466,13 +304,13 @@ fun CreatePythonAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.njsBasicConfig, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().njsBasicConfig, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     PremiumTextField(
                         value = appName,
                         onValueChange = { appName = it },
-                        label = { Text(Strings.labelAppName) },
+                        label = { Text(AppStringsProvider.current().labelAppName) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -482,19 +320,19 @@ fun CreatePythonAppScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(Strings.njsLandscapeMode)
+                        Text(AppStringsProvider.current().njsLandscapeMode)
                         PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
             }
             
-            // ========== 3. 图标选择 ==========
+            // ========== 3. iconselect ==========
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             
-            // ========== 4. 项目选择 ==========
+            // ========== 4. Project Selection ==========
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -504,11 +342,11 @@ fun CreatePythonAppScreen(
                             contentAlignment = Alignment.Center
                         ) { Icon(Icons.Outlined.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(Strings.pySelectProject, style = MaterialTheme.typography.titleMedium)
+                        Text(AppStringsProvider.current().pySelectProject, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = Strings.pySupportedFrameworks,
+                        text = AppStringsProvider.current().pySupportedFrameworks,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -524,7 +362,7 @@ fun CreatePythonAppScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.pyProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(AppStringsProvider.current().pyProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -534,13 +372,13 @@ fun CreatePythonAppScreen(
                                 )
                                 if (detectedFramework != null && detectedFramework != "raw") {
                                     Text(
-                                        "${Strings.frameworkDetected}: $detectedFramework",
+                                        "${AppStringsProvider.current().frameworkDetected}: $detectedFramework",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Text(
-                                    "${Strings.entryFile}: $entryFile",
+                                    "${AppStringsProvider.current().entryFile}: $entryFile",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -563,22 +401,22 @@ fun CreatePythonAppScreen(
                     ) {
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.pySelectProject)
+                        Text(AppStringsProvider.current().pySelectProject)
                     }
                 }
             }
             
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            // ========== Cards below appear after project selection ==========
             if (projectId != null) {
                 
-                // ========== 5. 虚拟环境指示器 ==========
+                // ========== 5. Virtual Env Indicator ==========
                 PythonVenvIndicator(
                     venvDetected = venvDetected,
                     venvPath = venvPath,
                     frameworkColor = frameworkColor
                 )
                 
-                // ========== 6. 依赖面板 ==========
+                // ========== 6. Dependencies Panel ==========
                 if (requirements.isNotEmpty()) {
                     PythonRequirementsCard(
                         requirements = requirements,
@@ -589,7 +427,7 @@ fun CreatePythonAppScreen(
                     )
                 }
                 
-                // ========== 7. 服务器类型选择器 ==========
+                // ========== 7. Server Type Selector ==========
                 PythonServerTypeCard(
                     serverType = serverType,
                     detectedFramework = detectedFramework,
@@ -597,7 +435,7 @@ fun CreatePythonAppScreen(
                     frameworkColor = frameworkColor
                 )
                 
-                // ========== 8. WSGI/ASGI 模块配置 ==========
+                // ========== 8. WSGI/ASGI Module Settings ==========
                 PythonModuleConfigCard(
                     entryFile = entryFile,
                     onEntryFileChange = { entryFile = it },
@@ -606,7 +444,7 @@ fun CreatePythonAppScreen(
                     serverType = serverType
                 )
                 
-                // ========== 9. Django 专属面板 ==========
+                // ========== 9. Django Panel ==========
                 if (detectedFramework == "django") {
                     PythonDjangoCard(
                         settingsModule = djangoSettingsModule,
@@ -616,7 +454,7 @@ fun CreatePythonAppScreen(
                     )
                 }
                 
-                // ========== 10. FastAPI 专属面板 ==========
+                // ========== 10. FastAPI Panel ==========
                 if (detectedFramework == "fastapi") {
                     PythonFastapiCard(
                         docsEnabled = fastapiDocsEnabled,
@@ -624,10 +462,10 @@ fun CreatePythonAppScreen(
                     )
                 }
                 
-                // ========== 11. 框架提示 ==========
+                // ========== 11. Framework Tips ==========
                 PythonFrameworkTipCard(framework = detectedFramework)
                 
-                // ========== 12. 环境变量 ==========
+                // ========== 12. Environment Variables ==========
                 RuntimeEnvVarsCard(
                     envVars = envVars,
                     newEnvKey = newEnvKey,
@@ -644,12 +482,12 @@ fun CreatePythonAppScreen(
                 )
             }
             
-            // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
+            // Status message
+            if (screenState.isBusy) {
+                RuntimeLoadingCard(screenState.phase)
             }
             
-            errorMessage?.let { error ->
+            screenState.errorMessage?.let { error ->
                 RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
             }
             
@@ -659,10 +497,10 @@ fun CreatePythonAppScreen(
         }
 }
 
-// ==================== 私有 Composable 组件 ====================
+// ==================== Private Composable Components ====================
 
 /**
- * Python 框架品牌化 Hero 区域
+ * Python Hero area
  */
 @Composable
 private fun PythonHeroSection(
@@ -700,14 +538,14 @@ private fun PythonHeroSection(
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = if (detectedFramework != null && detectedFramework != "raw")
-                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${Strings.pyHeroTitle}"
-                        else Strings.pyHeroTitle,
+                            "${detectedFramework!!.replaceFirstChar { it.uppercase() }} ${AppStringsProvider.current().pyHeroTitle}"
+                        else AppStringsProvider.current().pyHeroTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = frameworkColor
                     )
                     Text(
-                        text = Strings.pyHeroDesc,
+                        text = AppStringsProvider.current().pyHeroDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -733,7 +571,7 @@ private fun PythonHeroSection(
 }
 
 /**
- * 虚拟环境检测指示器
+ * indicator
  */
 @Composable
 private fun PythonVenvIndicator(
@@ -760,14 +598,14 @@ private fun PythonVenvIndicator(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
-                    text = Strings.pyVenvDetected,
+                    text = AppStringsProvider.current().pyVenvDetected,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = if (venvDetected) frameworkColor else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = if (venvDetected) "${Strings.pyVenvFound} ($venvPath/)"
-                    else Strings.pyVenvNotFound,
+                    text = if (venvDetected) "${AppStringsProvider.current().pyVenvFound} ($venvPath/)"
+                    else AppStringsProvider.current().pyVenvNotFound,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -791,7 +629,7 @@ private fun PythonVenvIndicator(
 }
 
 /**
- * 依赖列表面板
+ * listpanel
  */
 @Composable
 private fun PythonRequirementsCard(
@@ -810,7 +648,7 @@ private fun PythonRequirementsCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Extension, null, tint = frameworkColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyRequirements, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyRequirements, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -828,7 +666,7 @@ private fun PythonRequirementsCard(
             
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "${Strings.pyRequirementsFile}: $source",
+                "${AppStringsProvider.current().pyRequirementsFile}: $source",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -861,7 +699,7 @@ private fun PythonRequirementsCard(
             }
             if (requirements.size > 8) {
                 TextButton(onClick = onToggleShowAll, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (showAll) Strings.close else "${Strings.more} (${requirements.size - 8})")
+                    Text(if (showAll) AppStringsProvider.current().close else "${AppStringsProvider.current().more} (${requirements.size - 8})")
                 }
             }
         }
@@ -869,7 +707,7 @@ private fun PythonRequirementsCard(
 }
 
 /**
- * 服务器类型可视化选择器
+ * type select
  */
 @Composable
 private fun PythonServerTypeCard(
@@ -894,14 +732,14 @@ private fun PythonServerTypeCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Dns, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyServerType, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyServerType, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             // Builtin
             PythonServerOption(
-                title = Strings.pyServerBuiltin,
-                description = Strings.pyServerBuiltinDesc,
+                title = AppStringsProvider.current().pyServerBuiltin,
+                description = AppStringsProvider.current().pyServerBuiltinDesc,
                 selected = serverType == "builtin",
                 isRecommended = recommendedServer == null,
                 onClick = { onServerTypeChange("builtin") },
@@ -911,8 +749,8 @@ private fun PythonServerTypeCard(
             
             // Gunicorn (WSGI)
             PythonServerOption(
-                title = Strings.pyServerGunicorn,
-                description = Strings.pyServerGunicornDesc,
+                title = AppStringsProvider.current().pyServerGunicorn,
+                description = AppStringsProvider.current().pyServerGunicornDesc,
                 selected = serverType == "gunicorn",
                 isRecommended = recommendedServer == "gunicorn",
                 onClick = { onServerTypeChange("gunicorn") },
@@ -922,8 +760,8 @@ private fun PythonServerTypeCard(
             
             // Uvicorn (ASGI)
             PythonServerOption(
-                title = Strings.pyServerUvicorn,
-                description = Strings.pyServerUvicornDesc,
+                title = AppStringsProvider.current().pyServerUvicorn,
+                description = AppStringsProvider.current().pyServerUvicornDesc,
                 selected = serverType == "uvicorn",
                 isRecommended = recommendedServer == "uvicorn",
                 onClick = { onServerTypeChange("uvicorn") },
@@ -934,7 +772,7 @@ private fun PythonServerTypeCard(
 }
 
 /**
- * 单个服务器选项卡片
+ * card
  */
 @Composable
 private fun PythonServerOption(
@@ -977,7 +815,7 @@ private fun PythonServerOption(
                             color = accentColor.copy(alpha = 0.12f)
                         ) {
                             Text(
-                                Strings.pyRecommended,
+                                AppStringsProvider.current().pyRecommended,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = accentColor
@@ -996,7 +834,7 @@ private fun PythonServerOption(
 }
 
 /**
- * WSGI/ASGI 模块与入口文件配置卡片
+ * WSGI/ASGI modulewith fileconfigcard
  */
 @Composable
 private fun PythonModuleConfigCard(
@@ -1015,14 +853,14 @@ private fun PythonModuleConfigCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Code, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.phpAdvancedConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().phpAdvancedConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
                 value = entryFile,
                 onValueChange = onEntryFileChange,
-                label = { Text(Strings.entryFile) },
+                label = { Text(AppStringsProvider.current().entryFile) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -1033,8 +871,8 @@ private fun PythonModuleConfigCard(
                     PremiumTextField(
                         value = entryModule,
                         onValueChange = onEntryModuleChange,
-                        label = { Text(Strings.pyWsgiModule) },
-                        placeholder = { Text(Strings.pyWsgiModuleHint) },
+                        label = { Text(AppStringsProvider.current().pyWsgiModule) },
+                        placeholder = { Text(AppStringsProvider.current().pyWsgiModuleHint) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         supportingText = {
@@ -1053,7 +891,7 @@ private fun PythonModuleConfigCard(
 }
 
 /**
- * Django 专属配置面板
+ * Django configpanel
  */
 @Composable
 private fun PythonDjangoCard(
@@ -1071,14 +909,14 @@ private fun PythonDjangoCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Settings, null, tint = Color(0xFF0C4B33), modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyDjangoSettings, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyDjangoSettings, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
             PremiumTextField(
                 value = settingsModule,
                 onValueChange = onSettingsModuleChange,
-                label = { Text(Strings.pyDjangoSettingsModule) },
+                label = { Text(AppStringsProvider.current().pyDjangoSettingsModule) },
                 placeholder = { Text("myproject.settings") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -1087,7 +925,7 @@ private fun PythonDjangoCard(
             PremiumTextField(
                 value = staticDir,
                 onValueChange = onStaticDirChange,
-                label = { Text(Strings.pyDjangoStaticDir) },
+                label = { Text(AppStringsProvider.current().pyDjangoStaticDir) },
                 placeholder = { Text("static") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -1103,7 +941,7 @@ private fun PythonDjangoCard(
                     Icon(Icons.Outlined.Info, null, tint = Color(0xFF0C4B33), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        Strings.pyDjangoAllowedHosts,
+                        AppStringsProvider.current().pyDjangoAllowedHosts,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF0C4B33)
                     )
@@ -1114,7 +952,7 @@ private fun PythonDjangoCard(
 }
 
 /**
- * FastAPI 专属配置面板
+ * FastAPI configpanel
  */
 @Composable
 private fun PythonFastapiCard(
@@ -1130,7 +968,7 @@ private fun PythonFastapiCard(
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Api, null, tint = Color(0xFF009688), modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.pyFastapiConfig, style = MaterialTheme.typography.titleMedium)
+                Text(AppStringsProvider.current().pyFastapiConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1141,14 +979,14 @@ private fun PythonFastapiCard(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        Strings.pyFastapiDocsEndpoint,
+                        AppStringsProvider.current().pyFastapiDocsEndpoint,
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
                         color = Color(0xFF009688)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        Strings.pyFastapiAsgiHint,
+                        AppStringsProvider.current().pyFastapiAsgiHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1159,7 +997,7 @@ private fun PythonFastapiCard(
 }
 
 /**
- * 框架特定提示卡片
+ * hintcard
  */
 @Composable
 private fun PythonFrameworkTipCard(framework: String?) {
@@ -1190,7 +1028,7 @@ private fun PythonFrameworkTipCard(framework: String?) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        Strings.phpFrameworkTip,
+                        AppStringsProvider.current().phpFrameworkTip,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = tipData.color

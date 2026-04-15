@@ -18,13 +18,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.stats.BatchImportService
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 
 /**
- * 批量导入对话框
+ * importdialog
  */
 @Composable
 fun BatchImportDialog(
@@ -41,7 +41,7 @@ fun BatchImportDialog(
     var importResult by remember { mutableStateOf<Int?>(null) }
     var selectedTab by remember { mutableIntStateOf(0) }
     
-    // 书签文件选择器
+    // fileselect
     val bookmarkLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -54,7 +54,7 @@ fun BatchImportDialog(
     
     AlertDialog(
         onDismissRequest = { if (!isImporting) onDismiss() },
-        title = { Text(Strings.batchImportTitle) },
+        title = { Text(AppStringsProvider.current().batchImportTitle) },
         text = {
             Column(
                 modifier = Modifier
@@ -62,32 +62,32 @@ fun BatchImportDialog(
                     .heightIn(max = 500.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Tab 切换
+                // Tab switch
                 TabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text(Strings.batchImportFromText, style = MaterialTheme.typography.labelMedium) },
+                        text = { Text(AppStringsProvider.current().batchImportFromText, style = MaterialTheme.typography.labelMedium) },
                         icon = { Icon(Icons.Outlined.TextFields, null, Modifier.size(16.dp)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text(Strings.batchImportFromBookmarks, style = MaterialTheme.typography.labelMedium) },
+                        text = { Text(AppStringsProvider.current().batchImportFromBookmarks, style = MaterialTheme.typography.labelMedium) },
                         icon = { Icon(Icons.Outlined.Bookmarks, null, Modifier.size(16.dp)) }
                     )
                 }
                 
                 when (selectedTab) {
                     0 -> {
-                        // 文本输入
+                        // textinput
                         OutlinedTextField(
                             value = inputText,
                             onValueChange = {
                                 inputText = it
                                 parsedEntries = importService.parseFromText(it)
                             },
-                            label = { Text(Strings.batchImportHint) },
+                            label = { Text(AppStringsProvider.current().batchImportHint) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(150.dp),
@@ -95,23 +95,23 @@ fun BatchImportDialog(
                         )
                     }
                     1 -> {
-                        // 书签文件导入
+                        // fileimport
                         PremiumOutlinedButton(
                             onClick = { bookmarkLauncher.launch("text/html") },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Outlined.FileOpen, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(Strings.batchImportFromBookmarks)
+                            Text(AppStringsProvider.current().batchImportFromBookmarks)
                         }
                     }
                 }
                 
-                // 解析结果预览
+                // preview
                 if (parsedEntries.isNotEmpty()) {
                     HorizontalDivider()
                     Text(
-                        Strings.batchImportParsed.replace("%d", parsedEntries.size.toString()),
+                        AppStringsProvider.current().batchImportParsed.replace("%d", parsedEntries.size.toString()),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -161,7 +161,7 @@ fun BatchImportDialog(
                     }
                 }
                 
-                // 导入结果
+                // import
                 if (importResult != null) {
                     Surface(
                         shape = MaterialTheme.shapes.small,
@@ -180,7 +180,7 @@ fun BatchImportDialog(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                Strings.batchImportSuccess.replace("%d", importResult.toString()),
+                                AppStringsProvider.current().batchImportSuccess.replace("%d", importResult.toString()),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -192,7 +192,7 @@ fun BatchImportDialog(
         confirmButton = {
             if (importResult != null) {
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.close)
+                    Text(AppStringsProvider.current().close)
                 }
             } else if (!isImporting) {
                 PremiumButton(
@@ -211,7 +211,7 @@ fun BatchImportDialog(
                 ) {
                     Icon(Icons.Outlined.FileDownload, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(Strings.batchImportBtn)
+                    Text(AppStringsProvider.current().batchImportBtn)
                 }
             } else {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -220,7 +220,7 @@ fun BatchImportDialog(
         dismissButton = {
             if (!isImporting && importResult == null) {
                 TextButton(onClick = onDismiss) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         }

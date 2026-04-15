@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.activation.ActivationCode
 import com.webtoapp.core.activation.ActivationCodeType
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import java.util.concurrent.TimeUnit
@@ -86,7 +86,7 @@ private fun getCodeTypeTheme(type: ActivationCodeType): CodeTypeTheme = when (ty
 // ═══════════════════════════════════════════
 
 /**
- * 激活码配置卡片（增强版 - 支持多种类型 + 批量操作）
+ * activation codeconfigcard( enhanced- support type +)
  */
 @Composable
 fun ActivationCodeCard(
@@ -143,12 +143,12 @@ fun ActivationCodeCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = Strings.activationCodeVerify,
+                            text = AppStringsProvider.current().activationCodeVerify,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (enabled && activationCodes.isNotEmpty()) {
                             Text(
-                                text = Strings.totalCodes.replace("%d", activationCodes.size.toString()),
+                                text = AppStringsProvider.current().totalCodes.replace("%d", activationCodes.size.toString()),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -168,7 +168,7 @@ fun ActivationCodeCard(
             ) {
               Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = Strings.activationCodeHint,
+                    text = AppStringsProvider.current().activationCodeHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -182,11 +182,11 @@ fun ActivationCodeCard(
                 ) {
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = Strings.requireEveryLaunch,
+                            text = AppStringsProvider.current().requireEveryLaunch,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = if (requireEveryTime) Strings.requireEveryLaunchHintOn else Strings.requireEveryLaunchHintOff,
+                            text = if (requireEveryTime) AppStringsProvider.current().requireEveryLaunchHintOn else AppStringsProvider.current().requireEveryLaunchHintOff,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -208,11 +208,11 @@ fun ActivationCodeCard(
                 ) {
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         Text(
-                            text = Strings.customDialogText,
+                            text = AppStringsProvider.current().customDialogText,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = Strings.customDialogTextHint,
+                            text = AppStringsProvider.current().customDialogTextHint,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -241,32 +241,32 @@ fun ActivationCodeCard(
                         PremiumTextField(
                             value = dialogConfig.title,
                             onValueChange = { onDialogConfigChange(dialogConfig.copy(title = it)) },
-                            label = { Text(Strings.dialogTitle) },
-                            placeholder = { Text(Strings.dialogTitleHint) },
+                            label = { Text(AppStringsProvider.current().dialogTitle) },
+                            placeholder = { Text(AppStringsProvider.current().dialogTitleHint) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         PremiumTextField(
                             value = dialogConfig.subtitle,
                             onValueChange = { onDialogConfigChange(dialogConfig.copy(subtitle = it)) },
-                            label = { Text(Strings.dialogSubtitle) },
-                            placeholder = { Text(Strings.dialogSubtitleHint) },
+                            label = { Text(AppStringsProvider.current().dialogSubtitle) },
+                            placeholder = { Text(AppStringsProvider.current().dialogSubtitleHint) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         PremiumTextField(
                             value = dialogConfig.inputLabel,
                             onValueChange = { onDialogConfigChange(dialogConfig.copy(inputLabel = it)) },
-                            label = { Text(Strings.dialogInputLabel) },
-                            placeholder = { Text(Strings.dialogInputLabelHint) },
+                            label = { Text(AppStringsProvider.current().dialogInputLabel) },
+                            placeholder = { Text(AppStringsProvider.current().dialogInputLabelHint) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         PremiumTextField(
                             value = dialogConfig.buttonText,
                             onValueChange = { onDialogConfigChange(dialogConfig.copy(buttonText = it)) },
-                            label = { Text(Strings.dialogButtonText) },
-                            placeholder = { Text(Strings.dialogButtonTextHint) },
+                            label = { Text(AppStringsProvider.current().dialogButtonText) },
+                            placeholder = { Text(AppStringsProvider.current().dialogButtonTextHint) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -287,7 +287,7 @@ fun ActivationCodeCard(
                     ) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(Strings.addActivationCode, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(AppStringsProvider.current().addActivationCode, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
 
                     // Batch generate
@@ -297,7 +297,7 @@ fun ActivationCodeCard(
                     ) {
                         Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.batchGenerate, maxLines = 1)
+                        Text(AppStringsProvider.current().batchGenerate, maxLines = 1)
                     }
                 }
 
@@ -318,7 +318,7 @@ fun ActivationCodeCard(
                         ) {
                             Icon(Icons.Outlined.CopyAll, null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.copyAllCodes, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().copyAllCodes, style = MaterialTheme.typography.labelSmall)
                         }
 
                         TextButton(
@@ -330,7 +330,7 @@ fun ActivationCodeCard(
                         ) {
                             Icon(Icons.Outlined.DeleteSweep, null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.deleteAllCodes, style = MaterialTheme.typography.labelSmall)
+                            Text(AppStringsProvider.current().deleteAllCodes, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -392,8 +392,8 @@ fun ActivationCodeCard(
                     modifier = Modifier.size(32.dp)
                 )
             },
-            title = { Text(Strings.deleteAllCodes, fontWeight = FontWeight.Bold) },
-            text = { Text(Strings.deleteAllCodesConfirm) },
+            title = { Text(AppStringsProvider.current().deleteAllCodes, fontWeight = FontWeight.Bold) },
+            text = { Text(AppStringsProvider.current().deleteAllCodesConfirm) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -404,12 +404,12 @@ fun ActivationCodeCard(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(Strings.btnDelete)
+                    Text(AppStringsProvider.current().btnDelete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteAllDialog = false }) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         )
@@ -441,7 +441,7 @@ private fun EmptyActivationCodesState() {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
             )
             Text(
-                text = Strings.noActivationCodes,
+                text = AppStringsProvider.current().noActivationCodes,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
@@ -467,7 +467,7 @@ private fun EnhancedActivationCodeItem(
     LaunchedEffect(showCopiedToast) {
         if (showCopiedToast) {
             snackbarHostState.showSnackbar(
-                message = Strings.activationCodeCopied,
+                message = AppStringsProvider.current().activationCodeCopied,
                 duration = SnackbarDuration.Short
             )
             showCopiedToast = false
@@ -542,7 +542,7 @@ private fun EnhancedActivationCodeItem(
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(
                             Icons.Outlined.ContentCopy,
-                            contentDescription = Strings.copyActivationCode,
+                            contentDescription = AppStringsProvider.current().copyActivationCode,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                         )
@@ -556,7 +556,7 @@ private fun EnhancedActivationCodeItem(
                 ) {
                     Icon(
                         Icons.Outlined.Close,
-                        Strings.btnDelete,
+                        AppStringsProvider.current().btnDelete,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -570,28 +570,28 @@ private fun EnhancedActivationCodeItem(
                         code.timeLimitMs?.let { timeLimit ->
                             val days = TimeUnit.MILLISECONDS.toDays(timeLimit)
                             val hours = TimeUnit.MILLISECONDS.toHours(timeLimit) % 24
-                            add("⏱ ${Strings.validityPeriod}：${days}${Strings.days}${if (hours > 0) " ${hours}${Strings.hours}" else ""}")
+                            add("⏱ ${AppStringsProvider.current().validityPeriod}：${days}${AppStringsProvider.current().days}${if (hours > 0) " ${hours}${AppStringsProvider.current().hours}" else ""}")
                         }
                     }
                     ActivationCodeType.USAGE_LIMITED -> {
                         code.usageLimit?.let { limit ->
-                            add("🔢 ${Strings.usageCount}：$limit ${Strings.times}")
+                            add("🔢 ${AppStringsProvider.current().usageCount}：$limit ${AppStringsProvider.current().times}")
                         }
                     }
                     ActivationCodeType.COMBINED -> {
                         code.timeLimitMs?.let { timeLimit ->
                             val days = TimeUnit.MILLISECONDS.toDays(timeLimit)
-                            add("⏱ ${days}${Strings.days}")
+                            add("⏱ ${days}${AppStringsProvider.current().days}")
                         }
                         code.usageLimit?.let { limit ->
-                            add("🔢 $limit ${Strings.times}")
+                            add("🔢 $limit ${AppStringsProvider.current().times}")
                         }
                     }
                     ActivationCodeType.DEVICE_BOUND -> {
-                        add("🔒 ${Strings.deviceBound}")
+                        add("🔒 ${AppStringsProvider.current().deviceBound}")
                     }
                     ActivationCodeType.PERMANENT -> {
-                        add("♾️ ${Strings.permanentValid}")
+                        add("♾️ ${AppStringsProvider.current().permanentValid}")
                     }
                 }
 
@@ -650,7 +650,7 @@ private fun AddActivationCodeDialog(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(Strings.addActivationCode, fontWeight = FontWeight.Bold)
+                Text(AppStringsProvider.current().addActivationCode, fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -662,7 +662,7 @@ private fun AddActivationCodeDialog(
             ) {
                 // Activation code type selector using chips
                 Text(
-                    text = Strings.activationCodeType,
+                    text = AppStringsProvider.current().activationCodeType,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -731,7 +731,7 @@ private fun AddActivationCodeDialog(
                         onCheckedChange = { useCustomCode = it }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.useCustomCode, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStringsProvider.current().useCustomCode, style = MaterialTheme.typography.bodyMedium)
                 }
 
                 AnimatedVisibility(visible = useCustomCode) {
@@ -744,12 +744,12 @@ private fun AddActivationCodeDialog(
                                 customCode = filtered
                                 codeLengthError = when {
                                     filtered.length in 1 until com.webtoapp.core.activation.ActivationManager.MIN_CODE_LENGTH ->
-                                        Strings.codeTooShort
+                                        AppStringsProvider.current().codeTooShort
                                     else -> null
                                 }
                             },
-                            label = { Text(Strings.inputActivationCode) },
-                            placeholder = { Text(Strings.activationCodeExample) },
+                            label = { Text(AppStringsProvider.current().inputActivationCode) },
+                            placeholder = { Text(AppStringsProvider.current().activationCodeExample) },
                             leadingIcon = {
                                 Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(18.dp))
                             },
@@ -771,11 +771,11 @@ private fun AddActivationCodeDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = Strings.codeLength,
+                                text = AppStringsProvider.current().codeLength,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = "${codeLength.toInt()} ${Strings.chars}",
+                                text = "${codeLength.toInt()} ${AppStringsProvider.current().chars}",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
@@ -803,7 +803,7 @@ private fun AddActivationCodeDialog(
                                 timeLimitDays = it
                             }
                         },
-                        label = { Text(Strings.validityDays) },
+                        label = { Text(AppStringsProvider.current().validityDays) },
                         placeholder = { Text("7") },
                         leadingIcon = {
                             Icon(Icons.Outlined.Timer, null, modifier = Modifier.size(18.dp))
@@ -828,7 +828,7 @@ private fun AddActivationCodeDialog(
                                 usageLimit = it
                             }
                         },
-                        label = { Text(Strings.usageCount) },
+                        label = { Text(AppStringsProvider.current().usageCount) },
                         placeholder = { Text("100") },
                         leadingIcon = {
                             Icon(Icons.Outlined.ConfirmationNumber, null, modifier = Modifier.size(18.dp))
@@ -845,8 +845,8 @@ private fun AddActivationCodeDialog(
                 PremiumTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text(Strings.noteOptional) },
-                    placeholder = { Text(Strings.vipUserOnly) },
+                    label = { Text(AppStringsProvider.current().noteOptional) },
+                    placeholder = { Text(AppStringsProvider.current().vipUserOnly) },
                     leadingIcon = {
                         Icon(Icons.AutoMirrored.Outlined.Notes, null, modifier = Modifier.size(18.dp))
                     },
@@ -877,7 +877,7 @@ private fun AddActivationCodeDialog(
                     val code = if (useCustomCode && customCode.isNotBlank()) {
                         val trimmed = customCode.trim()
                         if (trimmed.length < com.webtoapp.core.activation.ActivationManager.MIN_CODE_LENGTH) {
-                            codeLengthError = Strings.codeTooShort
+                            codeLengthError = AppStringsProvider.current().codeTooShort
                             return@PremiumButton  // abort, code too short
                         }
                         ActivationCode(
@@ -902,12 +902,12 @@ private fun AddActivationCodeDialog(
             ) {
                 Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.btnOk, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().btnOk, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -940,7 +940,7 @@ private fun BatchGenerateDialog(
                 modifier = Modifier.size(32.dp)
             )
         },
-        title = { Text(Strings.batchGenerate, fontWeight = FontWeight.Bold) },
+        title = { Text(AppStringsProvider.current().batchGenerate, fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier
@@ -952,7 +952,7 @@ private fun BatchGenerateDialog(
                 PremiumTextField(
                     value = batchCount,
                     onValueChange = { if (it.all { c -> c.isDigit() } && it.length <= 3) batchCount = it },
-                    label = { Text(Strings.batchCount) },
+                    label = { Text(AppStringsProvider.current().batchCount) },
                     placeholder = { Text("5") },
                     leadingIcon = {
                         Icon(Icons.Outlined.Tag, null, modifier = Modifier.size(18.dp))
@@ -966,7 +966,7 @@ private fun BatchGenerateDialog(
 
                 // Type selection (simplified for batch)
                 Text(
-                    text = Strings.activationCodeType,
+                    text = AppStringsProvider.current().activationCodeType,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -1035,11 +1035,11 @@ private fun BatchGenerateDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = Strings.codeLength,
+                            text = AppStringsProvider.current().codeLength,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "${codeLength.toInt()} ${Strings.chars}",
+                            text = "${codeLength.toInt()} ${AppStringsProvider.current().chars}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
@@ -1061,7 +1061,7 @@ private fun BatchGenerateDialog(
                     PremiumTextField(
                         value = timeLimitDays,
                         onValueChange = { if (it.all { c -> c.isDigit() }) timeLimitDays = it },
-                        label = { Text(Strings.validityDays) },
+                        label = { Text(AppStringsProvider.current().validityDays) },
                         leadingIcon = { Icon(Icons.Outlined.Timer, null, modifier = Modifier.size(18.dp)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -1078,7 +1078,7 @@ private fun BatchGenerateDialog(
                     PremiumTextField(
                         value = usageLimit,
                         onValueChange = { if (it.all { c -> c.isDigit() }) usageLimit = it },
-                        label = { Text(Strings.usageCount) },
+                        label = { Text(AppStringsProvider.current().usageCount) },
                         leadingIcon = { Icon(Icons.Outlined.ConfirmationNumber, null, modifier = Modifier.size(18.dp)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -1116,12 +1116,12 @@ private fun BatchGenerateDialog(
             ) {
                 Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(Strings.batchGenerate, fontWeight = FontWeight.SemiBold)
+                Text(AppStringsProvider.current().batchGenerate, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
+                Text(AppStringsProvider.current().btnCancel)
             }
         }
     )
@@ -1132,17 +1132,17 @@ private fun BatchGenerateDialog(
 // ═══════════════════════════════════════════
 
 private fun getActivationTypeName(type: ActivationCodeType): String = when (type) {
-    ActivationCodeType.PERMANENT -> Strings.activationTypePermanent
-    ActivationCodeType.TIME_LIMITED -> Strings.activationTypeTimeLimited
-    ActivationCodeType.USAGE_LIMITED -> Strings.activationTypeUsageLimited
-    ActivationCodeType.DEVICE_BOUND -> Strings.activationTypeDeviceBound
-    ActivationCodeType.COMBINED -> Strings.activationTypeCombined
+    ActivationCodeType.PERMANENT -> AppStringsProvider.current().activationTypePermanent
+    ActivationCodeType.TIME_LIMITED -> AppStringsProvider.current().activationTypeTimeLimited
+    ActivationCodeType.USAGE_LIMITED -> AppStringsProvider.current().activationTypeUsageLimited
+    ActivationCodeType.DEVICE_BOUND -> AppStringsProvider.current().activationTypeDeviceBound
+    ActivationCodeType.COMBINED -> AppStringsProvider.current().activationTypeCombined
 }
 
 private fun getActivationTypeDesc(type: ActivationCodeType): String = when (type) {
-    ActivationCodeType.PERMANENT -> Strings.activationTypePermanentDesc
-    ActivationCodeType.TIME_LIMITED -> Strings.activationTypeTimeLimitedDesc
-    ActivationCodeType.USAGE_LIMITED -> Strings.activationTypeUsageLimitedDesc
-    ActivationCodeType.DEVICE_BOUND -> Strings.activationTypeDeviceBoundDesc
-    ActivationCodeType.COMBINED -> Strings.activationTypeCombinedDesc
+    ActivationCodeType.PERMANENT -> AppStringsProvider.current().activationTypePermanentDesc
+    ActivationCodeType.TIME_LIMITED -> AppStringsProvider.current().activationTypeTimeLimitedDesc
+    ActivationCodeType.USAGE_LIMITED -> AppStringsProvider.current().activationTypeUsageLimitedDesc
+    ActivationCodeType.DEVICE_BOUND -> AppStringsProvider.current().activationTypeDeviceBoundDesc
+    ActivationCodeType.COMBINED -> AppStringsProvider.current().activationTypeCombinedDesc
 }

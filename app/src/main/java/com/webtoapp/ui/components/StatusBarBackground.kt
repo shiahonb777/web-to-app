@@ -1,7 +1,7 @@
 package com.webtoapp.ui.components
 
 import android.graphics.BitmapFactory
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.core.logging.AppLogger
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,18 +17,18 @@ import androidx.compose.ui.unit.dp
 import java.io.File
 
 /**
- * Status bar background组件
+ * Status bar background
  * 
- * 在全屏模式下显示状态栏时，渲染自定义的状态栏背景
- * 支持纯色背景和图片背景，以及透明度调整
+ * mode displaystatus bar, status bar
+ * support, and
  */
 @Composable
 fun StatusBarBackground(
     backgroundType: String, // "COLOR" or "IMAGE"
     backgroundColor: String?,
-    backgroundImagePath: String?, // 可以是本地路径或 assets 路径
+    backgroundImagePath: String?, // localpathor assets path
     alpha: Float,
-    heightDp: Int, // 0 表示使用系统默认
+    heightDp: Int, // 0 systemdefault
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -41,19 +41,19 @@ fun StatusBarBackground(
         24.dp
     }
     
-    // 使用自定义高度或系统默认高度
+    // orsystemdefault
     val actualHeight = if (heightDp > 0) heightDp.dp else systemStatusBarHeight
     
-    // Load图片背景
+    // Load
     val imageBitmap = remember(backgroundImagePath) {
         if (backgroundType == "IMAGE" && !backgroundImagePath.isNullOrEmpty()) {
             try {
-                // 尝试从本地文件加载
+                // fromlocalfileload
                 val file = File(backgroundImagePath)
                 if (file.exists()) {
                     BitmapFactory.decodeFile(backgroundImagePath)?.asImageBitmap()
                 } else {
-                    // 尝试从 assets 加载
+                    // from assets load
                     val assetPath = backgroundImagePath.removePrefix("assets/")
                     context.assets.open(assetPath).use { inputStream ->
                         BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
@@ -76,10 +76,10 @@ fun StatusBarBackground(
     ) {
         when {
             backgroundType == "IMAGE" && imageBitmap != null -> {
-                // Image背景
+                // Image
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = Strings.statusBarBackground,
+                    contentDescription = AppStringsProvider.current().statusBarBackground,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 1f - alpha)),
@@ -88,7 +88,7 @@ fun StatusBarBackground(
                 )
             }
             else -> {
-                // 纯色背景
+                // Note
                 val bgColor = try {
                     val hex = backgroundColor?.removePrefix("#") ?: "000000"
                     when (hex.length) {
@@ -110,12 +110,12 @@ fun StatusBarBackground(
 }
 
 /**
- * Status bar background覆盖层
+ * Status bar background
  * 
- * 用于在全屏模式下覆盖在内容上方，显示自定义状态栏背景
- * 这个组件应该放在 Box 的最上层
+ * for mode content, display status bar
+ * Box
  * 
- * 注意：此组件需要放在一个使用 fillMaxSize() 的容器中
+ * fillMaxSize( )
  */
 @Composable
 fun StatusBarOverlay(
@@ -139,19 +139,19 @@ fun StatusBarOverlay(
         24.dp
     }
     
-    // 使用自定义高度或系统默认高度
+    // orsystemdefault
     val actualHeight = if (heightDp > 0) heightDp.dp else systemStatusBarHeight
     
-    // Load图片背景
+    // Load
     val imageBitmap = remember(backgroundImagePath) {
         if (backgroundType == "IMAGE" && !backgroundImagePath.isNullOrEmpty()) {
             try {
-                // 尝试从本地文件加载
+                // fromlocalfileload
                 val file = File(backgroundImagePath)
                 if (file.exists()) {
                     BitmapFactory.decodeFile(backgroundImagePath)?.asImageBitmap()
                 } else {
-                    // 尝试从 assets 加载
+                    // from assets load
                     val assetPath = backgroundImagePath.removePrefix("assets/")
                     context.assets.open(assetPath).use { inputStream ->
                         BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
@@ -166,7 +166,7 @@ fun StatusBarOverlay(
         }
     }
     
-    // Status bar背景 - 从屏幕最顶部开始，覆盖状态栏区域
+    // Status bar- from top, status bararea
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -174,17 +174,17 @@ fun StatusBarOverlay(
     ) {
         when {
             backgroundType == "IMAGE" && imageBitmap != null -> {
-                // Image背景
+                // Image
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = Strings.statusBarBackground,
+                    contentDescription = AppStringsProvider.current().statusBarBackground,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     alpha = alpha
                 )
             }
             else -> {
-                // 纯色背景
+                // Note
                 val bgColor = try {
                     val hex = backgroundColor?.removePrefix("#") ?: "000000"
                     when (hex.length) {

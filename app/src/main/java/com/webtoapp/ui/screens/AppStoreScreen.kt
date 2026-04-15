@@ -24,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -56,7 +57,7 @@ import com.webtoapp.core.cloud.Announcement
 import com.webtoapp.core.cloud.UpdateConfig
 import com.webtoapp.core.cloud.AppUser
 import com.webtoapp.core.cloud.GeoDistribution
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumFilterChip
@@ -75,8 +76,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
- * 统一市场页面 — 应用商店 + 模块市场
- * 使用顶部 Tab 切换「应用」和「模块」两个子页面
+ * unifiedmarket- appstore + modulemarket
+ * Top tab switch: "app" and "module"
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,14 +91,14 @@ fun AppStoreScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    // ── Pager 状态 ──
+    // Pager state
     val pagerState = rememberPagerState(pageCount = { 2 })
 
-    // ── 搜索状态 ──
+    // state
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // ── 右上角菜单 ──
+    // Note
     var showMenu by remember { mutableStateOf(false) }
     var showDownloadManager by remember { mutableStateOf(false) }
     var showMyApps by remember { mutableStateOf(false) }
@@ -106,7 +107,7 @@ fun AppStoreScreen(
     var showMyModules by remember { mutableStateOf(false) }
     var showPublishModule by remember { mutableStateOf(false) }
 
-    // 活跃下载数 badge
+    // download badge
     val emptyTasks = remember { mutableStateOf<Map<Int, AppDownloadManager.DownloadTask>>(emptyMap()) }
     val activeTasks by (downloadManager?.activeTasks?.collectAsState() ?: emptyTasks)
     val activeCount = activeTasks.count {
@@ -116,8 +117,8 @@ fun AppStoreScreen(
     val emptyDownloaded = remember { mutableStateOf<List<AppDownloadManager.DownloadedApp>>(emptyList()) }
     val downloadedAppsList by (downloadManager?.downloadedApps?.collectAsState() ?: emptyDownloaded)
     val downloadedCount = downloadedAppsList.size
-    // 当前 Tab 名称
-    val tabTitles = listOf(Strings.marketTabApps, Strings.marketTabModules)
+    // current Tab
+    val tabTitles = listOf(AppStringsProvider.current().marketTabApps, AppStringsProvider.current().marketTabModules)
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -135,8 +136,8 @@ fun AppStoreScreen(
                             onExpandedChange = { },
                             placeholder = {
                                 Text(
-                                    if (pagerState.currentPage == 0) Strings.storeSearchPlaceholder
-                                    else Strings.moduleStoreSearchPlaceholder
+                                    if (pagerState.currentPage == 0) AppStringsProvider.current().storeSearchPlaceholder
+                                    else AppStringsProvider.current().moduleStoreSearchPlaceholder
                                 )
                             },
                             leadingIcon = {
@@ -144,7 +145,7 @@ fun AppStoreScreen(
                                     isSearchActive = false
                                     searchQuery = ""
                                 }) {
-                                    Icon(Icons.Filled.ArrowBack, contentDescription = null)
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                                 }
                             },
                             trailingIcon = {
@@ -163,7 +164,7 @@ fun AppStoreScreen(
             } else {
                 TopAppBar(
                     title = {
-                        // 内嵌 pill-style Tab 切换器 — 不占额外空间
+                        // pill- style Tab switch
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f)
@@ -228,7 +229,7 @@ fun AppStoreScreen(
                                 if (pagerState.currentPage == 0) {
                                     // ── Apps Tab Menu ──
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeDownloadManager) },
+                                        text = { Text(AppStringsProvider.current().storeDownloadManager) },
                                         onClick = { showMenu = false; showDownloadManager = true },
                                         leadingIcon = { Icon(Icons.Outlined.Download, null) },
                                         trailingIcon = if (activeCount > 0 || downloadedCount > 0) {{
@@ -239,19 +240,19 @@ fun AppStoreScreen(
                                     )
                                     HorizontalDivider()
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeMyApps) },
+                                        text = { Text(AppStringsProvider.current().storeMyApps) },
                                         onClick = { showMenu = false; showMyApps = true },
                                         leadingIcon = { Icon(Icons.Outlined.Apps, null) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storePublishApp) },
+                                        text = { Text(AppStringsProvider.current().storePublishApp) },
                                         onClick = { showMenu = false; showPublishApp = true },
                                         leadingIcon = { Icon(Icons.Outlined.Publish, null) }
                                     )
                                 } else {
                                     // ── Modules Tab Menu ──
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeDownloadManager) },
+                                        text = { Text(AppStringsProvider.current().storeDownloadManager) },
                                         onClick = { showMenu = false; showDownloadManager = true },
                                         leadingIcon = { Icon(Icons.Outlined.Download, null) },
                                         trailingIcon = if (activeCount > 0 || downloadedCount > 0) {{
@@ -262,12 +263,12 @@ fun AppStoreScreen(
                                     )
                                     HorizontalDivider()
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storeMyModules) },
+                                        text = { Text(AppStringsProvider.current().storeMyModules) },
                                         onClick = { showMenu = false; showMyModules = true },
                                         leadingIcon = { Icon(Icons.Outlined.Extension, null) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(Strings.storePublishModule) },
+                                        text = { Text(AppStringsProvider.current().storePublishModule) },
                                         onClick = { showMenu = false; showPublishModule = true },
                                         leadingIcon = { Icon(Icons.Outlined.Publish, null) }
                                     )
@@ -354,7 +355,7 @@ fun AppStoreScreen(
 
 
 // ════════════════════════════════════════════════
-// Tab 1: 应用市场
+// Tab 1: appmarket
 // ════════════════════════════════════════════════
 
 @Composable
@@ -377,17 +378,17 @@ private fun AppsTabContent(
     var selectedApp by remember { mutableStateOf<AppStoreItem?>(null) }
 
     val categoryLabels = mapOf(
-        "tools" to Strings.storeCatTools,
-        "social" to Strings.storeCatSocial,
-        "education" to Strings.storeCatEducation,
-        "entertainment" to Strings.storeCatEntertainment,
-        "productivity" to Strings.storeCatProductivity,
-        "lifestyle" to Strings.storeCatLifestyle,
-        "business" to Strings.storeCatBusiness,
-        "news" to Strings.storeCatNews,
-        "finance" to Strings.storeCatFinance,
-        "health" to Strings.storeCatHealth,
-        "other" to Strings.storeCatOther,
+        "tools" to AppStringsProvider.current().storeCatTools,
+        "social" to AppStringsProvider.current().storeCatSocial,
+        "education" to AppStringsProvider.current().storeCatEducation,
+        "entertainment" to AppStringsProvider.current().storeCatEntertainment,
+        "productivity" to AppStringsProvider.current().storeCatProductivity,
+        "lifestyle" to AppStringsProvider.current().storeCatLifestyle,
+        "business" to AppStringsProvider.current().storeCatBusiness,
+        "news" to AppStringsProvider.current().storeCatNews,
+        "finance" to AppStringsProvider.current().storeCatFinance,
+        "health" to AppStringsProvider.current().storeCatHealth,
+        "other" to AppStringsProvider.current().storeCatOther,
     )
 
     val categoryIcons = mapOf(
@@ -405,10 +406,10 @@ private fun AppsTabContent(
     )
 
     val sortOptions = listOf(
-        "downloads" to Strings.storeSortDownloads,
-        "rating" to Strings.storeSortRating,
-        "created_at" to Strings.storeSortNewest,
-        "like_count" to Strings.storeSortLikes,
+        "downloads" to AppStringsProvider.current().storeSortDownloads,
+        "rating" to AppStringsProvider.current().storeSortRating,
+        "created_at" to AppStringsProvider.current().storeSortNewest,
+        "like_count" to AppStringsProvider.current().storeSortLikes,
     )
 
     fun loadApps(page: Int = 1) {
@@ -433,7 +434,7 @@ private fun AppsTabContent(
 
     LaunchedEffect(Unit) { loadApps() }
     LaunchedEffect(selectedCategory, selectedSort, sortOrder) { loadApps() }
-    // 当搜索完成（不再 active 且 query 变化过）时重新加载
+    // when( active query) load
     LaunchedEffect(searchQuery, isSearchActive) {
         if (!isSearchActive) loadApps()
     }
@@ -449,7 +450,7 @@ private fun AppsTabContent(
         contentPadding = PaddingValues(bottom = 80.dp),
         horizontalArrangement = if (isLandscape) Arrangement.spacedBy(8.dp) else Arrangement.spacedBy(0.dp)
     ) {
-        // ── 分类筛选 (full-width) ──
+        // filter( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -460,7 +461,7 @@ private fun AppsTabContent(
                     PremiumFilterChip(
                         selected = selectedCategory == null,
                         onClick = { selectedCategory = null },
-                        label = { Text(Strings.storeAllCategories, fontSize = 12.sp) },
+                        label = { Text(AppStringsProvider.current().storeAllCategories, fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(
                                 Icons.Outlined.Apps,
@@ -488,7 +489,7 @@ private fun AppsTabContent(
             }
         }
 
-        // ── 排序 (full-width) ──
+        // ( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
                 modifier = Modifier
@@ -498,7 +499,7 @@ private fun AppsTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "${Strings.storeAppsCount}: $totalApps",
+                    "${AppStringsProvider.current().storeAppsCount}: $totalApps",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -525,7 +526,7 @@ private fun AppsTabContent(
                                         Icon(
                                             if (sortOrder == "desc") Icons.Filled.KeyboardArrowDown
                                             else Icons.Filled.KeyboardArrowUp,
-                                            contentDescription = if (sortOrder == "desc") Strings.sortDesc else Strings.sortAsc,
+                                            contentDescription = if (sortOrder == "desc") AppStringsProvider.current().sortDesc else AppStringsProvider.current().sortAsc,
                                             modifier = Modifier.size(14.dp)
                                         )
                                     }
@@ -553,7 +554,7 @@ private fun AppsTabContent(
                             strokeWidth = 3.dp
                         )
                         Text(
-                            Strings.storeLoadingApps,
+                            AppStringsProvider.current().storeLoadingApps,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
@@ -600,14 +601,14 @@ private fun AppsTabContent(
                         }
                     }
                     Text(
-                        Strings.storeEmpty,
+                        AppStringsProvider.current().storeEmpty,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Text(
-                        Strings.storeNoContentTryAgain,
+                        AppStringsProvider.current().storeNoContentTryAgain,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
@@ -615,7 +616,7 @@ private fun AppsTabContent(
             }
         }
 
-        // ── 应用列表 — cards auto-fill grid columns ──
+        // applist- cards auto- fill grid columns
         items(apps, key = { it.id }) { app ->
             AppListCard(
                 app = app,
@@ -650,7 +651,7 @@ private fun AppsTabContent(
                         )
                     ) {
                         Text(
-                            Strings.storeLoadMore,
+                            AppStringsProvider.current().storeLoadMore,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 0.3.sp
                         )
@@ -677,7 +678,7 @@ private fun AppsTabContent(
         }
     }
 
-    // ── 应用详情底部弹窗 ──
+    // app bottomdialog
     selectedApp?.let { app ->
         AppDetailSheet(
             app = app,
@@ -690,7 +691,7 @@ private fun AppsTabContent(
 
 
 // ════════════════════════════════════════════════
-// Tab 2: 模块市场
+// Tab 2: modulemarket
 // ════════════════════════════════════════════════
 
 @Composable
@@ -706,7 +707,7 @@ private fun ModulesTabContent(
     val loading by cloudViewModel.storeLoading.collectAsStateWithLifecycle()
     val total by cloudViewModel.storeTotal.collectAsStateWithLifecycle()
 
-    // 跟踪是否已完成首次加载——避免空列表瞬间闪过
+    // load- - list
     var initialLoaded by remember { mutableStateOf(false) }
     var selectedStoreModule by remember { mutableStateOf<StoreModuleInfo?>(null) }
 
@@ -715,21 +716,21 @@ private fun ModulesTabContent(
     var sortOrder by rememberSaveable { mutableStateOf("desc") }
 
     val moduleCategories = listOf(
-        "UI_ENHANCE" to Strings.catUiEnhance,
-        "MEDIA" to Strings.catMedia,
-        "PRIVACY" to Strings.catPrivacySecurity,
-        "TOOLS" to Strings.catTools,
-        "AD_BLOCK" to Strings.catAdBlock,
-        "SOCIAL" to Strings.catSocial,
-        "DEVELOPER" to Strings.catDeveloper,
-        "OTHER" to Strings.catOther
+        "UI_ENHANCE" to AppStringsProvider.current().catUiEnhance,
+        "MEDIA" to AppStringsProvider.current().catMedia,
+        "PRIVACY" to AppStringsProvider.current().catPrivacySecurity,
+        "TOOLS" to AppStringsProvider.current().catTools,
+        "AD_BLOCK" to AppStringsProvider.current().catAdBlock,
+        "SOCIAL" to AppStringsProvider.current().catSocial,
+        "DEVELOPER" to AppStringsProvider.current().catDeveloper,
+        "OTHER" to AppStringsProvider.current().catOther
     )
 
     val moduleSorts = listOf(
-        "downloads" to Strings.moduleStoreSortDownloads,
-        "rating" to Strings.moduleStoreSortRating,
-        "created_at" to Strings.moduleStoreSortNewest,
-        "like_count" to Strings.moduleStoreSortLikes,
+        "downloads" to AppStringsProvider.current().moduleStoreSortDownloads,
+        "rating" to AppStringsProvider.current().moduleStoreSortRating,
+        "created_at" to AppStringsProvider.current().moduleStoreSortNewest,
+        "like_count" to AppStringsProvider.current().moduleStoreSortLikes,
     )
 
     fun loadModules() {
@@ -741,21 +742,21 @@ private fun ModulesTabContent(
         )
     }
 
-    // 首次进入触发加载
+    // load
     LaunchedEffect(Unit) { loadModules() }
     LaunchedEffect(selectedCategory, selectedSort, sortOrder) { loadModules() }
     LaunchedEffect(searchQuery, isSearchActive) {
         if (!isSearchActive) loadModules()
     }
 
-    // 当 loading 变为 false 且 modules 加载过后，标记首次加载完成
+    // when loading false modules load, load
     LaunchedEffect(loading) {
         if (!loading && !initialLoaded) {
             initialLoaded = true
         }
     }
 
-    // ── 首次加载：全屏 loading（覆盖 loading 尚未被 ViewModel 设为 true 的那一帧）──
+    // load: loading( loading ViewModel true)
     if (!initialLoaded) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -770,7 +771,7 @@ private fun ModulesTabContent(
                     strokeWidth = 3.dp
                 )
                 Text(
-                    Strings.storeLoadingModules,
+                    AppStringsProvider.current().storeLoadingModules,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -791,14 +792,14 @@ private fun ModulesTabContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = if (isLandscape) Arrangement.spacedBy(12.dp) else Arrangement.spacedBy(0.dp)
     ) {
-        // ── 分类过滤 (full-width) ──
+        // ( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
                     PremiumFilterChip(
                         selected = selectedCategory == null,
                         onClick = { selectedCategory = null },
-                        label = { Text(Strings.moduleStoreCatAll, fontSize = 12.sp) }
+                        label = { Text(AppStringsProvider.current().moduleStoreCatAll, fontSize = 12.sp) }
                     )
                 }
                 items(moduleCategories) { (key, name) ->
@@ -813,7 +814,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 排序 + 统计 (full-width) ──
+        // +( full- width)
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -843,7 +844,7 @@ private fun ModulesTabContent(
                                 Icon(
                                     if (sortOrder == "desc") Icons.Filled.KeyboardArrowDown
                                     else Icons.Filled.KeyboardArrowUp,
-                                    contentDescription = if (sortOrder == "desc") Strings.sortDesc else Strings.sortAsc,
+                                    contentDescription = if (sortOrder == "desc") AppStringsProvider.current().sortDesc else AppStringsProvider.current().sortAsc,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }} else null,
@@ -854,7 +855,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 切换分类/排序后的加载中 (full-width) ──
+        // switch / load( full- width)
         if (loading && initialLoaded) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(
@@ -866,7 +867,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 模块列表 — cards auto-fill grid columns ──
+        // modulelist- cards auto- fill grid columns
         if (!loading) {
             items(modules, key = { it.id }) { module ->
                 ModuleStoreCard(
@@ -878,7 +879,7 @@ private fun ModulesTabContent(
             }
         }
 
-        // ── 空状态 (full-width) ──
+        // state( full- width)
         if (!loading && modules.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Column(
@@ -914,14 +915,14 @@ private fun ModulesTabContent(
                         }
                     }
                     Text(
-                        if (searchQuery.isNotBlank()) Strings.moduleStoreEmptySearch else Strings.moduleStoreEmpty,
+                        if (searchQuery.isNotBlank()) AppStringsProvider.current().moduleStoreEmptySearch else AppStringsProvider.current().moduleStoreEmpty,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
-                        Strings.storeNoContentForModules,
+                        AppStringsProvider.current().storeNoContentForModules,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
                     )
@@ -943,9 +944,9 @@ private fun ModulesTabContent(
                     onResult = { shareCode ->
                         try {
                             onInstallModule(shareCode)
-                            onComplete(true, Strings.storeInstallSuccess)
+                            onComplete(true, AppStringsProvider.current().storeInstallSuccess)
                         } catch (e: Exception) {
-                            onComplete(false, e.message ?: Strings.storeInstallFailed)
+                            onComplete(false, e.message ?: AppStringsProvider.current().storeInstallFailed)
                         }
                     },
                     onError = { errorMsg ->

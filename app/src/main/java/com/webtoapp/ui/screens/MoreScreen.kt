@@ -25,12 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.R
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 /**
- * "更多" Tab — 工具 & 设置入口
+ * " " Tab- & settings
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +54,7 @@ fun MoreScreen(
             TopAppBar(
                 title = {
                     Text(
-                        Strings.tabMore,
+                        AppStringsProvider.current().tabMore,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -74,80 +74,80 @@ fun MoreScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-                // ── AI 工具 ──
-                MoreSectionTitle(Strings.moreSectionAiTools)
+                // AI
+                MoreSectionTitle(AppStringsProvider.current().moreSectionAiTools)
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuAiCoding,
+                        title = AppStringsProvider.current().menuAiCoding,
                         icon = painterResource(R.drawable.ic_sidebar_ai_coding),
                         onClick = onOpenAiCoding
                     )
                     MoreMenuItem(
-                        title = Strings.menuAiSettings,
+                        title = AppStringsProvider.current().menuAiSettings,
                         icon = painterResource(R.drawable.ic_sidebar_ai_settings),
                         onClick = onOpenAiSettings
                     )
                 }
 
-                // ── 开发工具 ──
-                MoreSectionTitle(Strings.moreSectionDevTools)
+                // Note
+                MoreSectionTitle(AppStringsProvider.current().moreSectionDevTools)
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuExtensionModules,
+                        title = AppStringsProvider.current().menuExtensionModules,
                         icon = painterResource(R.drawable.ic_sidebar_extensions),
                         onClick = onOpenExtensionModules
                     )
                     MoreMenuItem(
-                        title = Strings.menuAppModifier,
+                        title = AppStringsProvider.current().menuAppModifier,
                         icon = painterResource(R.drawable.ic_sidebar_app_modifier),
                         onClick = onOpenAppModifier
                     )
                     MoreMenuItem(
-                        title = Strings.menuLinuxEnvironment,
+                        title = AppStringsProvider.current().menuLinuxEnvironment,
                         icon = painterResource(R.drawable.ic_sidebar_linux),
                         onClick = onOpenLinuxEnvironment
                     )
                     MoreMenuItem(
-                        title = Strings.menuRuntimeDeps,
+                        title = AppStringsProvider.current().menuRuntimeDeps,
                         icon = painterResource(R.drawable.ic_sidebar_runtime),
                         onClick = onOpenRuntimeDeps
                     )
                     MoreMenuItem(
-                        title = Strings.menuPortManager,
+                        title = AppStringsProvider.current().menuPortManager,
                         icon = painterResource(R.drawable.ic_sidebar_port),
                         onClick = onOpenPortManager
                     )
                 }
 
-                // ── 浏览器 & 网络 ──
-                MoreSectionTitle(Strings.moreSectionBrowser)
+                // & network
+                MoreSectionTitle(AppStringsProvider.current().moreSectionBrowser)
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuBrowserKernel,
+                        title = AppStringsProvider.current().menuBrowserKernel,
                         icon = painterResource(R.drawable.ic_sidebar_browser),
                         onClick = onOpenBrowserKernel
                     )
                     MoreMenuItem(
-                        title = Strings.menuHostsAdBlock,
+                        title = AppStringsProvider.current().menuHostsAdBlock,
                         icon = painterResource(R.drawable.ic_sidebar_adblock),
                         onClick = onOpenHostsAdBlock
                     )
                 }
 
-                // ── 数据 & 统计 ──
-                MoreSectionTitle(Strings.moreSectionAppearance)
+                // Note
+                MoreSectionTitle(AppStringsProvider.current().moreSectionAppearance)
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuStats,
+                        title = AppStringsProvider.current().menuStats,
                         icon = painterResource(R.drawable.ic_sidebar_stats),
                         onClick = onOpenStats
                     )
                 }
 
-                // ── 关于 ──
+                // Note
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuAbout,
+                        title = AppStringsProvider.current().menuAbout,
                         icon = painterResource(R.drawable.ic_sidebar_about),
                         onClick = onOpenAbout
                     )

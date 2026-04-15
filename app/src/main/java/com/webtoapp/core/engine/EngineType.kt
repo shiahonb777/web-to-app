@@ -1,17 +1,17 @@
 package com.webtoapp.core.engine
 
 /**
- * 浏览器引擎类型
+ * Note.
  */
 enum class EngineType(
     val displayName: String,
     val description: String,
-    /** 引擎原生库预估大小 (单架构, MB) */
+    /** MB. */
     val estimatedSizeMb: Int,
-    /** 是否需要额外下载 */
+    /** download. */
     val requiresDownload: Boolean
 ) {
-    /** 系统 WebView（默认，零额外体积） */
+    /** default system. */
     SYSTEM_WEBVIEW(
         displayName = "System WebView",
         description = "使用设备内置的 Android WebView 引擎",
@@ -19,7 +19,7 @@ enum class EngineType(
         requiresDownload = false
     ),
 
-    /** Mozilla GeckoView (Firefox 内核) */
+    /** Mozilla GeckoView Firefox. */
     GECKOVIEW(
         displayName = "GeckoView (Firefox)",
         description = "内嵌 Firefox 引擎，内置隐私保护与广告拦截",

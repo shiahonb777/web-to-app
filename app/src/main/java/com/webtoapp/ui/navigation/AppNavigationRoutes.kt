@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 
 internal const val TAB_HOST_ROUTE = "tab_host"
 
@@ -29,11 +29,11 @@ enum class BottomTab(
     MORE(Routes.MORE, Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz, "more");
 
     fun label(): String = when (this) {
-        HOME -> Strings.tabHome
-        STORE -> Strings.tabStore
-        COMMUNITY -> Strings.tabCommunity
-        PROFILE -> Strings.tabProfile
-        MORE -> Strings.tabMore
+        HOME -> AppStringsProvider.current().tabHome
+        STORE -> AppStringsProvider.current().tabStore
+        COMMUNITY -> AppStringsProvider.current().tabCommunity
+        PROFILE -> AppStringsProvider.current().tabProfile
+        MORE -> AppStringsProvider.current().tabMore
     }
 }
 
@@ -53,7 +53,6 @@ object Routes {
     const val LINUX_ENVIRONMENT = "linux_environment"
 
     const val EDIT_APP = "edit_app/{appId}"
-    const val EDIT_WEB_APP = "edit_web_app/{appId}"
     const val EDIT_MEDIA_APP = "edit_media_app/{appId}"
     const val EDIT_GALLERY_APP = "edit_gallery_app/{appId}"
     const val EDIT_HTML_APP = "edit_html_app/{appId}"
@@ -103,7 +102,6 @@ object Routes {
     val TAB_ROUTES = setOf(HOME, APP_STORE, COMMUNITY, PROFILE_TAB, MORE)
 
     fun editApp(appId: Long) = "edit_app/$appId"
-    fun editWebApp(appId: Long) = "edit_web_app/$appId"
     fun editMediaApp(appId: Long) = "edit_media_app/$appId"
     fun editGalleryApp(appId: Long) = "edit_gallery_app/$appId"
     fun editHtmlApp(appId: Long) = "edit_html_app/$appId"

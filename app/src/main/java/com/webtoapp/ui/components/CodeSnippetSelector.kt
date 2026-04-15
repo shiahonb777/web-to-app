@@ -32,9 +32,9 @@ import com.webtoapp.core.extension.CodeSnippets
 import androidx.compose.ui.graphics.Color
 
 /**
- * 代码块选择器对话框
+ * code select dialog
  * 
- * 提供分类浏览、搜索、预览和插入代码块的功能
+ * , , preview code
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,13 +49,13 @@ fun CodeSnippetSelectorDialog(
     val allCategories = remember { CodeSnippets.getAll() }
     val popularSnippets = remember { CodeSnippets.getPopular() }
     
-    // Search结果
+    // Search
     val searchResults = remember(searchQuery) {
         if (searchQuery.isBlank()) emptyList()
         else CodeSnippets.search(searchQuery)
     }
     
-    // 当前显示的代码块
+    // currentdisplay code
     val displaySnippets = when {
         searchQuery.isNotBlank() -> searchResults
         selectedCategory != null -> selectedCategory!!.snippets
@@ -74,18 +74,18 @@ fun CodeSnippetSelectorDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
-                    title = { Text(com.webtoapp.core.i18n.Strings.codeBlockLibraryTitle) },
+                    title = { Text(com.webtoapp.core.i18n.AppStringsProvider.current().codeBlockLibraryTitle) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, com.webtoapp.core.i18n.Strings.close)
+                            Icon(Icons.Default.Close, com.webtoapp.core.i18n.AppStringsProvider.current().close)
                         }
                     },
                     actions = {
-                        // 统计信息
+                        // Note
                         Text(
-                            "${allCategories.size} ${com.webtoapp.core.i18n.Strings.categoriesAndBlocks.split("·")[0].trim()} · ${allCategories.sumOf { it.snippets.size }} ${com.webtoapp.core.i18n.Strings.categoriesAndBlocks.split("·")[1].trim()}",
+                            "${allCategories.size} ${com.webtoapp.core.i18n.AppStringsProvider.current().categoriesAndBlocks.split("·")[0].trim()} · ${allCategories.sumOf { it.snippets.size }} ${com.webtoapp.core.i18n.AppStringsProvider.current().categoriesAndBlocks.split("·")[1].trim()}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(end = 16.dp)
@@ -98,7 +98,7 @@ fun CodeSnippetSelectorDialog(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    // Search框
+                    // Search
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { 
@@ -106,12 +106,12 @@ fun CodeSnippetSelectorDialog(
                             if (it.isNotBlank()) selectedCategory = null
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(com.webtoapp.core.i18n.Strings.searchCodeBlocksPlaceholder) },
+                        placeholder = { Text(com.webtoapp.core.i18n.AppStringsProvider.current().searchCodeBlocksPlaceholder) },
                         leadingIcon = { Icon(Icons.Default.Search, null) },
                         trailingIcon = {
                             if (searchQuery.isNotBlank()) {
                                 IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Default.Clear, com.webtoapp.core.i18n.Strings.clear)
+                                    Icon(Icons.Default.Clear, com.webtoapp.core.i18n.AppStringsProvider.current().clear)
                                 }
                             }
                         },
@@ -121,27 +121,27 @@ fun CodeSnippetSelectorDialog(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 分类标签
+                    // label
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 热门
+                        // Note
                         PremiumFilterChip(
                             selected = selectedCategory == null && searchQuery.isBlank(),
                             onClick = { 
                                 selectedCategory = null
                                 searchQuery = ""
                             },
-                            label = { Text(com.webtoapp.core.i18n.Strings.hotTag) },
+                            label = { Text(com.webtoapp.core.i18n.AppStringsProvider.current().hotTag) },
                             leadingIcon = if (selectedCategory == null && searchQuery.isBlank()) {
                                 { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                             } else null
                         )
                         
-                        // 分类
+                        // Note
                         allCategories.forEach { category ->
                             PremiumFilterChip(
                                 selected = selectedCategory == category,
@@ -159,7 +159,7 @@ fun CodeSnippetSelectorDialog(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // 当前分类描述
+                    // current
                     selectedCategory?.let { category ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
@@ -180,7 +180,7 @@ fun CodeSnippetSelectorDialog(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        "${category.description} · ${com.webtoapp.core.i18n.Strings.codeBlocksCount.format(category.snippets.size)}",
+                                        "${category.description} · ${com.webtoapp.core.i18n.AppStringsProvider.current().codeBlocksCount.format(category.snippets.size)}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -190,17 +190,17 @@ fun CodeSnippetSelectorDialog(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                     
-                    // Search结果提示
+                    // Search hint
                     if (searchQuery.isNotBlank()) {
                         Text(
-                            com.webtoapp.core.i18n.Strings.foundResults.format(searchResults.size),
+                            com.webtoapp.core.i18n.AppStringsProvider.current().foundResults.format(searchResults.size),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                     
-                    // 代码块列表
+                    // code list
                     LazyColumn(
                         modifier = Modifier.weight(weight = 1f, fill = true),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -233,7 +233,7 @@ fun CodeSnippetSelectorDialog(
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            com.webtoapp.core.i18n.Strings.noMatchingCodeBlocks,
+                                            com.webtoapp.core.i18n.AppStringsProvider.current().noMatchingCodeBlocks,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -249,7 +249,7 @@ fun CodeSnippetSelectorDialog(
         }
     }
     
-    // 代码预览对话框
+    // codepreviewdialog
     previewSnippet?.let { snippet ->
         CodeSnippetPreviewDialog(
             snippet = snippet,
@@ -263,7 +263,7 @@ fun CodeSnippetSelectorDialog(
 }
 
 /**
- * 代码块列表项
+ * code list
  */
 @Composable
 private fun CodeSnippetItem(
@@ -296,7 +296,7 @@ private fun CodeSnippetItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                // 标签
+                // label
                 if (snippet.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -317,14 +317,14 @@ private fun CodeSnippetItem(
                 }
             }
             
-            // 插入按钮
+            // button
             FilledTonalIconButton(
                 onClick = onInsert,
                 modifier = Modifier.size(36.dp)
             ) {
                 Icon(
                     Icons.Default.Add,
-                    contentDescription = com.webtoapp.core.i18n.Strings.insert,
+                    contentDescription = com.webtoapp.core.i18n.AppStringsProvider.current().insert,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -334,7 +334,7 @@ private fun CodeSnippetItem(
 
 
 /**
- * 代码块预览对话框
+ * code previewdialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -358,7 +358,7 @@ fun CodeSnippetPreviewDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+                // Note
                 TopAppBar(
                     title = { 
                         Column {
@@ -372,7 +372,7 @@ fun CodeSnippetPreviewDialog(
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, com.webtoapp.core.i18n.Strings.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, com.webtoapp.core.i18n.AppStringsProvider.current().back)
                         }
                     }
                 )
@@ -382,7 +382,7 @@ fun CodeSnippetPreviewDialog(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    // 标签
+                    // label
                     if (snippet.tags.isNotEmpty()) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -404,7 +404,7 @@ fun CodeSnippetPreviewDialog(
                         }
                     }
                     
-                    // 代码预览
+                    // codepreview
                     Surface(
                         modifier = Modifier
                             .weight(weight = 1f, fill = true)
@@ -413,7 +413,7 @@ fun CodeSnippetPreviewDialog(
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Column {
-                            // 代码头部
+                            // codeheader
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -440,13 +440,13 @@ fun CodeSnippetPreviewDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(if (copied) com.webtoapp.core.i18n.Strings.copied else com.webtoapp.core.i18n.Strings.copy)
+                                    Text(if (copied) com.webtoapp.core.i18n.AppStringsProvider.current().copied else com.webtoapp.core.i18n.AppStringsProvider.current().copy)
                                 }
                             }
                             
                             HorizontalDivider()
                             
-                            // 代码内容
+                            // codecontent
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -468,7 +468,7 @@ fun CodeSnippetPreviewDialog(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // 操作按钮
+                    // button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -477,7 +477,7 @@ fun CodeSnippetPreviewDialog(
                             onClick = onDismiss,
                             modifier = Modifier.weight(weight = 1f, fill = true)
                         ) {
-                            Text(com.webtoapp.core.i18n.Strings.btnCancel)
+                            Text(com.webtoapp.core.i18n.AppStringsProvider.current().btnCancel)
                         }
                         
                         PremiumButton(
@@ -486,7 +486,7 @@ fun CodeSnippetPreviewDialog(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(com.webtoapp.core.i18n.Strings.insertCode)
+                            Text(com.webtoapp.core.i18n.AppStringsProvider.current().insertCode)
                         }
                     }
                 }
@@ -496,8 +496,8 @@ fun CodeSnippetPreviewDialog(
 }
 
 /**
- * 代码块快速选择卡片
- * 用于模块编辑器中快速插入代码
+ * code selectcard
+ * formoduleedit code
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -535,13 +535,13 @@ fun CodeSnippetQuickPicker(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        com.webtoapp.core.i18n.Strings.codeBlockLibraryTitle,
+                        com.webtoapp.core.i18n.AppStringsProvider.current().codeBlockLibraryTitle,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
                 
                 TextButton(onClick = { showFullSelector = true }) {
-                    Text(com.webtoapp.core.i18n.Strings.browseAll)
+                    Text(com.webtoapp.core.i18n.AppStringsProvider.current().browseAll)
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
@@ -551,12 +551,12 @@ fun CodeSnippetQuickPicker(
             }
             
             Text(
-                com.webtoapp.core.i18n.Strings.quickInsertCodeSnippets,
+                com.webtoapp.core.i18n.AppStringsProvider.current().quickInsertCodeSnippets,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
-            // 热门代码块
+            // code
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -580,7 +580,7 @@ fun CodeSnippetQuickPicker(
         }
     }
     
-    // 完整选择器对话框
+    // select dialog
     if (showFullSelector) {
         CodeSnippetSelectorDialog(
             onDismiss = { showFullSelector = false },
@@ -590,8 +590,8 @@ fun CodeSnippetQuickPicker(
 }
 
 /**
- * 分类代码块网格
- * 按分类展示代码块
+ * code
+ * code
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -630,7 +630,7 @@ fun CodeSnippetCategoryGrid(
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    com.webtoapp.core.i18n.Strings.codeBlocksCount.format(category.snippets.size),
+                                    com.webtoapp.core.i18n.AppStringsProvider.current().codeBlocksCount.format(category.snippets.size),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -686,7 +686,7 @@ fun CodeSnippetCategoryGrid(
                                         
                                         Icon(
                                             Icons.Default.Add,
-                                            contentDescription = com.webtoapp.core.i18n.Strings.insert,
+                                            contentDescription = com.webtoapp.core.i18n.AppStringsProvider.current().insert,
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                     }

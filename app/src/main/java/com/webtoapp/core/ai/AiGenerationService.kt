@@ -16,17 +16,16 @@ import androidx.core.app.NotificationCompat
 import com.webtoapp.R
 import com.webtoapp.core.ai.coding.HtmlAgentEvent
 import com.webtoapp.core.ai.coding.AiCodingAgent
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.SavedModel
 import com.webtoapp.core.ai.coding.SessionConfig
 import com.webtoapp.ui.MainActivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-
 /**
- * AI 生成前台服务
- * 
- * 用于在后台保持 AI 生成任务运行，防止用户切换应用时任务被终止
+ * AI generation foreground service
+ *
+ * Keeps AI generation tasks running when the user switches apps or the process is backgrounded
  */
 class AiGenerationService : Service() {
     
@@ -35,7 +34,7 @@ class AiGenerationService : Service() {
         private const val CHANNEL_ID = "ai_generation_channel"
         private const val NOTIFICATION_ID = 1001
         
-        // 服务状态
+        // Service status
         var isRunning = false
             private set
     }
@@ -43,22 +42,22 @@ class AiGenerationService : Service() {
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
-    // 当前生成任务
+    // Current generation job
     private var currentJob: Job? = null
     private var htmlAgent: AiCodingAgent? = null
     
-    // WakeLock 保持 CPU 运行
+    // WakeLock to keep the CPU running
     private var wakeLock: PowerManager.WakeLock? = null
     
-    // 事件流 - 用于向 UI 发送事件（不使用 replay，避免重复事件）
+    // Event flow for UI events (no replay to prevent duplicates)
     private val _eventFlow = MutableSharedFlow<HtmlAgentEvent>(replay = 0, extraBufferCapacity = 64)
     val eventFlow: SharedFlow<HtmlAgentEvent> = _eventFlow.asSharedFlow()
     
-    // Generate状态
+    // Generation state flag
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
     
-    // 最终结果缓存（用于 UI 重新连接时获取结果）
+    // Cache the last result for UI reconnection
     private var lastCompletedEvent: HtmlAgentEvent.Completed? = null
     private var lastHtmlContent: String? = null
     
@@ -87,7 +86,7 @@ class AiGenerationService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.w(TAG, "Service started")
-        startForeground(NOTIFICATION_ID, createNotification(Strings.aiGenerationServiceRunning))
+        startForeground(NOTIFICATION_ID, createNotification(AppStringsProvider.current().aiGenerationServiceRunning))
         return START_STICKY
     }
     
@@ -101,39 +100,39 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 获取最后完成的事件（用于 UI 重新连接）
+     * Return the most recent completed event for UI reconnection
      */
     fun getLastCompletedEvent(): HtmlAgentEvent.Completed? = lastCompletedEvent
     
     /**
-     * 获取最后生成的 HTML
+     * Get the last generated HTML content
      */
     fun getLastHtmlContent(): String? = lastHtmlContent
     
     /**
-     * 开始 AI 生成任务
+     * Start an AI generation task
      */
     fun startGeneration(
         requirement: String,
         currentHtml: String?,
         sessionConfig: SessionConfig?,
         model: SavedModel,
-        sessionId: String? = null  // SessionID，用于文件操作
+        sessionId: String? = null  // Session ID used for file operations
     ) {
-        // Cancel之前的任务
+        // Cancel any previous job
         currentJob?.cancel()
         lastCompletedEvent = null
         lastHtmlContent = null
         
-        // Reset事件流，清除可能残留的缓冲事件
+        // Reset the event flow to clear buffered events
         _eventFlow.resetReplayCache()
         
         _isGenerating.value = true
-        updateNotification(Strings.generatingHtmlCode)
+        updateNotification(AppStringsProvider.current().generatingHtmlCode)
         
         AppLogger.w(TAG, "Starting generation for requirement: ${requirement.take(50)}..., sessionId: $sessionId")
         
-        // Get WakeLock 保持 CPU 运行
+        // Acquire WakeLock to keep the CPU running
         acquireWakeLock()
         
         currentJob = serviceScope.launch {
@@ -145,34 +144,34 @@ class AiGenerationService : Service() {
                     model = model,
                     sessionId = sessionId
                 )?.collect { event ->
-                    // 转发事件到 UI
+                    // Forward events to the UI
                     _eventFlow.emit(event)
                     
-                    // Update通知和缓存
+                    // Update the notification and cache state
                     when (event) {
                         is HtmlAgentEvent.CodeDelta -> {
-                            updateNotification(Strings.generatingCodeChars.format(event.accumulated.length))
+                            updateNotification(AppStringsProvider.current().generatingCodeChars.format(event.accumulated.length))
                         }
                         is HtmlAgentEvent.FileCreated -> {
-                            val versionInfo = if (event.isNewVersion) "v${event.fileInfo.version}" else Strings.newFile
-                            updateNotification(Strings.fileCreatedVersion.format(event.fileInfo.name, versionInfo))
+                            val versionInfo = if (event.isNewVersion) "v${event.fileInfo.version}" else AppStringsProvider.current().newFile
+                            updateNotification(AppStringsProvider.current().fileCreatedVersion.format(event.fileInfo.name, versionInfo))
                             AppLogger.w(TAG, "File created: ${event.fileInfo.name}, version=${event.fileInfo.version}")
                         }
                         is HtmlAgentEvent.HtmlComplete -> {
                             lastHtmlContent = event.html
-                            updateNotification(Strings.codeGenerationComplete)
+                            updateNotification(AppStringsProvider.current().codeGenerationComplete)
                         }
                         is HtmlAgentEvent.Error -> {
-                            updateNotification(Strings.generationFailed.format(event.message))
+                            updateNotification(AppStringsProvider.current().generationFailed.format(event.message))
                             _isGenerating.value = false
                             releaseWakeLock()
                         }
                         is HtmlAgentEvent.Completed -> {
                             lastCompletedEvent = event
                             _isGenerating.value = false
-                            updateNotification(Strings.generationComplete)
+                            updateNotification(AppStringsProvider.current().generationComplete)
                             releaseWakeLock()
-                            // 延迟停止前台服务
+                            // Delay stopping the foreground service
                             delay(3000)
                             stopForegroundCompat()
                         }
@@ -181,11 +180,11 @@ class AiGenerationService : Service() {
                 }
             } catch (e: CancellationException) {
                 AppLogger.w(TAG, "Generation cancelled")
-                _eventFlow.emit(HtmlAgentEvent.Error(Strings.generationCancelled))
+                _eventFlow.emit(HtmlAgentEvent.Error(AppStringsProvider.current().generationCancelled))
                 releaseWakeLock()
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Generation error", e)
-                _eventFlow.emit(HtmlAgentEvent.Error(Strings.generationFailed.format(e.message)))
+                _eventFlow.emit(HtmlAgentEvent.Error(AppStringsProvider.current().generationFailed.format(e.message)))
                 releaseWakeLock()
             } finally {
                 _isGenerating.value = false
@@ -194,13 +193,13 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 取消当前生成任务
+     * Cancel the current generation job
      */
     fun cancelGeneration() {
         currentJob?.cancel()
         _isGenerating.value = false
         releaseWakeLock()
-        updateNotification(Strings.generationCancelled)
+        updateNotification(AppStringsProvider.current().generationCancelled)
         serviceScope.launch {
             delay(1000)
             stopForegroundCompat()
@@ -217,13 +216,13 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 获取 WakeLock
+     * Acquire a WakeLock
      */
     private fun acquireWakeLock() {
         try {
             wakeLock?.let {
                 if (!it.isHeld) {
-                    it.acquire(10 * 60 * 1000L) // 最多 10 分钟
+                    it.acquire(10 * 60 * 1000L) // Up to 10 minutes
                     AppLogger.w(TAG, "WakeLock acquired")
                 }
             }
@@ -233,7 +232,7 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 释放 WakeLock
+     * Release the WakeLock
      */
     private fun releaseWakeLock() {
         try {
@@ -249,16 +248,16 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 创建通知渠道
+     * Create the notification channel
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                Strings.aiGenerationService,
+                AppStringsProvider.current().aiGenerationService,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = Strings.aiCodeGenerationNotification
+                description = AppStringsProvider.current().aiCodeGenerationNotification
                 setShowBadge(false)
             }
             
@@ -268,7 +267,7 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 创建通知
+     * Build the foreground notification
      */
     private fun createNotification(content: String): Notification {
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -280,7 +279,7 @@ class AiGenerationService : Service() {
         )
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(Strings.htmlCodingAssistant)
+            .setContentTitle(AppStringsProvider.current().htmlCodingAssistant)
             .setContentText(content)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
@@ -291,7 +290,7 @@ class AiGenerationService : Service() {
     }
     
     /**
-     * 更新通知
+     * Refresh the notification content
      */
     private fun updateNotification(content: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.webtoapp.core.ai.AiApiClient
 import com.webtoapp.core.ai.AiConfigManager
-import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.i18n.AppStringsProvider
 import com.webtoapp.data.model.AiFeature
 import com.webtoapp.data.model.SavedModel
 import com.webtoapp.util.IconLibraryStorage
@@ -39,45 +39,45 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * AI 图标生成对话框
+ * AI icon dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IconGeneratorDialog(
     onDismiss: () -> Unit,
-    onIconGenerated: (String) -> Unit // Icon文件路径（已保存到图标库）
+    onIconGenerated: (String) -> Unit // Iconfilepath( save icon)
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val configManager = remember { AiConfigManager(context) }
     val aiClient = remember { AiApiClient(context) }
     
-    // 模型和密钥
+    // Note
     val savedModels by configManager.savedModelsFlow.collectAsState(initial = emptyList())
     val apiKeys by configManager.apiKeysFlow.collectAsState(initial = emptyList())
     
-    // 筛选支持图标生成功能的模型
+    // filtersupporticon success
     val imageGenModels = savedModels.filter { model ->
         model.supportsFeature(AiFeature.ICON_GENERATION)
     }
     
-    // 状态
+    // state
     var selectedModel by remember { mutableStateOf<SavedModel?>(null) }
     var prompt by remember { mutableStateOf("") }
     var referenceImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isGenerating by remember { mutableStateOf(false) }
-    var generatedIcon by remember { mutableStateOf<String?>(null) }  // Base64 数据
-    var savedIconPath by remember { mutableStateOf<String?>(null) }  // Save后的文件路径
+    var generatedIcon by remember { mutableStateOf<String?>(null) }  // Base64
+    var savedIconPath by remember { mutableStateOf<String?>(null) }  // Save filepath
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
-    // Auto选择第一个模型
+    // Autoselect
     LaunchedEffect(imageGenModels) {
         if (selectedModel == null && imageGenModels.isNotEmpty()) {
             selectedModel = imageGenModels.first()
         }
     }
     
-    // Image选择器
+    // Imageselect
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -105,7 +105,7 @@ fun IconGeneratorDialog(
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(Strings.aiGenerateIcon)
+                Text(AppStringsProvider.current().aiGenerateIcon)
             }
         },
         text = {
@@ -115,7 +115,7 @@ fun IconGeneratorDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 模型选择
+                // select
                 if (imageGenModels.isEmpty()) {
                     Surface(
                         shape = MaterialTheme.shapes.small,
@@ -123,20 +123,20 @@ fun IconGeneratorDialog(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                Strings.noImageGenModel,
+                                AppStringsProvider.current().noImageGenModel,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.error
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                Strings.addImageGenModelHint,
+                                AppStringsProvider.current().addImageGenModelHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 } else {
-                    Text(Strings.selectModel, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().selectModel, style = MaterialTheme.typography.labelMedium)
                     
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
@@ -150,7 +150,7 @@ fun IconGeneratorDialog(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
@@ -169,20 +169,20 @@ fun IconGeneratorDialog(
                     }
                 }
                 
-                // 提示词输入
-                Text(Strings.describeIcon, style = MaterialTheme.typography.labelMedium)
+                // hint input
+                Text(AppStringsProvider.current().describeIcon, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value = prompt,
                     onValueChange = { prompt = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(Strings.iconDescriptionExample) },
+                    placeholder = { Text(AppStringsProvider.current().iconDescriptionExample) },
                     minLines = 2,
                     maxLines = 4
                 )
                 
-                // 参考图片
+                // Note
                 Text(
-                    Strings.referenceImages,
+                    AppStringsProvider.current().referenceImages,
                     style = MaterialTheme.typography.labelMedium
                 )
                 
@@ -234,7 +234,7 @@ fun IconGeneratorDialog(
                             ) {
                                 Icon(
                                     Icons.Default.Add,
-                                    Strings.addImage,
+                                    AppStringsProvider.current().addImage,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -242,9 +242,9 @@ fun IconGeneratorDialog(
                     }
                 }
                 
-                // Generate结果预览
+                // Generate
                 generatedIcon?.let { base64 ->
-                    Text(Strings.generationResult, style = MaterialTheme.typography.labelMedium)
+                    Text(AppStringsProvider.current().generationResult, style = MaterialTheme.typography.labelMedium)
                     Box(
                         modifier = Modifier
                             .size(128.dp)
@@ -261,7 +261,7 @@ fun IconGeneratorDialog(
                         bitmap?.let {
                             Image(
                                 bitmap = it.asImageBitmap(),
-                                contentDescription = Strings.generatedIcon,
+                                contentDescription = AppStringsProvider.current().generatedIcon,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
@@ -269,7 +269,7 @@ fun IconGeneratorDialog(
                     }
                 }
                 
-                // Error信息
+                // Error
                 errorMessage?.let {
                     Text(
                         it,
@@ -278,7 +278,7 @@ fun IconGeneratorDialog(
                     )
                 }
                 
-                // Generate中提示
+                // Generate
                 if (isGenerating) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -293,14 +293,14 @@ fun IconGeneratorDialog(
         confirmButton = {
             if (generatedIcon != null && savedIconPath != null) {
                 PremiumButton(onClick = { onIconGenerated(savedIconPath!!) }) {
-                    Text(Strings.useThisIcon)
+                    Text(AppStringsProvider.current().useThisIcon)
                 }
             } else if (generatedIcon != null) {
-                // 正在保存中
+                // Comment
                 PremiumButton(enabled = false, onClick = {}) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.saving)
+                    Text(AppStringsProvider.current().saving)
                 }
             } else {
                 PremiumButton(
@@ -322,7 +322,7 @@ fun IconGeneratorDialog(
                                 result.fold(
                                     onSuccess = { base64 ->
                                         generatedIcon = base64
-                                        // Auto保存到图标库
+                                        // Auto
                                         scope.launch {
                                             val item = IconLibraryStorage.saveFromBase64(
                                                 context, base64, 
@@ -338,7 +338,7 @@ fun IconGeneratorDialog(
                     },
                     enabled = selectedModel != null && prompt.isNotBlank() && !isGenerating
                 ) {
-                    Text(Strings.generateIcon)
+                    Text(AppStringsProvider.current().generateIcon)
                 }
             }
         },
@@ -348,11 +348,11 @@ fun IconGeneratorDialog(
                     generatedIcon = null 
                     savedIconPath = null
                 }) {
-                    Text(Strings.regenerate)
+                    Text(AppStringsProvider.current().regenerate)
                 }
             } else {
                 TextButton(onClick = onDismiss, enabled = !isGenerating) {
-                    Text(Strings.btnCancel)
+                    Text(AppStringsProvider.current().btnCancel)
                 }
             }
         }
