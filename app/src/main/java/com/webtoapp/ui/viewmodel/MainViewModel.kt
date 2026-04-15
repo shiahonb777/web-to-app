@@ -937,7 +937,9 @@ data class EditState(
     val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
-    val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig = com.webtoapp.core.disguise.DeviceDisguiseConfig()
+    val browserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig? = null,
+    val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig = com.webtoapp.core.disguise.DeviceDisguiseConfig(),
+    val cloudConfig: CloudAppConfig? = null
 )
 sealed class UiState {
     data object Idle : UiState()

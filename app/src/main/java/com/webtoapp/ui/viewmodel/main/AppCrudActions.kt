@@ -49,13 +49,16 @@ class AppCrudActions {
             themeType = themeType,
             translateEnabled = state.translateEnabled,
             translateConfig = translateConfig,
+            extensionEnabled = state.extensionModuleEnabled,
             extensionModuleIds = state.extensionModuleIds.toList(),
             extensionFabIcon = state.extensionFabIcon.ifBlank { null },
             autoStartConfig = state.autoStartConfig,
             forcedRunConfig = state.forcedRunConfig,
             blackTechConfig = state.blackTechConfig,
             disguiseConfig = state.disguiseConfig,
-            deviceDisguiseConfig = state.deviceDisguiseConfig
+            browserDisguiseConfig = state.browserDisguiseConfig,
+            deviceDisguiseConfig = state.deviceDisguiseConfig,
+            cloudConfig = state.cloudConfig
         ) ?: run {
             WebApp(
                 name = state.name,
@@ -84,13 +87,16 @@ class AppCrudActions {
                 themeType = themeType,
                 translateEnabled = state.translateEnabled,
                 translateConfig = translateConfig,
+                extensionEnabled = state.extensionModuleEnabled,
                 extensionModuleIds = state.extensionModuleIds.toList(),
                 extensionFabIcon = state.extensionFabIcon.ifBlank { null },
                 autoStartConfig = state.autoStartConfig,
                 forcedRunConfig = state.forcedRunConfig,
                 blackTechConfig = state.blackTechConfig,
                 disguiseConfig = state.disguiseConfig,
+                browserDisguiseConfig = state.browserDisguiseConfig,
                 deviceDisguiseConfig = state.deviceDisguiseConfig,
+                cloudConfig = state.cloudConfig,
                 categoryId = categoryId
             )
         }
