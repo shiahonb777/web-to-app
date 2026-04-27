@@ -35591,6 +35591,46 @@ object Strings {
         AppLanguage.ENGLISH -> "Doc audit & correction workflow"
         AppLanguage.ARABIC -> "تدقيق التوثيق وتصحيح المسار"
     }
+    val docChangelog: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更新日志"
+        AppLanguage.ENGLISH -> "Changelog"
+        AppLanguage.ARABIC -> "سجل التغييرات"
+    }
+    val docChangelogDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "版本更新记录与变更历史"
+        AppLanguage.ENGLISH -> "Version updates & change history"
+        AppLanguage.ARABIC -> "تحديثات الإصدار وسجل التغييرات"
+    }
+    val docCodeOfConduct: String get() = when (lang) {
+        AppLanguage.CHINESE -> "行为准则"
+        AppLanguage.ENGLISH -> "Code of Conduct"
+        AppLanguage.ARABIC -> "مدونة السلوك"
+    }
+    val docCodeOfConductDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "社区行为规范与准则"
+        AppLanguage.ENGLISH -> "Community behavior standards & guidelines"
+        AppLanguage.ARABIC -> "معايير السلوك المجتمعي والإرشادات"
+    }
+    val docContributing: String get() = when (lang) {
+        AppLanguage.CHINESE -> "贡献指南"
+        AppLanguage.ENGLISH -> "Contributing Guide"
+        AppLanguage.ARABIC -> "دليل المساهمة"
+    }
+    val docContributingDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "如何参与项目贡献与提交 PR"
+        AppLanguage.ENGLISH -> "How to contribute & submit pull requests"
+        AppLanguage.ARABIC -> "كيفية المساهمة وتقديم طلبات السحب"
+    }
+    val docShellBuildGuide: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Shell 构建指南"
+        AppLanguage.ENGLISH -> "Shell Build Guide"
+        AppLanguage.ARABIC -> "دليل بناء Shell"
+    }
+    val docShellBuildGuideDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Shell 模块构建配置、同步规则与覆盖文件"
+        AppLanguage.ENGLISH -> "Shell module build config, sync rules & override files"
+        AppLanguage.ARABIC -> "تكوين بناء وحدة Shell وقواعد المزامنة والملفات المتجاوزة"
+    }
 
 }
 

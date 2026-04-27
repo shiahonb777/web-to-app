@@ -93,6 +93,10 @@ private val DOC_ITEMS = listOf(
     DocItem("feedback-guide.md", "feedbackGuide", "feedbackGuideDesc", Icons.Outlined.Feedback, chineseFileName = "feedback-guide_CN.md"),
     DocItem("_doc-manual.md", "docManual", "docManualDesc", Icons.Outlined.MenuBook, chineseFileName = "_doc-manual_CN.md"),
     DocItem("_doc-maintenance.md", "docMaintenance", "docMaintenanceDesc", Icons.Outlined.AutoFixHigh, chineseFileName = "_doc-maintenance_CN.md"),
+    DocItem("CHANGELOG.md", "changelog", "changelogDesc", Icons.Outlined.Update, chineseFileName = "CHANGELOG_CN.md"),
+    DocItem("CODE_OF_CONDUCT.md", "codeOfConduct", "codeOfConductDesc", Icons.Outlined.Handshake, chineseFileName = "CODE_OF_CONDUCT_CN.md"),
+    DocItem("CONTRIBUTING.md", "contributing", "contributingDesc", Icons.Outlined.MergeType, chineseFileName = "CONTRIBUTING_CN.md"),
+    DocItem("shell-build-guide.md", "shellBuildGuide", "shellBuildGuideDesc", Icons.Outlined.Construction, chineseFileName = "shell-build-guide_CN.md"),
 )
 
 // ── Resolve i18n title / description from Strings ───────────────
@@ -110,6 +114,10 @@ private fun resolveTitle(key: String): String = when (key) {
     "feedbackGuide" -> Strings.docFeedbackGuide
     "docManual" -> Strings.docDocManual
     "docMaintenance" -> Strings.docDocMaintenance
+    "changelog" -> Strings.docChangelog
+    "codeOfConduct" -> Strings.docCodeOfConduct
+    "contributing" -> Strings.docContributing
+    "shellBuildGuide" -> Strings.docShellBuildGuide
     else -> key
 }
 
@@ -127,6 +135,10 @@ private fun resolveDesc(key: String): String = when (key) {
     "feedbackGuide" -> Strings.docFeedbackGuideDesc
     "docManual" -> Strings.docDocManualDesc
     "docMaintenance" -> Strings.docDocMaintenanceDesc
+    "changelog" -> Strings.docChangelogDesc
+    "codeOfConduct" -> Strings.docCodeOfConductDesc
+    "contributing" -> Strings.docContributingDesc
+    "shellBuildGuide" -> Strings.docShellBuildGuideDesc
     else -> key
 }
 
